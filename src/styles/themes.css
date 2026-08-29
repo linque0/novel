@@ -746,3 +746,252 @@ body,
   border-color: var(--accent);
   color: #fff;
 }
+
+/* ============ 幕布式大纲编辑器（设定模块） ============ */
+
+.ob-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.ob-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 9px 9px 0 0;
+  background: var(--bg-panel);
+}
+.ob-toolbar .tb {
+  min-width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 6px;
+  font-family: inherit;
+}
+.ob-toolbar .tb:hover {
+  background: var(--bg-hover);
+}
+.ob-toolbar .tb:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.ob-toolbar .ob-count {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.ob-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 24px);
+  gap: 6px;
+  padding: 4px;
+}
+.ob-editor .ob-ctx {
+  position: fixed;
+  z-index: 3000;
+  min-width: 190px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+  padding: 5px;
+  user-select: none;
+}
+.ob-ctx .ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.ob-ctx .ctx-item:hover {
+  background: var(--bg-hover);
+}
+.ob-ctx .ctx-item.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.ob-ctx .ctx-item.disabled:hover {
+  background: transparent;
+}
+.ob-ctx .ctx-item .hint {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+.ob-ctx .ctx-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
+.ob-ctx-colors {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+}
+.ob-editor {
+  border: 1px solid var(--border);
+  border-radius: 0 0 9px 9px;
+  background: var(--bg-editor);
+  padding: 10px 12px;
+  min-height: 260px;
+}
+.ob-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 1px 6px 1px 2px;
+  border-radius: 6px;
+  position: relative;
+  min-height: 30px;
+}
+.ob-row:hover {
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+.ob-row.drop-before::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+.ob-row.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+.ob-row.drop-inside {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.ob-guide {
+  flex: none;
+  width: 20px;
+  align-self: stretch;
+  border-left: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  margin-left: 2px;
+}
+.ob-bullet {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 7px 8px 0 4px;
+  border-radius: 50%;
+  border: 2px solid var(--text-dim);
+  background: transparent;
+  cursor: grab;
+  padding: 0;
+  position: relative;
+}
+.ob-bullet:active {
+  cursor: grabbing;
+}
+.ob-bullet.has-children {
+  border-color: var(--accent);
+}
+.ob-bullet.folded {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.ob-bullet.folded::after {
+  content: '▸';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 9px;
+  line-height: 1;
+}
+.ob-text {
+  flex: 1;
+  outline: none;
+  min-height: 28px;
+  padding: 3px 4px;
+  line-height: 1.8;
+  font-size: 14.5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--editor-font);
+  color: var(--text);
+}
+.ob-text:empty::before {
+  content: attr(data-ph);
+  color: var(--text-dim);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.ob-ops {
+  display: none;
+  flex: none;
+  margin-left: 6px;
+  margin-top: 4px;
+  gap: 2px;
+}
+.ob-row:hover .ob-ops {
+  display: inline-flex;
+}
+.ob-op {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  padding: 0;
+}
+.ob-op:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+.ob-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.ob-tip {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.ob-kind {
+  flex: none;
+  margin-left: 8px;
+  margin-top: 6px;
+  font-size: 10px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+.ob-kind.folder {
+  color: var(--accent);
+  border-color: var(--accent);
+}

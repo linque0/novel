@@ -14,6 +14,7 @@ export const useUiStore = defineStore('ui', {
     editorFont: 'song',
     fontSize: 17,
     focusMode: false,
+    dbError: false,
     autosave: { pending: 0, saving: false, lastSavedAt: 0 },
     searchOpen: false,
     statsOpen: false,

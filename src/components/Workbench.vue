@@ -15,6 +15,7 @@ import EditorPane from './EditorPane.vue'
 import OutlineCenter from './OutlineCenter.vue'
 import CharacterCenter from './CharacterCenter.vue'
 import LoreCenter from './LoreCenter.vue'
+import LoreOverview from './LoreOverview.vue'
 import SnippetCenter from './SnippetCenter.vue'
 import RightPanel from './RightPanel.vue'
 
@@ -147,7 +148,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <EditorPane v-if="work.tab === 'chapters'" />
         <OutlineCenter v-else-if="work.tab === 'outline'" />
         <CharacterCenter v-else-if="work.tab === 'characters'" />
-        <LoreCenter v-else-if="work.tab === 'lore'" />
+        <template v-else-if="work.tab === 'lore'">
+          <LoreOverview v-if="work.loreView === 'overview'" />
+          <LoreCenter v-else />
+        </template>
         <SnippetCenter v-else-if="work.tab === 'snippets'" />
       </div>
 

@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { NButton, NSelect } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import OutlineEditor from './OutlineEditor.vue'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
 
 const work = useWorkStore()
@@ -33,6 +34,12 @@ async function uploadImages() {
   }
   await work.warmUrls(ids)
 }
+
+/* 幕布式大纲：树以 JSON 存于 content，fmt 标记格式；旧文本首次编辑时自动迁移 */
+function onOutlineChange(tree) {
+  if (!l.value) return
+  work.updateLore(l.value.id, { content: JSON.stringify(tree), fmt: 'outline' })
+}
 </script>
 
 <template>
@@ -54,13 +61,9 @@ async function uploadImages() {
       style="margin-bottom: 12px"
       @update:value="(v) => work.updateLore(l.id, { tags: v })"
     />
-    <textarea
-      class="rp-textarea"
-      style="flex: 1; min-height: 260px; font-size: 15px; line-height: 2"
-      :value="l.content"
-      placeholder="在这里描述这个设定：外观、规则、历史、与其他设定的关联……"
-      @input="(e) => work.updateLore(l.id, { content: e.target.value })"
-    ></textarea>
+
+    <div class="rp-title" style="margin-bottom: 6px">内容大纲 <span style="font-weight: 400">· 幕布式编辑</span></div>
+    <OutlineEditor :lore="l" @change="onOutlineChange" />
 
     <hr class="divider" />
     <div class="rp-title">

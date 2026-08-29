@@ -4,14 +4,28 @@ import naive from 'naive-ui'
 import App from './App.vue'
 import './styles/themes.css'
 
-import { decodeText, splitTxtChapters, splitMarkdown, htmlToMd } from './services/importers'
+import { decodeText, splitTxtChapters, splitMarkdown, htmlToMd, parseLoreOutlineMd } from './services/importers'
 import { countWords } from './services/wordcount'
 import { db, uid, now } from './db/database'
-
-// 供自动化测试 / 控制台调试使用的钩子
-window.__ns = { decodeText, splitTxtChapters, splitMarkdown, htmlToMd, countWords, db, uid, now }
+import { useWorkStore } from './stores/work'
 
 const app = createApp(App)
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.use(naive)
+
+// 供自动化测试 / 控制台调试使用的钩子
+window.__ns = {
+  decodeText,
+  splitTxtChapters,
+  splitMarkdown,
+  htmlToMd,
+  parseLoreOutlineMd,
+  countWords,
+  db,
+  uid,
+  now,
+  getWork: () => useWorkStore(pinia)
+}
+
 app.mount('#app')

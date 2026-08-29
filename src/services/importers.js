@@ -286,6 +286,40 @@ export async function parseEpub(data) {
   return { chapters: chapters.length ? chapters : [{ title: opfName || '导入章节', text: '' }], coverBlob }
 }
 
+/* ================= 设定库 MD 导入解析 ================= */
+/**
+ * 标题层级 → 设定库层级：H1/H2 → 文件夹（嵌套），H3 及更深 → 条目标题，正文行 → 条目大纲内容。
+ * 返回 [{ name, children, entries: [{ title, lines }] }]
+ */
+export function parseLoreOutlineMd(text) {
+  const root = { name: '__ROOT__', children: [], entries: [] }
+  const stack = [{ level: 0, container: root }]
+  let currentEntry = null
+  for (const raw of String(text || '').split(/\r?\n/)) {
+    const hm = raw.match(/^(#{1,6})\s+(.*)$/)
+    if (hm) {
+      const level = hm[1].length
+      const title = hm[2].trim()
+      if (!title) continue
+      while (stack.length && stack[stack.length - 1].level >= level) stack.pop()
+      const parent = stack[stack.length - 1].container
+      if (level <= 2) {
+        const folder = { name: title, children: [], entries: [] }
+        parent.children.push(folder)
+        stack.push({ level, container: folder })
+        currentEntry = null
+      } else {
+        currentEntry = { title, lines: [] }
+        parent.entries.push(currentEntry)
+        stack.push({ level, container: parent })
+      }
+    } else if (currentEntry && raw.trim()) {
+      currentEntry.lines.push(raw.trim())
+    }
+  }
+  return root.children
+}
+
 /* ================= 汇总入口 ================= */
 
 export const DOC_EXTS = ['txt', 'md', 'markdown', 'docx', 'pdf', 'epub']

@@ -1,7 +1,7 @@
 {
   "name": "novel-studio",
   "productName": "小说工坊",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "本地优先的小说创作软件：正文/大纲/人物/设定一站式管理，即时自动保存",
   "private": true,
   "main": "electron/main.js",

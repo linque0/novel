@@ -8,6 +8,22 @@ import { useShelfStore } from './shelf'
 
 const urlCache = new Map()
 
+/** 设定条目检索用纯文本：幕布式大纲抽出全部节点文本 */
+function loreText(l) {
+  if (l.fmt !== 'outline') return l.content || ''
+  try {
+    const out = []
+    const walk = (n) => {
+      out.push(n.text || '')
+      ;(n.children || []).forEach(walk)
+    }
+    ;(JSON.parse(l.content || '[]') || []).forEach(walk)
+    return out.join('\n')
+  } catch {
+    return l.content || ''
+  }
+}
+
 export const useWorkStore = defineStore('work', {
   state: () => ({
     loaded: false,
@@ -24,9 +40,11 @@ export const useWorkStore = defineStore('work', {
     links: [],
     prevCounts: new Map(),
     tab: 'chapters', // chapters | outline | characters | lore | snippets
+    loreView: 'detail', // lore 视图：detail 详情 | overview 总览
     selChapterId: null,
     selCharacterId: null,
     selLoreId: null,
+    selFolderId: null,
     selSnippetId: null,
     selOutlineId: null,
     selVolumeId: null,
@@ -37,7 +55,14 @@ export const useWorkStore = defineStore('work', {
     liveVolumes: (s) => s.volumes.filter((v) => !v.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder),
     liveChapters: (s) => s.chapters.filter((c) => !c.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder),
     liveCharacters: (s) => s.characters.filter((c) => !c.deletedAt).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
-    liveLore: (s) => s.lore.filter((l) => !l.deletedAt).sort((a, b) => (a.title || '').localeCompare(b.title || '')),
+    liveLore: (s) =>
+      s.lore
+        .filter((l) => !l.deletedAt)
+        .sort((a, b) => {
+          const sa = a.sortOrder ?? 1e9
+          const sb = b.sortOrder ?? 1e9
+          return sa !== sb ? sa - sb : (a.title || '').localeCompare(b.title || '')
+        }),
     liveCategories: (s) => s.lorecats.filter((c) => !c.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder),
     liveSnippets: (s) => s.snippets.filter((x) => !x.deletedAt).sort((a, b) => b.createdAt - a.createdAt),
     activeChapter() {
@@ -355,26 +380,253 @@ export const useWorkStore = defineStore('work', {
       this.relations = this.relations.filter((r) => r.id !== id)
     },
 
-    /* ---------- 设定 ---------- */
-    addCategory(name = '新分类') {
-      const maxSort = this.liveCategories.reduce((m, c) => Math.max(m, c.sortOrder), -1)
-      const row = { id: uid(), workId: this.work.id, name, sortOrder: maxSort + 1, deletedAt: null }
+    /* ---------- 设定（文件夹式分类 + 条目） ---------- */
+    addCategory(name = '新分类', parentId = null) {
+      const siblings = this.liveCategories.filter((c) => (c.parentId || null) === (parentId || null))
+      const maxSort = siblings.reduce((m, c) => Math.max(m, c.sortOrder || 0), -1)
+      const row = { id: uid(), workId: this.work.id, name, parentId: parentId || null, sortOrder: maxSort + 1, deletedAt: null }
       this.lorecats.push(row)
       autosave.mark('lorecats', row)
       return row
     },
 
-    updateLorecat(id, name) {
+    updateLorecat(id, patch) {
       const c = this.lorecats.find((x) => x.id === id)
       if (!c) return
-      c.name = name
+      Object.assign(c, typeof patch === 'string' ? { name: patch } : patch)
       autosave.mark('lorecats', c)
     },
 
+    /** 分类子树内所有分类 id（含自身），用于防循环与级联 */
+    categorySubtreeIds(id) {
+      const ids = [id]
+      let grew = true
+      while (grew) {
+        grew = false
+        for (const c of this.liveCategories) {
+          if (ids.includes(c.parentId) && !ids.includes(c.id)) {
+            ids.push(c.id)
+            grew = true
+          }
+        }
+      }
+      return ids
+    },
+
+    /** 删除文件夹：子文件夹与条目上提到其父级（数据不丢失），文件夹本身软删除 */
     async deleteCategory(id) {
       const c = this.lorecats.find((x) => x.id === id)
       if (!c) return
+      const parent = c.parentId || null
+      for (const sub of this.liveCategories.filter((x) => x.parentId === id)) {
+        sub.parentId = parent
+        autosave.mark('lorecats', sub)
+      }
+      for (const e of this.liveLore.filter((x) => x.categoryId === id)) {
+        e.categoryId = parent
+        autosave.mark('lore', e)
+      }
       await repo.softDeleteRow('lorecats', c)
+    },
+
+    moveCategoryTo(id, newParentId) {
+      const c = this.lorecats.find((x) => x.id === id)
+      if (!c) return
+      const target = newParentId || null
+      if ((c.parentId || null) === target) return
+      if (target && this.categorySubtreeIds(id).includes(target)) return // 不能移入自己的子级
+      c.parentId = target
+      autosave.mark('lorecats', c)
+    },
+
+    moveLoreTo(loreId, categoryId) {
+      const l = this.lore.find((x) => x.id === loreId)
+      if (!l) return
+      l.categoryId = categoryId || null
+      autosave.mark('lore', l)
+    },
+
+    /** 文件夹树：分类嵌套 + 各文件夹内条目；孤儿条目归入「未分类」 */
+    categoryTreeData() {
+      const entryNode = (l) => ({ key: 'l:' + l.id, label: l.title || '未命名条目', type: 'entry', isLeaf: true })
+      const catNode = (c) => ({
+        key: 'c:' + c.id,
+        label: c.name,
+        type: 'folder',
+        isLeaf: false,
+        children: [
+          ...this.liveCategories.filter((x) => x.parentId === c.id).map(catNode),
+          ...this.liveLore.filter((l) => l.categoryId === c.id).map(entryNode)
+        ]
+      })
+      const roots = this.liveCategories.filter((c) => !c.parentId || !this.liveCategories.some((p) => p.id === c.parentId)).map(catNode)
+      const known = new Set(this.liveCategories.map((c) => c.id))
+      const orphans = this.liveLore.filter((l) => !l.categoryId || !known.has(l.categoryId))
+      if (orphans.length) {
+        roots.push({ key: 'c:none', label: '未分类', type: 'folder', isLeaf: false, pseudo: true, children: orphans.map(entryNode) })
+      }
+      return roots
+    },
+
+    /** 同文件夹内条目排序（overview 拖拽/移动用） */
+    reorderLore(entryId, dir) {
+      const l = this.lore.find((x) => x.id === entryId)
+      if (!l) return
+      const siblings = this.liveLore.filter((x) => (x.categoryId || null) === (l.categoryId || null))
+      const i = siblings.findIndex((x) => x.id === entryId)
+      const j = i + dir
+      if (j < 0 || j >= siblings.length) return
+      siblings.forEach((x, idx) => {
+        if (x.sortOrder == null) x.sortOrder = idx * 1000
+      })
+      const tmp = siblings[i].sortOrder
+      siblings[i].sortOrder = siblings[j].sortOrder
+      siblings[j].sortOrder = tmp
+      autosave.mark('lore', siblings[i])
+      autosave.mark('lore', siblings[j])
+    },
+
+    /** 更新设定条目内单个大纲节点的文本（总览视图编辑） */
+    updateOutlineNodeText(loreId, nid, text) {
+      const l = this.lore.find((x) => x.id === loreId)
+      if (!l || l.fmt !== 'outline') return
+      try {
+        const t = JSON.parse(l.content || '[]')
+        const walk = (list) => {
+          for (const n of list) {
+            if (n.id === nid) {
+              n.text = text
+              return true
+            }
+            if (walk(n.children)) return true
+          }
+          return false
+        }
+        if (walk(t)) this.updateLore(loreId, { content: JSON.stringify(t) })
+      } catch {
+        /* 内容损坏时忽略 */
+      }
+    },
+
+    /** 删除设定条目内单个大纲节点 */
+    removeOutlineNode(loreId, nid) {
+      const l = this.lore.find((x) => x.id === loreId)
+      if (!l || l.fmt !== 'outline') return
+      try {
+        const t = JSON.parse(l.content || '[]')
+        const walk = (list) => {
+          const i = list.findIndex((n) => n.id === nid)
+          if (i >= 0) {
+            list.splice(i, 1)
+            return true
+          }
+          return list.some((n) => walk(n.children))
+        }
+        if (walk(t)) this.updateLore(loreId, { content: JSON.stringify(t) })
+      } catch {
+        /* ignore */
+      }
+    },
+
+    /** 在设定条目大纲中某节点后插入新节点（返回新节点 id） */
+    insertOutlineNodeAfter(loreId, nid, text = '') {
+      const l = this.lore.find((x) => x.id === loreId)
+      if (!l || l.fmt !== 'outline') return null
+      const fresh = { id: uid(), text, fold: false, children: [] }
+      try {
+        const t = JSON.parse(l.content || '[]')
+        const walk = (list) => {
+          const i = list.findIndex((n) => n.id === nid)
+          if (i >= 0) {
+            list.splice(i + 1, 0, fresh)
+            return true
+          }
+          return list.some((n) => walk(n.children))
+        }
+        if (walk(t)) {
+          this.updateLore(loreId, { content: JSON.stringify(t) })
+          return fresh.id
+        }
+      } catch {
+        /* ignore */
+      }
+      return null
+    },
+
+    /** 移动设定大纲节点到目标节点前/后（总览视图拖拽/排序） */
+    moveOutlineNodeTo(loreId, nid, targetNid, after = false) {
+      const l = this.lore.find((x) => x.id === loreId)
+      if (!l || l.fmt !== 'outline' || nid === targetNid) return
+      try {
+        const t = JSON.parse(l.content || '[]')
+        let moved = null
+        const remove = (list) => {
+          const i = list.findIndex((n) => n.id === nid)
+          if (i >= 0) {
+            moved = list.splice(i, 1)[0]
+            return true
+          }
+          return list.some((n) => remove(n.children))
+        }
+        if (!remove(t)) return
+        const insert = (list) => {
+          const i = list.findIndex((n) => n.id === targetNid)
+          if (i >= 0) {
+            list.splice(after ? i + 1 : i, 0, moved)
+            return true
+          }
+          return list.some((n) => insert(n.children))
+        }
+        if (insert(t)) this.updateLore(loreId, { content: JSON.stringify(t) })
+      } catch {
+        /* ignore */
+      }
+    },
+
+    /** 同列表内交换两个大纲节点的顺序（Alt+↑↓） */
+    moveOutlineNode(loreId, nid, dir) {
+      const l = this.lore.find((x) => x.id === loreId)
+      if (!l || l.fmt !== 'outline') return
+      try {
+        const t = JSON.parse(l.content || '[]')
+        const walk = (list) => {
+          const i = list.findIndex((n) => n.id === nid)
+          if (i >= 0) {
+            const j = i + dir
+            if (j < 0 || j >= list.length) return true
+            ;[list[i], list[j]] = [list[j], list[i]]
+            return true
+          }
+          return list.some((n) => walk(n.children))
+        }
+        if (walk(t)) this.updateLore(loreId, { content: JSON.stringify(t) })
+      } catch {
+        /* ignore */
+      }
+    },
+
+    /** 导入 MD 解析结果：folders = [{name, children, entries:[{title, lines}]}] */
+    importLoreTree(folders, parentFolderId = null) {
+      let foldersCreated = 0
+      let entriesCreated = 0
+      const walk = (list, parentId) => {
+        for (const f of list) {
+          const cat = this.addCategory(f.name || '导入文件夹', parentId)
+          foldersCreated++
+          for (const e of f.entries || []) {
+            const row = this.addLore(cat.id)
+            const lines = (e.lines || []).filter((x) => x !== null && x !== undefined)
+            const tree = lines.length
+              ? lines.map((t) => ({ id: uid(), text: String(t), fold: false, children: [] }))
+              : [{ id: uid(), text: '', fold: false, children: [] }]
+            this.updateLore(row.id, { title: e.title || '导入条目', content: JSON.stringify(tree), fmt: 'outline' })
+            entriesCreated++
+          }
+          walk(f.children || [], cat.id)
+        }
+      }
+      walk(folders || [], parentFolderId)
+      return { foldersCreated, entriesCreated }
     },
 
     addLore(categoryId = null) {
@@ -543,8 +795,9 @@ export const useWorkStore = defineStore('work', {
       }
       if (scopes.lore) {
         for (const l of this.liveLore) {
-          if (((l.title || '') + (l.content || '')).toLowerCase().includes(ql)) {
-            push({ type: 'lore', id: l.id, title: l.title, hits: grab(l.content) })
+          const body = loreText(l)
+          if (((l.title || '') + ' ' + body).toLowerCase().includes(ql)) {
+            push({ type: 'lore', id: l.id, title: l.title, hits: grab(body) })
           }
         }
       }

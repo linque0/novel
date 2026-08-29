@@ -4,6 +4,13 @@ const fs = require('fs')
 
 const isDev = !!process.env.NOVEL_STUDIO_DEV || process.argv.includes('--dev')
 
+/* 多配置支持：--profile=xxx 使用独立数据目录（测试/多开互不干扰） */
+const profileArg = process.argv.find((a) => a.startsWith('--profile='))
+const profileName = profileArg ? profileArg.split('=')[1].replace(/[^\w-]/g, '').slice(0, 32) : null
+if (profileName) {
+  app.setPath('userData', path.join(app.getPath('appData'), '小说工坊-' + profileName))
+}
+
 /** 仅放行公网 http/https 链接（拒绝本地/私有/保留地址），其余一律不在应用内打开 */
 function isPublicHttpUrl(url) {
   try {
@@ -46,7 +53,7 @@ function createWindow() {
     minWidth: 1080,
     minHeight: 680,
     backgroundColor: '#f6f2e7',
-    title: '小说工坊',
+    title: '小说工坊' + (profileName ? ' · ' + profileName : ''),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

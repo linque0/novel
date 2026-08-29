@@ -1,8 +1,9 @@
 <script setup>
 import { computed, onMounted } from 'vue'
-import { NConfigProvider, NMessageProvider, NDialogProvider, zhCN, dateZhCN, darkTheme } from 'naive-ui'
+import { NConfigProvider, NMessageProvider, NDialogProvider, NButton, zhCN, dateZhCN, darkTheme } from 'naive-ui'
 import { useUiStore } from './stores/ui'
 import { startAutosave } from './services/autosave'
+import { openDbWithRetry } from './db/database'
 import Bookshelf from './components/Bookshelf.vue'
 import Workbench from './components/Workbench.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
@@ -22,11 +23,18 @@ const overrides = computed(() => {
   return { common: { primaryColor: accent, primaryColorHover: accent, primaryColorPressed: accent, primaryColorSuppl: accent } }
 })
 
-onMounted(async () => {
+async function boot() {
+  ui.dbError = false
+  const ok = await openDbWithRetry()
+  if (!ok) {
+    ui.dbError = true
+    return
+  }
   startAutosave()
   await ui.loadPrefs()
   await shelf.refresh()
-})
+}
+onMounted(boot)
 </script>
 
 <template>
@@ -35,13 +43,23 @@ onMounted(async () => {
       <NDialogProvider>
         <PrefBridge />
         <div class="app-root" :class="'theme-' + ui.theme" :style="ui.rootStyle">
-          <Bookshelf v-if="ui.view === 'shelf'" />
-          <Workbench v-else />
-          <GlobalSearch />
-          <ImportDialog />
-          <RevisionsModal />
-          <TrashModal />
-          <StatsModal />
+          <div v-if="ui.dbError" class="empty-shelf" style="padding-top: 16vh">
+            <div class="big">数据的另一扇门被占用了</div>
+            <p>
+              本地数据库暂时无法打开——很可能是另一个「小说工坊」窗口正在运行。<br />
+              你的全部数据都安全地保存在本地，不会被覆盖。关闭其他窗口后重试即可。
+            </p>
+            <NButton type="primary" @click="boot">重试</NButton>
+          </div>
+          <template v-else>
+            <Bookshelf v-if="ui.view === 'shelf'" />
+            <Workbench v-else />
+            <GlobalSearch />
+            <ImportDialog />
+            <RevisionsModal />
+            <TrashModal />
+            <StatsModal />
+          </template>
         </div>
       </NDialogProvider>
     </NMessageProvider>
