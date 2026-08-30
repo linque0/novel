@@ -240,7 +240,12 @@ function fmt(cmd, val = null) {
 
 function addSibling(row) {
   pushUndo()
-  const r = work.mubuAdd(row.node.parentId, row.node.id, '')
+  const r = row ? work.mubuAdd(row.node.parentId, row.node.id, '') : work.mubuAdd(null, null, '')
+  commit(() => {}, 'm:' + r.id, 'start')
+}
+function createFirst() {
+  pushUndo()
+  const r = work.mubuAdd(null, null, '')
   commit(() => {}, 'm:' + r.id, 'start')
 }
 function addChild(row) {
@@ -257,7 +262,7 @@ function onEnter(row) {
   const n = row.node
   if (!n.text && !hasChildren(n) && n.parentId) {
     pushUndo()
-    work.mubuMove(n.id, 'm:' + n.parentId, 'after')
+    work.mubuMove(n.id, n.parentId, 'after')
     commit(() => {}, n.key, 'end')
     return
   }
@@ -278,7 +283,7 @@ function outdent(row) {
   const n = row.node
   if (!n.parentId) return
   pushUndo()
-  work.mubuMove(n.id, 'm:' + n.parentId, 'after')
+  work.mubuMove(n.id, n.parentId, 'after')
   commit(() => {}, n.key, 'end')
 }
 function moveRow(row, dir) {
@@ -416,12 +421,12 @@ function onBackspace(row) {
     work.mubuSetText(prev.node.id, prev.node.text, mergedHtml)
     if (row.node.children.length) {
       // 子节点上提到本层
-      for (const c of [...row.node.children].reverse()) work.mubuMove(c.id, row.node.key, 'after')
+      for (const c of [...row.node.children].reverse()) work.mubuMove(c.id, row.node.id, 'after')
     }
     work.mubuRemove(row.node.id)
     commit(() => {}, prev.node.key, 'end')
   } else if (row.node.parentId) {
-    work.mubuMove(row.node.id, 'm:' + row.node.parentId, 'after')
+    work.mubuMove(row.node.id, row.node.parentId, 'after')
     commit(() => {}, row.node.key, 'start')
   }
 }
@@ -663,6 +668,9 @@ onBeforeUnmount(() => {
       <button class="tb" title="清除格式" @mousedown.prevent @click="fmt('removeFormat')">清除</button>
       <span class="tb-sep" />
       <button class="tb" title="导入 MD / TXT（标题层级自动转为节点层级）" @click="importMd">⬆ 导入</button>
+      <span class="tb-sep" />
+      <button class="tb" title="新建同级节点" @click="addSibling(visible.find((r) => r.node.id === focusedId))">＋同级</button>
+      <button class="tb" title="新建子节点（先点击选中一个节点）" :disabled="!focusedId" @click="addChild(visible.find((r) => r.node.id === focusedId))">＋子级</button>
       <span class="ob-count">{{ nodeCount }} 节点</span>
     </div>
 
@@ -705,6 +713,11 @@ onBeforeUnmount(() => {
           <button class="ob-op" title="添加子节点" @click.stop="addChild(row)">＋</button>
           <button class="ob-op" title="删除节点" @click.stop="deleteRow(row)">✕</button>
         </span>
+      </div>
+      <div v-if="nodeCount === 0" class="empty-shelf" style="padding-top: 70px">
+        <div class="big">白纸待书</div>
+        <p>设定库还是空的——写下第一个节点，开始构建你的世界。</p>
+        <button class="btn-primary" @click="createFirst">新建第一个节点</button>
       </div>
       <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到顶层） · 选中文字后可用工具栏或右键设置格式</div>
 

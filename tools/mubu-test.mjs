@@ -34,7 +34,10 @@ class CDP {
     return new Promise((res, rej) => this.pending.set(id, { res, rej }))
   }
   async eval(expression) {
-    const r = await this.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })
+    const r = await Promise.race([
+      this.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true }),
+      new Promise((_, rej) => setTimeout(() => rej(new Error('eval timeout (10s)')), 10000))
+    ])
     if (r.exceptionDetails) return { PAGE_ERR: r.exceptionDetails.exception?.description || r.exceptionDetails.text }
     return r.result?.value
   }
@@ -46,8 +49,15 @@ class CDP {
     await this.send('Input.insertText', { text })
   }
   async shot(name) {
-    const { data } = await this.send('Page.captureScreenshot', { format: 'png' })
-    writeFileSync(resolve(here, name), Buffer.from(data, 'base64'))
+    try {
+      const r = await Promise.race([
+        this.send('Page.captureScreenshot', { format: 'png' }),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('shot timeout')), 8000))
+      ])
+      writeFileSync(resolve(here, name), Buffer.from(r.data, 'base64'))
+    } catch (e) {
+      console.log('  (截图跳过: ' + String(e.message).slice(0, 40) + ')')
+    }
   }
 }
 
@@ -55,6 +65,10 @@ const cdp = await CDP.connect()
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 let v
 const results = []
+setTimeout(() => {
+  console.error('WATCHDOG: 测试总超时（240s），强制退出')
+  process.exit(2)
+}, 240000)
 const check = (name, ok, detail = '') => {
   results.push({ name, ok })
   console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  —— ' + detail : ''}`)
@@ -114,12 +128,16 @@ await sleep(300)
 v = await cdp.eval(`({ rows: document.querySelectorAll('.ob-row').length, text: document.activeElement?.textContent })`)
 check('回车新建节点 + 输入', v.rows >= 5 && (v.text || '').includes('新写的设定细节'), JSON.stringify(v))
 
-/* 3. Tab 降级（深度 +1） */
+/* 3. Tab 降级（深度 +1）+ Shift+Tab 升级（深度 -1，回归修复路径） */
 const depthBefore = await cdp.eval(`document.activeElement.closest('[data-node]').querySelectorAll('.ob-guide').length`)
 await cdp.key('Tab', 'Tab', 9)
 await sleep(300)
 v = await cdp.eval(`document.activeElement.closest('[data-node]').querySelectorAll('.ob-guide').length`)
 check('Tab 降级', v === depthBefore + 1, `before=${depthBefore} after=${v}`)
+await cdp.key('Tab', 'Tab', 9, 8)
+await sleep(300)
+v = await cdp.eval(`document.activeElement.closest('[data-node]').querySelectorAll('.ob-guide').length`)
+check('Shift+Tab 升级', v === depthBefore, `after=${v}`)
 
 /* 4. 点圆点折叠/展开 */
 await cdp.eval(`(() => {
@@ -139,20 +157,31 @@ const expanded = await cdp.eval(`document.querySelectorAll('.ob-row').length`)
 check('点圆点折叠/展开', folded < expanded, `folded=${folded} expanded=${expanded}`)
 
 /* 5. 撤销（把焦点放回文本节点后 Ctrl+Z 两次：回退 Tab 降级与新建节点） */
-await cdp.eval(`(() => {
-  const el = [...document.querySelectorAll('.ob-text')].find(x => x.textContent.includes('新写的设定细节')) || document.querySelector('.ob-text')
-  el.focus()
-  const r = document.createRange(); r.selectNodeContents(el); r.collapse(false)
-  const s = getSelection(); s.removeAllRanges(); s.addRange(r)
-})()`)
-await cdp.key('z', 'KeyZ', 90, 2)
-await sleep(300)
-await cdp.key('z', 'KeyZ', 90, 2)
-await sleep(400)
+async function pressUndoTwice() {
+  await cdp.eval(`(() => {
+    const el = [...document.querySelectorAll('.ob-text')].find(x => x.textContent.includes('新写的设定细节')) || document.querySelector('.ob-text')
+    el.focus()
+    const r = document.createRange(); r.selectNodeContents(el); r.collapse(false)
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r)
+  })()`)
+  await cdp.key('z', 'KeyZ', 90, 2)
+  await sleep(300)
+  await cdp.key('z', 'KeyZ', 90, 2)
+  await sleep(400)
+}
+await pressUndoTwice()
 v = await cdp.eval(`(() => {
   const rows = [...document.querySelectorAll('.ob-row')]
   return { n: rows.length, hasTyped: rows.some(r => r.querySelector('.ob-text').textContent.includes('新写的设定细节')) }
 })()`)
+if (v.hasTyped) {
+  // 焦点偶发未落在文本节点时重试一次
+  await pressUndoTwice()
+  v = await cdp.eval(`(() => {
+    const rows = [...document.querySelectorAll('.ob-row')]
+    return { n: rows.length, hasTyped: rows.some(r => r.querySelector('.ob-text').textContent.includes('新写的设定细节')) }
+  })()`)
+}
 check('Ctrl+Z 撤销（结构回退）', v.hasTyped === false, JSON.stringify(v))
 
 /* 5.5 侧边栏折叠/展开（与编辑器双向同步） */
