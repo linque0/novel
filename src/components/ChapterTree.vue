@@ -1,10 +1,25 @@
 <script setup>
 import { computed, h, ref } from 'vue'
-import { NTree, NButton, NModal, NInput, NPopconfirm } from 'naive-ui'
+import { NTree, NButton, NModal, NInput, NPopconfirm, NDropdown } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { autosave } from '../services/autosave'
 
 const work = useWorkStore()
+
+/* 树数据：书签章节加 ★ 前缀 */
+const treeData = computed(() => {
+  const marked = (key) => {
+    if (!key || key.slice(0, 2) !== 'c:') return false
+    return work.isChapterBookmarked(key.slice(2))
+  }
+  return work.treeData.map((v) => ({
+    ...v,
+    children: (v.children || []).map((c) => ({
+      ...c,
+      label: (marked(c.key) ? '★ ' : '') + c.label
+    }))
+  }))
+})
 
 const selectedKeys = computed(() => {
   const keys = []
@@ -13,7 +28,7 @@ const selectedKeys = computed(() => {
 })
 const selNode = ref(null)
 
-function onSelect(keys, opt) {
+function onSelect(keys) {
   const key = keys[keys.length - 1]
   if (!key) return
   const [kind, id] = [key.slice(0, 1), key.slice(2)]
@@ -76,8 +91,7 @@ function addCh() {
 function moveSel(dir) {
   if (selNode.value?.type === 'chapter') work.moveChapter(selNode.value.id, dir)
 }
-function openRename() {
-  const s = selNode.value
+function openRenameById(s) {
   if (!s) return
   if (s.type === 'volume') {
     const v = work.volumes.find((x) => x.id === s.id)
@@ -87,6 +101,9 @@ function openRename() {
     rename.value = { show: true, kind: 'chapter', id: s.id, value: c?.title || '' }
   }
 }
+function openRename() {
+  openRenameById(selNode.value)
+}
 function confirmRename() {
   const r = rename.value
   if (!r.value.trim()) return
@@ -94,12 +111,62 @@ function confirmRename() {
   else work.renameChapter(r.id, r.value.trim())
   rename.value.show = false
 }
-async function delSel() {
-  const s = selNode.value
+async function delById(s) {
   if (!s) return
   if (s.type === 'volume') await work.deleteVolume(s.id)
   else await work.deleteChapter(s.id)
-  selNode.value = null
+  if (selNode.value?.id === s.id) selNode.value = null
+}
+async function delSel() {
+  await delById(selNode.value)
+}
+
+/* ---------- 右键快捷栏 ---------- */
+const ctx = ref({ show: false, x: 0, y: 0, kind: null, id: null, bookmarked: false })
+
+function nodeProps({ option }) {
+  return {
+    onContextmenu: (e) => {
+      e.preventDefault()
+      const id = option.key.slice(2)
+      onSelect([option.key], option)
+      ctx.value = {
+        show: true,
+        x: e.clientX,
+        y: e.clientY,
+        kind: option.type,
+        id,
+        bookmarked: option.type === 'chapter' ? work.isChapterBookmarked(id) : false
+      }
+    }
+  }
+}
+function closeCtx() {
+  ctx.value.show = false
+}
+const ctxOptions = computed(() => {
+  if (ctx.value.kind === 'chapter') {
+    return [
+      { label: ctx.value.bookmarked ? '★ 移除书签' : '☆ 收藏书签', key: 'bm' },
+      { label: '重命名', key: 'rename' },
+      { label: '删除（进回收站）', key: 'del' }
+    ]
+  }
+  return [
+    { label: '重命名卷', key: 'rename' },
+    { label: '删除卷（章目上提）', key: 'del' }
+  ]
+})
+function onCtxSelect(key) {
+  const c = ctx.value
+  closeCtx()
+  if (key === 'bm') {
+    const added = work.toggleChapterBookmark(c.id)
+    window.$msg?.success(added ? '已加入书签' : '已移除书签')
+    return
+  }
+  if (key === 'rename') return openRenameById({ type: c.kind, id: c.id })
+  if (key === 'del') return delById({ type: c.kind, id: c.id })
 }
 
 const rename = ref({ show: false, kind: 'chapter', id: null, value: '' })
@@ -122,17 +189,29 @@ const rename = ref({ show: false, kind: 'chapter', id: null, value: '' })
     </div>
     <div class="side-list">
       <NTree
-        :data="work.treeData"
+        :data="treeData"
         block-line
         draggable
         default-expand-all
         :selected-keys="selectedKeys"
         :allow-drop="allowDrop"
         :render-suffix="renderSuffix"
+        :node-props="nodeProps"
         @update:selected-keys="onSelect"
         @drop="onDrop"
       />
     </div>
+
+    <NDropdown
+      trigger="manual"
+      :show="ctx.show"
+      :x="ctx.x"
+      :y="ctx.y"
+      :options="ctxOptions"
+      placement="bottom-start"
+      @select="onCtxSelect"
+      @clickoutside="closeCtx"
+    />
 
     <NModal v-model:show="rename.show" preset="dialog" :title="rename.kind === 'volume' ? '重命名卷' : '重命名章节'">
       <NInput v-model:value="rename.value" placeholder="名称" @keyup.enter="confirmRename" />

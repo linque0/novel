@@ -1,6 +1,6 @@
 <script setup>
-import { computed, onMounted, onBeforeUnmount } from 'vue'
-import { NButton, NSelect, NDropdown, useMessage } from 'naive-ui'
+import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { NButton, NSelect, NDropdown, NModal, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { useShelfStore } from '../stores/shelf'
@@ -22,6 +22,22 @@ const work = useWorkStore()
 const ui = useUiStore()
 const shelf = useShelfStore()
 const msg = useMessage()
+
+/* ---------- 书签（章节快捷收藏） ---------- */
+const bookmarkOptions = computed(() => {
+  const list = work.liveBookmarks
+  return list.length
+    ? list.map((b) => ({ label: '📄 ' + (b.title || '（空）'), key: b.id }))
+    : [{ label: '暂无书签（章节右键或工具栏 ☆ 添加）', key: 'none', disabled: true }]
+})
+function onBookmarkSelect(key) {
+  const b = work.bookmarks.find((x) => x.id === key)
+  if (!b) return
+  work.tab = 'chapters'
+  work.selChapterId = b.targetId
+  const c = work.chapters.find((x) => x.id === b.targetId)
+  if (c) work.selVolumeId = c.volumeId
+}
 
 const tabs = [
   { key: 'chapters', icon: '文', label: '正文' },
@@ -106,6 +122,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </NDropdown>
       <NButton size="small" @click="ui.statsOpen = true">统计</NButton>
       <NButton size="small" @click="ui.trashOpen = true">回收站</NButton>
+      <NDropdown trigger="click" :options="bookmarkOptions" @select="onBookmarkSelect">
+        <NButton size="small">🔖 书签</NButton>
+      </NDropdown>
       <NSelect
         size="small"
         :value="ui.theme"

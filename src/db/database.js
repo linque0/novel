@@ -56,6 +56,26 @@ db.version(3).stores({
   appconfig: 'key'
 })
 
+// v4：书签（章节快捷收藏）
+db.version(4).stores({
+  works: 'id, updatedAt, deletedAt',
+  volumes: 'id, workId, [workId+sortOrder]',
+  chapters: 'id, workId, volumeId, [workId+deletedAt], updatedAt',
+  outlines: 'id, workId, level, refId, [workId+level]',
+  characters: 'id, workId, [workId+deletedAt], name',
+  relations: 'id, workId, fromId, toId',
+  lorecats: 'id, workId, parentId, [workId+sortOrder]',
+  lore: 'id, workId, categoryId, [workId+deletedAt]',
+  mubu: 'id, workId, parentId, [workId+deletedAt], [workId+parentId]',
+  snippets: 'id, workId, [workId+deletedAt], createdAt',
+  assets: 'id, workId, [workId+deletedAt]',
+  links: 'id, [entityType+entityId], assetId',
+  revisions: 'id, [entityType+entityId], createdAt',
+  wordlog: 'id, date, workId, [workId+date], [date+chapterId]',
+  appconfig: 'key',
+  bookmarks: 'id, workId, targetId, [workId+targetId]'
+})
+
 export const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()

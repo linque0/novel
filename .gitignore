@@ -1,8 +1,11 @@
 node_modules
 dist
 release
+release2
 .mimosa
 *.log
-release2
 app
-软件
+软件*
+软件-0.3.1-r3
+软件-0.3.2
+软件-0.4.0

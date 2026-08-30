@@ -1,4 +1,4 @@
-/* 拆分定位：树★ / 工具栏★ 两段各自执行 */
+/* 测试 profile 种子：作品 + 卷 + 章节（幂等） */
 const PORT = 9222
 
 class CDP {
@@ -31,17 +31,23 @@ class CDP {
   }
   async eval(expression) {
     const r = await this.send('Runtime.evaluate', { expression, returnByValue: true, awaitPromise: true })
-    if (r.exceptionDetails) return { PAGE_ERR: String(r.exceptionDetails.exception?.description).slice(0, 140) }
+    if (r.exceptionDetails) return { PAGE_ERR: r.exceptionDetails.exception?.description || r.exceptionDetails.text }
     return r.result?.value
   }
 }
 
 const cdp = await CDP.connect()
-
-const q = (expr) => cdp.eval(`(() => { try { return JSON.stringify((() => { ${expr} })()) } catch (e) { return 'THROW: ' + e.message } })()`)
-
-console.log('A tree some:', await q(`return [...document.querySelectorAll('.n-tree-node')].some(n => n.textContent.includes('★'))`))
-console.log('B toolbar:', await q(`const els = [...document.querySelectorAll('.editor-toolbar .tb')]; return { n: els.length, titles: els.map(b => b.title || b.textContent.trim()) }`))
-console.log('C toolbar star:', await q(`return [...document.querySelectorAll('.editor-toolbar .tb')].some(b => b.textContent.trim() === '★' && b.className.includes('on'))`))
-console.log('D editor:', await q(`const ed = window.__ns.editor; return { has: !!ed, sel: ed && ed.state.selection.from + '-' + ed.state.selection.to }`))
+const v = await cdp.eval(`(async () => {
+  const { db, uid, now } = window.__ns
+  if ((await db.works.toArray()).length) return 'has'
+  const t = now()
+  const workId = uid()
+  await db.works.add({ id: workId, title: '星尘旅人', author: '', genre: '科幻', status: '连载', intro: '', createdAt: t, updatedAt: t, deletedAt: null })
+  await db.outlines.add({ id: uid(), workId, level: 'master', refId: workId, content: '', createdAt: t, updatedAt: t, deletedAt: null })
+  const volId = uid()
+  await db.volumes.add({ id: volId, workId, title: '第一卷', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
+  await db.chapters.add({ id: uid(), workId, volumeId: volId, title: '第一章 · 初雪', content: '<p>穹顶大厅的钟声在雾中回荡。</p>', wordCount: 13, status: 'draft', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
+  return 'seeded'
+})()`)
+console.log(v)
 process.exit(0)

@@ -39,6 +39,7 @@ export const useWorkStore = defineStore('work', {
     assets: [],
     links: [],
     mubu: [],
+    bookmarks: [],
     prevCounts: new Map(),
     tab: 'chapters', // chapters | outline | characters | lore | snippets
     loreView: 'detail', // lore 视图：detail 详情 | overview 总览
@@ -55,6 +56,11 @@ export const useWorkStore = defineStore('work', {
   getters: {
     liveVolumes: (s) => s.volumes.filter((v) => !v.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder),
     liveChapters: (s) => s.chapters.filter((c) => !c.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder),
+    liveBookmarks: (s) =>
+      s.bookmarks
+        .filter((b) => !b.deletedAt)
+        .map((b) => ({ ...b, title: s.chapters.find((c) => c.id === b.targetId && !c.deletedAt)?.title || '' }))
+        .filter((b) => b.title),
     liveCharacters: (s) => s.characters.filter((c) => !c.deletedAt).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
     liveLore: (s) =>
       s.lore
@@ -119,6 +125,7 @@ export const useWorkStore = defineStore('work', {
       this.links = b.links
       await this.migrateMubu(workId)
       this.mubu = await db.mubu.where('workId').equals(workId).toArray()
+      this.bookmarks = await db.bookmarks.where('workId').equals(workId).toArray()
       this.prevCounts = new Map(this.liveChapters.map((c) => [c.id, c.wordCount || 0]))
       installWordLogHook(this.prevCounts)
       this.tab = 'chapters'
@@ -1023,6 +1030,29 @@ export const useWorkStore = defineStore('work', {
           await db.mubu.put(JSON.parse(JSON.stringify(cur)))
         }
       }
+    },
+
+    /* ---------- 书签（章节快捷收藏） ---------- */
+    isChapterBookmarked(id) {
+      return this.bookmarks.some((b) => !b.deletedAt && b.targetId === id)
+    },
+
+    toggleChapterBookmark(id) {
+      const ch = this.chapters.find((x) => x.id === id)
+      if (!ch) return false
+      const existing = this.bookmarks.find((b) => !b.deletedAt && b.targetId === id)
+      if (existing) {
+        this.bookmarks = this.bookmarks.filter((b) => b.id !== existing.id)
+        db.bookmarks.delete(existing.id)
+        return false
+      }
+      const row = {
+        id: uid(), workId: this.work.id, targetType: 'chapter', targetId: id,
+        title: ch.title || '', createdAt: now()
+      }
+      this.bookmarks.push(row)
+      db.bookmarks.put(JSON.parse(JSON.stringify(row)))
+      return true
     },
 
     /* ---------- 搜索 ---------- */

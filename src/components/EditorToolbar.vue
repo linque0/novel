@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue'
 import { NButton, NSelect, NPopover, NColorPicker } from 'naive-ui'
+import { useWorkStore } from '../stores/work'
 
 const props = defineProps({ editor: { type: Object, required: true } })
+const work = useWorkStore()
 
 const tick = ref(0)
 const onTr = () => tick.value++
@@ -35,6 +37,18 @@ function refocus() {
 function applySize(v) {
   if (!v) chain().unsetFontSize().run()
   else chain().setFontSize(Number(v)).run()
+}
+
+/* 书签（当前章节） */
+const bmOn = computed(() => {
+  const ch = work.activeChapter
+  return !!ch && work.isChapterBookmarked(ch.id)
+})
+function toggleBm() {
+  const ch = work.activeChapter
+  if (!ch) return
+  const added = work.toggleChapterBookmark(ch.id)
+  window.$msg?.success(added ? '已加入书签' : '已移除书签')
 }
 
 /* 超链接 */
@@ -164,5 +178,12 @@ const isActive = (name, attrs) => {
     <span class="tb-sep" />
 
     <button class="tb" title="清除格式" @click="chain().unsetAllMarks().clearNodes().run()">清除</button>
+    <span class="tb-sep" />
+    <button
+      class="tb"
+      :class="{ on: bmOn }"
+      :title="bmOn ? '移除书签' : '收藏本书签'"
+      @click="toggleBm"
+    >{{ bmOn ? '★' : '☆' }}</button>
   </div>
 </template>
