@@ -288,13 +288,12 @@ export async function parseEpub(data) {
 
 /* ================= 设定库 MD 导入解析 ================= */
 /**
- * 标题层级 → 设定库层级：H1/H2 → 文件夹（嵌套），H3 及更深 → 条目标题，正文行 → 条目大纲内容。
- * 返回 [{ name, children, entries: [{ title, lines }] }]
+ * 幕布节点导入：H1–H6 → 对应层级节点，正文行 → 末级节点的子节点。
+ * 返回 [{ text, children }]
  */
-export function parseLoreOutlineMd(text) {
-  const root = { name: '__ROOT__', children: [], entries: [] }
-  const stack = [{ level: 0, container: root }]
-  let currentEntry = null
+export function parseMubuMd(text) {
+  const root = { children: [] }
+  const stack = [{ level: 0, node: root }]
   for (const raw of String(text || '').split(/\r?\n/)) {
     const hm = raw.match(/^(#{1,6})\s+(.*)$/)
     if (hm) {
@@ -302,19 +301,11 @@ export function parseLoreOutlineMd(text) {
       const title = hm[2].trim()
       if (!title) continue
       while (stack.length && stack[stack.length - 1].level >= level) stack.pop()
-      const parent = stack[stack.length - 1].container
-      if (level <= 2) {
-        const folder = { name: title, children: [], entries: [] }
-        parent.children.push(folder)
-        stack.push({ level, container: folder })
-        currentEntry = null
-      } else {
-        currentEntry = { title, lines: [] }
-        parent.entries.push(currentEntry)
-        stack.push({ level, container: parent })
-      }
-    } else if (currentEntry && raw.trim()) {
-      currentEntry.lines.push(raw.trim())
+      const n = { text: title, children: [] }
+      stack[stack.length - 1].node.children.push(n)
+      stack.push({ level, node: n })
+    } else if (raw.trim()) {
+      stack[stack.length - 1].node.children.push({ text: raw.trim(), children: [] })
     }
   }
   return root.children

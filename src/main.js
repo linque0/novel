@@ -4,7 +4,7 @@ import naive from 'naive-ui'
 import App from './App.vue'
 import './styles/themes.css'
 
-import { decodeText, splitTxtChapters, splitMarkdown, htmlToMd, parseLoreOutlineMd } from './services/importers'
+import { decodeText, splitTxtChapters, splitMarkdown, htmlToMd, parseMubuMd } from './services/importers'
 import { countWords } from './services/wordcount'
 import { db, uid, now } from './db/database'
 import { useWorkStore } from './stores/work'
@@ -20,7 +20,7 @@ window.__ns = {
   splitTxtChapters,
   splitMarkdown,
   htmlToMd,
-  parseLoreOutlineMd,
+  parseMubuMd,
   countWords,
   db,
   uid,

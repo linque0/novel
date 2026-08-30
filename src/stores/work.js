@@ -38,6 +38,7 @@ export const useWorkStore = defineStore('work', {
     snippets: [],
     assets: [],
     links: [],
+    mubu: [],
     prevCounts: new Map(),
     tab: 'chapters', // chapters | outline | characters | lore | snippets
     loreView: 'detail', // lore 视图：detail 详情 | overview 总览
@@ -116,6 +117,8 @@ export const useWorkStore = defineStore('work', {
       this.snippets = b.snippets
       this.assets = b.assets
       this.links = b.links
+      await this.migrateMubu(workId)
+      this.mubu = await db.mubu.where('workId').equals(workId).toArray()
       this.prevCounts = new Map(this.liveChapters.map((c) => [c.id, c.wordCount || 0]))
       installWordLogHook(this.prevCounts)
       this.tab = 'chapters'
@@ -737,7 +740,8 @@ export const useWorkStore = defineStore('work', {
       return {
         chapters: this.chapters.filter((c) => c.deletedAt),
         characters: this.characters.filter((c) => c.deletedAt),
-        lore: this.lore.filter((l) => l.deletedAt),
+        lore: [],
+        mubu: this.mubu.filter((n) => n.deletedAt),
         snippets: this.snippets.filter((s) => s.deletedAt)
       }
     },
@@ -749,6 +753,276 @@ export const useWorkStore = defineStore('work', {
     async purgeItem(table, row) {
       await repo.purgeRow(table, row)
       this[table] = this[table].filter((x) => x.id !== row.id)
+    },
+
+    /* ---------- 幕布节点体系（设定库） ---------- */
+
+    /**
+     * 旧「分类/条目」数据一次性迁移为幕布节点：分类→节点（保留嵌套），
+     * 条目标题→节点，其大纲/正文→子节点。迁移后删除旧行。
+     */
+    async migrateMubu(workId) {
+      const flagKey = 'mubu-mig:' + workId
+      const flag = await db.appconfig.get(flagKey)
+      if (flag) return
+      const cats = (await db.lorecats.where('workId').equals(workId).toArray())
+        .filter((c) => !c.deletedAt)
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+      const lores = (await db.lore.where('workId').equals(workId).toArray()).filter((l) => !l.deletedAt)
+      if (cats.length || lores.length) {
+        const catMap = new Map()
+        let order = 0
+        for (const c of cats) {
+          const id = uid()
+          catMap.set(c.id, id)
+          await db.mubu.add({
+            id, workId, parentId: c.parentId ? catMap.get(c.parentId) || null : null,
+            sortOrder: order++ * 1000, text: c.name || '未命名分类', html: null, fold: false,
+            deletedAt: null, createdAt: now(), updatedAt: now()
+          })
+        }
+        const fromTextLines = (text) =>
+          String(text || '').split('\n').filter((x) => x.trim()).map((x) => ({ text: x.trim() }))
+        for (const l of lores) {
+          const id = uid()
+          const pid = l.categoryId ? catMap.get(l.categoryId) || null : null
+          await db.mubu.add({
+            id, workId, parentId: pid, sortOrder: order++ * 1000,
+            text: l.title || '未命名条目', html: null, fold: false,
+            deletedAt: null, createdAt: now(), updatedAt: now()
+          })
+          let outline = []
+          if (l.fmt === 'outline') {
+            try { outline = JSON.parse(l.content || '[]') } catch { outline = [] }
+          } else if ((l.content || '').trim()) {
+            outline = fromTextLines(l.content).map((x) => ({ ...x, children: [] }))
+          }
+          let childOrder = 0
+          const walkAdd = async (list, parent) => {
+            for (const n of list) {
+              const cid = uid()
+              await db.mubu.add({
+                id: cid, workId, parentId: parent, sortOrder: childOrder++ * 1000,
+                text: n.text || '', html: n.html || null, fold: !!n.fold,
+                deletedAt: null, createdAt: now(), updatedAt: now()
+              })
+              await walkAdd(n.children || [], cid)
+            }
+          }
+          await walkAdd(outline, id)
+        }
+        await db.lore.where('workId').equals(workId).delete()
+        await db.lorecats.where('workId').equals(workId).delete()
+      }
+      await db.appconfig.put({ key: flagKey, value: 1 })
+    },
+
+    liveMubu() {
+      return this.mubu
+        .filter((n) => !n.deletedAt)
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+    },
+
+    mubuChildren(parentId) {
+      return this.liveMubu().filter((n) => (n.parentId || null) === (parentId || null))
+    },
+
+    mubuAdd(parentId, afterId = null, text = '', html = null) {
+      const siblings = this.mubuChildren(parentId)
+      const row = {
+        id: uid(), workId: this.work.id, parentId: parentId || null,
+        sortOrder: 0, text, html, fold: false, deletedAt: null,
+        createdAt: now(), updatedAt: now()
+      }
+      if (afterId) {
+        const i = siblings.findIndex((s) => s.id === afterId)
+        row.sortOrder = i >= 0 ? siblings[i].sortOrder + 500 : siblings.length * 1000
+        this.mubu.push(row)
+        this.mubuNormalize(parentId)
+      } else {
+        row.sortOrder = siblings.reduce((m, s) => Math.max(m, s.sortOrder || 0), -1000) + 1000
+        this.mubu.push(row)
+      }
+      autosave.mark('mubu', row)
+      return row
+    },
+
+    mubuAddTree(parentId, afterId, treeNodes) {
+      // 幕布顺序（DFS）扁平插入：栈记录每层的父节点
+      const flat = []
+      const walk = (list, depth) => {
+        for (const n of list) {
+          flat.push({ depth, text: n.text || '', html: n.html || null, fold: !!n.fold })
+          walk(n.children || [], depth + 1)
+        }
+      }
+      walk(treeNodes || [], 0)
+      const stack = [parentId || null]
+      let prevId = afterId
+      let prevDepth = 0
+      const created = []
+      for (const item of flat) {
+        stack.length = item.depth + 1
+        const parent = stack[item.depth] != null ? stack[item.depth] : stack[stack.length - 1]
+        const sameParent = prevDepth === item.depth
+        const r = this.mubuAdd(parent, sameParent ? prevId : null, item.text, item.html)
+        if (item.fold) {
+          r.fold = true
+          autosave.mark('mubu', r)
+        }
+        stack[item.depth] = r.id
+        created.push(r)
+        prevId = r.id
+        prevDepth = item.depth
+      }
+      return created[0]
+    },
+
+    mubuNormalize(parentId) {
+      const siblings = this.mubuChildren(parentId)
+      siblings.forEach((s, i) => {
+        if (s.sortOrder !== i * 1000) {
+          s.sortOrder = i * 1000
+          autosave.mark('mubu', s)
+        }
+      })
+    },
+
+    mubuSetText(id, text, html = undefined) {
+      const n = this.mubu.find((x) => x.id === id)
+      if (!n) return
+      n.text = text
+      if (html !== undefined) n.html = html
+      autosave.mark('mubu', n)
+    },
+
+    mubuToggleFold(id) {
+      const n = this.mubu.find((x) => x.id === id)
+      if (!n) return
+      n.fold = !n.fold
+      autosave.mark('mubu', n)
+    },
+
+    mubuFoldAll(v) {
+      for (const n of this.liveMubu()) {
+        if (!this.mubuChildren(n.id).length) continue
+        if (n.fold !== v) {
+          n.fold = v
+          autosave.mark('mubu', n)
+        }
+      }
+    },
+
+    mubuDescendants(id) {
+      const out = []
+      const walk = (pid) => this.mubuChildren(pid).forEach((n) => (out.push(n), walk(n.id)))
+      walk(id)
+      return out
+    },
+
+    mubuMove(id, targetId, zone) {
+      if (id === targetId) return
+      if (this.mubuDescendants(id).some((n) => n.id === targetId)) return
+      const n = this.mubu.find((x) => x.id === id)
+      const t = this.mubu.find((x) => x.id === targetId)
+      if (!n || !t) return
+      if (zone === 'inside') {
+        const oldParent = n.parentId
+        n.parentId = t.id
+        autosave.mark('mubu', n)
+        this.mubuNormalize(t.id)
+        if (oldParent !== (t.id)) this.mubuNormalize(oldParent)
+      } else {
+        const targetParent = t.parentId || null
+        const wasParent = n.parentId
+        n.parentId = targetParent
+        const siblings = this.mubuChildren(targetParent)
+        const ti = siblings.findIndex((s) => s.id === targetId)
+        siblings.splice(ti + (zone === 'after' ? 1 : 0), 0, n)
+        siblings.forEach((s, i) => {
+          if (s.sortOrder !== i * 1000) {
+            s.sortOrder = i * 1000
+            autosave.mark('mubu', s)
+          }
+        })
+        if (wasParent !== targetParent) this.mubuNormalize(wasParent)
+      }
+    },
+
+    mubuMoveOrder(id, dir) {
+      const n = this.mubu.find((x) => x.id === id)
+      if (!n) return
+      const siblings = this.mubuChildren(n.parentId)
+      const i = siblings.findIndex((s) => s.id === id)
+      const j = i + dir
+      if (j < 0 || j >= siblings.length) return
+      const tmp = siblings[i].sortOrder
+      siblings[i].sortOrder = siblings[j].sortOrder
+      siblings[j].sortOrder = tmp
+      autosave.mark('mubu', siblings[i])
+      autosave.mark('mubu', siblings[j])
+    },
+
+    mubuRemove(id) {
+      const all = [this.mubu.find((x) => x.id === id), ...this.mubuDescendants(id)].filter(Boolean)
+      const t = now()
+      for (const n of all) {
+        n.deletedAt = t
+        autosave.mark('mubu', n)
+      }
+    },
+
+    mubuRestore(id) {
+      const all = [this.mubu.find((x) => x.id === id), ...this.mubuDescendants(id)].filter(Boolean)
+      for (const n of all) {
+        n.deletedAt = null
+        autosave.mark('mubu', n)
+      }
+    },
+
+    async mubuPurge(id) {
+      const all = [id, ...this.mubuDescendants(id).map((n) => n.id)]
+      await db.mubu.bulkDelete(all)
+      this.mubu = this.mubu.filter((n) => !all.includes(n.id))
+    },
+
+    /** 撤销/重做：用快照同步整棵树（增/删/改差异落库） */
+    async mubuSyncTree(flatNodes) {
+      const current = new Map(this.mubu.map((n) => [n.id, n]))
+      const want = new Map(flatNodes.map((n) => [n.id, n]))
+      const t = now()
+      for (const [id, w] of want) {
+        const cur = current.get(id)
+        if (!cur) {
+          const row = {
+            id, workId: this.work.id, parentId: w.parentId || null, sortOrder: w.sortOrder || 0,
+            text: w.text || '', html: w.html ?? null, fold: !!w.fold, deletedAt: null,
+            createdAt: t, updatedAt: t
+          }
+          this.mubu.push(row)
+          await db.mubu.put(JSON.parse(JSON.stringify(row)))
+        } else if (
+          cur.parentId !== (w.parentId || null) || cur.sortOrder !== w.sortOrder ||
+          cur.text !== (w.text || '') || (cur.html ?? null) !== (w.html ?? null) ||
+          !!cur.fold !== !!w.fold || !!cur.deletedAt !== !!w.deletedAt
+        ) {
+          cur.parentId = w.parentId || null
+          cur.sortOrder = w.sortOrder || 0
+          cur.text = w.text || ''
+          cur.html = w.html ?? null
+          cur.fold = !!w.fold
+          cur.deletedAt = w.deletedAt ?? null
+          cur.updatedAt = t
+          await db.mubu.put(JSON.parse(JSON.stringify(cur)))
+        }
+      }
+      for (const [id, cur] of current) {
+        if (!want.has(id) && !cur.deletedAt) {
+          cur.deletedAt = t
+          cur.updatedAt = t
+          await db.mubu.put(JSON.parse(JSON.stringify(cur)))
+        }
+      }
     },
 
     /* ---------- 搜索 ---------- */
@@ -794,10 +1068,9 @@ export const useWorkStore = defineStore('work', {
         }
       }
       if (scopes.lore) {
-        for (const l of this.liveLore) {
-          const body = loreText(l)
-          if (((l.title || '') + ' ' + body).toLowerCase().includes(ql)) {
-            push({ type: 'lore', id: l.id, title: l.title, hits: grab(body) })
+        for (const n of this.liveMubu()) {
+          if ((n.text || '').toLowerCase().includes(ql)) {
+            push({ type: 'lore', id: n.id, title: (n.text || '（空）').slice(0, 24), hits: grab(n.text) })
           }
         }
       }
@@ -816,8 +1089,10 @@ export const useWorkStore = defineStore('work', {
         const c = this.chapters.find((x) => x.id === id)
         if (c) this.selVolumeId = c.volumeId
       }
+      if (type === 'lore') {
+        useUiStore().loreFocusId = id
+      }
       if (type === 'characters') this.selCharacterId = id
-      if (type === 'lore') this.selLoreId = id
       if (type === 'snippets') this.selSnippetId = id
       useUiStore().searchOpen = false
     },

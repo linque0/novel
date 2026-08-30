@@ -981,6 +981,34 @@ body,
   font-size: 11px;
   color: var(--text-dim);
 }
+.ob-flash {
+  animation: obflash 1.6s ease;
+}
+@keyframes obflash {
+  0%,
+  55% {
+    background: color-mix(in srgb, var(--accent) 24%, transparent);
+  }
+  100% {
+    background: transparent;
+  }
+}
+.ob-appear {
+  animation: obappear 0.28s ease;
+}
+@keyframes obappear {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.ob-row {
+  transition: background 0.15s;
+}
 .ob-kind {
   flex: none;
   margin-left: 8px;

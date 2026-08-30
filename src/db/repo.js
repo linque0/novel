@@ -9,7 +9,7 @@ import { htmlToMd, htmlToPlain } from '../services/importers'
 export async function loadWorkBundle(workId) {
   const [
     works, volumes, chapters, outlines, characters, relations,
-    lorecats, lore, snippets, assetRows, links
+    lorecats, lore, snippets, assetRows, links, mubu
   ] = await Promise.all([
     db.works.get(workId),
     db.volumes.where('workId').equals(workId).toArray(),
@@ -21,11 +21,12 @@ export async function loadWorkBundle(workId) {
     db.lore.where('workId').equals(workId).toArray(),
     db.snippets.where('workId').equals(workId).toArray(),
     db.assets.where('workId').equals(workId).toArray(),
-    db.links.toArray()
+    db.links.toArray(),
+    db.mubu.where('workId').equals(workId).toArray()
   ])
   // 资产只保留元信息，blob 按需读取，避免大图全部驻留内存
   const assets = assetRows.map(({ blob, ...meta }) => meta)
-  return { work: works, volumes, chapters, outlines, characters, relations, lorecats, lore, snippets, assets, links }
+  return { work: works, volumes, chapters, outlines, characters, relations, lorecats, lore, snippets, assets, links, mubu }
 }
 
 export async function listWorks() {
@@ -162,7 +163,7 @@ export async function removeLink(linkId) {
 /* ---- 备份 / 恢复 ---- */
 
 export async function exportBackupJson() {
-  const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'snippets', 'links', 'wordlog', 'appconfig']
+  const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'snippets', 'links', 'wordlog', 'appconfig']
   const dump = { version: 1, exportedAt: now(), assets: [], data: {} }
   for (const t of tables) dump.data[t] = await db.table(t).toArray()
   const assetRows = await db.assets.toArray()

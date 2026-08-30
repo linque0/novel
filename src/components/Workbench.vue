@@ -9,13 +9,11 @@ import { pickFiles } from '../services/fileio'
 import ChapterTree from './ChapterTree.vue'
 import OutlineList from './OutlineList.vue'
 import CharacterList from './CharacterList.vue'
-import LoreList from './LoreList.vue'
 import SnippetList from './SnippetList.vue'
 import EditorPane from './EditorPane.vue'
 import OutlineCenter from './OutlineCenter.vue'
 import CharacterCenter from './CharacterCenter.vue'
-import LoreCenter from './LoreCenter.vue'
-import LoreOverview from './LoreOverview.vue'
+import MubuView from './MubuView.vue'
 import SnippetCenter from './SnippetCenter.vue'
 import RightPanel from './RightPanel.vue'
 
@@ -136,11 +134,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </div>
       </div>
 
-      <div v-if="!ui.focusMode" class="side-panel">
+      <div v-if="!ui.focusMode && work.tab !== 'lore'" class="side-panel">
         <ChapterTree v-if="work.tab === 'chapters'" />
         <OutlineList v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
-        <LoreList v-else-if="work.tab === 'lore'" />
         <SnippetList v-else-if="work.tab === 'snippets'" />
       </div>
 
@@ -149,8 +146,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <OutlineCenter v-else-if="work.tab === 'outline'" />
         <CharacterCenter v-else-if="work.tab === 'characters'" />
         <template v-else-if="work.tab === 'lore'">
-          <LoreOverview v-if="work.loreView === 'overview'" />
-          <LoreCenter v-else />
+          <MubuView />
         </template>
         <SnippetCenter v-else-if="work.tab === 'snippets'" />
       </div>

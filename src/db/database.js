@@ -37,6 +37,25 @@ db.version(2).stores({
   appconfig: 'key'
 })
 
+// v3：设定模块改为幕布式统一节点树（取消文件夹/条目二分，任意节点平权）
+db.version(3).stores({
+  works: 'id, updatedAt, deletedAt',
+  volumes: 'id, workId, [workId+sortOrder]',
+  chapters: 'id, workId, volumeId, [workId+deletedAt], updatedAt',
+  outlines: 'id, workId, level, refId, [workId+level]',
+  characters: 'id, workId, [workId+deletedAt], name',
+  relations: 'id, workId, fromId, toId',
+  lorecats: 'id, workId, parentId, [workId+sortOrder]',
+  lore: 'id, workId, categoryId, [workId+deletedAt]',
+  mubu: 'id, workId, parentId, [workId+deletedAt], [workId+parentId]',
+  snippets: 'id, workId, [workId+deletedAt], createdAt',
+  assets: 'id, workId, [workId+deletedAt]',
+  links: 'id, [entityType+entityId], assetId',
+  revisions: 'id, [entityType+entityId], createdAt',
+  wordlog: 'id, date, workId, [workId+date], [date+chapterId]',
+  appconfig: 'key'
+})
+
 export const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()

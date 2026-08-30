@@ -15,6 +15,7 @@ export const useUiStore = defineStore('ui', {
     fontSize: 17,
     focusMode: false,
     dbError: false,
+    loreFocusId: null,
     autosave: { pending: 0, saving: false, lastSavedAt: 0 },
     searchOpen: false,
     statsOpen: false,

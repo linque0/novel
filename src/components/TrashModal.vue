@@ -9,7 +9,7 @@ const ui = useUiStore()
 
 const items = computed(() => work.recycleItems())
 const total = computed(
-  () => items.value.chapters.length + items.value.characters.length + items.value.lore.length + items.value.snippets.length
+  () => items.value.chapters.length + items.value.characters.length + items.value.mubu.length + items.value.snippets.length
 )
 const fmt = (t) => new Date(t).toLocaleString('zh-CN')
 </script>
@@ -38,13 +38,13 @@ const fmt = (t) => new Date(t).toLocaleString('zh-CN')
           </NPopconfirm>
         </div>
       </NTabPane>
-      <NTabPane :name="'lore'" :tab="`设定 (${items.lore.length})`">
-        <div v-for="l in items.lore" :key="l.id" class="trash-row">
-          <span style="flex: 1">{{ l.title }} <span class="dim">{{ fmt(l.deletedAt) }}</span></span>
-          <NButton size="tiny" @click="work.restoreItem('lore', l)">恢复</NButton>
-          <NPopconfirm @positive-click="work.purgeItem('lore', l)">
+      <NTabPane :name="'lore'" :tab="`设定 (${items.mubu.length})`">
+        <div v-for="n in items.mubu" :key="n.id" class="trash-row">
+          <span style="flex: 1">{{ (n.text || '（空）').slice(0, 24) }} <span class="dim">{{ fmt(n.deletedAt) }}</span></span>
+          <NButton size="tiny" @click="work.mubuRestore(n.id)">恢复</NButton>
+          <NPopconfirm @positive-click="work.mubuPurge(n.id)">
             <template #trigger><NButton size="tiny" quaternary type="error">彻底删除</NButton></template>
-            彻底删除后无法恢复，确定？
+            彻底删除（含其子节点）后无法恢复，确定？
           </NPopconfirm>
         </div>
       </NTabPane>
