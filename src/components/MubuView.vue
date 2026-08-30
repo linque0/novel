@@ -517,6 +517,7 @@ function countTree(list) {
 }
 
 /* ---------- 右键菜单 ---------- */
+const ctxEl = ref(null)
 function onRowCtx(row, e) {
   e.preventDefault()
   try {
@@ -594,14 +595,32 @@ function toggleCtxFold() {
 
 /* ---------- 全局事件 ---------- */
 function onWinMouseDown(e) {
-  if (ctx.open && rootEl.value && !rootEl.value.contains(e.target)) closeCtx()
+  // 点击菜单本身不关闭；点击其他任何区域（含编辑器内）都关闭
+  if (ctx.open && ctxEl.value && !ctxEl.value.contains(e.target)) closeCtx()
 }
+function onWinKeyDown(e) {
+  if (e.key === 'Escape' && ctx.open) closeCtx()
+}
+function onWinWheel() {
+  if (ctx.open) closeCtx()
+}
+
+/* 侧栏折叠/展开与编辑器双向同步 */
+watch(
+  () => ui.mubuSyncTick,
+  () => ver.value++
+)
+
 onMounted(() => {
   window.addEventListener('mousedown', onWinMouseDown, true)
+  window.addEventListener('keydown', onWinKeyDown)
+  window.addEventListener('wheel', onWinWheel, { passive: true })
   window.addEventListener('resize', closeCtx)
 })
 onBeforeUnmount(() => {
   window.removeEventListener('mousedown', onWinMouseDown, true)
+  window.removeEventListener('keydown', onWinKeyDown)
+  window.removeEventListener('wheel', onWinWheel)
   window.removeEventListener('resize', closeCtx)
   clearTimeout(expandTimer)
 })
@@ -689,7 +708,7 @@ onBeforeUnmount(() => {
       </div>
       <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到顶层） · 选中文字后可用工具栏或右键设置格式</div>
 
-      <div v-if="ctx.open" class="ob-ctx" :style="{ left: ctx.x + 'px', top: ctx.y + 'px' }" @contextmenu.prevent>
+      <div v-if="ctx.open" ref="ctxEl" class="ob-ctx" :style="{ left: ctx.x + 'px', top: ctx.y + 'px' }" @contextmenu.prevent>
         <div class="ctx-item" :class="{ disabled: !selectionText() }" @mousedown.prevent @click="doCutText()"><span>剪切</span><span class="hint">Ctrl+X</span></div>
         <div class="ctx-item" :class="{ disabled: !selectionText() }" @mousedown.prevent @click="doCopyText()"><span>复制</span><span class="hint">Ctrl+C</span></div>
         <div class="ctx-item" @mousedown.prevent @click="doPastePlain()"><span>粘贴为纯文本</span><span class="hint">Ctrl+V</span></div>

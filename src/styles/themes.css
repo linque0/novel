@@ -1022,6 +1022,32 @@ body,
   background: var(--accent);
   border-color: var(--accent);
 }
+.ob-arrow {
+  flex: none;
+  width: 16px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0;
+  margin-top: 4px;
+  margin-right: 2px;
+  line-height: 20px;
+  text-align: center;
+}
+.ob-arrow:hover {
+  color: var(--accent);
+}
+.ob-arrow.folded {
+  color: var(--accent);
+  font-weight: 700;
+}
+.ob-arrow-leaf {
+  cursor: default;
+  opacity: 0.5;
+}
 .ob-kind {
   flex: none;
   margin-left: 8px;

@@ -155,13 +155,59 @@ v = await cdp.eval(`(() => {
 })()`)
 check('Ctrl+Z 撤销（结构回退）', v.hasTyped === false, JSON.stringify(v))
 
+/* 5.5 侧边栏折叠/展开（与编辑器双向同步） */
+const sideBefore = await cdp.eval(`document.querySelectorAll('.side-item').length`)
+const editorBefore = await cdp.eval(`document.querySelectorAll('.ob-row').length`)
+await cdp.eval(`(() => {
+  const item = [...document.querySelectorAll('.side-item')].find(x => x.textContent.includes('地点'))
+  item.querySelector('.ob-arrow').click()
+})()`)
+await sleep(300)
+const sideFolded = await cdp.eval(`document.querySelectorAll('.side-item').length`)
+const editorFolded = await cdp.eval(`document.querySelectorAll('.ob-row').length`)
+await cdp.eval(`(() => {
+  const item = [...document.querySelectorAll('.side-item')].find(x => x.textContent.includes('地点'))
+  item.querySelector('.ob-arrow').click()
+})()`)
+await sleep(300)
+const sideBack = await cdp.eval(`document.querySelectorAll('.side-item').length`)
+check('侧边栏折叠/展开（双向同步）', sideFolded === 1 && editorFolded === sideFolded && sideBack === sideBefore, `side ${sideBefore}→${sideFolded}→${sideBack}, editor ${editorBefore}→${editorFolded}`)
+
+/* 5.6 右键菜单的退出方式：点外部 / Esc / 滚轮 */
+const openMenu = () =>
+  cdp.eval(`(() => {
+    const rows = [...document.querySelectorAll('.ob-row')]
+    rows[0].dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 600, clientY: 300 }))
+  })()`)
+await openMenu()
+await sleep(250)
+await cdp.eval(`document.querySelector('.brand').dispatchEvent(new MouseEvent('mousedown', { bubbles: true }))`)
+await sleep(200)
+v = await cdp.eval(`!!document.querySelector('.ob-ctx')`)
+check('右键菜单：点击菜单外区域退出', v === false, `open=${v}`)
+await openMenu()
+await sleep(250)
+await cdp.eval(`window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))`)
+await sleep(200)
+v = await cdp.eval(`!!document.querySelector('.ob-ctx')`)
+check('右键菜单：Esc 退出', v === false, `open=${v}`)
+await openMenu()
+await sleep(250)
+await cdp.eval(`window.dispatchEvent(new Event('wheel'))`)
+await sleep(200)
+v = await cdp.eval(`!!document.querySelector('.ob-ctx')`)
+check('右键菜单：滚动退出', v === false, `open=${v}`)
+
 /* 6. 侧边栏：层级展示 + 点击定位 */
 v = await cdp.eval(`({
   tree: !!document.querySelector('.side-panel .ob-dot'),
   items: [...document.querySelectorAll('.side-item')].map(x => x.textContent.trim()),
   indents: [...document.querySelectorAll('.side-item')].map(x => parseInt(x.style.paddingLeft || '6'))
 })`)
-check('侧边栏节点层级展示', v.tree && v.items.length >= 5 && v.items.includes('观测站') && v.items.includes('穹顶大厅'), JSON.stringify(v.items))
+check('侧边栏节点层级展示', (() => {
+  const items = v.items.map((x) => x.replace(/^[▾▸·]+/, '').trim())
+  return items.includes('观测站') && items.includes('穹顶大厅') && items.includes('地点')
+})(), JSON.stringify(v.items))
 check('侧边栏缩进体现层级', v.indents.some((x) => x > 6), JSON.stringify(v.indents))
 await cdp.eval(`[...document.querySelectorAll('.side-item')].find(x => x.textContent.includes('穹顶大厅')).click()`)
 await sleep(500)
