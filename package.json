@@ -9,6 +9,7 @@
     "dev": "concurrently -k -s first \"vite --host 127.0.0.1 --port 5173 --strictPort\" \"wait-on tcp:127.0.0.1:5173 && cross-env NOVEL_STUDIO_DEV=1 electron .\"",
     "build": "vite build",
     "start": "electron .",
+    "stop": "node tools/stop.mjs",
     "web": "node server.mjs --open",
     "icon": "node scripts/make-icon.mjs",
     "dist": "vite build && electron-builder --win"
