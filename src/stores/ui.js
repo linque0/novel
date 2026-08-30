@@ -16,6 +16,7 @@ export const useUiStore = defineStore('ui', {
     focusMode: false,
     dbError: false,
     loreFocusId: null,
+    mubuSelectedId: null,
     autosave: { pending: 0, saving: false, lastSavedAt: 0 },
     searchOpen: false,
     statsOpen: false,

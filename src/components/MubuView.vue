@@ -211,6 +211,7 @@ onUpdated(syncAll)
 function onTextFocus(e) {
   const row = e.currentTarget.closest('[data-node]')
   focusedId.value = row?.dataset.node || null
+  ui.mubuSelectedId = row?.dataset.node?.slice(2) || null
 }
 
 /* ---------- 编辑操作 ---------- */
@@ -522,11 +523,15 @@ function onRowCtx(row, e) {
     const range = document.caretRangeFromPoint(e.clientX, e.clientY)
     if (range && rootEl.value?.contains(range.startContainer)) {
       const sel = window.getSelection()
-      sel.removeAllRanges()
-      const r = document.createRange()
-      r.setStart(range.startContainer, range.startOffset)
-      r.collapse(true)
-      sel.addRange(r)
+      // 与正文一致：右键点落在非空选区内 → 保持选区（格式作用于选中文字）；否则光标移到右键处
+      const keep = sel.rangeCount > 0 && !sel.isCollapsed && sel.getRangeAt(0).intersectsNode(range.startContainer)
+      if (!keep) {
+        sel.removeAllRanges()
+        const r = document.createRange()
+        r.setStart(range.startContainer, range.startOffset)
+        r.collapse(true)
+        sel.addRange(r)
+      }
     }
   } catch {
     /* ignore */
@@ -537,6 +542,40 @@ function onRowCtx(row, e) {
   ctx.rowId = row.node.id
   ctx.folded = !!row.node.fold
   ctx.hasChildren = hasChildren(row.node)
+}
+function selectionText() {
+  const sel = window.getSelection()
+  return sel && !sel.isCollapsed ? sel.toString() : ''
+}
+function doCutText() {
+  const t = selectionText()
+  if (!t) return closeCtx()
+  window.native?.clipboardWriteText?.(t)
+  document.execCommand('delete')
+  syncFocusedRow()
+  closeCtx()
+  ver.value++
+}
+function doCopyText() {
+  const t = selectionText()
+  if (!t) return closeCtx()
+  window.native?.clipboardWriteText?.(t)
+  closeCtx()
+}
+async function doPastePlain() {
+  let t = ''
+  try {
+    t = (await window.native?.clipboardReadText?.()) || ''
+  } catch {
+    t = ''
+  }
+  if (t) {
+    pushUndo()
+    document.execCommand('insertText', false, t)
+    syncFocusedRow()
+  }
+  closeCtx()
+  ver.value++
 }
 function closeCtx() {
   ctx.open = false
@@ -651,14 +690,13 @@ onBeforeUnmount(() => {
       <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到顶层） · 选中文字后可用工具栏或右键设置格式</div>
 
       <div v-if="ctx.open" class="ob-ctx" :style="{ left: ctx.x + 'px', top: ctx.y + 'px' }" @contextmenu.prevent>
-        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => copyNode(visible.find((r) => r.node.id === ctx.rowId)))"><span>复制节点</span></div>
-        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => copyNode(visible.find((r) => r.node.id === ctx.rowId), true))"><span>剪切节点</span></div>
-        <div class="ctx-item" :class="{ disabled: !clip }" @mousedown.prevent @click="!clip && runCtx(() => pasteClip(false))"><span>粘贴为同级</span></div>
-        <div class="ctx-item" :class="{ disabled: !clip }" @mousedown.prevent @click="!clip && runCtx(() => pasteClip(true))"><span>粘贴为子节点</span></div>
+        <div class="ctx-item" :class="{ disabled: !selectionText() }" @mousedown.prevent @click="doCutText()"><span>剪切</span><span class="hint">Ctrl+X</span></div>
+        <div class="ctx-item" :class="{ disabled: !selectionText() }" @mousedown.prevent @click="doCopyText()"><span>复制</span><span class="hint">Ctrl+C</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="doPastePlain()"><span>粘贴为纯文本</span><span class="hint">Ctrl+V</span></div>
         <div class="ctx-sep" />
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => fmt('bold'))"><span>加粗</span><span class="hint">Ctrl+B</span></div>
-        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => fmt('italic'))"><span>斜体</span></div>
-        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => fmt('underline'))"><span>下划线</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => fmt('italic'))"><span>斜体</span><span class="hint">Ctrl+I</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => fmt('underline'))"><span>下划线</span><span class="hint">Ctrl+U</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => fmt('strikeThrough'))"><span>删除线</span></div>
         <div class="ob-ctx-colors" @mousedown.prevent>
           <span style="font-size: 11px; color: var(--text-dim)">颜色</span>
@@ -672,8 +710,13 @@ onBeforeUnmount(() => {
         <div class="ctx-sep" />
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => indent(visible.find((r) => r.node.id === ctx.rowId)))"><span>降级</span><span class="hint">Tab</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => outdent(visible.find((r) => r.node.id === ctx.rowId)))"><span>升级</span><span class="hint">Shift+Tab</span></div>
-        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => moveRow(visible.find((r) => r.node.id === ctx.rowId), -1))"><span>上移</span></div>
-        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => moveRow(visible.find((r) => r.node.id === ctx.rowId), 1))"><span>下移</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => moveRow(visible.find((r) => r.node.id === ctx.rowId), -1))"><span>上移</span><span class="hint">Alt+↑</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => moveRow(visible.find((r) => r.node.id === ctx.rowId), 1))"><span>下移</span><span class="hint">Alt+↓</span></div>
+        <div class="ctx-sep" />
+        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => copyNode(visible.find((r) => r.node.id === ctx.rowId)))"><span>复制节点</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => copyNode(visible.find((r) => r.node.id === ctx.rowId), true))"><span>剪切节点</span></div>
+        <div class="ctx-item" :class="{ disabled: !clip }" @mousedown.prevent @click="!clip && runCtx(() => pasteClip(false))"><span>粘贴为同级</span></div>
+        <div class="ctx-item" :class="{ disabled: !clip }" @mousedown.prevent @click="!clip && runCtx(() => pasteClip(true))"><span>粘贴为子节点</span></div>
         <div class="ctx-sep" />
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => addSibling(visible.find((r) => r.node.id === ctx.rowId)))"><span>新建同级节点</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => addChild(visible.find((r) => r.node.id === ctx.rowId)))"><span>新建子节点</span></div>

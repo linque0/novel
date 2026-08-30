@@ -155,7 +155,45 @@ v = await cdp.eval(`(() => {
 })()`)
 check('Ctrl+Z 撤销（结构回退）', v.hasTyped === false, JSON.stringify(v))
 
-/* 6. MD 导入按钮（解析与入库路径） */
+/* 6. 侧边栏：层级展示 + 点击定位 */
+v = await cdp.eval(`({
+  tree: !!document.querySelector('.side-panel .ob-dot'),
+  items: [...document.querySelectorAll('.side-item')].map(x => x.textContent.trim()),
+  indents: [...document.querySelectorAll('.side-item')].map(x => parseInt(x.style.paddingLeft || '6'))
+})`)
+check('侧边栏节点层级展示', v.tree && v.items.length >= 5 && v.items.includes('观测站') && v.items.includes('穹顶大厅'), JSON.stringify(v.items))
+check('侧边栏缩进体现层级', v.indents.some((x) => x > 6), JSON.stringify(v.indents))
+await cdp.eval(`[...document.querySelectorAll('.side-item')].find(x => x.textContent.includes('穹顶大厅')).click()`)
+await sleep(500)
+v = await cdp.eval(`({ flash: !!document.querySelector('.ob-flash'), focused: document.activeElement?.textContent?.slice(0, 4) })`)
+check('侧栏点击定位（滚动+高亮）', v.flash, JSON.stringify(v))
+
+/* 7. 选区内右键保持选区，菜单加粗作用于选中文字（与正文习惯一致） */
+await cdp.eval(`(() => {
+  const el = [...document.querySelectorAll('.ob-text')][0]
+  el.focus()
+  const tn = el.firstChild
+  const r = document.createRange()
+  r.setStart(tn, 0)
+  r.setEnd(tn, Math.min(4, tn.textContent.length))
+  const s = getSelection(); s.removeAllRanges(); s.addRange(r)
+  const rect = s.getRangeAt(0).getBoundingClientRect()
+  el.closest('.ob-row').dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: Math.round(rect.left + rect.width / 2), clientY: Math.round(rect.top + rect.height / 2) }))
+})()`)
+await sleep(300)
+v = await cdp.eval(`({ collapsed: getSelection().isCollapsed, menu: !!document.querySelector('.ob-ctx'), first: [...document.querySelectorAll('.ob-ctx .ctx-item > span:first-child')].map(x => x.textContent).slice(0, 3) })`)
+check('选区内右键保持选区', v.menu && v.collapsed === false, JSON.stringify(v))
+check('菜单首段与正文一致（剪切/复制/粘贴）', JSON.stringify(v.first) === JSON.stringify(['剪切', '复制', '粘贴为纯文本']), JSON.stringify(v.first))
+await cdp.eval(`[...document.querySelectorAll('.ob-ctx .ctx-item')].find(i => i.textContent.trim().startsWith('加粗'))?.click()`)
+await sleep(300)
+v = await cdp.eval(`(async () => {
+  await window.__flushNow()
+  const n = (await window.__ns.db.mubu.toArray()).find(x => (x.text || '').includes('地点'))
+  return /<(b|strong)>/i.test(n?.html || '')
+})()`)
+check('右键加粗作用于选中文字', v, '')
+
+/* 8. MD 导入按钮（解析与入库路径） */
 const MD = ['# 势力', '## 观测局', '监视所有星图异动的官方机构。', '### 内部派系', '保守派与激进派明争暗斗。'].join('\n')
 await cdp.eval(`(() => {
   const { parseMubuMd } = window.__ns

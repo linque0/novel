@@ -14,6 +14,7 @@ import EditorPane from './EditorPane.vue'
 import OutlineCenter from './OutlineCenter.vue'
 import CharacterCenter from './CharacterCenter.vue'
 import MubuView from './MubuView.vue'
+import MubuTree from './MubuTree.vue'
 import SnippetCenter from './SnippetCenter.vue'
 import RightPanel from './RightPanel.vue'
 
@@ -134,10 +135,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </div>
       </div>
 
-      <div v-if="!ui.focusMode && work.tab !== 'lore'" class="side-panel">
+      <div v-if="!ui.focusMode" class="side-panel">
         <ChapterTree v-if="work.tab === 'chapters'" />
         <OutlineList v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
+        <MubuTree v-else-if="work.tab === 'lore'" />
         <SnippetList v-else-if="work.tab === 'snippets'" />
       </div>
 

@@ -1009,6 +1009,19 @@ body,
 .ob-row {
   transition: background 0.15s;
 }
+.ob-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--text-dim);
+  margin-right: 8px;
+  margin-top: 5px;
+}
+.ob-dot.folded {
+  background: var(--accent);
+  border-color: var(--accent);
+}
 .ob-kind {
   flex: none;
   margin-left: 8px;
