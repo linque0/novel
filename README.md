@@ -14,7 +14,7 @@ npm run dev        # 开发模式（Vite 热更新 + Electron）
 npm run build      # 构建渲染进程到 dist/
 npm start          # 以生产模式启动应用（读取 dist/）
 npm run web        # 网页版：启动本地静态服务器并打开浏览器（http://127.0.0.1:18688）
-npm run dist       # 打包 Windows 安装程序 + 便携版 exe（输出到 release/）
+npm run dist       # 打包软件本体到 app/win-unpacked/（双击 小说工坊.exe 直接运行，无安装程序）
 ```
 
 要求：Node.js ≥ 18（开发环境为 Node 24）。`.npmrc` 已配置 Electron 国内镜像。
@@ -23,10 +23,11 @@ npm run dist       # 打包 Windows 安装程序 + 便携版 exe（输出到 rel
 
 | 形态 | 路径 / 用法 | 说明 |
 |---|---|---|
-| 安装程序 | `release/小说工坊-安装程序-0.3.0.exe` | NSIS 向导安装，可选安装目录，自动创建桌面/开始菜单快捷方式，自带卸载 |
-| 便携版 | `release/小说工坊-便携版-0.3.0.exe` | 免安装单文件，双击即用（首次启动解压略慢） |
+| 软件本体 | `app/win-unpacked/小说工坊.exe` | 双击直接运行（免安装、免解压），`npm run dist` 重新生成 |
 | 网页版 | 双击 `启动网页版.bat`，或 `npm run web` | 浏览器打开 http://127.0.0.1:18688，仅本机监听 |
 | 源码运行 | `npm install && npm start` | 开发者方式 |
+
+> v0.3.0 起取消安装程序与便携版打包（`release/`、`release2/` 中的旧安装包可全部删除），只保留可直接打开运行的软件本体；打包体积经 node_modules 精准裁剪由 504MB 降至 279MB。
 
 注意事项：
 - **同一时间只能运行一个实例**：安装版 / 便携版 / 开发模式共用数据目录（`%APPDATA%\小说工坊`），后启动的会显示「数据库被占用」提示（数据不会损坏）；需要多开时用 `小说工坊.exe --profile=名字` 走独立数据目录；

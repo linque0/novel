@@ -22,26 +22,40 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
-      "!**/*.log"
+      "package.json",
+      "!node_modules/**",
+      "node_modules/@xmldom/xmldom/**",
+      "node_modules/argparse/**",
+      "node_modules/base64-js/**",
+      "node_modules/bluebird/**",
+      "node_modules/core-util-is/**",
+      "node_modules/dingbat-to-unicode/**",
+      "node_modules/duck/**",
+      "node_modules/immediate/**",
+      "node_modules/inherits/**",
+      "node_modules/isarray/**",
+      "node_modules/jszip/**",
+      "node_modules/lie/**",
+      "node_modules/lop/**",
+      "node_modules/mammoth/**",
+      "node_modules/option/**",
+      "node_modules/pako/**",
+      "node_modules/path-is-absolute/**",
+      "node_modules/process-nextick-args/**",
+      "node_modules/readable-stream/**",
+      "node_modules/safe-buffer/**",
+      "node_modules/setimmediate/**",
+      "node_modules/sprintf-js/**",
+      "node_modules/string_decoder/**",
+      "node_modules/underscore/**",
+      "node_modules/util-deprecate/**",
+      "node_modules/xmlbuilder/**"
     ],
     "win": {
       "icon": "build/icon.ico",
       "target": [
-        { "target": "nsis", "arch": ["x64"] },
-        { "target": "portable", "arch": ["x64"] }
+        { "target": "dir", "arch": ["x64"] }
       ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "小说工坊",
-      "artifactName": "小说工坊-安装程序-${version}.${ext}",
-      "uninstallDisplayName": "小说工坊"
-    },
-    "portable": {
-      "artifactName": "小说工坊-便携版-${version}.${ext}"
     }
   },
   "dependencies": {
