@@ -15,7 +15,10 @@ npm run build      # 构建渲染进程到 dist/
 npm start          # 以生产模式启动应用（读取 dist/）
 npm run web        # 网页版：启动本地静态服务器并打开浏览器（http://127.0.0.1:18688）
 npm run dist       # 打包软件本体到 软件/win-unpacked/（双击 小说工坊.exe 直接运行，无安装程序）
+npm run stop       # 完全退出所有小说工坊实例（先优雅关闭确保数据落盘，残留进程再强制结束）
 ```
+
+> 调试纪律：每次调试 / 自动化验收结束后，必须执行 `npm run stop` 完全退出程序，防止多实例抢占数据目录造成进程冲突。
 
 要求：Node.js ≥ 18（开发环境为 Node 24）。`.npmrc` 已配置 Electron 国内镜像。
 
