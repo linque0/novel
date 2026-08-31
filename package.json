@@ -17,6 +17,9 @@
   "build": {
     "appId": "com.novelstudio.app",
     "productName": "小说工坊",
+    "electronLanguages": ["zh-CN", "en-US"],
+    "compression": "maximum",
+    "afterPack": "scripts/afterpack.js",
     "directories": {
       "output": "release"
     },
