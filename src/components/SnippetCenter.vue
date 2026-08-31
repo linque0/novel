@@ -1,11 +1,20 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { NButton, NInput, NPopconfirm, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import DLinkTextMenu from './DLinkTextMenu.vue'
 
 const work = useWorkStore()
 const msg = useMessage()
 const s = computed(() => work.activeSnippet)
+const dlMenu = ref(null)
+
+/* 灵感内容右键快捷栏：剪切/复制/粘贴 + 添加双链 */
+function onCtx(e) {
+  if (!s.value) return
+  const sn = s.value
+  dlMenu.value?.open(e, { get: () => sn.content || '', set: (v) => work.updateSnippet(sn.id, { content: v }) })
+}
 
 function toChapter() {
   if (!s.value) return
@@ -45,11 +54,14 @@ function toLore() {
       style="flex: 1"
       :autosize="{ minRows: 18, maxRows: 40 }"
       placeholder="记录灵感、桥段、对话片段……"
+      data-dl-token
       @update:value="(v) => work.updateSnippet(s.id, { content: v })"
+      @contextmenu="onCtx"
     />
   </div>
   <div v-else class="empty-shelf" style="padding-top: 140px">
     <div class="big">灵光一现</div>
     <p>从左侧选择一条灵感，或直接在左侧输入框随手记。</p>
   </div>
+  <DLinkTextMenu ref="dlMenu" />
 </template>

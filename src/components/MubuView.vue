@@ -5,6 +5,7 @@ import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { pickFiles } from '../services/fileio'
 import { decodeText, parseMubuMd } from '../services/importers'
+import DLinkPicker from './DLinkPicker.vue'
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -14,7 +15,7 @@ const rows = ref([])
 const pending = reactive({ key: null, offset: 'end' })
 const drag = reactive({ key: null, hintKey: null, zone: null })
 const focusedId = ref(null)
-const ctx = reactive({ open: false, x: 0, y: 0, rowId: null, folded: false, hasChildren: false })
+const ctx = reactive({ open: false, x: 0, y: 0, rowId: null, folded: false, hasChildren: false, linkSearch: false, linkSpan: null })
 const clip = ref(null)
 const undoStack = ref([])
 const redoStack = ref([])
@@ -548,6 +549,15 @@ function onRowCtx(row, e) {
   ctx.rowId = row.node.id
   ctx.folded = !!row.node.fold
   ctx.hasChildren = hasChildren(row.node)
+  ctx.linkSearch = false
+  ctx.linkSpan = e.target?.closest?.('.dl-link') || null
+  nextTick(() => {
+    const el = ctxEl.value
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    ctx.x = Math.max(8, Math.min(ctx.x, window.innerWidth - r.width - 8))
+    ctx.y = Math.max(8, Math.min(ctx.y, window.innerHeight - r.height - 8))
+  })
 }
 function selectionText() {
   const sel = window.getSelection()
@@ -598,6 +608,66 @@ function toggleCtxFold() {
   if (ctx.hasChildren) work.mubuToggleFold(ctx.rowId)
 }
 
+/* ---------- 双链（多模块内容互联）：节点内选中文字标记为指向全书任意内容的双链 ---------- */
+let savedRange = null
+function rowTextEl(id = ctx.rowId) {
+  return rootEl.value?.querySelector(`[data-node="m:${id}"] .ob-text`)
+}
+function openLinkSearch() {
+  const sel = window.getSelection()
+  savedRange = sel.rangeCount ? sel.getRangeAt(0).cloneRange() : null
+  const el = rowTextEl()
+  // 光标不在本节点文本内（如右键圆点）时，置于节点文本末尾
+  if (savedRange && el && !el.contains(savedRange.startContainer)) savedRange = null
+  if (!savedRange && el) {
+    el.focus()
+    const r = document.createRange()
+    r.selectNodeContents(el)
+    r.collapse(false)
+    savedRange = r
+  }
+  // 光标折叠落在已有双链内：移到双链之后，避免产生嵌套双链
+  const span = savedRange?.startContainer?.parentElement?.closest?.('.dl-link')
+  if (span && savedRange.collapsed) savedRange.setStartAfter(span)
+  ctx.linkSearch = true
+}
+function insertCtxLink(t) {
+  const el = rowTextEl()
+  if (!el) return closeCtx()
+  pushUndo()
+  const span = document.createElement('span')
+  span.className = 'dl-link'
+  span.setAttribute('data-dl-target', t.kind + ':' + t.id)
+  span.setAttribute('data-dl-title', t.title)
+  let ok = false
+  try {
+    if (savedRange) {
+      span.textContent = savedRange.collapsed ? t.title : savedRange.toString() || t.title
+      if (!savedRange.collapsed) savedRange.deleteContents()
+      savedRange.insertNode(span)
+      ok = true
+    }
+  } catch {
+    ok = false
+  }
+  if (!ok) el.appendChild(span) // 兜底：追加到节点末尾
+  work.mubuSetText(ctx.rowId, el.textContent || '', el.innerHTML)
+  ctx.linkSearch = false
+  closeCtx()
+  ver.value++
+}
+function removeCtxLink() {
+  const span = ctx.linkSpan
+  const el = span?.closest?.('.ob-text')
+  if (!span || !el) return closeCtx()
+  pushUndo()
+  span.replaceWith(...span.childNodes)
+  const id = el.closest('[data-node]')?.dataset.node?.slice(2)
+  if (id) work.mubuSetText(id, el.textContent || '', el.innerHTML)
+  closeCtx()
+  ver.value++
+}
+
 /* ---------- 全局事件 ---------- */
 function onWinMouseDown(e) {
   // 点击菜单本身不关闭；点击其他任何区域（含编辑器内）都关闭
@@ -606,8 +676,9 @@ function onWinMouseDown(e) {
 function onWinKeyDown(e) {
   if (e.key === 'Escape' && ctx.open) closeCtx()
 }
-function onWinWheel() {
-  if (ctx.open) closeCtx()
+function onWinWheel(e) {
+  // 菜单内部滚动（双链选择列表等）不关闭；编辑区滚动时关闭
+  if (ctx.open && ctxEl.value && !ctxEl.value.contains(e.target)) closeCtx()
 }
 
 /* 侧栏折叠/展开与编辑器双向同步 */
@@ -722,6 +793,7 @@ onBeforeUnmount(() => {
       <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到顶层） · 选中文字后可用工具栏或右键设置格式</div>
 
       <div v-if="ctx.open" ref="ctxEl" class="ob-ctx" :style="{ left: ctx.x + 'px', top: ctx.y + 'px' }" @contextmenu.prevent>
+        <template v-if="!ctx.linkSearch">
         <div class="ctx-item" :class="{ disabled: !selectionText() }" @mousedown.prevent @click="doCutText()"><span>剪切</span><span class="hint">Ctrl+X</span></div>
         <div class="ctx-item" :class="{ disabled: !selectionText() }" @mousedown.prevent @click="doCopyText()"><span>复制</span><span class="hint">Ctrl+C</span></div>
         <div class="ctx-item" @mousedown.prevent @click="doPastePlain()"><span>粘贴为纯文本</span><span class="hint">Ctrl+V</span></div>
@@ -750,6 +822,9 @@ onBeforeUnmount(() => {
         <div class="ctx-item" :class="{ disabled: !clip }" @mousedown.prevent @click="!clip && runCtx(() => pasteClip(false))"><span>粘贴为同级</span></div>
         <div class="ctx-item" :class="{ disabled: !clip }" @mousedown.prevent @click="!clip && runCtx(() => pasteClip(true))"><span>粘贴为子节点</span></div>
         <div class="ctx-sep" />
+        <div class="ctx-item" @mousedown.prevent @click="openLinkSearch()"><span>插入双链…</span><span class="hint">互联</span></div>
+        <div v-if="ctx.linkSpan" class="ctx-item" @mousedown.prevent @click="removeCtxLink()"><span>移除该双链</span></div>
+        <div class="ctx-sep" />
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => addSibling(visible.find((r) => r.node.id === ctx.rowId)))"><span>新建同级节点</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => addChild(visible.find((r) => r.node.id === ctx.rowId)))"><span>新建子节点</span></div>
         <div v-if="ctx.hasChildren" class="ctx-item" @mousedown.prevent @click="runCtx(toggleCtxFold)"><span>{{ ctx.folded ? '展开子节点' : '折叠子节点' }}</span></div>
@@ -757,6 +832,11 @@ onBeforeUnmount(() => {
         <div class="ctx-sep" />
         <div class="ctx-item" @mousedown.prevent @click="runCtx(undo)"><span>撤销</span><span class="hint">Ctrl+Z</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(redo)"><span>重做</span><span class="hint">Ctrl+Y</span></div>
+        </template>
+        <div v-else class="ctx-dlwrap">
+          <DLinkPicker @pick="insertCtxLink" />
+          <button class="ctx-btn" style="width: 100%; margin-top: 8px" type="button" @mousedown.prevent @click="ctx.linkSearch = false">返回</button>
+        </div>
       </div>
     </div>
   </div>

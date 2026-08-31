@@ -1,8 +1,10 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useWorkStore } from '../stores/work'
+import DLinkTextMenu from './DLinkTextMenu.vue'
 
 const work = useWorkStore()
+const dlMenu = ref(null)
 
 const current = computed(() => {
   if (!work.work || !work.selOutlineId) return null
@@ -22,6 +24,13 @@ const current = computed(() => {
 function onInput(e) {
   if (current.value) work.updateOutline(current.value.o.id, e.target.value)
 }
+
+/* 右键快捷栏：剪切/复制/粘贴 + 添加双链（选中内容变 [[标题]] 令牌） */
+function onCtx(e) {
+  if (!current.value) return
+  const o = current.value.o
+  dlMenu.value?.open(e, { get: () => o.content || '', set: (v) => work.updateOutline(o.id, v) })
+}
 </script>
 
 <template>
@@ -32,11 +41,14 @@ function onInput(e) {
       class="rp-textarea"
       style="flex: 1; min-height: 380px; font-size: 15px; line-height: 2"
       :value="current.o.content"
+      data-dl-token
       @input="onInput"
+      @contextmenu="onCtx"
     ></textarea>
   </div>
   <div v-else class="empty-shelf" style="padding-top: 140px">
     <div class="big">谋定而后动</div>
     <p>从左侧选择「总纲 / 卷纲 / 章纲」开始规划故事。</p>
   </div>
+  <DLinkTextMenu ref="dlMenu" />
 </template>

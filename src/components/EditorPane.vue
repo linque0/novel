@@ -16,6 +16,7 @@ import { useUiStore } from '../stores/ui'
 import { autosave } from '../services/autosave'
 import { FontSize } from '../services/richtext'
 import { isImageExt } from '../services/fileio'
+import { DlLinkMark } from '../services/doublelinks'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorContextMenu from './EditorContextMenu.vue'
 
@@ -48,6 +49,7 @@ const extensions = [
   FontSize,
   Color,
   Highlight,
+  DlLinkMark,
   Link.configure({ openOnClick: false, autolink: true }),
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
   Placeholder.configure({ placeholder: '落笔成章……' })

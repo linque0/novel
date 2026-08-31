@@ -17,6 +17,7 @@ import MubuView from './MubuView.vue'
 import MubuTree from './MubuTree.vue'
 import SnippetCenter from './SnippetCenter.vue'
 import RightPanel from './RightPanel.vue'
+import DLinkPopover from './DLinkPopover.vue'
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -174,5 +175,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <RightPanel v-if="!ui.focusMode && work.tab === 'chapters'" />
     </div>
+
+    <!-- 双链悬浮预览窗（全局唯一，悬停双链标签 / 纯文本令牌时展示目标内容） -->
+    <DLinkPopover />
   </div>
 </template>

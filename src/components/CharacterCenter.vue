@@ -3,10 +3,19 @@ import { computed, ref } from 'vue'
 import { NButton, NInput, NSelect, NTag } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
+import DLinkTextMenu from './DLinkTextMenu.vue'
 
 const work = useWorkStore()
 const c = computed(() => work.activeCharacter)
+const dlMenu = ref(null)
 const ROLE_OPTS = ['主角', '配角', '反派', '龙套'].map((r) => ({ label: r, value: r }))
+
+/* 人物小传右键快捷栏：剪切/复制/粘贴 + 添加双链 */
+function onCtx(e) {
+  if (!c.value) return
+  const ch = c.value
+  dlMenu.value?.open(e, { get: () => ch.content || '', set: (v) => work.updateCharacter(ch.id, { content: v }) })
+}
 
 const avatarUrl = computed(() => {
   void work.urlTick
@@ -125,11 +134,14 @@ function addRelation() {
       class="rp-textarea"
       style="min-height: 220px; font-size: 14px; line-height: 1.9"
       :value="c.content"
+      data-dl-token
       @input="(e) => work.updateCharacter(c.id, { content: e.target.value })"
+      @contextmenu="onCtx"
     ></textarea>
   </div>
   <div v-else class="empty-shelf" style="padding-top: 140px">
     <div class="big">众生有相</div>
     <p>从左侧选择或创建一个人物。</p>
   </div>
+  <DLinkTextMenu ref="dlMenu" />
 </template>

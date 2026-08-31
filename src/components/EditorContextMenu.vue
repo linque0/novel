@@ -1,9 +1,11 @@
 <script setup>
 import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { parseTarget, targetById, findByTitle, jumpTo } from '../services/doublelinks'
+import DLinkPicker from './DLinkPicker.vue'
 
 const props = defineProps({ editor: { type: Object, required: true } })
 
-const st = reactive({ open: false, x: 0, y: 0, sub: null, subX: 0, subY: 0, linkEdit: false, linkHref: '' })
+const st = reactive({ open: false, x: 0, y: 0, sub: null, subX: 0, subY: 0, linkEdit: false, linkHref: '', dlPicker: false, dlFrom: 0, dlTo: 0 })
 const rootEl = ref(null)
 
 const SIZES = [12, 14, 16, 18, 20, 24, 28, 32]
@@ -31,6 +33,46 @@ function refresh() {
   act.linkHref = ed.getAttributes('link')?.href || ''
   act.size = String(ed.getAttributes('textStyle')?.fontSize || '')
   act.align = ['left', 'center', 'right', 'justify'].find((a) => ed.isActive({ textAlign: a })) || 'left'
+  act.dl = ed.isActive('dlLink')
+  act.dlTarget = ed.getAttributes('dlLink')?.target || ''
+  act.dlTitle = ed.getAttributes('dlLink')?.title || ''
+}
+
+/* ---------- 双链（多模块内容互联）：选中文字标记为指向全书任意内容的双链 ---------- */
+function openDlPicker() {
+  if (selEmpty() && !act.dl) return
+  const sel = props.editor.state.selection
+  if (sel.empty && act.dl) {
+    // 光标落在已有双链内：把作用范围扩展到整个双链再编辑
+    chain().extendMarkRange('dlLink').run()
+    const sel2 = props.editor.state.selection
+    st.dlFrom = sel2.from
+    st.dlTo = sel2.to
+  } else {
+    st.dlFrom = sel.from
+    st.dlTo = sel.to
+  }
+  st.dlPicker = true
+}
+function onPickDl(t) {
+  props.editor
+    .chain()
+    .setTextSelection({ from: st.dlFrom, to: st.dlTo })
+    .setMark('dlLink', { target: t.kind + ':' + t.id, title: t.title })
+    .run()
+  st.dlPicker = false
+  close()
+  refocus()
+}
+function removeDl() {
+  chain().extendMarkRange('dlLink').unsetMark('dlLink').run()
+  close()
+  refocus()
+}
+function jumpDl() {
+  const resolved = targetById(parseTarget(act.dlTarget)?.kind, parseTarget(act.dlTarget)?.id)
+  jumpTo(resolved || findByTitle(act.dlTitle))
+  close()
 }
 
 const selEmpty = () => props.editor.state.selection.empty
@@ -121,6 +163,7 @@ async function open(x, y) {
   st.open = true
   st.sub = null
   st.linkEdit = false
+  st.dlPicker = false
   await nextTick()
   const el = rootEl.value
   if (el) {
@@ -133,6 +176,7 @@ function close() {
   st.open = false
   st.sub = null
   st.linkEdit = false
+  st.dlPicker = false
 }
 
 /** 展开二级飞出菜单：fixed 定位，按父项实测坐标放置并防出屏（escape 祖先 overflow 裁剪） */
@@ -192,6 +236,15 @@ defineExpose({ open, close })
           <button class="ctx-btn primary" @click="applyLink">确定</button>
           <button v-if="act.link" class="ctx-btn" @click="removeLink">移除</button>
           <button class="ctx-btn" @click="st.linkEdit = false">返回</button>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="st.dlPicker">
+      <div class="ctx-dlwrap">
+        <DLinkPicker @pick="onPickDl" />
+        <div style="display: flex; margin-top: 8px">
+          <button class="ctx-btn" @click="st.dlPicker = false">返回</button>
         </div>
       </div>
     </template>
@@ -278,6 +331,13 @@ defineExpose({ open, close })
       <div class="ctx-item" @click="doLink"><span>{{ act.link ? '编辑链接…' : '超链接…' }}</span></div>
       <div v-if="act.link" class="ctx-item" @click="openLink"><span>打开链接</span></div>
       <div v-if="act.link" class="ctx-item" @click="removeLink"><span>清除链接</span></div>
+
+      <div class="ctx-sep" />
+      <div class="ctx-item" :class="{ disabled: selEmpty() && !act.dl }" @click="openDlPicker">
+        <span>{{ act.dl ? '编辑双链…' : '添加双链…' }}</span><span class="hint">互联</span>
+      </div>
+      <div v-if="act.dl" class="ctx-item" @click="jumpDl"><span>跳转到双链目标</span></div>
+      <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除双链</span></div>
 
       <div class="ctx-sep" />
       <div class="ctx-item" @click="run(() => chain().undo().run())"><span>撤销</span><span class="hint">Ctrl+Z</span></div>
