@@ -1,54 +1,164 @@
+<!-- 大纲中心（8.8）：文本 / 导图双视图；文本视图为 Word 式富文本编辑（text+html 双字段），右键快捷栏含双链 -->
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
+import { NPopover } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import DLinkTextMenu from './DLinkTextMenu.vue'
+import OutlineMap from './OutlineMap.vue'
 
 const work = useWorkStore()
-const dlMenu = ref(null)
+const editorEl = ref(null)
 
-const current = computed(() => {
-  if (!work.work || !work.selOutlineId) return null
-  const o = work.ensureOutline(work.selOutlineId)
-  let label = '总纲'
-  let hint = '整本书的核心脉络、主线冲突与结局构想'
-  if (o.level === 'volume') {
-    label = '卷纲 · ' + (work.volumes.find((v) => v.id === o.refId)?.title || '')
-    hint = '这一卷的起承转合、主要事件与收尾'
-  } else if (o.level === 'chapter') {
-    label = '章纲 · ' + (work.chapters.find((c) => c.id === o.refId)?.title || '')
-    hint = '本章要点：出场人物、关键情节、伏笔与钩子'
-  }
-  return { o, label, hint }
+const COLORS = ['#3c3427', '#8c6f4e', '#c0392b', '#d35400', '#27ae60', '#2980b9', '#8e44ad', '#7f8c8d']
+const HIGHLIGHTS = ['#fff3a3', '#ffd6a5', '#ffa8a8', '#b8f2c9', '#a8d8ff', '#e0c3fc']
+const FIXED_TITLE = { master: '总纲', volumes: '卷纲', chapters: '章纲', lines: '故事线' }
+const canEditTitle = (n) => !!n && !['master', 'volumes', 'chapters', 'lines', 'volume', 'chapter'].includes(n.kind)
+
+const cur = computed(() => {
+  if (!work.work || !work.selOlnodeId) return null
+  return work.olnodes.find((n) => n.id === work.selOlnodeId && !n.deletedAt) || null
 })
 
+const titleValue = computed(() => {
+  const n = cur.value
+  if (!n) return ''
+  if (n.kind === 'chapter') return work.chapters.find((c) => c.id === n.refId)?.title || '（已删章节）'
+  if (n.kind === 'volume') return work.volumes.find((v) => v.id === n.refId)?.title || '（已删卷）'
+  if (FIXED_TITLE[n.kind]) return FIXED_TITLE[n.kind]
+  return n.title
+})
+
+/* 进入大纲模块时默认选中总纲 */
+watch(
+  () => work.tab,
+  (t) => {
+    if (t === 'outline' && !work.selOlnodeId) {
+      const m = work.olnodeByKind('master')
+      if (m) work.selOlnodeId = m.id
+    }
+  },
+  { immediate: true }
+)
+
+/* 切换节点时装载内容（html 优先）；输入期间以编辑器为准，不回写 DOM 防光标跳动 */
+function loadEditor() {
+  const n = cur.value
+  if (!editorEl.value) return
+  if (!n) {
+    editorEl.value.innerHTML = ''
+    return
+  }
+  if (n.html != null) editorEl.value.innerHTML = n.html
+  else editorEl.value.textContent = n.text || ''
+}
+watch(() => work.selOlnodeId, () => nextTick(loadEditor), { immediate: true })
+
 function onInput(e) {
-  if (current.value) work.updateOutline(current.value.o.id, e.target.value)
+  const n = cur.value
+  if (!n) return
+  const el = e.currentTarget
+  work.olnodeSetRich(n.id, el.textContent || '', el.innerHTML)
+}
+function onPaste(e) {
+  e.preventDefault()
+  const t = e.clipboardData?.getData('text/plain') || ''
+  if (t) document.execCommand('insertText', false, t)
+}
+function fmt(cmd, val = null) {
+  if (!cur.value) return
+  editorEl.value?.focus()
+  document.execCommand(cmd, false, val)
+  const el = editorEl.value
+  if (el && cur.value) work.olnodeSetRich(cur.value.id, el.textContent || '', el.innerHTML)
 }
 
 /* 右键快捷栏：剪切/复制/粘贴 + 添加双链（选中内容变 [[标题]] 令牌） */
+const dlMenu = ref(null)
 function onCtx(e) {
-  if (!current.value) return
-  const o = current.value.o
-  dlMenu.value?.open(e, { get: () => o.content || '', set: (v) => work.updateOutline(o.id, v) })
+  if (!cur.value) return
+  const n = cur.value
+  const el = editorEl.value
+  dlMenu.value?.open(e, {
+    get: () => (el ? el.textContent : n.text) || '',
+    set: (v) => {
+      if (el) {
+        el.textContent = v
+        work.olnodeSetRich(n.id, v, null)
+      }
+    }
+  })
 }
 </script>
 
 <template>
-  <div v-if="current" style="flex: 1; display: flex; flex-direction: column; padding: 22px 34px; min-height: 0; overflow: auto">
-    <h2 class="serif" style="margin: 0 0 4px">{{ current.label }}</h2>
-    <p style="margin: 0 0 12px; font-size: 12px; color: var(--text-dim)">{{ current.hint }}（自动保存）</p>
-    <textarea
-      class="rp-textarea"
-      style="flex: 1; min-height: 380px; font-size: 15px; line-height: 2"
-      :value="current.o.content"
-      data-dl-token
-      @input="onInput"
-      @contextmenu="onCtx"
-    ></textarea>
+  <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+      <span class="serif" style="font-size: 18px; font-weight: 700">大纲</span>
+      <span style="font-size: 12px; color: var(--text-dim)">结构化故事蓝图 · 双链联动 · 思维导图</span>
+      <div style="flex: 1"></div>
+      <div class="ol-viewtoggle">
+        <button :class="{ on: work.outlineView === 'text' }" @click="work.outlineView = 'text'">文本</button>
+        <button :class="{ on: work.outlineView === 'map' }" @click="work.outlineView = 'map'">导图</button>
+      </div>
+    </div>
+
+    <OutlineMap v-if="work.outlineView === 'map'" style="flex: 1; min-height: 0" />
+
+    <template v-else>
+      <div v-if="cur" class="ol-editor-head">
+        <input
+          v-if="canEditTitle(cur)"
+          class="rp-input ol-title-input"
+          :value="cur.title"
+          placeholder="条目标题"
+          @change="(e) => work.olnodeSetTitle(cur.id, e.target.value.trim())"
+        />
+        <span v-else class="serif ol-title-static">{{ titleValue }}</span>
+      </div>
+
+      <div v-if="cur" class="ol-toolbar">
+        <button class="ol-tb" title="加粗" @mousedown.prevent @click="fmt('bold')"><b>B</b></button>
+        <button class="ol-tb" title="斜体" @mousedown.prevent @click="fmt('italic')"><i>I</i></button>
+        <button class="ol-tb" title="下划线" @mousedown.prevent @click="fmt('underline')"><u>U</u></button>
+        <button class="ol-tb" title="删除线" @mousedown.prevent @click="fmt('strikeThrough')"><s>S</s></button>
+        <NPopover trigger="click" :show-arrow="false">
+          <template #trigger>
+            <button class="ol-tb" title="字体颜色" @mousedown.prevent><span style="border-bottom: 3px solid var(--accent)">A</span></button>
+          </template>
+          <div class="ob-swatches">
+            <button v-for="c in COLORS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="fmt('foreColor', c)" />
+          </div>
+        </NPopover>
+        <NPopover trigger="click" :show-arrow="false">
+          <template #trigger>
+            <button class="ol-tb" title="底色" @mousedown.prevent>底</button>
+          </template>
+          <div class="ob-swatches">
+            <button v-for="c in HIGHLIGHTS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="fmt('hiliteColor', c)" />
+          </div>
+        </NPopover>
+        <button class="ol-tb" title="清除格式" @mousedown.prevent @click="fmt('removeFormat')">清除</button>
+        <span class="tb-sep" />
+        <span style="font-size: 11px; color: var(--text-dim)">选中文字后右键可「添加双链」；[[标题]] 令牌会在导图中显示为联动节点</span>
+      </div>
+
+      <div
+        v-if="cur"
+        ref="editorEl"
+        class="ol-editor paper-texture"
+        contenteditable="true"
+        spellcheck="false"
+        data-dl-token
+        @input="onInput"
+        @paste="onPaste"
+        @contextmenu="onCtx"
+      ></div>
+      <div v-else class="empty-shelf" style="padding-top: 120px">
+        <div class="big">谋定而后动</div>
+        <p>从左侧选择一个条目开始编辑，或新建故事线与子条目。</p>
+      </div>
+    </template>
+
+    <DLinkTextMenu ref="dlMenu" />
   </div>
-  <div v-else class="empty-shelf" style="padding-top: 140px">
-    <div class="big">谋定而后动</div>
-    <p>从左侧选择「总纲 / 卷纲 / 章纲」开始规划故事。</p>
-  </div>
-  <DLinkTextMenu ref="dlMenu" />
 </template>

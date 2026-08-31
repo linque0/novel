@@ -7,7 +7,7 @@ import { useShelfStore } from '../stores/shelf'
 import { exportBook, backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles } from '../services/fileio'
 import ChapterTree from './ChapterTree.vue'
-import OutlineList from './OutlineList.vue'
+import OutlineSidebar from './OutlineSidebar.vue'
 import CharacterList from './CharacterList.vue'
 import SnippetList from './SnippetList.vue'
 import EditorPane from './EditorPane.vue'
@@ -157,7 +157,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <div v-if="!ui.focusMode" class="side-panel">
         <ChapterTree v-if="work.tab === 'chapters'" />
-        <OutlineList v-else-if="work.tab === 'outline'" />
+        <OutlineSidebar v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
         <MubuTree v-else-if="work.tab === 'lore'" />
         <SnippetList v-else-if="work.tab === 'snippets'" />

@@ -10,8 +10,16 @@ const ch = computed(() => work.activeChapter)
 
 const outline = computed(() => {
   if (!ch.value) return null
-  return work.ensureOutline(ch.value.id)
+  // 8.8：本章大纲来自大纲节点树（章纲节点），右栏速记写 text 并清 html 以回退纯文本
+  return work.olnodeByRef(ch.value.id)
 })
+
+const gotoOutlineEditor = () => {
+  if (!outline.value) return
+  work.tab = 'outline'
+  work.outlineView = 'text'
+  work.selOlnodeId = outline.value.id
+}
 
 const presentChars = computed(() => {
   if (!ch.value) return []
@@ -57,15 +65,19 @@ watch(
 <template>
   <div v-if="ch" class="right-panel">
     <div class="rp-section">
-      <div class="rp-title">本章大纲</div>
+      <div class="rp-title">
+        本章大纲
+        <NButton v-if="outline" size="tiny" @click="gotoOutlineEditor">去编辑</NButton>
+      </div>
       <textarea
         v-if="outline"
         class="rp-textarea"
         style="min-height: 80px"
-        :value="outline.content"
+        :value="outline.text || ''"
         placeholder="本章要点速记（在大纲页可写长版）"
-        @input="(e) => work.updateOutline(outline.id, e.target.value)"
+        @input="(e) => work.olnodeSetRich(outline.id, e.target.value, null)"
       ></textarea>
+      <div v-else style="font-size: 12px; color: var(--text-dim)">章纲节点缺失——打开大纲模块后自动生成</div>
     </div>
 
     <div class="rp-section">

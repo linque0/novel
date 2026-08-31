@@ -40,6 +40,9 @@ export const useWorkStore = defineStore('work', {
     links: [],
     mubu: [],
     bookmarks: [],
+    olnodes: [],
+    outlineView: 'text', // 大纲视图：text 文本 | map 导图
+    selOlnodeId: null,
     prevCounts: new Map(),
     tab: 'chapters', // chapters | outline | characters | lore | snippets
     loreView: 'detail', // lore 视图：detail 详情 | overview 总览
@@ -126,6 +129,8 @@ export const useWorkStore = defineStore('work', {
       await this.migrateMubu(workId)
       this.mubu = await db.mubu.where('workId').equals(workId).toArray()
       this.bookmarks = await db.bookmarks.where('workId').equals(workId).toArray()
+      await this.migrateOlnodes(workId)
+      this.olnodes = await db.olnodes.where('workId').equals(workId).toArray()
       this.prevCounts = new Map(this.liveChapters.map((c) => [c.id, c.wordCount || 0]))
       installWordLogHook(this.prevCounts)
       this.tab = 'chapters'
@@ -153,6 +158,9 @@ export const useWorkStore = defineStore('work', {
       const o = { id: uid(), workId: this.work.id, level: 'volume', refId: vol.id, content: '', createdAt: now(), updatedAt: now(), deletedAt: null }
       this.outlines.push(o)
       autosave.mark('outlines', o)
+      // 大纲节点树：卷纲组下同步追加卷节点（8.8）
+      const vg = this.olnodeByKind('volumes')
+      if (vg) this.olnodeAdd(vg.id, { kind: 'volume', refId: vol.id, title: vol.title, text: '' })
       this.selVolumeId = vol.id
       return vol
     },
@@ -171,6 +179,9 @@ export const useWorkStore = defineStore('work', {
         await this.deleteChapter(c.id)
       }
       await repo.softDeleteRow('volumes', v)
+      // 大纲节点树：同步移除对应卷节点（8.8）
+      const vnode = this.olnodeByRef(id)
+      if (vnode) this.olnodeRemove(vnode.id)
       if (this.selVolumeId === id) this.selVolumeId = null
     },
 
@@ -200,6 +211,9 @@ export const useWorkStore = defineStore('work', {
       const o = { id: uid(), workId: this.work.id, level: 'chapter', refId: ch.id, content: '', createdAt: now(), updatedAt: now(), deletedAt: null }
       this.outlines.push(o)
       autosave.mark('outlines', o)
+      // 大纲节点树：章纲组下同步追加章节点（8.8）
+      const cg = this.olnodeByKind('chapters')
+      if (cg) this.olnodeAdd(cg.id, { kind: 'chapter', refId: ch.id, title: ch.title, text: '' })
       this.tab = 'chapters'
       this.selChapterId = ch.id
       this.selVolumeId = vid
@@ -286,6 +300,9 @@ export const useWorkStore = defineStore('work', {
       const c = this.chapters.find((x) => x.id === id)
       if (!c) return
       await repo.softDeleteRow('chapters', c)
+      // 大纲节点树：同步移除对应章节点（8.8）
+      const node = this.olnodeByRef(id)
+      if (node) this.olnodeRemove(node.id)
       if (this.selChapterId === id) {
         const rest = this.liveChapters
         const idx = rest.findIndex((x) => x.id === id)
@@ -1030,6 +1047,141 @@ export const useWorkStore = defineStore('work', {
           await db.mubu.put(JSON.parse(JSON.stringify(cur)))
         }
       }
+    },
+
+    /* ---------- 大纲节点树（8.8 思维导图方向） ---------- */
+
+    /**
+     * 首次打开一次性迁移：原 outlines 三级文本大纲 → olnodes 节点树。
+     * 固定根：总纲(master) / 卷纲组(volumes) / 章纲组(chapters) / 故事线组(lines)；
+     * 卷、章节点带 refId 与实体联动。迁移后 outlines 表保留不删（回滚安全）。
+     */
+    async migrateOlnodes(workId) {
+      const flagKey = 'olnodes-mig:' + workId
+      const flag = await db.appconfig.get(flagKey)
+      if (flag) return
+      const mk = async (fields) => {
+        const row = {
+          id: uid(), workId, parentId: null, refId: null, kind: 'note', title: '',
+          text: '', html: null, fold: false, sortOrder: 0, deletedAt: null,
+          createdAt: now(), updatedAt: now(), ...fields
+        }
+        await db.olnodes.add(JSON.parse(JSON.stringify(row)))
+        return row
+      }
+      const contentOf = (refId) => this.outlines.find((o) => o.refId === refId && !o.deletedAt)?.content || ''
+      await mk({ kind: 'master', title: '总纲', text: contentOf(this.work?.id), sortOrder: 0 })
+      const vg = await mk({ kind: 'volumes', title: '卷纲', sortOrder: 1000 })
+      let order = 0
+      for (const v of this.liveVolumes) {
+        await mk({ kind: 'volume', refId: v.id, parentId: vg.id, title: v.title, text: contentOf(v.id), sortOrder: order++ * 1000 })
+      }
+      const cg = await mk({ kind: 'chapters', title: '章纲', sortOrder: 2000 })
+      order = 0
+      for (const c of this.liveChapters) {
+        await mk({ kind: 'chapter', refId: c.id, parentId: cg.id, title: c.title, text: contentOf(c.id), sortOrder: order++ * 1000 })
+      }
+      await mk({ kind: 'lines', title: '故事线', sortOrder: 3000 })
+      await db.appconfig.put({ key: flagKey, value: 1 })
+    },
+
+    liveOlnodes() {
+      return this.olnodes
+        .filter((n) => !n.deletedAt)
+        .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
+    },
+
+    olnodeChildren(parentId) {
+      return this.liveOlnodes().filter((n) => (n.parentId || null) === (parentId || null))
+    },
+
+    olnodeByRef(refId) {
+      return this.olnodes.find((n) => n.refId === refId && !n.deletedAt) || null
+    },
+
+    olnodeByKind(kind) {
+      return this.olnodes.find((n) => n.kind === kind && !n.deletedAt) || null
+    },
+
+    olnodeAdd(parentId, fields = {}, afterId = null) {
+      const siblings = this.olnodeChildren(parentId)
+      const row = {
+        id: uid(), workId: this.work.id, parentId: parentId || null, refId: null,
+        kind: 'note', title: '', text: '', html: null, fold: false, sortOrder: 0,
+        deletedAt: null, createdAt: now(), updatedAt: now(), ...fields
+      }
+      if (afterId) {
+        const i = siblings.findIndex((s) => s.id === afterId)
+        row.sortOrder = i >= 0 ? siblings[i].sortOrder + 500 : siblings.length * 1000
+        this.olnodes.push(row)
+        this.olnodeNormalize(parentId)
+      } else {
+        row.sortOrder = siblings.reduce((m, s) => Math.max(m, s.sortOrder || 0), -1000) + 1000
+        this.olnodes.push(row)
+      }
+      autosave.mark('olnodes', row)
+      return row
+    },
+
+    olnodeNormalize(parentId) {
+      this.olnodeChildren(parentId).forEach((s, i) => {
+        if (s.sortOrder !== i * 1000) {
+          s.sortOrder = i * 1000
+          autosave.mark('olnodes', s)
+        }
+      })
+    },
+
+    olnodeSetTitle(id, title) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.title = title
+      autosave.mark('olnodes', n)
+    },
+
+    olnodeSetRich(id, text, html = undefined) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.text = text
+      if (html !== undefined) n.html = html
+      autosave.mark('olnodes', n)
+    },
+
+    olnodeRemove(id) {
+      const all = [this.olnodes.find((x) => x.id === id), ...this.olnodeDescendants(id)].filter(Boolean)
+      const t = now()
+      for (const n of all) {
+        n.deletedAt = t
+        autosave.mark('olnodes', n)
+      }
+    },
+
+    olnodeDescendants(id) {
+      const out = []
+      const walk = (pid) => this.olnodeChildren(pid).forEach((n) => (out.push(n), walk(n.id)))
+      walk(id)
+      return out
+    },
+
+    olnodeToggleFold(id) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.fold = !n.fold
+      autosave.mark('olnodes', n)
+    },
+
+    olnodeMoveOrder(id, dir) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      const siblings = this.olnodeChildren(n.parentId)
+      const i = siblings.findIndex((s) => s.id === id)
+      const j = i + dir
+      if (j < 0 || j >= siblings.length) return
+      const tmp = siblings[i].sortOrder
+      siblings[i].sortOrder = siblings[j].sortOrder
+      siblings[j].sortOrder = tmp
+      autosave.mark('olnodes', siblings[i])
+      autosave.mark('olnodes', siblings[j])
     },
 
     /* ---------- 书签（章节快捷收藏） ---------- */

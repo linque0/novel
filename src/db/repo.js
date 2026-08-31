@@ -78,21 +78,21 @@ export async function seedWorkDefaults(workId, { withVolume = true } = {}) {
 
 export async function putRow(table, row) {
   row.updatedAt = now()
-  await db.table(table).put(row)
+  await db.table(table).put(JSON.parse(JSON.stringify(row)))
   return row
 }
 
 export async function softDeleteRow(table, row) {
   row.deletedAt = now()
   row.updatedAt = row.deletedAt
-  await db.table(table).put(row)
+  await db.table(table).put(JSON.parse(JSON.stringify(row)))
   return row
 }
 
 export async function restoreRow(table, row) {
   row.deletedAt = null
   row.updatedAt = now()
-  await db.table(table).put(row)
+  await db.table(table).put(JSON.parse(JSON.stringify(row)))
   return row
 }
 
@@ -163,7 +163,7 @@ export async function removeLink(linkId) {
 /* ---- 备份 / 恢复 ---- */
 
 export async function exportBackupJson() {
-  const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'snippets', 'links', 'wordlog', 'appconfig']
+  const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'snippets', 'links', 'wordlog', 'appconfig', 'bookmarks', 'olnodes']
   const dump = { version: 1, exportedAt: now(), assets: [], data: {} }
   for (const t of tables) dump.data[t] = await db.table(t).toArray()
   const assetRows = await db.assets.toArray()

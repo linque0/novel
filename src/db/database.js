@@ -76,6 +76,28 @@ db.version(4).stores({
   bookmarks: 'id, workId, targetId, [workId+targetId]'
 })
 
+// v5：大纲节点树（8.8 思维导图方向）——总纲/卷纲/章纲/故事线/自定义条目统一为节点，
+// 原 outlines 三级文本大纲首次打开时一次性迁移；节点富文本为 text+html 双字段
+db.version(5).stores({
+  works: 'id, updatedAt, deletedAt',
+  volumes: 'id, workId, [workId+sortOrder]',
+  chapters: 'id, workId, volumeId, [workId+deletedAt], updatedAt',
+  outlines: 'id, workId, level, refId, [workId+level]',
+  characters: 'id, workId, [workId+deletedAt], name',
+  relations: 'id, workId, fromId, toId',
+  lorecats: 'id, workId, parentId, [workId+sortOrder]',
+  lore: 'id, workId, categoryId, [workId+deletedAt]',
+  mubu: 'id, workId, parentId, [workId+deletedAt], [workId+parentId]',
+  snippets: 'id, workId, [workId+deletedAt], createdAt',
+  assets: 'id, workId, [workId+deletedAt]',
+  links: 'id, [entityType+entityId], assetId',
+  revisions: 'id, [entityType+entityId], createdAt',
+  wordlog: 'id, date, workId, [workId+date], [date+chapterId]',
+  appconfig: 'key',
+  bookmarks: 'id, workId, targetId, [workId+targetId]',
+  olnodes: 'id, workId, parentId, refId, [workId+deletedAt], [workId+parentId]'
+})
+
 export const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()

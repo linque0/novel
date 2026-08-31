@@ -1253,3 +1253,269 @@ body,
   font-weight: 700;
   padding: 0;
 }
+
+/* ============ 大纲模块重构（8.8 思维导图方向） ============ */
+
+/* 视图切换 */
+.ol-viewtoggle {
+  display: inline-flex;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  overflow: hidden;
+}
+.ol-viewtoggle button {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  padding: 3px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.ol-viewtoggle button.on {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* 侧边栏：标签 / 悬停操作 / 底栏 */
+.ol-side-label.fixed {
+  color: var(--accent);
+  font-weight: 700;
+}
+.ol-ops {
+  display: inline-flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.side-item:hover .ol-ops {
+  opacity: 1;
+}
+.ol-op {
+  width: 18px;
+  height: 18px;
+  line-height: 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+}
+.ol-op:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.ol-op-danger:hover {
+  color: #c0392b;
+  border-color: #c0392b;
+}
+.ol-side-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--border);
+}
+
+/* 文本编辑器：标题 + Word 式工具栏 + contenteditable */
+.ol-editor-head {
+  margin-bottom: 8px;
+}
+.ol-title-input {
+  font-size: 16px;
+  font-weight: 700;
+  width: 100%;
+}
+.ol-title-static {
+  font-size: 18px;
+  font-weight: 700;
+}
+.ol-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  background: var(--bg-panel);
+}
+.ol-tb {
+  min-width: 26px;
+  height: 24px;
+  border: none;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0 6px;
+}
+.ol-tb:hover {
+  background: var(--bg-hover);
+}
+.ol-editor {
+  flex: 1;
+  min-height: 320px;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+  outline: none;
+  font-size: 15px;
+  line-height: 1.9;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.ol-editor:focus {
+  border-color: var(--accent);
+}
+
+/* 导图 */
+.om-wrap {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.om-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.om-chip {
+  font-size: 12px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+.om-chip.on {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+.om-btn {
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.om-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.om-canvas {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-editor);
+  cursor: grab;
+}
+.om-canvas:active {
+  cursor: grabbing;
+}
+.om-inner {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform-origin: 0 0;
+}
+.om-edges {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
+.om-edges path {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1.6;
+}
+.om-node {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  background: var(--bg-panel);
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  user-select: none;
+  overflow: hidden;
+}
+.om-node:hover {
+  border-color: var(--accent);
+}
+.om-node.sel {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--bg-hover), var(--shadow);
+}
+.om-master {
+  border-width: 2px;
+}
+.om-master .om-label {
+  font-weight: 700;
+}
+.om-line {
+  border-width: 2px;
+}
+.om-label {
+  font-size: 13px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.om-sub {
+  font-size: 10.5px;
+  color: var(--text-dim);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.om-caret {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  line-height: 13px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0;
+}
+.om-sat {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--bg-panel);
+  font-size: 11.5px;
+  text-decoration: none;
+  overflow: hidden;
+}
+.om-sat-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
