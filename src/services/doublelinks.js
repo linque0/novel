@@ -14,6 +14,7 @@ export const KIND_LABEL = { chapter: '正文', mubu: '设定', character: '人�
 /* ---------- TipTap 双链标记：正文中的双链以标签样式渲染并携带目标 ---------- */
 export const DlLinkMark = Mark.create({
   name: 'dlLink',
+  inclusive: false, // 光标贴边续写不连带成链接
   addAttributes() {
     return {
       target: {
@@ -47,37 +48,72 @@ export function outlineLabel(refId) {
   return c ? '章纲 · ' + c.title : '大纲'
 }
 
-/* ---------- 全库可链接目标检索 ---------- */
+/* ---------- 全库可链接目标检索：标题或内容命中关键词，内容命中附选段 ---------- */
+
+/** 关键词在文本中的命中选段（前后留窗口），未命中返回空串 */
+function excerptOf(text, q, win = 26) {
+  if (!q) return ''
+  const t = String(text || '').replace(/\s+/g, ' ').trim()
+  if (!t) return ''
+  const i = t.toLowerCase().indexOf(q)
+  if (i < 0) return ''
+  const start = Math.max(0, i - win)
+  const end = Math.min(t.length, i + q.length + win * 2)
+  return (start > 0 ? '…' : '') + t.slice(start, end) + (end < t.length ? '…' : '')
+}
+
 export function searchTargets(query, limit = 40) {
   const work = useWorkStore()
   const q = (query || '').trim().toLowerCase()
-  const hit = (t) => !q || String(t || '').toLowerCase().includes(q)
   const out = []
+  const outlineBody = (refId) => {
+    const o = work.outlines.find((x) => x.refId === refId && !x.deletedAt)
+    return o ? o.content || '' : ''
+  }
+  const push = (kind, id, title, extra, body) => {
+    const viaTitle = !q || String(title || '').toLowerCase().includes(q)
+    const ex = q ? excerptOf(body, q) : ''
+    if (!viaTitle && !ex) return
+    out.push({ kind, id, title, extra, excerpt: ex, viaTitle })
+  }
   for (const c of work.liveChapters) {
-    if (hit(c.title)) out.push({ kind: 'chapter', id: c.id, title: c.title || '未命名章节', extra: `正文 · ${c.wordCount || 0}字` })
+    push('chapter', c.id, c.title || '未命名章节', `正文 · ${c.wordCount || 0}字`, stripTags(c.content))
   }
   for (const n of work.liveMubu()) {
-    if (hit(n.text)) out.push({ kind: 'mubu', id: n.id, title: (n.text || '').slice(0, 40) || '（空节点）', extra: '设定' })
+    push('mubu', n.id, (n.text || '').slice(0, 40) || '（空节点）', '设定', n.text)
   }
   for (const c of work.liveCharacters) {
-    if (hit(c.name)) out.push({ kind: 'character', id: c.id, title: c.name || '未命名', extra: `人物${c.role ? ' · ' + c.role : ''}` })
+    push('character', c.id, c.name || '未命名', `人物${c.role ? ' · ' + c.role : ''}`, (c.content || '') + ' ' + (c.aliases || ''))
   }
-  if (work.work) {
-    if (hit('总纲')) out.push({ kind: 'outline', id: work.work.id, title: '总纲', extra: '大纲' })
-  }
+  if (work.work) push('outline', work.work.id, '总纲', '大纲', outlineBody(work.work.id))
   for (const v of work.liveVolumes) {
-    const lb = '卷纲 · ' + v.title
-    if (hit(lb) || hit(v.title)) out.push({ kind: 'outline', id: v.id, title: lb, extra: '大纲' })
+    push('outline', v.id, '卷纲 · ' + v.title, '大纲', outlineBody(v.id))
   }
   for (const c of work.liveChapters) {
-    const lb = '章纲 · ' + c.title
-    if (hit(lb) || hit(c.title)) out.push({ kind: 'outline', id: c.id, title: lb, extra: '大纲' })
+    push('outline', c.id, '章纲 · ' + c.title, '大纲', outlineBody(c.id))
   }
   for (const s of work.liveSnippets) {
     const first = (s.content || '').split('\n').find((x) => x.trim()) || '（空）'
-    if (hit(first)) out.push({ kind: 'snippet', id: s.id, title: first.slice(0, 30), extra: '灵感' })
+    push('snippet', s.id, first.slice(0, 30), '灵感', s.content)
   }
+  // 标题命中优先（稳定排序，保持模块内顺序）
+  if (q) out.sort((a, b) => (b.viaTitle ? 1 : 0) - (a.viaTitle ? 1 : 0))
   return out.slice(0, limit)
+}
+
+/** 选段 HTML：先转义再对关键词包 mark（防注入） */
+export function highlightExcerpt(excerpt, keyword) {
+  const esc = (s) =>
+    String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+  const e = esc(excerpt)
+  const q = String(keyword || '').trim()
+  if (!e || !q) return e
+  const eq = esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  try {
+    return e.replace(new RegExp(eq, 'gi'), (m) => '<mark>' + m + '</mark>')
+  } catch {
+    return e
+  }
 }
 
 /** 按 kind:id 精确取目标（已删除则返回 null） */

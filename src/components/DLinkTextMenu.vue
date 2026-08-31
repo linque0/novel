@@ -4,7 +4,7 @@ import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import DLinkPicker from './DLinkPicker.vue'
 import { buildToken, tokenAtOffset, tokenAtPoint } from '../services/doublelinks'
 
-const st = reactive({ open: false, x: 0, y: 0, picker: false, host: null, get: null, set: null, onToken: null })
+const st = reactive({ open: false, x: 0, y: 0, picker: false, host: null, get: null, set: null, onToken: null, q: '' })
 const rootEl = ref(null)
 
 /**
@@ -19,6 +19,7 @@ function open(e, opts) {
   st.get = opts.get
   st.set = opts.set
   st.picker = false
+  st.q = ''
   st.x = e.clientX
   st.y = e.clientY
   const hit = tokenAtPoint(ta, e.clientX, e.clientY)
@@ -90,6 +91,7 @@ async function doPaste() {
 }
 
 function openPicker() {
+  st.q = selectedText().replace(/\s+/g, ' ').trim().slice(0, 20)
   st.picker = true
 }
 
@@ -136,7 +138,7 @@ defineExpose({ open, close })
   <div v-if="st.open" ref="rootEl" class="ctx-menu" :style="{ left: st.x + 'px', top: st.y + 'px' }" @contextmenu.prevent>
     <template v-if="st.picker">
       <div class="ctx-dlwrap">
-        <DLinkPicker @pick="applyPick" />
+        <DLinkPicker :initial-query="st.q" @pick="applyPick" />
         <div style="display: flex; margin-top: 8px">
           <button class="ctx-btn" type="button" @click="st.picker = false">返回</button>
         </div>

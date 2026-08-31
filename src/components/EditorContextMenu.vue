@@ -5,7 +5,7 @@ import DLinkPicker from './DLinkPicker.vue'
 
 const props = defineProps({ editor: { type: Object, required: true } })
 
-const st = reactive({ open: false, x: 0, y: 0, sub: null, subX: 0, subY: 0, linkEdit: false, linkHref: '', dlPicker: false, dlFrom: 0, dlTo: 0 })
+const st = reactive({ open: false, x: 0, y: 0, sub: null, subX: 0, subY: 0, linkEdit: false, linkHref: '', dlPicker: false, dlFrom: 0, dlTo: 0, savedFrom: null, savedTo: null, dlQuery: '' })
 const rootEl = ref(null)
 
 const SIZES = [12, 14, 16, 18, 20, 24, 28, 32]
@@ -39,19 +39,33 @@ function refresh() {
 }
 
 /* ---------- 双链（多模块内容互联）：选中文字标记为指向全书任意内容的双链 ---------- */
+const dlDisabled = () => selEmpty() && !act.dl && st.savedFrom == null
+
 function openDlPicker() {
-  if (selEmpty() && !act.dl) return
-  const sel = props.editor.state.selection
-  if (sel.empty && act.dl) {
+  const hasSaved = st.savedFrom != null
+  if (hasSaved) {
+    // 用右键时刻的选区快照（此刻编辑器选区可能已被塌缩）
+    st.dlFrom = st.savedFrom
+    st.dlTo = st.savedTo
+  } else if (act.dl) {
     // 光标落在已有双链内：把作用范围扩展到整个双链再编辑
     chain().extendMarkRange('dlLink').run()
     const sel2 = props.editor.state.selection
     st.dlFrom = sel2.from
     st.dlTo = sel2.to
   } else {
-    st.dlFrom = sel.from
-    st.dlTo = sel.to
+    if (selEmpty()) return
+    st.dlFrom = props.editor.state.selection.from
+    st.dlTo = props.editor.state.selection.to
   }
+  // 选中内容作为全局搜索关键词（无选区时用当前双链标题）
+  let kw = ''
+  try {
+    kw = hasSaved || !selEmpty() ? props.editor.state.doc.textBetween(st.dlFrom, st.dlTo, ' ') : act.dlTitle
+  } catch {
+    kw = ''
+  }
+  st.dlQuery = String(kw || '').replace(/\s+/g, ' ').trim().slice(0, 20)
   st.dlPicker = true
 }
 function onPickDl(t) {
@@ -156,8 +170,11 @@ function run(fn) {
   refocus()
 }
 
-async function open(x, y) {
+async function open(x, y, savedSel = null) {
   refresh()
+  st.savedFrom = savedSel && savedSel.to > savedSel.from ? savedSel.from : null
+  st.savedTo = st.savedFrom != null ? savedSel.to : null
+  st.dlQuery = ''
   st.x = x
   st.y = y
   st.open = true
@@ -242,7 +259,7 @@ defineExpose({ open, close })
 
     <template v-else-if="st.dlPicker">
       <div class="ctx-dlwrap">
-        <DLinkPicker @pick="onPickDl" />
+        <DLinkPicker :initial-query="st.dlQuery" @pick="onPickDl" />
         <div style="display: flex; margin-top: 8px">
           <button class="ctx-btn" @click="st.dlPicker = false">返回</button>
         </div>

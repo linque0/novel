@@ -25,21 +25,40 @@ const ui = useUiStore()
 const editor = shallowRef(null)
 const ctxMenu = ref(null)
 
+let savedSelRange = null // 右键时刻的选区快照（浏览器/PM 可能在右键流程中塌缩选区）
+
+function onMouseDownCapture(e) {
+  const ed = editor.value
+  if (!ed) return
+  if (e.button === 2) {
+    const { from, to, empty } = ed.state.selection
+    savedSelRange = empty ? null : { from, to }
+  } else {
+    savedSelRange = null
+  }
+}
+
 function onContextMenu(e) {
   const ed = editor.value
   if (!ed) return
   e.preventDefault()
-  // 右键落点不在当前选区内时，先把光标移过去（Word 习惯）
+  // 快照选区且右键落在其内 → 保持选区（菜单作用于选中文字）；否则光标移到右键处（Word 习惯）
   try {
     const pos = ed.view.posAtCoords({ left: e.clientX, top: e.clientY })
     if (pos && pos.pos != null) {
-      const { from, to } = ed.state.selection
-      if (pos.pos < from || pos.pos > to) ed.commands.setTextSelection(pos.pos)
+      const range = savedSelRange
+      const keep = !!(range && pos.pos >= range.from && pos.pos <= range.to)
+      if (!keep) {
+        savedSelRange = null
+        ed.commands.setTextSelection(pos.pos)
+      }
+    } else {
+      savedSelRange = null
     }
   } catch {
-    /* 坐标越界时忽略，菜单作用于当前选区 */
+    savedSelRange = null
   }
-  ctxMenu.value?.open(e.clientX, e.clientY)
+  ctxMenu.value?.open(e.clientX, e.clientY, savedSelRange)
 }
 
 const extensions = [
@@ -183,7 +202,7 @@ function openHistory() {
     </div>
     <template v-if="work.activeChapter && editor">
       <EditorToolbar :key="work.selChapterId" :editor="editor" />
-      <div class="rich-host paper-texture" @contextmenu.capture="onContextMenu">
+      <div class="rich-host paper-texture" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
         <EditorContent :key="work.selChapterId" :editor="editor" class="rich-inner" />
       </div>
       <EditorContextMenu ref="ctxMenu" :editor="editor" />

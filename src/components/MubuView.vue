@@ -610,6 +610,7 @@ function toggleCtxFold() {
 
 /* ---------- 双链（多模块内容互联）：节点内选中文字标记为指向全书任意内容的双链 ---------- */
 let savedRange = null
+const dlKeyword = ref('')
 function rowTextEl(id = ctx.rowId) {
   return rootEl.value?.querySelector(`[data-node="m:${id}"] .ob-text`)
 }
@@ -629,6 +630,8 @@ function openLinkSearch() {
   // 光标折叠落在已有双链内：移到双链之后，避免产生嵌套双链
   const span = savedRange?.startContainer?.parentElement?.closest?.('.dl-link')
   if (span && savedRange.collapsed) savedRange.setStartAfter(span)
+  // 选中内容作为全局搜索关键词
+  dlKeyword.value = savedRange && !savedRange.collapsed ? String(savedRange.toString() || '').replace(/\s+/g, ' ').trim().slice(0, 20) : ''
   ctx.linkSearch = true
 }
 function insertCtxLink(t) {
@@ -834,7 +837,7 @@ onBeforeUnmount(() => {
         <div class="ctx-item" @mousedown.prevent @click="runCtx(redo)"><span>重做</span><span class="hint">Ctrl+Y</span></div>
         </template>
         <div v-else class="ctx-dlwrap">
-          <DLinkPicker @pick="insertCtxLink" />
+          <DLinkPicker :initial-query="dlKeyword" @pick="insertCtxLink" />
           <button class="ctx-btn" style="width: 100%; margin-top: 8px" type="button" @mousedown.prevent @click="ctx.linkSearch = false">返回</button>
         </div>
       </div>

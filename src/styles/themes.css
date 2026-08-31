@@ -1221,3 +1221,35 @@ body,
   max-height: 240px;
   overflow-y: auto;
 }
+
+/* 双链搜索：命中选段 */
+.picker-item.has-excerpt {
+  align-items: flex-start;
+}
+.picker-item.has-excerpt .dl-kind,
+.picker-item.has-excerpt .picker-extra {
+  margin-top: 3px;
+}
+.picker-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.picker-excerpt {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  word-break: break-all;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.picker-excerpt mark {
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+  padding: 0;
+}
