@@ -164,6 +164,12 @@ const STATUS_OPTS = [
 ]
 const STATUS_COLOR = { draft: 'default', done: 'success', revise: 'warning' }
 
+function onStatus(v) {
+  if (!work.activeChapter) return
+  const synced = work.setChapterStatus(work.activeChapter.id, v)
+  if (synced) window.$msg?.success('本章章纲已同步为已完成')
+}
+
 function onTitle(e) {
   if (!work.activeChapter) return
   work.renameChapter(work.activeChapter.id, e.target.value.trim() || '未命名章节')
@@ -189,7 +195,7 @@ function openHistory() {
         :value="work.activeChapter.status"
         :options="STATUS_OPTS"
         style="width: 92px"
-        @update:value="(v) => work.setChapterStatus(work.activeChapter.id, v)"
+        @update:value="onStatus"
       />
       <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter.status]">
         {{ work.activeChapter.wordCount || 0 }} 字

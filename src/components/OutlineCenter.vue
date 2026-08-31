@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { useWorkStore } from '../stores/work'
 import DLinkTextMenu from './DLinkTextMenu.vue'
+import { parseBeats, beatProgress, toggleBeatLine, BEAT_TEMPLATE } from '../services/outlineBeats'
 
 const work = useWorkStore()
 const dlMenu = ref(null)
@@ -25,6 +26,21 @@ function onInput(e) {
   if (current.value) work.updateOutline(current.value.o.id, e.target.value)
 }
 
+/* 节拍清单（8.8-O3）：- [ ] / - [x] 文本约定行，可勾选 */
+const beats = computed(() => parseBeats(current.value?.o?.content))
+const progress = computed(() => beatProgress(current.value?.o?.content))
+
+function insertTemplate() {
+  if (!current.value) return
+  const o = current.value.o
+  const cur = o.content || ''
+  work.updateOutline(o.id, cur.trim() ? cur.replace(/\s*$/, '') + '\n' + BEAT_TEMPLATE : BEAT_TEMPLATE)
+}
+function toggleBeat(index) {
+  if (!current.value) return
+  work.updateOutline(current.value.o.id, toggleBeatLine(current.value.o.content, index))
+}
+
 /* 右键快捷栏：剪切/复制/粘贴 + 添加双链（选中内容变 [[标题]] 令牌） */
 function onCtx(e) {
   if (!current.value) return
@@ -37,6 +53,19 @@ function onCtx(e) {
   <div v-if="current" style="flex: 1; display: flex; flex-direction: column; padding: 22px 34px; min-height: 0; overflow: auto">
     <h2 class="serif" style="margin: 0 0 4px">{{ current.label }}</h2>
     <p style="margin: 0 0 12px; font-size: 12px; color: var(--text-dim)">{{ current.hint }}（自动保存）</p>
+
+    <div class="beat-toolbar">
+      <button class="tb" title="插入节拍模板：目标 / 冲突 / 转折 / 钩子（一行一拍，可勾选）" @click="insertTemplate">☑ 节拍模板</button>
+      <span v-if="progress.total" class="dim">节拍 {{ progress.done }}/{{ progress.total }}</span>
+      <span v-if="beats.length" style="font-size: 12px; color: var(--text-dim)">勾选后列表侧显示进度，正文右栏可跟踪</span>
+    </div>
+    <div v-if="beats.length" class="beat-strip">
+      <label v-for="b in beats" :key="b.index" class="beat-chip" :class="{ done: b.done }">
+        <input type="checkbox" :checked="b.done" @change="toggleBeat(b.index)" />
+        <span>{{ b.text || '（空节拍）' }}</span>
+      </label>
+    </div>
+
     <textarea
       class="rp-textarea"
       style="flex: 1; min-height: 380px; font-size: 15px; line-height: 2"

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, watch, onBeforeUnmount, nextTick } from 'vue'
 import { NModal } from 'naive-ui'
 import * as echarts from 'echarts'
 import { useUiStore } from '../stores/ui'
@@ -10,6 +10,10 @@ import { getWordLogs } from '../db/repo'
 const ui = useUiStore()
 const work = useWorkStore()
 const shelf = useShelfStore()
+
+/* 章纲完成度（8.8-O2）：当前作品章纲 done / 总数 */
+const outlineDone = computed(() => work.outlines.filter((o) => o.level === 'chapter' && !o.deletedAt && o.status === 'done').length)
+const outlineTotal = computed(() => work.outlines.filter((o) => o.level === 'chapter' && !o.deletedAt).length)
 
 const barEl = ref(null)
 const heatEl = ref(null)
@@ -143,6 +147,10 @@ onBeforeUnmount(() => {
       <div class="stat-card">
         <div class="num">{{ cards.days }}</div>
         <div class="lbl">累计写作天数</div>
+      </div>
+      <div v-if="work.loaded && outlineTotal" class="stat-card">
+        <div class="num">{{ outlineDone }}/{{ outlineTotal }}</div>
+        <div class="lbl">章纲完成度</div>
       </div>
     </div>
     <div style="font-size: 12px; color: var(--text-dim); margin-bottom: 4px">近 90 天每日新增字数</div>

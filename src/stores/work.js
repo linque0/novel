@@ -215,9 +215,26 @@ export const useWorkStore = defineStore('work', {
 
     setChapterStatus(id, status) {
       const c = this.chapters.find((x) => x.id === id)
-      if (!c) return
+      if (!c) return false
       c.status = status
       autosave.mark('chapters', c)
+      // 章节标记完成时同步章纲状态（8.8-O2）；outlines.status 为非索引列，无需数据库版本升级
+      if (status === 'done') {
+        const o = this.outlines.find((x) => x.refId === id && x.level === 'chapter' && !x.deletedAt)
+        if (o && o.status !== 'done') {
+          o.status = 'done'
+          autosave.mark('outlines', o)
+          return true
+        }
+      }
+      return false
+    },
+
+    setOutlineStatus(id, status) {
+      const o = this.outlines.find((x) => x.id === id)
+      if (!o) return
+      o.status = status
+      autosave.mark('outlines', o)
     },
 
     setChapterContent(id, content, fmt) {
