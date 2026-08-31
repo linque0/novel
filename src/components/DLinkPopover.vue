@@ -8,6 +8,7 @@ const st = reactive({ show: false, x: 0, y: 0, view: null, target: null })
 let curEl = null // 当前悬停的 .dl-link 元素
 let curHost = null // 当前悬停的 textarea
 let tokenCache = { host: null, token: null }
+let hideTimer = null // 离开双链的宽限期：给鼠标移入浮窗的时间
 
 function place() {
   const el = pop.value
@@ -44,10 +45,41 @@ function resolveByEl(el) {
   return byTitle ? { view: previewFor(byTitle), target: byTitle } : { view: missingView(title, parsed?.kind), target: null }
 }
 
+function cancelHide() {
+  if (hideTimer) {
+    clearTimeout(hideTimer)
+    hideTimer = null
+  }
+}
+
+function hide() {
+  cancelHide()
+  st.show = false
+  curEl = null
+  curHost = null
+  tokenCache = { host: null, token: null }
+}
+
+/** 离开双链：延迟消失，鼠标在此期间移入浮窗则保持显示 */
+function delayHide() {
+  cancelHide()
+  hideTimer = setTimeout(() => {
+    hideTimer = null
+    st.show = false
+    curEl = null
+    curHost = null
+    tokenCache = { host: null, token: null }
+  }, 260)
+}
+
 function onMouseMove(e) {
-  if (e.target?.closest?.('.dl-pop')) return // 悬停在悬浮窗自身上时保持
+  if (e.target?.closest?.('.dl-pop')) {
+    cancelHide() // 鼠标移入浮窗：保持显示
+    return
+  }
   const linkEl = e.target?.closest?.('.dl-link')
   if (linkEl) {
+    cancelHide()
     if (linkEl === curEl && st.show) return
     curEl = linkEl
     curHost = null
@@ -61,6 +93,7 @@ function onMouseMove(e) {
     if (host) {
       const hit = tokenAtPoint(host, e.clientX, e.clientY)
       if (hit) {
+        cancelHide()
         if (curHost === host && st.show && tokenCache.token === hit.title + '|' + hit.display) return
         curEl = null
         curHost = host
@@ -76,14 +109,7 @@ function onMouseMove(e) {
       }
     }
   }
-  if (st.show) hide()
-}
-
-function hide() {
-  st.show = false
-  curEl = null
-  curHost = null
-  tokenCache = { host: null, token: null }
+  if (st.show) delayHide()
 }
 
 function onJump() {
@@ -109,6 +135,7 @@ onMounted(() => {
   window.addEventListener('resize', hide)
 })
 onBeforeUnmount(() => {
+  cancelHide()
   window.removeEventListener('mousemove', onMouseMove)
   window.removeEventListener('mousedown', onWinMouseDown, true)
   window.removeEventListener('scroll', onWinScroll, true)

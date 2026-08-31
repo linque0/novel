@@ -350,8 +350,8 @@ defineExpose({ open, close })
       <div v-if="act.link" class="ctx-item" @click="removeLink"><span>清除链接</span></div>
 
       <div class="ctx-sep" />
-      <div class="ctx-item" :class="{ disabled: selEmpty() && !act.dl }" @click="openDlPicker">
-        <span>{{ act.dl ? '编辑双链…' : '添加双链…' }}</span><span class="hint">互联</span>
+      <div class="ctx-item" :class="{ disabled: dlDisabled() }" @click="openDlPicker">
+        <span>{{ act.dl && !dlDisabled() ? '编辑双链…' : '添加双链…' }}</span><span class="hint">互联</span>
       </div>
       <div v-if="act.dl" class="ctx-item" @click="jumpDl"><span>跳转到双链目标</span></div>
       <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除双链</span></div>
