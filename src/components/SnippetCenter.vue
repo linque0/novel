@@ -2,9 +2,11 @@
 import { computed, ref } from 'vue'
 import { NButton, NInput, NPopconfirm, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
 import DLinkTextMenu from './DLinkTextMenu.vue'
 
 const work = useWorkStore()
+const ui = useUiStore()
 const msg = useMessage()
 const s = computed(() => work.activeSnippet)
 const dlMenu = ref(null)
@@ -27,10 +29,14 @@ function toChapter() {
 }
 function toLore() {
   if (!s.value) return
+  // 设定库已幕布化（v0.3.0）：旧 lore 表为死表，改写幕布节点——首行作标题、余行作子节点内容
   const lines = (s.value.content || '').split('\n').filter((x) => x.trim())
-  const row = work.addLore(null)
-  work.updateLore(row.id, { title: (lines[0] || '新设定').slice(0, 30), content: lines.slice(1).join('\n') })
-  msg.success('已转为设定条目')
+  const node = work.mubuAdd(null, null, (lines[0] || '新设定').slice(0, 30))
+  const body = lines.slice(1).join('\n').trim()
+  if (body) work.mubuAdd(node.id, null, body)
+  work.tab = 'lore'
+  ui.loreFocusId = node.id
+  msg.success('已转为设定节点')
 }
 </script>
 
