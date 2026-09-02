@@ -522,6 +522,31 @@ function nodeStyle(n) {
   }
 }
 
+/* 形状描边多边形（viewBox 0 0 100 100，preserveAspectRatio=none 拉伸铺满节点）：
+ * 菱形/平行四边形顶点恰好落在连线锚点（边界中点）上，边框与连线端点贴合 */
+const SW = 1.6
+function shapePoly(n) {
+  if (n.shape === 'diamond') {
+    return [
+      [50, SW],
+      [100 - SW, 50],
+      [50, 100 - SW],
+      [SW, 50]
+    ]
+      .map((p) => p.join(','))
+      .join(' ')
+  }
+  const sk = 12
+  return [
+    [sk, SW],
+    [100 - SW, SW],
+    [100 - sk, 100 - SW],
+    [SW, 100 - SW]
+  ]
+    .map((p) => p.join(','))
+    .join(' ')
+}
+
 /* ---------- 新建与骨架模板 ---------- */
 function addNodeAt(kind, pt, fields = {}) {
   const s = effSize({ kind }, work.canvasPrefs.density)
@@ -723,6 +748,10 @@ onBeforeUnmount(() => {
             </div>
           </template>
           <template v-else>
+            <!-- 菱形/平行四边形：SVG 描边代替 clip-path（clip 会裁掉边框、锚点与手柄） -->
+            <svg v-if="n.kind === 'event' && (n.shape === 'diamond' || n.shape === 'para')" class="oc-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+              <polygon :points="shapePoly(n)" />
+            </svg>
             <div v-if="n.kind === 'textbox'" class="oc-tbbg" :style="{ opacity: n.opacity != null ? n.opacity : 1 }"></div>
             <span v-if="n.kind === 'anchor' && chapterOf(n)" class="ol-dot" :data-s="chapterOf(n).status" :title="STATUS_LABEL[chapterOf(n).status]" />
             <textarea

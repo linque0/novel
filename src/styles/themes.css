@@ -1960,67 +1960,61 @@ body,
   border-color: var(--accent);
   box-shadow: 0 0 0 2px var(--bg-hover), var(--shadow);
 }
-.oc-event.sh-para {
-  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
-  border: none;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
-}
-.oc-event.sh-para:hover,
-.oc-event.sh-para.sel {
-  filter: drop-shadow(0 0 4px var(--accent));
-}
+/* 菱形/平行四边形：SVG polygon 描边（clip-path 方案会裁掉边框、锚点与缩放手柄） */
+.oc-event.sh-para,
 .oc-event.sh-diamond {
-  clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  /* 抵消基础矩形的背景/边框/阴影，轮廓与描边交给 .oc-shape */
+  background: transparent;
   border: none;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.18));
+  box-shadow: none;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
-.oc-event.sh-diamond:hover,
+.oc-event.sh-para.sel,
 .oc-event.sh-diamond.sel {
-  filter: drop-shadow(0 0 4px var(--accent));
+  box-shadow: none;
+  filter: drop-shadow(0 0 5px var(--accent));
+}
+.oc-event.sh-para:hover .oc-shape polygon,
+.oc-event.sh-diamond:hover .oc-shape polygon {
+  stroke: var(--accent);
+}
+.sh-para .oc-body,
+.sh-diamond .oc-body {
+  position: relative;
+  z-index: 1;
+}
+/* 编辑态隐藏形状描边：编辑时节点恢复圆角矩形 */
+.oc-node.editing .oc-shape {
+  display: none;
+}
+.oc-shape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.oc-shape polygon {
+  fill: var(--bg-panel);
+  stroke: var(--border);
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+  transition: stroke 0.15s ease;
+}
+.oc-event:hover .oc-shape polygon,
+.oc-event.sel .oc-shape polygon {
+  stroke: var(--accent);
+}
+.oc-event.sel .oc-shape polygon {
+  stroke-width: 2;
 }
 .oc-event.sh-diamond .oc-body {
   padding: 22px 36px;
   text-align: center;
 }
-/* clip-path 形状会裁剪越界子元素：锚点/手柄内缩到形状内部 */
-.sh-para .oc-apt[data-side='left'] {
-  left: 4px;
-}
-.sh-para .oc-apt[data-side='right'] {
-  right: 4px;
-}
-.sh-diamond .oc-apt[data-side='left'] {
-  left: calc(25% - 4px);
-}
-.sh-diamond .oc-apt[data-side='right'] {
-  right: calc(25% - 4px);
-}
-.sh-diamond .oc-apt[data-side='top'] {
-  top: calc(25% - 4px);
-}
-.sh-diamond .oc-apt[data-side='bottom'] {
-  bottom: calc(25% - 4px);
-}
-.sh-para .oc-rs[data-dir='e'] {
-  right: 4px;
-}
-.sh-para .oc-rs[data-dir='s'] {
-  bottom: 4px;
-}
-.sh-para .oc-rs-corner {
-  right: 10px;
-  bottom: 5px;
-}
-.sh-diamond .oc-rs[data-dir='e'] {
-  right: calc(25% - 4px);
-}
-.sh-diamond .oc-rs[data-dir='s'] {
-  bottom: calc(25% - 4px);
-}
-.sh-diamond .oc-rs-corner {
-  right: calc(25% - 4px);
-  bottom: calc(25% - 4px);
-}
+/* SVG 形状边框贴合节点边界：锚点/手柄恢复标准贴边位置（不再需要为 clip-path 内缩） */
 /* 放大模块（自定义高度）显示正文全文 */
 .oc-fulltext {
   font-size: 11.5px;
