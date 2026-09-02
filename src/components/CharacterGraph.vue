@@ -350,6 +350,7 @@ onBeforeUnmount(() => {
           :style="{ left: svgBox.x + 'px', top: svgBox.y + 'px' }"
           :width="svgBox.w"
           :height="svgBox.h"
+          :viewBox="svgBox.x + ' ' + svgBox.y + ' ' + svgBox.w + ' ' + svgBox.h"
         >
           <path
             v-for="e in edges"
