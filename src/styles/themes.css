@@ -1756,6 +1756,11 @@ body,
   position: absolute;
   cursor: grab;
   user-select: none;
+  /* 尺寸/位置变化的缩放过渡动画（拖拽调整大小时由 .resizing 关闭） */
+  transition: width 0.25s ease, height 0.25s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+.oc-node.resizing {
+  transition: box-shadow 0.15s ease;
 }
 .oc-node:active {
   cursor: grabbing;
@@ -1779,25 +1784,37 @@ body,
   top: -9px;
   font-size: 11px;
 }
-/* 容器正文区（与事件/便签/引用卡同级：可双击编辑内容） */
+/* 容器正文区（PPT 式文本框：标题栏下方独立框，虚线提示 + 内补白，双击进入行内编辑） */
 .oc-cbody {
   position: absolute;
-  left: 8px;
-  right: 8px;
+  left: 10px;
+  right: 10px;
   top: 40px;
-  bottom: 8px;
+  bottom: 10px;
+  border: 1px dashed color-mix(in srgb, var(--bc, var(--accent)) 45%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--bg-panel) 65%, transparent);
   overflow: hidden;
   cursor: text;
-  border-radius: 6px;
+}
+.oc-cbody:hover {
+  border-style: solid;
+  background: var(--bg-panel);
 }
 .oc-cbody-hint {
   font-size: 11px;
   color: var(--text-dim);
   opacity: 0.75;
-  padding: 4px 6px;
+  padding: 8px 10px;
 }
 .oc-inline-body {
   top: 40px !important;
+  left: 10px !important;
+  right: auto !important;
+  width: calc(100% - 20px) !important;
+  height: calc(100% - 50px) !important;
+  border-style: solid !important;
+  background: var(--bg-panel) !important;
   z-index: 7;
 }
 .oc-body {
@@ -1901,6 +1918,13 @@ body,
   overflow: hidden;
   max-height: 100%;
   margin-top: 2px;
+}
+/* 容器正文文本（内补白，适配文本框样式） */
+.oc-cbody .oc-fulltext {
+  padding: 8px 10px;
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
 }
 .oc-event.sh-ellipse {
   border-radius: 50%;

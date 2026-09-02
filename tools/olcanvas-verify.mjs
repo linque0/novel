@@ -426,6 +426,39 @@ await c.sleep(300)
 await c.evalx(`(() => { document.querySelector('.oc-eedit') && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); return 1 })()`)
 check('容器内子模块直连（拖线不锚容器）', m19.toKid, JSON.stringify(m19))
 
+/* 11i) 大小调整修复：右缘/下缘拖拽增量精确（基于当前 w/h，累积生效）+ 过渡动画存在 */
+const m20 = await c.evalx(`(() => {
+  const w = ${store}
+  const n = w.liveOlnodes().find((x) => x.kind === 'event')
+  const el = [...document.querySelectorAll('.oc-node.oc-event')][0]
+  const rs = el.querySelector('.oc-rs[data-dir="se"]')
+  const r = rs.getBoundingClientRect()
+  const inner = document.querySelector('.om-inner')
+  const sc = parseFloat((inner.style.transform.match(/scale\\(([\\d.]+)\\)/) || [])[1] || '1')
+  const w0 = n.w != null ? n.w : 178
+  const h0 = n.h != null ? n.h : 54
+  rs.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + 4, clientY: r.top + 4 }))
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + 48, clientY: r.top + 32 }))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: r.left + 48, clientY: r.top + 32 }))
+  return {
+    w: n.w,
+    h: n.h,
+    expW: Math.round((w0 + 48 / sc) / 16) * 16,
+    expH: Math.round((h0 + 32 / sc) / 16) * 16,
+    trans: getComputedStyle(el).transition.includes('width')
+  }
+})()`)
+check('大小调整增量精确（吸附）+ 缩放过渡动画', Math.abs(m20.w - m20.expW) <= 16 && Math.abs(m20.h - m20.expH) <= 16 && m20.trans, JSON.stringify(m20))
+
+/* 11j) 容器 PPT 式文本框 */
+const m21 = await c.evalx(`(() => {
+  const el = [...document.querySelectorAll('.oc-node.oc-container')][0]
+  const body = el.querySelector('.oc-cbody')
+  const st = getComputedStyle(body)
+  return { dashed: st.borderTopStyle === 'dashed', hint: !!el.querySelector('.oc-cbody-hint') || !!el.querySelector('.oc-fulltext') }
+})()`)
+check('容器正文为 PPT 式文本框（虚线框 + 占位/正文）', m21.dashed && m21.hint, JSON.stringify(m21))
+
 const fail = results.filter((x) => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')
 process.exit(fail ? 1 : 0)

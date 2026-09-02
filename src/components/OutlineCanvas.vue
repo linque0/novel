@@ -265,26 +265,31 @@ function reparentAfterDrop(n, pt) {
   }
 }
 
-/* ---------- 模块边缘拖拽调整大小（v0.4.1 界面优化） ---------- */
+/* ---------- 模块边缘拖拽调整大小（拖拽中禁用过渡动画，落库后恢复） ---------- */
+const resizing = ref(false)
 function startResize(e, n, dir) {
   if (e.button !== 0) return
   e.stopPropagation()
   e.preventDefault()
+  resizing.value = true
   const base = { ...(dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)) }
   const mx = e.clientX
   const my = e.clientY
-  const move = (ev) => {
+  const apply = (ev) => {
     let w = base.w
     let h = base.h
     if (dir.includes('e')) w = snap(base.w + (ev.clientX - mx) / zoom.value)
     if (dir.includes('s')) h = snap(base.h + (ev.clientY - my) / zoom.value)
     dragSize.set(n.id, { w: Math.max(96, w), h: Math.max(36, h) })
   }
+  apply(e)
+  const move = (ev) => apply(ev)
   const up = () => {
     window.removeEventListener('mousemove', move)
     window.removeEventListener('mouseup', up)
     const p = dragSize.get(n.id)
     dragSize.delete(n.id)
+    resizing.value = false
     if (p) work.olnodeSetSize(n.id, p.w, p.h)
   }
   window.addEventListener('mousemove', move)
@@ -617,7 +622,7 @@ onBeforeUnmount(() => {
           v-for="n in visNodes"
           :key="n.id"
           class="oc-node"
-          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, 'dl-link': n.kind === 'cite' && n.refId }]"
+          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing, 'dl-link': n.kind === 'cite' && n.refId }]"
           :style="nodeStyle(n)"
           :data-dl-target="n.kind === 'cite' && n.refId ? n.refId : null"
           :data-dl-title="n.kind === 'cite' ? labelOf(n) : null"
