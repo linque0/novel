@@ -160,14 +160,18 @@ await c.sleep(500)
 const m8 = await c.evalx(`(() => ({ flash: !!document.querySelector('.rg-node.flash') }))()`)
 check('孤岛人物提示与定位闪烁', m8a.txt.includes('孤岛 1') && m8.flash, JSON.stringify({ ...m8a, ...m8 }))
 
-/* 9) 发送为大纲画布引用卡 */
+/* 9) 发送为大纲画布引用卡（v0.4.3 起入口为节点右键菜单） */
 await c.evalx(`(() => { const w = ${store}; w.selCharacterId = w.liveCharacters.find((x) => x.name === '林昭').id; return 1 })()`)
 await c.sleep(300)
-const m9 = await c.evalx(`(() => {
-  const btn = [...document.querySelectorAll('.rg-node .oc-mini button')].find((b) => b.title.includes('大纲'))
-  btn?.click()
+const m9 = await c.evalx(`(async () => {
+  const node = document.querySelector('.rg-node.sel')
+  if (!node) return { err: 'no sel node' }
+  node.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: 300, clientY: 300 }))
+  await new Promise((r) => setTimeout(r, 200))
+  const btn = [...document.querySelectorAll('.rg-ctx button')].find((b) => b.title.includes('大纲'))
+  if (!btn) return { err: 'no ctx btn' }
+  btn.click()
   const w = ${store}
-  const cite = w.olnodeByRef ? null : null
   return { tab: w.tab, view: w.outlineView }
 })()`)
 await c.sleep(500)

@@ -239,6 +239,27 @@ function removeRel() {
 function onWinDown(e) {
   if (relEdit.value && !e.target.closest?.('.rg-eedit, .rg-elabel, .rg-edge-hit')) relEdit.value = null
   if (relInput.value && !e.target.closest?.('.rg-relinput')) saveRelInput()
+  if (ctxMenu.value && !e.target.closest?.('.rg-ctx')) ctxMenu.value = null
+}
+/* 人物节点右键菜单（v0.4.3）：替代旧「选中即显示」的常驻小工具条——不遮挡节点内容，随点随开随点随关 */
+const ctxMenu = ref(null) // { charId, x, y }
+function openCtx(e, c) {
+  const p = canvasPt(e)
+  work.selCharacterId = c.id
+  ctxMenu.value = { charId: c.id, x: p.x, y: p.y }
+}
+const ctxChar = computed(() => work.liveCharacters.find((c) => c.id === ctxMenu.value?.charId) || null)
+function ctxSendOutline() {
+  if (ctxChar.value) work.sendCharToOutline(ctxChar.value.id)
+  ctxMenu.value = null
+}
+function ctxOpenDetail() {
+  if (ctxChar.value) openDetail(ctxChar.value)
+  ctxMenu.value = null
+}
+function onWheelC(ev) {
+  ctxMenu.value = null
+  onWheel(ev)
 }
 function nodeStyle(c) {
   const p = posOf(c)
@@ -312,7 +333,7 @@ onBeforeUnmount(() => {
       <button class="om-btn" title="适应视图" @click="fitView">适应</button>
     </div>
 
-    <div ref="canvasEl" class="om-canvas rg-canvas" @mousedown="onPanStart" @wheel.prevent="onWheel">
+    <div ref="canvasEl" class="om-canvas rg-canvas" @mousedown="onPanStart" @wheel="onWheelC">
       <div class="om-inner" :style="innerStyle">
         <svg class="om-edges rg-edges" :width="Math.max(2400, bounds.x + bounds.w + 500)" :height="Math.max(1600, bounds.y + bounds.h + 500)">
           <path
@@ -352,6 +373,7 @@ onBeforeUnmount(() => {
           :class="{ sel: work.selCharacterId === c.id, flash: flashIds.has(c.id) }"
           :style="nodeStyle(c)"
           @mousedown="onNodeDown($event, c)"
+          @contextmenu.prevent="openCtx($event, c)"
           @mouseenter="hoverId = c.id"
           @mouseleave="hoverId = null"
           @dblclick.stop="openDetail(c)"
@@ -361,10 +383,6 @@ onBeforeUnmount(() => {
           <div class="rg-meta">
             <div class="rg-name">{{ c.name || '未命名' }}</div>
             <span class="rg-role" :style="{ color: ROLE_COLOR[c.role] || 'var(--text-dim)', borderColor: ROLE_COLOR[c.role] || 'var(--border)' }">{{ c.role }}</span>
-          </div>
-          <div v-if="work.selCharacterId === c.id" class="oc-mini" @mousedown.stop>
-            <button title="发送为大纲画布引用卡" @click.stop="work.sendCharToOutline(c.id)">→纲</button>
-            <button title="打开人物详情（列表视图）" @click.stop="openDetail(c)">详情</button>
           </div>
           <span v-for="sd in ['right', 'left']" :key="sd" class="oc-apt rg-apt" :data-side="sd" title="拖到另一人物建立关系" @mousedown="startConnect($event, c)" />
         </div>
@@ -379,6 +397,12 @@ onBeforeUnmount(() => {
         <div v-if="relEdit" class="rg-eedit" :style="{ left: relEdit.mx + 'px', top: relEdit.my + 'px' }" @mousedown.stop>
           <input class="rp-input" :value="work.relations.find((r) => r.id === relEdit.relId)?.label || ''" placeholder="关系标签…" @input="patchRelLabel" @keydown.enter="relEdit = null" @keydown.esc="relEdit = null" />
           <button class="om-btn oc-mini-x" title="删除关系" @click="removeRel">✕</button>
+        </div>
+
+        <!-- 人物节点右键菜单（替代旧常驻小工具条，不再遮挡节点内容） -->
+        <div v-if="ctxMenu" class="rg-ctx" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }" @mousedown.stop>
+          <button title="发送为大纲画布引用卡" @click="ctxSendOutline">发送为大纲引用卡</button>
+          <button title="打开人物详情（也可双击节点）" @click="ctxOpenDetail">打开详情</button>
         </div>
       </div>
     </div>
