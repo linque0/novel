@@ -3,6 +3,7 @@
 import { computed, ref, watch, nextTick } from 'vue'
 import { NPopover } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import { KIND_META } from './outline/canvas-model'
 import DLinkTextMenu from './DLinkTextMenu.vue'
 import OutlineCanvas from './OutlineCanvas.vue'
 
@@ -26,6 +27,19 @@ const titleValue = computed(() => {
 })
 
 /* 自由画布不再预置结构：默认不选中，文本视图显示空态引导 */
+
+/* 容器内容联动（v0.4.2）：选中容器列出子模块内容；选中子模块显示所属容器面包屑 */
+const curKids = computed(() => (cur.value?.kind === 'container' ? work.olnodeChildren(cur.value.id) : []))
+const parentContainer = computed(() => {
+  const pid = cur.value?.parentId
+  if (!pid) return null
+  return work.olnodes.find((x) => x.id === pid && !x.deletedAt && x.kind === 'container') || null
+})
+const kidLabel = (k) => k.title || (k.text || '').split('\n').find((x) => x.trim())?.trim().slice(0, 30) || '（空）'
+const kidText = (k) => String(k.text || '').replace(/\[\[([^\[\]\n]+?)\|?([^\[\]\n]*?)\]\]/g, (m, t, d) => d || t).slice(0, 240)
+function selectNode(id) {
+  work.selOlnodeId = id
+}
 
 /* 切换节点时装载内容（html 优先）；输入期间以编辑器为准，不回写 DOM 防光标跳动 */
 function loadEditor() {
@@ -135,6 +149,7 @@ function onCtx(e) {
         v-if="cur"
         ref="editorEl"
         class="ol-editor paper-texture"
+        :style="cur.kind === 'container' || cur.parentId ? { flex: 'none', minHeight: '120px', maxHeight: '45%' } : null"
         contenteditable="true"
         spellcheck="false"
         data-dl-token
@@ -145,6 +160,25 @@ function onCtx(e) {
       <div v-else class="empty-shelf" style="padding-top: 120px">
         <div class="big">谋定而后动</div>
         <p>从左侧选择一个条目开始编辑，或新建故事线与子条目。</p>
+      </div>
+
+      <!-- 所属容器面包屑（选中容器内模块时） -->
+      <div v-if="cur && parentContainer" class="ol-crumb">
+        所属容器：
+        <a href="javascript:;" @click.stop="selectNode(parentContainer.id)">{{ parentContainer.title || '容器' }}</a>
+      </div>
+
+      <!-- 容器内容展示（选中容器时列出子模块内容） -->
+      <div v-if="cur && cur.kind === 'container' && curKids.length" class="ol-kids">
+        <div class="rp-title">容器内容（{{ curKids.length }}）——点击卡片可跳转编辑</div>
+        <div v-for="k in curKids" :key="k.id" class="ol-kid" role="button" tabindex="0" @click="selectNode(k.id)" @keydown.enter="selectNode(k.id)">
+          <div class="ol-kid-head">
+            <span class="ol-type-icon">{{ KIND_META[k.kind]?.icon || '◆' }}</span>
+            <span class="ol-kid-label">{{ kidLabel(k) }}</span>
+            <span class="ol-kid-type">{{ KIND_META[k.kind]?.label || '模块' }}</span>
+          </div>
+          <pre v-if="kidText(k)" class="ol-kid-text">{{ kidText(k) }}</pre>
+        </div>
       </div>
     </template>
 

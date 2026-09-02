@@ -60,36 +60,62 @@ function typeIcon(n) {
   return TYPE_META[n.kind]?.icon || '◆'
 }
 
+const metaOf = (n, depth) => {
+  const ch = chapterOf(n)
+  const broken = work.olBroken
+  const isTail = broken.tails.some((t) => t.id === n.id)
+  const isMissing = broken.missing.some((t) => t.id === n.id)
+  const rels = relsCount(n)
+  const mtype = n.mtype || ''
+  const parent = n.parentId ? work.olnodes.find((x) => x.id === n.parentId && !x.deletedAt) : null
+  return {
+    n,
+    depth,
+    hasKids: n.kind === 'container' && work.olnodeChildren(n.id).length > 0,
+    icon: typeIcon(n),
+    type: typeLabel(n),
+    label: labelOf(n),
+    parentLabel: parent ? parent.title || '容器' : '',
+    badge: [ch ? `${ch.wordCount || 0}字` : '', n.kind === 'container' ? `${work.olnodeChildren(n.id).length}项` : '', rels ? `↔${rels}` : ''].filter(Boolean).join(' '),
+    mtype,
+    mcolor: mtype ? work.olTypes.find((t) => t.name === mtype)?.color || 'var(--text-dim)' : '',
+    broken: showBroken.value && (isTail || isMissing),
+    brokenTip: isTail ? '烂尾情节（无后继）' : isMissing ? '缺铺垫（无来源）' : ''
+  }
+}
+
 const modules = computed(() => {
   const kw = q.value.trim().toLowerCase()
-  return work
-    .liveOlnodes()
-    .slice()
-    .sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
-    .map((n) => {
-      const ch = chapterOf(n)
-      const broken = work.olBroken
-      const isTail = broken.tails.some((t) => t.id === n.id)
-      const isMissing = broken.missing.some((t) => t.id === n.id)
-      const rels = relsCount(n)
-      const mtype = n.mtype || ''
-      return {
-        n,
-        icon: typeIcon(n),
-        type: typeLabel(n),
-        label: labelOf(n),
-        badge: [ch ? `${ch.wordCount || 0}字` : '', n.kind === 'container' ? `${work.olnodeChildren(n.id).length}项` : '', rels ? `↔${rels}` : ''].filter(Boolean).join(' '),
-        mtype,
-        mcolor: mtype ? work.olTypes.find((t) => t.name === mtype)?.color || 'var(--text-dim)' : '',
-        broken: showBroken.value && (isTail || isMissing),
-        brokenTip: isTail ? '烂尾情节（无后继）' : isMissing ? '缺铺垫（无来源）' : ''
-      }
-    })
-    .filter(
-      (m) =>
-        (typeFilter.value === '全部' || m.type === typeFilter.value || m.mtype === typeFilter.value) &&
-        (!kw || m.label.toLowerCase().includes(kw))
-    )
+  const nodes = work.liveOlnodes()
+  const match = (m) =>
+    (typeFilter.value === '全部' || m.type === typeFilter.value || m.mtype === typeFilter.value) &&
+    (!kw || m.label.toLowerCase().includes(kw))
+  const byParent = new Map()
+  for (const n of nodes) {
+    const p = n.parentId || null
+    if (!byParent.has(p)) byParent.set(p, [])
+    byParent.get(p).push(n)
+  }
+  for (const list of byParent.values()) list.sort((a, b) => (a.kind === 'container' ? 0 : 1) - (b.kind === 'container' ? 0 : 1) || (a.sortOrder || 0) - (b.sortOrder || 0))
+  const out = []
+  const walk = (pid, depth) => {
+    for (const n of byParent.get(pid) || []) {
+      const m = metaOf(n, depth)
+      if (match(m)) out.push(m)
+      if (n.kind === 'container' && !n.fold) walk(n.id, depth + 1)
+    }
+  }
+  walk(null, 0)
+  // 搜索 / 筛选时补充被折叠容器隐藏的匹配项（平铺呈现，带所属容器前缀）
+  if (kw || typeFilter.value !== '全部') {
+    const seen = new Set(out.map((m) => m.n.id))
+    for (const n of nodes) {
+      if (seen.has(n.id)) continue
+      const m = metaOf(n, 0)
+      if (match(m)) out.push(m)
+    }
+  }
+  return out
 })
 
 const brokenCount = computed(() => work.olBroken.tails.length + work.olBroken.missing.length)
@@ -166,14 +192,25 @@ function remove(m) {
         :key="m.n.id"
         class="side-item"
         :class="{ active: work.selOlnodeId === m.n.id, 'ol-broken-item': m.broken }"
-        :title="m.brokenTip || m.label"
+        :style="{ paddingLeft: 6 + m.depth * 14 + 'px' }"
+        :title="m.brokenTip || (m.parentLabel && !m.hasKids ? m.parentLabel + ' · ' + m.label : m.label)"
         role="button"
         tabindex="0"
         @click="pick(m)"
         @keydown.enter="pick(m)"
       >
+        <button
+          v-if="m.hasKids"
+          class="ob-arrow"
+          :class="{ folded: m.n.fold }"
+          :title="m.n.fold ? '展开子模块' : '折叠子模块（与画布同步）'"
+          @click.stop="work.olnodeToggleFold(m.n.id)"
+        >{{ m.n.fold ? '▸' : '▾' }}</button>
+        <span v-else class="ob-arrow ob-arrow-leaf">·</span>
         <span class="ol-type-icon">{{ m.icon }}</span>
-        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1">{{ m.label }}</span>
+        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1">
+          <span v-if="m.parentLabel" class="ol-side-parent">{{ m.parentLabel }} / </span>{{ m.label }}
+        </span>
         <span v-if="m.mtype" class="om-mtype" :style="{ color: m.mcolor, borderColor: m.mcolor }">{{ m.mtype }}</span>
         <span v-if="m.badge" class="dim">{{ m.badge }}</span>
         <span class="ol-ops">

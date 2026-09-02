@@ -506,6 +506,64 @@ const m22 = await c.evalx(`(() => {
 })()`)
 check('容器高度调整生效', m22.grew, JSON.stringify(m22))
 
+/* 11k) 侧栏层级树 + 文本视图容器内容展示 */
+const m23 = await c.evalx(`(() => {
+  const items = [...document.querySelectorAll('.side-list .side-item')]
+  const caretRows = items.filter((x) => x.querySelector('.ob-arrow'))
+  const indented = items.filter((x) => (x.style.paddingLeft || '') !== '6px' && x.style.paddingLeft !== '')
+  return { total: items.length, caretRows: caretRows.length, indented: indented.length }
+})()`)
+check('侧栏层级树（容器行带折叠箭头 + 子项缩进）', m23.caretRows >= 3 && m23.indented >= 3, JSON.stringify(m23))
+/* 折叠容器 → 子项从侧栏隐藏；展开恢复（等待 Vue 重渲染后计数） */
+const m23b = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container' && w.olnodeChildren(x.id).length)
+  const itemsBefore = document.querySelectorAll('.side-list .side-item').length
+  w.olnodeToggleFold(cont.id)
+  return { itemsBefore, kidCount: w.olnodeChildren(cont.id).length }
+})()`)
+await c.sleep(400)
+const m23c = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container' && x.fold)
+  const folded = document.querySelectorAll('.side-list .side-item').length
+  w.olnodeToggleFold(cont.id)
+  return { folded }
+})()`)
+await c.sleep(400)
+const m23d = await c.evalx(`JSON.stringify({ n: document.querySelectorAll('.side-list .side-item').length })`)
+check('侧栏容器折叠/展开（与画布同步）', m23c.folded === m23b.itemsBefore - m23b.kidCount && JSON.parse(m23d).n === m23b.itemsBefore, JSON.stringify({ m23b, m23c, m23d }))
+
+/* 11l) 文本视图：选中容器展示内容卡片；选中子模块显示所属容器 */
+await c.evalx(`(() => { const w = ${store}; w.tab = 'outline'; w.outlineView = 'text'; return 1 })()`)
+await c.sleep(500)
+const m24 = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  w.selOlnodeId = cont.id
+  return 1
+})()`)
+await c.sleep(500)
+const m24b = await c.evalx(`(() => {
+  const cards = document.querySelectorAll('.ol-kid')
+  const texts = [...document.querySelectorAll('.ol-kid-text')].map((x) => x.textContent)
+  return { cards: cards.length, hasContent: texts.some((t) => t.trim().length > 0) }
+})()`)
+check('文本视图：选中容器列出子模块内容卡片', m24b.cards >= 1 && m24b.hasContent, JSON.stringify(m24b))
+const m24c = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  const kid = w.olnodeChildren(cont.id)[0]
+  w.selOlnodeId = kid.id
+  return 1
+})()`)
+await c.sleep(400)
+const m24d = await c.evalx(`(() => {
+  const crumb = document.querySelector('.ol-crumb')
+  return { crumb: crumb ? crumb.textContent.includes('所属容器') : false, linkText: crumb?.querySelector('a')?.textContent }
+})()`)
+check('文本视图：子模块显示所属容器面包屑', m24d.crumb && !!m24d.linkText, JSON.stringify(m24d))
+
 const fail = results.filter((x) => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')
 process.exit(fail ? 1 : 0)
