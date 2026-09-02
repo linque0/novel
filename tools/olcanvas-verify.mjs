@@ -378,19 +378,20 @@ const m12 = await c.evalx(`(() => {
 })()`)
 check('落库持久化（重载后坐标与节点保留）', m12.kept && m12.nodes >= 12, JSON.stringify(m12))
 
-/* 11g) 模块同级化：容器正文双击编辑 + 命中优先子模块 */
+/* 11g) 容器 PPT 式文本框：双击空白添加 → 行内编辑 → 落库 */
 const m18 = await c.evalx(`(() => {
   const w = ${store}
   const cont = w.liveOlnodes().find((x) => x.kind === 'container')
   const el = [...document.querySelectorAll('.oc-node.oc-container')][0]
   const body = el.querySelector('.oc-cbody')
-  body.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
-  return { bodyExists: !!body }
+  const br = body.getBoundingClientRect()
+  body.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: br.left + 40, clientY: br.top + 20 }))
+  return { bodyExists: !!body, boxesAfter: (cont.textboxes || []).length }
 })()`)
-await c.sleep(400)
+await c.sleep(500)
 const m18b = await c.evalx(`(() => {
-  const ta = document.querySelector('.oc-inline-body')
-  if (!ta) return { err: 'no container editor' }
+  const ta = document.querySelector('.oc-tb-edit')
+  if (!ta) return { err: 'no tb editor' }
   Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(ta, '容器内容文本')
   ta.dispatchEvent(new Event('input', { bubbles: true }))
   ta.dispatchEvent(new Event('blur'))
@@ -400,9 +401,58 @@ await c.sleep(400)
 const m18c = await c.evalx(`(() => {
   const w = ${store}
   const cont = w.liveOlnodes().find((x) => x.kind === 'container')
-  return { saved: cont.text === '容器内容文本', closed: !document.querySelector('.oc-inline-body') }
+  const tbs = cont.textboxes || []
+  return { saved: tbs.length === 1 && tbs[0].text === '容器内容文本', closed: !document.querySelector('.oc-tb-edit'), opacity: tbs[0]?.opacity }
 })()`)
-check('容器正文双击编辑（与事件/便签/引用卡同级）', m18.bodyExists && !m18b.err && m18c.saved && m18c.closed, JSON.stringify({ m18, m18b, m18c }))
+check('容器文本框：双击添加 + 行内编辑落库', m18.bodyExists && m18.boxesAfter === 1 && !m18b.err && m18c.saved && m18c.closed, JSON.stringify({ m18, m18b, m18c }))
+
+/* 11g2) 文本框移动 / 透明度 / 删除 */
+const m18d = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  const tb = cont.textboxes[0]
+  const key = cont.id + ':' + tb.id
+  const el = document.querySelector('.oc-tb.sel') || document.querySelector('.oc-tb')
+  const r = el.getBoundingClientRect()
+  el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + 20, clientY: r.top + 10 }))
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + 68, clientY: r.top + 40 }))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: r.left + 68, clientY: r.top + 40 }))
+  return 1
+})()`)
+await c.sleep(400)
+const m18e = await c.evalx(`(async () => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  const tb = cont.textboxes[0]
+  const moved = tb.x >= 40
+  const rng = document.querySelector('.oc-tb.sel input[type="range"]')
+  const proto = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')
+  proto.set.call(rng, '0.4')
+  rng.dispatchEvent(new Event('input', { bubbles: true }))
+  await new Promise((r) => setTimeout(r, 200))
+  const cont2 = w.liveOlnodes().find((x) => x.kind === 'container')
+  return { moved, opacity: cont2.textboxes[0].opacity }
+})()`)
+check('文本框移动落库 + 透明度设置', m18e.moved && Math.abs(m18e.opacity - 0.4) < 0.01, JSON.stringify(m18e))
+const m18f = await c.evalx(`(() => {
+  const btn = document.querySelector('.oc-tb.sel .oc-tb-mini .oc-mini-x')
+  btn?.click()
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  return { removed: (cont.textboxes || []).length === 0 }
+})()`)
+check('文本框删除', m18f.removed, JSON.stringify(m18f))
+/* 重新添加一个文本框供后续断言 */
+await c.evalx(`(() => {
+  const el = [...document.querySelectorAll('.oc-node.oc-container')][0]
+  const body = el.querySelector('.oc-cbody')
+  const br = body.getBoundingClientRect()
+  body.dispatchEvent(new MouseEvent('dblclick', { bubbles: true, clientX: br.left + 40, clientY: br.top + 20 }))
+  return 1
+})()`)
+await c.sleep(300)
+await c.evalx(`(() => { const ta = document.querySelector('.oc-tb-edit'); if (ta) { Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(ta, '容器内容文本'); ta.dispatchEvent(new Event('input', { bubbles: true })); ta.dispatchEvent(new Event('blur')) } return 1 })()`)
+await c.sleep(300)
 
 /* 11h) 容器内拖线直连子模块（命中优先子模块，不锚容器） */
 const m19 = await c.evalx(`(() => {
@@ -450,14 +500,36 @@ const m20 = await c.evalx(`(() => {
 })()`)
 check('大小调整增量精确（吸附）+ 缩放过渡动画', Math.abs(m20.w - m20.expW) <= 16 && Math.abs(m20.h - m20.expH) <= 16 && m20.trans, JSON.stringify(m20))
 
-/* 11j) 容器 PPT 式文本框 */
+/* 11j) 容器 PPT 式文本框 + 容器高度调整解锁 */
 const m21 = await c.evalx(`(() => {
   const el = [...document.querySelectorAll('.oc-node.oc-container')][0]
   const body = el.querySelector('.oc-cbody')
   const st = getComputedStyle(body)
-  return { dashed: st.borderTopStyle === 'dashed', hint: !!el.querySelector('.oc-cbody-hint') || !!el.querySelector('.oc-fulltext') }
+  const tb = el.querySelector('.oc-tb')
+  const rsS = el.querySelector('.oc-rs[data-dir="s"]')
+  const rsCorner = el.querySelector('.oc-rs-corner')
+  return {
+    dashed: st.borderTopStyle === 'dashed',
+    tbText: tb ? tb.querySelector('.oc-tb-text')?.textContent : null,
+    sUnlocked: getComputedStyle(rsS).display !== 'none',
+    cornerUnlocked: getComputedStyle(rsCorner).display !== 'none'
+  }
 })()`)
-check('容器正文为 PPT 式文本框（虚线框 + 占位/正文）', m21.dashed && m21.hint, JSON.stringify(m21))
+check('容器 PPT 式文本框 + 高度/角手柄解锁', m21.dashed && m21.tbText === '容器内容文本' && m21.sUnlocked && m21.cornerUnlocked, JSON.stringify(m21))
+/* 容器高度拖拽：下缘手柄下拖 → 自定义 h 生效 */
+const m22 = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  const el = [...document.querySelectorAll('.oc-node.oc-container')][0]
+  const rs = el.querySelector('.oc-rs[data-dir="s"]')
+  const r = rs.getBoundingClientRect()
+  const h0 = cont.h != null ? cont.h : 120
+  rs.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + 4, clientY: r.top + 4 }))
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left, clientY: r.top + 64 }))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: r.left, clientY: r.top + 64 }))
+  return { h: cont.h, grew: cont.h == null || cont.h >= h0 + 40 }
+})()`)
+check('容器高度调整生效', m22.grew, JSON.stringify(m22))
 
 const fail = results.filter((x) => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')

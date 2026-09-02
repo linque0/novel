@@ -265,22 +265,22 @@ function reparentAfterDrop(n, pt) {
   }
 }
 
-/* ---------- 模块边缘拖拽调整大小（拖拽中禁用过渡动画，落库后恢复） ---------- */
+/* ---------- 模块边缘拖拽调整大小（拖拽中短过渡实时跟随鼠标，落库取整） ---------- */
 const resizing = ref(false)
 function startResize(e, n, dir) {
   if (e.button !== 0) return
   e.stopPropagation()
   e.preventDefault()
-  resizing.value = true
+  resizing.value = n.id
   const base = { ...(dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)) }
   const mx = e.clientX
   const my = e.clientY
   const apply = (ev) => {
     let w = base.w
     let h = base.h
-    if (dir.includes('e')) w = snap(base.w + (ev.clientX - mx) / zoom.value)
-    if (dir.includes('s')) h = snap(base.h + (ev.clientY - my) / zoom.value)
-    dragSize.set(n.id, { w: Math.max(96, w), h: Math.max(36, h) })
+    if (dir.includes('e')) w = Math.max(96, base.w + (ev.clientX - mx) / zoom.value)
+    if (dir.includes('s')) h = Math.max(36, base.h + (ev.clientY - my) / zoom.value)
+    dragSize.set(n.id, { w, h })
   }
   apply(e)
   const move = (ev) => apply(ev)
@@ -296,7 +296,138 @@ function startResize(e, n, dir) {
   window.addEventListener('mouseup', up)
 }
 
-/* ---------- 模块内行内文本编辑（双击进入，Ctrl+Enter / 失焦提交） ---------- */
+/* ---------- 容器内 PPT 式文本框（v0.4.2）：自由增删/移动/宽高/透明度/行内编辑 ---------- */
+const selTb = ref(null) // { cid, tid } 选中
+const tbEdit = ref(null) // { cid, tid, value } 行内编辑
+const tbEl = ref(null)
+const tbMoves = reactive(new Map()) // 拖动中的临时位置
+const tbSizes = reactive(new Map()) // 拖拽中的临时尺寸
+const tbDragging = ref(false)
+const tbKey = (cid, tid) => cid + ':' + tid
+const tbsOf = (n) => (Array.isArray(n.textboxes) ? n.textboxes : [])
+function setTbs(n, list) {
+  work.olnodeTextboxesSet(n.id, list)
+}
+function tbStyle(n, tb) {
+  const key = tbKey(n.id, tb.id)
+  const p = tbMoves.get(key) || tb
+  const s = tbSizes.get(key) || tb
+  return {
+    left: p.x + 'px',
+    top: p.y + 'px',
+    width: Math.max(80, s.w) + 'px',
+    height: Math.max(30, s.h) + 'px'
+  }
+}
+function addTextBox(n, pt) {
+  const box = rectOf(n)
+  const bodyW = Math.max(120, (box?.w || 280) - 20)
+  const bodyH = Math.max(80, (box?.h || 120) - 50)
+  let x = 12
+  let y = 12
+  if (pt && box) {
+    x = Math.max(0, Math.min(bodyW - 160, pt.x - box.x - 10))
+    y = Math.max(0, Math.min(Math.max(0, bodyH - 60), pt.y - box.y - 40))
+  }
+  const occupied = tbsOf(n).map((t) => ({ x: t.x, y: t.y, w: t.w, h: t.h }))
+  const spot = freeSpotFor(occupied, { w: 180, h: 64 }, x, y, 24, Math.max(240, bodyW))
+  work.olnodePushUndo(true)
+  const tb = { id: uid(), x: spot.x, y: spot.y, w: Math.min(180, bodyW), h: Math.min(64, bodyH), text: '', opacity: 1 }
+  setTbs(n, [...tbsOf(n), tb])
+  selTb.value = { cid: n.id, tid: tb.id }
+  startTbEdit(n, tb)
+  return tb
+}
+function removeTb(n, tb) {
+  work.olnodePushUndo(true)
+  setTbs(n, tbsOf(n).filter((t) => t.id !== tb.id))
+  if (selTb.value && selTb.value.tid === tb.id) selTb.value = null
+}
+function onTbDown(e, n, tb) {
+  if (e.button !== 0) return
+  const wasSelected = !!selTb.value && selTb.value.cid === n.id && selTb.value.tid === tb.id
+  selTb.value = { cid: n.id, tid: tb.id }
+  if (!wasSelected || tbEdit.value) return
+  // 已选中的框再次按下即进入移动（对齐 PPT 手感）
+  const key = tbKey(n.id, tb.id)
+  const t0 = { x: tb.x, y: tb.y }
+  const mx = e.clientX
+  const my = e.clientY
+  tbDragging.value = key
+  const move = (ev) => {
+    tbMoves.set(key, {
+      x: Math.max(0, Math.round(t0.x + (ev.clientX - mx) / zoom.value)),
+      y: Math.max(0, Math.round(t0.y + (ev.clientY - my) / zoom.value))
+    })
+  }
+  const up = () => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+    tbDragging.value = false
+    const p = tbMoves.get(key)
+    tbMoves.delete(key)
+    if (p) {
+      work.olnodePushUndo(true)
+      setTbs(n, tbsOf(n).map((t) => (t.id === tb.id ? { ...t, x: p.x, y: p.y } : t)))
+    }
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
+}
+function startTbResize(e, n, tb, dir) {
+  if (e.button !== 0) return
+  e.stopPropagation()
+  e.preventDefault()
+  const key = tbKey(n.id, tb.id)
+  const base = { ...(tbSizes.get(key) || tb) }
+  const mx = e.clientX
+  const my = e.clientY
+  const apply = (ev) => {
+    let w = base.w
+    let h = base.h
+    if (dir.includes('e')) w = Math.max(80, base.w + (ev.clientX - mx) / zoom.value)
+    if (dir.includes('s')) h = Math.max(30, base.h + (ev.clientY - my) / zoom.value)
+    tbSizes.set(key, { w, h })
+  }
+  apply(e)
+  const move = (ev) => apply(ev)
+  const up = () => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+    const p = tbSizes.get(key)
+    tbSizes.delete(key)
+    if (p) {
+      work.olnodePushUndo(true)
+      setTbs(n, tbsOf(n).map((t) => (t.id === tb.id ? { ...t, w: Math.round(p.w), h: Math.round(p.h) } : t)))
+    }
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
+}
+function startTbEdit(n, tb) {
+  tbEdit.value = { cid: n.id, tid: tb.id, value: tb.text || '' }
+  nextTick(() => {
+    tbEl.value?.focus()
+    if (tbEl.value) tbEl.value.setSelectionRange(tbEl.value.value.length, tbEl.value.value.length)
+  })
+}
+function commitTbEdit(n) {
+  const st = tbEdit.value
+  tbEdit.value = null
+  if (st && st.cid === n.id) {
+    const tb = tbById(n, st.tid)
+    if (tb && tb.text !== st.value) {
+      work.olnodePushUndo(true)
+      setTbs(n, tbsOf(n).map((t) => (t.id === st.tid ? { ...t, text: st.value } : t)))
+    }
+  }
+}
+function setTbOpacity(n, tb, v) {
+  work.olnodeTextboxesSet(n.id, tbsOf(n).map((t) => (t.id === tb.id ? { ...t, opacity: Number(v) } : t)))
+}
+function tbById(n, tid) {
+  return tbsOf(n).find((t) => t.id === tid)
+}
 function startInlineEdit(n) {
   editText.value = { id: n.id, value: n.text || '' }
   nextTick(() => {
@@ -379,6 +510,7 @@ function onWinDown(e) {
   if (edgeEdit.value && !e.target.closest?.('.oc-eedit, .oc-edge-hit, .oc-elabel')) edgeEdit.value = null
   if (citePick.value && !e.target.closest?.('.oc-pick')) citePick.value = null
   if (editTitle.value && !e.target.closest?.('.oc-title-edit')) commitTitle()
+  if (selTb.value && !e.target.closest?.('.oc-tb')) selTb.value = null
 }
 
 /* ---------- 节点操作 ---------- */
@@ -397,6 +529,10 @@ function onDblNode(n) {
   if (n.kind === 'volume' && n.refId) {
     const first = work.liveChapters.find((c) => c.volumeId === n.refId)
     if (first) work.navTo('chapters', first.id)
+    return
+  }
+  if (n.kind === 'container') {
+    addTextBox(n)
     return
   }
   startInlineEdit(n)
@@ -545,6 +681,13 @@ watch(
 function onKey(e) {
   const t = e.target
   if (t && (t.matches?.('input, textarea, [contenteditable="true"]') || t.isContentEditable)) return
+  if ((e.key === 'Delete' || e.key === 'Backspace') && selTb.value && !tbEdit.value) {
+    e.preventDefault()
+    const cont = nodeById(selTb.value.cid)
+    const tb = cont && tbById(cont, selTb.value.tid)
+    if (cont && tb) removeTb(cont, tb)
+    return
+  }
   if (!(e.ctrlKey || e.metaKey)) return
   const k = e.key.toLowerCase()
   if (k === 'z' && !e.shiftKey) {
@@ -557,6 +700,17 @@ function onKey(e) {
 }
 onMounted(() => {
   ensurePlaced()
+  // v0.4.1 旧容器文本（n.text）惰性迁移为默认文本框（保留 n.text 作回滚）
+  const legacy = live.value.filter((x) => x.kind === 'container' && (x.text || '').trim() && !tbsOf(x).length)
+  if (legacy.length) {
+    work.olnodePushUndo(true)
+    for (const c of legacy) {
+      const box = rectOf(c)
+      work.olnodeTextboxesSet(c.id, [
+        { id: uid(), x: 10, y: 10, w: Math.max(120, Math.min(260, (box?.w || 280) - 20)), h: 90, text: c.text, opacity: 1 }
+      ])
+    }
+  }
   window.addEventListener('keydown', onKey)
   window.addEventListener('mousedown', onWinDown, true)
   if (live.value.length) nextTick(fitView)
@@ -622,7 +776,7 @@ onBeforeUnmount(() => {
           v-for="n in visNodes"
           :key="n.id"
           class="oc-node"
-          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing, 'dl-link': n.kind === 'cite' && n.refId }]"
+          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
           :style="nodeStyle(n)"
           :data-dl-target="n.kind === 'cite' && n.refId ? n.refId : null"
           :data-dl-title="n.kind === 'cite' ? labelOf(n) : null"
@@ -644,22 +798,48 @@ onBeforeUnmount(() => {
               <span v-else class="oc-ctitle">{{ n.title || '容器' }}</span>
               <span class="oc-ccount">{{ kidsOf(n).length }}</span>
             </div>
-            <textarea
-              v-if="editText && editText.id === n.id"
-              ref="inlineEl"
-              v-model="editText.value"
-              class="oc-inline-edit oc-inline-body"
-              spellcheck="false"
-              title="Ctrl+Enter 提交 · Esc 取消"
-              @mousedown.stop
-              @dblclick.stop
-              @blur="commitInline"
-              @keydown.esc.prevent="editText = null"
-              @keydown.ctrl.enter.prevent="commitInline"
-            ></textarea>
-            <div v-else class="oc-cbody" @dblclick.stop="startInlineEdit(n)">
-              <div v-if="plainText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
-              <div v-else class="oc-cbody-hint">双击此处编辑容器内容</div>
+            <div
+              class="oc-cbody"
+              :class="{ tbdragging: !!tbDragging }"
+              @dblclick.self.stop="addTextBox(n, canvasPt($event))"
+              @mousedown.self="selTb = null"
+            >
+              <div
+                v-for="tb in tbsOf(n)"
+                :key="tb.id"
+                class="oc-tb"
+                :class="{ sel: selTb && selTb.cid === n.id && selTb.tid === tb.id, editing: tbEdit && tbEdit.cid === n.id && tbEdit.tid === tb.id, dragging: tbDragging === tbKey(n.id, tb.id) }"
+                :style="tbStyle(n, tb)"
+                @mousedown.stop="onTbDown($event, n, tb)"
+                @dblclick.stop="startTbEdit(n, tb)"
+              >
+                <div class="oc-tb-bg" :style="{ opacity: tb.opacity != null ? tb.opacity : 1 }"></div>
+                <textarea
+                  v-if="tbEdit && tbEdit.cid === n.id && tbEdit.tid === tb.id"
+                  ref="tbEl"
+                  v-model="tbEdit.value"
+                  class="oc-tb-edit"
+                  spellcheck="false"
+                  title="Ctrl+Enter 提交 · Esc 取消"
+                  @mousedown.stop
+                  @dblclick.stop
+                  @blur="commitTbEdit(n)"
+                  @keydown.esc.prevent="tbEdit = null"
+                  @keydown.ctrl.enter.prevent="commitTbEdit(n)"
+                ></textarea>
+                <div v-else class="oc-tb-text">{{ tb.text || '文本框' }}</div>
+                <template v-if="selTb && selTb.cid === n.id && selTb.tid === tb.id && !(tbEdit && tbEdit.cid === n.id && tbEdit.tid === tb.id)">
+                  <span class="oc-tb-rs" data-dir="e" title="拖拽调整宽度" @mousedown.stop="startTbResize($event, n, tb, 'e')" />
+                  <span class="oc-tb-rs" data-dir="s" title="拖拽调整高度" @mousedown.stop="startTbResize($event, n, tb, 's')" />
+                  <span class="oc-tb-rs oc-tb-corner" data-dir="se" title="拖拽调整大小" @mousedown.stop="startTbResize($event, n, tb, 'se')" />
+                  <div class="oc-tb-mini" @mousedown.stop>
+                    <span class="oc-tb-mini-label">透明</span>
+                    <input type="range" min="0.15" max="1" step="0.05" :value="tb.opacity != null ? tb.opacity : 1" title="文本框透明度" @input="setTbOpacity(n, tb, $event.target.value)" />
+                    <button class="oc-mini-x" title="删除文本框（Delete）" @click.stop="removeTb(n, tb)">✕</button>
+                  </div>
+                </template>
+              </div>
+              <div v-if="!tbsOf(n).length" class="oc-cbody-hint">双击添加文本框 · 拖入模块即归组</div>
             </div>
           </template>
           <template v-else>
@@ -688,7 +868,8 @@ onBeforeUnmount(() => {
 
           <div v-if="work.selOlnodeId === n.id" class="oc-mini" @mousedown.stop>
             <button v-if="n.kind === 'event'" :title="'形状：' + SHAPE_LABEL[n.shape || 'process'] + '（点击切换）'" @click.stop="work.olnodeSetShape(n.id, nextShape(n.shape))">◇</button>
-            <button title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)">✎</button>
+            <button v-if="n.kind === 'container'" title="添加文本框（也可双击容器空白区）" @click.stop="addTextBox(n)">＋框</button>
+            <button v-else title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)">✎</button>
             <button v-if="work.olTypes.length" :title="'自定义类型：' + (n.mtype || '无') + '（点击切换）'" @click.stop="cycleMtype(n)">🏷</button>
             <button :title="n.pin ? '取消固定' : '固定位置（「整理」时不动）'" @click.stop="work.olnodeSetPin(n.id, !n.pin)">{{ n.pin ? '📌' : '📍' }}</button>
             <button class="oc-mini-x" title="删除模块" @click.stop="onRemove(n)">✕</button>

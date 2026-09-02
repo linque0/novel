@@ -1297,6 +1297,14 @@ export const useWorkStore = defineStore('work', {
       autosave.mark('olnodes', n)
     },
 
+    /** 容器内 PPT 式文本框（v0.4.2）：textboxes = [{ id, x, y, w, h, text, opacity }]，坐标相对容器正文区 */
+    olnodeTextboxesSet(id, list) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.textboxes = JSON.parse(JSON.stringify(list))
+      autosave.mark('olnodes', n)
+    },
+
     olnodeSetRels(id, rels) {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n) return

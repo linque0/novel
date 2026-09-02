@@ -1756,11 +1756,11 @@ body,
   position: absolute;
   cursor: grab;
   user-select: none;
-  /* 尺寸/位置变化的缩放过渡动画（拖拽调整大小时由 .resizing 关闭） */
+  /* 尺寸/位置变化的缩放过渡动画（拖拽调整大小时切换为 0.08s 短过渡实时跟手） */
   transition: width 0.25s ease, height 0.25s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 .oc-node.resizing {
-  transition: box-shadow 0.15s ease;
+  transition: width 0.08s ease-out, height 0.08s ease-out, box-shadow 0.15s ease;
 }
 .oc-node:active {
   cursor: grabbing;
@@ -1784,7 +1784,7 @@ body,
   top: -9px;
   font-size: 11px;
 }
-/* 容器正文区（PPT 式文本框：标题栏下方独立框，虚线提示 + 内补白，双击进入行内编辑） */
+/* 容器正文区（PPT 画布式：承载多个自由文本框，双击空白添加） */
 .oc-cbody {
   position: absolute;
   left: 10px;
@@ -1795,7 +1795,6 @@ body,
   border-radius: 6px;
   background: color-mix(in srgb, var(--bg-panel) 65%, transparent);
   overflow: hidden;
-  cursor: text;
 }
 .oc-cbody:hover {
   border-style: solid;
@@ -1806,16 +1805,121 @@ body,
   color: var(--text-dim);
   opacity: 0.75;
   padding: 8px 10px;
+  pointer-events: none;
 }
-.oc-inline-body {
-  top: 40px !important;
-  left: 10px !important;
-  right: auto !important;
-  width: calc(100% - 20px) !important;
-  height: calc(100% - 50px) !important;
-  border-style: solid !important;
-  background: var(--bg-panel) !important;
-  z-index: 7;
+/* PPT 式文本框：虚线框、选中实线、底色透明度可调，拖拽短过渡 */
+.oc-tb {
+  position: absolute;
+  border: 1px dashed var(--text-dim);
+  border-radius: 4px;
+  cursor: move;
+  overflow: visible;
+  transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+.oc-tb.dragging {
+  transition: left 0.08s ease-out, top 0.08s ease-out, width 0.08s ease-out, height 0.08s ease-out;
+}
+.oc-tb.sel {
+  border: 1px solid var(--accent);
+  box-shadow: 0 0 0 1px var(--bg-hover);
+}
+.oc-tb-bg {
+  position: absolute;
+  inset: 0;
+  background: var(--bg-panel);
+  border-radius: 3px;
+}
+.oc-tb-text {
+  position: absolute;
+  inset: 0;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+}
+.oc-tb.editing {
+  border-style: solid;
+}
+.oc-tb-edit {
+  position: absolute;
+  inset: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.55;
+  resize: none;
+  color: var(--text);
+  white-space: pre-wrap;
+}
+.oc-tb-rs {
+  position: absolute;
+  z-index: 5;
+}
+.oc-tb-rs[data-dir='e'] {
+  right: -4px;
+  top: 6px;
+  bottom: 6px;
+  width: 7px;
+  cursor: ew-resize;
+}
+.oc-tb-rs[data-dir='s'] {
+  left: 6px;
+  right: 6px;
+  bottom: -4px;
+  height: 7px;
+  cursor: ns-resize;
+}
+.oc-tb-corner {
+  right: -4px;
+  bottom: -4px;
+  width: 11px;
+  height: 11px;
+  border-radius: 3px;
+  background: var(--accent);
+  border: 2px solid var(--bg-panel);
+  cursor: nwse-resize;
+  box-shadow: var(--shadow);
+}
+.oc-tb.sel .oc-tb-rs {
+  opacity: 1;
+}
+.oc-tb-mini {
+  position: absolute;
+  top: -26px;
+  right: -1px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 1px 5px;
+  box-shadow: var(--shadow);
+  z-index: 9;
+}
+.oc-tb-mini-label {
+  font-size: 10.5px;
+  color: var(--text-dim);
+}
+.oc-tb-mini input[type='range'] {
+  width: 64px;
+  accent-color: var(--accent);
+}
+.oc-tb-mini .oc-mini-x {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text);
+  padding: 0 2px;
+}
+.oc-tb-mini .oc-mini-x:hover {
+  color: #c0392b;
 }
 .oc-body {
   padding: 6px 12px;
@@ -1920,12 +2024,6 @@ body,
   margin-top: 2px;
 }
 /* 容器正文文本（内补白，适配文本框样式） */
-.oc-cbody .oc-fulltext {
-  padding: 8px 10px;
-  margin: 0;
-  height: 100%;
-  box-sizing: border-box;
-}
 .oc-event.sh-ellipse {
   border-radius: 50%;
 }
@@ -1997,15 +2095,31 @@ body,
 .oc-container.sel {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--bc, var(--accent)) 40%, transparent);
 }
-.oc-container .oc-rs[data-dir='s'],
-.oc-container .oc-rs-corner {
-  display: none; /* 容器高度由内容派生，仅开放横向调宽 */
-}
+/* 容器手柄：横向调宽 + 纵向调高 + 角部同步宽高（高度下限为子模块派生盒） */
 .oc-container .oc-rs[data-dir='e'] {
-  opacity: 0;
+  opacity: 1;
+  width: 9px;
+  right: -5px;
+  background: color-mix(in srgb, var(--bc, var(--accent)) 30%, var(--bg-panel));
+  border: 1px solid var(--bc, var(--accent));
+  border-radius: 4px;
 }
-.oc-container:hover .oc-rs[data-dir='e'] {
-  opacity: 0.55;
+.oc-container .oc-rs[data-dir='s'] {
+  opacity: 1;
+  height: 9px;
+  bottom: -5px;
+  background: color-mix(in srgb, var(--bc, var(--accent)) 30%, var(--bg-panel));
+  border: 1px solid var(--bc, var(--accent));
+  border-radius: 4px;
+}
+.oc-container .oc-rs-corner {
+  opacity: 1;
+  background: color-mix(in srgb, var(--bc, var(--accent)) 30%, var(--bg-panel));
+  border: 1px solid var(--bc, var(--accent));
+  border-radius: 4px;
+}
+.oc-container .oc-rs:hover {
+  background: var(--bc, var(--accent));
 }
 .oc-chead {
   display: flex;
