@@ -59,11 +59,20 @@ const hiddenIds = computed(() => {
 })
 
 const visNodes = computed(() => live.value.filter((n) => n.canvasX != null && !hiddenIds.value.has(n.id)))
+/* 拖拽中的子树：容器的派生盒计算将其排除，否则盒子跟着子模块扩张，永远拖不出容器；
+ * 拖的是容器本身时不排除（否则容器拖动时会被自己的子孙撑空塌陷） */
+const draggingId = ref(null)
+const draggingSubtree = computed(() => {
+  const n = draggingId.value ? nodeById(draggingId.value) : null
+  if (!n || n.kind === 'container') return new Set()
+  return new Set([n.id, ...work.olnodeDescendants(n.id).map((d) => d.id)])
+})
 const containerBoxes = computed(() => {
   const m = new Map()
+  const sub = draggingSubtree.value
   for (const n of visNodes.value) {
     if (n.kind !== 'container') continue
-    m.set(n.id, containerRect(n, visNodes.value.filter((k) => k.parentId === n.id), posOf, sizeOf))
+    m.set(n.id, containerRect(n, visNodes.value.filter((k) => k.parentId === n.id && !sub.has(k.id)), posOf, sizeOf))
   }
   return m
 })
@@ -215,6 +224,7 @@ function onNodeDown(e, n) {
   work.selOlnodeId = n.id
   closeFloaters()
   const group = n.kind === 'container' ? [n, ...work.olnodeDescendants(n.id)] : [n]
+  draggingId.value = n.id
   const start = { mx: e.clientX, my: e.clientY, origins: group.map((g) => ({ id: g.id, x: g.canvasX ?? 0, y: g.canvasY ?? 0 })) }
   let moved = false
   const move = (ev) => {
@@ -226,6 +236,7 @@ function onNodeDown(e, n) {
   const up = (ev) => {
     window.removeEventListener('mousemove', move)
     window.removeEventListener('mouseup', up)
+    draggingId.value = null
     const dropPt = canvasPt(ev)
     for (const o of start.origins) {
       const p = dragPos.get(o.id)
@@ -237,7 +248,8 @@ function onNodeDown(e, n) {
   window.addEventListener('mousemove', move)
   window.addEventListener('mouseup', up)
 }
-/* 拖入即归组：落点中心命中容器 → 改父；拖出容器外 → 回到根 */
+/* 拖入即归组：落点中心命中容器 → 改父；拖出容器外 → 回到根。
+ * 判定用「排除被拖子树」的容器盒：否则盒子随节点一起扩张，永远判定在容器内 */
 function reparentAfterDrop(n, pt) {
   const p = posOf(n)
   if (!p) return
@@ -245,11 +257,18 @@ function reparentAfterDrop(n, pt) {
   const cy = p.y + sizeOf(n).h / 2
   const desc = new Set(work.olnodeDescendants(n.id).map((d) => d.id))
   const curParent = n.parentId || null
+  const boxOf = (c) =>
+    containerRect(
+      c,
+      visNodes.value.filter((k) => k.parentId === c.id && k.id !== n.id && !desc.has(k.id)),
+      posOf,
+      sizeOf
+    )
   const inBox = (box) => box && cx >= box.x && cx <= box.x + box.w && cy >= box.y && cy <= box.y + box.h
   let landed = null
   for (const c of [...visNodes.value].reverse()) {
     if (c.kind !== 'container' || c.id === n.id || desc.has(c.id)) continue
-    if (inBox(containerBoxes.value.get(c.id))) {
+    if (inBox(boxOf(c))) {
       landed = c
       break
     }
@@ -260,7 +279,7 @@ function reparentAfterDrop(n, pt) {
   }
   if (!landed && curParent) {
     const own = nodeById(curParent)
-    const box = own && own.kind === 'container' ? containerBoxes.value.get(own.id) : null
+    const box = own && own.kind === 'container' ? boxOf(own) : null
     if (!inBox(box)) work.olnodeMoveTo(n.id, null)
   }
 }
@@ -491,12 +510,14 @@ function branchColor(n) {
 function nodeStyle(n) {
   const r = rectOf(n)
   if (!r) return { display: 'none' }
+  const editing = editText.value && editText.value.id === n.id
   return {
     left: r.x + 'px',
     top: r.y + 'px',
     width: r.w + 'px',
-    height: n.kind === 'container' ? r.h + 'px' : 'auto',
-    zIndex: n.kind === 'container' ? 1 : work.selOlnodeId === n.id ? 6 : 3,
+    // 编辑态必须有确定高度（否则 absolute 编辑器撑不开节点，内容不可见），并给足最小编辑区
+    height: n.kind === 'container' ? r.h + 'px' : editing ? Math.max(r.h, 96) + 'px' : 'auto',
+    zIndex: editing ? 8 : n.kind === 'container' ? 1 : work.selOlnodeId === n.id ? 6 : 3,
     ...(n.kind === 'container' ? { '--bc': branchColor(n) } : {})
   }
 }
@@ -677,7 +698,7 @@ onBeforeUnmount(() => {
           v-for="n in visNodes"
           :key="n.id"
           class="oc-node"
-          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
+          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
           :style="nodeStyle(n)"
           :data-dl-target="n.kind === 'cite' && n.refId ? n.refId : null"
           :data-dl-title="n.kind === 'cite' ? labelOf(n) : null"

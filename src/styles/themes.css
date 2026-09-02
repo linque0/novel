@@ -2298,6 +2298,20 @@ body,
   outline: none;
   resize: none;
   z-index: 7;
+  box-sizing: border-box;
+}
+/* 编辑态覆盖形状：clip-path（平行四边形/菱形）会裁剪编辑器导致内容不可见 */
+.oc-node.editing {
+  clip-path: none !important;
+  border-radius: 8px;
+  border: 1.5px solid var(--accent);
+  background: var(--bg-panel);
+  overflow: visible;
+}
+.oc-node.editing .oc-inline-edit {
+  inset: 3px;
+  width: calc(100% - 6px);
+  height: calc(100% - 6px);
 }
 /* 画布设置弹层 */
 .oc-settings {
