@@ -160,6 +160,16 @@ const bounds = computed(() => {
   if (x0 === Infinity) return { x: 0, y: 0, w: 600, h: 400 }
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
 })
+/* 连线层视口：模块可拖到原点左侧/上方（负坐标），包围盒向左/上收缩时
+ * 若视口仍从 (0,0) 起算会裁掉连线——改为覆盖负象限并四周留余量 */
+const svgBox = computed(() => {
+  const b = bounds.value
+  const x0 = Math.min(0, b.x - 400)
+  const y0 = Math.min(0, b.y - 400)
+  const x1 = Math.max(2400, b.x + b.w + 400)
+  const y1 = Math.max(1600, b.y + b.h + 400)
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
+})
 
 /* ---------- 落位 / 视图 ---------- */
 function applyPositions(map) {
@@ -706,7 +716,12 @@ onBeforeUnmount(() => {
 
     <div ref="canvasEl" class="om-canvas oc-canvas" @mousedown="onPanStart" @wheel.prevent="onWheel" @dblclick.self="addNode('event')">
       <div class="om-inner" :style="innerStyle">
-        <svg class="om-edges oc-edges" :width="Math.max(2400, bounds.x + bounds.w + 500)" :height="Math.max(1600, bounds.y + bounds.h + 500)">
+        <svg
+          class="om-edges oc-edges"
+          :style="{ left: svgBox.x + 'px', top: svgBox.y + 'px' }"
+          :width="svgBox.w"
+          :height="svgBox.h"
+        >
           <path v-for="e in edges" :key="'h' + e.key" class="oc-edge-hit" :d="e.d" @mousedown.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)" />
           <path
             v-for="e in edges"
