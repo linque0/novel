@@ -295,6 +295,9 @@ function startResize(e, n, dir) {
   const p0 = { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
   const mx = e.clientX
   const my = e.clientY
+  /* 拖拽方向决定可变轴：未拖的轴保持原值不落库（否则横拖会把高度钉死在当前值） */
+  const canW = dir.includes('e') || dir.includes('w')
+  const canH = dir.includes('n') || dir.includes('s')
   const apply = (ev) => {
     const dx = (ev.clientX - mx) / zoom.value
     const dy = (ev.clientY - my) / zoom.value
@@ -326,7 +329,7 @@ function startResize(e, n, dir) {
     dragPos.delete(n.id)
     resizing.value = false
     if (pos) work.olnodeSetCanvas(n.id, pos.x, pos.y)
-    if (p) work.olnodeSetSize(n.id, p.w, p.h)
+    if (p) work.olnodeSetSize(n.id, canW ? p.w : n.w, canH ? p.h : n.h)
   }
   window.addEventListener('mousemove', move)
   window.addEventListener('mouseup', up)
@@ -515,8 +518,9 @@ function nodeStyle(n) {
     left: r.x + 'px',
     top: r.y + 'px',
     width: r.w + 'px',
-    // 编辑态必须有确定高度（否则 absolute 编辑器撑不开节点，内容不可见），并给足最小编辑区
-    height: n.kind === 'container' ? r.h + 'px' : editing ? Math.max(r.h, 96) + 'px' : 'auto',
+    // 非容器一律显式高度：与 rectOf（连线锚点/容器派生盒）一致，高度拖拽才能生效；
+    // 编辑态给足最小编辑区（否则 absolute 编辑器撑不开节点，内容不可见）
+    height: n.kind === 'container' ? r.h + 'px' : editing ? Math.max(r.h, 96) + 'px' : Math.max(r.h, 36) + 'px',
     zIndex: editing ? 8 : n.kind === 'container' ? 1 : work.selOlnodeId === n.id ? 6 : 3,
     ...(n.kind === 'container' ? { '--bc': branchColor(n) } : {})
   }
