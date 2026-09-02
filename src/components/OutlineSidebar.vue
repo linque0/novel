@@ -28,11 +28,12 @@ const TYPE_META = {
   event: { icon: '◆', label: '事件' },
   note: { icon: '✎', label: '便签' },
   cite: { icon: '🔗', label: '引用' },
+  textbox: { icon: '▭', label: '文本框' },
   container: { icon: '📦', label: '容器' },
   volume: { icon: '▤', label: '卷' },
   anchor: { icon: '⚓', label: '章节' }
 }
-const TYPES = computed(() => ['全部', '事件', '便签', '引用', '容器', '章节', ...customTypes.value.map((t) => t.name)])
+const TYPES = computed(() => ['全部', '事件', '便签', '引用', '文本框', '容器', '章节', ...customTypes.value.map((t) => t.name)])
 
 function chapterOf(n) {
   return n.kind === 'anchor' ? work.chapters.find((c) => c.id === n.refId && !c.deletedAt) : null
@@ -98,9 +99,9 @@ function pick(m) {
   work.canvasFocusTick++
   work.outlineView = 'canvas'
 }
-function addModule(kind) {
+function addModule(kind, fields = {}) {
   const n = work.liveOlnodes().length
-  const row = work.olnodeAdd(null, { kind, title: '', canvasX: 60 + (n % 4) * 224, canvasY: 40 + Math.floor(n / 4) * 116 })
+  const row = work.olnodeAdd(null, { kind, title: '', canvasX: 60 + (n % 4) * 224, canvasY: 40 + Math.floor(n / 4) * 116, ...fields })
   work.selOlnodeId = row.id
   work.canvasFocusTick++
 }
@@ -138,6 +139,7 @@ function remove(m) {
         </template>
         <DLinkPicker @pick="onCitePick" />
       </NPopover>
+      <button class="btn-ghost" title="添加文本框（PPT 式自由文本）" @click="addModule('textbox', { w: 180, h: 64, opacity: 1 })">＋文本框</button>
       <button class="btn-ghost" title="添加容器（拖入模块即归组）" @click="addModule('container')">＋容器</button>
     </div>
     <div style="padding: 0 10px 6px">

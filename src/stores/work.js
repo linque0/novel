@@ -1305,6 +1305,22 @@ export const useWorkStore = defineStore('work', {
       autosave.mark('olnodes', n)
     },
 
+    /** 容器颜色（v0.4.2 右键快捷栏）：color 为调色板色值，null 恢复按序自动配色 */
+    olnodeSetColor(id, color) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.color = color || ''
+      autosave.mark('olnodes', n)
+    },
+
+    /** 文本框模块透明度（v0.4.2）：0.15–1，作用于底色层 */
+    olnodeSetOpacity(id, v) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.opacity = Math.min(1, Math.max(0.15, Number(v) || 1))
+      autosave.mark('olnodes', n)
+    },
+
     olnodeSetRels(id, rels) {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n) return

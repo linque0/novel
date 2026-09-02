@@ -118,7 +118,7 @@ const edgeDecor = computed(() => {
 const sats = computed(() => {
   const out = []
   for (const n of visNodes.value) {
-    if (!['event', 'note', 'anchor', 'container'].includes(n.kind)) continue
+    if (!['event', 'note', 'anchor', 'container', 'textbox'].includes(n.kind)) continue
     const p = posOf(n)
     const s = sizeOf(n)
     parseTokens(n.text || '').forEach((t, i) => {
@@ -265,7 +265,7 @@ function reparentAfterDrop(n, pt) {
   }
 }
 
-/* ---------- 模块边缘拖拽调整大小（拖拽中短过渡实时跟随鼠标，落库取整） ---------- */
+/* ---------- 模块八向边缘拖拽调整大小（n/w 方向同步移动原点；拖拽中短过渡实时跟手，落库取整） ---------- */
 const resizing = ref(false)
 function startResize(e, n, dir) {
   if (e.button !== 0) return
@@ -273,14 +273,28 @@ function startResize(e, n, dir) {
   e.preventDefault()
   resizing.value = n.id
   const base = { ...(dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)) }
+  const p0 = { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
   const mx = e.clientX
   const my = e.clientY
   const apply = (ev) => {
+    const dx = (ev.clientX - mx) / zoom.value
+    const dy = (ev.clientY - my) / zoom.value
     let w = base.w
     let h = base.h
-    if (dir.includes('e')) w = Math.max(96, base.w + (ev.clientX - mx) / zoom.value)
-    if (dir.includes('s')) h = Math.max(36, base.h + (ev.clientY - my) / zoom.value)
+    let x = p0.x
+    let y = p0.y
+    if (dir.includes('e')) w = Math.max(96, base.w + dx)
+    if (dir.includes('s')) h = Math.max(36, base.h + dy)
+    if (dir.includes('w')) {
+      w = Math.max(96, base.w - dx)
+      x = p0.x + (base.w - w)
+    }
+    if (dir.includes('n')) {
+      h = Math.max(36, base.h - dy)
+      y = p0.y + (base.h - h)
+    }
     dragSize.set(n.id, { w, h })
+    if (dir.includes('w') || dir.includes('n')) dragPos.set(n.id, { x: Math.round(x), y: Math.round(y) })
   }
   apply(e)
   const move = (ev) => apply(ev)
@@ -288,145 +302,27 @@ function startResize(e, n, dir) {
     window.removeEventListener('mousemove', move)
     window.removeEventListener('mouseup', up)
     const p = dragSize.get(n.id)
+    const pos = dragPos.get(n.id)
     dragSize.delete(n.id)
+    dragPos.delete(n.id)
     resizing.value = false
+    if (pos) work.olnodeSetCanvas(n.id, pos.x, pos.y)
     if (p) work.olnodeSetSize(n.id, p.w, p.h)
   }
   window.addEventListener('mousemove', move)
   window.addEventListener('mouseup', up)
 }
 
-/* ---------- 容器内 PPT 式文本框（v0.4.2）：自由增删/移动/宽高/透明度/行内编辑 ---------- */
-const selTb = ref(null) // { cid, tid } 选中
-const tbEdit = ref(null) // { cid, tid, value } 行内编辑
-const tbEl = ref(null)
-const tbMoves = reactive(new Map()) // 拖动中的临时位置
-const tbSizes = reactive(new Map()) // 拖拽中的临时尺寸
-const tbDragging = ref(false)
-const tbKey = (cid, tid) => cid + ':' + tid
-const tbsOf = (n) => (Array.isArray(n.textboxes) ? n.textboxes : [])
-function setTbs(n, list) {
-  work.olnodeTextboxesSet(n.id, list)
-}
-function tbStyle(n, tb) {
-  const key = tbKey(n.id, tb.id)
-  const p = tbMoves.get(key) || tb
-  const s = tbSizes.get(key) || tb
-  return {
-    left: p.x + 'px',
-    top: p.y + 'px',
-    width: Math.max(80, s.w) + 'px',
-    height: Math.max(30, s.h) + 'px'
-  }
-}
-function addTextBox(n, pt) {
-  const box = rectOf(n)
-  const bodyW = Math.max(120, (box?.w || 280) - 20)
-  const bodyH = Math.max(80, (box?.h || 120) - 50)
-  let x = 12
-  let y = 12
-  if (pt && box) {
-    x = Math.max(0, Math.min(bodyW - 160, pt.x - box.x - 10))
-    y = Math.max(0, Math.min(Math.max(0, bodyH - 60), pt.y - box.y - 40))
-  }
-  const occupied = tbsOf(n).map((t) => ({ x: t.x, y: t.y, w: t.w, h: t.h }))
-  const spot = freeSpotFor(occupied, { w: 180, h: 64 }, x, y, 24, Math.max(240, bodyW))
-  work.olnodePushUndo(true)
-  const tb = { id: uid(), x: spot.x, y: spot.y, w: Math.min(180, bodyW), h: Math.min(64, bodyH), text: '', opacity: 1 }
-  setTbs(n, [...tbsOf(n), tb])
-  selTb.value = { cid: n.id, tid: tb.id }
-  startTbEdit(n, tb)
-  return tb
-}
-function removeTb(n, tb) {
-  work.olnodePushUndo(true)
-  setTbs(n, tbsOf(n).filter((t) => t.id !== tb.id))
-  if (selTb.value && selTb.value.tid === tb.id) selTb.value = null
-}
-function onTbDown(e, n, tb) {
-  if (e.button !== 0) return
-  const wasSelected = !!selTb.value && selTb.value.cid === n.id && selTb.value.tid === tb.id
-  selTb.value = { cid: n.id, tid: tb.id }
-  if (!wasSelected || tbEdit.value) return
-  // 已选中的框再次按下即进入移动（对齐 PPT 手感）
-  const key = tbKey(n.id, tb.id)
-  const t0 = { x: tb.x, y: tb.y }
-  const mx = e.clientX
-  const my = e.clientY
-  tbDragging.value = key
-  const move = (ev) => {
-    tbMoves.set(key, {
-      x: Math.max(0, Math.round(t0.x + (ev.clientX - mx) / zoom.value)),
-      y: Math.max(0, Math.round(t0.y + (ev.clientY - my) / zoom.value))
-    })
-  }
-  const up = () => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-    tbDragging.value = false
-    const p = tbMoves.get(key)
-    tbMoves.delete(key)
-    if (p) {
-      work.olnodePushUndo(true)
-      setTbs(n, tbsOf(n).map((t) => (t.id === tb.id ? { ...t, x: p.x, y: p.y } : t)))
-    }
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
-}
-function startTbResize(e, n, tb, dir) {
-  if (e.button !== 0) return
-  e.stopPropagation()
+/* ---------- 容器右键色彩快捷栏（v0.4.2） ---------- */
+const ctxMenu = ref(null) // { x, y, nodeId }
+function onNodeCtx(e, n) {
+  if (n.kind !== 'container') return
   e.preventDefault()
-  const key = tbKey(n.id, tb.id)
-  const base = { ...(tbSizes.get(key) || tb) }
-  const mx = e.clientX
-  const my = e.clientY
-  const apply = (ev) => {
-    let w = base.w
-    let h = base.h
-    if (dir.includes('e')) w = Math.max(80, base.w + (ev.clientX - mx) / zoom.value)
-    if (dir.includes('s')) h = Math.max(30, base.h + (ev.clientY - my) / zoom.value)
-    tbSizes.set(key, { w, h })
-  }
-  apply(e)
-  const move = (ev) => apply(ev)
-  const up = () => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-    const p = tbSizes.get(key)
-    tbSizes.delete(key)
-    if (p) {
-      work.olnodePushUndo(true)
-      setTbs(n, tbsOf(n).map((t) => (t.id === tb.id ? { ...t, w: Math.round(p.w), h: Math.round(p.h) } : t)))
-    }
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
+  ctxMenu.value = { x: e.clientX, y: e.clientY, nodeId: n.id }
 }
-function startTbEdit(n, tb) {
-  tbEdit.value = { cid: n.id, tid: tb.id, value: tb.text || '' }
-  nextTick(() => {
-    tbEl.value?.focus()
-    if (tbEl.value) tbEl.value.setSelectionRange(tbEl.value.value.length, tbEl.value.value.length)
-  })
-}
-function commitTbEdit(n) {
-  const st = tbEdit.value
-  tbEdit.value = null
-  if (st && st.cid === n.id) {
-    const tb = tbById(n, st.tid)
-    if (tb && tb.text !== st.value) {
-      work.olnodePushUndo(true)
-      setTbs(n, tbsOf(n).map((t) => (t.id === st.tid ? { ...t, text: st.value } : t)))
-    }
-  }
-}
-function setTbOpacity(n, tb, v) {
-  work.olnodeTextboxesSet(n.id, tbsOf(n).map((t) => (t.id === tb.id ? { ...t, opacity: Number(v) } : t)))
-}
-function tbById(n, tid) {
-  return tbsOf(n).find((t) => t.id === tid)
+function applyColor(c) {
+  if (ctxMenu.value) work.olnodeSetColor(ctxMenu.value.nodeId, c)
+  ctxMenu.value = null
 }
 function startInlineEdit(n) {
   editText.value = { id: n.id, value: n.text || '' }
@@ -510,7 +406,7 @@ function onWinDown(e) {
   if (edgeEdit.value && !e.target.closest?.('.oc-eedit, .oc-edge-hit, .oc-elabel')) edgeEdit.value = null
   if (citePick.value && !e.target.closest?.('.oc-pick')) citePick.value = null
   if (editTitle.value && !e.target.closest?.('.oc-title-edit')) commitTitle()
-  if (selTb.value && !e.target.closest?.('.oc-tb')) selTb.value = null
+  if (ctxMenu.value && !e.target.closest?.('.oc-ctx')) ctxMenu.value = null
 }
 
 /* ---------- 节点操作 ---------- */
@@ -532,7 +428,7 @@ function onDblNode(n) {
     return
   }
   if (n.kind === 'container') {
-    addTextBox(n)
+    editTitle.value = { id: n.id, value: n.title || '' }
     return
   }
   startInlineEdit(n)
@@ -571,8 +467,9 @@ function citeJump(n) {
   if (parsed.kind === 'character') work.jumpToCharGraph(t.id)
   else jumpTo(t)
 }
-/* 放大模块（自定义高度超出默认 30px+）显示正文全文而非单行摘要 */
+/* 放大模块（自定义高度超出默认 30px+）显示正文全文；文本框模块始终全文 */
 function showFullText(n) {
+  if (n.kind === 'textbox') return true
   if (n.h == null) return false
   const base = effSize({ kind: n.kind, shape: n.shape }, work.canvasPrefs.density).h
   return n.h >= base + 30 && (n.text || '').trim().length > 0
@@ -586,6 +483,7 @@ function commitTitle() {
   if (st && st.value.trim()) work.olnodeSetTitle(st.id, st.value.trim())
 }
 function branchColor(n) {
+  if (n.color) return n.color // 右键快捷栏手动指定色优先
   const cs = live.value.filter((x) => x.kind === 'container')
   const i = cs.findIndex((x) => x.id === n.id)
   return PALETTE[(i < 0 ? 0 : i) % PALETTE.length]
@@ -681,13 +579,6 @@ watch(
 function onKey(e) {
   const t = e.target
   if (t && (t.matches?.('input, textarea, [contenteditable="true"]') || t.isContentEditable)) return
-  if ((e.key === 'Delete' || e.key === 'Backspace') && selTb.value && !tbEdit.value) {
-    e.preventDefault()
-    const cont = nodeById(selTb.value.cid)
-    const tb = cont && tbById(cont, selTb.value.tid)
-    if (cont && tb) removeTb(cont, tb)
-    return
-  }
   if (!(e.ctrlKey || e.metaKey)) return
   const k = e.key.toLowerCase()
   if (k === 'z' && !e.shiftKey) {
@@ -700,15 +591,25 @@ function onKey(e) {
 }
 onMounted(() => {
   ensurePlaced()
-  // v0.4.1 旧容器文本（n.text）惰性迁移为默认文本框（保留 n.text 作回滚）
-  const legacy = live.value.filter((x) => x.kind === 'container' && (x.text || '').trim() && !tbsOf(x).length)
+  // v0.4.2：容器内嵌 textboxes（上一实现）迁移为独立文本框子节点（可拖拽/连线/缩放）
+  const legacy = live.value.filter((x) => x.kind === 'container' && (Array.isArray(x.textboxes) && x.textboxes.length))
   if (legacy.length) {
     work.olnodePushUndo(true)
     for (const c of legacy) {
-      const box = rectOf(c)
-      work.olnodeTextboxesSet(c.id, [
-        { id: uid(), x: 10, y: 10, w: Math.max(120, Math.min(260, (box?.w || 280) - 20)), h: 90, text: c.text, opacity: 1 }
-      ])
+      const box = rectOf(c) || { x: c.canvasX ?? 0, y: c.canvasY ?? 0, w: 280 }
+      const rows = (c.textboxes || []).map((t, i) => ({
+        kind: 'textbox',
+        parentId: c.id,
+        title: '',
+        text: t.text || '',
+        opacity: t.opacity != null ? t.opacity : 1,
+        w: t.w || 180,
+        h: t.h || 64,
+        canvasX: (box.x ?? 0) + 10 + (i % 2) * (t.w || 180),
+        canvasY: (box.y ?? 0) + 44 + Math.floor(i / 2) * (t.h || 64) + i * 8
+      }))
+      for (const r of rows) work.olnodeAdd(null, r)
+      work.olnodeTextboxesSet(c.id, [])
     }
   }
   window.addEventListener('keydown', onKey)
@@ -783,6 +684,7 @@ onBeforeUnmount(() => {
           @mousedown="onNodeDown($event, n)"
           @dblclick.stop="onDblNode(n)"
           @click.stop="n.kind === 'cite' && n.refId && citeJump(n)"
+          @contextmenu.prevent="onNodeCtx($event, n)"
         >
           <template v-if="n.kind === 'container'">
             <div class="oc-chead" @dblclick.stop="editTitle = { id: n.id, value: n.title || '' }">
@@ -798,51 +700,9 @@ onBeforeUnmount(() => {
               <span v-else class="oc-ctitle">{{ n.title || '容器' }}</span>
               <span class="oc-ccount">{{ kidsOf(n).length }}</span>
             </div>
-            <div
-              class="oc-cbody"
-              :class="{ tbdragging: !!tbDragging }"
-              @dblclick.self.stop="addTextBox(n, canvasPt($event))"
-              @mousedown.self="selTb = null"
-            >
-              <div
-                v-for="tb in tbsOf(n)"
-                :key="tb.id"
-                class="oc-tb"
-                :class="{ sel: selTb && selTb.cid === n.id && selTb.tid === tb.id, editing: tbEdit && tbEdit.cid === n.id && tbEdit.tid === tb.id, dragging: tbDragging === tbKey(n.id, tb.id) }"
-                :style="tbStyle(n, tb)"
-                @mousedown.stop="onTbDown($event, n, tb)"
-                @dblclick.stop="startTbEdit(n, tb)"
-              >
-                <div class="oc-tb-bg" :style="{ opacity: tb.opacity != null ? tb.opacity : 1 }"></div>
-                <textarea
-                  v-if="tbEdit && tbEdit.cid === n.id && tbEdit.tid === tb.id"
-                  ref="tbEl"
-                  v-model="tbEdit.value"
-                  class="oc-tb-edit"
-                  spellcheck="false"
-                  title="Ctrl+Enter 提交 · Esc 取消"
-                  @mousedown.stop
-                  @dblclick.stop
-                  @blur="commitTbEdit(n)"
-                  @keydown.esc.prevent="tbEdit = null"
-                  @keydown.ctrl.enter.prevent="commitTbEdit(n)"
-                ></textarea>
-                <div v-else class="oc-tb-text">{{ tb.text || '文本框' }}</div>
-                <template v-if="selTb && selTb.cid === n.id && selTb.tid === tb.id && !(tbEdit && tbEdit.cid === n.id && tbEdit.tid === tb.id)">
-                  <span class="oc-tb-rs" data-dir="e" title="拖拽调整宽度" @mousedown.stop="startTbResize($event, n, tb, 'e')" />
-                  <span class="oc-tb-rs" data-dir="s" title="拖拽调整高度" @mousedown.stop="startTbResize($event, n, tb, 's')" />
-                  <span class="oc-tb-rs oc-tb-corner" data-dir="se" title="拖拽调整大小" @mousedown.stop="startTbResize($event, n, tb, 'se')" />
-                  <div class="oc-tb-mini" @mousedown.stop>
-                    <span class="oc-tb-mini-label">透明</span>
-                    <input type="range" min="0.15" max="1" step="0.05" :value="tb.opacity != null ? tb.opacity : 1" title="文本框透明度" @input="setTbOpacity(n, tb, $event.target.value)" />
-                    <button class="oc-mini-x" title="删除文本框（Delete）" @click.stop="removeTb(n, tb)">✕</button>
-                  </div>
-                </template>
-              </div>
-              <div v-if="!tbsOf(n).length" class="oc-cbody-hint">双击添加文本框 · 拖入模块即归组</div>
-            </div>
           </template>
           <template v-else>
+            <div v-if="n.kind === 'textbox'" class="oc-tbbg" :style="{ opacity: n.opacity != null ? n.opacity : 1 }"></div>
             <span v-if="n.kind === 'anchor' && chapterOf(n)" class="ol-dot" :data-s="chapterOf(n).status" :title="STATUS_LABEL[chapterOf(n).status]" />
             <textarea
               v-if="editText && editText.id === n.id"
@@ -858,7 +718,7 @@ onBeforeUnmount(() => {
               @keydown.ctrl.enter.prevent="commitInline"
             ></textarea>
             <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }">＋ 选择目标</button>
-            <div v-else class="oc-body">
+            <div v-else class="oc-body" :class="{ 'oc-textbody': n.kind === 'textbox' }">
               <div class="oc-label">{{ labelOf(n) }}</div>
               <div v-if="showFullText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
               <div v-else class="om-sub">{{ plainText(n).split('\n')[0].slice(0, 40) || subOf(n) || '&nbsp;' }}</div>
@@ -868,16 +728,24 @@ onBeforeUnmount(() => {
 
           <div v-if="work.selOlnodeId === n.id" class="oc-mini" @mousedown.stop>
             <button v-if="n.kind === 'event'" :title="'形状：' + SHAPE_LABEL[n.shape || 'process'] + '（点击切换）'" @click.stop="work.olnodeSetShape(n.id, nextShape(n.shape))">◇</button>
-            <button v-if="n.kind === 'container'" title="添加文本框（也可双击容器空白区）" @click.stop="addTextBox(n)">＋框</button>
-            <button v-else title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)">✎</button>
+            <button v-if="n.kind !== 'container'" title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)">✎</button>
+            <span v-if="n.kind === 'textbox'" class="oc-mini-op" title="文本框透明度">
+              <input type="range" min="0.15" max="1" step="0.05" :value="n.opacity != null ? n.opacity : 1" @input="work.olnodeSetOpacity(n.id, $event.target.value)" />
+              透
+            </span>
             <button v-if="work.olTypes.length" :title="'自定义类型：' + (n.mtype || '无') + '（点击切换）'" @click.stop="cycleMtype(n)">🏷</button>
             <button :title="n.pin ? '取消固定' : '固定位置（「整理」时不动）'" @click.stop="work.olnodeSetPin(n.id, !n.pin)">{{ n.pin ? '📌' : '📍' }}</button>
             <button class="oc-mini-x" title="删除模块" @click.stop="onRemove(n)">✕</button>
           </div>
           <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块建立连线'" @mousedown="startConnect($event, n)" />
           <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
+          <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
           <span class="oc-rs" data-dir="s" title="拖拽调整高度" @mousedown="startResize($event, n, 's')" />
+          <span class="oc-rs" data-dir="n" title="拖拽调整高度" @mousedown="startResize($event, n, 'n')" />
           <span class="oc-rs oc-rs-corner" data-dir="se" title="拖拽调整大小" @mousedown="startResize($event, n, 'se')" />
+          <span class="oc-rs oc-rs-corner" data-dir="sw" title="拖拽调整大小" @mousedown="startResize($event, n, 'sw')" />
+          <span class="oc-rs oc-rs-corner" data-dir="ne" title="拖拽调整大小" @mousedown="startResize($event, n, 'ne')" />
+          <span class="oc-rs oc-rs-corner" data-dir="nw" title="拖拽调整大小" @mousedown="startResize($event, n, 'nw')" />
         </div>
 
         <!-- 双链令牌卫星 -->
@@ -937,6 +805,17 @@ onBeforeUnmount(() => {
         <div v-if="citePick" class="oc-pick" :style="{ left: citePick.x + 'px', top: citePick.y + 40 + 'px' }" @mousedown.stop>
           <DLinkPicker @pick="onCitePick" />
         </div>
+      </div>
+    </div>
+
+    <!-- 容器右键色彩快捷栏（fixed 定位须在 transform 层外） -->
+    <div v-if="ctxMenu" class="oc-ctx" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }" @mousedown.stop>
+      <div class="oc-ctx-title">容器颜色</div>
+      <div class="oc-ctx-swatches">
+        <span v-for="c in PALETTE" :key="c" class="oc-ctx-sw" :style="{ background: c }" :title="c" @click="applyColor(c)" />
+      </div>
+      <div class="oc-ctx-actions">
+        <span class="oc-ctx-reset" title="恢复自动配色（按容器顺序）" @click="applyColor('')">↺ 自动配色</span>
       </div>
     </div>
 

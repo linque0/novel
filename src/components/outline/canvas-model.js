@@ -139,6 +139,7 @@ export const KIND_META = {
   event: { icon: '◆', label: '事件' },
   note: { icon: '🗒', label: '便签' },
   cite: { icon: '🔗', label: '引用' },
+  textbox: { icon: '▭', label: '文本框' },
   container: { icon: '▢', label: '容器' },
   anchor: { icon: '⚑', label: '锚点' },
   volume: { icon: '▤', label: '卷' }

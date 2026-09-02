@@ -1784,142 +1784,84 @@ body,
   top: -9px;
   font-size: 11px;
 }
-/* 容器正文区（PPT 画布式：承载多个自由文本框，双击空白添加） */
-.oc-cbody {
-  position: absolute;
-  left: 10px;
-  right: 10px;
-  top: 40px;
-  bottom: 10px;
-  border: 1px dashed color-mix(in srgb, var(--bc, var(--accent)) 45%, transparent);
-  border-radius: 6px;
-  background: color-mix(in srgb, var(--bg-panel) 65%, transparent);
-  overflow: hidden;
-}
-.oc-cbody:hover {
-  border-style: solid;
-  background: var(--bg-panel);
-}
-.oc-cbody-hint {
-  font-size: 11px;
-  color: var(--text-dim);
-  opacity: 0.75;
-  padding: 8px 10px;
-  pointer-events: none;
-}
-/* PPT 式文本框：虚线框、选中实线、底色透明度可调，拖拽短过渡 */
-.oc-tb {
-  position: absolute;
+/* 文本框模块（v0.4.2）：独立节点，PPT 式虚线框 + 底色透明度可调 */
+.oc-textbox {
+  background: transparent;
   border: 1px dashed var(--text-dim);
   border-radius: 4px;
-  cursor: move;
-  overflow: visible;
-  transition: left 0.2s ease, top 0.2s ease, width 0.2s ease, height 0.2s ease;
 }
-.oc-tb.dragging {
-  transition: left 0.08s ease-out, top 0.08s ease-out, width 0.08s ease-out, height 0.08s ease-out;
+.oc-textbox:hover {
+  border-color: var(--accent);
 }
-.oc-tb.sel {
+.oc-textbox.sel {
   border: 1px solid var(--accent);
-  box-shadow: 0 0 0 1px var(--bg-hover);
 }
-.oc-tb-bg {
+.oc-tbbg {
   position: absolute;
   inset: 0;
   background: var(--bg-panel);
   border-radius: 3px;
 }
-.oc-tb-text {
-  position: absolute;
-  inset: 0;
-  padding: 6px 8px;
-  font-size: 12px;
-  line-height: 1.55;
-  color: var(--text);
-  white-space: pre-wrap;
-  word-break: break-word;
-  overflow: hidden;
+.oc-textbox .oc-body {
+  position: relative;
+  z-index: 1;
 }
-.oc-tb.editing {
-  border-style: solid;
+.oc-textbox .oc-fulltext {
+  margin: 0;
+  max-height: none;
 }
-.oc-tb-edit {
-  position: absolute;
-  inset: 0;
-  border: none;
-  outline: none;
-  background: transparent;
-  padding: 6px 8px;
-  font-size: 12px;
-  line-height: 1.55;
-  resize: none;
-  color: var(--text);
-  white-space: pre-wrap;
-}
-.oc-tb-rs {
-  position: absolute;
-  z-index: 5;
-}
-.oc-tb-rs[data-dir='e'] {
-  right: -4px;
-  top: 6px;
-  bottom: 6px;
-  width: 7px;
-  cursor: ew-resize;
-}
-.oc-tb-rs[data-dir='s'] {
-  left: 6px;
-  right: 6px;
-  bottom: -4px;
-  height: 7px;
-  cursor: ns-resize;
-}
-.oc-tb-corner {
-  right: -4px;
-  bottom: -4px;
-  width: 11px;
-  height: 11px;
-  border-radius: 3px;
-  background: var(--accent);
-  border: 2px solid var(--bg-panel);
-  cursor: nwse-resize;
-  box-shadow: var(--shadow);
-}
-.oc-tb.sel .oc-tb-rs {
-  opacity: 1;
-}
-.oc-tb-mini {
-  position: absolute;
-  top: -26px;
-  right: -1px;
-  display: flex;
+.oc-mini-op {
+  display: inline-flex;
   align-items: center;
-  gap: 4px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  padding: 1px 5px;
-  box-shadow: var(--shadow);
-  z-index: 9;
-}
-.oc-tb-mini-label {
-  font-size: 10.5px;
+  gap: 2px;
+  font-size: 10px;
   color: var(--text-dim);
 }
-.oc-tb-mini input[type='range'] {
-  width: 64px;
+.oc-mini-op input[type='range'] {
+  width: 56px;
   accent-color: var(--accent);
 }
-.oc-tb-mini .oc-mini-x {
-  border: none;
-  background: transparent;
-  cursor: pointer;
-  font-size: 12px;
-  color: var(--text);
-  padding: 0 2px;
+/* 容器右键色彩快捷栏 */
+.oc-ctx {
+  position: fixed;
+  z-index: 50;
+  min-width: 150px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  padding: 8px;
 }
-.oc-tb-mini .oc-mini-x:hover {
-  color: #c0392b;
+.oc-ctx-title {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.oc-ctx-swatches {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.oc-ctx-sw {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+}
+.oc-ctx-sw:hover {
+  transform: scale(1.12);
+}
+.oc-ctx-actions {
+  margin-top: 8px;
+}
+.oc-ctx-reset {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.oc-ctx-reset:hover {
+  color: var(--accent);
 }
 .oc-body {
   padding: 6px 12px;
@@ -2095,32 +2037,7 @@ body,
 .oc-container.sel {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--bc, var(--accent)) 40%, transparent);
 }
-/* 容器手柄：横向调宽 + 纵向调高 + 角部同步宽高（高度下限为子模块派生盒） */
-.oc-container .oc-rs[data-dir='e'] {
-  opacity: 1;
-  width: 9px;
-  right: -5px;
-  background: color-mix(in srgb, var(--bc, var(--accent)) 30%, var(--bg-panel));
-  border: 1px solid var(--bc, var(--accent));
-  border-radius: 4px;
-}
-.oc-container .oc-rs[data-dir='s'] {
-  opacity: 1;
-  height: 9px;
-  bottom: -5px;
-  background: color-mix(in srgb, var(--bc, var(--accent)) 30%, var(--bg-panel));
-  border: 1px solid var(--bc, var(--accent));
-  border-radius: 4px;
-}
-.oc-container .oc-rs-corner {
-  opacity: 1;
-  background: color-mix(in srgb, var(--bc, var(--accent)) 30%, var(--bg-panel));
-  border: 1px solid var(--bc, var(--accent));
-  border-radius: 4px;
-}
-.oc-container .oc-rs:hover {
-  background: var(--bc, var(--accent));
-}
+/* 容器手柄与其他模块一致（正常边缘细条 + 四角），不再使用加宽样式块 */
 .oc-chead {
   display: flex;
   align-items: center;
@@ -2245,6 +2162,13 @@ body,
   width: 7px;
   cursor: ew-resize;
 }
+.oc-rs[data-dir='w'] {
+  left: -4px;
+  top: 6px;
+  bottom: 6px;
+  width: 7px;
+  cursor: ew-resize;
+}
 .oc-rs[data-dir='s'] {
   left: 6px;
   right: 6px;
@@ -2252,16 +2176,36 @@ body,
   height: 7px;
   cursor: ns-resize;
 }
+.oc-rs[data-dir='n'] {
+  left: 6px;
+  right: 6px;
+  top: -4px;
+  height: 7px;
+  cursor: ns-resize;
+}
 .oc-rs-corner {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--bg-panel);
+  border: 1.5px solid var(--accent);
+  cursor: nwse-resize;
+}
+.oc-rs-corner[data-dir='se'] {
   right: -4px;
   bottom: -4px;
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  background: var(--accent);
-  border: 2px solid var(--bg-panel);
-  cursor: nwse-resize;
-  box-shadow: var(--shadow);
+}
+.oc-rs-corner[data-dir='sw'] {
+  left: -4px;
+  bottom: -4px;
+}
+.oc-rs-corner[data-dir='ne'] {
+  right: -4px;
+  top: -4px;
+}
+.oc-rs-corner[data-dir='nw'] {
+  left: -4px;
+  top: -4px;
 }
 .oc-node:hover .oc-rs {
   opacity: 0.55;

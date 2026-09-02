@@ -87,7 +87,7 @@ check('章级清单模板（无章）占位事件', t3.rows.filter((r) => r.kind
 /* 6) 杂项 */
 check('gridCols 边界', gridCols(0) === 1 && gridCols(1) === 1 && gridCols(3) === 2 && gridCols(9) === 3 && gridCols(20) === 3)
 check('形状/箭头循环', nextShape('ellipse') === 'process' && cycleArrow('--') === '->' && relColor('伏笔') === '#8e44ad')
-check('KIND_META 覆盖六类', Object.keys(KIND_META).length === 6)
+check('KIND_META 覆盖七类（含文本框）', Object.keys(KIND_META).length === 7 && !!KIND_META.textbox)
 
 /* 7) 自定义尺寸与线型（v0.4.1 界面优化） */
 const cs = mk('cs', 'event', { canvasX: 0, canvasY: 0, w: 240, h: 90 })
