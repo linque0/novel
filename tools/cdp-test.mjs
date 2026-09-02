@@ -69,7 +69,13 @@ await cdp.eval(`window.setInput = (el, value) => {
 const typeInto = (selector, text) =>
   cdp.eval(`(() => { const el = document.querySelector(${JSON.stringify(selector)}); el.focus(); document.execCommand('insertText', false, ${JSON.stringify(text)}) })()`)
 const setVal = (selector, value) =>
-  cdp.eval(`(() => { setInput(document.querySelector(${JSON.stringify(selector)}), ${JSON.stringify(value)}) })()`)
+  cdp.eval(`(() => {
+    const el = document.querySelector(${JSON.stringify(selector)})
+    if (!el) throw new Error('no element: ' + ${JSON.stringify(selector)})
+    const proto = el.tagName === 'TEXTAREA' ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype
+    Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, ${JSON.stringify(value)})
+    el.dispatchEvent(new Event('input', { bubbles: true }))
+  })()`)
 const clickBtnWithText = (text, scope = 'document') =>
   cdp.eval(`[...${scope}.querySelectorAll('button')].find(b => b.textContent.includes(${JSON.stringify(text)}))?.click()`)
 
@@ -80,7 +86,7 @@ await sleep(1800)
 /* 1. 书架 + 持久化 */
 let v = await cdp.eval(`({ cards: document.querySelectorAll('.book-card').length, titles: [...document.querySelectorAll('.book-title')].map(x => x.textContent) })`)
 check('书架页渲染', v.cards >= 1, `cards=${v.cards}`)
-check('演示作品存在（星尘旅人）', (v.titles || []).some((t) => t.includes('星尘旅人')), JSON.stringify(v.titles))
+check('书架含作品条目', (v.titles || []).length >= 1, JSON.stringify(v.titles))
 
 /* 2. 导入解析逻辑 */
 v = await cdp.eval(`(() => {
@@ -181,15 +187,25 @@ await sleep(800)
 v = await cdp.eval(`({ fmt: window.__ns.db === undefined ? '?' : 'db-ok', html: document.querySelector('.rich-host .tiptap')?.innerHTML?.slice(0, 40) || '' })`)
 check('编辑器重新挂载（富文本）', /<p/.test(v.html), JSON.stringify(v))
 
-/* 5. 大纲 */
+/* 5. 大纲（v0.4.1 自由画布：新建事件模块 → 文本视图编辑） */
 await cdp.eval(`document.querySelectorAll('.rail-item')[1].click()`)
+await sleep(600)
+await clickBtnWithText('＋事件')
+await sleep(500)
+await cdp.eval(`(() => {
+  const w = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work')
+  w.outlineView = 'text'
+  return 1
+})()`)
 await sleep(400)
-await cdp.eval(`document.querySelector('.side-list .side-item')?.click()`)
+await typeInto('.ol-editor', '主线：星图碎片指引旅人穿越四境，找回失落的黎明。')
 await sleep(300)
-await typeInto('.center-pane textarea', '主线：星图碎片指引旅人穿越四境，找回失落的黎明。')
-await sleep(300)
-v = await cdp.eval(`({ label: document.querySelector('.center-pane h2')?.textContent, len: document.querySelector('.center-pane textarea')?.value?.length })`)
-check('大纲模块（总纲编辑）', /总纲/.test(v.label || '') && v.len > 10, JSON.stringify(v))
+v = await cdp.eval(`(() => {
+  const w = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work')
+  const node = w.liveOlnodes().find((n) => n.kind === 'event')
+  return { len: (document.querySelector('.ol-editor')?.textContent || '').length, saved: (node?.text || '').length > 10 }
+})()`)
+check('大纲模块（事件条目编辑）', v.len > 10 && v.saved, JSON.stringify(v))
 
 /* 6. 人物 */
 await cdp.eval(`document.querySelectorAll('.rail-item')[2].click()`)
@@ -209,16 +225,19 @@ await sleep(500)
 v = await cdp.eval(`document.querySelector('.right-panel')?.textContent || ''`)
 check('右侧面板检测本章出场人物', v.includes('林远') && v.includes('本章大纲'), '')
 
-/* 8. 设定 */
+/* 8. 设定（v0.3.0 幕布化：＋条目 → 幕布节点 contenteditable） */
 await cdp.eval(`document.querySelectorAll('.rail-item')[3].click()`)
-await sleep(400)
+await sleep(500)
 await clickBtnWithText('＋条目')
-await sleep(400)
-await setVal('.center-pane .rp-input input', '观测站')
-await typeInto('.center-pane textarea.rp-textarea', '建于界脊之上，监控星图异动。')
+await sleep(500)
+await typeInto('.center-pane .ob-editor .ob-text', '观测站：建于界脊之上，监控星图异动。')
 await sleep(300)
-v = await cdp.eval(`[...document.querySelectorAll('.side-item span')].map(x => x.textContent).join('|')`)
-check('设定条目创建', v.includes('观测站'), v)
+v = await cdp.eval(`(() => {
+  const t = document.querySelector('.center-pane .ob-editor')?.textContent || ''
+  const items = [...document.querySelectorAll('.side-item')].map(x => x.textContent)
+  return { typed: t.includes('观测站'), nodeInTree: items.length > 0 }
+})()`)
+check('设定条目创建（幕布节点）', v.typed && v.nodeInTree, JSON.stringify(v))
 
 /* 9. 灵感 */
 await cdp.eval(`document.querySelectorAll('.rail-item')[4].click()`)

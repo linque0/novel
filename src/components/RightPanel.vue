@@ -8,11 +8,14 @@ import { stripTags } from '../services/wordcount'
 const work = useWorkStore()
 const ch = computed(() => work.activeChapter)
 
-const outline = computed(() => {
-  if (!ch.value) return null
-  // 8.8：本章大纲来自大纲节点树（章纲节点），右栏速记写 text 并清 html 以回退纯文本
-  return work.olnodeByRef(ch.value.id)
-})
+const outline = computed(() => (ch.value ? work.olnodeByRef(ch.value.id) : null))
+function onSpeedNote(e) {
+  if (!ch.value) return
+  // 8.8.2-G1 懒挂载：首次输入才创建章节锚点节点
+  const n = work.ensureChapterAnchor(ch.value.id)
+  if (!n) return
+  work.olnodeSetRich(n.id, e.target.value, null)
+}
 
 const gotoOutlineEditor = () => {
   if (!outline.value) return
@@ -70,14 +73,12 @@ watch(
         <NButton v-if="outline" size="tiny" @click="gotoOutlineEditor">去编辑</NButton>
       </div>
       <textarea
-        v-if="outline"
         class="rp-textarea"
         style="min-height: 80px"
-        :value="outline.text || ''"
-        placeholder="本章要点速记（在大纲页可写长版）"
-        @input="(e) => work.olnodeSetRich(outline.id, e.target.value, null)"
+        :value="outline?.text || ''"
+        placeholder="本章要点速记（输入即挂到大纲画布）"
+        @input="onSpeedNote"
       ></textarea>
-      <div v-else style="font-size: 12px; color: var(--text-dim)">章纲节点缺失——打开大纲模块后自动生成</div>
     </div>
 
     <div class="rp-section">

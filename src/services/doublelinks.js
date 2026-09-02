@@ -240,6 +240,11 @@ export function jumpTo(target) {
   } else if (target.kind === 'character') {
     work.tab = 'characters'
     work.selCharacterId = target.id
+    // 8.8.3：关系图视图打开时，双链跳转人物附带画布定位
+    if (work.charView === 'graph') {
+      work.charFocusId = target.id
+      work.charFocusTick++
+    }
   } else if (target.kind === 'outline') {
     work.tab = 'outline'
     work.selOutlineId = target.id

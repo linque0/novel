@@ -1,18 +1,17 @@
-<!-- 大纲中心（8.8）：文本 / 导图双视图；文本视图为 Word 式富文本编辑（text+html 双字段），右键快捷栏含双链 -->
+<!-- 大纲中心（8.8.2）：文本 / 画布双视图；文本视图为 Word 式富文本编辑（text+html 双字段），右键快捷栏含双链 -->
 <script setup>
 import { computed, ref, watch, nextTick } from 'vue'
 import { NPopover } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import DLinkTextMenu from './DLinkTextMenu.vue'
-import OutlineMap from './OutlineMap.vue'
+import OutlineCanvas from './OutlineCanvas.vue'
 
 const work = useWorkStore()
 const editorEl = ref(null)
 
 const COLORS = ['#3c3427', '#8c6f4e', '#c0392b', '#d35400', '#27ae60', '#2980b9', '#8e44ad', '#7f8c8d']
 const HIGHLIGHTS = ['#fff3a3', '#ffd6a5', '#ffa8a8', '#b8f2c9', '#a8d8ff', '#e0c3fc']
-const FIXED_TITLE = { master: '总纲', volumes: '卷纲', chapters: '章纲', lines: '故事线' }
-const canEditTitle = (n) => !!n && !['master', 'volumes', 'chapters', 'lines', 'volume', 'chapter'].includes(n.kind)
+const canEditTitle = (n) => !!n && n.kind !== 'anchor'
 
 const cur = computed(() => {
   if (!work.work || !work.selOlnodeId) return null
@@ -22,23 +21,11 @@ const cur = computed(() => {
 const titleValue = computed(() => {
   const n = cur.value
   if (!n) return ''
-  if (n.kind === 'chapter') return work.chapters.find((c) => c.id === n.refId)?.title || '（已删章节）'
-  if (n.kind === 'volume') return work.volumes.find((v) => v.id === n.refId)?.title || '（已删卷）'
-  if (FIXED_TITLE[n.kind]) return FIXED_TITLE[n.kind]
+  if (n.kind === 'anchor') return work.chapters.find((c) => c.id === n.refId)?.title || work.volumes.find((v) => v.id === n.refId)?.title || '（已删）'
   return n.title
 })
 
-/* 进入大纲模块时默认选中总纲 */
-watch(
-  () => work.tab,
-  (t) => {
-    if (t === 'outline' && !work.selOlnodeId) {
-      const m = work.olnodeByKind('master')
-      if (m) work.selOlnodeId = m.id
-    }
-  },
-  { immediate: true }
-)
+/* 自由画布不再预置结构：默认不选中，文本视图显示空态引导 */
 
 /* 切换节点时装载内容（html 优先）；输入期间以编辑器为准，不回写 DOM 防光标跳动 */
 function loadEditor() {
@@ -94,15 +81,17 @@ function onCtx(e) {
   <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">大纲</span>
-      <span style="font-size: 12px; color: var(--text-dim)">结构化故事蓝图 · 双链联动 · 思维导图</span>
+      <span style="font-size: 12px; color: var(--text-dim)">自由模块画布 · 双链联动 · 文本与画布双视图</span>
+      <button class="om-btn" title="撤销" :disabled="!work.olUndo.length" @click="work.olnodeUndo()">↶</button>
+      <button class="om-btn" title="重做" :disabled="!work.olRedo.length" @click="work.olnodeRedo()">↷</button>
       <div style="flex: 1"></div>
       <div class="ol-viewtoggle">
         <button :class="{ on: work.outlineView === 'text' }" @click="work.outlineView = 'text'">文本</button>
-        <button :class="{ on: work.outlineView === 'map' }" @click="work.outlineView = 'map'">导图</button>
+        <button :class="{ on: work.outlineView === 'canvas' }" @click="work.outlineView = 'canvas'" >画布</button>
       </div>
     </div>
 
-    <OutlineMap v-if="work.outlineView === 'map'" style="flex: 1; min-height: 0" />
+    <OutlineCanvas v-if="work.outlineView === 'canvas'" style="flex: 1; min-height: 0" />
 
     <template v-else>
       <div v-if="cur" class="ol-editor-head">

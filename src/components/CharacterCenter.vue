@@ -4,6 +4,7 @@ import { NButton, NInput, NSelect, NTag } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
 import DLinkTextMenu from './DLinkTextMenu.vue'
+import CharacterGraph from './CharacterGraph.vue'
 
 const work = useWorkStore()
 const c = computed(() => work.activeCharacter)
@@ -78,7 +79,9 @@ function addRelation() {
 </script>
 
 <template>
-  <div v-if="c" style="flex: 1; overflow: auto; padding: 22px 34px">
+  <!-- 关系图视图：整幅画布（8.8.3）；列表视图：人物详情 -->
+  <CharacterGraph v-if="work.charView === 'graph'" />
+  <div v-else-if="c" style="flex: 1; overflow: auto; padding: 22px 34px">
     <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px">
       <img v-if="avatarUrl" :src="avatarUrl" class="avatar-lg" />
       <div v-else class="avatar-lg" style="display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--text-dim)">人</div>
@@ -143,5 +146,5 @@ function addRelation() {
     <div class="big">众生有相</div>
     <p>从左侧选择或创建一个人物。</p>
   </div>
-  <DLinkTextMenu ref="dlMenu" />
+  <DLinkTextMenu v-if="work.charView === 'list'" ref="dlMenu" />
 </template>

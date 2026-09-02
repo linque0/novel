@@ -41,8 +41,18 @@ export const useWorkStore = defineStore('work', {
     mubu: [],
     bookmarks: [],
     olnodes: [],
-    outlineView: 'text', // 大纲视图：text 文本 | map 导图
+    outlineView: 'text', // 大纲视图：text 文本 | canvas 画布
     selOlnodeId: null,
+    canvasFocusTick: 0, // 侧边栏请求画布居中定位的信号
+    canvasPrefs: { snap: true, density: 'detail', edgeStyle: 'bezier' }, // 画布偏好（appconfig 按作品隔离）
+    olTypes: [], // 自定义模块类型（8.8.2-G2）：[{ name, color }]，节点以 mtype 引用
+    olUndo: [],
+    olRedo: [],
+    olUndoAt: 0,
+    charView: 'list', // 人物视图：list 列表 | graph 关系图
+    charFocusId: null, // 关系图定位的人物 id
+    charFocusTick: 0,
+    charFocusHandled: 0, // 关系图已处理的定位信号（组件未挂载时请求不丢）
     prevCounts: new Map(),
     tab: 'chapters', // chapters | outline | characters | lore | snippets
     loreView: 'detail', // lore 视图：detail 详情 | overview 总览
@@ -83,6 +93,25 @@ export const useWorkStore = defineStore('work', {
     activeSnippet: (s) => s.snippets.find((x) => x.id === s.selSnippetId && !x.deletedAt) || null,
     chapterCount() {
       return this.liveChapters.length
+    },
+    /** 断线检测（8.8.2-G3）：仅统计事件节点间连线——无出边=烂尾情节，无入边=缺铺垫 */
+    olBroken() {
+      const evs = this.liveOlnodes().filter((n) => n.kind === 'event')
+      if (evs.length < 2) return { tails: [], missing: [] }
+      const hasIn = new Set()
+      const hasOut = new Set()
+      for (const n of evs) {
+        for (const rel of this.olnodeRelsOf(n.id)) {
+          if (evs.some((e) => e.id === rel.toId)) {
+            hasOut.add(n.id)
+            hasIn.add(rel.toId)
+          }
+        }
+      }
+      return {
+        tails: evs.filter((n) => !hasOut.has(n.id)),
+        missing: evs.filter((n) => !hasIn.has(n.id))
+      }
     },
     totalWords() {
       return this.liveChapters.reduce((sum, c) => sum + (c.wordCount || 0), 0)
@@ -131,6 +160,8 @@ export const useWorkStore = defineStore('work', {
       this.bookmarks = await db.bookmarks.where('workId').equals(workId).toArray()
       await this.migrateOlnodes(workId)
       this.olnodes = await db.olnodes.where('workId').equals(workId).toArray()
+      await this.loadCanvasPrefs()
+      await this.loadOlTypes()
       this.prevCounts = new Map(this.liveChapters.map((c) => [c.id, c.wordCount || 0]))
       installWordLogHook(this.prevCounts)
       this.tab = 'chapters'
@@ -158,9 +189,6 @@ export const useWorkStore = defineStore('work', {
       const o = { id: uid(), workId: this.work.id, level: 'volume', refId: vol.id, content: '', createdAt: now(), updatedAt: now(), deletedAt: null }
       this.outlines.push(o)
       autosave.mark('outlines', o)
-      // 大纲节点树：卷纲组下同步追加卷节点（8.8）
-      const vg = this.olnodeByKind('volumes')
-      if (vg) this.olnodeAdd(vg.id, { kind: 'volume', refId: vol.id, title: vol.title, text: '' })
       this.selVolumeId = vol.id
       return vol
     },
@@ -211,9 +239,6 @@ export const useWorkStore = defineStore('work', {
       const o = { id: uid(), workId: this.work.id, level: 'chapter', refId: ch.id, content: '', createdAt: now(), updatedAt: now(), deletedAt: null }
       this.outlines.push(o)
       autosave.mark('outlines', o)
-      // 大纲节点树：章纲组下同步追加章节点（8.8）
-      const cg = this.olnodeByKind('chapters')
-      if (cg) this.olnodeAdd(cg.id, { kind: 'chapter', refId: ch.id, title: ch.title, text: '' })
       this.tab = 'chapters'
       this.selChapterId = ch.id
       this.selVolumeId = vid
@@ -385,6 +410,12 @@ export const useWorkStore = defineStore('work', {
       for (const r of rels) {
         await db.relations.delete(r.id)
         this.relations = this.relations.filter((x) => x.id !== r.id)
+      }
+      // 关系图布局清理（8.8.3）
+      const layout = await this.loadCharGraph()
+      if (layout && layout[id] !== undefined) {
+        delete layout[id]
+        await this.saveCharGraph(layout)
       }
       if (this.selCharacterId === id) this.selCharacterId = null
     },
@@ -1051,38 +1082,67 @@ export const useWorkStore = defineStore('work', {
 
     /* ---------- 大纲节点树（8.8 思维导图方向） ---------- */
 
+    /* ---------- 大纲自由模块画布（8.8.2） ---------- */
+
     /**
-     * 首次打开一次性迁移：原 outlines 三级文本大纲 → olnodes 节点树。
-     * 固定根：总纲(master) / 卷纲组(volumes) / 章纲组(chapters) / 故事线组(lines)；
-     * 卷、章节点带 refId 与实体联动。迁移后 outlines 表保留不删（回滚安全）。
+     * 大纲节点迁移（两段式）：
+     * - v1（≤v0.4.0 老数据）：仅当存在非空旧大纲内容时，导入为容器 + 条目节点（保留用户文本）；
+     * - v2（本次，v0.4.1）：固定组语义降级为普通容器（可编辑可删除），卷节点保留 refId 联动，
+     *   章节点转为章节锚点（anchor）；注意此阶段 this.olnodes 尚未装载，需直接读库。
+     * - 全新作品：空画布，不预置任何结构（骨架模板见 OutlineCanvas 的「快速开始」）。
+     * outlines 旧表保留不删（回滚安全）。
      */
     async migrateOlnodes(workId) {
-      const flagKey = 'olnodes-mig:' + workId
-      const flag = await db.appconfig.get(flagKey)
-      if (flag) return
-      const mk = async (fields) => {
-        const row = {
-          id: uid(), workId, parentId: null, refId: null, kind: 'note', title: '',
-          text: '', html: null, fold: false, sortOrder: 0, deletedAt: null,
-          createdAt: now(), updatedAt: now(), ...fields
+      const hasLegacy = this.outlines.some((o) => !o.deletedAt && (o.content || '').trim())
+      const v1Flag = await db.appconfig.get('olnodes-mig:' + workId)
+      const v2Flag = await db.appconfig.get('olnodes-mig2:' + workId)
+      if (v2Flag) return
+      const rows = await db.olnodes.where('workId').equals(workId).toArray()
+      const put = (row) => db.olnodes.put(JSON.parse(JSON.stringify(row)))
+
+      if (!v1Flag && hasLegacy) {
+        const mk = async (fields) => {
+          const row = {
+            id: uid(), workId, parentId: null, refId: null, kind: 'event', title: '',
+            text: '', html: null, fold: false, sortOrder: 0, deletedAt: null,
+            canvasX: null, canvasY: null, shape: 'process', rels: [],
+            createdAt: now(), updatedAt: now(), ...fields
+          }
+          await db.olnodes.add(JSON.parse(JSON.stringify(row)))
+          return row
         }
-        await db.olnodes.add(JSON.parse(JSON.stringify(row)))
-        return row
+        const contentOf = (refId) => this.outlines.find((o) => o.refId === refId && !o.deletedAt)?.content || ''
+        let order = 0
+        await mk({ kind: 'container', title: '总纲', text: contentOf(this.work?.id), sortOrder: order++ * 1000 })
+        const vg = await mk({ kind: 'container', title: '卷纲', sortOrder: order++ * 1000 })
+        for (const v of this.liveVolumes) {
+          await mk({ kind: 'volume', refId: v.id, parentId: vg.id, title: v.title, text: contentOf(v.id), sortOrder: order++ * 1000 })
+        }
+        const cg = await mk({ kind: 'container', title: '章纲', sortOrder: order++ * 1000 })
+        for (const c of this.liveChapters) {
+          await mk({ kind: 'anchor', refId: c.id, parentId: cg.id, title: c.title, text: contentOf(c.id), sortOrder: order++ * 1000 })
+        }
+        await mk({ kind: 'container', title: '故事线', sortOrder: order++ * 1000 })
+      } else if (v1Flag || rows.length) {
+        // v1 已迁移（或存在任意旧节点数据）：固定组降级、章节点转为锚点
+        for (const n of rows) {
+          if (['master', 'volumes', 'chapters', 'lines'].includes(n.kind)) {
+            n.kind = 'container'
+            await put(n)
+          } else if (n.kind === 'line' || n.kind === 'note') {
+            n.kind = 'event'
+            await put(n)
+          } else if (n.kind === 'chapter') {
+            n.kind = 'anchor'
+            await put(n)
+          }
+          if (n.canvasX == null && n.rels === undefined) {
+            n.rels = []
+            await put(n)
+          }
+        }
       }
-      const contentOf = (refId) => this.outlines.find((o) => o.refId === refId && !o.deletedAt)?.content || ''
-      await mk({ kind: 'master', title: '总纲', text: contentOf(this.work?.id), sortOrder: 0 })
-      const vg = await mk({ kind: 'volumes', title: '卷纲', sortOrder: 1000 })
-      let order = 0
-      for (const v of this.liveVolumes) {
-        await mk({ kind: 'volume', refId: v.id, parentId: vg.id, title: v.title, text: contentOf(v.id), sortOrder: order++ * 1000 })
-      }
-      const cg = await mk({ kind: 'chapters', title: '章纲', sortOrder: 2000 })
-      order = 0
-      for (const c of this.liveChapters) {
-        await mk({ kind: 'chapter', refId: c.id, parentId: cg.id, title: c.title, text: contentOf(c.id), sortOrder: order++ * 1000 })
-      }
-      await mk({ kind: 'lines', title: '故事线', sortOrder: 3000 })
-      await db.appconfig.put({ key: flagKey, value: 1 })
+      await db.appconfig.put({ key: 'olnodes-mig2:' + workId, value: 1 })
     },
 
     liveOlnodes() {
@@ -1104,10 +1164,12 @@ export const useWorkStore = defineStore('work', {
     },
 
     olnodeAdd(parentId, fields = {}, afterId = null) {
+      this.olnodePushUndo(true)
       const siblings = this.olnodeChildren(parentId)
       const row = {
         id: uid(), workId: this.work.id, parentId: parentId || null, refId: null,
-        kind: 'note', title: '', text: '', html: null, fold: false, sortOrder: 0,
+        kind: 'event', title: '', text: '', html: null, fold: false, sortOrder: 0,
+        canvasX: null, canvasY: null, shape: 'process', pin: false, rels: [],
         deletedAt: null, createdAt: now(), updatedAt: now(), ...fields
       }
       if (afterId) {
@@ -1148,11 +1210,20 @@ export const useWorkStore = defineStore('work', {
     },
 
     olnodeRemove(id) {
+      this.olnodePushUndo(true)
       const all = [this.olnodes.find((x) => x.id === id), ...this.olnodeDescendants(id)].filter(Boolean)
       const t = now()
+      const removed = new Set(all.map((n) => n.id))
       for (const n of all) {
         n.deletedAt = t
         autosave.mark('olnodes', n)
+      }
+      // 清理其他节点指向被删节点的连线（统一关系层）
+      for (const n of this.liveOlnodes()) {
+        if (Array.isArray(n.rels) && n.rels.some((r) => removed.has(r.toId))) {
+          n.rels = n.rels.filter((r) => !removed.has(r.toId))
+          autosave.mark('olnodes', n)
+        }
       }
     },
 
@@ -1170,6 +1241,171 @@ export const useWorkStore = defineStore('work', {
       autosave.mark('olnodes', n)
     },
 
+    olnodeSetCanvas(id, x, y) {
+      const n = this.olnodes.find((x2) => x2.id === id)
+      if (!n) return
+      n.canvasX = Math.round(x)
+      n.canvasY = Math.round(y)
+      autosave.mark('olnodes', n)
+    },
+
+    /** 骨架模板批量创建：调用方先 olnodePushUndo(true)，本动作不再逐条压栈；_parent 为 rows 序号（创建后回填父级） */
+    olnodeBulkAdd(rows) {
+      const t = now()
+      const created = []
+      for (const r of rows) {
+        const row = {
+          id: uid(), workId: this.work.id, parentId: r.parentId || null, refId: r.refId || null,
+          kind: r.kind || 'event', title: r.title || '', text: r.text || '', html: null,
+          fold: false, sortOrder: r.sortOrder || 0, canvasX: r.canvasX ?? null, canvasY: r.canvasY ?? null,
+          shape: r.shape || 'process', rels: [], deletedAt: null, createdAt: t, updatedAt: t
+        }
+        this.olnodes.push(row)
+        created.push(row)
+        autosave.mark('olnodes', row)
+      }
+      for (let i = 0; i < rows.length; i++) {
+        const pi = rows[i]?._parent
+        if (pi != null && created[pi]) {
+          created[i].parentId = created[pi].id
+          autosave.mark('olnodes', created[i])
+        }
+      }
+      return created
+    },
+
+    olnodeSetKind(id, kind) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n || n.kind === kind) return
+      n.kind = kind
+      autosave.mark('olnodes', n)
+    },
+
+    olnodeSetShape(id, shape) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.shape = shape
+      autosave.mark('olnodes', n)
+    },
+
+    olnodeSetRels(id, rels) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.rels = rels
+      autosave.mark('olnodes', n)
+    },
+
+    olnodeSetPin(id, pin) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.pin = !!pin
+      autosave.mark('olnodes', n)
+    },
+
+    /** 引用卡设目标（8.8.2-G2）：refId 存 "kind:id"，标题随目标预填 */
+    olnodeSetCite(id, target) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n || !target) return
+      n.refId = target.kind + ':' + target.id
+      n.title = target.title || ''
+      autosave.mark('olnodes', n)
+    },
+
+    /** 画布偏好读写（appconfig 按作品隔离） */
+    async loadCanvasPrefs() {
+      try {
+        const row = await db.appconfig.get('olcanvas:' + this.work?.id)
+        if (row?.value) this.canvasPrefs = { snap: true, density: 'detail', edgeStyle: 'bezier', ...row.value }
+      } catch {
+        /* 保持默认 */
+      }
+    },
+    async saveCanvasPrefs() {
+      if (!this.work) return
+      await db.appconfig.put({ key: 'olcanvas:' + this.work.id, value: JSON.parse(JSON.stringify(this.canvasPrefs)) })
+    },
+
+    /** 自定义模块类型注册表（8.8.2-G2）：appconfig 按作品隔离，节点以 mtype 名称引用 */
+    async loadOlTypes() {
+      try {
+        const row = await db.appconfig.get('olTypes:' + this.work?.id)
+        this.olTypes = Array.isArray(row?.value) ? row.value : []
+      } catch {
+        this.olTypes = []
+      }
+    },
+    async saveOlTypes() {
+      if (!this.work) return
+      await db.appconfig.put({ key: 'olTypes:' + this.work.id, value: JSON.parse(JSON.stringify(this.olTypes)) })
+    },
+    olTypeAdd(name) {
+      const nameTrim = String(name || '').trim()
+      if (!nameTrim || this.olTypes.some((t) => t.name === nameTrim)) return null
+      const palette = ['#c0392b', '#2980b9', '#27ae60', '#8e44ad', '#d35400', '#16a085', '#b8860b']
+      const t = { name: nameTrim, color: palette[this.olTypes.length % palette.length] }
+      this.olTypes.push(t)
+      this.saveOlTypes()
+      return t
+    },
+    olTypeRemove(name) {
+      this.olTypes = this.olTypes.filter((t) => t.name !== name)
+      this.saveOlTypes()
+    },
+    olnodeSetMtype(id, mtype) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.mtype = String(mtype || '')
+      autosave.mark('olnodes', n)
+    },
+
+    /**
+     * 章节锚点懒挂载（8.8.2-G1）：首次在右栏输入本章速记时才创建锚点节点，
+     * refId 关联章节（显示状态点与字数、可跳正文），不再预生成。
+     */
+    ensureChapterAnchor(chapterId) {
+      const exist = this.olnodeByRef(chapterId)
+      if (exist) return exist
+      const ch = this.chapters.find((x) => x.id === chapterId && !x.deletedAt)
+      if (!ch || !this.work) return null
+      return this.olnodeAdd(null, { kind: 'anchor', refId: chapterId, title: ch.title, text: '' })
+    },
+
+    /* ---------- 人物关系图（8.8.3） ---------- */
+
+    /** 人物关系图布局持久化（appconfig 按作品隔离） */
+    async loadCharGraph() {
+      const row = await db.appconfig.get('charGraph:' + this.work?.id)
+      return row?.value || {}
+    },
+    async saveCharGraph(layout) {
+      if (!this.work) return
+      await db.appconfig.put({ key: 'charGraph:' + this.work.id, value: JSON.parse(JSON.stringify(layout)) })
+    },
+
+    /** 双链引用卡点选人物 → 跳人物模块并定位关系图 */
+    jumpToCharGraph(charId) {
+      const c = this.characters.find((x) => x.id === charId && !x.deletedAt)
+      if (!c) return false
+      this.tab = 'characters'
+      this.selCharacterId = charId
+      this.charView = 'graph'
+      this.charFocusId = charId
+      this.charFocusTick++
+      return true
+    },
+
+    /** 人物节点「发送为大纲画布引用卡」（跨模块人物动线） */
+    sendCharToOutline(charId) {
+      const c = this.characters.find((x) => x.id === charId && !x.deletedAt)
+      if (!c) return null
+      const row = this.olnodeAdd(null, { kind: 'cite', refId: 'character:' + c.id, title: c.name || '未命名', text: '' })
+      this.tab = 'outline'
+      this.outlineView = 'canvas'
+      this.selOlnodeId = row.id
+      this.canvasFocusTick++
+      return row
+    },
+
     olnodeMoveOrder(id, dir) {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n) return
@@ -1182,6 +1418,88 @@ export const useWorkStore = defineStore('work', {
       siblings[j].sortOrder = tmp
       autosave.mark('olnodes', siblings[i])
       autosave.mark('olnodes', siblings[j])
+    },
+
+    /** 拖拽重挂接（8.8 专业导图交互）：把节点移动到目标父级下（afterId 为null时追加到末尾） */
+    olnodeMoveTo(id, targetParentId, afterId = null) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n || id === targetParentId) return false
+      this.olnodePushUndo(true)
+      // 不能挂到自己的后代下
+      if (this.olnodeDescendants(id).some((d) => d.id === targetParentId)) return false
+      const oldParent = n.parentId || null
+      n.parentId = targetParentId || null
+      const sibs = this.olnodeChildren(targetParentId || null).filter((s) => s.id !== id)
+      if (afterId) {
+        const i = sibs.findIndex((s) => s.id === afterId)
+        n.sortOrder = i >= 0 ? sibs[i].sortOrder + 500 : sibs.length * 1000
+      } else {
+        n.sortOrder = sibs.reduce((m, s) => Math.max(m, s.sortOrder || 0), -1000) + 1000
+      }
+      autosave.mark('olnodes', n)
+      if (oldParent !== (targetParentId || null)) this.olnodeNormalize(oldParent)
+      this.olnodeNormalize(targetParentId || null)
+      return true
+    },
+
+    /* 撤销 / 重做（快照栈）：结构操作前 force 快照，连续文本编辑按 1.2s 合并 */
+    olnodePushUndo(force = false) {
+      const t = Date.now()
+      if (!force && this.olUndo.length && t - this.olUndoAt < 1200) {
+        this.olUndoAt = t
+        return
+      }
+      this.olUndo.push(JSON.stringify(this.olnodes.map((n) => ({ ...n }))))
+      if (this.olUndo.length > 60) this.olUndo.shift()
+      this.olRedo = []
+      this.olUndoAt = t
+    },
+
+    olnodeUndo() {
+      if (!this.olUndo.length) return false
+      this.olRedo.push(JSON.stringify(this.olnodes.map((n) => ({ ...n }))))
+      this.olnodes = JSON.parse(this.olUndo.pop())
+      for (const n of this.olnodes) autosave.mark('olnodes', n)
+      return true
+    },
+
+    olnodeRedo() {
+      if (!this.olRedo.length) return false
+      this.olUndo.push(JSON.stringify(this.olnodes.map((n) => ({ ...n }))))
+      this.olnodes = JSON.parse(this.olRedo.pop())
+      for (const n of this.olnodes) autosave.mark('olnodes', n)
+      return true
+    },
+
+    /* ---------- 统一关系层（8.8.2-G3）：边存储于源节点 rels 数组 [{ id, toId, label, kind, arrows, style }] ---------- */
+    olnodeRelsOf(id) {
+      const n = this.olnodes.find((x) => x.id === id)
+      const arr = n && Array.isArray(n.rels) ? n.rels : []
+      return arr.map((r) => ({ arrows: '->', style: '', label: '', kind: '关联', ...r }))
+    },
+    olnodeRelAdd(fromId, toId, fields = {}) {
+      if (fromId === toId) return null
+      const n = this.olnodes.find((x) => x.id === fromId)
+      if (!n) return null
+      const arr = this.olnodeRelsOf(fromId)
+      if (arr.some((r) => r.toId === toId && r.kind === (fields.kind || '关联'))) return null
+      this.olnodePushUndo(true)
+      const rel = { id: uid(), toId, label: '', kind: '关联', arrows: '->', style: '', ...fields }
+      n.rels = [...arr, rel]
+      autosave.mark('olnodes', n)
+      return rel
+    },
+    olnodeRelUpdate(ownerId, relId, patch) {
+      const n = this.olnodes.find((x) => x.id === ownerId)
+      if (!n || !Array.isArray(n.rels)) return
+      n.rels = n.rels.map((r) => (r.id === relId ? { ...r, ...patch } : r))
+      autosave.mark('olnodes', n)
+    },
+    olnodeRelRemove(ownerId, relId) {
+      const n = this.olnodes.find((x) => x.id === ownerId)
+      if (!n || !Array.isArray(n.rels)) return
+      n.rels = n.rels.filter((r) => r.id !== relId)
+      autosave.mark('olnodes', n)
     },
 
     /* ---------- 书签（章节快捷收藏） ---------- */

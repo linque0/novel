@@ -1,0 +1,254 @@
+/* 自由模块画布验收（8.8.2 / 计划书 9.4.1-S14）：迁移v2 / 快速开始模板 / 模块CRUD / 拖动落位 /
+   锚点连线与边编辑 / 断线检测 / 双链卫星 / 容器归组 / 撤销重做 / 持久化 */
+import { connect } from './_cdp-lib.mjs'
+
+const c = await connect('app://')
+await c.sleep(2500)
+const results = []
+const check = (name, ok, detail = '') => { results.push(ok); console.log((ok ? 'PASS ' : 'FAIL ') + name + (detail ? '  —— ' + String(detail).slice(0, 300) : '')) }
+const NL = String.fromCharCode(10)
+const store = `document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work')`
+
+/* 种子A：带旧大纲的书（测迁移v2）；种子B：空书（测快速开始） */
+const seed = await c.evalx(`(async () => {
+  try {
+    const { db, uid, now } = window.__ns
+    const t = now()
+    for (const title of ['画布验证书A', '画布验证书B']) {
+      const old = (await db.works.toArray()).find(w => w.title === title)
+      if (old) await db.works.delete(old.id)
+    }
+    const mk = async (title) => {
+      const workId = uid()
+      await db.works.add({ id: workId, title, author: '', genre: '', status: '', intro: '', createdAt: t, updatedAt: t, deletedAt: null })
+      return workId
+    }
+    const wa = await mk('画布验证书A')
+    const volId = uid()
+    await db.volumes.add({ id: volId, workId: wa, title: '第一卷', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
+    const chId = uid()
+    await db.chapters.add({ id: chId, workId: wa, volumeId: volId, title: '第一章 · 启程', content: '<p>启程。</p>', wordCount: 3, status: 'draft', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
+    await db.mubu.add({ id: uid(), workId: wa, parentId: null, sortOrder: 0, text: '雾都钟楼', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
+    await db.outlines.add({ id: uid(), workId: wa, level: 'master', refId: wa, content: '主线：寻找黎明之城。', createdAt: t, updatedAt: t, deletedAt: null })
+    await db.outlines.add({ id: uid(), workId: wa, level: 'chapter', refId: chId, content: '目标：进入雾都' + ${JSON.stringify(NL)} + '线索：[[雾都钟楼]]', createdAt: t, updatedAt: t, deletedAt: null })
+    const wb = await mk('画布验证书B')
+    await db.mubu.add({ id: uid(), workId: wb, parentId: null, sortOrder: 0, text: '雾都钟楼', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
+    return { ok: true, wa, wb, chId }
+  } catch (e) { return { ok: false, err: String(e).slice(0, 200) } }
+})()`)
+console.log('seed:', JSON.stringify(seed))
+if (!seed.ok) process.exit(1)
+await c.evalx(`location.reload()`)
+await c.sleep(3000)
+
+/* 1) 迁移 v2：打开书A → 固定组降级容器、章节点转锚点 */
+await c.evalx(`[...document.querySelectorAll('.book-card')].find(x => x.textContent.includes('画布验证书A'))?.click()`)
+await c.sleep(1800)
+const m1 = await c.evalx(`(() => {
+  const w = ${store}
+  const kinds = w.liveOlnodes().map(n => n.kind)
+  const ch = w.olnodeByRef(${JSON.stringify(seed.chId)})
+  return {
+    hasOld: kinds.some(k => ['master', 'volumes', 'chapters', 'lines', 'chapter', 'line'].includes(k)),
+    containers: kinds.filter(k => k === 'container').length,
+    chKind: ch?.kind, chText: ch?.text?.includes('雾都钟楼')
+  }
+})()`)
+check('迁移v2：固定组降级容器/章转锚点/无旧kind残留', !m1.hasOld && m1.containers >= 3 && m1.chKind === 'anchor' && m1.chText, JSON.stringify(m1))
+
+/* 2) 大纲画布渲染 + 章节锚点显示 */
+await c.evalx(`(() => { const w = ${store}; w.tab = 'outline'; w.outlineView = 'canvas'; return 1 })()`)
+await c.sleep(1200)
+const m2 = await c.evalx(`(() => ({
+  nodes: document.querySelectorAll('.oc-node').length,
+  containers: document.querySelectorAll('.oc-container').length,
+  anchors: document.querySelectorAll('.oc-anchor').length,
+  caret: !!document.querySelector('.oc-caret')
+}))()`)
+check('画布渲染节点/容器/锚点', m2.nodes >= 6 && m2.containers >= 3 && m2.anchors >= 1 && m2.caret, JSON.stringify(m2))
+
+/* 3) 空书快速开始：三幕式模板 */
+await c.evalx(`location.hash = '#b'; 1`)
+await c.evalx(`(() => { const w = ${store}; w.closeWork(); return 1 })()`)
+await c.sleep(800)
+await c.evalx(`[...document.querySelectorAll('.book-card')].find(x => x.textContent.includes('画布验证书B'))?.click()`)
+await c.sleep(1500)
+await c.evalx(`(() => { const w = ${store}; w.tab = 'outline'; w.outlineView = 'canvas'; return 1 })()`)
+await c.sleep(900)
+const m3a = await c.evalx(`(() => ({ empty: ${store}.liveOlnodes().length === 0, quick: !!document.querySelector('.oc-quick') }))()`)
+check('空画布快速开始引导', m3a.empty && m3a.quick, JSON.stringify(m3a))
+await c.evalx(`[...document.querySelectorAll('.oc-quick-btns button')].find(b => b.textContent.includes('三幕式'))?.click()`)
+await c.sleep(900)
+const m3b = await c.evalx(`(() => {
+  const w = ${store}
+  const nodes = w.liveOlnodes()
+  const rels = nodes.flatMap(n => (n.rels || []).length)
+  return { events: nodes.filter(n => n.kind === 'event').length, containers: nodes.filter(n => n.kind === 'container').length, notes: nodes.filter(n => n.kind === 'note').length, edges: rels.reduce((s, x) => s + x, 0), dom: document.querySelectorAll('.oc-node').length }
+})()`)
+check('三幕式模板生成（事件/容器/便签/连线）', m3b.events === 7 && m3b.containers === 3 && m3b.notes === 1 && m3b.edges === 3 && m3b.dom >= 11, JSON.stringify(m3b))
+
+/* 4) 侧栏模块列表：搜索筛选 + 定位闪烁 */
+await c.evalx(`(() => { const w = ${store}; w.selOlnodeId = w.liveOlnodes().find(n => n.kind === 'event').id; w.canvasFocusTick++; return 1 })()`)
+await c.sleep(500)
+const m4 = await c.evalx(`(() => ({ items: document.querySelectorAll('.side-list .side-item').length, flash: !!document.querySelector('.oc-node.flash'), active: !!document.querySelector('.side-item.active') }))()`)
+check('侧栏列表渲染 + 画布定位闪烁', m4.items >= 11 && m4.flash && m4.active, JSON.stringify(m4))
+
+/* 5) 侧栏新建模块（事件/便签/容器）+ 引用卡选择目标 */
+const before5 = await c.evalx(`${store}.liveOlnodes().length`)
+await c.evalx(`[...document.querySelectorAll('.ol-side-add button')].find(b => b.title.includes('事件'))?.click()`)
+await c.sleep(400)
+await c.evalx(`[...document.querySelectorAll('.ol-side-add button')].find(b => b.title.includes('便签'))?.click()`)
+await c.sleep(400)
+await c.evalx(`[...document.querySelectorAll('.ol-side-add button')].find(b => b.title.includes('容器'))?.click()`)
+await c.sleep(400)
+await c.evalx(`[...document.querySelectorAll('.ol-side-add button')].find(b => b.title.includes('引用卡'))?.click()`)
+await c.sleep(700)
+await c.evalx(`document.querySelector('.picker-item')?.click()`)
+await c.sleep(700)
+const m5 = await c.evalx(`(() => {
+  const w = ${store}
+  const nodes = w.liveOlnodes()
+  const cite = nodes.filter(n => n.kind === 'cite').pop()
+  return { added: nodes.length - ${before5}, citeRef: !!cite?.refId, containers: nodes.filter(n => n.kind === 'container').length }
+})()`)
+check('侧栏新建事件/便签/容器/引用卡（含目标）', m5.added === 4 && m5.citeRef && m5.containers === 4, JSON.stringify(m5))
+
+/* 6) 拖动落位：合成鼠标事件拖动事件节点（按画布缩放换算 + 吸附断言） */
+const m6 = await c.evalx(`(() => {
+  const w = ${store}
+  const n = w.liveOlnodes().find(x => x.kind === 'event')
+  const el = [...document.querySelectorAll('.oc-node.oc-event')][0]
+  if (!el) return { err: 'no el' }
+  const inner = document.querySelector('.om-inner')
+  const sc = parseFloat((inner.style.transform.match(/scale\\(([\\d.]+)\\)/) || [])[1] || '1')
+  const r = el.getBoundingClientRect()
+  const sx = r.left + r.width / 2, sy = r.top + r.height / 2
+  const before = { x: n.canvasX, y: n.canvasY }
+  el.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: sx, clientY: sy }))
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: sx + 64, clientY: sy + 32 }))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: sx + 64, clientY: sy + 32 }))
+  const expX = Math.round((before.x + 64 / sc) / 16) * 16
+  const expY = Math.round((before.y + 32 / sc) / 16) * 16
+  return { sc, before, after: { x: n.canvasX, y: n.canvasY }, expX, expY }
+})()`)
+check('节点拖动落位（缩放换算 + 吸附 16px 网格）', !m6.err && m6.after && m6.after.x === m6.expX && m6.after.y === m6.expY, JSON.stringify(m6))
+
+/* 7) 锚点拖线建边 + 边编辑浮层（mouseup 后等待 Vue 渲染再断言） */
+const m7a = await c.evalx(`(() => {
+  const w = ${store}
+  const evs = w.liveOlnodes().filter(x => x.kind === 'event')
+  const A = evs[0], B = evs[1]
+  const ea = [...document.querySelectorAll('.oc-node.oc-event')][0]
+  const eb = [...document.querySelectorAll('.oc-node.oc-event')][1]
+  if (!ea || !eb) return { err: 'no els' }
+  const apt = ea.querySelector('.oc-apt[data-side="right"]')
+  const ar = apt.getBoundingClientRect()
+  apt.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: ar.left + 4, clientY: ar.top + 4 }))
+  const rb = eb.getBoundingClientRect()
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: rb.left + rb.width / 2, clientY: rb.top + rb.height / 2 }))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: rb.left + rb.width / 2, clientY: rb.top + rb.height / 2 }))
+  const rel = (A.rels || []).slice(-1)[0]
+  return { rel: !!rel, toB: rel?.toId === B.id }
+})()`)
+await c.sleep(500)
+const m7 = await c.evalx(`(() => ({ editor: !!document.querySelector('.oc-eedit'), relCount: ${store}.liveOlnodes().filter(x => x.kind === 'event')[0].rels.length }))()`)
+check('四向锚点拖线建边 + 边编辑浮层', m7a.rel && m7a.toB && m7.editor, JSON.stringify({ ...m7a, ...m7 }))
+await c.evalx(`(() => {
+  const inp = document.querySelector('.oc-eedit input')
+  inp.focus()
+  Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(inp, '推动')
+  inp.dispatchEvent(new Event('input', { bubbles: true }))
+  return 1
+})()`)
+await c.sleep(400)
+const m7b = await c.evalx(`(() => {
+  const w = ${store}
+  const evs = w.liveOlnodes().filter(x => x.kind === 'event')
+  const rel = (evs[0].rels || []).slice(-1)[0]
+  const label = [...document.querySelectorAll('.oc-elabel')].some(x => x.textContent.includes('推动'))
+  return { saved: rel?.label === '推动', labelDom: label }
+})()`)
+check('边标签编辑落库 + 标签渲染', m7b.saved && m7b.labelDom, JSON.stringify(m7b))
+
+/* 8) 断线检测：缺铺垫节点定位（点击后等 Vue 渲染再查 flash） */
+const m8a = await c.evalx(`(() => {
+  const w = ${store}
+  const chip = [...document.querySelectorAll('.oc-chip')].find(x => x.textContent.includes('缺铺垫'))
+  chip?.click()
+  return { missing: w.olBroken.missing.length, tails: w.olBroken.tails.length }
+})()`)
+await c.sleep(500)
+const m8 = await c.evalx(`(() => ({ flash: !!document.querySelector('.oc-node.flash') }))()`)
+check('断线检测（烂尾/缺铺垫）与定位', m8a.missing >= 1 && m8a.tails >= 1 && m8.flash, JSON.stringify({ ...m8a, ...m8 }))
+
+/* 9) 双链卫星：事件正文写 [[雾都钟楼]] → 卫星渲染 + 点击跳设定 */
+await c.evalx(`(() => {
+  const w = ${store}
+  const n = w.liveOlnodes().find(x => x.kind === 'event')
+  w.olnodeSetRich(n.id, '去[[雾都钟楼]]看看', null)
+  return 1
+})()`)
+await c.sleep(700)
+const m9 = await c.evalx(`(() => {
+  const sat = document.querySelector('.oc-sat')
+  const txt = sat?.textContent || ''
+  sat?.click()
+  return { sat: txt.slice(0, 12), tab: ${store}.tab }
+})()`)
+check('双链卫星渲染 + 点击跳转设定', m9.sat.includes('雾都钟楼') && m9.tab === 'lore', JSON.stringify(m9))
+
+/* 10) 容器归组：store 移动 + 容器盒派生（先切回大纲模块——上一步卫星跳转离开了） */
+const m10a = await c.evalx(`(() => {
+  const w = ${store}
+  w.tab = 'outline'
+  w.outlineView = 'canvas'
+  const cont = w.liveOlnodes().find(x => x.kind === 'container')
+  const loose = w.liveOlnodes().find(x => x.kind === 'note')
+  const ok = w.olnodeMoveTo(loose.id, cont.id)
+  return { ok, parent: loose.parentId === cont.id }
+})()`)
+await c.sleep(700)
+const m10 = await c.evalx(`(() => {
+  const items = [...document.querySelectorAll('.side-list .side-item')].map(x => x.textContent)
+  return { badge: items.some(t => t.includes('3项')) } // 目标容器原有 2 个子模块 + 拖入便签 = 3项
+})()`)
+check('容器归组（badge 计数）', m10a.ok && m10a.parent && m10.badge, JSON.stringify({ ...m10a, ...m10 }))
+
+/* 11) 撤销 / 重做（undo/redo 替换 olnodes 数组，需按 id 重查行） */
+const m11 = await c.evalx(`(() => {
+  const w = ${store}
+  const note = w.liveOlnodes().find(x => x.kind === 'note' && x.parentId)
+  if (!note) return { err: 'no moved note' }
+  const id = note.id
+  w.olnodeUndo()
+  const undone = w.olnodes.find(x => x.id === id)?.parentId == null
+  w.olnodeRedo()
+  const redone = w.olnodes.find(x => x.id === id)?.parentId != null
+  return { undone, redone }
+})()`)
+check('撤销/重做快照栈（恢复挂接关系）', !m11.err && m11.undone && m11.redone, JSON.stringify(m11))
+
+/* 12) 持久化：flush → 重载 → 坐标仍在（keep 存 sessionStorage 以跨 reload） */
+await c.evalx(`(() => {
+  const w = ${store}
+  const n = w.liveOlnodes().find(x => x.kind === 'event')
+  sessionStorage.setItem('verify-keep', JSON.stringify({ id: n.id, x: n.canvasX }))
+  return window.__flushNow ? window.__flushNow() : 0
+})()`)
+await c.evalx(`location.reload()`)
+await c.sleep(3000)
+await c.evalx(`[...document.querySelectorAll('.book-card')].find(x => x.textContent.includes('画布验证书B'))?.click()`)
+await c.sleep(1500)
+await c.evalx(`(() => { const w = ${store}; w.tab = 'outline'; w.outlineView = 'canvas'; return 1 })()`)
+await c.sleep(900)
+const m12 = await c.evalx(`(() => {
+  const w = ${store}
+  const keep = JSON.parse(sessionStorage.getItem('verify-keep') || '{}')
+  const n = w.olnodes.find(x => x.id === keep.id)
+  return { kept: n ? n.canvasX === keep.x : false, nodes: w.liveOlnodes().length }
+})()`)
+check('落库持久化（重载后坐标与节点保留）', m12.kept && m12.nodes >= 12, JSON.stringify(m12))
+
+const fail = results.filter((x) => !x).length
+console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')
+process.exit(fail ? 1 : 0)

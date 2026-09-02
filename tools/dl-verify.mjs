@@ -145,14 +145,25 @@ const s4 = await c.evalx(`(async () => {
 })()`)
 check('双链写入幕布节点并落库（指向正文）', s4.span && s4.isChapter, JSON.stringify(s4))
 
-/* 5) 大纲令牌链路 */
+/* 5) 大纲令牌链路（v0.4.1：文本视图 ce 编辑器写入令牌 → 画布卫星渲染 → 悬停预览 → 点击跳转） */
 await c.evalx(`(() => { [...document.querySelectorAll('.rail-item')].find(x => x.textContent.includes('纲'))?.click(); return 1 })()`)
 await c.sleep(800)
 await c.evalx(`(() => { [...document.querySelectorAll('.side-item')].find(x => x.textContent.includes('总纲'))?.click(); return 1 })()`)
+await c.sleep(500)
+await c.evalx(`(() => { const w = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work'); w.outlineView = 'text'; return 1 })()`)
 await c.sleep(800)
-const t1 = await c.evalx(`(() => { const ta = document.querySelector('textarea[data-dl-token]'); return { ta: !!ta } })()`)
-check('大纲文本域就绪', t1.ta, JSON.stringify(t1))
-const t2 = await c.evalx(`(() => { const ta = document.querySelector('textarea[data-dl-token]'); ta.focus(); ta.setSelectionRange(0, 0); const r = ta.getBoundingClientRect(); return { x: r.left + 46, y: r.top + 22 } })()`)
+const t1 = await c.evalx(`(() => { const el = document.querySelector('.ol-editor[data-dl-token]'); return { ta: !!el } })()`)
+check('大纲编辑器就绪', t1.ta, JSON.stringify(t1))
+const t2 = await c.evalx(`(() => {
+  const el = document.querySelector('.ol-editor[data-dl-token]')
+  el.focus()
+  const r0 = document.createRange()
+  r0.selectNodeContents(el)
+  r0.collapse(true)
+  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r0)
+  const r = el.getBoundingClientRect()
+  return { x: r.left + 60, y: r.top + 20 }
+})()`)
 await rclick(t2.x, t2.y)
 await c.sleep(600)
 const t3 = await c.evalx(`(() => ({ menu: !!document.querySelector('.ctx-menu'), add: [...document.querySelectorAll('.ctx-menu .ctx-item')].some(i => i.textContent.includes('添加双链')) }))()`)
@@ -172,20 +183,31 @@ await c.evalx(`document.querySelector('.ctx-menu .ctx-dlwrap .picker-item')?.cli
 await c.sleep(600)
 const t6 = await c.evalx(`(async () => {
   await window.__flushNow()
-  const ta = document.querySelector('textarea[data-dl-token]')
-  return { token: /\\[\\[.+\\]\\]/.test(ta?.value || ''), val: (ta?.value || '').slice(0, 40) }
+  const el = document.querySelector('.ol-editor[data-dl-token]')
+  const w = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work')
+  const node = w.liveOlnodes().find((x) => x.title === '总纲')
+  return {
+    token: /\\[\\[.+\\]\\]/.test(el?.textContent || ''),
+    saved: node ? /\\[\\[.+\\]\\]/.test(node.text || '') : false
+  }
 })()`)
-check('双链令牌写入大纲', t6.token, JSON.stringify(t6))
-await c.evalx(`(() => { const ta = document.querySelector('textarea[data-dl-token]'); const r = ta.getBoundingClientRect(); ta.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + 40, clientY: r.top + 20 })); return 1 })()`)
+check('双链令牌写入大纲并落库', t6.token && t6.saved, JSON.stringify(t6))
+await c.evalx(`(() => { const w = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work'); w.outlineView = 'canvas'; return 1 })()`)
+await c.sleep(1000)
+const t7 = await c.evalx(`(() => {
+  const sat = document.querySelector('.oc-sat')
+  if (!sat) return { sat: false }
+  const r = sat.getBoundingClientRect()
+  sat.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + 10, clientY: r.top + 6 }))
+  return { sat: sat.textContent.includes('铜刻星辰'), x: r.left + 10, y: r.top + 6 }
+})()`)
 await c.sleep(700)
 const t8 = await c.evalx(`(() => { const p = document.querySelector('.dl-pop'); return { shown: !!p, text: p?.innerText?.slice(0, 30) } })()`)
-check('令牌悬浮预览', t8.shown, JSON.stringify(t8))
-await rclick(t2.x, t2.y)
-await c.sleep(500)
-const t9 = await c.evalx(`(() => { const it = [...document.querySelectorAll('.ctx-menu .ctx-item')].find(i => i.textContent.includes('移除该双链')); it?.click(); return { had: !!it } })()`)
-await c.sleep(500)
-const t10 = await c.evalx(`(async () => { await window.__flushNow(); const ta = document.querySelector('textarea[data-dl-token]'); return { val: (ta?.value || '').slice(0, 40) } })()`)
-check('移除该双链', t9.had && !/\\[\\[.+\\]\\]/.test(t10.val), JSON.stringify(t10))
+check('画布卫星节点渲染 + 令牌悬浮预览', t7.sat && t8.shown, JSON.stringify({ t7, t8 }))
+await c.evalx(`document.querySelector('.oc-sat')?.click()`)
+await c.sleep(900)
+const t10 = await c.evalx(`(() => { const w = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work'); return { tab: w.tab } })()`)
+check('卫星点击跳转设定', t10.tab === 'lore', JSON.stringify(t10))
 
 const fail = results.filter(x => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')

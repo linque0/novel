@@ -8,6 +8,13 @@ const ROLE_COLOR = { 主角: 'error', 反派: 'warning', 配角: 'info', 龙套:
 const list = computed(() =>
   work.liveCharacters.map((c) => ({ id: c.id, name: c.name, role: c.role }))
 )
+function pick(c) {
+  work.selCharacterId = c.id
+  if (work.charView === 'graph') {
+    work.charFocusId = c.id
+    work.charFocusTick++
+  }
+}
 </script>
 
 <template>
@@ -15,6 +22,11 @@ const list = computed(() =>
     <div class="side-head">
       <NButton size="tiny" type="primary" @click="work.addCharacter()">＋人物</NButton>
       <span style="font-size: 12px; color: var(--text-dim)">{{ list.length }} 人</span>
+      <span style="flex: 1"></span>
+      <span class="ol-viewtoggle char-viewtoggle">
+        <button :class="{ on: work.charView === 'list' }" title="列表视图" @click="work.charView = 'list'">列表</button>
+        <button :class="{ on: work.charView === 'graph' }" title="人物关系图" @click="work.charView = 'graph'">关系图</button>
+      </span>
     </div>
     <div class="side-list">
       <div
@@ -24,8 +36,8 @@ const list = computed(() =>
         :class="{ active: work.selCharacterId === c.id }"
         role="button"
         tabindex="0"
-        @click="work.selCharacterId = c.id"
-        @keydown.enter="work.selCharacterId = c.id"
+        @click="pick(c)"
+        @keydown.enter="pick(c)"
       >
         <NTag size="tiny" :type="ROLE_COLOR[c.role] || 'default'" :bordered="false">{{ c.role }}</NTag>
         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ c.name }}</span>
