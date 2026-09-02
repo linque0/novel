@@ -183,7 +183,23 @@ function canvasPt(e) {
   return { x: (e.clientX - r.left - tx.value) / zoom.value, y: (e.clientY - r.top - ty.value) / zoom.value }
 }
 function hitNodeAt(pt, exclude = new Set()) {
+  // 命中优先子模块：容器有子模块时，只有落在空白区（非正文区）才轮到容器，避免拖线误锚容器
   for (const n of [...visNodes.value].reverse()) {
+    if (exclude.has(n.id)) continue
+    const r = rectOf(n)
+    if (r && pt.x >= r.x && pt.x <= r.x + r.w && pt.y >= r.y && pt.y <= r.y + r.h) return n
+  }
+  return null
+}
+function hitConnTarget(pt, exclude = new Set()) {
+  // 拖线目标优先命中子模块（事件/便签/引用卡/锚点/卷），其次无子模块的容器
+  const nodes = [...visNodes.value].reverse()
+  for (const n of nodes) {
+    if (exclude.has(n.id) || n.kind === 'container') continue
+    const r = rectOf(n)
+    if (r && pt.x >= r.x && pt.x <= r.x + r.w && pt.y >= r.y && pt.y <= r.y + r.h) return n
+  }
+  for (const n of nodes) {
     if (exclude.has(n.id)) continue
     const r = rectOf(n)
     if (r && pt.x >= r.x && pt.x <= r.x + r.w && pt.y >= r.y && pt.y <= r.y + r.h) return n
@@ -309,7 +325,7 @@ function startConnect(e, n) {
     const st = connecting.value
     connecting.value = null
     if (!st) return
-    const target = hitNodeAt(canvasPt(ev), new Set([n.id]))
+    const target = hitConnTarget(canvasPt(ev), new Set([n.id]))
     if (!target) return
     const rel = work.olnodeRelAdd(n.id, target.id, { fromSide: side })
     if (!rel) return
@@ -376,10 +392,6 @@ function onDblNode(n) {
   if (n.kind === 'volume' && n.refId) {
     const first = work.liveChapters.find((c) => c.volumeId === n.refId)
     if (first) work.navTo('chapters', first.id)
-    return
-  }
-  if (n.kind === 'container') {
-    editTitle.value = { id: n.id, value: n.title || '' }
     return
   }
   startInlineEdit(n)
@@ -627,6 +639,23 @@ onBeforeUnmount(() => {
               <span v-else class="oc-ctitle">{{ n.title || '容器' }}</span>
               <span class="oc-ccount">{{ kidsOf(n).length }}</span>
             </div>
+            <textarea
+              v-if="editText && editText.id === n.id"
+              ref="inlineEl"
+              v-model="editText.value"
+              class="oc-inline-edit oc-inline-body"
+              spellcheck="false"
+              title="Ctrl+Enter 提交 · Esc 取消"
+              @mousedown.stop
+              @dblclick.stop
+              @blur="commitInline"
+              @keydown.esc.prevent="editText = null"
+              @keydown.ctrl.enter.prevent="commitInline"
+            ></textarea>
+            <div v-else class="oc-cbody" @dblclick.stop="startInlineEdit(n)">
+              <div v-if="plainText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
+              <div v-else class="oc-cbody-hint">双击此处编辑容器内容</div>
+            </div>
           </template>
           <template v-else>
             <span v-if="n.kind === 'anchor' && chapterOf(n)" class="ol-dot" :data-s="chapterOf(n).status" :title="STATUS_LABEL[chapterOf(n).status]" />
@@ -646,15 +675,15 @@ onBeforeUnmount(() => {
             <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }">＋ 选择目标</button>
             <div v-else class="oc-body">
               <div class="oc-label">{{ labelOf(n) }}</div>
-              <div v-if="subOf(n) && !showFullText(n)" class="om-sub">{{ subOf(n) }}</div>
               <div v-if="showFullText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
-              <span v-else-if="n.mtype && work.canvasPrefs.density === 'detail'" class="om-mtype" :style="{ color: mtypeColorOf(n.mtype), borderColor: mtypeColorOf(n.mtype) }">{{ n.mtype }}</span>
+              <div v-else class="om-sub">{{ plainText(n).split('\n')[0].slice(0, 40) || subOf(n) || '&nbsp;' }}</div>
+              <span v-if="!showFullText(n) && n.mtype && work.canvasPrefs.density === 'detail'" class="om-mtype" :style="{ color: mtypeColorOf(n.mtype), borderColor: mtypeColorOf(n.mtype) }">{{ n.mtype }}</span>
             </div>
           </template>
 
           <div v-if="work.selOlnodeId === n.id" class="oc-mini" @mousedown.stop>
             <button v-if="n.kind === 'event'" :title="'形状：' + SHAPE_LABEL[n.shape || 'process'] + '（点击切换）'" @click.stop="work.olnodeSetShape(n.id, nextShape(n.shape))">◇</button>
-            <button v-if="!['anchor', 'volume', 'container'].includes(n.kind)" title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)">✎</button>
+            <button title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)">✎</button>
             <button v-if="work.olTypes.length" :title="'自定义类型：' + (n.mtype || '无') + '（点击切换）'" @click.stop="cycleMtype(n)">🏷</button>
             <button :title="n.pin ? '取消固定' : '固定位置（「整理」时不动）'" @click.stop="work.olnodeSetPin(n.id, !n.pin)">{{ n.pin ? '📌' : '📍' }}</button>
             <button class="oc-mini-x" title="删除模块" @click.stop="onRemove(n)">✕</button>

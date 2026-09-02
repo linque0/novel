@@ -1779,6 +1779,27 @@ body,
   top: -9px;
   font-size: 11px;
 }
+/* 容器正文区（与事件/便签/引用卡同级：可双击编辑内容） */
+.oc-cbody {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 40px;
+  bottom: 8px;
+  overflow: hidden;
+  cursor: text;
+  border-radius: 6px;
+}
+.oc-cbody-hint {
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.75;
+  padding: 4px 6px;
+}
+.oc-inline-body {
+  top: 40px !important;
+  z-index: 7;
+}
 .oc-body {
   padding: 6px 12px;
   min-width: 0;
@@ -1951,6 +1972,16 @@ body,
 }
 .oc-container.sel {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--bc, var(--accent)) 40%, transparent);
+}
+.oc-container .oc-rs[data-dir='s'],
+.oc-container .oc-rs-corner {
+  display: none; /* 容器高度由内容派生，仅开放横向调宽 */
+}
+.oc-container .oc-rs[data-dir='e'] {
+  opacity: 0;
+}
+.oc-container:hover .oc-rs[data-dir='e'] {
+  opacity: 0.55;
 }
 .oc-chead {
   display: flex;

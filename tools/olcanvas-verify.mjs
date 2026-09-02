@@ -378,6 +378,54 @@ const m12 = await c.evalx(`(() => {
 })()`)
 check('落库持久化（重载后坐标与节点保留）', m12.kept && m12.nodes >= 12, JSON.stringify(m12))
 
+/* 11g) 模块同级化：容器正文双击编辑 + 命中优先子模块 */
+const m18 = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  const el = [...document.querySelectorAll('.oc-node.oc-container')][0]
+  const body = el.querySelector('.oc-cbody')
+  body.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+  return { bodyExists: !!body }
+})()`)
+await c.sleep(400)
+const m18b = await c.evalx(`(() => {
+  const ta = document.querySelector('.oc-inline-body')
+  if (!ta) return { err: 'no container editor' }
+  Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(ta, '容器内容文本')
+  ta.dispatchEvent(new Event('input', { bubbles: true }))
+  ta.dispatchEvent(new Event('blur'))
+  return 1
+})()`)
+await c.sleep(400)
+const m18c = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  return { saved: cont.text === '容器内容文本', closed: !document.querySelector('.oc-inline-body') }
+})()`)
+check('容器正文双击编辑（与事件/便签/引用卡同级）', m18.bodyExists && !m18b.err && m18c.saved && m18c.closed, JSON.stringify({ m18, m18b, m18c }))
+
+/* 11h) 容器内拖线直连子模块（命中优先子模块，不锚容器） */
+const m19 = await c.evalx(`(() => {
+  const w = ${store}
+  const cont = w.liveOlnodes().find((x) => x.kind === 'container')
+  const kid = w.olnodeChildren(cont.id)[0]
+  const kidEl = [...document.querySelectorAll('.oc-node')].find((x) => x.style.left === posOfX(kid.id))
+  function posOfX(id) { const n = w.olnodes.find((x) => x.id === id); return (n.canvasX ?? 0) + 'px' }
+  const src = w.liveOlnodes().find((x) => x.kind === 'event' && x.id !== kid.id && !(x.parentId))
+  const srcEl = [...document.querySelectorAll('.oc-node')].find((x) => x.style.left === posOfX(src.id))
+  const apt = srcEl.querySelector('.oc-apt[data-side="right"]')
+  const ar = apt.getBoundingClientRect()
+  apt.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: ar.left + 3, clientY: ar.top + 3 }))
+  const kr = kidEl.getBoundingClientRect()
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: kr.left + kr.width / 2, clientY: kr.top + kr.height / 2 }))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: kr.left + kr.width / 2, clientY: kr.top + kr.height / 2 }))
+  const rel = (src.rels || []).slice(-1)[0]
+  return { toKid: rel?.toId === kid.id }
+})()`)
+await c.sleep(300)
+await c.evalx(`(() => { document.querySelector('.oc-eedit') && document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); return 1 })()`)
+check('容器内子模块直连（拖线不锚容器）', m19.toKid, JSON.stringify(m19))
+
 const fail = results.filter((x) => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')
 process.exit(fail ? 1 : 0)
