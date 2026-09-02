@@ -228,6 +228,135 @@ const m11 = await c.evalx(`(() => {
 })()`)
 check('撤销/重做快照栈（恢复挂接关系）', !m11.err && m11.undone && m11.redone, JSON.stringify(m11))
 
+/* 11b) 界面优化：边缘拖拽调整大小 */
+const m13 = await c.evalx(`(() => {
+  const w = ${store}
+  const n = w.liveOlnodes().find((x) => x.kind === 'event')
+  const el = [...document.querySelectorAll('.oc-node.oc-event')][0]
+  const rs = el.querySelector('.oc-rs[data-dir="se"]')
+  const r = rs.getBoundingClientRect()
+  rs.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + 4, clientY: r.top + 4 }))
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + 64, clientY: r.top + 44 }))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: r.left + 64, clientY: r.top + 44 }))
+  return { w: n.w, h: n.h }
+})()`)
+check('模块边缘拖拽调整大小并落库', m13.w >= 96 && m13.h >= 36, JSON.stringify(m13))
+
+/* 11c) 界面优化：双击模块行内编辑内容（等 Vue 渲染后再断言） */
+const m14 = await c.evalx(`(() => {
+  const el = [...document.querySelectorAll('.oc-node.oc-note')][0]
+  el.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }))
+  return 1
+})()`)
+await c.sleep(500)
+const m14b = await c.evalx(`(() => {
+  const ta = document.querySelector('.oc-inline-edit')
+  if (!ta) return { err: 'no editor' }
+  Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set.call(ta, '行内编辑的正文内容')
+  ta.dispatchEvent(new Event('input', { bubbles: true }))
+  ta.dispatchEvent(new Event('blur'))
+  return 1
+})()`)
+await c.sleep(500)
+const m14c = await c.evalx(`(() => {
+  const w = ${store}
+  const n = w.liveOlnodes().find((x) => x.kind === 'note')
+  return { saved: n.text === '行内编辑的正文内容', closed: !document.querySelector('.oc-inline-edit') }
+})()`)
+check('双击行内编辑（提交落库）', m14b.err !== 'no editor' && m14c.saved && m14c.closed, JSON.stringify({ m14, m14b, m14c }))
+
+/* 11d) 界面优化：连线对齐接口（fromSide 存储）+ 线型设置 */
+const m15 = await c.evalx(`(() => {
+  const w = ${store}
+  const src = w.liveOlnodes().filter((x) => x.kind === 'event' && !(x.rels || []).length)[0]
+  const dst = w.liveOlnodes().find((x) => x.kind === 'event' && x.id !== src.id)
+  const se = [...document.querySelectorAll('.oc-node.oc-event')].find((x) => x.textContent.includes(src.title || ''))
+  const de = [...document.querySelectorAll('.oc-node.oc-event')].find((x) => x.textContent.includes(dst.title || ''))
+  const apt = se.querySelector('.oc-apt[data-side="top"]')
+  const ar = apt.getBoundingClientRect()
+  apt.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: ar.left + 3, clientY: ar.top + 3 }))
+  const dr = de.getBoundingClientRect()
+  window.dispatchEvent(new MouseEvent('mousemove', { clientX: dr.left + dr.width / 2, clientY: dr.top + dr.height / 2 }))
+  window.dispatchEvent(new MouseEvent('mouseup', { clientX: dr.left + dr.width / 2, clientY: dr.top + dr.height / 2 }))
+  const rel = (src.rels || []).slice(-1)[0]
+  return { fromSide: rel?.fromSide, toId: rel?.toId === dst.id }
+})()`)
+await c.sleep(400)
+const m15b = await c.evalx(`(() => {
+  const box = document.querySelector('.oc-eedit')
+  if (!box) return { err: 'no editor' }
+  const chip = [...box.querySelectorAll('.oc-kind')].find((x) => x.textContent === '虚线')
+  chip?.click()
+  return 1
+})()`)
+await c.sleep(500)
+const m15c = await c.evalx(`(() => {
+  const w = ${store}
+  const ev = w.liveOlnodes().find((x) => x.kind === 'event' && (x.rels || []).some((r) => r.style === 'dashed'))
+  const path = [...document.querySelectorAll('.oc-edges path:not(.oc-edge-hit)')].find((p) => p.getAttribute('stroke-dasharray') === '5 4')
+  return { styleSaved: !!ev, domDash: !!path }
+})()`)
+check('连线对齐接口（fromSide）+ 虚线线型', m15.fromSide === 'top' && m15.toId && m15c.styleSaved && m15c.domDash, JSON.stringify({ m15, m15c }))
+
+/* 11e) 界面优化：连线粗细设置 */
+const m16 = await c.evalx(`(() => {
+  document.querySelector('.oc-toolbar .oc-chip[title*="画布设置"]')?.click()
+  return 1
+})()`)
+await c.sleep(500)
+const m16a = await c.evalx(`(() => ({ panel: !!document.querySelector('.oc-settings') }))()`)
+const m16b = await c.evalx(`(() => {
+  const w = ${store}
+  w.canvasPrefs.edgeWidth = 3.4
+  w.saveCanvasPrefs()
+  return 1
+})()`)
+await c.sleep(500)
+const m16c = await c.evalx(`(() => ({ dom: [...document.querySelectorAll('.oc-edges path:not(.oc-edge-hit)')].some((p) => p.getAttribute('stroke-width') === '3.4') }))()`)
+check('设置界面调整连线粗细（模板生效）', m16a.panel && m16c.dom, JSON.stringify({ m16a, m16c }))
+
+/* 11f) 视觉几何检查：裁剪修复（锚点伸出节点边界）/ mini 在节点内 / 标签在中点上方 */
+const m17 = await c.evalx(`(() => {
+  const el = [...document.querySelectorAll('.oc-node.oc-event')][0]
+  el.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }))
+  const nr = el.getBoundingClientRect()
+  const apt = el.querySelector('.oc-apt[data-side="right"]')
+  const ar = apt.getBoundingClientRect()
+  return {
+    aptProtrudes: ar.right > nr.right - 2,
+    aptOpacity: getComputedStyle(apt).opacity
+  }
+})()`)
+await c.sleep(200)
+const m17b = await c.evalx(`(() => {
+  const el = [...document.querySelectorAll('.oc-node.oc-event')][0]
+  el.dispatchEvent(new MouseEvent('mouseleave', { bubbles: true }))
+  const w = ${store}
+  w.selOlnodeId = w.liveOlnodes().find((x) => x.kind === 'event').id
+  return 1
+})()`)
+await c.sleep(400)
+const m17c = await c.evalx(`(() => {
+  const el = [...document.querySelectorAll('.oc-node.oc-event')][0]
+  const nr = el.getBoundingClientRect()
+  const mini = el.querySelector('.oc-mini')
+  const mr = mini.getBoundingClientRect()
+  const inside = mr.left >= nr.left - 2 && mr.right <= nr.right + 2 && mr.top >= nr.top - 2 && mr.bottom <= nr.bottom + 2
+  const lab = document.querySelector('.oc-elabel')
+  let labelAbove = null
+  if (lab) {
+    const m = new DOMMatrixReadOnly(getComputedStyle(lab).transform)
+    labelAbove = m.f < -1 // translateY 为负（元素整体位于中点上方）
+  }
+  return { miniInside: inside, labelAbove }
+})()`)
+check('视觉几何：锚点伸出节点（无裁剪）+ mini 在节点内 + 标签中点上方', m17.aptProtrudes && parseFloat(m17.aptOpacity) > 0.5 && m17c.miniInside && m17c.labelAbove === true, JSON.stringify({ m17, m17c }))
+const shot = await c.send('Page.captureScreenshot', { format: 'png' }).catch(() => null)
+if (shot) {
+  const { writeFileSync } = await import('node:fs')
+  writeFileSync('tools/_canvas-final.png', Buffer.from(shot.data, 'base64'))
+}
+
 /* 12) 持久化：flush → 重载 → 坐标仍在（keep 存 sessionStorage 以跨 reload） */
 await c.evalx(`(() => {
   const w = ${store}

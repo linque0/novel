@@ -44,7 +44,7 @@ export const useWorkStore = defineStore('work', {
     outlineView: 'text', // 大纲视图：text 文本 | canvas 画布
     selOlnodeId: null,
     canvasFocusTick: 0, // 侧边栏请求画布居中定位的信号
-    canvasPrefs: { snap: true, density: 'detail', edgeStyle: 'bezier' }, // 画布偏好（appconfig 按作品隔离）
+    canvasPrefs: { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8 }, // 画布偏好（appconfig 按作品隔离）
     olTypes: [], // 自定义模块类型（8.8.2-G2）：[{ name, color }]，节点以 mtype 引用
     olUndo: [],
     olRedo: [],
@@ -1169,7 +1169,7 @@ export const useWorkStore = defineStore('work', {
       const row = {
         id: uid(), workId: this.work.id, parentId: parentId || null, refId: null,
         kind: 'event', title: '', text: '', html: null, fold: false, sortOrder: 0,
-        canvasX: null, canvasY: null, shape: 'process', pin: false, rels: [],
+        canvasX: null, canvasY: null, w: null, h: null, shape: 'process', pin: false, rels: [],
         deletedAt: null, createdAt: now(), updatedAt: now(), ...fields
       }
       if (afterId) {
@@ -1258,7 +1258,7 @@ export const useWorkStore = defineStore('work', {
           id: uid(), workId: this.work.id, parentId: r.parentId || null, refId: r.refId || null,
           kind: r.kind || 'event', title: r.title || '', text: r.text || '', html: null,
           fold: false, sortOrder: r.sortOrder || 0, canvasX: r.canvasX ?? null, canvasY: r.canvasY ?? null,
-          shape: r.shape || 'process', rels: [], deletedAt: null, createdAt: t, updatedAt: t
+          shape: r.shape || 'process', w: r.w ?? null, h: r.h ?? null, rels: [], deletedAt: null, createdAt: t, updatedAt: t
         }
         this.olnodes.push(row)
         created.push(row)
@@ -1285,6 +1285,15 @@ export const useWorkStore = defineStore('work', {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n) return
       n.shape = shape
+      autosave.mark('olnodes', n)
+    },
+
+    /** 自定义尺寸（v0.4.1 界面优化）：模块边缘拖拽调整大小，null 恢复默认 */
+    olnodeSetSize(id, w, h) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.w = w != null ? Math.round(w) : null
+      n.h = h != null ? Math.round(h) : null
       autosave.mark('olnodes', n)
     },
 
@@ -1315,7 +1324,7 @@ export const useWorkStore = defineStore('work', {
     async loadCanvasPrefs() {
       try {
         const row = await db.appconfig.get('olcanvas:' + this.work?.id)
-        if (row?.value) this.canvasPrefs = { snap: true, density: 'detail', edgeStyle: 'bezier', ...row.value }
+        if (row?.value) this.canvasPrefs = { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8, ...row.value }
       } catch {
         /* 保持默认 */
       }

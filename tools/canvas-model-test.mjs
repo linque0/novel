@@ -1,5 +1,5 @@
 /* canvas-model 纯逻辑自测（计划书 9.4.1-S3）：布局无重叠 / pin 豁免 / 补位模式 / 容器派生盒 / 模板完整性 */
-import { relayoutAll, containerRect, canvasNodeSize, effSize, tplThreeAct, tplChapterList, gridCols, nextShape, cycleArrow, relColor, KIND_META } from '../src/components/outline/canvas-model.js'
+import { relayoutAll, containerRect, canvasNodeSize, effSize, tplThreeAct, tplChapterList, gridCols, nextShape, cycleArrow, relColor, KIND_META, EDGE_STYLES, dashOf } from '../src/components/outline/canvas-model.js'
 
 const results = []
 const check = (name, ok, detail = '') => {
@@ -88,6 +88,19 @@ check('章级清单模板（无章）占位事件', t3.rows.filter((r) => r.kind
 check('gridCols 边界', gridCols(0) === 1 && gridCols(1) === 1 && gridCols(3) === 2 && gridCols(9) === 3 && gridCols(20) === 3)
 check('形状/箭头循环', nextShape('ellipse') === 'process' && cycleArrow('--') === '->' && relColor('伏笔') === '#8e44ad')
 check('KIND_META 覆盖六类', Object.keys(KIND_META).length === 6)
+
+/* 7) 自定义尺寸与线型（v0.4.1 界面优化） */
+const cs = mk('cs', 'event', { canvasX: 0, canvasY: 0, w: 240, h: 90 })
+check('effSize 自定义尺寸优先', effSize(cs).w === 240 && effSize(cs).h === 90)
+const csMin = mk('csm', 'event', { canvasX: 0, canvasY: 0, w: 40, h: 10 })
+check('effSize 自定义尺寸下限钳制', effSize(csMin).w === 96 && effSize(csMin).h === 36)
+check('effSize 无自定义回退基准', effSize(mk('cd', 'event', { canvasX: 0, canvasY: 0 })).w === 178)
+const cont2 = mk('cc', 'container', { canvasX: 0, canvasY: 0, w: 500, h: 400 })
+const cr2 = containerRect(cont2, [], (n) => ({ x: n.canvasX, y: n.canvasY }), (n) => effSize(n))
+check('容器自定义尺寸生效', cr2.w === 500 && cr2.h === 400, JSON.stringify(cr2))
+check('线型：显式优先', dashOf('dotted', '因果') === '2 3' && dashOf('solid', '伏笔') === null)
+check('线型：未设置时伏笔默认虚线', dashOf('', '伏笔') === '5 4' && dashOf('', '因果') === null)
+check('EDGE_STYLES 三种', EDGE_STYLES.length === 3 && EDGE_STYLES.map((s) => s.key).join(',') === 'solid,dashed,dotted')
 
 const fail = results.filter((x) => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')

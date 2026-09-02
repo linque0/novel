@@ -21,11 +21,32 @@ export function canvasNodeSize(n, density = 'detail') {
   }
 }
 
-/** 形状尺寸加幅：菱形需更大面积容纳文字 */
+/** 形状尺寸加幅：菱形需更大面积容纳文字；节点自定义 w/h 优先（显式拖拽结果，容器作为派生盒下限） */
 export function effSize(n, density = 'detail') {
+  if (n.w != null || n.h != null) {
+    const s = canvasNodeSize(n, density)
+    return {
+      w: Math.max(96, n.w != null ? n.w : s.w),
+      h: Math.max(36, n.h != null ? n.h : s.h)
+    }
+  }
   const s = canvasNodeSize(n, density)
   if (n.kind === 'event' && n.shape === 'diamond') return { w: s.w + 46, h: s.h + 42 }
   return s
+}
+
+/* ---------- 连线样式（v0.4.1 界面优化）：实线 / 虚线 / 点线 ---------- */
+export const EDGE_STYLES = [
+  { key: 'solid', label: '实线' },
+  { key: 'dashed', label: '虚线' },
+  { key: 'dotted', label: '点线' }
+]
+/** 渲染 dasharray：显式线型优先，未设置时伏笔类默认虚线 */
+export function dashOf(style, kind) {
+  if (style === 'dashed') return '5 4'
+  if (style === 'dotted') return '2 3'
+  if (style === 'solid') return null
+  return relDashed(kind) ? '5 4' : null
 }
 
 /**
@@ -63,7 +84,7 @@ export const gridCols = (cnt) => Math.max(1, Math.min(3, Math.ceil(Math.sqrt(Mat
  * 无可见子项（空 / 折叠）时用基准尺寸。
  */
 export function containerRect(n, kids, posOf, sizeOf) {
-  const base = canvasNodeSize(n)
+  const base = effSize(n) // 容器自定义尺寸优先，空态用基准尺寸
   const p = posOf(n)
   let x = p.x
   let y = p.y
@@ -253,7 +274,7 @@ export function tplThreeAct() {
   const a3 = mkContainer('第三幕 · 解决', 1080, 40)
   const f = mkEvent(a3, '终局对决', '', ex(1080, 0), ey(40, 0))
   mkEvent(a3, '新的平衡', '', ex(1080, 1), ey(40, 0))
-  rows.push({ kind: 'note', title: '用法', text: '拖节点四向锚点拉连线；拖入容器即归组；双击节点进文本编辑。', canvasX: 40, canvasY: 320 })
+  rows.push({ kind: 'note', title: '用法', text: '拖节点四向锚点拉连线；拖入容器即归组；双击节点行内编辑内容。', canvasX: 40, canvasY: 320 })
   return {
     rows,
     edges: [

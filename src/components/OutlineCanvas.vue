@@ -9,9 +9,10 @@ import { parseTokens, findByTitle, targetById, parseTarget, jumpTo, KIND_LABEL }
 import {
   relayoutAll, containerRect, effSize, freeSpotFor,
   relColor, relDashed, cycleArrow, nextShape, SHAPE_LABEL,
-  REL_KINDS, KIND_META, tplThreeAct, tplChapterList
+  REL_KINDS, KIND_META, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES
 } from './outline/canvas-model'
 import { uid } from '../db/database'
+import { NPopover, NSlider } from 'naive-ui'
 import DLinkPicker from './DLinkPicker.vue'
 
 const work = useWorkStore()
@@ -19,6 +20,9 @@ const canvasEl = ref(null)
 const { zoom, tx, ty, innerStyle, onWheel, onPanStart, fit: fitTo, centerOn } = usePanZoom(canvasEl)
 
 const dragPos = reactive(new Map()) // 拖动中的临时坐标（mouseup 统一落库）
+const dragSize = reactive(new Map()) // 拖拽调整大小时的临时尺寸
+const editText = ref(null) // { id, value } 模块内行内文本编辑
+const inlineEl = ref(null)
 const connecting = ref(null) // { fromId, x, y } 锚点拖线临时态
 const edgeEdit = ref(null) // { ownerId, relId, mx, my } 边编辑浮层
 const citePick = ref(null) // { nodeId } 引用卡目标选择浮层
@@ -31,7 +35,7 @@ const PALETTE = ['#c0392b', '#2980b9', '#27ae60', '#8e44ad', '#d35400', '#16a085
 const live = computed(() => work.liveOlnodes())
 const nodeById = (id) => live.value.find((n) => n.id === id)
 const posOf = (n) => dragPos.get(n.id) || (n.canvasX != null ? { x: n.canvasX, y: n.canvasY } : null)
-const sizeOf = (n) => effSize(n, work.canvasPrefs.density)
+const sizeOf = (n) => dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)
 const kidsOf = (n) => live.value.filter((k) => k.parentId === n.id)
 
 /* 被折叠容器隐藏的后代（渲染与连线一律跳过） */
@@ -74,13 +78,26 @@ const edges = computed(() => {
       if (!m || !posOf(m) || hiddenIds.value.has(m.id)) continue
       const A = rectOf(n)
       const B = rectOf(m)
-      const [a, b] = pickAnchors(A, B)
-      const g = edgeGeom(a, b, work.canvasPrefs.edgeStyle)
-      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, a, b, color: relColor(r.kind), dashed: relDashed(r.kind) })
+      // 对齐接口：连线锚定在建立时拖出的接口（fromSide）；目标换侧后自动回退到就近接口
+      const from = sideFaces(r.fromSide, A, B) ? anchorsOf(A)[r.fromSide] : pickAnchors(A, B)[0]
+      const pb = pickAnchors(A, B)[1]
+      const g = edgeGeom(from, pb, work.canvasPrefs.edgeStyle)
+      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, a: from, b: pb, color: relColor(r.kind), dashed: relDashed(r.kind) })
     }
   }
   return out
 })
+/* fromSide 是否仍朝向目标（避免节点挪位后连线绕背） */
+function sideFaces(side, A, B) {
+  if (!side) return false
+  const dx = B.x + B.w / 2 - (A.x + A.w / 2)
+  const dy = B.y + B.h / 2 - (A.y + A.h / 2)
+  if (side === 'right') return dx >= 0
+  if (side === 'left') return dx <= 0
+  if (side === 'bottom') return dy >= 0
+  if (side === 'top') return dy <= 0
+  return false
+}
 /* 箭头三角形：按 rel.arrows 在两端生成 */
 const edgeDecor = computed(() => {
   const heads = []
@@ -154,6 +171,10 @@ function setPref(k, v) {
   work.canvasPrefs[k] = v
   work.saveCanvasPrefs()
 }
+const edgeWidthModel = computed({
+  get: () => work.canvasPrefs.edgeWidth || 1.8,
+  set: (v) => setPref('edgeWidth', v)
+})
 function snap(v) {
   return work.canvasPrefs.snap ? Math.round(v / 16) * 16 : Math.round(v)
 }
@@ -173,7 +194,7 @@ function hitNodeAt(pt, exclude = new Set()) {
 /* ---------- 节点拖动（容器连带后代；落点几何归组） ---------- */
 function onNodeDown(e, n) {
   if (e.button !== 0) return
-  if (e.target.closest('button, input, textarea, a, .oc-apt, .oc-mini')) return
+  if (e.target.closest('button, input, textarea, a, .oc-apt, .oc-mini, .oc-rs')) return
   e.stopPropagation()
   work.selOlnodeId = n.id
   closeFloaters()
@@ -228,15 +249,59 @@ function reparentAfterDrop(n, pt) {
   }
 }
 
-/* ---------- 锚点拖线建边 ---------- */
+/* ---------- 模块边缘拖拽调整大小（v0.4.1 界面优化） ---------- */
+function startResize(e, n, dir) {
+  if (e.button !== 0) return
+  e.stopPropagation()
+  e.preventDefault()
+  const base = { ...(dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)) }
+  const mx = e.clientX
+  const my = e.clientY
+  const move = (ev) => {
+    let w = base.w
+    let h = base.h
+    if (dir.includes('e')) w = snap(base.w + (ev.clientX - mx) / zoom.value)
+    if (dir.includes('s')) h = snap(base.h + (ev.clientY - my) / zoom.value)
+    dragSize.set(n.id, { w: Math.max(96, w), h: Math.max(36, h) })
+  }
+  const up = () => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+    const p = dragSize.get(n.id)
+    dragSize.delete(n.id)
+    if (p) work.olnodeSetSize(n.id, p.w, p.h)
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
+}
+
+/* ---------- 模块内行内文本编辑（双击进入，Ctrl+Enter / 失焦提交） ---------- */
+function startInlineEdit(n) {
+  editText.value = { id: n.id, value: n.text || '' }
+  nextTick(() => {
+    const el = inlineEl.value
+    if (el) {
+      el.focus()
+      el.setSelectionRange(el.value.length, el.value.length)
+    }
+  })
+}
+function commitInline() {
+  const st = editText.value
+  editText.value = null
+  if (st) work.olnodeSetRich(st.id, st.value, null)
+}
+
+/* ---------- 锚点拖线建边（从拖出的接口出发，fromSide 随边存储） ---------- */
 function startConnect(e, n) {
   e.stopPropagation()
   e.preventDefault()
-  const a = canvasPt(e)
-  connecting.value = { fromId: n.id, x: a.x, y: a.y }
+  const side = e.currentTarget?.dataset?.side || 'right'
+  const a0 = anchorsOf(rectOf(n))[side] || canvasPt(e)
+  connecting.value = { fromId: n.id, side, x: a0.x, y: a0.y }
   const move = (ev) => {
     const p = canvasPt(ev)
-    connecting.value = { fromId: n.id, x: p.x, y: p.y }
+    connecting.value = { fromId: n.id, side, x: p.x, y: p.y }
   }
   const up = (ev) => {
     window.removeEventListener('mousemove', move)
@@ -246,7 +311,7 @@ function startConnect(e, n) {
     if (!st) return
     const target = hitNodeAt(canvasPt(ev), new Set([n.id]))
     if (!target) return
-    const rel = work.olnodeRelAdd(n.id, target.id)
+    const rel = work.olnodeRelAdd(n.id, target.id, { fromSide: side })
     if (!rel) return
     const g = edgeGeom(...pickAnchors(rectOf(n), rectOf(target)), work.canvasPrefs.edgeStyle)
     openEdgeEdit(n.id, rel.id, g.mid)
@@ -258,9 +323,8 @@ const connPath = computed(() => {
   const c = connecting.value
   if (!c) return ''
   const from = nodeById(c.fromId)
-  const p = from && posOf(from)
-  const s = from && sizeOf(from)
-  const start = p ? { x: p.x + s.w / 2, y: p.y + s.h / 2 } : c
+  const anchor = from && rectOf(from) ? anchorsOf(rectOf(from))[c.side] : null
+  const start = anchor || c
   return `M ${start.x} ${start.y} L ${c.x} ${c.y}`
 })
 
@@ -314,7 +378,11 @@ function onDblNode(n) {
     if (first) work.navTo('chapters', first.id)
     return
   }
-  work.outlineView = 'text'
+  if (n.kind === 'container') {
+    editTitle.value = { id: n.id, value: n.title || '' }
+    return
+  }
+  startInlineEdit(n)
 }
 const chapterOf = (n) => (n.kind === 'anchor' ? work.chapters.find((c) => c.id === n.refId && !c.deletedAt) : null)
 function labelOf(n) {
@@ -349,6 +417,15 @@ function citeJump(n) {
   if (!t) return
   if (parsed.kind === 'character') work.jumpToCharGraph(t.id)
   else jumpTo(t)
+}
+/* 放大模块（自定义高度超出默认 30px+）显示正文全文而非单行摘要 */
+function showFullText(n) {
+  if (n.h == null) return false
+  const base = effSize({ kind: n.kind, shape: n.shape }, work.canvasPrefs.density).h
+  return n.h >= base + 30 && (n.text || '').trim().length > 0
+}
+function plainText(n) {
+  return String(n.text || '').replace(/\[\[([^\[\]\n]+?)\|?([^\[\]\n]*?)\]\]/g, (m, t, d) => d || t).slice(0, 600)
 }
 function commitTitle() {
   const st = editTitle.value
@@ -481,6 +558,19 @@ onBeforeUnmount(() => {
       <span class="oc-chip" :class="{ on: work.canvasPrefs.snap }" title="拖动时吸附 16px 网格" @click="setPref('snap', !work.canvasPrefs.snap)">吸附</span>
       <span class="oc-chip" :class="{ on: work.canvasPrefs.density === 'compact' }" title="卡片密度" @click="setPref('density', work.canvasPrefs.density === 'compact' ? 'detail' : 'compact')">{{ work.canvasPrefs.density === 'compact' ? '紧凑' : '详细' }}</span>
       <span class="oc-chip" :class="{ on: work.canvasPrefs.edgeStyle === 'ortho' }" title="连线样式" @click="setPref('edgeStyle', work.canvasPrefs.edgeStyle === 'ortho' ? 'bezier' : 'ortho')">{{ edgeStyleLabel }}</span>
+      <NPopover trigger="click" :show-arrow="false">
+        <template #trigger>
+          <span class="oc-chip" title="画布设置：连线粗细等">⚙ 设置</span>
+        </template>
+        <div class="oc-settings">
+          <div class="oc-settings-row">
+            <span class="oc-settings-label">连线粗细</span>
+            <NSlider v-model:value="edgeWidthModel" :min="0.8" :max="5" :step="0.2" style="width: 150px" />
+            <span class="oc-settings-val">{{ (work.canvasPrefs.edgeWidth || 1.8).toFixed(1) }}px</span>
+          </div>
+          <div class="oc-settings-tip">调整画布全部连线的显示粗细；线型（实线/虚线/点线）在连线编辑浮层中按条设置。</div>
+        </div>
+      </NPopover>
       <span style="flex: 1"></span>
       <span class="oc-count">{{ visNodes.length }} 模块 · {{ edges.length }} 连线</span>
       <button class="om-btn" title="撤销 (Ctrl+Z)" @click="work.olnodeUndo()">↶</button>
@@ -502,8 +592,8 @@ onBeforeUnmount(() => {
             :d="e.d"
             fill="none"
             :stroke="e.color"
-            stroke-width="1.8"
-            :stroke-dasharray="e.dashed ? '5 4' : null"
+            :stroke-width="work.canvasPrefs.edgeWidth || 1.8"
+            :stroke-dasharray="dashOf(e.rel.style, e.rel.kind)"
             :opacity="edgeEdit && edgeEdit.relId === e.key ? 1 : 0.85"
           />
           <polygon v-for="(h, i) in edgeDecor.heads" :key="'a' + i" :points="h" :fill="edgeDecor.fills[i]" />
@@ -540,21 +630,39 @@ onBeforeUnmount(() => {
           </template>
           <template v-else>
             <span v-if="n.kind === 'anchor' && chapterOf(n)" class="ol-dot" :data-s="chapterOf(n).status" :title="STATUS_LABEL[chapterOf(n).status]" />
-            <button v-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }">＋ 选择目标</button>
+            <textarea
+              v-if="editText && editText.id === n.id"
+              ref="inlineEl"
+              v-model="editText.value"
+              class="oc-inline-edit"
+              spellcheck="false"
+              title="Ctrl+Enter 提交 · Esc 取消"
+              @mousedown.stop
+              @dblclick.stop
+              @blur="commitInline"
+              @keydown.esc.prevent="editText = null"
+              @keydown.ctrl.enter.prevent="commitInline"
+            ></textarea>
+            <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }">＋ 选择目标</button>
             <div v-else class="oc-body">
               <div class="oc-label">{{ labelOf(n) }}</div>
-              <div v-if="subOf(n)" class="om-sub">{{ subOf(n) }}</div>
-              <span v-if="n.mtype && work.canvasPrefs.density === 'detail'" class="om-mtype" :style="{ color: mtypeColorOf(n.mtype), borderColor: mtypeColorOf(n.mtype) }">{{ n.mtype }}</span>
+              <div v-if="subOf(n) && !showFullText(n)" class="om-sub">{{ subOf(n) }}</div>
+              <div v-if="showFullText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
+              <span v-else-if="n.mtype && work.canvasPrefs.density === 'detail'" class="om-mtype" :style="{ color: mtypeColorOf(n.mtype), borderColor: mtypeColorOf(n.mtype) }">{{ n.mtype }}</span>
             </div>
           </template>
 
           <div v-if="work.selOlnodeId === n.id" class="oc-mini" @mousedown.stop>
             <button v-if="n.kind === 'event'" :title="'形状：' + SHAPE_LABEL[n.shape || 'process'] + '（点击切换）'" @click.stop="work.olnodeSetShape(n.id, nextShape(n.shape))">◇</button>
+            <button v-if="!['anchor', 'volume', 'container'].includes(n.kind)" title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)">✎</button>
             <button v-if="work.olTypes.length" :title="'自定义类型：' + (n.mtype || '无') + '（点击切换）'" @click.stop="cycleMtype(n)">🏷</button>
             <button :title="n.pin ? '取消固定' : '固定位置（「整理」时不动）'" @click.stop="work.olnodeSetPin(n.id, !n.pin)">{{ n.pin ? '📌' : '📍' }}</button>
             <button class="oc-mini-x" title="删除模块" @click.stop="onRemove(n)">✕</button>
           </div>
           <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块建立连线'" @mousedown="startConnect($event, n)" />
+          <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
+          <span class="oc-rs" data-dir="s" title="拖拽调整高度" @mousedown="startResize($event, n, 's')" />
+          <span class="oc-rs oc-rs-corner" data-dir="se" title="拖拽调整大小" @mousedown="startResize($event, n, 'se')" />
         </div>
 
         <!-- 双链令牌卫星 -->
@@ -599,6 +707,15 @@ onBeforeUnmount(() => {
               @click="patchRel({ kind: k.key })"
             >{{ k.key }}</span>
           </div>
+          <div class="oc-eedit-row oc-kindrow">
+            <span
+              v-for="s in EDGE_STYLES"
+              :key="s.key"
+              class="oc-kind"
+              :class="{ on: (curRel()?.style || '') === (s.key === 'solid' ? '' : s.key) }"
+              @click="patchRel({ style: s.key === 'solid' ? '' : s.key })"
+            >{{ s.label }}</span>
+          </div>
         </div>
 
         <!-- 引用卡目标选择浮层 -->
@@ -617,7 +734,7 @@ onBeforeUnmount(() => {
         <button @click="applyTemplate(tplChapterList(work.liveChapters))">章级清单模板</button>
         <button class="ghost" @click="addNode('event')">空白开始</button>
       </div>
-      <p class="oc-quick-tip">拖节点四向锚点拉出连线 · 拖入容器即归组 · 双击模块进文本编辑 · 空白处双击新建事件</p>
+      <p class="oc-quick-tip">拖节点四向锚点拉出连线 · 拖入容器即归组 · 双击模块行内编辑内容 · 拖边缘调整大小 · 空白处双击新建事件</p>
     </div>
   </div>
 </template>
