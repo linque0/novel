@@ -242,6 +242,19 @@ body,
   flex-direction: column;
   min-height: 0;
 }
+/* 侧栏右缘拖拽手柄：可拖动调宽（180–480），双击恢复默认 */
+.side-resizer {
+  width: 5px;
+  flex: none;
+  margin-left: -3px;
+  cursor: col-resize;
+  z-index: 6;
+  transition: background 0.15s;
+}
+.side-resizer:hover,
+.side-resizer:active {
+  background: color-mix(in srgb, var(--accent, #8c6f4e) 45%, transparent);
+}
 .side-head {
   padding: 10px 12px 6px;
   display: flex;
@@ -1408,6 +1421,18 @@ body,
   background: transparent;
   color: var(--text);
   cursor: pointer;
+}
+/* 汉字标签变体（「整理」「适应」等）：24px 方钮放不下双字，自动宽度 + 内边距居中 */
+.om-btn.text {
+  width: auto;
+  min-width: 34px;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  line-height: 1;
+  white-space: nowrap;
 }
 .om-btn:hover {
   border-color: var(--accent);

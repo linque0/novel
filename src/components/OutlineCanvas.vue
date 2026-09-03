@@ -707,11 +707,11 @@ onBeforeUnmount(() => {
       <span class="oc-count">{{ visNodes.length }} 模块 · {{ edges.length }} 连线</span>
       <button class="om-btn" title="撤销 (Ctrl+Z)" @click="work.olnodeUndo()">↶</button>
       <button class="om-btn" title="重做 (Ctrl+Y)" @click="work.olnodeRedo()">↷</button>
-      <button class="om-btn oc-tidy" title="整理布局（固定模块除外）" @click="tidyAll">整理</button>
+      <button class="om-btn text oc-tidy" title="整理布局（固定模块除外）" @click="tidyAll">整理</button>
       <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)">－</button>
       <span class="oc-zoom">{{ Math.round(zoom * 100) }}%</span>
       <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)">＋</button>
-      <button class="om-btn" title="适应视图" @click="fitView">适应</button>
+      <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
     </div>
 
     <div ref="canvasEl" class="om-canvas oc-canvas" @mousedown="onPanStart" @wheel.prevent="onWheel" @dblclick.self="addNode('event')">

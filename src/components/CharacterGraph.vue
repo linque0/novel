@@ -340,7 +340,7 @@ onBeforeUnmount(() => {
       <button class="om-btn" title="网格排布" @click="gridAll">▦</button>
       <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)">－</button>
       <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)">＋</button>
-      <button class="om-btn" title="适应视图" @click="fitView">适应</button>
+      <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
     </div>
 
     <div ref="canvasEl" class="om-canvas rg-canvas" @mousedown="onPanStart" @wheel="onWheelC">

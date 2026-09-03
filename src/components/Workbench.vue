@@ -142,6 +142,28 @@ const modulePopped = computed(() => {
   return isPopped(work, work.tab, curEntityForTab(work.tab))
 })
 const curTabLabel = computed(() => tabs.find((t) => t.key === work.tab)?.label || '')
+
+/* ---------- 侧栏宽度拖拽（180–480，松手后写入 appconfig 记忆） ---------- */
+function startSideResize(e) {
+  e.preventDefault()
+  const startX = e.clientX
+  const startW = ui.sideWidth
+  document.body.style.userSelect = 'none'
+  const move = (ev) => {
+    ui.sideWidth = Math.min(480, Math.max(180, startW + ev.clientX - startX))
+  }
+  const up = () => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+    document.body.style.userSelect = ''
+    ui.setPref('sideWidth', ui.sideWidth)
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
+}
+function resetSideWidth() {
+  ui.setPref('sideWidth', 252)
+}
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
@@ -198,13 +220,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </div>
       </div>
 
-      <div v-if="!ui.focusMode && !modulePopped" class="side-panel">
+      <div v-if="!ui.focusMode && !modulePopped" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
         <ChapterTree v-if="work.tab === 'chapters'" />
         <OutlineSidebar v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
         <MubuTree v-else-if="work.tab === 'lore'" />
         <SnippetList v-else-if="work.tab === 'snippets'" />
       </div>
+      <div
+        v-if="!ui.focusMode && !modulePopped"
+        class="side-resizer"
+        title="拖拽调整侧栏宽度（双击恢复默认）"
+        @mousedown="startSideResize"
+        @dblclick="resetSideWidth"
+      ></div>
 
       <!-- 模块已被拆出为面板窗口：主窗口占位，避免双窗口同写 -->
       <div v-if="modulePopped" class="center-pane paper-texture pop-lock-pane">
