@@ -125,9 +125,12 @@ export function edgeGeom(a, b, style = 'bezier') {
     if (Math.abs(sx) < 0.01) sx = b.x - a.x || -1
     return { d, mid, endDir: { x: ex, y: 0 }, startDir: { x: sx, y: 0 } }
   }
+  /* 控制点方向跟随连线走向：向左的边（b.x < a.x）控制点必须向左弯，
+   * 否则初段反向内折——容器淡色内底会让这段弯折暴露在内部 */
   const dx = Math.max(36, Math.abs(b.x - a.x) / 2)
-  const c1 = { x: a.x + dx, y: a.y }
-  const c2 = { x: b.x - dx, y: b.y }
+  const dirx = b.x >= a.x ? 1 : -1
+  const c1 = { x: a.x + dx * dirx, y: a.y }
+  const c2 = { x: b.x - dx * dirx, y: b.y }
   const d = `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
   // 三次贝塞尔 t=0.5：M = (P0 + 3C1 + 3C2 + P3) / 8
   const mid = {
