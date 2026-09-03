@@ -347,7 +347,47 @@ function startResize(e, n, dir) {
 
 /* ---------- 容器右键色彩快捷栏（v0.4.2） ---------- */
 const ctxMenu = ref(null) // { x, y, nodeId }
-function onNodeCtx(e, n) {
+/* 空白右键（v0.4.9）：在右键落点选建各模块（锚点/卷需选章节/卷参数，不在菜单内） */
+const blankCtx = ref(null) // { x, y, px, py }  px/py = 画布坐标落点
+const CREATE_KINDS = Object.fromEntries(Object.entries(KIND_META).filter(([k]) => k !== 'anchor' && k !== 'volume'))
+function onCanvasCtx(e) {
+  if (e.target.closest?.('.oc-node')) return // 节点上不弹创建菜单（容器右键走调色板）
+  const pt = canvasPt(e)
+  blankCtx.value = { x: e.clientX, y: e.clientY, px: pt.x, py: pt.y }
+}
+function onWheelC(e) {
+  blankCtx.value = null
+  onWheel(e)
+}
+function createAt(kind) {
+  const st = blankCtx.value
+  blankCtx.value = null
+  if (!st) return
+  addNodeAt(kind, { x: st.px, y: st.py }, kind === 'note' ? { title: '新便签' } : {})
+}
+/* Delete 键删除选中模块（输入态不劫持） */
+function onKey(e) {
+  const t = e.target
+  if (t && (t.matches?.('input, textarea, [contenteditable="true"]') || t.isContentEditable)) return
+  if (e.key === 'Delete' || e.key === 'Backspace') {
+    if (editTitle.value || editText.value || edgeEdit.value || connecting.value || citePick.value) return
+    if (work.selOlnodeId && visNodes.value.some((n) => n.id === work.selOlnodeId)) {
+      e.preventDefault()
+      work.olnodeRemove(work.selOlnodeId)
+      work.selOlnodeId = null
+    }
+    return
+  }
+  if (!(e.ctrlKey || e.metaKey)) return
+  const k = e.key.toLowerCase()
+  if (k === 'z' && !e.shiftKey) {
+    e.preventDefault()
+    work.olnodeUndo()
+  } else if (k === 'y' || (k === 'z' && e.shiftKey)) {
+    e.preventDefault()
+    work.olnodeRedo()
+  }
+}function onNodeCtx(e, n) {
   if (n.kind !== 'container') return
   e.preventDefault()
   ctxMenu.value = { x: e.clientX, y: e.clientY, nodeId: n.id }
@@ -439,6 +479,7 @@ function onWinDown(e) {
   if (citePick.value && !e.target.closest?.('.oc-pick')) citePick.value = null
   if (editTitle.value && !e.target.closest?.('.oc-title-edit')) commitTitle()
   if (ctxMenu.value && !e.target.closest?.('.oc-ctx')) ctxMenu.value = null
+  if (blankCtx.value && !e.target.closest?.('.oc-ctx')) blankCtx.value = null
 }
 
 /* ---------- 节点操作 ---------- */
@@ -636,19 +677,6 @@ watch(
 )
 
 /* ---------- 键盘 / 生命周期 ---------- */
-function onKey(e) {
-  const t = e.target
-  if (t && (t.matches?.('input, textarea, [contenteditable="true"]') || t.isContentEditable)) return
-  if (!(e.ctrlKey || e.metaKey)) return
-  const k = e.key.toLowerCase()
-  if (k === 'z' && !e.shiftKey) {
-    e.preventDefault()
-    work.olnodeUndo()
-  } else if (k === 'y' || (k === 'z' && e.shiftKey)) {
-    e.preventDefault()
-    work.olnodeRedo()
-  }
-}
 onMounted(() => {
   ensurePlaced()
   // v0.4.2：容器内嵌 textboxes（上一实现）迁移为独立文本框子节点（可拖拽/连线/缩放）
@@ -714,7 +742,7 @@ onBeforeUnmount(() => {
       <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
     </div>
 
-    <div ref="canvasEl" class="om-canvas oc-canvas" @mousedown="onPanStart" @wheel.prevent="onWheel" @dblclick.self="addNode('event')">
+    <div ref="canvasEl" class="om-canvas oc-canvas" @mousedown="onPanStart" @wheel.prevent="onWheelC" @dblclick.self="addNode('event')" @contextmenu.prevent="onCanvasCtx">
       <div class="om-inner" :style="innerStyle">
         <svg
           class="om-edges oc-edges"
@@ -887,6 +915,14 @@ onBeforeUnmount(() => {
       <div class="oc-ctx-actions">
         <span class="oc-ctx-reset" title="恢复自动配色（按容器顺序）" @click="applyColor('')">↺ 自动配色</span>
       </div>
+    </div>
+
+    <!-- 画布空白右键：选建模块（v0.4.9） -->
+    <div v-if="blankCtx" class="oc-ctx oc-blankctx" :style="{ left: blankCtx.x + 'px', top: blankCtx.y + 'px' }" @mousedown.stop>
+      <div class="oc-ctx-title">在此处新建模块</div>
+      <button v-for="(m, k) in CREATE_KINDS" :key="k" class="oc-ctx-item" @click="createAt(k)">
+        {{ m.icon }} {{ m.label }}
+      </button>
     </div>
 
     <!-- 空画布快速开始 -->

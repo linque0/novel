@@ -250,13 +250,41 @@ function onWinDown(e) {
   if (relEdit.value && !e.target.closest?.('.rg-eedit, .rg-elabel, .rg-edge-hit')) relEdit.value = null
   if (relInput.value && !e.target.closest?.('.rg-relinput')) saveRelInput()
   if (ctxMenu.value && !e.target.closest?.('.rg-ctx')) ctxMenu.value = null
+  if (blankCtx.value && !e.target.closest?.('.oc-ctx')) blankCtx.value = null
 }
 /* 人物节点右键菜单（v0.4.3）：替代旧「选中即显示」的常驻小工具条——不遮挡节点内容，随点随开随点随关 */
 const ctxMenu = ref(null) // { charId, x, y }
 function openCtx(e, c) {
   const p = canvasPt(e)
   work.selCharacterId = c.id
+  blankCtx.value = null
   ctxMenu.value = { charId: c.id, x: p.x, y: p.y }
+}
+/* 画布空白右键（v0.4.9）：在此处新建人物并选中 */
+const blankCtx = ref(null) // { x, y, px, py }
+function onBlankCtx(e) {
+  if (e.target.closest?.('.rg-node')) return
+  const p = canvasPt(e)
+  blankCtx.value = { x: e.clientX, y: e.clientY, px: p.x, py: p.y }
+}
+function createCharAt() {
+  const st = blankCtx.value
+  blankCtx.value = null
+  if (!st) return
+  const row = work.addCharacter('新人物')
+  layout.value = { ...layout.value, [row.id]: { x: Math.round(st.px), y: Math.round(st.py) } }
+  scheduleSave()
+  work.selCharacterId = row.id
+}
+/* Delete 键删除选中人物（软删，可在回收站恢复；输入态不劫持） */
+function onKeyC(e) {
+  const t = e.target
+  if (t && (t.matches?.('input, textarea, select, [contenteditable="true"]') || t.isContentEditable)) return
+  if ((e.key === 'Delete' || e.key === 'Backspace') && work.selCharacterId && !relInput.value && !relEdit.value) {
+    e.preventDefault()
+    work.deleteCharacter(work.selCharacterId)
+    work.selCharacterId = null
+  }
 }
 const ctxChar = computed(() => work.liveCharacters.find((c) => c.id === ctxMenu.value?.charId) || null)
 function ctxSendOutline() {
@@ -269,6 +297,7 @@ function ctxOpenDetail() {
 }
 function onWheelC(ev) {
   ctxMenu.value = null
+  blankCtx.value = null
   onWheel(ev)
 }
 function nodeStyle(c) {
@@ -316,12 +345,14 @@ watch(() => work.charFocusTick, maybeFocus)
 onMounted(async () => {
   await loadLayout()
   window.addEventListener('mousedown', onWinDown, true)
+  window.addEventListener('keydown', onKeyC)
   const ids = work.liveCharacters.filter((ch) => ch.avatarAssetId).map((ch) => ch.avatarAssetId)
   if (ids.length) await work.warmUrls(ids)
   maybeFocus()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('mousedown', onWinDown, true)
+  window.removeEventListener('keydown', onKeyC)
   flushSave()
 })
 </script>
@@ -343,7 +374,7 @@ onBeforeUnmount(() => {
       <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
     </div>
 
-    <div ref="canvasEl" class="om-canvas rg-canvas" @mousedown="onPanStart" @wheel="onWheelC">
+    <div ref="canvasEl" class="om-canvas rg-canvas" @mousedown="onPanStart" @wheel="onWheelC" @contextmenu.prevent="onBlankCtx">
       <div class="om-inner" :style="innerStyle">
         <svg
           class="om-edges rg-edges"
@@ -419,6 +450,11 @@ onBeforeUnmount(() => {
         <div v-if="ctxMenu" class="rg-ctx" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }" @mousedown.stop>
           <button title="发送为大纲画布引用卡" @click="ctxSendOutline">发送为大纲引用卡</button>
           <button title="打开人物详情（也可双击节点）" @click="ctxOpenDetail">打开详情</button>
+        </div>
+
+        <!-- 画布空白右键：在此处新建人物（v0.4.9） -->
+        <div v-if="blankCtx" class="oc-ctx oc-blankctx" :style="{ left: blankCtx.x + 'px', top: blankCtx.y + 'px' }" @mousedown.stop>
+          <button class="oc-ctx-item" title="新建人物并放到此处" @click="createCharAt">＋ 新建人物</button>
         </div>
       </div>
     </div>

@@ -2676,3 +2676,29 @@ body,
   background: color-mix(in srgb, var(--accent, #8c6f4e) 8%, var(--bg-panel));
   border-bottom: 1px solid var(--border);
 }
+
+/* 画布空白右键：选建模块菜单（v0.4.9） */
+.oc-blankctx {
+  min-width: 132px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.oc-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12.5px;
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.oc-ctx-item:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
