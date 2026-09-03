@@ -104,21 +104,21 @@ function onKeydown(e) {
   }
 }
 
-/* ---------- 功能面板拆窗（9.2-W5） ---------- */
+/* ---------- 功能面板拆窗（9.2-W5：面板 = 完整模块界面，预选中当前实体） ---------- */
 const splitOptions = computed(() => [
-  { label: '⧉ 正文（当前章节）', key: 'chapter', disabled: !work.activeChapter },
-  { label: '⧉ 大纲（画布）', key: 'outline', disabled: false },
-  { label: '⧉ 人物', key: 'characters', disabled: !work.activeCharacter },
-  { label: '⧉ 设定（幕布）', key: 'lore', disabled: false },
-  { label: '⧉ 灵感', key: 'snippets', disabled: !work.activeSnippet }
+  { label: '⧉ 正文', key: 'chapter', disabled: false },
+  { label: '⧉ 大纲', key: 'outline', disabled: false },
+  { label: '⧉ 人物', key: 'characters', disabled: false },
+  { label: '⧉ 设定', key: 'lore', disabled: false },
+  { label: '⧉ 灵感', key: 'snippets', disabled: false }
 ])
 async function onSplit(key) {
   const titles = {
-    chapter: () => work.activeChapter?.title || '正文',
-    outline: () => '大纲画布',
-    characters: () => work.activeCharacter?.name || '人物',
-    lore: () => '设定幕布',
-    snippets: () => work.activeSnippet?.title || '灵感'
+    chapter: () => `${work.work?.title || ''} · 正文`,
+    outline: () => `${work.work?.title || ''} · 大纲`,
+    characters: () => `${work.work?.title || ''} · 人物`,
+    lore: () => `${work.work?.title || ''} · 设定`,
+    snippets: () => `${work.work?.title || ''} · 灵感`
   }
   const entityMap = {
     chapter: () => work.selChapterId,
@@ -142,6 +142,11 @@ const modulePopped = computed(() => {
   return isPopped(work, work.tab, curEntityForTab(work.tab))
 })
 const curTabLabel = computed(() => tabs.find((t) => t.key === work.tab)?.label || '')
+const poppedEntityName = computed(() => {
+  if (work.tab === 'characters') return work.activeCharacter?.name || ''
+  if (work.tab === 'snippets') return work.activeSnippet?.title || ''
+  return ''
+})
 
 /* ---------- 侧栏宽度拖拽（180–480，松手后写入 appconfig 记忆） ---------- */
 function startSideResize(e) {
@@ -238,8 +243,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <!-- 模块已被拆出为面板窗口：主窗口占位，避免双窗口同写 -->
       <div v-if="modulePopped" class="center-pane paper-texture pop-lock-pane">
         <div class="pop-lock-note">
-          <div class="big serif">{{ curTabLabel }}已在独立窗口编辑</div>
-          <p>主窗口此模块暂时只读——两侧同时写入会互相覆盖。关闭独立面板后此处自动恢复编辑。</p>
+          <div class="big serif">{{ poppedEntityName ? `${curTabLabel}「${poppedEntityName}」已在独立窗口编辑` : `${curTabLabel}已在独立窗口编辑` }}</div>
+          <p>主窗口此条目暂时只读——两侧同时写入会互相覆盖。关闭独立面板（或在面板中切换到其他条目）后此处自动恢复编辑。</p>
           <NButton type="primary" @click="focusPopped(work, work.tab, curEntityForTab(work.tab))">前往窗口</NButton>
         </div>
       </div>

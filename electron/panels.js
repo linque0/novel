@@ -11,11 +11,11 @@ const fs = require('fs')
 const isDev = !!process.env.NOVEL_STUDIO_DEV || process.argv.includes('--dev')
 
 const PANEL_META = {
-  chapter: { label: '正文', w: 880, h: 740 },
-  outline: { label: '大纲', w: 1120, h: 780 },
-  characters: { label: '人物', w: 980, h: 740 },
-  lore: { label: '设定', w: 980, h: 740 },
-  snippets: { label: '灵感', w: 880, h: 660 }
+  chapter: { label: '正文', w: 1080, h: 740 },
+  outline: { label: '大纲', w: 1200, h: 780 },
+  characters: { label: '人物', w: 1080, h: 740 },
+  lore: { label: '设定', w: 1080, h: 740 },
+  snippets: { label: '灵感', w: 960, h: 660 }
 }
 
 let mainWindow = null
@@ -95,8 +95,8 @@ function openPanel(spec) {
 
   const win = new BrowserWindow({
     ...bounds,
-    minWidth: 680,
-    minHeight: 460,
+    minWidth: 800,
+    minHeight: 500,
     backgroundColor: '#f6f2e7',
     title: spec.title || `小说工坊 · ${meta.label}`,
     autoHideMenuBar: true,
@@ -176,6 +176,23 @@ function init() {
   ipcMain.handle('panel:close-self', (e) => {
     const w = BrowserWindow.fromWebContents(e.sender)
     if (w && !w.isDestroyed()) w.close()
+    return { ok: true }
+  })
+  /* 实体锁随面板内选中迁移（章节/人物/灵感）：面板切选 → 旧锁释放、新锁登记并广播 */
+  ipcMain.handle('panel:set-entity', (e, entityId) => {
+    const w = BrowserWindow.fromWebContents(e.sender)
+    const p = panels.find((x) => x.win === w && !x.win.isDestroyed())
+    if (!p) return { ok: false, reason: 'not-a-panel' }
+    const newSpec = { ...p.spec, entityId: entityId ? String(entityId) : '' }
+    const newKey = lockKeyOf(newSpec)
+    if (newKey === p.key) return { ok: true, unchanged: true }
+    if (locks.has(newKey)) return { ok: false, reason: 'locked' }
+    const oldKey = p.key
+    if (locks.get(oldKey) === oldKey) locks.delete(oldKey)
+    p.spec = newSpec
+    p.key = newKey
+    locks.set(newKey, newKey)
+    broadcast('panel:event', { kind: 'moved', key: newKey, oldKey, spec: newSpec, locks: [...locks.keys()] })
     return { ok: true }
   })
 }

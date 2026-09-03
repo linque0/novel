@@ -101,6 +101,52 @@ const after = await c.evalx(`(async () => {
 })()`)
 check('5 面板关闭释放锁并恢复编辑', after.n === 0 && after.locks === 0 && after.noteGone && after.editable === true)
 
+/* ---------- 5b. 完整界面：面板含侧栏+正文区+右栏，且面板自身可写（ownKey 不自我只读） ---------- */
+const pop4 = await c.evalx(`(async () => {
+  const app = document.querySelector('#app').__vue_app__
+  const work = app.config.globalProperties.$pinia._s.get('work')
+  const ch2 = work.liveChapters[1] || (await work.addChapter(null, '验收章节二'))
+  const r = await window.native.panelOpen({ type: 'chapter', workId: '${seed.wid}', entityId: '${seed.chId}', title: '完整界面' })
+  return { r, ch2: ch2.id }
+})()`)
+await c.sleep(3200)
+const p4 = await connect('panel=')
+await p4.sleep(2200)
+const full = await p4.evalx(`(() => {
+  const side = document.querySelector('.side-panel')
+  const center = document.querySelector('.rich-host')
+  const right = document.querySelector('.panel-body > div:last-child')
+  const note = document.querySelector('.panel-lock-note')
+  return { hasSide: !!side, sideKids: side?.children.length || 0, hasEditor: !!center, hasRight: !!right, selfNote: !!note, editable: window.__ns.editor?.isEditable }
+})()`)
+check('5b 面板为完整界面（侧栏+编辑器+右栏）且自身可写', full.hasSide && full.sideKids > 0 && full.hasEditor && full.hasRight && !full.selfNote && full.editable === true)
+
+/* ---------- 5c. 锁跟随：面板切到章节二 → 主窗口章节二只读、章节一恢复 ---------- */
+const follow = await p4.evalx(`(async () => {
+  const app = document.querySelector('#app').__vue_app__
+  const work = app.config.globalProperties.$pinia._s.get('work')
+  work.selChapterId = '${pop4.ch2}'
+  await new Promise((r) => setTimeout(r, 1200))
+  return { sel: work.selChapterId }
+})()`)
+await c.sleep(800)
+const fchk = await c.evalx(`(async () => {
+  const app = document.querySelector('#app').__vue_app__
+  const work = app.config.globalProperties.$pinia._s.get('work')
+  work.selChapterId = '${seed.chId}'
+  await new Promise((r) => setTimeout(r, 600))
+  const note1 = !!document.querySelector('.panel-lock-note')
+  work.selChapterId = '${pop4.ch2}'
+  await new Promise((r) => setTimeout(r, 600))
+  const note2 = !!document.querySelector('.panel-lock-note')
+  work.selChapterId = '${seed.chId}'
+  await new Promise((r) => setTimeout(r, 400))
+  return { note1, note2 }
+})()`)
+check('5c 实体锁随面板选中迁移（章节二锁定/章节一恢复）', fchk.note1 === false && fchk.note2 === true)
+await p4.evalx(`window.native.panelCloseSelf()`)
+await c.sleep(3000)
+
 /* ---------- 6. 拆出大纲模块面板（模块级锁）→ 主窗口大纲页占位 ---------- */
 const pop3 = await c.evalx(`(async () => {
   const app = document.querySelector('#app').__vue_app__
@@ -121,9 +167,10 @@ await p3.sleep(2200)
 const ol = await p3.evalx(`(() => {
   const host = document.querySelector('.panel-topbar')
   const canvas = document.querySelector('.oc-node') || document.querySelector('.oc-canvas') || document.querySelector('.oc-edges')
-  return { title: host?.querySelector('.serif')?.textContent || '', hasCanvas: !!canvas }
+  const side = document.querySelector('.side-panel')
+  return { title: host?.querySelector('.serif')?.textContent || '', hasCanvas: !!canvas, hasSide: !!side }
 })()`)
-check('7 大纲面板渲染画布', ol.hasCanvas && ol.title.includes('大纲'))
+check('7 大纲面板渲染画布', ol.hasCanvas && ol.hasSide && ol.title.includes('大纲'))
 
 /* ---------- 8. 关闭大纲面板恢复 ---------- */
 await p3.evalx(`window.native.panelCloseSelf()`)
