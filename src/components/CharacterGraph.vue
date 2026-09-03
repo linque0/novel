@@ -125,7 +125,7 @@ const isolated = computed(() => {
     linked.add(r.fromId)
     linked.add(r.toId)
   }
-  return work.liveCharacters.filter((c) => !linked.has(c.id))
+  return work.liveCharacters.filter((c) => !linked.has(c.id)).map((c) => ({ ...c, name: c.name || '未命名' }))
 })
 const bounds = computed(() => {
   let x0 = Infinity
@@ -213,8 +213,17 @@ function startConnect(e, c) {
     if (!st) return
     const target = hitCharAt(canvasPt(ev), c.id)
     if (!target) return
-    const dup = work.relations.some((r) => (r.fromId === c.id && r.toId === target.id) || (r.fromId === target.id && r.toId === c.id))
-    if (dup) return
+    /* 已有这层关系（含反向）→ 打开编辑浮层直接改；无 → 弹输入新建 */
+    const dup = work.relations.find((r) => (r.fromId === c.id && r.toId === target.id) || (r.fromId === target.id && r.toId === c.id))
+    if (dup) {
+      const a = posOf(c)
+      const b = posOf(target)
+      if (a && b) {
+        const g = edgeGeom(...pickAnchors({ ...a, w: NODE_W, h: NODE_H }, { ...b, w: NODE_W, h: NODE_H }), 'bezier')
+        openRelEdit(dup, g.mid)
+      }
+      return
+    }
     const p = canvasPt(ev)
     relInput.value = { fromId: c.id, toId: target.id, x: p.x, y: p.y, value: '' }
     nextTick(() => relInputEl.value?.focus())
@@ -234,6 +243,7 @@ function saveRelInput() {
   const st = relInput.value
   relInput.value = null
   if (st && st.value.trim()) work.addRelation(st.fromId, st.toId, st.value.trim())
+  else if (st) work.addRelation(st.fromId, st.toId, '关联')
 }
 function openRelEdit(rel, mid) {
   relEdit.value = { relId: rel.id, mx: mid.x, my: mid.y }
@@ -271,7 +281,7 @@ function createCharAt() {
   const st = blankCtx.value
   blankCtx.value = null
   if (!st) return
-  const row = work.addCharacter('新人物')
+  const row = work.addCharacter()
   layout.value = { ...layout.value, [row.id]: { x: Math.round(st.px), y: Math.round(st.py) } }
   scheduleSave()
   work.selCharacterId = row.id
@@ -429,7 +439,7 @@ onBeforeUnmount(() => {
           <div v-else class="rg-avatar rg-avatar-empty">人</div>
           <div class="rg-meta">
             <div class="rg-name">{{ c.name || '未命名' }}</div>
-            <span class="rg-role" :style="{ color: ROLE_COLOR[c.role] || 'var(--text-dim)', borderColor: ROLE_COLOR[c.role] || 'var(--border)' }">{{ c.role }}</span>
+            <span class="rg-role" :style="{ color: ROLE_COLOR[c.role] || 'var(--text-dim)', borderColor: ROLE_COLOR[c.role] || 'var(--border)' }">{{ c.role || '未定' }}</span>
           </div>
           <span v-for="sd in ['right', 'left']" :key="sd" class="oc-apt rg-apt" :data-side="sd" title="拖到另一人物建立关系" @mousedown="startConnect($event, c)" />
         </div>

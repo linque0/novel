@@ -373,7 +373,8 @@ export const useWorkStore = defineStore('work', {
     },
 
     /* ---------- 人物 ---------- */
-    addCharacter(name = '新人物') {
+    /** 新建人物：内容全部留空待用户填写（name 空时列表/画布显示「未命名」兜底） */
+    addCharacter(name = '') {
       const row = {
         id: uid(),
         workId: this.work.id,

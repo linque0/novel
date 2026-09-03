@@ -129,11 +129,11 @@ const charAdd = await c.evalx(`(async () => {
   const menuShown = !!document.querySelector('.oc-blankctx')
   ;[...document.querySelectorAll('.oc-blankctx .oc-ctx-item')].find((x) => x.textContent.includes('新建人物'))?.click()
   await new Promise((r) => setTimeout(r, 600))
-  const c2 = work.liveCharacters.find((x) => x.name === '新人物')
+  const c2 = work.liveCharacters.find((x) => !x.name)
   const graph = await work.loadCharGraph()
-  return { before, after: work.liveCharacters.length, menuShown, sel: work.selCharacterId === c2?.id, placed: !!(c2 && graph && graph[c2.id]) }
+  return { before, after: work.liveCharacters.length, menuShown, sel: work.selCharacterId === c2?.id, blank: !!c2, placed: !!(c2 && graph && graph[c2.id]) }
 })()`)
-check('5 人物图空白右键新建人物并放位', charAdd.menuShown && charAdd.after === charAdd.before + 1 && charAdd.sel && charAdd.placed, JSON.stringify(charAdd))
+check('5 人物图空白右键新建人物（空内容）并放位', charAdd.menuShown && charAdd.after === charAdd.before + 1 && charAdd.sel && charAdd.blank && charAdd.placed, JSON.stringify(charAdd))
 
 /* 6. 人物图 Delete 软删选中人物 */
 const charDel = await c.evalx(`(async () => {
