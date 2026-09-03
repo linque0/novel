@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { NButton, NInput, NSelect, NTag } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
@@ -9,7 +9,8 @@ import CharacterGraph from './CharacterGraph.vue'
 const work = useWorkStore()
 const c = computed(() => work.activeCharacter)
 const dlMenu = ref(null)
-const ROLE_OPTS = ['主角', '配角', '反派', '龙套'].map((r) => ({ label: r, value: r }))
+/* 角色定位：自定义输入为主 + 常见故事定位快捷项（再点取消） */
+const ROLE_PRESETS = ['主角', '配角', '反派', '导师', '红颜', '盟友', '旁观者', '龙套']
 
 /* 人物小传右键快捷栏：剪切/复制/粘贴 + 添加双链 */
 function onCtx(e) {
@@ -34,6 +35,21 @@ async function changeAvatar() {
   work.updateCharacter(c.value.id, { avatarAssetId: meta.id })
   await work.warmUrls([meta.id])
 }
+
+/* 新人物默认字段（外貌/性格角色要素，可删可改名） */
+const DEFAULT_FIELDS = ['外貌', '性格']
+function ensureDefaultFields() {
+  const c0 = c.value
+  if (!c0 || c0.__defaultsSeeded) return
+  const hasAny = Object.keys(c0.fields || {}).length > 0
+  if (!hasAny) {
+    const f = {}
+    for (const k of DEFAULT_FIELDS) f[k] = ''
+    work.updateCharacter(c0.id, { fields: f })
+    c0.__defaultsSeeded = true
+  }
+}
+watch(c, ensureDefaultFields, { immediate: true })
 
 function addField() {
   if (!c.value) return
@@ -88,7 +104,16 @@ function addRelation() {
       <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
         <div style="display: flex; gap: 8px">
           <NInput class="rp-input" :value="c.name" placeholder="姓名" style="flex: 1; font-size: 16px; font-weight: 700" @update:value="(v) => work.updateCharacter(c.id, { name: v })" />
-          <NSelect :value="c.role" :options="ROLE_OPTS" style="width: 100px" size="small" @update:value="(v) => work.updateCharacter(c.id, { role: v })" />
+          <NInput class="rp-input" :value="c.role" placeholder="角色定位（可自定义）" style="width: 170px" @update:value="(v) => work.updateCharacter(c.id, { role: v })" />
+        </div>
+        <div class="role-chips">
+          <span
+            v-for="r in ROLE_PRESETS"
+            :key="r"
+            class="role-chip"
+            :class="{ on: c.role === r }"
+            @click="work.updateCharacter(c.id, { role: c.role === r ? '' : r })"
+          >{{ r }}</span>
         </div>
         <div style="display: flex; gap: 8px">
           <NInput class="rp-input" :value="c.aliases" placeholder="别名（用 / 分隔）" style="flex: 1" @update:value="(v) => work.updateCharacter(c.id, { aliases: v })" />
@@ -112,7 +137,7 @@ function addRelation() {
     <hr class="divider" />
     <div class="rp-title">自定义字段</div>
     <div v-for="[k, v] in fieldsRows" :key="k" class="field-row">
-      <NInput class="rp-input" :value="k" style="width: 120px" @change="(v) => setFieldKey(k, v)" />
+      <input class="rp-input" :value="k" style="width: 120px" title="点击修改字段名（失焦或回车提交）" @change="setFieldKey(k, $event.target.value.trim())" @keyup.enter="$event.target.blur()" />
       <NInput class="rp-input" :value="v" style="flex: 1" @update:value="(v2) => setFieldValue(k, v2)" />
       <NButton size="tiny" quaternary @click="removeField(k)">✕</NButton>
     </div>

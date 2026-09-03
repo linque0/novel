@@ -6,7 +6,7 @@
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useWorkStore } from '../stores/work'
 import { usePanZoom, pickAnchors, edgeGeom } from '../services/graphview'
-import { freeSpotFor } from './outline/canvas-model'
+import { freeSpotFor, dashOf, EDGE_STYLES } from './outline/canvas-model'
 
 const work = useWorkStore()
 const canvasEl = ref(null)
@@ -102,7 +102,7 @@ const edges = computed(() => {
     const b = chars.value.find((c) => c.id === r.toId)
     if (!posOf(a) || !posOf(b)) continue
     const g = edgeGeom(...pickAnchors({ ...posOf(a), w: NODE_W, h: NODE_H }, { ...posOf(b), w: NODE_W, h: NODE_H }), 'bezier')
-    out.push({ rel: r, ...g })
+    out.push({ rel: r, ...g, dash: dashOf(r.style, ''), stroke: r.color || 'var(--accent)' })
   }
   return out
 })
@@ -251,6 +251,13 @@ function openRelEdit(rel, mid) {
 }
 function patchRelLabel(e) {
   if (relEdit.value) work.updateRelation(relEdit.value.relId, { label: e.target.value })
+}
+const REL_COLORS = ['#2980b9', '#c0392b', '#8e44ad', '#d35400', '#27ae60', '#7f8c8d']
+function curRel() {
+  return relEdit.value ? work.relations.find((r) => r.id === relEdit.value.relId) || null : null
+}
+function patchRel(patch) {
+  if (relEdit.value) work.updateRelation(relEdit.value.relId, patch)
 }
 function removeRel() {
   if (relEdit.value) work.removeRelation(relEdit.value.relId)
@@ -406,8 +413,9 @@ onBeforeUnmount(() => {
             :key="'v' + e.rel.id"
             :d="e.d"
             fill="none"
-            stroke="var(--accent)"
+            :stroke="e.stroke"
             stroke-width="1.7"
+            :stroke-dasharray="e.dash"
             :opacity="dimEdgeIds.has(e.rel.id) ? 0.1 : 0.8"
           />
           <path v-if="connecting" :d="connPath" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4" />
@@ -441,7 +449,14 @@ onBeforeUnmount(() => {
             <div class="rg-name">{{ c.name || '未命名' }}</div>
             <span class="rg-role" :style="{ color: ROLE_COLOR[c.role] || 'var(--text-dim)', borderColor: ROLE_COLOR[c.role] || 'var(--border)' }">{{ c.role || '未定' }}</span>
           </div>
-          <span v-for="sd in ['right', 'left']" :key="sd" class="oc-apt rg-apt" :data-side="sd" title="拖到另一人物建立关系" @mousedown="startConnect($event, c)" />
+          <span
+            v-for="sd in ['top', 'right', 'bottom', 'left']"
+            :key="sd"
+            class="oc-apt rg-apt"
+            :data-side="sd"
+            title="拖到另一人物建立/修改关系"
+            @mousedown="startConnect($event, c)"
+          />
         </div>
 
         <!-- 拖线建关系输入 -->
@@ -450,9 +465,35 @@ onBeforeUnmount(() => {
           <button class="om-btn" title="保存" @click="saveRelInput">✓</button>
         </div>
 
-        <!-- 边标签编辑 -->
+        <!-- 边标签编辑（v0.4.11：标签 + 线型 + 颜色） -->
         <div v-if="relEdit" class="rg-eedit" :style="{ left: relEdit.mx + 'px', top: relEdit.my + 'px' }" @mousedown.stop>
-          <input class="rp-input" :value="work.relations.find((r) => r.id === relEdit.relId)?.label || ''" placeholder="关系标签…" @input="patchRelLabel" @keydown.enter="relEdit = null" @keydown.esc="relEdit = null" />
+          <input class="rp-input" :value="curRel()?.label || ''" placeholder="关系标签…" @input="patchRelLabel" @keydown.enter="relEdit = null" @keydown.esc="relEdit = null" />
+          <div class="oc-kindrow">
+            <span
+              v-for="s in EDGE_STYLES"
+              :key="s.key"
+              class="oc-kind"
+              :class="{ on: (curRel()?.style || '') === (s.key === 'solid' ? '' : s.key) }"
+              @click="patchRel({ style: s.key === 'solid' ? '' : s.key })"
+            >{{ s.label }}</span>
+          </div>
+          <div class="oc-eedit-swatches">
+            <span
+              class="oc-ctx-sw"
+              :class="{ on: !(curRel()?.color || '') }"
+              title="主题色"
+              @click="patchRel({ color: '' })"
+            ></span>
+            <span
+              v-for="col in REL_COLORS"
+              :key="col"
+              class="oc-ctx-sw"
+              :class="{ on: (curRel()?.color || '') === col }"
+              :style="{ background: col }"
+              :title="col"
+              @click="patchRel({ color: col })"
+            />
+          </div>
           <button class="om-btn oc-mini-x" title="删除关系" @click="removeRel">✕</button>
         </div>
 

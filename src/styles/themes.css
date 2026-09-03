@@ -2553,11 +2553,40 @@ body,
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+/* 人物块四边拖线热区（v0.4.11）：锚点半透明圆点叠大热区，悬停显形，易点中 */
+.rg-apt {
+  width: 16px;
+  height: 16px;
+  background: transparent;
+  border: none;
+}
+.rg-apt::after {
+  content: '';
+  position: absolute;
+  inset: 3.5px;
+  border-radius: 50%;
+  background: var(--bg-panel);
+  border: 1.5px solid var(--accent);
+  transition: transform 0.12s;
+}
+.rg-apt:hover::after {
+  transform: scale(1.25);
+}
 .rg-apt[data-side='right'] {
-  right: -6px;
+  right: -8px;
+  top: calc(50% - 8px);
 }
 .rg-apt[data-side='left'] {
-  left: -6px;
+  left: -8px;
+  top: calc(50% - 8px);
+}
+.rg-apt[data-side='top'] {
+  top: -8px;
+  left: calc(50% - 8px);
+}
+.rg-apt[data-side='bottom'] {
+  bottom: -8px;
+  left: calc(50% - 8px);
 }
 .rg-elabel {
   position: absolute;
@@ -2595,6 +2624,7 @@ body,
   position: absolute;
   transform: translate(-50%, calc(-100% - 12px));
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   align-items: center;
   background: var(--bg-panel);
@@ -2608,6 +2638,56 @@ body,
   height: 24px;
   font-size: 12px;
   width: 130px;
+}
+.rg-eedit .oc-kindrow,
+.rg-eedit .oc-eedit-swatches {
+  flex-basis: 100%;
+}
+/* 角色定位快捷选项（v0.4.11）：自定义输入为主，常见定位一键填入 */
+.role-chips {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.role-chip {
+  font-size: 11px;
+  line-height: 1;
+  padding: 3px 9px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+}
+.role-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.role-chip.on {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+/* 关系边颜色板（与大纲容器调色板同款色块） */
+.oc-eedit-swatches {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+}
+.oc-eedit-swatches .oc-ctx-sw {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  cursor: pointer;
+}
+.oc-eedit-swatches .oc-ctx-sw.on {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.oc-eedit-swatches .oc-ctx-sw[title='主题色'] {
+  background: linear-gradient(135deg, var(--accent) 50%, var(--bg-editor) 50%);
 }
 /* 人物节点右键菜单（v0.4.3）：随点随开，不遮挡节点 */
 .rg-ctx {

@@ -421,8 +421,9 @@ export const useWorkStore = defineStore('work', {
       if (this.selCharacterId === id) this.selCharacterId = null
     },
 
-    addRelation(fromId, toId, label) {
-      const row = { id: uid(), workId: this.work.id, fromId, toId, label }
+    /** 新建人物关系：label 关系名；color 线色（空=主题色）；style 线型 dashed/dotted/'' 实线 */
+    addRelation(fromId, toId, label, extra = {}) {
+      const row = { id: uid(), workId: this.work.id, fromId, toId, label, color: '', style: '', ...extra }
       this.relations.push(row)
       autosave.mark('relations', row)
     },
