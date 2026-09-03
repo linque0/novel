@@ -18,6 +18,7 @@ import MubuTree from './MubuTree.vue'
 import SnippetCenter from './SnippetCenter.vue'
 import RightPanel from './RightPanel.vue'
 import DLinkPopover from './DLinkPopover.vue'
+import { popOut, isPopped, focusPopped } from '../services/panelwindows'
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -102,6 +103,45 @@ function onKeydown(e) {
     ui.searchOpen = true
   }
 }
+
+/* ---------- 功能面板拆窗（9.2-W5） ---------- */
+const splitOptions = computed(() => [
+  { label: '⧉ 正文（当前章节）', key: 'chapter', disabled: !work.activeChapter },
+  { label: '⧉ 大纲（画布）', key: 'outline', disabled: false },
+  { label: '⧉ 人物', key: 'characters', disabled: !work.activeCharacter },
+  { label: '⧉ 设定（幕布）', key: 'lore', disabled: false },
+  { label: '⧉ 灵感', key: 'snippets', disabled: !work.activeSnippet }
+])
+async function onSplit(key) {
+  const titles = {
+    chapter: () => work.activeChapter?.title || '正文',
+    outline: () => '大纲画布',
+    characters: () => work.activeCharacter?.name || '人物',
+    lore: () => '设定幕布',
+    snippets: () => work.activeSnippet?.title || '灵感'
+  }
+  const entityMap = {
+    chapter: () => work.selChapterId,
+    outline: () => '',
+    characters: () => work.selCharacterId,
+    lore: () => '',
+    snippets: () => work.selSnippetId
+  }
+  const ok = await popOut(work, key, entityMap[key]?.() || '', titles[key]?.())
+  if (ok) msg.success('已在独立窗口打开')
+}
+
+/* 模块级锁：大纲/设定拆出为整模块锁；人物/灵感按选中实体锁（9.2-W5） */
+function curEntityForTab(tab) {
+  if (tab === 'characters') return work.selCharacterId || ''
+  if (tab === 'snippets') return work.selSnippetId || ''
+  return ''
+}
+const modulePopped = computed(() => {
+  if (!work.work || work.tab === 'chapters') return false
+  return isPopped(work, work.tab, curEntityForTab(work.tab))
+})
+const curTabLabel = computed(() => tabs.find((t) => t.key === work.tab)?.label || '')
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
@@ -117,6 +157,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </span>
       <div style="flex: 1"></div>
       <NButton size="small" @click="ui.searchOpen = true">🔍 搜索</NButton>
+      <NDropdown trigger="click" :options="splitOptions" @select="onSplit">
+        <NButton size="small" title="把模块拆出为独立窗口，可边看大纲边写正文">⧉ 拆窗 ▾</NButton>
+      </NDropdown>
       <NButton size="small" @click="ui.importOpen = true">⬇ 导入</NButton>
       <NDropdown :options="exportOptions" trigger="click" @select="onExport">
         <NButton size="small">导出 ▾</NButton>
@@ -155,7 +198,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </div>
       </div>
 
-      <div v-if="!ui.focusMode" class="side-panel">
+      <div v-if="!ui.focusMode && !modulePopped" class="side-panel">
         <ChapterTree v-if="work.tab === 'chapters'" />
         <OutlineSidebar v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
@@ -163,7 +206,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <SnippetList v-else-if="work.tab === 'snippets'" />
       </div>
 
-      <div class="center-pane paper-texture">
+      <!-- 模块已被拆出为面板窗口：主窗口占位，避免双窗口同写 -->
+      <div v-if="modulePopped" class="center-pane paper-texture pop-lock-pane">
+        <div class="pop-lock-note">
+          <div class="big serif">{{ curTabLabel }}已在独立窗口编辑</div>
+          <p>主窗口此模块暂时只读——两侧同时写入会互相覆盖。关闭独立面板后此处自动恢复编辑。</p>
+          <NButton type="primary" @click="focusPopped(work, work.tab, curEntityForTab(work.tab))">前往窗口</NButton>
+        </div>
+      </div>
+      <div v-else class="center-pane paper-texture">
         <EditorPane v-if="work.tab === 'chapters'" />
         <OutlineCenter v-else-if="work.tab === 'outline'" />
         <CharacterCenter v-else-if="work.tab === 'characters'" />
@@ -173,7 +224,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <SnippetCenter v-else-if="work.tab === 'snippets'" />
       </div>
 
-      <RightPanel v-if="!ui.focusMode && work.tab === 'chapters'" />
+      <RightPanel v-if="!ui.focusMode && !modulePopped && work.tab === 'chapters'" />
     </div>
 
     <!-- 双链悬浮预览窗（全局唯一，悬停双链标签 / 纯文本令牌时展示目标内容） -->

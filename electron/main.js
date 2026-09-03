@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, protocol, shell, clipboard } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const panels = require('./panels')
 
 const isDev = !!process.env.NOVEL_STUDIO_DEV || process.argv.includes('--dev')
 
@@ -104,6 +105,7 @@ function createWindow() {
 
   win.on('closed', () => {
     win = null
+    panels.onMainClosed()
   })
 }
 
@@ -134,7 +136,9 @@ function startMain() {
   if (!isDev) {
     protocol.handle('app', serveDist)
   }
+  panels.init()
   createWindow()
+  panels.setMainWindow(win)
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()

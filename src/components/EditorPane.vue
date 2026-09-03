@@ -1,5 +1,5 @@
 <script setup>
-import { ref, shallowRef, watch, onBeforeUnmount, onMounted } from 'vue'
+import { ref, shallowRef, computed, watch, onBeforeUnmount, onMounted } from 'vue'
 import { Editor, EditorContent } from '@tiptap/vue-3'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
@@ -17,6 +17,7 @@ import { autosave } from '../services/autosave'
 import { FontSize } from '../services/richtext'
 import { isImageExt } from '../services/fileio'
 import { DlLinkMark } from '../services/doublelinks'
+import { isPopped, focusPopped } from '../services/panelwindows'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorContextMenu from './EditorContextMenu.vue'
 
@@ -24,6 +25,12 @@ const work = useWorkStore()
 const ui = useUiStore()
 const editor = shallowRef(null)
 const ctxMenu = ref(null)
+
+/* 章节已被拆出为面板窗口时，主窗口本章只读（9.2-W5 两级锁） */
+const chapterPopped = computed(() => !!work.activeChapter && isPopped(work, 'chapter', work.activeChapter.id))
+watch(chapterPopped, (popped) => {
+  editor.value?.setEditable(!popped)
+})
 
 let savedSelRange = null // 右键时刻的选区快照（浏览器/PM 可能在右键流程中塌缩选区）
 
@@ -113,6 +120,7 @@ function mountEditor() {
   editor.value = new Editor({
     content: toEditorHtml(ch),
     extensions,
+    editable: !chapterPopped.value,
     editorProps: {
       handleDOMEvents: {
         // 超链接在系统默认浏览器打开，不劫持应用窗口
@@ -181,6 +189,7 @@ function openHistory() {
         class="title-input"
         :value="work.activeChapter.title"
         placeholder="章节标题"
+        :readonly="chapterPopped"
         @change="onTitle"
         @keyup.enter="$event.target.blur()"
       />
@@ -188,6 +197,7 @@ function openHistory() {
         size="tiny"
         :value="work.activeChapter.status"
         :options="STATUS_OPTS"
+        :disabled="chapterPopped"
         style="width: 92px"
         @update:value="(v) => work.setChapterStatus(work.activeChapter.id, v)"
       />
@@ -201,11 +211,15 @@ function openHistory() {
       <p>从左侧「＋章」新建一章开始写作，章节内容会即时自动保存。</p>
     </div>
     <template v-if="work.activeChapter && editor">
-      <EditorToolbar :key="work.selChapterId" :editor="editor" />
-      <div class="rich-host paper-texture" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
+      <EditorToolbar v-if="!chapterPopped" :key="work.selChapterId" :editor="editor" />
+      <div v-if="chapterPopped" class="panel-lock-note">
+        <span>「{{ work.activeChapter.title }}」已在独立窗口编辑，本窗口此章暂为只读</span>
+        <NButton size="small" type="primary" @click="focusPopped(work, 'chapter', work.activeChapter.id)">前往窗口</NButton>
+      </div>
+      <div v-show="!chapterPopped" class="rich-host paper-texture" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
         <EditorContent :key="work.selChapterId" :editor="editor" class="rich-inner" />
       </div>
-      <EditorContextMenu ref="ctxMenu" :editor="editor" />
+      <EditorContextMenu v-if="!chapterPopped" ref="ctxMenu" :editor="editor" />
     </template>
   </div>
 </template>

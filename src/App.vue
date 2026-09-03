@@ -12,10 +12,14 @@ import RevisionsModal from './components/RevisionsModal.vue'
 import TrashModal from './components/TrashModal.vue'
 import StatsModal from './components/StatsModal.vue'
 import PrefBridge from './components/PrefBridge.vue'
+import PanelHost from './components/PanelHost.vue'
 import { useShelfStore } from './stores/shelf'
 
 const ui = useUiStore()
 const shelf = useShelfStore()
+
+/* 功能面板窗口（9.2-W5）：URL 带 ?panel=<type>:<workId>:<entityId> 时渲染精简面板布局 */
+const panelMode = new URLSearchParams(location.search).has('panel')
 
 const naiveTheme = computed(() => (ui.theme === 'night' ? darkTheme : null))
 const overrides = computed(() => {
@@ -32,6 +36,7 @@ async function boot() {
   }
   startAutosave()
   await ui.loadPrefs()
+  if (panelMode) return
   await shelf.refresh()
 }
 onMounted(boot)
@@ -42,7 +47,8 @@ onMounted(boot)
     <NMessageProvider>
       <NDialogProvider>
         <PrefBridge />
-        <div class="app-root" :class="'theme-' + ui.theme" :style="ui.rootStyle">
+        <PanelHost v-if="panelMode" />
+        <div v-else class="app-root" :class="'theme-' + ui.theme" :style="ui.rootStyle">
           <div v-if="ui.dbError" class="empty-shelf" style="padding-top: 16vh">
             <div class="big">数据的另一扇门被占用了</div>
             <p>
