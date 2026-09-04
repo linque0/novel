@@ -2634,6 +2634,11 @@ body,
   padding: 5px 7px;
   z-index: 12;
 }
+/* 边编辑浮层翻转：连线贴近可视区顶部时向下弹出，避免被画布 overflow 裁掉（v0.4.12） */
+.rg-eedit.flip,
+.oc-eedit.flip {
+  transform: translate(-50%, 14px);
+}
 .rg-eedit .rp-input {
   height: 24px;
   font-size: 12px;

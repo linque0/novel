@@ -9,7 +9,7 @@ import { parseTokens, findByTitle, targetById, parseTarget, jumpTo, KIND_LABEL }
 import {
   relayoutAll, containerRect, effSize, freeSpotFor,
   relColor, relDashed, cycleArrow, nextShape, SHAPE_LABEL,
-  REL_KINDS, KIND_META, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES
+  REL_KINDS, KIND_META, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES, EDGE_COLORS, edgeColor
 } from './outline/canvas-model'
 import { uid } from '../db/database'
 import { NPopover, NSlider } from 'naive-ui'
@@ -91,7 +91,7 @@ const edges = computed(() => {
       const from = sideFaces(r.fromSide, A, B) ? anchorsOf(A)[r.fromSide] : pickAnchors(A, B)[0]
       const pb = pickAnchors(A, B)[1]
       const g = edgeGeom(from, pb, work.canvasPrefs.edgeStyle)
-      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, a: from, b: pb, color: relColor(r.kind), dashed: relDashed(r.kind) })
+      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, a: from, b: pb, color: edgeColor(r), dashed: relDashed(r.kind) })
     }
   }
   return out
@@ -450,8 +450,21 @@ const connPath = computed(() => {
 
 /* ---------- 边编辑浮层 ---------- */
 const edgeLabelInput = ref(null)
+/* 浮层弹出方向：中点上方空间不足时翻转向下（否则被画布 overflow 裁掉），横向夹在可视区内 */
+function popPlacement(mid) {
+  const el = canvasEl.value
+  if (!el) return { mx: mid.x, flip: false }
+  const r = el.getBoundingClientRect()
+  const sx = r.left + tx.value + mid.x * zoom.value
+  const sy = r.top + ty.value + mid.y * zoom.value
+  const halfW = 120 * zoom.value
+  const cx = Math.min(Math.max(sx, r.left + 6 + halfW), r.right - 6 - halfW)
+  const roomUp = sy - r.top
+  return { mx: (cx - r.left - tx.value) / zoom.value, flip: roomUp < 170 * zoom.value && r.bottom - sy > roomUp }
+}
 function openEdgeEdit(ownerId, relId, mid) {
-  edgeEdit.value = { ownerId, relId, mx: mid.x, my: mid.y }
+  const p = popPlacement(mid)
+  edgeEdit.value = { ownerId, relId, mx: p.mx, my: mid.y, flip: p.flip }
   nextTick(() => edgeLabelInput.value?.focus())
 }
 function curRel() {
@@ -872,7 +885,7 @@ onBeforeUnmount(() => {
         >{{ e.rel.label }}</div>
 
         <!-- 边编辑浮层 -->
-        <div v-if="edgeEdit" class="oc-eedit" :style="{ left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop>
+        <div v-if="edgeEdit" class="oc-eedit" :class="{ flip: edgeEdit.flip }" :style="{ left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop>
           <div class="oc-eedit-row">
             <input ref="edgeLabelInput" class="rp-input" :value="curRel()?.label || ''" placeholder="连线标签…" @input="patchRel({ label: $event.target.value })" @keydown.enter="edgeEdit = null" @keydown.esc="edgeEdit = null" />
             <button class="om-btn" :title="edgeEdit && curRel() ? '箭头：' + { '->': '单向', '<->': '双向', '--': '无向' }[curRel().arrows || '->'] : '箭头'" @click="patchRel({ arrows: cycleArrow(curRel()?.arrows || '->') })">{{ arrowsGlyph(curRel()?.arrows) }}</button>
@@ -896,6 +909,23 @@ onBeforeUnmount(() => {
               :class="{ on: (curRel()?.style || '') === (s.key === 'solid' ? '' : s.key) }"
               @click="patchRel({ style: s.key === 'solid' ? '' : s.key })"
             >{{ s.label }}</span>
+          </div>
+          <div class="oc-eedit-row oc-eedit-swatches">
+            <span
+              class="oc-ctx-sw"
+              :class="{ on: !(curRel()?.color || '') }"
+              title="主题色"
+              @click="patchRel({ color: '' })"
+            ></span>
+            <span
+              v-for="col in EDGE_COLORS"
+              :key="col"
+              class="oc-ctx-sw"
+              :class="{ on: (curRel()?.color || '') === col }"
+              :style="{ background: col }"
+              :title="col"
+              @click="patchRel({ color: col })"
+            />
           </div>
         </div>
 

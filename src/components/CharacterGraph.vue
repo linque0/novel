@@ -245,8 +245,21 @@ function saveRelInput() {
   if (st && st.value.trim()) work.addRelation(st.fromId, st.toId, st.value.trim())
   else if (st) work.addRelation(st.fromId, st.toId, '关联')
 }
+/* 浮层弹出方向：中点上方空间不足时翻转向下（否则被画布 overflow 裁掉），横向夹在可视区内 */
+function popPlacement(mid) {
+  const el = canvasEl.value
+  if (!el) return { mx: mid.x, flip: false }
+  const r = el.getBoundingClientRect()
+  const sx = r.left + tx.value + mid.x * zoom.value
+  const sy = r.top + ty.value + mid.y * zoom.value
+  const halfW = 120 * zoom.value
+  const cx = Math.min(Math.max(sx, r.left + 6 + halfW), r.right - 6 - halfW)
+  const roomUp = sy - r.top
+  return { mx: (cx - r.left - tx.value) / zoom.value, flip: roomUp < 150 * zoom.value && r.bottom - sy > roomUp }
+}
 function openRelEdit(rel, mid) {
-  relEdit.value = { relId: rel.id, mx: mid.x, my: mid.y }
+  const p = popPlacement(mid)
+  relEdit.value = { relId: rel.id, mx: p.mx, my: mid.y, flip: p.flip }
   nextTick(() => relInputEl.value?.focus())
 }
 function patchRelLabel(e) {
@@ -466,7 +479,7 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- 边标签编辑（v0.4.11：标签 + 线型 + 颜色） -->
-        <div v-if="relEdit" class="rg-eedit" :style="{ left: relEdit.mx + 'px', top: relEdit.my + 'px' }" @mousedown.stop>
+        <div v-if="relEdit" class="rg-eedit" :class="{ flip: relEdit.flip }" :style="{ left: relEdit.mx + 'px', top: relEdit.my + 'px' }" @mousedown.stop>
           <input class="rp-input" :value="curRel()?.label || ''" placeholder="关系标签…" @input="patchRelLabel" @keydown.enter="relEdit = null" @keydown.esc="relEdit = null" />
           <div class="oc-kindrow">
             <span

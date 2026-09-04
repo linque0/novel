@@ -222,6 +222,137 @@ const dfCheck = await c.evalx(`(() => {
 })()`)
 check('9 预置字段为 外貌+性格', dfCheck.keys.join(',') === '外貌,性格', JSON.stringify(dfCheck))
 
+/* ---------- 10. v0.4.12：大纲画布边编辑浮层含颜色色板，自定义色跟随线/箭头/标签，主题色恢复 ---------- */
+{
+  await c.evalx(`(async () => {
+    const w = ${store}
+    w.tab = 'outline'; w.outlineView = 'canvas'
+    await new Promise((r) => setTimeout(r, 900))
+    return 1
+  })()`)
+  // 种子：两个事件节点 + 连线（幂等）
+  await c.evalx(`(() => {
+    const w = ${store}
+    const live = w.olnodes.filter((n) => !n.deletedAt)
+    const a = live.find((n) => n.title === '验事件A') || w.olnodeAdd(null, { kind: 'event', title: '验事件A', canvasX: 300, canvasY: 300 })
+    const b = live.find((n) => n.title === '验事件B') || w.olnodeAdd(null, { kind: 'event', title: '验事件B', canvasX: 760, canvasY: 300 })
+    if (!w.olnodeRelsOf(a.id).some((r) => r.toId === b.id)) w.olnodeRelAdd(a.id, b.id, { label: '验收' })
+    return 1
+  })()`)
+  await c.evalx(`(() => { const btn = [...document.querySelectorAll('.om-btn.text')].find((x) => x.textContent.includes('适应')); btn?.click(); return 1 })()`)
+  await c.sleep(600)
+  const ohit = await c.evalx(`(() => {
+    const els = [...document.querySelectorAll('.oc-edge-hit')]
+    let best = null
+    for (const el of els) { const r = el.getBoundingClientRect(); if (!best || r.height < best.h) best = { x: r.x + r.width / 2, y: r.y + r.height / 2, h: r.height } }
+    return best
+  })()`)
+  if (!ohit) {
+    check('10 大纲画布颜色编辑（色板+跟随+恢复）', false, 'no edge hit')
+  } else {
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: ohit.x, y: ohit.y, button: 'none' })
+    await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: ohit.x, y: ohit.y, button: 'left', buttons: 1, clickCount: 1 })
+    await c.sleep(60)
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: ohit.x, y: ohit.y, button: 'left', buttons: 0, clickCount: 1 })
+    await c.sleep(300)
+    const sw = await c.evalx(`(() => {
+      const box = document.querySelector('.oc-eedit')
+      if (!box) return { err: 'no popover' }
+      const el = [...box.querySelectorAll('.oc-eedit-swatches .oc-ctx-sw')][3]
+      if (!el) return { err: 'no swatch', swatches: box.querySelectorAll('.oc-eedit-swatches .oc-ctx-sw').length }
+      const r = el.getBoundingClientRect()
+      return { x: r.x + r.width / 2, y: r.y + r.height / 2 }
+    })()`)
+    if (sw.err) {
+      check('10 大纲画布颜色编辑（色板+跟随+恢复）', false, JSON.stringify(sw))
+    } else {
+      await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: sw.x, y: sw.y, button: 'left', buttons: 1, clickCount: 1 })
+      await c.sleep(60)
+      await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: sw.x, y: sw.y, button: 'left', buttons: 0, clickCount: 1 })
+      await c.sleep(300)
+      const oc = await c.evalx(`(() => {
+        const w = ${store}
+        const src = w.olnodes.find((n) => (n.rels || []).some((r) => r.toId))
+        const rel = src?.rels?.find((r) => r.label === '验收') || src?.rels?.[0]
+        const line = [...document.querySelectorAll('.oc-edges path[stroke]')].find((p) => p.getAttribute('stroke') === '#8e44ad')
+        const arrow = [...document.querySelectorAll('.oc-edges polygon')].find((p) => p.getAttribute('fill') === '#8e44ad')
+        const label = [...document.querySelectorAll('.oc-elabel')].find((x) => x.textContent.trim() === '验收')
+        return { color: rel?.color, line: !!line, arrow: !!arrow, labelBorder: label ? getComputedStyle(label).borderColor : null }
+      })()`)
+      check('10 大纲画布颜色编辑：色板出现+自定义色跟随线/箭头/标签', oc.color === '#8e44ad' && oc.line && oc.arrow && /142, 68, 173/.test(oc.labelBorder || ''), JSON.stringify(oc))
+      // 主题色恢复
+      const sw0 = await c.evalx(`(() => { const el = document.querySelector('.oc-eedit .oc-eedit-swatches .oc-ctx-sw'); if (!el) return null; const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })()`)
+      if (sw0) {
+        await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: sw0.x, y: sw0.y, button: 'left', buttons: 1, clickCount: 1 })
+        await c.sleep(60)
+        await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: sw0.x, y: sw0.y, button: 'left', buttons: 0, clickCount: 1 })
+        await c.sleep(300)
+      }
+      const oc2 = await c.evalx(`(() => {
+        const w = ${store}
+        const src = w.olnodes.find((n) => (n.rels || []).some((r) => r.toId))
+        const line = [...document.querySelectorAll('.oc-edges path[stroke]')].find((p) => p.getAttribute('stroke') === '#2980b9')
+        return { color: src?.rels?.[0]?.color, autoRestored: !!line }
+      })()`)
+      check('10b 大纲「主题色」恢复按类型自动配色', oc2.color === '' && oc2.autoRestored, JSON.stringify(oc2))
+    }
+  }
+}
+
+/* ---------- 11. v0.4.12：人物图边编辑浮层在可视区顶部翻转向下（不再被裁掉） ---------- */
+{
+  await c.evalx(`(async () => {
+    const w = ${store}
+    w.tab = 'characters'; w.charView = 'graph'
+    await new Promise((r) => setTimeout(r, 900))
+    return 1
+  })()`)
+  // 真实拖拽画布空白逐步向上平移，直到连线贴近可视区顶部（top 距画布顶 < 120px）仍可见
+  const cv = await c.evalx(`(() => { const r = document.querySelector('.rg-canvas').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })()`)
+  for (let round = 0; round < 8; round++) {
+    await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: cv.x + 300, y: cv.y + 180, button: 'left', buttons: 1, clickCount: 1 })
+    for (let i = 1; i <= 3; i++) {
+      await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: cv.x + 300, y: cv.y + 180 - i * 20, button: 'left', buttons: 1 })
+      await c.sleep(30)
+    }
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: cv.x + 300, y: cv.y + 180 - 3 * 20, button: 'left', buttons: 0, clickCount: 1 })
+    await c.sleep(350)
+    const st = await c.evalx(`(() => {
+      const els = [...document.querySelectorAll('.rg-edge-hit')]
+      let best = null
+      for (const el of els) { const r = el.getBoundingClientRect(); if (!best || r.height < best.h) best = { x: r.x + r.width / 2, y: r.y + r.height / 2, top: r.top } }
+      const cvr = document.querySelector('.rg-canvas').getBoundingClientRect()
+      return { best, canvasTop: cvr.top, gap: best ? Math.round(best.top - cvr.top) : null }
+    })()`)
+    if (!st.best) break
+    if (st.gap < 120 && st.gap >= 0) break
+  }
+  const hit2 = await c.evalx(`(() => {
+    const els = [...document.querySelectorAll('.rg-edge-hit')]
+    let best = null
+    for (const el of els) { const r = el.getBoundingClientRect(); if (!best || r.height < best.h) best = { x: r.x + r.width / 2, y: r.y + r.height / 2, top: r.top } }
+    const cvr = document.querySelector('.rg-canvas').getBoundingClientRect()
+    return best && best.top >= cvr.top ? best : null
+  })()`)
+  if (!hit2) {
+    check('11 人物图浮层顶部翻转可见', false, 'no visible edge after pan')
+  } else {
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: hit2.x, y: hit2.y, button: 'none' })
+    await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: hit2.x, y: hit2.y, button: 'left', buttons: 1, clickCount: 1 })
+    await c.sleep(60)
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: hit2.x, y: hit2.y, button: 'left', buttons: 0, clickCount: 1 })
+    await c.sleep(300)
+    const vis = await c.evalx(`(() => {
+      const pop = document.querySelector('.rg-eedit')
+      if (!pop) return { pop: false }
+      const pr = pop.getBoundingClientRect()
+      const cvr = document.querySelector('.rg-canvas').getBoundingClientRect()
+      return { pop: true, flipped: pop.className.includes('flip'), visible: pr.top >= cvr.top - 1 && pr.left >= cvr.left - 1 && pr.bottom <= cvr.bottom + 1 && pr.right <= cvr.right + 1 }
+    })()`)
+    check('11 人物图浮层顶部翻转可见（连线贴近可视区顶边时向下弹出）', vis.pop && vis.flipped && vis.visible, JSON.stringify(vis))
+  }
+}
+
 const pass = results.filter((r) => r.ok).length
 console.log(`\nrelfollow-verify: ${pass}/${results.length}`)
 process.exit(pass === results.length ? 0 : 1)

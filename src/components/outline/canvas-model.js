@@ -49,6 +49,13 @@ export function dashOf(style, kind) {
   return relDashed(kind) ? '5 4' : null
 }
 
+/* 连线自定义色板（v0.4.12）：首项=主题色（空值，跟随关系类型配色），其余为常用色 */
+export const EDGE_COLORS = ['#2980b9', '#c0392b', '#8e44ad', '#d35400', '#27ae60', '#7f8c8d']
+/** 边渲染色：自定义 color 优先，否则按关系类型配色 */
+export function edgeColor(rel) {
+  return rel.color || relColor(rel.kind)
+}
+
 /**
  * 为新节点找一个不与现有矩形重叠的落点：从起点逐格右移扫描，超过行宽换行。
  * occupied 为已有节点矩形数组。
