@@ -293,7 +293,22 @@ function openCtx(e, c) {
 /* 画布空白右键（v0.4.9）：在此处新建人物并选中 */
 const blankCtx = ref(null) // { x, y, px, py }
 function onBlankCtx(e) {
-  if (e.target.closest?.('.rg-node')) return
+  /* Chromium 对 SVG pointer-events:stroke 路径的 contextmenu 命中可能与 mousedown 不一致——反查真实落点 */
+  const t = document.elementFromPoint(e.clientX, e.clientY)
+  const hitEl = t && (t.classList?.contains('rg-edge-hit') ? t : t.closest?.('.rg-edge-hit'))
+  if (hitEl && hitEl.dataset.rel) {
+    const rel = work.relations.find((r) => r.id === hitEl.dataset.rel)
+    if (rel) {
+      const a = posOf(chars.value.find((c) => c.id === rel.fromId) || rel.fromId)
+      const b = posOf(chars.value.find((c) => c.id === rel.toId) || rel.toId)
+      if (a && b) {
+        const g = edgeGeom(...pickAnchors({ ...a, w: NODE_W, h: NODE_H }, { ...b, w: NODE_W, h: NODE_H }), 'bezier')
+        openRelEdit(rel, g.mid)
+      }
+      return
+    }
+  }
+  if (e.target.closest?.('.rg-node, .rg-elabel, .rg-edge-hit, .rg-eedit, .oc-eedit, .oc-ctx')) return
   const p = canvasPt(e)
   blankCtx.value = { x: e.clientX, y: e.clientY, px: p.x, py: p.y }
 }
@@ -419,8 +434,12 @@ onBeforeUnmount(() => {
             class="rg-edge-hit"
             :d="e.d"
             :opacity="dimEdgeIds.has(e.rel.id) ? 0.1 : 1"
+            :data-rel="e.rel.id"
             @mousedown.stop="openRelEdit(e.rel, e.mid)"
-          />
+            @contextmenu.prevent.stop="openRelEdit(e.rel, e.mid)"
+          >
+            <title>点击或右键编辑连线（标签 / 线型 / 颜色）</title>
+          </path>
           <path
             v-for="e in edges"
             :key="'v' + e.rel.id"
@@ -441,6 +460,7 @@ onBeforeUnmount(() => {
           class="rg-elabel"
           :style="{ left: e.mid.x + 'px', top: e.mid.y + 'px', opacity: dimEdgeIds.has(e.rel.id) ? 0.12 : 1 }"
           @mousedown.stop="openRelEdit(e.rel, e.mid)"
+          @contextmenu.prevent.stop="openRelEdit(e.rel, e.mid)"
         >{{ e.rel.label }}</div>
 
         <!-- 人物节点 -->
@@ -479,7 +499,7 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- 边标签编辑（v0.4.11：标签 + 线型 + 颜色） -->
-        <div v-if="relEdit" class="rg-eedit" :class="{ flip: relEdit.flip }" :style="{ left: relEdit.mx + 'px', top: relEdit.my + 'px' }" @mousedown.stop>
+        <div v-if="relEdit" class="rg-eedit" :class="{ flip: relEdit.flip }" :style="{ left: relEdit.mx + 'px', top: relEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
           <input class="rp-input" :value="curRel()?.label || ''" placeholder="关系标签…" @input="patchRelLabel" @keydown.enter="relEdit = null" @keydown.esc="relEdit = null" />
           <div class="oc-kindrow">
             <span

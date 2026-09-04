@@ -1463,10 +1463,11 @@ body,
   top: 0;
   pointer-events: none;
 }
+/* v0.4.13 修复：此规则原属已退役的 OutlineMap 思维导图；stroke/stroke-width 会以更高
+   优先级覆盖大纲/人物画布连线的 SVG stroke 属性（线色/粗细永远不生效），一并移除。
+   fill:none 保留——命中路径（.oc-edge-hit/.rg-edge-hit）无 fill 属性，缺省会渲染黑块 */
 .om-edges path {
   fill: none;
-  stroke: var(--border);
-  stroke-width: 1.6;
 }
 .om-node {
   position: absolute;
@@ -1773,9 +1774,12 @@ body,
 }
 .oc-edge-hit {
   stroke: transparent;
-  stroke-width: 16;
+  stroke-width: 20;
   cursor: pointer;
   pointer-events: stroke;
+}
+.oc-edge-hit:hover + path {
+  stroke-width: 3.4;
 }
 .oc-node {
   position: absolute;
@@ -2484,9 +2488,13 @@ body,
 }
 .rg-edge-hit {
   stroke: transparent;
-  stroke-width: 16;
+  stroke-width: 20;
   cursor: pointer;
   pointer-events: stroke;
+}
+/* 悬停反馈：命中线 hover 时其相邻的可见线加粗，提示可点击（v0.4.13） */
+.rg-edge-hit:hover + path {
+  stroke-width: 3.2;
 }
 .rg-node {
   position: absolute;

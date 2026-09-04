@@ -351,7 +351,15 @@ const ctxMenu = ref(null) // { x, y, nodeId }
 const blankCtx = ref(null) // { x, y, px, py }  px/py = 画布坐标落点
 const CREATE_KINDS = Object.fromEntries(Object.entries(KIND_META).filter(([k]) => k !== 'anchor' && k !== 'volume'))
 function onCanvasCtx(e) {
-  if (e.target.closest?.('.oc-node')) return // 节点上不弹创建菜单（容器右键走调色板）
+  /* Chromium 对 SVG pointer-events:stroke 路径的 contextmenu 命中可能与 mousedown 不一致
+     （mousedown 命中路径，contextmenu 却派发给画布）——用 elementFromPoint 反查真实落点 */
+  const t = document.elementFromPoint(e.clientX, e.clientY)
+  const hitEl = t && (t.classList?.contains('oc-edge-hit') ? t : t.closest?.('.oc-edge-hit'))
+  if (hitEl && hitEl.dataset.owner && hitEl.dataset.rel) {
+    openEdgeEdit(hitEl.dataset.owner, hitEl.dataset.rel, canvasPt(e))
+    return
+  }
+  if (e.target.closest?.('.oc-node, .oc-elabel, .oc-edge-hit, .oc-eedit, .rg-eedit, .oc-ctx')) return // 节点/连线/标签/浮层/菜单上不弹创建菜单（容器右键走调色板，连线右键走编辑浮层）
   const pt = canvasPt(e)
   blankCtx.value = { x: e.clientX, y: e.clientY, px: pt.x, py: pt.y }
 }
@@ -764,7 +772,9 @@ onBeforeUnmount(() => {
           :height="svgBox.h"
           :viewBox="svgBox.x + ' ' + svgBox.y + ' ' + svgBox.w + ' ' + svgBox.h"
         >
-          <path v-for="e in edges" :key="'h' + e.key" class="oc-edge-hit" :d="e.d" @mousedown.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)" />
+          <path v-for="e in edges" :key="'h' + e.key" class="oc-edge-hit" :d="e.d" :data-owner="e.ownerId" :data-rel="e.rel.id" @mousedown.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)" @contextmenu.prevent.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)">
+            <title>点击或右键编辑连线（标签 / 线型 / 颜色）</title>
+          </path>
           <path
             v-for="e in edges"
             :key="'v' + e.key"
@@ -882,10 +892,11 @@ onBeforeUnmount(() => {
           class="oc-elabel"
           :style="{ left: e.mid.x + 'px', top: e.mid.y + 'px', borderColor: e.color, color: e.color }"
           @mousedown.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)"
+          @contextmenu.prevent.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)"
         >{{ e.rel.label }}</div>
 
         <!-- 边编辑浮层 -->
-        <div v-if="edgeEdit" class="oc-eedit" :class="{ flip: edgeEdit.flip }" :style="{ left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop>
+        <div v-if="edgeEdit" class="oc-eedit" :class="{ flip: edgeEdit.flip }" :style="{ left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
           <div class="oc-eedit-row">
             <input ref="edgeLabelInput" class="rp-input" :value="curRel()?.label || ''" placeholder="连线标签…" @input="patchRel({ label: $event.target.value })" @keydown.enter="edgeEdit = null" @keydown.esc="edgeEdit = null" />
             <button class="om-btn" :title="edgeEdit && curRel() ? '箭头：' + { '->': '单向', '<->': '双向', '--': '无向' }[curRel().arrows || '->'] : '箭头'" @click="patchRel({ arrows: cycleArrow(curRel()?.arrows || '->') })">{{ arrowsGlyph(curRel()?.arrows) }}</button>
