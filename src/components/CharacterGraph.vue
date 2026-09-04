@@ -5,8 +5,8 @@
 <script setup>
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useWorkStore } from '../stores/work'
-import { usePanZoom, pickAnchors, edgeGeom } from '../services/graphview'
-import { freeSpotFor, dashOf, EDGE_STYLES } from './outline/canvas-model'
+import { usePanZoom, anchorsOf } from '../services/graphview'
+import { freeSpotFor, dashOf, EDGE_STYLES, sideBetween, routeEdge } from './outline/canvas-model'
 
 const work = useWorkStore()
 const canvasEl = ref(null)
@@ -92,16 +92,30 @@ function flushSave() {
   if (work.work && Object.keys(layout.value).length) work.saveCharGraph(layout.value)
 }
 
-/* ---------- 边集合与一度网高亮 ---------- */
+/* ---------- 边集合与一度网高亮（v0.4.14 严格端口 + 遇模块绕行） ---------- */
 const edges = computed(() => {
   const out = []
   const ids = new Set(chars.value.map((c) => c.id))
+  const obstacles = []
+  for (const c of chars.value) {
+    const p = posOf(c)
+    if (p) obstacles.push({ x: p.x, y: p.y, w: NODE_W, h: NODE_H })
+  }
   for (const r of work.relations) {
     if (!ids.has(r.fromId) || !ids.has(r.toId)) continue
     const a = chars.value.find((c) => c.id === r.fromId)
     const b = chars.value.find((c) => c.id === r.toId)
     if (!posOf(a) || !posOf(b)) continue
-    const g = edgeGeom(...pickAnchors({ ...posOf(a), w: NODE_W, h: NODE_H }, { ...posOf(b), w: NODE_W, h: NODE_H }), 'bezier')
+    const A = { ...posOf(a), w: NODE_W, h: NODE_H }
+    const B = { ...posOf(b), w: NODE_W, h: NODE_H }
+    const sb = sideBetween(A, B)
+    const fromSide = r.fromSide || sb.from
+    const toSide = r.toSide || sb.to
+    const fa = anchorsOf(A)[fromSide]
+    const ta = anchorsOf(B)[toSide]
+    if (!fa || !ta) continue
+    const obs = obstacles.filter((o) => o.x !== A.x || o.y !== A.y)
+    const g = routeEdge(fa, fromSide, ta, toSide, obs, 'bezier')
     out.push({ rel: r, ...g, dash: dashOf(r.style, ''), stroke: r.color || 'var(--accent)' })
   }
   return out
@@ -195,15 +209,16 @@ function onNodeDown(e, c) {
   window.addEventListener('mousemove', move)
   window.addEventListener('mouseup', up)
 }
-/* 从节点边缘拖线到另一人物 → 弹关系标签输入 */
+/* 从节点边缘拖线到另一人物 → 弹关系标签输入（v0.4.14：记录两侧端口） */
 function startConnect(e, c) {
   e.stopPropagation()
   e.preventDefault()
+  const side = e.currentTarget?.dataset?.side || 'right'
   const a = canvasPt(e)
-  connecting.value = { fromId: c.id, x: a.x, y: a.y }
+  connecting.value = { fromId: c.id, side, x: a.x, y: a.y }
   const move = (ev) => {
     const p = canvasPt(ev)
-    connecting.value = { fromId: c.id, x: p.x, y: p.y }
+    connecting.value = { fromId: c.id, side, x: p.x, y: p.y }
   }
   const up = (ev) => {
     window.removeEventListener('mousemove', move)
@@ -216,16 +231,12 @@ function startConnect(e, c) {
     /* 已有这层关系（含反向）→ 打开编辑浮层直接改；无 → 弹输入新建 */
     const dup = work.relations.find((r) => (r.fromId === c.id && r.toId === target.id) || (r.fromId === target.id && r.toId === c.id))
     if (dup) {
-      const a = posOf(c)
-      const b = posOf(target)
-      if (a && b) {
-        const g = edgeGeom(...pickAnchors({ ...a, w: NODE_W, h: NODE_H }, { ...b, w: NODE_W, h: NODE_H }), 'bezier')
-        openRelEdit(dup, g.mid)
-      }
+      const g = relGeom(dup)
+      if (g) openRelEdit(dup, g.mid)
       return
     }
     const p = canvasPt(ev)
-    relInput.value = { fromId: c.id, toId: target.id, x: p.x, y: p.y, value: '' }
+    relInput.value = { fromId: c.id, toId: target.id, side: st.side, x: p.x, y: p.y, value: '' }
     nextTick(() => relInputEl.value?.focus())
   }
   window.addEventListener('mousemove', move)
@@ -236,14 +247,39 @@ const connPath = computed(() => {
   if (!c) return ''
   const from = work.liveCharacters.find((x) => x.id === c.fromId)
   const p = from && posOf(from)
-  const start = p ? { x: p.x + NODE_W / 2, y: p.y + NODE_H / 2 } : c
+  const start = p ? anchorsOf({ ...p, w: NODE_W, h: NODE_H })[c.side] : c
   return `M ${start.x} ${start.y} L ${c.x} ${c.y}`
 })
+/* 关系几何（严格端口 + 绕行）：拖线编辑定位/已有关系复用 */
+function relGeom(rel) {
+  const a = chars.value.find((x) => x.id === rel.fromId)
+  const b = chars.value.find((x) => x.id === rel.toId)
+  if (!posOf(a) || !posOf(b)) return null
+  const A = { ...posOf(a), w: NODE_W, h: NODE_H }
+  const B = { ...posOf(b), w: NODE_W, h: NODE_H }
+  const sb = sideBetween(A, B)
+  const fromSide = rel.fromSide || sb.from
+  const toSide = rel.toSide || sb.to
+  const fa = anchorsOf(A)[fromSide]
+  const ta = anchorsOf(B)[toSide]
+  if (!fa || !ta) return null
+  const obs = chars.value
+    .map((c) => posOf(c))
+    .filter(Boolean)
+    .map((p) => ({ x: p.x, y: p.y, w: NODE_W, h: NODE_H }))
+    .filter((o) => o.x !== A.x || o.y !== A.y)
+  return routeEdge(fa, fromSide, ta, toSide, obs, 'bezier')
+}
 function saveRelInput() {
   const st = relInput.value
   relInput.value = null
-  if (st && st.value.trim()) work.addRelation(st.fromId, st.toId, st.value.trim())
-  else if (st) work.addRelation(st.fromId, st.toId, '关联')
+  if (!st) return
+  const from = chars.value.find((x) => x.id === st.fromId)
+  const to = chars.value.find((x) => x.id === st.toId)
+  if (!posOf(from) || !posOf(to)) return
+  const toSide = sideBetween({ ...posOf(from), w: NODE_W, h: NODE_H }, { ...posOf(to), w: NODE_W, h: NODE_H }).to
+  const label = st.value.trim()
+  work.addRelation(st.fromId, st.toId, label || '关联', { fromSide: st.side, toSide })
 }
 /* 浮层弹出方向：中点上方空间不足时翻转向下（否则被画布 overflow 裁掉），横向夹在可视区内 */
 function popPlacement(mid) {
@@ -299,12 +335,8 @@ function onBlankCtx(e) {
   if (hitEl && hitEl.dataset.rel) {
     const rel = work.relations.find((r) => r.id === hitEl.dataset.rel)
     if (rel) {
-      const a = posOf(chars.value.find((c) => c.id === rel.fromId) || rel.fromId)
-      const b = posOf(chars.value.find((c) => c.id === rel.toId) || rel.toId)
-      if (a && b) {
-        const g = edgeGeom(...pickAnchors({ ...a, w: NODE_W, h: NODE_H }, { ...b, w: NODE_W, h: NODE_H }), 'bezier')
-        openRelEdit(rel, g.mid)
-      }
+      const g = relGeom(rel)
+      if (g) openRelEdit(rel, g.mid)
       return
     }
   }

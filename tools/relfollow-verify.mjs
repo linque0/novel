@@ -230,13 +230,14 @@ check('9 预置字段为 外貌+性格', dfCheck.keys.join(',') === '外貌,性�
     await new Promise((r) => setTimeout(r, 900))
     return 1
   })()`)
-  // 种子：两个事件节点 + 连线（幂等）
-  await c.evalx(`(() => {
+  // 种子：清场后两个事件节点 + 连线（确定性，防跨轮残留污染查找）
+  await c.evalx(`(async () => {
     const w = ${store}
-    const live = w.olnodes.filter((n) => !n.deletedAt)
-    const a = live.find((n) => n.title === '验事件A') || w.olnodeAdd(null, { kind: 'event', title: '验事件A', canvasX: 300, canvasY: 300 })
-    const b = live.find((n) => n.title === '验事件B') || w.olnodeAdd(null, { kind: 'event', title: '验事件B', canvasX: 760, canvasY: 300 })
-    if (!w.olnodeRelsOf(a.id).some((r) => r.toId === b.id)) w.olnodeRelAdd(a.id, b.id, { label: '验收' })
+    for (const n of [...w.olnodes]) if (!n.deletedAt) await w.olnodeRemove(n.id)
+    const a = w.olnodeAdd(null, { kind: 'event', title: '验事件A', canvasX: 300, canvasY: 300 })
+    const b = w.olnodeAdd(null, { kind: 'event', title: '验事件B', canvasX: 760, canvasY: 300 })
+    w.olnodeRelAdd(a.id, b.id, { label: '验收' })
+    await new Promise((r) => setTimeout(r, 300))
     return 1
   })()`)
   await c.evalx(`(() => { const btn = [...document.querySelectorAll('.om-btn.text')].find((x) => x.textContent.includes('适应')); btn?.click(); return 1 })()`)
@@ -305,8 +306,27 @@ check('9 预置字段为 外貌+性格', dfCheck.keys.join(',') === '外貌,性�
     const w = ${store}
     w.tab = 'characters'; w.charView = 'graph'
     await new Promise((r) => setTimeout(r, 900))
+    const fit = [...document.querySelectorAll('.rg-toolbar .om-btn.text')].find((x) => x.textContent.includes('适应'))
+    fit?.click()
+    await new Promise((r) => setTimeout(r, 500))
     return 1
   })()`)
+  /* 布局归一化：乙拖到甲右侧水平位（杀掉跨轮残留状态）+ 显式设定关系端口 right→left */
+  const jv = await c.evalx(`(() => { const el = [...document.querySelectorAll('.rg-node')].find((x) => x.textContent.includes('甲')); const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })()`)
+  async function dragNodeTo(title, tx, ty) {
+    const p = await c.evalx(`(() => { const el = [...document.querySelectorAll('.rg-node')].find((x) => x.textContent.includes('${title}')); const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })()`)
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: p.x, y: p.y, button: 'none' })
+    await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: p.x, y: p.y, button: 'left', buttons: 1, clickCount: 1 })
+    for (let i = 1; i <= 8; i++) {
+      await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: p.x + ((tx - p.x) * i) / 8, y: p.y + ((ty - p.y) * i) / 8, button: 'left', buttons: 1 })
+      await c.sleep(30)
+    }
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: tx, y: ty, button: 'left', buttons: 0, clickCount: 1 })
+    await c.sleep(400)
+  }
+  await dragNodeTo('乙', jv.x + 600, jv.y)
+  await c.evalx(`(() => { const w = ${store}; const rel = w.relations[0]; if (rel) w.updateRelation(rel.id, { fromSide: 'right', toSide: 'left' }); return 1 })()`)
+  await c.sleep(300)
   // 真实拖拽画布空白逐步向上平移，直到连线贴近可视区顶部（top 距画布顶 < 120px）仍可见
   const cv = await c.evalx(`(() => { const r = document.querySelector('.rg-canvas').getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } })()`)
   for (let round = 0; round < 8; round++) {
@@ -351,6 +371,95 @@ check('9 预置字段为 外貌+性格', dfCheck.keys.join(',') === '外貌,性�
     })()`)
     check('11 人物图浮层顶部翻转可见（连线贴近可视区顶边时向下弹出）', vis.pop && vis.flipped && vis.visible, JSON.stringify(vis))
   }
+}
+
+/* ---------- 12. v0.4.14：严格端口——节点挪位后连线仍从记录的接口出/入 ---------- */
+{
+  // 布局已由 check 11 归一化（乙在甲右侧水平位，关系端口 right→left）
+  const pos = await c.evalx(`(() => {
+    const find = (t) => { const el = [...document.querySelectorAll('.rg-node')].find((x) => x.textContent.includes(t)); if (!el) return null; return { vx: (r0 => r0.x + r0.width / 2)(el.getBoundingClientRect()), vy: (r0 => r0.y + r0.height / 2)(el.getBoundingClientRect()) } }
+    return { jia: find('甲'), yi: find('乙') }
+  })()`)
+  if (!pos.jia || !pos.yi) {
+    check('12 严格端口：挪位后起终点不漂移', false, 'nodes not found')
+  } else {
+    // 真实拖拽乙到甲正上方 260px（视口位移）
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pos.yi.vx, y: pos.yi.vy, button: 'none' })
+    await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: pos.yi.vx, y: pos.yi.vy, button: 'left', buttons: 1, clickCount: 1 })
+    for (let i = 1; i <= 10; i++) {
+      await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pos.yi.vx + ((pos.jia.vx - pos.yi.vx) * i) / 10, y: pos.yi.vy + ((pos.jia.vy - 260 - pos.yi.vy) * i) / 10, button: 'left', buttons: 1 })
+      await c.sleep(30)
+    }
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: pos.jia.vx, y: pos.jia.vy - 260, button: 'left', buttons: 0, clickCount: 1 })
+    await c.sleep(600)
+    // 画布坐标断言：起=甲右口(style.left+132, style.top+28)，终=乙左口(style.left, style.top+28)
+    const st = await c.evalx(`(() => {
+      const p = [...document.querySelectorAll('.rg-edges path')].find((x) => !x.classList.contains('rg-edge-hit'))
+      if (!p) return null
+      const s = p.getPointAtLength(0)
+      const e = p.getPointAtLength(p.getTotalLength())
+      const find = (t) => { const el = [...document.querySelectorAll('.rg-node')].find((x) => x.textContent.includes(t)); return { cx: parseInt(el.style.left), cy: parseInt(el.style.top) } }
+      const jia = find('甲')
+      const yi = find('乙')
+      return {
+        start: { x: Math.round(s.x), y: Math.round(s.y) },
+        end: { x: Math.round(e.x), y: Math.round(e.y) },
+        expStart: { x: jia.cx + 132, y: jia.cy + 28 },
+        expEnd: { x: yi.cx, y: yi.cy + 28 }
+      }
+    })()`)
+    const ok = st && Math.abs(st.start.x - st.expStart.x) <= 1 && Math.abs(st.start.y - st.expStart.y) <= 1 && Math.abs(st.end.x - st.expEnd.x) <= 1 && Math.abs(st.end.y - st.expEnd.y) <= 1
+    check('12 严格端口：乙拖到甲上方后连线仍从甲右口出、乙左口入', ok, JSON.stringify(st))
+    // 恢复：把乙拖回原画布位（按位移差反向拖回）
+    const pos2 = await c.evalx(`(() => {
+      const find = (t) => { const el = [...document.querySelectorAll('.rg-node')].find((x) => x.textContent.includes(t)); const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 } }
+      return { yi: find('乙') }
+    })()`)
+    const dxv = pos2.yi.x - pos.yi.vx
+    const dyv = pos2.yi.vy - pos.yi.vy
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pos2.yi.x, y: pos2.yi.y, button: 'none' })
+    await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: pos2.yi.x, y: pos2.yi.y, button: 'left', buttons: 1, clickCount: 1 })
+    for (let i = 1; i <= 10; i++) {
+      await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pos2.yi.x - (dxv * i) / 10, y: pos2.yi.y - (dyv * i) / 10, button: 'left', buttons: 1 })
+      await c.sleep(30)
+    }
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: pos2.yi.x - dxv, y: pos2.yi.y - dyv, button: 'left', buttons: 0, clickCount: 1 })
+    await c.sleep(500)
+  }
+}
+
+/* ---------- 13. v0.4.14：连线避障——途经模块自动绕行（大纲画布，画布坐标直接可比） ---------- */
+{
+  const st = await c.evalx(`(async () => {
+    const w = ${store}
+    w.tab = 'outline'; w.outlineView = 'canvas'
+    await new Promise((r) => setTimeout(r, 900))
+    // 干净种子：源(200,300) → 目标(900,300)，障碍(500,285)
+    for (const n of [...w.olnodes]) if (!n.deletedAt) await w.olnodeRemove(n.id)
+    const a = w.olnodeAdd(null, { kind: 'event', title: '源', canvasX: 200, canvasY: 300 })
+    const b = w.olnodeAdd(null, { kind: 'event', title: '目标', canvasX: 900, canvasY: 300 })
+    w.olnodeAdd(null, { kind: 'event', title: '障碍', canvasX: 500, canvasY: 285 })
+    w.olnodeRelAdd(a.id, b.id, { fromSide: 'right', toSide: 'left' })
+    await new Promise((r) => setTimeout(r, 400))
+    const btn = [...document.querySelectorAll('.om-btn.text')].find((x) => x.textContent.includes('适应'))
+    btn?.click()
+    await new Promise((r) => setTimeout(r, 500))
+    const p = document.querySelector('.oc-edges path:not(.oc-edge-hit)')
+    if (!p) return { err: 'no path' }
+    const ob = w.olnodes.find((n) => n.title === '障碍')
+    // 障碍渲染矩形（画布坐标）：canvasX/Y + 实际渲染尺寸
+    const el = [...document.querySelectorAll('.oc-node')].find((x) => x.textContent.includes('障碍'))
+    const obW = parseInt(el.style.width)
+    const obH = parseInt(el.style.height)
+    const len = p.getTotalLength()
+    let inside = 0
+    for (let i = 0; i <= 80; i++) {
+      const pt = p.getPointAtLength((len * i) / 80)
+      if (pt.x > ob.canvasX + 2 && pt.x < ob.canvasX + obW - 2 && pt.y > ob.canvasY + 2 && pt.y < ob.canvasY + obH - 2) inside++
+    }
+    return { inside, hasBend: p.getAttribute('d').includes('Q'), start: p.getPointAtLength(0).x.toFixed(0) }
+  })()`)
+  check('13 连线避障：途经模块自动绕行（80 点采样不入模块矩形）', st && !st.err && st.inside === 0 && st.hasBend, JSON.stringify(st))
 }
 
 const pass = results.filter((r) => r.ok).length

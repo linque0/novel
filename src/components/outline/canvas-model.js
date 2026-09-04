@@ -56,6 +56,196 @@ export function edgeColor(rel) {
   return rel.color || relColor(rel.kind)
 }
 
+/* ---------- 连线端口严格化 + 避障路由（v0.4.14） ----------
+ * 端口在建立时记录（fromSide/toSide），渲染严格使用，不随节点挪位回退就近侧；
+ * 连线途经其他模块矩形时自动绕行（正交折线绕障）。 */
+
+/** 接口外法线方向 */
+export function sideDir(side) {
+  if (side === 'right') return { x: 1, y: 0 }
+  if (side === 'left') return { x: -1, y: 0 }
+  if (side === 'bottom') return { x: 0, y: 1 }
+  if (side === 'top') return { x: 0, y: -1 }
+  return { x: 1, y: 0 }
+}
+
+/** 依据两矩形相对位置给出默认端口组合（建边未记录侧 / 旧数据回退用） */
+export function sideBetween(A, B) {
+  const dx = B.x + B.w / 2 - (A.x + A.w / 2)
+  const dy = B.y + B.h / 2 - (A.y + A.h / 2)
+  if (Math.abs(dx) >= Math.abs(dy)) {
+    return { from: dx >= 0 ? 'right' : 'left', to: dx >= 0 ? 'left' : 'right' }
+  }
+  return { from: dy >= 0 ? 'bottom' : 'top', to: dy >= 0 ? 'top' : 'bottom' }
+}
+
+/** 轴对齐线段是否穿过矩形（严格重叠：仅贴合边缘不算穿过） */
+export function segHitsRect(ax, ay, bx, by, r) {
+  const minx = Math.min(ax, bx)
+  const maxx = Math.max(ax, bx)
+  const miny = Math.min(ay, by)
+  const maxy = Math.max(ay, by)
+  return maxx > r.x && minx < r.x + r.w && maxy > r.y && miny < r.y + r.h
+}
+
+/** 折点去重（合并重复点与共线中点） */
+function dedupePoints(pts) {
+  const out = []
+  for (const p of pts) {
+    const last = out[out.length - 1]
+    if (last && Math.abs(last.x - p.x) < 0.5 && Math.abs(last.y - p.y) < 0.5) continue
+    out.push({ x: p.x, y: p.y })
+  }
+  for (let i = out.length - 2; i >= 1; i--) {
+    const a = out[i - 1]
+    const m = out[i]
+    const b = out[i + 1]
+    if ((Math.abs(a.x - m.x) < 0.5 && Math.abs(m.x - b.x) < 0.5) || (Math.abs(a.y - m.y) < 0.5 && Math.abs(m.y - b.y) < 0.5)) out.splice(i, 1)
+  }
+  return out
+}
+
+/** 单段绕障：横向段从矩形上/下缘绕，纵向段从左/右缘绕（取近侧） */
+function detourAround(a, b, r, margin) {
+  if (Math.abs(a.y - b.y) < 0.5) {
+    const xa = Math.max(Math.min(a.x, b.x), r.x)
+    const xb = Math.min(Math.max(a.x, b.x), r.x + r.w)
+    const ny = a.y <= r.y + r.h / 2 ? r.y - margin : r.y + r.h + margin
+    return [{ x: xa, y: a.y }, { x: xa, y: ny }, { x: xb, y: ny }, { x: xb, y: a.y }]
+  }
+  const ya = Math.max(Math.min(a.y, b.y), r.y)
+  const yb = Math.min(Math.max(a.y, b.y), r.y + r.h)
+  const nx = a.x <= r.x + r.w / 2 ? r.x - margin : r.x + r.w + margin
+  return [{ x: a.x, y: ya }, { x: nx, y: ya }, { x: nx, y: yb }, { x: a.x, y: yb }]
+}
+
+/**
+ * 正交绕障路由：两端沿各自端口外法线出桩，中途逐段检查障碍并绕行。
+ * 返回折点数组（含起终点）。
+ */
+export function routeOrthogonal(from, fromSide, to, toSide, obstacles, stub = 18, margin = 16) {
+  const ds = sideDir(fromSide)
+  const de = sideDir(toSide)
+  const p1 = { x: from.x + ds.x * stub, y: from.y + ds.y * stub }
+  const p2 = { x: to.x + de.x * stub, y: to.y + de.y * stub }
+  let pts = [from, p1]
+  if (ds.x !== 0 && de.x !== 0) {
+    const mx = (p1.x + p2.x) / 2
+    pts.push({ x: mx, y: p1.y }, { x: mx, y: p2.y }, p2)
+  } else if (ds.y !== 0 && de.y !== 0) {
+    const my = (p1.y + p2.y) / 2
+    pts.push({ x: p1.x, y: my }, { x: p2.x, y: my }, p2)
+  } else if (ds.x !== 0) {
+    pts.push({ x: p2.x, y: p1.y }, p2)
+  } else {
+    pts.push({ x: p1.x, y: p2.y }, p2)
+  }
+  pts.push(to)
+  pts = dedupePoints(pts)
+  /* 逐段绕障：每次处理最先遇到的一个交叉后重扫（最多 5 轮防抖） */
+  for (let round = 0; round < 5; round++) {
+    let hit = null
+    outer: for (let i = 0; i < pts.length - 1; i++) {
+      for (const ob of obstacles) {
+        if (segHitsRect(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, ob)) {
+          hit = { i, ob }
+          break outer
+        }
+      }
+    }
+    if (!hit) break
+    pts.splice(hit.i + 1, 0, ...detourAround(pts[hit.i], pts[hit.i + 1], hit.ob, margin))
+    pts = dedupePoints(pts)
+  }
+  return pts
+}
+
+/** 折线路径（拐圆角），返回 SVG d 字符串 */
+export function pathFromPoints(pts, r = 10) {
+  if (!pts || pts.length < 2) return ''
+  let d = `M ${pts[0].x} ${pts[0].y}`
+  for (let i = 1; i < pts.length - 1; i++) {
+    const p = pts[i]
+    const prev = pts[i - 1]
+    const next = pts[i + 1]
+    const l1 = Math.hypot(p.x - prev.x, p.y - prev.y) || 1
+    const l2 = Math.hypot(next.x - p.x, next.y - p.y) || 1
+    const rr = Math.min(r, l1 / 2, l2 / 2)
+    const u = { x: (p.x - prev.x) / l1, y: (p.y - prev.y) / l1 }
+    const v = { x: (next.x - p.x) / l2, y: (next.y - p.y) / l2 }
+    d += ` L ${p.x - u.x * rr} ${p.y - u.y * rr} Q ${p.x} ${p.y}, ${p.x + v.x * rr} ${p.y + v.y * rr}`
+  }
+  const last = pts[pts.length - 1]
+  d += ` L ${last.x} ${last.y}`
+  return d
+}
+
+/** 折线中点（按长度一半处）——标签/浮层定位 */
+export function polyMid(pts) {
+  if (!pts || pts.length < 2) return { x: 0, y: 0 }
+  let total = 0
+  for (let i = 0; i < pts.length - 1; i++) total += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
+  let acc = 0
+  for (let i = 0; i < pts.length - 1; i++) {
+    const l = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
+    if (acc + l >= total / 2) {
+      const t = (total / 2 - acc) / (l || 1)
+      return { x: pts[i].x + (pts[i + 1].x - pts[i].x) * t, y: pts[i].y + (pts[i + 1].y - pts[i].y) * t }
+    }
+    acc += l
+  }
+  return pts[pts.length - 1]
+}
+
+/**
+ * 严格端口连线统一入口：返回 { d, mid, startDir, endDir, a, b, avoided }。
+ * bezier 风格且不穿障碍时用贝塞尔（控制点沿端口外法线）；
+ * 正交风格或贝塞尔途经障碍时改走正交绕障折线。
+ */
+export function routeEdge(a, fromSide, b, toSide, obstacles = [], style = 'bezier', stub = 18, margin = 16) {
+  const ds = sideDir(fromSide)
+  const de = sideDir(toSide)
+  let needOrtho = style === 'ortho'
+  if (!needOrtho && obstacles.length) {
+    const dx = Math.max(36, Math.hypot(b.x - a.x, b.y - a.y) / 2)
+    const c1 = { x: a.x + ds.x * dx, y: a.y + ds.y * dx }
+    const c2 = { x: b.x + de.x * dx, y: b.y + de.y * dx }
+    for (let i = 1; i <= 11 && !needOrtho; i++) {
+      const t = i / 12
+      const u = 1 - t
+      const x = u * u * u * a.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * b.x
+      const y = u * u * u * a.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * b.y
+      for (const o of obstacles) {
+        if (x > o.x && x < o.x + o.w && y > o.y && y < o.y + o.h) {
+          needOrtho = true
+          break
+        }
+      }
+    }
+  }
+  if (!needOrtho) {
+    const dx = Math.max(36, Math.hypot(b.x - a.x, b.y - a.y) / 2)
+    const c1 = { x: a.x + ds.x * dx, y: a.y + ds.y * dx }
+    const c2 = { x: b.x + de.x * dx, y: b.y + de.y * dx }
+    const d = `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
+    const mid = { x: (a.x + 3 * c1.x + 3 * c2.x + b.x) / 8, y: (a.y + 3 * c1.y + 3 * c2.y + b.y) / 8 }
+    return { d, mid, startDir: { x: c1.x - a.x, y: c1.y - a.y }, endDir: { x: b.x - c2.x, y: b.y - c2.y }, a, b, avoided: false }
+  }
+  const pts = routeOrthogonal(a, fromSide, b, toSide, obstacles, stub, margin)
+  const p1 = pts[1] || a
+  const p0 = pts[pts.length - 2] || b
+  const last = pts[pts.length - 1]
+  return {
+    d: pathFromPoints(pts),
+    mid: polyMid(pts),
+    startDir: { x: p1.x - a.x, y: p1.y - a.y },
+    endDir: { x: last.x - p0.x, y: last.y - p0.y },
+    a,
+    b,
+    avoided: true
+  }
+}
+
 /**
  * 为新节点找一个不与现有矩形重叠的落点：从起点逐格右移扫描，超过行宽换行。
  * occupied 为已有节点矩形数组。

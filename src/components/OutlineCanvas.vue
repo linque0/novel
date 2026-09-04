@@ -4,12 +4,13 @@
 <script setup>
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useWorkStore } from '../stores/work'
-import { usePanZoom, pickAnchors, edgeGeom, arrowHeadDir, anchorsOf } from '../services/graphview'
+import { usePanZoom, arrowHeadDir, anchorsOf } from '../services/graphview'
 import { parseTokens, findByTitle, targetById, parseTarget, jumpTo, KIND_LABEL } from '../services/doublelinks'
 import {
   relayoutAll, containerRect, effSize, freeSpotFor,
   relColor, relDashed, cycleArrow, nextShape, SHAPE_LABEL,
-  REL_KINDS, KIND_META, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES, EDGE_COLORS, edgeColor
+  REL_KINDS, KIND_META, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES, EDGE_COLORS, edgeColor,
+  sideBetween, routeEdge
 } from './outline/canvas-model'
 import { uid } from '../db/database'
 import { NPopover, NSlider } from 'naive-ui'
@@ -85,26 +86,46 @@ const edges = computed(() => {
     for (const r of work.olnodeRelsOf(n.id)) {
       const m = nodeById(r.toId)
       if (!m || !posOf(m) || hiddenIds.value.has(m.id)) continue
-      const A = rectOf(n)
-      const B = rectOf(m)
-      // 对齐接口：连线锚定在建立时拖出的接口（fromSide）；目标换侧后自动回退到就近接口
-      const from = sideFaces(r.fromSide, A, B) ? anchorsOf(A)[r.fromSide] : pickAnchors(A, B)[0]
-      const pb = pickAnchors(A, B)[1]
-      const g = edgeGeom(from, pb, work.canvasPrefs.edgeStyle)
-      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, a: from, b: pb, color: edgeColor(r), dashed: relDashed(r.kind) })
+      const g = edgeGeomFor(n, r)
+      if (!g) continue
+      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, color: edgeColor(r), dashed: relDashed(r.kind) })
     }
   }
   return out
 })
-/* fromSide 是否仍朝向目标（避免节点挪位后连线绕背） */
-function sideFaces(side, A, B) {
-  if (!side) return false
-  const dx = B.x + B.w / 2 - (A.x + A.w / 2)
-  const dy = B.y + B.h / 2 - (A.y + A.h / 2)
-  if (side === 'right') return dx >= 0
-  if (side === 'left') return dx <= 0
-  if (side === 'bottom') return dy >= 0
-  if (side === 'top') return dy <= 0
+/* v0.4.14 严格端口：从哪个接口来就从哪个接口出，接入侧同样在建立时记录（toSide）；
+ * 节点挪位不回退就近接口；连线途经其他模块时正交绕行 */
+function edgeGeomFor(n, r) {
+  const m = nodeById(r.toId)
+  if (!m || !posOf(m)) return null
+  const A = rectOf(n)
+  const B = rectOf(m)
+  const sb = sideBetween(A, B)
+  const fromSide = r.fromSide || sb.from
+  const toSide = r.toSide || sb.to
+  const from = anchorsOf(A)[fromSide]
+  const to = anchorsOf(B)[toSide]
+  if (!from || !to) return null
+  const obstacles = edgeObstacles(n.id, m.id)
+  return routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle)
+}
+/* 障碍集合：除两端节点外的可见模块矩形；容器仅当两端都在其外时才算障碍（子模块边必然穿越所在容器） */
+function edgeObstacles(fromId, toId) {
+  const out = []
+  for (const n of visNodes.value) {
+    if (n.id === fromId || n.id === toId) continue
+    if (n.kind === 'container' && (insideContainer(fromId, n.id) || insideContainer(toId, n.id))) continue
+    const r = rectOf(n)
+    if (r) out.push({ x: r.x, y: r.y, w: r.w, h: r.h })
+  }
+  return out
+}
+function insideContainer(nodeId, cid) {
+  let cur = nodeById(nodeId)
+  while (cur) {
+    if (cur.id === cid) return true
+    cur = cur.parentId ? nodeById(cur.parentId) : null
+  }
   return false
 }
 /* 箭头三角形：按 rel.arrows 在两端生成 */
@@ -439,9 +460,12 @@ function startConnect(e, n) {
     if (!st) return
     const target = hitConnTarget(canvasPt(ev), new Set([n.id]))
     if (!target) return
-    const rel = work.olnodeRelAdd(n.id, target.id, { fromSide: side })
+    /* 记录两侧端口：从拖出的接口（fromSide）来，接入侧取面向源节点一侧（toSide） */
+    const tb = rectOf(target)
+    const toSide = sideBetween(rectOf(n), tb).to
+    const rel = work.olnodeRelAdd(n.id, target.id, { fromSide: side, toSide })
     if (!rel) return
-    const g = edgeGeom(...pickAnchors(rectOf(n), rectOf(target)), work.canvasPrefs.edgeStyle)
+    const g = edgeGeomFor(n, rel) || { mid: p }
     openEdgeEdit(n.id, rel.id, g.mid)
   }
   window.addEventListener('mousemove', move)

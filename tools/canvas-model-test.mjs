@@ -1,5 +1,5 @@
 /* canvas-model 纯逻辑自测（计划书 9.4.1-S3）：布局无重叠 / pin 豁免 / 补位模式 / 容器派生盒 / 模板完整性 */
-import { relayoutAll, containerRect, canvasNodeSize, effSize, tplThreeAct, tplChapterList, gridCols, nextShape, cycleArrow, relColor, KIND_META, EDGE_STYLES, dashOf } from '../src/components/outline/canvas-model.js'
+import { relayoutAll, containerRect, canvasNodeSize, effSize, tplThreeAct, tplChapterList, gridCols, nextShape, cycleArrow, relColor, KIND_META, EDGE_STYLES, dashOf, routeEdge, segHitsRect, sideBetween, pathFromPoints } from '../src/components/outline/canvas-model.js'
 
 const results = []
 const check = (name, ok, detail = '') => {
@@ -101,6 +101,44 @@ check('容器自定义尺寸生效', cr2.w === 500 && cr2.h === 400, JSON.string
 check('线型：显式优先', dashOf('dotted', '因果') === '2 3' && dashOf('solid', '伏笔') === null)
 check('线型：未设置时伏笔默认虚线', dashOf('', '伏笔') === '5 4' && dashOf('', '因果') === null)
 check('EDGE_STYLES 三种', EDGE_STYLES.length === 3 && EDGE_STYLES.map((s) => s.key).join(',') === 'solid,dashed,dotted')
+
+/* 8) 严格端口连线 + 避障路由（v0.4.14） */
+const A = { x: 0, y: 0, w: 100, h: 60 }
+const B = { x: 300, y: 0, w: 100, h: 60 }
+const fa = { x: 100, y: 30 }
+const ta = { x: 300, y: 30 }
+const g1 = routeEdge(fa, 'right', ta, 'left', [], 'bezier')
+check('端口：bezier 起点即指定端口', g1.d.startsWith('M 100 30') && g1.d.endsWith('300 30'))
+check('端口：bezier 不绕行标记', g1.avoided === false)
+const g2 = routeEdge(fa, 'right', ta, 'left', [], 'ortho')
+check('端口：ortho 起终点即端口', g2.d.startsWith('M 100 30') && g2.d.endsWith('300 30'))
+const M = { x: 150, y: 10, w: 100, h: 40 } // 横挡在两节点之间
+const g3 = routeEdge(fa, 'right', ta, 'left', [M], 'bezier')
+check('避障：途经模块改走折线', g3.avoided === true && g3.d.split('L').length >= 2, g3.d.slice(0, 80))
+/* 折线全部线段不得穿过障碍矩形 */
+const pts3 = []
+const re3 = /([-\d.]+) ([-\d.]+)/g
+let mm3
+while ((mm3 = re3.exec(g3.d))) pts3.push({ x: +mm3[1], y: +mm3[2] })
+let clear3 = true
+for (let i = 0; i < pts3.length - 1; i++) {
+  if (segHitsRect(pts3[i].x, pts3[i].y, pts3[i + 1].x, pts3[i + 1].y, M)) {
+    clear3 = false
+    break
+  }
+}
+check('避障：折线逐段不穿模块', clear3, JSON.stringify(pts3))
+const g4 = routeEdge(fa, 'right', ta, 'left', [], 'bezier')
+check('无障碍时保持贝塞尔', g4.avoided === false && g4.d.includes('C'))
+const fa2 = { x: 50, y: 60 }
+const ta2 = { x: 350, y: -0 }
+const g5 = routeEdge(fa2, 'bottom', { x: 350, y: 0 }, 'top', [], 'ortho')
+check('端口：南北向 ortho 起终点正确', g5.d.startsWith('M 50 60') && g5.d.endsWith('350 0'))
+check('sideBetween 横向', sideBetween(A, B).from === 'right' && sideBetween(A, B).to === 'left')
+check('sideBetween 纵向', sideBetween(A, { x: 0, y: 200, w: 100, h: 60 }).from === 'bottom')
+const g6 = routeEdge(fa, 'right', ta, 'left', [], 'ortho')
+check('polyMid 在路径范围内', g6.mid.x >= 100 && g6.mid.x <= 300)
+check('pathFromPoints 拐圆角 Q 指令', pathFromPoints([{ x: 0, y: 0 }, { x: 50, y: 0 }, { x: 50, y: 50 }]).includes('Q'))
 
 const fail = results.filter((x) => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')
