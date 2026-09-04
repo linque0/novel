@@ -105,45 +105,78 @@ function dedupePoints(pts) {
   return out
 }
 
-/** 单段绕障：横向段从矩形上/下缘绕，纵向段从左/右缘绕（取近侧） */
-function detourAround(a, b, r, margin) {
+/** 单段绕障：横向段从矩形上/下缘绕，纵向段从左/右缘绕（取近侧）；
+ * detours 为累计偏移——同一障碍被多段命中时逐步外扩，避免相邻绕行段贴边互穿 */
+function detourAround(a, b, r, margin, detours) {
+  const extra = detours * margin
   if (Math.abs(a.y - b.y) < 0.5) {
     const xa = Math.max(Math.min(a.x, b.x), r.x)
     const xb = Math.min(Math.max(a.x, b.x), r.x + r.w)
-    const ny = a.y <= r.y + r.h / 2 ? r.y - margin : r.y + r.h + margin
+    const up = a.y <= r.y + r.h / 2
+    const ny = up ? r.y - margin - extra : r.y + r.h + margin + extra
     return [{ x: xa, y: a.y }, { x: xa, y: ny }, { x: xb, y: ny }, { x: xb, y: a.y }]
   }
   const ya = Math.max(Math.min(a.y, b.y), r.y)
   const yb = Math.min(Math.max(a.y, b.y), r.y + r.h)
-  const nx = a.x <= r.x + r.w / 2 ? r.x - margin : r.x + r.w + margin
+  const left = a.x <= r.x + r.w / 2
+  const nx = left ? r.x - margin - extra : r.x + r.w + margin + extra
   return [{ x: a.x, y: ya }, { x: nx, y: ya }, { x: nx, y: yb }, { x: a.x, y: yb }]
 }
 
 /**
  * 正交绕障路由：两端沿各自端口外法线出桩，中途逐段检查障碍并绕行。
+ * obstacles 含两端节点本体——桩长自动跳过源/目标矩形（出桩终点保证在矩形外），
+ * 中段任何线段不得与任何障碍矩形重叠；每障碍最多绕 3 次（外扩），全局最多 24 轮。
  * 返回折点数组（含起终点）。
  */
 export function routeOrthogonal(from, fromSide, to, toSide, obstacles, stub = 18, margin = 16) {
   const ds = sideDir(fromSide)
   const de = sideDir(toSide)
-  const p1 = { x: from.x + ds.x * stub, y: from.y + ds.y * stub }
-  const p2 = { x: to.x + de.x * stub, y: to.y + de.y * stub }
-  let pts = [from, p1]
+  /* 桩长：源/目标矩形在障碍表时，桩必须延伸出矩形（锚点在边缘上，直线距离为 0 → 取矩形宽高 + margin） */
+  const srcOb = obstacles.find((o) => from.x > o.x - 0.5 && from.x < o.x + o.w + 0.5 && from.y > o.y - 0.5 && from.y < o.y + o.h + 0.5)
+  const dstOb = obstacles.find((o) => to.x > o.x - 0.5 && to.x < o.x + o.w + 0.5 && to.y > o.y - 0.5 && to.y < o.y + o.h + 0.5)
+  const stubS = srcOb ? Math.max(stub, Math.max(srcOb.w, srcOb.h) + margin) : stub
+  const stubE = dstOb ? Math.max(stub, Math.max(dstOb.w, dstOb.h) + margin) : stub
+  const p1 = { x: from.x + ds.x * stubS, y: from.y + ds.y * stubS }
+  const p2 = { x: to.x + de.x * stubE, y: to.y + de.y * stubE }
+  let pts
   if (ds.x !== 0 && de.x !== 0) {
-    const mx = (p1.x + p2.x) / 2
-    pts.push({ x: mx, y: p1.y }, { x: mx, y: p2.y }, p2)
+    /* 两横向端口：横向段只顺端口方向直行（不反向折回），绕行走外侧通道：
+     * 包络高度 = 全部障碍 + 双方桩端的外包络，取离两端 y 中点近的一侧 */
+    const sameDir = ds.x === de.x && Math.sign(p2.x - p1.x) === ds.x
+    if (sameDir && (p2.x - p1.x) * ds.x > 0) {
+      /* 目标在行进方向前方：标准 Z 形（中转列取中点，不会反向） */
+      const mx = (p1.x + p2.x) / 2
+      pts = [from, p1, { x: mx, y: p1.y }, { x: mx, y: p2.y }, p2, to]
+    } else {
+      /* 目标在行进方向后方（端口背对）：走横向外侧环绕通道 */
+      const ys = obstacles.map((o) => [o.y - margin, o.y + o.h + margin]).flat()
+      const envTop = Math.min(...ys, p1.y, p2.y)
+      const envBot = Math.max(...ys, p1.y, p2.y)
+      const my = (from.y + to.y) / 2 <= (envTop + envBot) / 2 ? envTop : envBot
+      pts = [from, p1, { x: p1.x, y: my }, { x: p2.x, y: my }, p2, to]
+    }
   } else if (ds.y !== 0 && de.y !== 0) {
-    const my = (p1.y + p2.y) / 2
-    pts.push({ x: p1.x, y: my }, { x: p2.x, y: my }, p2)
+    const sameDir = ds.y === de.y && Math.sign(p2.y - p1.y) === ds.y
+    if (sameDir && (p2.y - p1.y) * ds.y > 0) {
+      const my = (p1.y + p2.y) / 2
+      pts = [from, p1, { x: p1.x, y: my }, { x: p2.x, y: my }, p2, to]
+    } else {
+      const xs = obstacles.map((o) => [o.x - margin, o.x + o.w + margin]).flat()
+      const envLeft = Math.min(...xs, p1.x, p2.x)
+      const envRight = Math.max(...xs, p1.x, p2.x)
+      const mx = (from.x + to.x) / 2 <= (envLeft + envRight) / 2 ? envLeft : envRight
+      pts = [from, p1, { x: mx, y: p1.y }, { x: mx, y: p2.y }, p2, to]
+    }
   } else if (ds.x !== 0) {
-    pts.push({ x: p2.x, y: p1.y }, p2)
+    /* 源横向、目标纵向：p1 →(横)→ p2 的 x →(竖)→ p2 */
+    pts = [from, p1, { x: p2.x, y: p1.y }, p2, to]
   } else {
-    pts.push({ x: p1.x, y: p2.y }, p2)
+    pts = [from, p1, { x: p1.x, y: p2.y }, p2, to]
   }
-  pts.push(to)
   pts = dedupePoints(pts)
-  /* 逐段绕障：每次处理最先遇到的一个交叉后重扫（最多 5 轮防抖） */
-  for (let round = 0; round < 5; round++) {
+  const detours = new Map()
+  for (let round = 0; round < 24; round++) {
     let hit = null
     outer: for (let i = 0; i < pts.length - 1; i++) {
       for (const ob of obstacles) {
@@ -154,7 +187,10 @@ export function routeOrthogonal(from, fromSide, to, toSide, obstacles, stub = 18
       }
     }
     if (!hit) break
-    pts.splice(hit.i + 1, 0, ...detourAround(pts[hit.i], pts[hit.i + 1], hit.ob, margin))
+    const key = `${Math.round(hit.ob.x)},${Math.round(hit.ob.y)}`
+    const d = (detours.get(key) || 0) + 1
+    detours.set(key, d)
+    pts.splice(hit.i + 1, 0, ...detourAround(pts[hit.i], pts[hit.i + 1], hit.ob, margin, d - 1))
     pts = dedupePoints(pts)
   }
   return pts

@@ -1,5 +1,5 @@
 /* canvas-model 纯逻辑自测（计划书 9.4.1-S3）：布局无重叠 / pin 豁免 / 补位模式 / 容器派生盒 / 模板完整性 */
-import { relayoutAll, containerRect, canvasNodeSize, effSize, tplThreeAct, tplChapterList, gridCols, nextShape, cycleArrow, relColor, KIND_META, EDGE_STYLES, dashOf, routeEdge, segHitsRect, sideBetween, pathFromPoints } from '../src/components/outline/canvas-model.js'
+import { relayoutAll, containerRect, canvasNodeSize, effSize, tplThreeAct, tplChapterList, gridCols, nextShape, cycleArrow, relColor, KIND_META, EDGE_STYLES, dashOf, routeEdge, routeOrthogonal, segHitsRect, sideBetween, pathFromPoints } from '../src/components/outline/canvas-model.js'
 
 const results = []
 const check = (name, ok, detail = '') => {
@@ -139,6 +139,36 @@ check('sideBetween 纵向', sideBetween(A, { x: 0, y: 200, w: 100, h: 60 }).from
 const g6 = routeEdge(fa, 'right', ta, 'left', [], 'ortho')
 check('polyMid 在路径范围内', g6.mid.x >= 100 && g6.mid.x <= 300)
 check('pathFromPoints 拐圆角 Q 指令', pathFromPoints([{ x: 0, y: 0 }, { x: 50, y: 0 }, { x: 50, y: 50 }]).includes('Q'))
+
+/* 9) 两端节点本体也纳入障碍（v0.4.15）：端口严格后连线不得从节点身上穿过 */
+const NA = { x: 0, y: 0, w: 100, h: 60 }
+const NB = { x: 0, y: -140, w: 100, h: 60 } // 目标在源正上方
+const ptsAB = routeOrthogonal({ x: 100, y: 30 }, 'right', { x: 0, y: -80 }, 'left', [NA, NB])
+let clearAB = true
+for (let i = 0; i < ptsAB.length - 1; i++) {
+  if (segHitsRect(ptsAB[i].x, ptsAB[i].y, ptsAB[i + 1].x, ptsAB[i + 1].y, NA) || segHitsRect(ptsAB[i].x, ptsAB[i].y, ptsAB[i + 1].x, ptsAB[i + 1].y, NB)) {
+    clearAB = false
+    break
+  }
+}
+check('避障：两端节点本体不被连线穿过', clearAB, JSON.stringify(ptsAB))
+check('避障：起止点仍在记录端口上', ptsAB[0].x === 100 && ptsAB[0].y === 30 && ptsAB[ptsAB.length - 1].x === 0 && ptsAB[ptsAB.length - 1].y === -80)
+/* 桩长延伸：源节点很宽时桩必须出得了矩形 */
+const NW = { x: 0, y: 0, w: 300, h: 60 }
+const ptsWide = routeOrthogonal({ x: 300, y: 30 }, 'right', { x: 700, y: 30 }, 'left', [NW], 18, 16)
+let clearWide = !segHitsRect(ptsWide[0].x, ptsWide[0].y, ptsWide[1].x, ptsWide[1].y, NW)
+check('避障：桩长自动越过宽源节点', clearWide, JSON.stringify(ptsWide.slice(0, 2)))
+/* 同一障碍多段命中时外扩不互穿 */
+const M2 = { x: 140, y: -40, w: 120, h: 140 } // 高障碍，横竖段都会撞
+const ptsM2 = routeOrthogonal({ x: 100, y: 30 }, 'right', { x: 400, y: 30 }, 'left', [M2])
+let clearM2 = true
+for (let i = 0; i < ptsM2.length - 1; i++) {
+  if (segHitsRect(ptsM2[i].x, ptsM2[i].y, ptsM2[i + 1].x, ptsM2[i + 1].y, M2)) {
+    clearM2 = false
+    break
+  }
+}
+check('避障：高障碍多段绕行不穿越', clearM2, JSON.stringify(ptsM2.map((p) => [p.x, p.y])))
 
 const fail = results.filter((x) => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')

@@ -92,7 +92,8 @@ function flushSave() {
   if (work.work && Object.keys(layout.value).length) work.saveCharGraph(layout.value)
 }
 
-/* ---------- 边集合与一度网高亮（v0.4.14 严格端口 + 遇模块绕行） ---------- */
+/* ---------- 边集合与一度网高亮（v0.4.15 严格端口 + 一次性补记 + 遇模块绕行） ---------- */
+const migratedSides = new Set()
 const edges = computed(() => {
   const out = []
   const ids = new Set(chars.value.map((c) => c.id))
@@ -111,10 +112,16 @@ const edges = computed(() => {
     const sb = sideBetween(A, B)
     const fromSide = r.fromSide || sb.from
     const toSide = r.toSide || sb.to
+    if ((!r.fromSide || !r.toSide) && !migratedSides.has(r.id)) {
+      migratedSides.add(r.id)
+      work.updateRelation(r.id, { fromSide, toSide })
+    }
     const fa = anchorsOf(A)[fromSide]
     const ta = anchorsOf(B)[toSide]
     if (!fa || !ta) continue
-    const obs = obstacles.filter((o) => o.x !== A.x || o.y !== A.y)
+    /* 两端节点本体也是障碍：端口严格后，连线中段不得从节点身上穿过 */
+    const obs = obstacles.filter((o) => !(o.x === A.x && o.y === A.y) && !(o.x === B.x && o.y === B.y))
+    obs.unshift({ x: A.x, y: A.y, w: NODE_W, h: NODE_H }, { x: B.x, y: B.y, w: NODE_W, h: NODE_H })
     const g = routeEdge(fa, fromSide, ta, toSide, obs, 'bezier')
     out.push({ rel: r, ...g, dash: dashOf(r.style, ''), stroke: r.color || 'var(--accent)' })
   }

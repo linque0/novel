@@ -93,8 +93,10 @@ const edges = computed(() => {
   }
   return out
 })
-/* v0.4.14 严格端口：从哪个接口来就从哪个接口出，接入侧同样在建立时记录（toSide）；
- * 节点挪位不回退就近接口；连线途经其他模块时正交绕行 */
+/* v0.4.15 严格端口：从哪个接口来就从哪个接口出，接入侧同样在建立时记录（toSide）；
+ * 旧连线缺端口记录时按首次渲染位置**一次性补记**（此后不再随挪位重算）；
+ * 连线途经任何模块（含两端节点本体）时正交绕行 */
+const migratedSides = new Set()
 function edgeGeomFor(n, r) {
   const m = nodeById(r.toId)
   if (!m || !posOf(m)) return null
@@ -103,10 +105,19 @@ function edgeGeomFor(n, r) {
   const sb = sideBetween(A, B)
   const fromSide = r.fromSide || sb.from
   const toSide = r.toSide || sb.to
+  if ((!r.fromSide || !r.toSide) && !migratedSides.has(r.id)) {
+    migratedSides.add(r.id)
+    work.olnodeRelUpdate(n.id, r.id, { fromSide, toSide })
+  }
   const from = anchorsOf(A)[fromSide]
   const to = anchorsOf(B)[toSide]
   if (!from || !to) return null
-  const obstacles = edgeObstacles(n.id, m.id)
+  /* 两端节点本体也是障碍：端口严格后，连线中段不得从节点身上穿过 */
+  const obstacles = [
+    { x: A.x, y: A.y, w: A.w, h: A.h },
+    { x: B.x, y: B.y, w: B.w, h: B.h },
+    ...edgeObstacles(n.id, m.id)
+  ]
   return routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle)
 }
 /* 障碍集合：除两端节点外的可见模块矩形；容器仅当两端都在其外时才算障碍（子模块边必然穿越所在容器） */
