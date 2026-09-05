@@ -170,6 +170,60 @@ for (let i = 0; i < ptsM2.length - 1; i++) {
 }
 check('避障：高障碍多段绕行不穿越', clearM2, JSON.stringify(ptsM2.map((p) => [p.x, p.y])))
 
+/* 10) v0.4.16 全局最优路由（A* + 拉直收敛）：最小环绕、无包络大绕、无重复共线段 */
+const polyLen = (pts) => {
+  let L = 0
+  for (let i = 0; i < pts.length - 1; i++) L += Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
+  return L
+}
+const noCross = (pts, rects) => {
+  for (let i = 0; i < pts.length - 1; i++) for (const r of rects) if (segHitsRect(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, r)) return false
+  return true
+}
+const noRepeat = (pts) => {
+  /* 任意两段不共线重叠（旧算法「重复路线」症状） */
+  for (let i = 0; i < pts.length - 1; i++)
+    for (let j = i + 1; j < pts.length - 1; j++) {
+      const a = pts[i]
+      const b = pts[i + 1]
+      const c = pts[j]
+      const d = pts[j + 1]
+      const h1 = Math.abs(a.y - b.y) < 0.5
+      const h2 = Math.abs(c.y - d.y) < 0.5
+      if (h1 !== h2) continue
+      if (h1 ? Math.abs(a.y - c.y) >= 0.5 : Math.abs(a.x - c.x) >= 0.5) continue
+      const s1 = h1 ? Math.min(a.x, b.x) : Math.min(a.y, b.y)
+      const e1 = h1 ? Math.max(a.x, b.x) : Math.max(a.y, b.y)
+      const s2 = h1 ? Math.min(c.x, d.x) : Math.min(c.y, d.y)
+      const e2 = h1 ? Math.max(c.x, d.x) : Math.max(c.y, d.y)
+      if (s1 < e2 - 0.5 && s2 < e1 - 0.5) return false
+    }
+  return true
+}
+/* 错位背对端口（人物关系图场景复刻）：旧算法延伸桩 + 包络 + 贪心外扩绕出 >1100px 巨型环绕；
+ * 新算法只走贴边 margin 最小通道 */
+const QA = { x: 0, y: 0, w: 132, h: 56 }
+const QB = { x: 96, y: 320, w: 196, h: 72 }
+const pw = routeOrthogonal({ x: 66, y: 0 }, 'top', { x: 194, y: 392 }, 'bottom', [QA, QB])
+check('最优：错位背对端口起止在记录端口', pw[0].x === 66 && pw[0].y === 0 && pw[pw.length - 1].x === 194 && pw[pw.length - 1].y === 392, JSON.stringify(pw))
+check('最优：错位背对端口不穿模块', noCross(pw, [QA, QB]))
+check('最优：错位背对端口总长有界', polyLen(pw) < 800, polyLen(pw))
+check('最优：无重复共线段', noRepeat(pw), JSON.stringify(pw))
+/* 正上方节点右/左端口（v0.4.15 场景）：新路径从两节点间隙穿过，总长约为旧包络的一半 */
+check('最优：间隙直穿路径显著缩短', polyLen(ptsAB) < 400, polyLen(ptsAB))
+/* 远处障碍不撑大路径：直连可达时保持最短形，bezier 也不触发绕行 */
+const FAR = { x: 150, y: -400, w: 100, h: 40 }
+const B2 = { x: 300, y: 0, w: 100, h: 60 }
+const pFar = routeOrthogonal({ x: 100, y: 30 }, 'right', { x: 300, y: 30 }, 'left', [NA, B2, FAR])
+check('最优：远处障碍不影响直连', polyLen(pFar) <= 202 && noCross(pFar, [FAR]), JSON.stringify([polyLen(pFar), pFar]))
+const gFar = routeEdge(fa, 'right', ta, 'left', [FAR], 'bezier')
+check('最优：远处障碍不触发绕行（bezier 保持）', gFar.avoided === false)
+/* 节点重叠病态布局：A* 仍给出不穿障的合法路径（不崩、不退化为穿越） */
+const RA = { x: 0, y: 0, w: 100, h: 60 }
+const RB = { x: 10, y: 10, w: 100, h: 60 }
+const pOv = routeOrthogonal({ x: 50, y: 0 }, 'top', { x: 110, y: 40 }, 'right', [RA, RB])
+check('最优：重叠节点病态布局仍合法绕行', pOv.length >= 2 && noCross(pOv, [RA, RB]), JSON.stringify(pOv))
+
 const fail = results.filter((x) => !x).length
 console.log('==== ' + (results.length - fail) + '/' + results.length + ' 通过 ====')
 process.exit(fail ? 1 : 0)

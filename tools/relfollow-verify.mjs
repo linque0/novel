@@ -273,7 +273,7 @@ check('9 预置字段为 外貌+性格', dfCheck.keys.join(',') === '外貌,性�
       await c.sleep(300)
       const oc = await c.evalx(`(() => {
         const w = ${store}
-        const src = w.olnodes.find((n) => (n.rels || []).some((r) => r.toId))
+        const src = w.olnodes.find((n) => !n.deletedAt && (n.rels || []).some((r) => r.toId)) // 过滤软删幽灵节点（跨轮残留，渲染层同样不可见）
         const rel = src?.rels?.find((r) => r.label === '验收') || src?.rels?.[0]
         const line = [...document.querySelectorAll('.oc-edges path[stroke]')].find((p) => p.getAttribute('stroke') === '#8e44ad')
         const arrow = [...document.querySelectorAll('.oc-edges polygon')].find((p) => p.getAttribute('fill') === '#8e44ad')
@@ -291,7 +291,7 @@ check('9 预置字段为 外貌+性格', dfCheck.keys.join(',') === '外貌,性�
       }
       const oc2 = await c.evalx(`(() => {
         const w = ${store}
-        const src = w.olnodes.find((n) => (n.rels || []).some((r) => r.toId))
+        const src = w.olnodes.find((n) => !n.deletedAt && (n.rels || []).some((r) => r.toId)) // 过滤软删幽灵节点
         const line = [...document.querySelectorAll('.oc-edges path[stroke]')].find((p) => p.getAttribute('stroke') === '#2980b9')
         return { color: src?.rels?.[0]?.color, autoRestored: !!line }
       })()`)
@@ -446,7 +446,7 @@ check('9 预置字段为 外貌+性格', dfCheck.keys.join(',') === '外貌,性�
     await new Promise((r) => setTimeout(r, 500))
     const p = document.querySelector('.oc-edges path:not(.oc-edge-hit)')
     if (!p) return { err: 'no path' }
-    const ob = w.olnodes.find((n) => n.title === '障碍')
+    const ob = w.olnodes.find((n) => !n.deletedAt && n.title === '障碍') // 过滤软删幽灵节点（跨轮残留坐标会污染采样框）
     // 障碍渲染矩形（画布坐标）：canvasX/Y + 实际渲染尺寸
     const el = [...document.querySelectorAll('.oc-node')].find((x) => x.textContent.includes('障碍'))
     const obW = parseInt(el.style.width)
