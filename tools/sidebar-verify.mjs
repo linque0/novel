@@ -1,7 +1,7 @@
 /* sidebar-verify.mjs —— 侧栏调宽 + 画布文本按钮验收（v0.4.7）
  * 覆盖：「整理/适应」汉字按钮文字居框内（不再溢出 24px 方钮）；
  *       侧栏右缘拖拽调宽（±位移生效）、上下限钳制（180–480）、appconfig 记忆、双击复位。
- * 运行前提：npm run build && npm run start -- --profile=test --remote-debugging-port=9222
+ * 运行前提：npm run build && npm run start -- --remote-debugging-port=9222（测试在开发版本默认数据中进行，2026-09-06 规则）
  */
 import { connect } from './_cdp-lib.mjs'
 

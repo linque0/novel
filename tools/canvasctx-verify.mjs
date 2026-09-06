@@ -1,7 +1,7 @@
 /* canvasctx-verify.mjs —— 画布空白右键建模块 + Delete 删除验收（v0.4.9）
  * 覆盖：大纲画布空白右键菜单出现 / 菜单选建 5 类模块且落在右键画布坐标 /
  *       Delete 删除选中模块（含输入态守卫）/ 人物图空白右键建人物 + Delete 软删。
- * 运行前提：npm run build && npm run start -- --profile=test --remote-debugging-port=9222
+ * 运行前提：npm run build && npm run start -- --remote-debugging-port=9222（测试在开发版本默认数据中进行，2026-09-06 规则）
  */
 import { connect } from './_cdp-lib.mjs'
 

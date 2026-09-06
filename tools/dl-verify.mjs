@@ -1,4 +1,4 @@
-/* 双链全链路验证（--profile=test 实例）：正文/幕布/大纲三链路 + 搜索命中选段 + 悬浮保持 */
+/* 双链全链路验证（开发版本实例）：正文/幕布/大纲三链路 + 搜索命中选段 + 悬浮保持 */
 import { connect } from './_cdp-lib.mjs'
 
 const c = await connect('app://')

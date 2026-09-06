@@ -1,7 +1,7 @@
 /* multiwindow-verify.mjs —— 功能面板多窗口验收（9.2-W5，计划书 9.2 验收条款）
  * 覆盖：拆窗创建 / 重复打开聚焦（锁互斥）/ 主窗口只读占位出现与恢复 /
  *       面板写入落库 / 面板关闭释放锁 / 面板列表一致性。
- * 运行前提：npm run build && npm run start -- --profile=test --remote-debugging-port=9222
+ * 运行前提：npm run build && npm run start -- --remote-debugging-port=9222（测试在开发版本默认数据中进行，2026-09-06 规则）
  */
 import { connect } from './_cdp-lib.mjs'
 
