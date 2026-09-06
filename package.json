@@ -57,7 +57,9 @@
     ],
     "win": {
       "icon": "build/icon.ico",
+      "artifactName": "novel-studio-setup-${version}.${ext}",
       "target": [
+        { "target": "nsis", "arch": ["x64"] },
         { "target": "dir", "arch": ["x64"] }
       ]
     }
