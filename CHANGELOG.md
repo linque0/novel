@@ -4,6 +4,15 @@
 > 所有版本均配 CDP 验收脚本入库 `tools/`，发布前全量跑一轮。
 > **推送纪律（2026-09-03 更新）**：单分支直推——main = 开发主体（最新可用版本），每次代码更新同步变更版本号（package.json / README / CHANGELOG / 提交信息四处一致），不新建/删除版本分支，里程碑发布点打 tag 存档。
 
+## v0.4.19（2026-09-07）视觉美化合并：美化测试分支合入主开发（OIcon 图标体系 + 组件质感）
+
+- **合并**：`v0.4.17分支美化测试`（4c51139 批次一 + a35e0fd 批次二 + b41de7d stop 增强）合入主开发，零冲突；
+- **OIcon 图标体系（美化方案 §6.9）**：全站 emoji 退出交互位，新增内联 SVG 图标组件（24 viewBox / 1.5px 描边 / 圆帽圆角 / 继承 currentColor，38 图标）；KIND_META / TYPE_META 图标值名称化由组件渲染；CSS 图钉改 data-URI SVG；
+- **设计令牌扩充（§4）**：三主题 `--accent-deep / --text-faint / --danger-soft / --shadow-node(-hover)`，`:root` 增 `--ease / --dur-*` 动效令牌与 radius/space/fs 不变量；**组件质感（§6）**：画布节点阴影三级、浮层统一 md 圆角 + pop 投影、输入框聚焦环与占位色、导航 rail 激活态重构（accent-soft 底 + 内缘竖条 + 昼夜一键切换）；
+- **基础观感（§7 批次一）**：全局细条滚动条、focus-visible 键盘焦点环、浮层 140ms 入场动效、`prefers-reduced-motion` 全局降级；
+- **工具**：`npm run stop` 清理范围纳入 vite 与 electron 的 node 包装进程，新增 5173 释放校验；
+- **验证**：canvas-model 48/48、chargraph 12/12、olcanvas 29/29、relfollow 15/15（dev 实例）；宣纸/暗夜双主题截图核对。
+
 ## v0.4.18（2026-09-06）测试数据隔离：npm run dev 挂 --profile=dev，验证书与真实书目分离
 
 - **变更：开发调试版数据独立**——`npm run dev` 启动参数挂 `--profile=dev`（数据目录 `%APPDATA%\小说工坊-dev`），9 本测试验证书（关系图/画布A·B/画布右键/关系跟随/双链/多窗口/侧栏验证书 + 验收测试作品）已迁入该目录；`npm start` 正式启动版只含真实书目（浮世、星尘旅人），不再混入测试数据；
