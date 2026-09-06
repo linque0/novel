@@ -2109,9 +2109,26 @@ body,
   border-radius: 8px;
   box-shadow: var(--shadow);
 }
-.oc-anchor .ol-dot {
-  flex: none;
-  margin-left: 8px;
+/* 章节状态徽标点：绝对定位不占布局——旧版 .ol-dot 无基础样式，空内联元素会撑出一个
+ * 行盒把卡片文字整体顶到下半截（锚点卡文字偏下的根因） */
+.ol-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--bg-panel);
+  box-sizing: border-box;
+}
+.ol-dot[data-s='draft'] {
+  background: #7f8c8d;
+}
+.ol-dot[data-s='done'] {
+  background: #27ae60;
+}
+.ol-dot[data-s='revise'] {
+  background: #d35400;
 }
 .oc-volume {
   border-left-color: #16a085;
