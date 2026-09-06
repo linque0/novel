@@ -2,7 +2,7 @@
  * 覆盖：拖线到已有人物关系 → 打开编辑浮层（改变关系而非忽略）；
  *       拖线新建空标签 → 默认「关联」；关系改动在人物列表/详情实时同步；
  *       右键新建人物内容全空（name 空、role 默认，显示未命名兜底）。
- * 运行前提：npm run build && npm run start -- --remote-debugging-port=9222（测试在开发版本默认数据中进行，2026-09-06 规则）
+ * 运行前提：npm run dev（开发调试版，验证书数据在 --profile=dev）或 electron . --profile=dev --remote-debugging-port=9222，再连 9222
  */
 import { connect } from './_cdp-lib.mjs'
 

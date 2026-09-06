@@ -1,12 +1,12 @@
 {
   "name": "novel-studio",
   "productName": "小说工坊",
-  "version": "0.4.17",
+  "version": "0.4.18",
   "description": "本地优先的小说创作软件：正文/大纲/人物/设定一站式管理，即时自动保存",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
-    "dev": "concurrently -k -s first \"vite --host 127.0.0.1 --port 5173 --strictPort\" \"wait-on tcp:127.0.0.1:5173 && cross-env NOVEL_STUDIO_DEV=1 electron .\"",
+    "dev": "concurrently -k -s first \"vite --host 127.0.0.1 --port 5173 --strictPort\" \"wait-on tcp:127.0.0.1:5173 && cross-env NOVEL_STUDIO_DEV=1 electron . --profile=dev\"",
     "build": "vite build",
     "start": "electron .",
     "stop": "node tools/stop.mjs",
