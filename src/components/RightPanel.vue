@@ -1,6 +1,7 @@
 <script setup>
 import { computed, watch } from 'vue'
 import { NButton, NTag, NSelect } from 'naive-ui'
+import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
 import { stripTags } from '../services/wordcount'
@@ -102,13 +103,13 @@ watch(
     <div class="rp-section">
       <div class="rp-title">
         本章插图
-        <NButton size="tiny" @click="uploadImages">＋上传</NButton>
+        <NButton size="tiny" @click="uploadImages"><OIcon name="plus" :size="11" /> 上传</NButton>
       </div>
       <div v-if="!images.length" style="font-size: 12px; color: var(--text-dim)">拖拽或粘贴图片到正文可直接添加</div>
       <div class="thumb-grid">
         <div v-for="it in images" :key="it.link.id" class="thumb">
           <img v-if="it.url" :src="it.url" />
-          <button class="x" @click="work.unlinkAsset(it.link.id)">✕</button>
+          <button class="x" @click="work.unlinkAsset(it.link.id)"><OIcon name="close" :size="11" /></button>
         </div>
       </div>
     </div>

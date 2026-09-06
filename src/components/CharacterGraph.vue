@@ -6,6 +6,7 @@
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useWorkStore } from '../stores/work'
 import { usePanZoom, anchorsOf } from '../services/graphview'
+import OIcon from './OIcon.vue'
 import { freeSpotFor, dashOf, EDGE_STYLES, sideBetween, routeEdge } from './outline/canvas-model'
 
 const work = useWorkStore()
@@ -451,10 +452,10 @@ onBeforeUnmount(() => {
       <span style="flex: 1"></span>
       <span v-if="isolated.length" class="oc-chip oc-warn" :title="'暂无任何关系：' + isolated.map((c) => c.name).join('、')" @click="locateIsolated(isolated[0])">孤岛 {{ isolated.length }}</span>
       <span class="oc-count">{{ chars.length }} 人 · {{ edges.length }} 条关系</span>
-      <button class="om-btn" title="圆形排布" @click="circleAll">◯</button>
-      <button class="om-btn" title="网格排布" @click="gridAll">▦</button>
-      <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)">－</button>
-      <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)">＋</button>
+      <button class="om-btn" title="圆形排布" @click="circleAll"><OIcon name="circle-layout" :size="14" /></button>
+      <button class="om-btn" title="网格排布" @click="gridAll"><OIcon name="grid" :size="14" /></button>
+      <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)"><OIcon name="minus" :size="14" /></button>
+      <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)"><OIcon name="plus" :size="14" /></button>
       <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
     </div>
 
@@ -534,7 +535,7 @@ onBeforeUnmount(() => {
         <!-- 拖线建关系输入 -->
         <div v-if="relInput" class="rg-relinput" :style="{ left: relInput.x + 'px', top: relInput.y + 'px' }" @mousedown.stop>
           <input ref="relInputEl" v-model="relInput.value" class="rp-input" placeholder="关系（如：师徒 / 宿敌）…" @keydown.enter="saveRelInput" @keydown.esc="relInput = null" />
-          <button class="om-btn" title="保存" @click="saveRelInput">✓</button>
+          <button class="om-btn" title="保存" @click="saveRelInput"><OIcon name="check" :size="13" /></button>
         </div>
 
         <!-- 边标签编辑（v0.4.11：标签 + 线型 + 颜色） -->
@@ -566,7 +567,7 @@ onBeforeUnmount(() => {
               @click="patchRel({ color: col })"
             />
           </div>
-          <button class="om-btn oc-mini-x" title="删除关系" @click="removeRel">✕</button>
+          <button class="om-btn oc-mini-x" title="删除关系" @click="removeRel"><OIcon name="close" :size="12" /></button>
         </div>
 
         <!-- 人物节点右键菜单（替代旧常驻小工具条，不再遮挡节点内容） -->

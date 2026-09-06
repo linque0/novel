@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { NButton, NModal, NInput, NSelect, NTag, NDropdown, NEmpty, NCheckbox, NPopconfirm, NSpin, useMessage } from 'naive-ui'
+import OIcon from './OIcon.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
@@ -108,7 +109,7 @@ async function onCardMenu(key, w) {
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
     <div class="topbar">
-      <span class="brand">📚 小说工坊</span>
+      <span class="brand">小说工坊</span>
       <span style="font-size: 12px; color: var(--text-dim)">本地优先 · 自动保存</span>
       <div style="flex: 1"></div>
       <NSelect

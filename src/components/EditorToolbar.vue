@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onBeforeUnmount } from 'vue'
 import { NButton, NSelect, NPopover, NColorPicker } from 'naive-ui'
+import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 
 const props = defineProps({ editor: { type: Object, required: true } })
@@ -150,13 +151,13 @@ const isActive = (name, attrs) => {
           :title="'底色 ' + c"
           @click="chain().setHighlight({ color: c }).run()"
         />
-        <button class="tb" title="清除底色" @click="chain().unsetHighlight().run()">✕</button>
+        <button class="tb" title="清除底色" @click="chain().unsetHighlight().run()"><OIcon name="close" :size="11" /></button>
       </div>
     </NPopover>
 
     <NPopover trigger="click" :show-arrow="false" :show="showLink" @update:show="(v) => (showLink = v)">
       <template #trigger>
-        <button class="tb" :class="{ on: isActive('link') }" title="超链接" @click="openLink">🔗</button>
+        <button class="tb" :class="{ on: isActive('link') }" title="超链接" @click="openLink"><OIcon name="link" :size="14" /></button>
       </template>
       <div style="display: flex; gap: 6px; width: 300px">
         <input v-model="linkHref" class="rp-input" placeholder="https://…" style="flex: 1" @keyup.enter="applyLink" />
@@ -184,6 +185,6 @@ const isActive = (name, attrs) => {
       :class="{ on: bmOn }"
       :title="bmOn ? '移除书签' : '收藏本书签'"
       @click="toggleBm"
-    >{{ bmOn ? '★' : '☆' }}</button>
+    ><OIcon :name="bmOn ? 'star-filled' : 'star'" :size="14" /></button>
   </div>
 </template>

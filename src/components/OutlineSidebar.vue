@@ -1,6 +1,7 @@
 <!-- 大纲侧边栏（8.8.2）：模块条目列表——搜索 / 类型筛选 / 新建（事件·便签·引用卡·分组）/ 定位画布 / 删除；
      断线检测列表；条目点击选中并让画布居中 -->
 <script setup>
+import OIcon from './OIcon.vue'
 import { computed, ref } from 'vue'
 import { NButton, NPopover } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -25,13 +26,13 @@ function relsCount(n) {
 }
 
 const TYPE_META = {
-  event: { icon: '◆', label: '事件' },
-  note: { icon: '✎', label: '便签' },
-  cite: { icon: '🔗', label: '引用' },
-  textbox: { icon: '▭', label: '文本框' },
-  container: { icon: '📦', label: '容器' },
-  volume: { icon: '▤', label: '卷' },
-  anchor: { icon: '⚓', label: '章节' }
+  event: { icon: 'diamond', label: '事件' },
+  note: { icon: 'edit', label: '便签' },
+  cite: { icon: 'link', label: '引用' },
+  textbox: { icon: 'textbox', label: '文本框' },
+  container: { icon: 'container', label: '容器' },
+  volume: { icon: 'rows', label: '卷' },
+  anchor: { icon: 'anchor', label: '章节' }
 }
 const TYPES = computed(() => ['全部', '事件', '便签', '引用', '文本框', '容器', '章节', ...customTypes.value.map((t) => t.name)])
 
@@ -172,17 +173,17 @@ function remove(m) {
       <input v-model="q" class="rp-input" placeholder="搜索模块…" style="width: 100%; font-size: 12px" />
       <div class="ol-typefilter">
         <span v-for="t in TYPES" :key="t" class="om-chip" :class="{ on: typeFilter === t }" @click="typeFilter = t">{{ t }}</span>
-        <span class="om-chip" :class="{ on: typeManage }" title="管理自定义类型" @click="typeManage = !typeManage">⚙</span>
+        <span class="om-chip" :class="{ on: typeManage }" title="管理自定义类型" @click="typeManage = !typeManage"><OIcon name="gear" :size="12" /></span>
       </div>
       <div v-if="typeManage" class="ol-type-manage">
         <div v-for="t in customTypes" :key="t.name" class="ol-type-row">
           <span class="om-mtype" :style="{ color: t.color, borderColor: t.color }">{{ t.name }}</span>
           <span style="flex: 1"></span>
-          <button class="ol-op ol-op-danger" title="删除该类型（节点保留，标签变灰）" @click="work.olTypeRemove(t.name)">✕</button>
+          <button class="ol-op ol-op-danger" title="删除该类型（节点保留，标签变灰）" @click="work.olTypeRemove(t.name)"><OIcon name="close" :size="11" /></button>
         </div>
         <div class="ol-type-row">
           <input v-model="newTypeName" class="rp-input" placeholder="新类型名…" style="flex: 1; font-size: 12px" @keyup.enter="addType" />
-          <button class="ol-op" title="添加类型" @click="addType">＋</button>
+          <button class="ol-op" title="添加类型" @click="addType"><OIcon name="plus" :size="11" /></button>
         </div>
       </div>
     </div>
@@ -205,17 +206,17 @@ function remove(m) {
           :class="{ folded: m.n.fold }"
           :title="m.n.fold ? '展开子模块' : '折叠子模块（与画布同步）'"
           @click.stop="work.olnodeToggleFold(m.n.id)"
-        >{{ m.n.fold ? '▸' : '▾' }}</button>
+        ><OIcon :name="m.n.fold ? 'caret-right' : 'caret-down'" :size="11" /></button>
         <span v-else class="ob-arrow ob-arrow-leaf">·</span>
-        <span class="ol-type-icon">{{ m.icon }}</span>
+        <span class="ol-type-icon"><OIcon :name="m.icon" :size="12" /></span>
         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1">
           <span v-if="m.parentLabel" class="ol-side-parent">{{ m.parentLabel }} / </span>{{ m.label }}
         </span>
         <span v-if="m.mtype" class="om-mtype" :style="{ color: m.mcolor, borderColor: m.mcolor }">{{ m.mtype }}</span>
         <span v-if="m.badge" class="dim">{{ m.badge }}</span>
         <span class="ol-ops">
-          <button class="ol-op" title="重命名" @click.stop="rename(m)">✎</button>
-          <button class="ol-op ol-op-danger" title="删除" @click.stop="remove(m)">✕</button>
+          <button class="ol-op" title="重命名" @click.stop="rename(m)"><OIcon name="edit" :size="11" /></button>
+          <button class="ol-op ol-op-danger" title="删除" @click.stop="remove(m)"><OIcon name="close" :size="11" /></button>
         </span>
       </div>
       <p v-if="!modules.length" style="font-size: 12px; color: var(--text-dim); padding: 10px">

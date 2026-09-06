@@ -5,6 +5,7 @@
  * 章节/人物/灵感的实体锁随面板当前选中迁移（panelSetEntity），主窗口占位实时跟随。 */
 import { computed, ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { NButton } from 'naive-ui'
+import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { autosave, startAutosave } from '../services/autosave'
@@ -153,7 +154,7 @@ onBeforeUnmount(() => autosave.flushAll())
         </span>
         <div style="flex: 1"></div>
         <NButton size="small" @click="flushAndClose">保存并关闭</NButton>
-        <NButton size="small" quaternary @click="closePanel">✕</NButton>
+        <NButton size="small" quaternary @click="closePanel"><OIcon name="close" :size="13" /></NButton>
       </div>
       <div class="panel-body">
         <div class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
