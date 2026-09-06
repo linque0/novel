@@ -34,6 +34,12 @@ body,
   --accent: #8c6f4e;
   --card-ink: #5b5142;
   --shadow: 0 2px 14px rgba(90, 70, 40, 0.12);
+  --border-strong: #d0c4a6;
+  --shadow-pop: 0 6px 24px rgba(90, 70, 40, 0.18);
+  --accent-soft: rgba(140, 111, 78, 0.14);
+  --danger: #b03a2e;
+  --success: #1e8449;
+  --warning: #b9770e;
 }
 
 /* 羊皮纸 */
@@ -48,6 +54,12 @@ body,
   --accent: #a0642f;
   --card-ink: #6b5238;
   --shadow: 0 2px 14px rgba(110, 80, 40, 0.16);
+  --border-strong: #c4b088;
+  --shadow-pop: 0 6px 24px rgba(110, 80, 40, 0.22);
+  --accent-soft: rgba(160, 100, 47, 0.14);
+  --danger: #a93226;
+  --success: #196f3d;
+  --warning: #a5690d;
 }
 
 /* 暗夜书房 */
@@ -62,10 +74,33 @@ body,
   --accent: #d4a95c;
   --card-ink: #d4a95c;
   --shadow: 0 2px 14px rgba(0, 0, 0, 0.5);
+  --border-strong: #4a4436;
+  --shadow-pop: 0 8px 28px rgba(0, 0, 0, 0.55);
+  --accent-soft: rgba(212, 169, 92, 0.16);
+  --danger: #e74c3c;
+  --success: #2ecc71;
+  --warning: #e67e22;
 }
 
 .serif {
   font-family: var(--editor-font);
+}
+
+/* ============ 设计令牌（美化测试第一批 v0.4.18-draft）：主题无关不变量 ============ */
+:root {
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --fs-xs: 11px;
+  --fs-sm: 12.5px;
+  --fs-md: 13.5px;
+  --fs-lg: 15px;
+  --fs-title: 17px;
 }
 
 /* ============ 布局通用 ============ */
@@ -211,7 +246,7 @@ body,
 .rail-item {
   width: 44px;
   height: 44px;
-  border-radius: 9px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -219,13 +254,30 @@ body,
   color: var(--text-dim);
   font-size: 13px;
   user-select: none;
+  position: relative;
+  transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease;
 }
 .rail-item:hover {
   background: var(--bg-hover);
+  color: var(--text);
 }
+.rail-item:active {
+  transform: scale(0.94);
+}
+/* 选中态：淡底 + accent 字色 + 内缘 2px 竖条（指向内容区，弱化旧实底反白的沉重感） */
 .rail-item.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.rail-item.active::after {
+  content: '';
+  position: absolute;
+  right: -8px;
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  border-radius: 1px;
   background: var(--accent);
-  color: #fff;
 }
 .rail-item .ico {
   font-size: 17px;
@@ -2811,4 +2863,77 @@ body,
 .oc-ctx-item:hover {
   background: var(--bg-hover);
   color: var(--accent);
+}
+
+/* ============ 美化测试第一批（v0.4.18-draft）：滚动条 / 焦点态 / 浮层动效 ============ */
+
+/* 细条滚动条：常态几乎隐身，悬停显字色 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-dim);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* 键盘焦点态：仅键盘导航（Tab）出现 accent 描边，鼠标点击不触发（文本输入框保留自有焦点样式） */
+button:focus-visible,
+[role='button']:focus-visible,
+.rail-item:focus-visible,
+[tabindex='0']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* 浮层入场动效：140ms 淡入下滑；flip 变体靠 transform 定位，仅做淡入避免位移冲突 */
+.oc-ctx,
+.rg-ctx,
+.rg-relinput,
+.oc-eedit:not(.flip),
+.rg-eedit:not(.flip) {
+  animation: pop-in 0.14s ease-out;
+}
+.oc-eedit.flip,
+.rg-eedit.flip {
+  animation: pop-fade 0.14s ease-out;
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes pop-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 无障碍：系统开启「减弱动态效果」时全站动效降级为即时切换 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
