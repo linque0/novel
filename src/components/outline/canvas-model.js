@@ -611,13 +611,13 @@ export const SHAPE_LABEL = { process: '矩形', para: '平行四边形', diamond
 
 /** 模块类型元数据（侧边栏图标 / 徽标 / 筛选） */
 export const KIND_META = {
-  event: { icon: '◆', label: '事件' },
-  note: { icon: '🗒', label: '便签' },
-  cite: { icon: '🔗', label: '引用' },
-  textbox: { icon: '▭', label: '文本框' },
-  container: { icon: '▢', label: '容器' },
-  anchor: { icon: '⚑', label: '锚点' },
-  volume: { icon: '▤', label: '卷' }
+  event: { icon: 'diamond', label: '事件' },
+  note: { icon: 'note', label: '便签' },
+  cite: { icon: 'link', label: '引用' },
+  textbox: { icon: 'textbox', label: '文本框' },
+  container: { icon: 'container', label: '容器' },
+  anchor: { icon: 'flag', label: '锚点' },
+  volume: { icon: 'rows', label: '卷' }
 }
 
 /* ---------- 布局算法 ---------- */

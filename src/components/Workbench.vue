@@ -6,6 +6,7 @@ import { useUiStore } from '../stores/ui'
 import { useShelfStore } from '../stores/shelf'
 import { exportBook, backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles } from '../services/fileio'
+import OIcon from './OIcon.vue'
 import ChapterTree from './ChapterTree.vue'
 import OutlineSidebar from './OutlineSidebar.vue'
 import CharacterList from './CharacterList.vue'
@@ -29,8 +30,8 @@ const msg = useMessage()
 const bookmarkOptions = computed(() => {
   const list = work.liveBookmarks
   return list.length
-    ? list.map((b) => ({ label: '📄 ' + (b.title || '（空）'), key: b.id }))
-    : [{ label: '暂无书签（章节右键或工具栏 ☆ 添加）', key: 'none', disabled: true }]
+    ? list.map((b) => ({ label: b.title || '（空）', key: b.id }))
+    : [{ label: '暂无书签（编辑器工具栏或章节右键添加）', key: 'none', disabled: true }]
 })
 function onBookmarkSelect(key) {
   const b = work.bookmarks.find((x) => x.id === key)
@@ -176,25 +177,25 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
     <div class="topbar">
-      <NButton size="small" quaternary @click="work.closeWork()">← 书架</NButton>
+      <NButton size="small" quaternary @click="work.closeWork()"><OIcon name="back" :size="14" /> 书架</NButton>
       <span class="brand" style="font-size: 15px">{{ work.work?.title }}</span>
       <span class="save-badge">
         <span class="save-dot" :class="badgeClass"></span>
         {{ badgeText }}
       </span>
       <div style="flex: 1"></div>
-      <NButton size="small" @click="ui.searchOpen = true">🔍 搜索</NButton>
+      <NButton size="small" @click="ui.searchOpen = true"><OIcon name="search" :size="14" /> 搜索</NButton>
       <NDropdown trigger="click" :options="splitOptions" @select="onSplit">
-        <NButton size="small" title="把模块拆出为独立窗口，可边看大纲边写正文">⧉ 拆窗 ▾</NButton>
+        <NButton size="small" title="把模块拆出为独立窗口，可边看大纲边写正文"><OIcon name="split" :size="14" /> 拆窗 <OIcon name="caret-down" :size="11" /></NButton>
       </NDropdown>
-      <NButton size="small" @click="ui.importOpen = true">⬇ 导入</NButton>
+      <NButton size="small" @click="ui.importOpen = true"><OIcon name="download" :size="14" /> 导入</NButton>
       <NDropdown :options="exportOptions" trigger="click" @select="onExport">
         <NButton size="small">导出 ▾</NButton>
       </NDropdown>
       <NButton size="small" @click="ui.statsOpen = true">统计</NButton>
       <NButton size="small" @click="ui.trashOpen = true">回收站</NButton>
       <NDropdown trigger="click" :options="bookmarkOptions" @select="onBookmarkSelect">
-        <NButton size="small">🔖 书签</NButton>
+        <NButton size="small"><OIcon name="bookmark" :size="14" /> 书签</NButton>
       </NDropdown>
       <NSelect
         size="small"
@@ -220,7 +221,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         >
           <div style="text-align: center">
             <div class="ico">{{ t.icon }}</div>
-            <div style="font-size: 10px; margin-top: 1px">{{ t.label }}</div>
+            <div class="rail-label">{{ t.label }}</div>
           </div>
         </div>
       </div>

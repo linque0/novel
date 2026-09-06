@@ -32,7 +32,7 @@ const fmt = (t) => {
         @keydown="(e) => e.ctrlKey && e.key === 'Enter' && addQuick()"
       />
       <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center">
-        <NButton size="tiny" type="primary" @click="addQuick">＋记录</NButton>
+        <NButton size="tiny" type="primary" @click="addQuick"><OIcon name="plus" :size="11" /> 记录</NButton>
         <span style="font-size: 12px; color: var(--text-dim)">{{ list.length }} 条</span>
       </div>
     </div>

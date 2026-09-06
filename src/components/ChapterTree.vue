@@ -1,6 +1,7 @@
 <script setup>
 import { computed, h, ref } from 'vue'
 import { NTree, NButton, NModal, NInput, NPopconfirm, NDropdown } from 'naive-ui'
+import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { autosave } from '../services/autosave'
 
@@ -147,7 +148,7 @@ function closeCtx() {
 const ctxOptions = computed(() => {
   if (ctx.value.kind === 'chapter') {
     return [
-      { label: ctx.value.bookmarked ? '★ 移除书签' : '☆ 收藏书签', key: 'bm' },
+      { label: ctx.value.bookmarked ? '移除书签' : '收藏书签', key: 'bm' },
       { label: '重命名', key: 'rename' },
       { label: '删除（进回收站）', key: 'del' }
     ]

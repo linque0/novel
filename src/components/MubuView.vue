@@ -1,6 +1,7 @@
 <script setup>
 import { ref, reactive, computed, watch, nextTick, onMounted, onUpdated, onBeforeUnmount } from 'vue'
 import { NButton, NPopover } from 'naive-ui'
+import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { pickFiles } from '../services/fileio'
@@ -741,10 +742,10 @@ onBeforeUnmount(() => {
       </NPopover>
       <button class="tb" title="清除格式" @mousedown.prevent @click="fmt('removeFormat')">清除</button>
       <span class="tb-sep" />
-      <button class="tb" title="导入 MD / TXT（标题层级自动转为节点层级）" @click="importMd">⬆ 导入</button>
+      <button class="tb" title="导入 MD / TXT（标题层级自动转为节点层级）" @click="importMd"><OIcon name="upload" :size="12" /> 导入</button>
       <span class="tb-sep" />
-      <button class="tb" title="新建同级节点" @click="addSibling(visible.find((r) => r.node.id === focusedId))">＋同级</button>
-      <button class="tb" title="新建子节点（先点击选中一个节点）" :disabled="!focusedId" @click="addChild(visible.find((r) => r.node.id === focusedId))">＋子级</button>
+      <button class="tb" title="新建同级节点" @click="addSibling(visible.find((r) => r.node.id === focusedId))"><OIcon name="plus" :size="11" /> 同级</button>
+      <button class="tb" title="新建子节点（先点击选中一个节点）" :disabled="!focusedId" @click="addChild(visible.find((r) => r.node.id === focusedId))"><OIcon name="plus" :size="11" /> 子级</button>
       <span class="ob-count">{{ nodeCount }} 节点</span>
     </div>
 
@@ -784,8 +785,8 @@ onBeforeUnmount(() => {
           @focus="onTextFocus"
         />
         <span class="ob-ops">
-          <button class="ob-op" title="添加子节点" @click.stop="addChild(row)">＋</button>
-          <button class="ob-op" title="删除节点" @click.stop="deleteRow(row)">✕</button>
+          <button class="ob-op" title="添加子节点" @click.stop="addChild(row)"><OIcon name="plus" :size="11" /></button>
+          <button class="ob-op" title="删除节点" @click.stop="deleteRow(row)"><OIcon name="close" :size="11" /></button>
         </span>
       </div>
       <div v-if="nodeCount === 0" class="empty-shelf" style="padding-top: 70px">

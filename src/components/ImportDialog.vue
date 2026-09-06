@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue'
 import { NModal, NButton, NInput, NRadioGroup, NRadio, NCheckbox, NTag, NAlert, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import OIcon from './OIcon.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useUiStore } from '../stores/ui'
 import { pickFiles, arrayBufferToBlob, imageMime } from '../services/fileio'
@@ -189,7 +190,7 @@ function reset() {
       </div>
 
       <div v-if="plan.images.length" style="margin-bottom: 12px; font-size: 13px">
-        🖼 检测到 {{ plan.images.length }} 张图片，将导入当前作品的素材库。
+        检测到 {{ plan.images.length }} 张图片，将导入当前作品的素材库。
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px">

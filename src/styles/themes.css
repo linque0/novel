@@ -40,6 +40,11 @@ body,
   --danger: #b03a2e;
   --success: #1e8449;
   --warning: #b9770e;
+  --accent-deep: #6e5537;
+  --text-faint: #b3a892;
+  --danger-soft: rgba(176, 58, 46, 0.1);
+  --shadow-node: 0 1px 3px rgba(60, 45, 20, 0.1);
+  --shadow-node-hover: 0 4px 12px rgba(60, 45, 20, 0.14);
 }
 
 /* 羊皮纸 */
@@ -60,6 +65,11 @@ body,
   --danger: #a93226;
   --success: #196f3d;
   --warning: #a5690d;
+  --accent-deep: #7d4c22;
+  --text-faint: #b5a68c;
+  --danger-soft: rgba(169, 50, 38, 0.1);
+  --shadow-node: 0 1px 3px rgba(70, 50, 25, 0.12);
+  --shadow-node-hover: 0 4px 12px rgba(70, 50, 25, 0.16);
 }
 
 /* 暗夜书房 */
@@ -80,6 +90,11 @@ body,
   --danger: #e74c3c;
   --success: #2ecc71;
   --warning: #e67e22;
+  --accent-deep: #b8893f;
+  --text-faint: #5c564a;
+  --danger-soft: rgba(231, 76, 60, 0.14);
+  --shadow-node: 0 1px 3px rgba(0, 0, 0, 0.35);
+  --shadow-node-hover: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .serif {
@@ -101,6 +116,10 @@ body,
   --fs-md: 13.5px;
   --fs-lg: 15px;
   --fs-title: 17px;
+  --ease: cubic-bezier(0.2, 0.6, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 250ms;
 }
 
 /* ============ 布局通用 ============ */
@@ -1859,11 +1878,14 @@ body,
   }
 }
 .oc-node.pinned::after {
-  content: '📌';
+  content: '';
   position: absolute;
   left: -7px;
   top: -9px;
-  font-size: 11px;
+  width: 14px;
+  height: 14px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9770e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 17v5'/%3E%3Cpath d='M9 10.8a2 2 0 0 1-1.1 1.8l-1.8.9A2 2 0 0 0 5 15.2v.8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.8a2 2 0 0 0-1.1-1.8l-1.8-.9a2 2 0 0 1-1.1-1.8V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z'/%3E%3C/svg%3E") center / contain no-repeat;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
 /* 文本框模块（v0.4.2）：独立节点，PPT 式虚线框 + 底色透明度可调 */
 .oc-textbox {
@@ -2936,4 +2958,63 @@ button:focus-visible,
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ============ 美化第二批（组件质感 · 美化方案 §4.3/§6.4/§6.7/§6.2） ============ */
+
+/* 画布节点阴影三级：常态贴纸 / 悬停抬起 */
+.oc-event,
+.oc-note,
+.oc-cite,
+.oc-anchor,
+.oc-volume,
+.rg-node {
+  box-shadow: var(--shadow-node);
+}
+.oc-event:hover,
+.oc-note:hover,
+.oc-cite:hover,
+.oc-anchor:hover,
+.oc-volume:hover,
+.rg-node:hover {
+  box-shadow: var(--shadow-node-hover);
+}
+
+/* 浮层/右键菜单统一语言：md 圆角 + pop 投影（追加在各自定义之后，就近覆盖） */
+.oc-ctx,
+.rg-ctx,
+.rg-eedit,
+.rg-relinput,
+.oc-eedit {
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+}
+
+/* 输入框聚焦环：accent 边 + 淡底光环 */
+.rp-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+.rp-input::placeholder {
+  color: var(--text-faint);
+}
+
+/* 导航 rail：标签档位化 + 底部昼夜切换按钮留白 */
+.nav-rail {
+  padding-bottom: 10px;
+}
+.rail-label {
+  font-size: 10px;
+  line-height: 1;
+  margin-top: 1px;
+}
+.rail-theme {
+  margin-top: auto;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+}
+.rail-theme:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
 }

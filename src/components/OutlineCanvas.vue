@@ -14,6 +14,7 @@ import {
 } from './outline/canvas-model'
 import { uid } from '../db/database'
 import { NPopover, NSlider } from 'naive-ui'
+import OIcon from './OIcon.vue'
 import DLinkPicker from './DLinkPicker.vue'
 
 const work = useWorkStore()
@@ -776,7 +777,7 @@ onBeforeUnmount(() => {
       <span class="oc-chip" :class="{ on: work.canvasPrefs.edgeStyle === 'ortho' }" title="连线样式" @click="setPref('edgeStyle', work.canvasPrefs.edgeStyle === 'ortho' ? 'bezier' : 'ortho')">{{ edgeStyleLabel }}</span>
       <NPopover trigger="click" :show-arrow="false">
         <template #trigger>
-          <span class="oc-chip" title="画布设置：连线粗细等">⚙ 设置</span>
+          <span class="oc-chip" title="画布设置：连线粗细等"><OIcon name="gear" :size="12" /> 设置</span>
         </template>
         <div class="oc-settings">
           <div class="oc-settings-row">
@@ -792,9 +793,9 @@ onBeforeUnmount(() => {
       <button class="om-btn" title="撤销 (Ctrl+Z)" @click="work.olnodeUndo()">↶</button>
       <button class="om-btn" title="重做 (Ctrl+Y)" @click="work.olnodeRedo()">↷</button>
       <button class="om-btn text oc-tidy" title="整理布局（固定模块除外）" @click="tidyAll">整理</button>
-      <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)">－</button>
+      <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)"><OIcon name="minus" :size="13" /></button>
       <span class="oc-zoom">{{ Math.round(zoom * 100) }}%</span>
-      <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)">＋</button>
+      <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)"><OIcon name="plus" :size="13" /></button>
       <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
     </div>
 
@@ -840,7 +841,7 @@ onBeforeUnmount(() => {
         >
           <template v-if="n.kind === 'container'">
             <div class="oc-chead" @dblclick.stop="editTitle = { id: n.id, value: n.title || '' }">
-              <button class="oc-caret" :title="n.fold ? '展开子模块' : '折叠子模块'" @click.stop="work.olnodeToggleFold(n.id)">{{ n.fold ? '▸' : '▾' }}</button>
+              <button class="oc-caret" :title="n.fold ? '展开子模块' : '折叠子模块'" @click.stop="work.olnodeToggleFold(n.id)"><OIcon :name="n.fold ? 'caret-right' : 'caret-down'" :size="11" /></button>
               <input
                 v-if="editTitle && editTitle.id === n.id"
                 class="oc-title-edit"
@@ -873,7 +874,7 @@ onBeforeUnmount(() => {
               @keydown.esc.prevent="editText = null"
               @keydown.ctrl.enter.prevent="commitInline"
             ></textarea>
-            <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }">＋ 选择目标</button>
+            <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }"><OIcon name="plus" :size="12" /> 选择目标</button>
             <div v-else class="oc-body" :class="{ 'oc-textbody': n.kind === 'textbox' }">
               <div class="oc-label">{{ labelOf(n) }}</div>
               <div v-if="showFullText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
@@ -883,15 +884,15 @@ onBeforeUnmount(() => {
           </template>
 
           <div v-if="work.selOlnodeId === n.id" class="oc-mini" @mousedown.stop>
-            <button v-if="n.kind === 'event'" :title="'形状：' + SHAPE_LABEL[n.shape || 'process'] + '（点击切换）'" @click.stop="work.olnodeSetShape(n.id, nextShape(n.shape))">◇</button>
-            <button v-if="n.kind !== 'container'" title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)">✎</button>
+            <button v-if="n.kind === 'event'" :title="'形状：' + SHAPE_LABEL[n.shape || 'process'] + '（点击切换）'" @click.stop="work.olnodeSetShape(n.id, nextShape(n.shape))"><OIcon name="shape" :size="13" /></button>
+            <button v-if="n.kind !== 'container'" title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)"><OIcon name="edit" :size="13" /></button>
             <span v-if="n.kind === 'textbox'" class="oc-mini-op" title="文本框透明度">
               <input type="range" min="0.15" max="1" step="0.05" :value="n.opacity != null ? n.opacity : 1" @input="work.olnodeSetOpacity(n.id, $event.target.value)" />
               透
             </span>
-            <button v-if="work.olTypes.length" :title="'自定义类型：' + (n.mtype || '无') + '（点击切换）'" @click.stop="cycleMtype(n)">🏷</button>
-            <button :title="n.pin ? '取消固定' : '固定位置（「整理」时不动）'" @click.stop="work.olnodeSetPin(n.id, !n.pin)">{{ n.pin ? '📌' : '📍' }}</button>
-            <button class="oc-mini-x" title="删除模块" @click.stop="onRemove(n)">✕</button>
+            <button v-if="work.olTypes.length" :title="'自定义类型：' + (n.mtype || '无') + '（点击切换）'" @click.stop="cycleMtype(n)"><OIcon name="tag" :size="13" /></button>
+            <button :title="n.pin ? '取消固定' : '固定位置（「整理」时不动）'" @click.stop="work.olnodeSetPin(n.id, !n.pin)"><OIcon name="pin" :size="13" :class="{ on: n.pin }" /></button>
+            <button class="oc-mini-x" title="删除模块" @click.stop="onRemove(n)"><OIcon name="close" :size="13" /></button>
           </div>
           <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块建立连线'" @mousedown="startConnect($event, n)" />
           <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
@@ -935,7 +936,7 @@ onBeforeUnmount(() => {
           <div class="oc-eedit-row">
             <input ref="edgeLabelInput" class="rp-input" :value="curRel()?.label || ''" placeholder="连线标签…" @input="patchRel({ label: $event.target.value })" @keydown.enter="edgeEdit = null" @keydown.esc="edgeEdit = null" />
             <button class="om-btn" :title="edgeEdit && curRel() ? '箭头：' + { '->': '单向', '<->': '双向', '--': '无向' }[curRel().arrows || '->'] : '箭头'" @click="patchRel({ arrows: cycleArrow(curRel()?.arrows || '->') })">{{ arrowsGlyph(curRel()?.arrows) }}</button>
-            <button class="om-btn oc-mini-x" title="删除连线" @click="removeRel">✕</button>
+            <button class="om-btn oc-mini-x" title="删除连线" @click="removeRel"><OIcon name="close" :size="12" /></button>
           </div>
           <div class="oc-eedit-row oc-kindrow">
             <span
@@ -997,7 +998,7 @@ onBeforeUnmount(() => {
     <div v-if="blankCtx" class="oc-ctx oc-blankctx" :style="{ left: blankCtx.x + 'px', top: blankCtx.y + 'px' }" @mousedown.stop>
       <div class="oc-ctx-title">在此处新建模块</div>
       <button v-for="(m, k) in CREATE_KINDS" :key="k" class="oc-ctx-item" @click="createAt(k)">
-        {{ m.icon }} {{ m.label }}
+        <OIcon :name="m.icon" :size="13" /> {{ m.label }}
       </button>
     </div>
 

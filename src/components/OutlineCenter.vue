@@ -1,5 +1,6 @@
 <!-- 大纲中心（8.8.2）：文本 / 画布双视图；文本视图为 Word 式富文本编辑（text+html 双字段），右键快捷栏含双链 -->
 <script setup>
+import OIcon from './OIcon.vue'
 import { computed, ref, watch, nextTick } from 'vue'
 import { NPopover } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -173,7 +174,7 @@ function onCtx(e) {
         <div class="rp-title">容器内容（{{ curKids.length }}）——点击卡片可跳转编辑</div>
         <div v-for="k in curKids" :key="k.id" class="ol-kid" role="button" tabindex="0" @click="selectNode(k.id)" @keydown.enter="selectNode(k.id)">
           <div class="ol-kid-head">
-            <span class="ol-type-icon">{{ KIND_META[k.kind]?.icon || '◆' }}</span>
+            <span class="ol-type-icon"><OIcon :name="KIND_META[k.kind]?.icon || 'diamond'" :size="12" /></span>
             <span class="ol-kid-label">{{ kidLabel(k) }}</span>
             <span class="ol-kid-type">{{ KIND_META[k.kind]?.label || '模块' }}</span>
           </div>

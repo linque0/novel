@@ -1,6 +1,7 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
 import { NButton, NInput, NSelect, NTag } from 'naive-ui'
+import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
 import DLinkTextMenu from './DLinkTextMenu.vue'
@@ -139,16 +140,16 @@ function addRelation() {
     <div v-for="[k, v] in fieldsRows" :key="k" class="field-row">
       <input class="rp-input" :value="k" style="width: 120px" title="点击修改字段名（失焦或回车提交）" @change="setFieldKey(k, $event.target.value.trim())" @keyup.enter="$event.target.blur()" />
       <NInput class="rp-input" :value="v" style="flex: 1" @update:value="(v2) => setFieldValue(k, v2)" />
-      <NButton size="tiny" quaternary @click="removeField(k)">✕</NButton>
+      <NButton size="tiny" quaternary @click="removeField(k)"><OIcon name="close" :size="11" /></NButton>
     </div>
-    <NButton size="tiny" @click="addField">＋字段</NButton>
+    <NButton size="tiny" @click="addField"><OIcon name="plus" :size="11" /> 字段</NButton>
 
     <hr class="divider" />
     <div class="rp-title">人物关系</div>
     <div v-for="r in myRelations" :key="r.id" class="field-row" style="align-items: center">
       <NTag size="small" :bordered="false">{{ r.other?.name || '?' }}</NTag>
       <NInput class="rp-input" :value="r.label" style="flex: 1" @update:value="(v) => work.updateRelation(r.id, { label: v })" />
-      <NButton size="tiny" quaternary @click="work.removeRelation(r.id)">✕</NButton>
+      <NButton size="tiny" quaternary @click="work.removeRelation(r.id)"><OIcon name="close" :size="11" /></NButton>
     </div>
     <div class="field-row" style="align-items: center">
       <NSelect v-model:value="relOther" :options="otherOpts" size="small" placeholder="选择人物" style="width: 140px" />
