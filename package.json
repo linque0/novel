@@ -21,7 +21,7 @@
     "compression": "maximum",
     "afterPack": "scripts/afterpack.js",
     "directories": {
-      "output": "release"
+      "output": "release2"
     },
     "files": [
       "dist/**/*",
@@ -62,6 +62,14 @@
         { "target": "nsis", "arch": ["x64"] },
         { "target": "dir", "arch": ["x64"] }
       ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": "always",
+      "createStartMenuShortcut": true,
+      "shortcutName": "小说工坊"
     }
   },
   "dependencies": {
