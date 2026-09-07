@@ -202,28 +202,44 @@ export function blobToDataUrl(blob) {
 
 /* ---- 全书导出 ---- */
 
-export async function buildBookText(work, volumes, chapters, asMarkdown) {
+/** 组装导出章节序列：按卷排序，可选 onlyIds 过滤（v1.0.4 按章节勾选导出）；返回 [{ vol, ch }] */
+export function collectExportChapters(volumes, chapters, onlyIds) {
+  const keep = (c) => !c.deletedAt && (!onlyIds || onlyIds.has(c.id))
+  const vols = volumes.filter((v) => !v.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder)
+  const out = []
+  const used = new Set()
+  for (const v of vols) {
+    const chs = chapters.filter((c) => keep(c) && c.volumeId === v.id).sort((a, b) => a.sortOrder - b.sortOrder)
+    for (const c of chs) {
+      used.add(c.id)
+      out.push({ vol: v, ch: c })
+    }
+  }
+  for (const c of chapters.filter((x) => keep(x) && !used.has(x.id)).sort((a, b) => a.sortOrder - b.sortOrder)) {
+    out.push({ vol: null, ch: c })
+  }
+  return out
+}
+
+export async function buildBookText(work, volumes, chapters, asMarkdown, onlyIds = null) {
   const asFmt = (c) => {
-    if (c.fmt === 'html') return asMarkdown ? htmlToMd(c.content) : htmlToPlain(c.content)
+    /* fmt 缺失但内容含标签（历史数据）也按 html 处理 */
+    if (c.fmt === 'html' || (c.fmt !== 'text' && /<[a-z][\s\S]*>/i.test(c.content || ''))) return asMarkdown ? htmlToMd(c.content) : htmlToPlain(c.content)
     return c.content || ''
   }
-  const vols = volumes.filter((v) => !v.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder)
+  const rows = collectExportChapters(volumes, chapters, onlyIds)
   const lines = []
   lines.push(asMarkdown ? `# ${work.title}` : `${work.title}`)
   if (work.author) lines.push(asMarkdown ? `> 作者：${work.author}` : `作者：${work.author}`)
   lines.push('')
-  const used = new Set()
-  for (const v of vols) {
-    const chs = chapters.filter((c) => !c.deletedAt && c.volumeId === v.id).sort((a, b) => a.sortOrder - b.sortOrder)
-    if (chs.length || vols.length > 1) lines.push(asMarkdown ? `## ${v.title}` : `【${v.title}】`, '')
-    for (const c of chs) {
-      used.add(c.id)
-      lines.push(asMarkdown ? `### ${c.title}` : c.title, '', asFmt(c), '', '')
+  let lastVol = undefined
+  for (const { vol, ch } of rows) {
+    if (vol && vol !== lastVol) {
+      lines.push(asMarkdown ? `## ${vol.title}` : `【${vol.title}】`, '')
+      lastVol = vol
     }
-  }
-  // 不属于任何卷的散章
-  for (const c of chapters.filter((x) => !x.deletedAt && !used.has(x.id))) {
-    lines.push(asMarkdown ? `### ${c.title}` : c.title, '', asFmt(c), '', '')
+    if (!vol && lastVol !== null) lastVol = null
+    lines.push(asMarkdown ? `### ${ch.title}` : ch.title, '', asFmt(ch), '', '')
   }
   return lines.join('\n').replace(/\n{4,}/g, '\n\n\n').trim() + '\n'
 }

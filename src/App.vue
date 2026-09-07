@@ -8,6 +8,7 @@ import Bookshelf from './components/Bookshelf.vue'
 import Workbench from './components/Workbench.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
 import ImportDialog from './components/ImportDialog.vue'
+import ExportDialog from './components/ExportDialog.vue'
 import RevisionsModal from './components/RevisionsModal.vue'
 import TrashModal from './components/TrashModal.vue'
 import StatsModal from './components/StatsModal.vue'
@@ -62,6 +63,7 @@ onMounted(boot)
             <Workbench v-else />
             <GlobalSearch />
             <ImportDialog />
+            <ExportDialog />
             <RevisionsModal />
             <TrashModal />
             <StatsModal />

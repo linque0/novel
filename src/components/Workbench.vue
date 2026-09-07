@@ -4,7 +4,7 @@ import { NButton, NSelect, NDropdown, NModal, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { useShelfStore } from '../stores/shelf'
-import { exportBook, backupAll, restoreBackup } from '../services/exporter'
+import { backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles } from '../services/fileio'
 import OIcon from './OIcon.vue'
 import ChapterTree from './ChapterTree.vue'
@@ -69,16 +69,14 @@ const THEME_OPTS = [
 ]
 
 const exportOptions = [
-  { label: '导出本书 TXT', key: 'txt' },
-  { label: '导出本书 Markdown', key: 'md' },
+  { label: '导出正文（选章节 · TXT/MD/Word）…', key: 'book' },
   { type: 'divider', key: 'd1' },
   { label: '备份全部数据 (JSON)', key: 'backup' },
   { label: '恢复备份 (JSON)', key: 'restore' }
 ]
 async function onExport(key) {
-  if (key === 'txt' || key === 'md') {
-    await exportBook(work.work, work.volumes, work.chapters, key === 'md')
-    msg.success('已导出')
+  if (key === 'book') {
+    ui.exportOpen = true
   } else if (key === 'backup') {
     const r = await backupAll()
     if (!r?.canceled) msg.success('备份已保存')
