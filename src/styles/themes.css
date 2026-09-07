@@ -1852,26 +1852,33 @@ body,
 .oc-edge-hit:hover + path {
   stroke-width: 3.4;
 }
-/* 连接点模块（v1.0.10）：线与线之间的接线柱——透明小热区，可见部分是居中圆点；
- * 拖线落到既有连线上会自动在该处生成连接点，实现连线↔连线互连 */
+/* 连接点模块（v1.0.12）：微观透明的接线柱——直径 6px、低透明度小圆点，
+ * 平时几乎隐形不遮挡所吸附的连线；悬停/选中时才显形（放大光晕）便于操作 */
 .oc-junction {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
   transform: translate(-50%, -50%);
   border-radius: 50%;
   background: var(--accent);
-  border: 2px solid var(--bg-panel);
-  box-shadow: 0 0 0 1px var(--accent);
+  opacity: 0.18; /* 微观透明：默认几乎融进连线 */
+  transition: opacity 0.12s ease, width 0.12s ease, height 0.12s ease;
   pointer-events: none; /* 命中交给外层 .oc-node 热区 */
+}
+.oc-node:hover .oc-junction,
+.oc-arrow.sel .oc-junction {
+  opacity: 0.9;
+  width: 9px;
+  height: 9px;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }
 .oc-arrow {
   background: transparent;
 }
 .oc-arrow.sel {
-  outline: 1.5px dashed var(--accent);
+  outline: 1.5px dashed color-mix(in srgb, var(--accent) 60%, transparent);
   outline-offset: 3px;
   border-radius: 50%;
 }

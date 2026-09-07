@@ -119,7 +119,12 @@ function edgeGeomFor(n, r) {
     { x: B.x, y: B.y, w: B.w, h: B.h },
     ...edgeObstacles(n.id, m.id)
   ]
-  return routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle)
+  /* 连接点（arrow）两端不出桩（stub=0）：线直接从点中心出发，
+   * 与连接点所吸附的既有连线无缝衔接 */
+  const isJunc = n.kind === 'arrow' || m.kind === 'arrow'
+  return isJunc
+    ? routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle, 0)
+    : routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle)
 }
 /* 障碍集合：除两端节点外的可见模块矩形；容器仅当两端都在其外时才算障碍（子模块边必然穿越所在容器）；
  * 连接点（arrow）是接线柱不是遮挡物——线从它身上过才是常态，不作障碍 */
@@ -395,6 +400,12 @@ const ctxMenu = ref(null) // { x, y, nodeId }
 const blankCtx = ref(null) // { x, y, px, py }  px/py = 画布坐标落点
 /* 连线右键（v1.0.11）：弹「创建连接点」菜单——在右键落点（吸附到连线上最近点）建接线柱 */
 const edgeCtx = ref(null) // { x, y, ownerId, relId, px, py }  屏幕坐标 + 画布落点
+/* 连线命中路径自身的 contextmenu（.stop 阻止冒泡，画布层收不到）——直接在此建菜单态。
+ * 不做 elementFromPoint 反查也能命中：事件目标就是连线命中路径 */
+function openEdgeCtxFromEvent(e, edge) {
+  const pt = canvasPt(e)
+  edgeCtx.value = { x: e.clientX, y: e.clientY, ownerId: edge.ownerId, relId: edge.rel.id, px: pt.x, py: pt.y }
+}
 const CREATE_KINDS = Object.fromEntries(Object.entries(KIND_META).filter(([k]) => k !== 'anchor' && k !== 'volume'))
 function onCanvasCtx(e) {
   /* Chromium 对 SVG pointer-events:stroke 路径的 contextmenu 命中可能与 mousedown 不一致
@@ -556,23 +567,15 @@ function junctionAt(pt) {
   const row = work.olnodeAdd(null, { kind: 'arrow', title: '', canvasX: snap(pt.x - 10), canvasY: snap(pt.y - 10), w: 20, h: 20 })
   return row
 }
-/* 连线右键菜单动作 */
+/* 连线右键菜单动作：在右键落点（吸附到被右键连线路径最近点）直接创建连接点 */
 function edgeCtxCreate() {
   const st = edgeCtx.value
   edgeCtx.value = null
   if (!st) return
-  /* 找到被右键的那条连线，把连接点吸附到其路径上离右键落点最近处 */
   const e = edges.value.find((x) => x.ownerId === st.ownerId && x.rel.id === st.relId)
   const pt = e ? snapPtOnEdge({ x: st.px, y: st.py }, e) : { x: st.px, y: st.py }
   const row = junctionAt(pt)
   work.selOlnodeId = row.id
-}
-function edgeCtxEdit() {
-  const st = edgeCtx.value
-  edgeCtx.value = null
-  if (!st) return
-  const e = edges.value.find((x) => x.ownerId === st.ownerId && x.rel.id === st.relId)
-  if (e) openEdgeEdit(st.ownerId, st.relId, { x: st.px, y: st.py })
 }
 function startConnect(e, n) {
   e.stopPropagation()
@@ -949,8 +952,8 @@ onBeforeUnmount(() => {
           :height="svgBox.h"
           :viewBox="svgBox.x + ' ' + svgBox.y + ' ' + svgBox.w + ' ' + svgBox.h"
         >
-          <path v-for="e in edges" :key="'h' + e.key" class="oc-edge-hit" :d="e.d" :data-owner="e.ownerId" :data-rel="e.rel.id" @mousedown.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)" @contextmenu.prevent.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)">
-            <title>点击或右键编辑连线（标签 / 线型 / 颜色）</title>
+          <path v-for="e in edges" :key="'h' + e.key" class="oc-edge-hit" :d="e.d" :data-owner="e.ownerId" :data-rel="e.rel.id" @mousedown.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)" @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)">
+            <title>点击编辑连线 · 右键创建连接点</title>
           </path>
           <path
             v-for="e in edges"
@@ -1181,14 +1184,10 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <!-- 连线右键（v1.0.11）：在此处创建连接点（吸附到连线上）/ 编辑连线 -->
+    <!-- 连线右键（v1.0.12）：仅创建连接点（吸附在连线路径上） -->
     <div v-if="edgeCtx" class="oc-ctx oc-blankctx" :style="{ left: edgeCtx.x + 'px', top: edgeCtx.y + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
-      <div class="oc-ctx-title">连线上</div>
-      <button class="oc-ctx-item" title="在右键位置创建连接点（吸附到连线上，可再拖线连接）" @click="edgeCtxCreate">
+      <button class="oc-ctx-item" title="在右键位置创建连接点（吸附在连线上，从它拖出新连线与原线无缝衔接）" @click="edgeCtxCreate">
         <OIcon name="link" :size="13" /> 创建连接点
-      </button>
-      <button class="oc-ctx-item" title="编辑连线（标签 / 线型 / 颜色 / 箭头 / 线宽）" @click="edgeCtxEdit">
-        <OIcon name="edit" :size="13" /> 编辑连线
       </button>
     </div>
 
