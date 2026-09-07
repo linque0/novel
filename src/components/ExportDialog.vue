@@ -112,7 +112,7 @@ async function doExport() {
       /* 多章（小批量）：按选中顺序逐章分批导出 */
       const r = await exportChapterRowsSequential(work.work, work.volumes, work.chapters, rows, fmt.value)
       if (r.canceledAt) msg.warning(`已导出 ${r.exported} 章，在「${r.canceledAt}」处取消`)
-      else msg.success(`已按顺序导出 ${r.exported} 章（${fmt.value.toUpperCase()}）`)
+      else msg.success(`已导出 ${r.exported} 章至 ${r.dir || '所选目录'}（${fmt.value.toUpperCase()}）`)
     } else if (batchMode.value === 'merge') {
       /* 大批量合并单文件（书名命名） */
       const r = await exportBookWithFilter(work.work, work.volumes, work.chapters, fmt.value, new Set(picked.value))

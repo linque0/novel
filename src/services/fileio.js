@@ -41,10 +41,10 @@ export function pickFiles(exts) {
   })
 }
 
-/** 保存文本/二进制文件：Electron 走保存对话框（isBase64 走 Buffer 写入），浏览器触发下载 */
+/** 保存文本/二进制文件：Electron 走保存对话框（isBase64 走 Buffer 写入；dirPath 给定时跳过对话框直接写该目录），浏览器触发下载 */
 export async function saveTextFile(defaultName, content, opts = {}) {
   if (window.native?.isElectron) {
-    return window.native.saveFile({ defaultName, content, isBase64: !!opts.isBase64 })
+    return window.native.saveFile({ defaultName, content, isBase64: !!opts.isBase64, dirPath: opts.dirPath || null })
   }
   const blob = opts.isBase64
     ? new Blob([Uint8Array.from(atob(content), (c) => c.charCodeAt(0))], { type: opts.mime || 'application/octet-stream' })

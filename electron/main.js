@@ -193,12 +193,20 @@ ipcMain.handle('docx:toHtml', async (_e, payload) => {
 ipcMain.handle('clip:readText', () => clipboard.readText())
 ipcMain.handle('clip:writeText', (_e, text) => clipboard.writeText(String(text ?? '')))
 
-ipcMain.handle('export:save', async (_e, payload) => {  const res = await dialog.showSaveDialog(win, { defaultPath: payload.defaultName || 'export.txt' })
-  if (res.canceled || !res.filePath) return { canceled: true }
-  if (payload.isBase64) {
-    fs.writeFileSync(res.filePath, Buffer.from(payload.content, 'base64'))
+ipcMain.handle('export:save', async (_e, payload) => {  /* v1.0.6：带 dirPath 时跳过对话框直接写入（逐章分批导出仅首次确认位置） */
+  let filePath
+  if (payload.dirPath) {
+    fs.mkdirSync(payload.dirPath, { recursive: true })
+    filePath = path.join(payload.dirPath, payload.defaultName || 'export.txt')
   } else {
-    fs.writeFileSync(res.filePath, payload.content, 'utf-8')
+    const res = await dialog.showSaveDialog(win, { defaultPath: payload.defaultName || 'export.txt' })
+    if (res.canceled || !res.filePath) return { canceled: true }
+    filePath = res.filePath
   }
-  return { canceled: false, path: res.filePath }
+  if (payload.isBase64) {
+    fs.writeFileSync(filePath, Buffer.from(payload.content, 'base64'))
+  } else {
+    fs.writeFileSync(filePath, payload.content, 'utf-8')
+  }
+  return { canceled: false, path: filePath }
 })

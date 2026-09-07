@@ -54,16 +54,19 @@ export async function exportSingleChapter(work, volumes, chapter, fmt) {
   return exportChapterRows(work, rows, fmt, safeName(chapter.title))
 }
 
-/** 逐章分批导出：按 rows 顺序依次弹保存对话框（每章一个文件，章节名命名）；
- * 任一步取消即中止后续（已导出的保留）。返回 { exported, canceledAt } */
+/** 逐章分批导出（v1.0.6：仅首次弹保存对话框确认位置，后续章节自动写入同目录）；
+ * 首步取消即中止全部。返回 { exported, canceledAt, dir } */
 export async function exportChapterRowsSequential(work, volumes, chapters, rows, fmt) {
   let exported = 0
+  let dir = null
   for (const { ch } of rows) {
-    const r = await exportChapterRows(work, [{ vol: null, ch }], fmt, safeName(ch.title))
-    if (r?.canceled) return { exported, canceledAt: ch.title }
+    const r = await exportChapterRows(work, [{ vol: null, ch }], fmt, safeName(ch.title), dir)
+    if (r?.canceled) return { exported, canceledAt: ch.title, dir }
+    /* 从首个保存路径提取目录 */
+    if (!dir && r?.path) dir = r.path.replace(/[\\/][^\\/]+$/, '')
     exported++
   }
-  return { exported, canceledAt: null }
+  return { exported, canceledAt: null, dir }
 }
 
 /** zip 批量：每章一个文件（NN-章节名.格式，NN 按顺序 01 起）打成一个压缩包 */
@@ -101,15 +104,14 @@ async function chapterText(work, chapters, asMarkdown) {
   return lines.join('\n').replace(/\n{4,}/g, '\n\n\n').trim() + '\n'
 }
 
-/** rows（[{vol, ch}]）→ 一个合并文件（供单章导出与合并导出共用） */
-async function exportChapterRows(work, rows, fmt, name) {
-  const only = new Set(rows.map((r) => r.ch.id))
-  if (fmt === 'txt') return saveTextFile(`${name}.txt`, await chapterText(work, rows.map((r) => r.ch), false))
-  if (fmt === 'md') return saveTextFile(`${name}.md`, await chapterText(work, rows.map((r) => r.ch), true))
+/** rows（[{vol, ch}]）→ 一个合并文件（供单章导出与合并导出共用；dir 给定时跳过对话框直写该目录） */
+async function exportChapterRows(work, rows, fmt, name, dir = null) {
+  if (fmt === 'txt') return saveTextFile(`${name}.txt`, await chapterText(work, rows.map((r) => r.ch), false), { dirPath: dir })
+  if (fmt === 'md') return saveTextFile(`${name}.md`, await chapterText(work, rows.map((r) => r.ch), true), { dirPath: dir })
   /* docx：rows 含卷信息时带卷标题 */
   const chapters = rows.map((r) => r.ch)
   const fakeVols = []
-  return saveTextFile(`${name}.docx`, await buildBookDocx(work, fakeVols, chapters, null), { isBase64: true })
+  return saveTextFile(`${name}.docx`, await buildBookDocx(work, fakeVols, chapters, null), { isBase64: true, dirPath: dir })
 }
 
 /* OOXML 转义 */
