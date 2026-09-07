@@ -25,6 +25,7 @@ export const useUiStore = defineStore('ui', {
     trashOpen: false,
     importOpen: false,
     exportOpen: false,
+    helpOpen: false,
     revisionsCtx: null
   }),
   getters: {

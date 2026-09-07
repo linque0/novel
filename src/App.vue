@@ -9,6 +9,7 @@ import Workbench from './components/Workbench.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
 import ImportDialog from './components/ImportDialog.vue'
 import ExportDialog from './components/ExportDialog.vue'
+import HelpManual from './components/HelpManual.vue'
 import RevisionsModal from './components/RevisionsModal.vue'
 import TrashModal from './components/TrashModal.vue'
 import StatsModal from './components/StatsModal.vue'
@@ -64,6 +65,7 @@ onMounted(boot)
             <GlobalSearch />
             <ImportDialog />
             <ExportDialog />
+            <HelpManual />
             <RevisionsModal />
             <TrashModal />
             <StatsModal />

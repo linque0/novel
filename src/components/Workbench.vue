@@ -192,6 +192,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </NDropdown>
       <NButton size="small" @click="ui.statsOpen = true">统计</NButton>
       <NButton size="small" @click="ui.trashOpen = true">回收站</NButton>
+      <NButton size="small" title="查看功能介绍与键位详解" @click="ui.helpOpen = true">帮助</NButton>
       <NDropdown trigger="click" :options="bookmarkOptions" @select="onBookmarkSelect">
         <NButton size="small"><OIcon name="bookmark" :size="14" /> 书签</NButton>
       </NDropdown>
