@@ -122,6 +122,7 @@ async function onCardMenu(key, w) {
       <NButton size="small" @click="doBackup">备份</NButton>
       <NButton size="small" @click="doRestore">恢复</NButton>
       <NButton size="small" @click="ui.statsOpen = true">统计</NButton>
+      <NButton size="small" title="查看功能介绍与键位详解" @click="ui.helpOpen = true">帮助</NButton>
       <NButton size="small" type="primary" @click="openCreate">＋ 新建作品</NButton>
     </div>
 
