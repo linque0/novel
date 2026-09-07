@@ -393,6 +393,8 @@ function startResize(e, n, dir) {
 const ctxMenu = ref(null) // { x, y, nodeId }
 /* 空白右键（v0.4.9）：在右键落点选建各模块（锚点/卷需选章节/卷参数，不在菜单内） */
 const blankCtx = ref(null) // { x, y, px, py }  px/py = 画布坐标落点
+/* 连线右键（v1.0.11）：弹「创建连接点」菜单——在右键落点（吸附到连线上最近点）建接线柱 */
+const edgeCtx = ref(null) // { x, y, ownerId, relId, px, py }  屏幕坐标 + 画布落点
 const CREATE_KINDS = Object.fromEntries(Object.entries(KIND_META).filter(([k]) => k !== 'anchor' && k !== 'volume'))
 function onCanvasCtx(e) {
   /* Chromium 对 SVG pointer-events:stroke 路径的 contextmenu 命中可能与 mousedown 不一致
@@ -400,10 +402,11 @@ function onCanvasCtx(e) {
   const t = document.elementFromPoint(e.clientX, e.clientY)
   const hitEl = t && (t.classList?.contains('oc-edge-hit') ? t : t.closest?.('.oc-edge-hit'))
   if (hitEl && hitEl.dataset.owner && hitEl.dataset.rel) {
-    openEdgeEdit(hitEl.dataset.owner, hitEl.dataset.rel, canvasPt(e))
+    const pt = canvasPt(e)
+    edgeCtx.value = { x: e.clientX, y: e.clientY, ownerId: hitEl.dataset.owner, relId: hitEl.dataset.rel, px: pt.x, py: pt.y }
     return
   }
-  if (e.target.closest?.('.oc-node, .oc-elabel, .oc-edge-hit, .oc-eedit, .rg-eedit, .oc-ctx')) return // 节点/连线/标签/浮层/菜单上不弹创建菜单（容器右键走调色板，连线右键走编辑浮层）
+  if (e.target.closest?.('.oc-node, .oc-elabel, .oc-edge-hit, .oc-eedit, .rg-eedit, .oc-ctx')) return // 节点/连线/标签/浮层/菜单上不弹创建菜单（容器右键走调色板，连线右键走连接点菜单）
   const pt = canvasPt(e)
   blankCtx.value = { x: e.clientX, y: e.clientY, px: pt.x, py: pt.y }
 }
@@ -422,6 +425,7 @@ function onKey(e) {
   if (e.key === 'Escape') {
     ctxMenu.value = null
     blankCtx.value = null
+    edgeCtx.value = null
     edgeEdit.value = null
     return
   }
@@ -526,10 +530,49 @@ function hitEdgeAt(pt, excludeOwnerId) {
   }
   return null
 }
+/* 点到连线上的最近点（采样法）：连接点吸附到被右键的连线上 */
+function snapPtOnEdge(pt, e) {
+  const N = 48
+  let best = null
+  let prev = null
+  for (let i = 0; i <= N; i++) {
+    const t = i / N
+    const p = { x: e.a.x + (e.b.x - e.a.x) * t, y: e.a.y + (e.b.y - e.a.y) * t }
+    if (prev) {
+      const dx = p.x - prev.x
+      const dy = p.y - prev.y
+      const l2 = dx * dx + dy * dy || 1
+      let s = ((pt.x - prev.x) * dx + (pt.y - prev.y) * dy) / l2
+      s = Math.max(0, Math.min(1, s))
+      const q = { x: prev.x + dx * s, y: prev.y + dy * s }
+      if (!best || Math.hypot(pt.x - q.x, pt.y - q.y) < Math.hypot(pt.x - best.x, pt.y - best.y)) best = q
+    }
+    prev = p
+  }
+  return best || pt
+}
 /* 在连线落点处生成连接点节点（kind:'arrow'，接线柱），返回该节点 */
 function junctionAt(pt) {
   const row = work.olnodeAdd(null, { kind: 'arrow', title: '', canvasX: snap(pt.x - 10), canvasY: snap(pt.y - 10), w: 20, h: 20 })
   return row
+}
+/* 连线右键菜单动作 */
+function edgeCtxCreate() {
+  const st = edgeCtx.value
+  edgeCtx.value = null
+  if (!st) return
+  /* 找到被右键的那条连线，把连接点吸附到其路径上离右键落点最近处 */
+  const e = edges.value.find((x) => x.ownerId === st.ownerId && x.rel.id === st.relId)
+  const pt = e ? snapPtOnEdge({ x: st.px, y: st.py }, e) : { x: st.px, y: st.py }
+  const row = junctionAt(pt)
+  work.selOlnodeId = row.id
+}
+function edgeCtxEdit() {
+  const st = edgeCtx.value
+  edgeCtx.value = null
+  if (!st) return
+  const e = edges.value.find((x) => x.ownerId === st.ownerId && x.rel.id === st.relId)
+  if (e) openEdgeEdit(st.ownerId, st.relId, { x: st.px, y: st.py })
 }
 function startConnect(e, n) {
   e.stopPropagation()
@@ -628,6 +671,7 @@ function onWinDown(e) {
   if (editTitle.value && !e.target.closest?.('.oc-title-edit')) commitTitle()
   if (ctxMenu.value && !e.target.closest?.('.oc-ctx')) ctxMenu.value = null
   if (blankCtx.value && !e.target.closest?.('.oc-ctx')) blankCtx.value = null
+  if (edgeCtx.value && !e.target.closest?.('.oc-ctx, .oc-edge-hit')) edgeCtx.value = null
 }
 
 /* ---------- 节点操作 ---------- */
@@ -1134,6 +1178,17 @@ onBeforeUnmount(() => {
       <div class="oc-ctx-title">在此处新建模块</div>
       <button v-for="(m, k) in CREATE_KINDS" :key="k" class="oc-ctx-item" @click="createAt(k)">
         <OIcon :name="m.icon" :size="13" /> {{ m.label }}
+      </button>
+    </div>
+
+    <!-- 连线右键（v1.0.11）：在此处创建连接点（吸附到连线上）/ 编辑连线 -->
+    <div v-if="edgeCtx" class="oc-ctx oc-blankctx" :style="{ left: edgeCtx.x + 'px', top: edgeCtx.y + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
+      <div class="oc-ctx-title">连线上</div>
+      <button class="oc-ctx-item" title="在右键位置创建连接点（吸附到连线上，可再拖线连接）" @click="edgeCtxCreate">
+        <OIcon name="link" :size="13" /> 创建连接点
+      </button>
+      <button class="oc-ctx-item" title="编辑连线（标签 / 线型 / 颜色 / 箭头 / 线宽）" @click="edgeCtxEdit">
+        <OIcon name="edit" :size="13" /> 编辑连线
       </button>
     </div>
 
