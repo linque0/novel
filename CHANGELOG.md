@@ -4,6 +4,14 @@
 > 所有版本均配 CDP 验收脚本入库 `tools/`，发布前全量跑一轮。
 > **推送纪律（2026-09-03 更新）**：单分支直推——main = 开发主体（最新可用版本），每次代码更新同步变更版本号（package.json / README / CHANGELOG / 提交信息四处一致），不新建/删除版本分支，里程碑发布点打 tag 存档。
 
+## v1.0.4（2026-09-07）正文导出重构：按章节勾选 + 新增 Word (docx) 格式
+
+- **导出对话框（ExportDialog）**：导出菜单原「导出本书 TXT / Markdown」两项合并为「导出正文（选章节 · TXT/MD/Word）…」——按卷分组勾选章节（全选/按卷选/单选，默认全选=原整书行为），格式三选：TXT 纯文本 / Markdown / **Word (docx)**；
+- **docx 生成（零新依赖）**：JSZip 手组 OOXML（WordprocessingML）——保留富文本基础语义（加粗/斜体/下划线/删除线/字体色、h1-h6 标题样式、对齐、列表与引用缩进），书名/卷/章节标题映射 Heading 1/2/3，A4 版式，元数据写入书名作者；
+- **修复：fmt 缺失的历史章节内容**——纯文本分支遇含 HTML 标签内容自动按 html 识别（此前原样转义出 `&lt;p&gt;` 标签残留），txt/md/docx 三格式统一受益；
+- buildBookText 抽出 collectExportChapters（卷序+散章兜底），支持 onlyIds 过滤；saveTextFile 支持 base64 二进制（docx 经 Electron 保存对话框落盘）；
+- **验证**：GUI 全链路——对话框勾选树（卷分组/三格式）、仅选 1 章时 txt/md 只含该章、docx 生成后经 mammoth 反解析内容干净（标题+正文段落无标签残留）；回归 olcanvas 29/29、chargraph 12/12、canvas-model 48/48、relfollow 15/15。
+
 ## v1.0.3（2026-09-07）连线与箭头大小调节
 
 - **新增「箭头大小」画布设置**（大纲画布 ⚙ 设置弹层）：0.5×–3.0× 滑杆，与既有「连线粗细」（0.8–5px）并列，canvasPrefs 新增 `arrowSize` 随作品持久化（appconfig）；
