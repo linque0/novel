@@ -140,18 +140,20 @@ function insideContainer(nodeId, cid) {
   }
   return false
 }
-/* 箭头三角形：按 rel.arrows 在两端生成 */
+/* 箭头三角形：按 rel.arrows 在两端生成；单条连线可经 rel.edgeWidth / rel.arrowScale 覆盖画布全局设置 */
+const relEdgeWidth = (rel) => rel?.edgeWidth || work.canvasPrefs.edgeWidth || 1.8
+const relArrowScale = (rel) => rel?.arrowScale || work.canvasPrefs.arrowSize || 1
 const edgeDecor = computed(() => {
   const heads = []
   const fills = []
   for (const e of edges.value) {
     const a = e.rel.arrows || '->'
     if (a === '->' || a === '<->') {
-      heads.push(arrowHeadDir(e.b.x, e.b.y, e.endDir, 7 * (work.canvasPrefs.arrowSize || 1)))
+      heads.push(arrowHeadDir(e.b.x, e.b.y, e.endDir, 7 * relArrowScale(e.rel)))
       fills.push(e.color)
     }
     if (a === '<->') {
-      heads.push(arrowHeadDir(e.a.x, e.a.y, e.startDir, 7 * (work.canvasPrefs.arrowSize || 1)))
+      heads.push(arrowHeadDir(e.a.x, e.a.y, e.startDir, 7 * relArrowScale(e.rel)))
       fills.push(e.color)
     }
   }
@@ -331,6 +333,32 @@ function reparentAfterDrop(n, pt) {
   }
 }
 
+/* ---------- 箭头模块旋转（v1.0.9）：绕模块中心拖拽，角度吸附 15° ---------- */
+function startRotate(e, n) {
+  if (e.button !== 0) return
+  e.stopPropagation()
+  e.preventDefault()
+  const r = rectOf(n)
+  const cx = r.x + r.w / 2
+  const cy = r.y + r.h / 2
+  const p0 = canvasPt(e)
+  const a0 = Math.atan2(p0.y - cy, p0.x - cx)
+  const rot0 = n.rot || 0
+  const move = (ev) => {
+    const p = canvasPt(ev)
+    const a = Math.atan2(p.y - cy, p.x - cx)
+    let deg = rot0 + ((a - a0) * 180) / Math.PI
+    deg = Math.round(deg / 15) * 15 // 15° 吸附，方向离散更好选
+    work.olnodeSetRot(n.id, ((deg % 360) + 360) % 360)
+  }
+  const up = () => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
+}
+
 /* ---------- 模块八向边缘拖拽调整大小（n/w 方向同步移动原点；拖拽中短过渡实时跟手，落库取整） ---------- */
 const resizing = ref(false)
 const resizeSmooth = ref(false) // 容器大盒子：调整过程用过渡动画平滑跟随鼠标
@@ -340,13 +368,14 @@ function startResize(e, n, dir) {
   e.preventDefault()
   resizing.value = n.id
   resizeSmooth.value = n.kind === 'container'
+  const isArrow = n.kind === 'arrow'
   const base = { ...(dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)) }
   const p0 = { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
   const mx = e.clientX
   const my = e.clientY
   /* 拖拽方向决定可变轴：未拖的轴保持原值不落库（否则横拖会把高度钉死在当前值） */
-  const canW = dir.includes('e') || dir.includes('w')
-  const canH = dir.includes('n') || dir.includes('s')
+  const canW = isArrow || dir.includes('e') || dir.includes('w')
+  const canH = isArrow || dir.includes('n') || dir.includes('s')
   const apply = (ev) => {
     const dx = (ev.clientX - mx) / zoom.value
     const dy = (ev.clientY - my) / zoom.value
@@ -354,18 +383,27 @@ function startResize(e, n, dir) {
     let h = base.h
     let x = p0.x
     let y = p0.y
-    if (dir.includes('e')) w = Math.max(96, base.w + dx)
-    if (dir.includes('s')) h = Math.max(36, base.h + dy)
-    if (dir.includes('w')) {
-      w = Math.max(96, base.w - dx)
-      x = p0.x + (base.w - w)
-    }
-    if (dir.includes('n')) {
-      h = Math.max(36, base.h - dy)
-      y = p0.y + (base.h - h)
+    if (isArrow) {
+      /* 箭头等比缩放：取拖拽距离在右下方向的投影，w=h 同步放大 */
+      const s = Math.max(12, base.w + (dx + dy) / 2)
+      w = s
+      h = s
+      x = p0.x + (base.w - s) / 2
+      y = p0.y + (base.h - s) / 2
+    } else {
+      if (dir.includes('e')) w = Math.max(96, base.w + dx)
+      if (dir.includes('s')) h = Math.max(36, base.h + dy)
+      if (dir.includes('w')) {
+        w = Math.max(96, base.w - dx)
+        x = p0.x + (base.w - w)
+      }
+      if (dir.includes('n')) {
+        h = Math.max(36, base.h - dy)
+        y = p0.y + (base.h - h)
+      }
     }
     dragSize.set(n.id, { w, h })
-    if (dir.includes('w') || dir.includes('n')) dragPos.set(n.id, { x: Math.round(x), y: Math.round(y) })
+    if (isArrow || dir.includes('w') || dir.includes('n')) dragPos.set(n.id, { x: Math.round(x), y: Math.round(y) })
   }
   apply(e)
   const move = (ev) => apply(ev)
@@ -456,6 +494,7 @@ function ctxAct(kind) {
   if (kind === 'shape') work.olnodeSetShape(n.id, nextShape(n.shape))
   else if (kind === 'mtype') cycleMtype(n)
   else if (kind === 'pin') work.olnodeSetPin(n.id, !n.pin)
+  else if (kind.startsWith('rot-')) work.olnodeSetRot(n.id, ((n.rot || 0) + Number(kind.slice(4))) % 360)
   else if (kind === 'edit') {
     ctxMenu.value = null
     startInlineEdit(n)
@@ -578,6 +617,7 @@ function onRemove(n) {
   work.olnodeRemove(n.id)
 }
 function onDblNode(n) {
+  if (n.kind === 'arrow') return // 箭头无文字内容，双击不进编辑
   if (n.kind === 'anchor' && n.refId) {
     work.navTo('chapters', n.refId)
     return
@@ -852,7 +892,7 @@ onBeforeUnmount(() => {
             :d="e.d"
             fill="none"
             :stroke="e.color"
-            :stroke-width="work.canvasPrefs.edgeWidth || 1.8"
+            :stroke-width="relEdgeWidth(e.rel)"
             :stroke-dasharray="dashOf(e.rel.style, e.rel.kind)"
             :opacity="edgeEdit && edgeEdit.relId === e.key ? 1 : 0.85"
           />
@@ -890,8 +930,14 @@ onBeforeUnmount(() => {
             </div>
           </template>
           <template v-else>
+            <!-- 箭头模块（v1.0.9）：自由摆放的指向箭头——按 rot 旋转、w 缩放 -->
+            <template v-if="n.kind === 'arrow'">
+              <svg class="oc-arrow-glyph" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+                <polygon class="oc-arrow-poly" points="0,0 100,50 0,100" :style="{ transform: 'rotate(' + (n.rot || 0) + 'deg)' }" />
+              </svg>
+            </template>
             <!-- 菱形/平行四边形：SVG 描边代替 clip-path（clip 会裁掉边框、锚点与手柄） -->
-            <svg v-if="n.kind === 'event' && (n.shape === 'diamond' || n.shape === 'para')" class="oc-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <svg v-else-if="n.kind === 'event' && (n.shape === 'diamond' || n.shape === 'para')" class="oc-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <polygon :points="shapePoly(n)" />
             </svg>
             <div v-if="n.kind === 'textbox'" class="oc-tbbg" :style="{ opacity: n.opacity != null ? n.opacity : 1 }"></div>
@@ -910,7 +956,7 @@ onBeforeUnmount(() => {
               @keydown.ctrl.enter.prevent="commitInline"
             ></textarea>
             <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }"><OIcon name="plus" :size="12" /> 选择目标</button>
-            <div v-else class="oc-body" :class="{ 'oc-textbody': n.kind === 'textbox' }">
+              <div v-else class="oc-body" :class="{ 'oc-textbody': n.kind === 'textbox' }">
               <div class="oc-label">{{ labelOf(n) }}</div>
               <div v-if="showFullText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
               <div v-else class="om-sub">{{ plainText(n).split('\n')[0].slice(0, 40) || subOf(n) || '&nbsp;' }}</div>
@@ -918,15 +964,21 @@ onBeforeUnmount(() => {
             </div>
           </template>
 
-          <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块建立连线'" @mousedown="startConnect($event, n)" />
-          <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
-          <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
-          <span class="oc-rs" data-dir="s" title="拖拽调整高度" @mousedown="startResize($event, n, 's')" />
-          <span class="oc-rs" data-dir="n" title="拖拽调整高度" @mousedown="startResize($event, n, 'n')" />
-          <span class="oc-rs oc-rs-corner" data-dir="se" title="拖拽调整大小" @mousedown="startResize($event, n, 'se')" />
-          <span class="oc-rs oc-rs-corner" data-dir="sw" title="拖拽调整大小" @mousedown="startResize($event, n, 'sw')" />
-          <span class="oc-rs oc-rs-corner" data-dir="ne" title="拖拽调整大小" @mousedown="startResize($event, n, 'ne')" />
-          <span class="oc-rs oc-rs-corner" data-dir="nw" title="拖拽调整大小" @mousedown="startResize($event, n, 'nw')" />
+          <span v-if="n.kind !== 'arrow'" v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块建立连线'" @mousedown="startConnect($event, n)" />
+          <template v-if="n.kind === 'arrow'">
+            <span class="oc-rot" title="拖拽旋转箭头方向" @mousedown="startRotate($event, n)">⟳</span>
+            <span class="oc-rs oc-rs-corner" data-dir="se" title="拖拽调整箭头大小" @mousedown="startResize($event, n, 'se')" />
+          </template>
+          <template v-else>
+            <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
+            <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
+            <span class="oc-rs" data-dir="s" title="拖拽调整高度" @mousedown="startResize($event, n, 's')" />
+            <span class="oc-rs" data-dir="n" title="拖拽调整高度" @mousedown="startResize($event, n, 'n')" />
+            <span class="oc-rs oc-rs-corner" data-dir="se" title="拖拽调整大小" @mousedown="startResize($event, n, 'se')" />
+            <span class="oc-rs oc-rs-corner" data-dir="sw" title="拖拽调整大小" @mousedown="startResize($event, n, 'sw')" />
+            <span class="oc-rs oc-rs-corner" data-dir="ne" title="拖拽调整大小" @mousedown="startResize($event, n, 'ne')" />
+            <span class="oc-rs oc-rs-corner" data-dir="nw" title="拖拽调整大小" @mousedown="startResize($event, n, 'nw')" />
+          </template>
         </div>
 
         <!-- 双链令牌卫星 -->
@@ -998,6 +1050,35 @@ onBeforeUnmount(() => {
               @click="patchRel({ color: col })"
             />
           </div>
+          <!-- 单条连线尺寸（v1.0.9）：覆盖画布全局设置，空值=跟随全局 -->
+          <div class="oc-eedit-row oc-eedit-size">
+            <span class="oc-eedit-szlabel">线宽</span>
+            <input
+              type="range"
+              min="0.8"
+              max="5"
+              step="0.2"
+              :value="curRel()?.edgeWidth || work.canvasPrefs.edgeWidth || 1.8"
+              title="本条连线粗细（拖动即时生效）"
+              @input="patchRel({ edgeWidth: Number($event.target.value) })"
+            />
+            <span class="oc-eedit-szval">{{ (curRel()?.edgeWidth || work.canvasPrefs.edgeWidth || 1.8).toFixed(1) }}</span>
+            <button v-if="curRel()?.edgeWidth" class="oc-eedit-szreset" title="恢复跟随全局线宽" @click="patchRel({ edgeWidth: null })">↺</button>
+          </div>
+          <div class="oc-eedit-row oc-eedit-size">
+            <span class="oc-eedit-szlabel">箭头</span>
+            <input
+              type="range"
+              min="0.5"
+              max="3"
+              step="0.1"
+              :value="curRel()?.arrowScale || work.canvasPrefs.arrowSize || 1"
+              title="本条连线箭头大小（拖动即时生效）"
+              @input="patchRel({ arrowScale: Number($event.target.value) })"
+            />
+            <span class="oc-eedit-szval">{{ (curRel()?.arrowScale || work.canvasPrefs.arrowSize || 1).toFixed(1) }}×</span>
+            <button v-if="curRel()?.arrowScale" class="oc-eedit-szreset" title="恢复跟随全局箭头大小" @click="patchRel({ arrowScale: null })">↺</button>
+          </div>
         </div>
 
         <!-- 引用卡目标选择浮层 -->
@@ -1019,8 +1100,17 @@ onBeforeUnmount(() => {
         </div>
       </template>
       <div class="oc-ctx-actions oc-ctx-ops">
+        <template v-if="ctxNode && ctxNode.kind === 'arrow'">
+          <div class="oc-ctx-title oc-ctx-sub">朝向 {{ ctxNode.rot || 0 }}°</div>
+          <div class="oc-ctx-actions oc-ctx-rot">
+            <button class="oc-ctx-item" title="逆时针旋转 90°" @click="ctxAct('rot--90')">↺ 90°</button>
+            <button class="oc-ctx-item" title="顺时针旋转 90°" @click="ctxAct('rot-90')">↻ 90°</button>
+            <button class="oc-ctx-item" title="旋转 180°（反向）" @click="ctxAct('rot-180')">⇅ 180°</button>
+            <button class="oc-ctx-item" title="重置朝向（向右）" @click="work.olnodeSetRot(ctxNode.id, 0)">→ 0°</button>
+          </div>
+        </template>
         <button v-if="ctxNode && ctxNode.kind === 'event'" class="oc-ctx-item" :title="'形状：' + SHAPE_LABEL[ctxNode.shape || 'process'] + '（点击切换）'" @click="ctxAct('shape')"><OIcon name="shape" :size="13" /> {{ SHAPE_LABEL[ctxNode.shape || 'process'] }} ▸</button>
-        <button v-if="ctxNode && ctxNode.kind !== 'container'" class="oc-ctx-item" title="编辑内容（也可双击模块）" @click="ctxAct('edit')"><OIcon name="edit" :size="13" /> 编辑内容</button>
+        <button v-if="ctxNode && ctxNode.kind !== 'container' && ctxNode.kind !== 'arrow'" class="oc-ctx-item" title="编辑内容（也可双击模块）" @click="ctxAct('edit')"><OIcon name="edit" :size="13" /> 编辑内容</button>
         <button v-if="ctxNode && ctxNode.kind === 'textbox'" class="oc-ctx-item oc-ctx-oprow" title="文本框透明度" @click.stop>
           <OIcon name="textbox" :size="13" /> 透明度
           <input type="range" min="0.15" max="1" step="0.05" :value="ctxNode.opacity != null ? ctxNode.opacity : 1" @input="work.olnodeSetOpacity(ctxNode.id, $event.target.value)" />

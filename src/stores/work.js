@@ -1251,6 +1251,14 @@ export const useWorkStore = defineStore('work', {
       autosave.mark('olnodes', n)
     },
 
+    /** 箭头模块旋转角（v1.0.9，仅 arrow 类型使用） */
+    olnodeSetRot(id, rot) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.rot = Math.round(rot)
+      autosave.mark('olnodes', n)
+    },
+
     /** 骨架模板批量创建：调用方先 olnodePushUndo(true)，本动作不再逐条压栈；_parent 为 rows 序号（创建后回填父级） */
     olnodeBulkAdd(rows) {
       const t = now()

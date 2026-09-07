@@ -16,6 +16,8 @@ export function canvasNodeSize(n, density = 'detail') {
     case 'anchor':
     case 'volume':
       return c ? { w: 142, h: 38 } : { w: 180, h: 48 }
+    case 'arrow':
+      return { w: 20, h: 20 }
     default:
       return { w: 280, h: 120 } // container
   }
@@ -617,7 +619,8 @@ export const KIND_META = {
   textbox: { icon: 'textbox', label: '文本框' },
   container: { icon: 'container', label: '容器' },
   anchor: { icon: 'flag', label: '锚点' },
-  volume: { icon: 'rows', label: '卷' }
+  volume: { icon: 'rows', label: '卷' },
+  arrow: { icon: 'caret-right', label: '箭头' }
 }
 
 /* ---------- 布局算法 ---------- */

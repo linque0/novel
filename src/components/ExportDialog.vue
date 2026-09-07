@@ -42,10 +42,9 @@ const pickedRows = computed(() => {
   for (const g of groups.value) for (const c of g.chapters) if (set.has(c.id)) rows.push({ vol: g.id === '__loose__' ? null : g, ch: c })
   return rows
 })
-/* 整卷判定：存在一个卷，其章节全部被选中且 ≥2 */
-const wholeVolOn = computed(() => groups.value.some((g) => g.id !== '__loose__' && g.chapters.length >= 2 && g.chapters.every((c) => picked.value.includes(c.id))))
-/* 大批量：整卷 / 全选 / 超过阈值 */
-const isBulk = computed(() => wholeVolOn.value || allOn.value || pickedRows.value.length > threshold.value)
+/* 大批量：仅按选中章节数是否超过阈值判定（整卷/全选本身不强制，
+   例如全书只有 8 章时全选仍走逐章分批导出） */
+const isBulk = computed(() => pickedRows.value.length > threshold.value)
 
 watch(
   () => ui.exportOpen,
@@ -99,9 +98,9 @@ async function doExport() {
   const rows = pickedRows.value
   busy.value = true
   try {
-    /* 大批量（整卷/全选/超阈值）：必须先选批量模式 */
+    /* 大批量（超过阈值）：必须先选批量模式 */
     if (isBulk.value && !batchMode.value) {
-      msg.warning('请先选择批量导出方式（合并单文件 或 按章打包 zip）')
+      msg.warning(`选中章节数超过阈值（${threshold.value} 章），请先选择批量导出方式（合并单文件 或 按章打包 zip）`)
       return
     }
     if (rows.length === 1 && !isBulk.value) {
@@ -161,10 +160,10 @@ async function doExport() {
         { k: 'docx', label: 'Word (docx)' }
       ]" :key="f.k" class="om-chip" :class="{ on: fmt === f.k }" @click="fmt = f.k">{{ f.label }}</span>
     </div>
-    <!-- 大批量导出方式（整卷 / 全选 / 超过阈值时出现） -->
+    <!-- 大批量导出方式（选中章节数超过阈值时出现） -->
     <div v-if="isBulk" class="exp-bulk">
       <div class="exp-bulk-tip">
-        已选 {{ pickedRows.length }} 章（{{ allOn ? '全部章节' : wholeVolOn ? '含整卷' : '超过 ' + threshold + ' 章' }}）——请选择导出方式：
+        已选 {{ pickedRows.length }} 章，超过大批量阈值 {{ threshold }} 章——请选择导出方式：
       </div>
       <div class="exp-bulk-opts">
         <div class="exp-bulk-opt" :class="{ on: batchMode === 'merge' }" @click="batchMode = 'merge'">
