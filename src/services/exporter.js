@@ -1,6 +1,6 @@
 import { exportBackupJson, importBackupJson, buildBookText, collectExportChapters } from '../db/repo'
 import { saveTextFile } from './fileio'
-import { decodeText } from './importers'
+import { decodeText, htmlToMd, htmlToPlain } from './importers'
 import JSZip from 'jszip'
 
 const stamp = () => {
@@ -38,6 +38,78 @@ export async function exportBookWithFilter(work, volumes, chapters, fmt, onlyIds
   }
   const zip = await buildBookDocx(work, volumes, chapters, onlyIds)
   return saveTextFile(`${name}.docx`, zip, { isBase64: true })
+}
+
+/* ---------- v1.0.5：单章命名 / 逐章分批 / zip 批量 ---------- */
+
+const FMT_EXT = { txt: 'txt', md: 'md', docx: 'docx' }
+/** 文件名安全化：去掉 Windows 非法字符，限长 60 */
+function safeName(s) {
+  return String(s || '未命名章节').replace(/[\\/:*?"<>|]/g, '_').trim().slice(0, 60) || '未命名章节'
+}
+
+/** 单章导出：文件名 = 章节名.格式 */
+export async function exportSingleChapter(work, volumes, chapter, fmt) {
+  const rows = [{ vol: null, ch: chapter }]
+  return exportChapterRows(work, rows, fmt, safeName(chapter.title))
+}
+
+/** 逐章分批导出：按 rows 顺序依次弹保存对话框（每章一个文件，章节名命名）；
+ * 任一步取消即中止后续（已导出的保留）。返回 { exported, canceledAt } */
+export async function exportChapterRowsSequential(work, volumes, chapters, rows, fmt) {
+  let exported = 0
+  for (const { ch } of rows) {
+    const r = await exportChapterRows(work, [{ vol: null, ch }], fmt, safeName(ch.title))
+    if (r?.canceled) return { exported, canceledAt: ch.title }
+    exported++
+  }
+  return { exported, canceledAt: null }
+}
+
+/** zip 批量：每章一个文件（NN-章节名.格式，NN 按顺序 01 起）打成一个压缩包 */
+export async function exportRowsAsZip(work, rows, fmt) {
+  const zip = new JSZip()
+  const pad = String(rows.length).length
+  let i = 0
+  let lastVol = null
+  for (const { vol, ch } of rows) {
+    i++
+    if (vol && vol !== lastVol) {
+      zip.folder(safeName(vol.title))
+      lastVol = vol
+    }
+    const dir = vol && vol === lastVol ? safeName(vol.title) : ''
+    const label = String(i).padStart(Math.max(2, pad), '0') + '-' + safeName(ch.title)
+    if (fmt === 'txt') zip.file((dir ? dir + '/' : '') + label + '.txt', await chapterText(work, [ch], false))
+    else if (fmt === 'md') zip.file((dir ? dir + '/' : '') + label + '.md', await chapterText(work, [ch], true))
+    else zip.file((dir ? dir + '/' : '') + label + '.docx', await buildBookDocx(work, [], [ch], null), { base64: true })
+  }
+  const b64 = await zip.generateAsync({ type: 'base64', compression: 'DEFLATE' })
+  return saveTextFile(`${safeName(work.title)}-${rows.length}章.zip`, b64, { isBase64: true })
+}
+
+/** 单章/单批文本（无卷头，仅章节正文） */
+async function chapterText(work, chapters, asMarkdown) {
+  const lines = []
+  for (const c of chapters) {
+    const asFmt = (ch) => {
+      if (ch.fmt === 'html' || (ch.fmt !== 'text' && /<[a-z][\s\S]*>/i.test(ch.content || ''))) return asMarkdown ? htmlToMd(ch.content) : htmlToPlain(ch.content)
+      return ch.content || ''
+    }
+    lines.push(asMarkdown ? `### ${c.title || '未命名章节'}` : c.title || '未命名章节', '', asFmt(c), '', '')
+  }
+  return lines.join('\n').replace(/\n{4,}/g, '\n\n\n').trim() + '\n'
+}
+
+/** rows（[{vol, ch}]）→ 一个合并文件（供单章导出与合并导出共用） */
+async function exportChapterRows(work, rows, fmt, name) {
+  const only = new Set(rows.map((r) => r.ch.id))
+  if (fmt === 'txt') return saveTextFile(`${name}.txt`, await chapterText(work, rows.map((r) => r.ch), false))
+  if (fmt === 'md') return saveTextFile(`${name}.md`, await chapterText(work, rows.map((r) => r.ch), true))
+  /* docx：rows 含卷信息时带卷标题 */
+  const chapters = rows.map((r) => r.ch)
+  const fakeVols = []
+  return saveTextFile(`${name}.docx`, await buildBookDocx(work, fakeVols, chapters, null), { isBase64: true })
 }
 
 /* OOXML 转义 */
