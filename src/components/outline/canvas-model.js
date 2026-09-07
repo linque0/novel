@@ -17,7 +17,7 @@ export function canvasNodeSize(n, density = 'detail') {
     case 'volume':
       return c ? { w: 142, h: 38 } : { w: 180, h: 48 }
     case 'arrow':
-      return { w: 20, h: 20 }
+      return { w: 20, h: 20 } // 连接点（接线柱）：小热区，渲染为圆点
     default:
       return { w: 280, h: 120 } // container
   }
@@ -620,7 +620,7 @@ export const KIND_META = {
   container: { icon: 'container', label: '容器' },
   anchor: { icon: 'flag', label: '锚点' },
   volume: { icon: 'rows', label: '卷' },
-  arrow: { icon: 'caret-right', label: '箭头' }
+  arrow: { icon: 'link', label: '连接点' }
 }
 
 /* ---------- 布局算法 ---------- */

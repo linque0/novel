@@ -1852,63 +1852,28 @@ body,
 .oc-edge-hit:hover + path {
   stroke-width: 3.4;
 }
-/* 箭头模块（v1.0.9）：自由指向箭头——透明本体只承载拖动，可见部分是内嵌 SVG 三角 */
-.oc-arrow-glyph {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-}
-.oc-arrow-glyph polygon {
-  fill: var(--accent);
-  opacity: 0.85;
-  transform-origin: 50% 50%;
-  transition: transform 0.1s ease-out;
-}
-.oc-node.sel .oc-arrow-glyph polygon {
-  opacity: 1;
-}
-.oc-rot {
+/* 连接点模块（v1.0.10）：线与线之间的接线柱——透明小热区，可见部分是居中圆点；
+ * 拖线落到既有连线上会自动在该处生成连接点，实现连线↔连线互连 */
+.oc-junction {
   position: absolute;
   left: 50%;
-  top: -22px;
-  transform: translateX(-50%);
-  width: 18px;
-  height: 18px;
-  line-height: 17px;
-  text-align: center;
-  font-size: 12px;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
   border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--bg-panel);
-  color: var(--text-dim);
-  cursor: grab;
-  user-select: none;
-  opacity: 0;
-  transition: opacity 0.12s ease;
+  background: var(--accent);
+  border: 2px solid var(--bg-panel);
+  box-shadow: 0 0 0 1px var(--accent);
+  pointer-events: none; /* 命中交给外层 .oc-node 热区 */
 }
-.oc-node:hover .oc-rot,
-.oc-node.sel .oc-rot {
-  opacity: 1;
+.oc-arrow {
+  background: transparent;
 }
-.oc-rot:hover {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-/* 右键菜单旋转按钮组 */
-.oc-ctx-rot {
-  display: flex;
-  gap: 4px;
-}
-.oc-ctx-rot .oc-ctx-item {
-  flex: 1;
-  justify-content: center;
-  min-width: 0;
-}
-.oc-ctx-sub {
-  padding: 2px 0 0;
-  font-size: 11px;
+.oc-arrow.sel {
+  outline: 1.5px dashed var(--accent);
+  outline-offset: 3px;
+  border-radius: 50%;
 }
 .oc-node {
   position: absolute;
@@ -1950,15 +1915,6 @@ body,
   background: transparent;
   border: 1px dashed var(--text-dim);
   border-radius: 4px;
-}
-/* 箭头模块本体透明：可见部分仅为内嵌三角，选中态用细描边提示热区 */
-.oc-arrow {
-  background: transparent;
-}
-.oc-arrow.sel {
-  outline: 1px dashed var(--accent);
-  outline-offset: 2px;
-  border-radius: 2px;
 }
 .oc-textbox:hover {
   border-color: var(--accent);

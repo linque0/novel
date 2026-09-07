@@ -121,11 +121,13 @@ function edgeGeomFor(n, r) {
   ]
   return routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle)
 }
-/* 障碍集合：除两端节点外的可见模块矩形；容器仅当两端都在其外时才算障碍（子模块边必然穿越所在容器） */
+/* 障碍集合：除两端节点外的可见模块矩形；容器仅当两端都在其外时才算障碍（子模块边必然穿越所在容器）；
+ * 连接点（arrow）是接线柱不是遮挡物——线从它身上过才是常态，不作障碍 */
 function edgeObstacles(fromId, toId) {
   const out = []
   for (const n of visNodes.value) {
     if (n.id === fromId || n.id === toId) continue
+    if (n.kind === 'arrow') continue
     if (n.kind === 'container' && (insideContainer(fromId, n.id) || insideContainer(toId, n.id))) continue
     const r = rectOf(n)
     if (r) out.push({ x: r.x, y: r.y, w: r.w, h: r.h })
@@ -333,32 +335,6 @@ function reparentAfterDrop(n, pt) {
   }
 }
 
-/* ---------- 箭头模块旋转（v1.0.9）：绕模块中心拖拽，角度吸附 15° ---------- */
-function startRotate(e, n) {
-  if (e.button !== 0) return
-  e.stopPropagation()
-  e.preventDefault()
-  const r = rectOf(n)
-  const cx = r.x + r.w / 2
-  const cy = r.y + r.h / 2
-  const p0 = canvasPt(e)
-  const a0 = Math.atan2(p0.y - cy, p0.x - cx)
-  const rot0 = n.rot || 0
-  const move = (ev) => {
-    const p = canvasPt(ev)
-    const a = Math.atan2(p.y - cy, p.x - cx)
-    let deg = rot0 + ((a - a0) * 180) / Math.PI
-    deg = Math.round(deg / 15) * 15 // 15° 吸附，方向离散更好选
-    work.olnodeSetRot(n.id, ((deg % 360) + 360) % 360)
-  }
-  const up = () => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
-}
-
 /* ---------- 模块八向边缘拖拽调整大小（n/w 方向同步移动原点；拖拽中短过渡实时跟手，落库取整） ---------- */
 const resizing = ref(false)
 const resizeSmooth = ref(false) // 容器大盒子：调整过程用过渡动画平滑跟随鼠标
@@ -368,14 +344,13 @@ function startResize(e, n, dir) {
   e.preventDefault()
   resizing.value = n.id
   resizeSmooth.value = n.kind === 'container'
-  const isArrow = n.kind === 'arrow'
   const base = { ...(dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)) }
   const p0 = { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
   const mx = e.clientX
   const my = e.clientY
   /* 拖拽方向决定可变轴：未拖的轴保持原值不落库（否则横拖会把高度钉死在当前值） */
-  const canW = isArrow || dir.includes('e') || dir.includes('w')
-  const canH = isArrow || dir.includes('n') || dir.includes('s')
+  const canW = dir.includes('e') || dir.includes('w')
+  const canH = dir.includes('n') || dir.includes('s')
   const apply = (ev) => {
     const dx = (ev.clientX - mx) / zoom.value
     const dy = (ev.clientY - my) / zoom.value
@@ -383,27 +358,18 @@ function startResize(e, n, dir) {
     let h = base.h
     let x = p0.x
     let y = p0.y
-    if (isArrow) {
-      /* 箭头等比缩放：取拖拽距离在右下方向的投影，w=h 同步放大 */
-      const s = Math.max(12, base.w + (dx + dy) / 2)
-      w = s
-      h = s
-      x = p0.x + (base.w - s) / 2
-      y = p0.y + (base.h - s) / 2
-    } else {
-      if (dir.includes('e')) w = Math.max(96, base.w + dx)
-      if (dir.includes('s')) h = Math.max(36, base.h + dy)
-      if (dir.includes('w')) {
-        w = Math.max(96, base.w - dx)
-        x = p0.x + (base.w - w)
-      }
-      if (dir.includes('n')) {
-        h = Math.max(36, base.h - dy)
-        y = p0.y + (base.h - h)
-      }
+    if (dir.includes('e')) w = Math.max(96, base.w + dx)
+    if (dir.includes('s')) h = Math.max(36, base.h + dy)
+    if (dir.includes('w')) {
+      w = Math.max(96, base.w - dx)
+      x = p0.x + (base.w - w)
+    }
+    if (dir.includes('n')) {
+      h = Math.max(36, base.h - dy)
+      y = p0.y + (base.h - h)
     }
     dragSize.set(n.id, { w, h })
-    if (isArrow || dir.includes('w') || dir.includes('n')) dragPos.set(n.id, { x: Math.round(x), y: Math.round(y) })
+    if (dir.includes('w') || dir.includes('n')) dragPos.set(n.id, { x: Math.round(x), y: Math.round(y) })
   }
   apply(e)
   const move = (ev) => apply(ev)
@@ -494,7 +460,6 @@ function ctxAct(kind) {
   if (kind === 'shape') work.olnodeSetShape(n.id, nextShape(n.shape))
   else if (kind === 'mtype') cycleMtype(n)
   else if (kind === 'pin') work.olnodeSetPin(n.id, !n.pin)
-  else if (kind.startsWith('rot-')) work.olnodeSetRot(n.id, ((n.rot || 0) + Number(kind.slice(4))) % 360)
   else if (kind === 'edit') {
     ctxMenu.value = null
     startInlineEdit(n)
@@ -523,6 +488,49 @@ function commitInline() {
 }
 
 /* ---------- 锚点拖线建边（从拖出的接口出发，fromSide 随边存储） ---------- */
+/* 点到折线/贝塞尔路径的最近距离（采样法）：连线落点检测用 */
+function distToEdge(pt, e) {
+  // e.a/e.b 为两端锚点；正交折线采样 pathFromPoints 的拐点不可得，用均匀采样近似
+  const N = 24
+  let best = Infinity
+  let prev = null
+  for (let i = 0; i <= N; i++) {
+    const t = i / N
+    let p
+    if (e.d.startsWith('M') && e.d.includes('C ') && !e.d.includes(' L ')) {
+      // 贝塞尔：控制点未知，按两端点连线近似中段采样（贝塞尔落点检测退化处理）
+      p = { x: e.a.x + (e.b.x - e.a.x) * t, y: e.a.y + (e.b.y - e.a.y) * t }
+    } else {
+      p = { x: e.a.x + (e.b.x - e.a.x) * t, y: e.a.y + (e.b.y - e.a.y) * t }
+    }
+    if (prev) {
+      // 线段 prev→p 上最近点
+      const dx = p.x - prev.x
+      const dy = p.y - prev.y
+      const l2 = dx * dx + dy * dy || 1
+      let s = ((pt.x - prev.x) * dx + (pt.y - prev.y) * dy) / l2
+      s = Math.max(0, Math.min(1, s))
+      const qx = prev.x + dx * s
+      const qy = prev.y + dy * s
+      best = Math.min(best, Math.hypot(pt.x - qx, pt.y - qy))
+    }
+    prev = p
+  }
+  return best
+}
+/* 落点命中既有连线：返回被命中的边（距路径 < 12px），供拖线释放时建连接点 */
+function hitEdgeAt(pt, excludeOwnerId) {
+  for (const e of edges.value) {
+    if (excludeOwnerId && e.ownerId === excludeOwnerId) continue
+    if (distToEdge(pt, e) < 12) return e
+  }
+  return null
+}
+/* 在连线落点处生成连接点节点（kind:'arrow'，接线柱），返回该节点 */
+function junctionAt(pt) {
+  const row = work.olnodeAdd(null, { kind: 'arrow', title: '', canvasX: snap(pt.x - 10), canvasY: snap(pt.y - 10), w: 20, h: 20 })
+  return row
+}
 function startConnect(e, n) {
   e.stopPropagation()
   e.preventDefault()
@@ -539,14 +547,28 @@ function startConnect(e, n) {
     const st = connecting.value
     connecting.value = null
     if (!st) return
-    const target = hitConnTarget(canvasPt(ev), new Set([n.id]))
-    if (!target) return
+    const pt = canvasPt(ev)
+    const target = hitConnTarget(pt, new Set([n.id]))
+    let finalTarget = target
+    let createdJunction = null
+    /* 线连线（v1.0.10）：落点不在任何模块上、但贴近某条既有连线 → 在该处自动生成连接点，接到连接点上 */
+    if (!target) {
+      const hitEdge = hitEdgeAt(pt, n.id)
+      if (hitEdge) {
+        createdJunction = junctionAt(pt)
+        finalTarget = createdJunction
+      }
+    }
+    if (!finalTarget) return
     /* 记录两侧端口：从拖出的接口（fromSide）来，接入侧取面向源节点一侧（toSide） */
-    const tb = rectOf(target)
+    const tb = rectOf(finalTarget)
     const toSide = sideBetween(rectOf(n), tb).to
-    const rel = work.olnodeRelAdd(n.id, target.id, { fromSide: side, toSide })
-    if (!rel) return
-    const g = edgeGeomFor(n, rel) || { mid: p }
+    const rel = work.olnodeRelAdd(n.id, finalTarget.id, { fromSide: side, toSide })
+    if (!rel) {
+      if (createdJunction) work.olnodeRemove(createdJunction.id) // 建边失败回滚连接点
+      return
+    }
+    const g = edgeGeomFor(n, rel) || { mid: pt }
     openEdgeEdit(n.id, rel.id, g.mid)
   }
   window.addEventListener('mousemove', move)
@@ -698,7 +720,7 @@ function nodeStyle(n) {
     width: r.w + 'px',
     // 非容器一律显式高度：与 rectOf（连线锚点/容器派生盒）一致，高度拖拽才能生效；
     // 编辑态给足最小编辑区（否则 absolute 编辑器撑不开节点，内容不可见）
-    height: n.kind === 'container' ? r.h + 'px' : editing ? Math.max(r.h, 96) + 'px' : Math.max(r.h, 36) + 'px',
+    height: n.kind === 'container' ? r.h + 'px' : editing ? Math.max(r.h, 96) + 'px' : n.kind === 'arrow' ? r.h + 'px' : Math.max(r.h, 36) + 'px',
     zIndex: editing ? 8 : n.kind === 'container' ? 1 : work.selOlnodeId === n.id ? 6 : 3,
     ...(n.kind === 'container' ? { '--bc': branchColor(n) } : {})
   }
@@ -930,11 +952,10 @@ onBeforeUnmount(() => {
             </div>
           </template>
           <template v-else>
-            <!-- 箭头模块（v1.0.9）：自由摆放的指向箭头——按 rot 旋转、w 缩放 -->
+            <!-- 连接点模块（v1.0.10）：线与线之间的接线柱——小圆点本体，四向锚点可拖线；
+                 拖线落到既有连线上时自动在该处生成连接点，实现连线↔连线互连 -->
             <template v-if="n.kind === 'arrow'">
-              <svg class="oc-arrow-glyph" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-                <polygon class="oc-arrow-poly" points="0,0 100,50 0,100" :style="{ transform: 'rotate(' + (n.rot || 0) + 'deg)' }" />
-              </svg>
+              <span class="oc-junction" :title="'连接点' + (n.title ? ' · ' + n.title : '') + '——拖四向锚点接线'"></span>
             </template>
             <!-- 菱形/平行四边形：SVG 描边代替 clip-path（clip 会裁掉边框、锚点与手柄） -->
             <svg v-else-if="n.kind === 'event' && (n.shape === 'diamond' || n.shape === 'para')" class="oc-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
@@ -964,12 +985,8 @@ onBeforeUnmount(() => {
             </div>
           </template>
 
-          <span v-if="n.kind !== 'arrow'" v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块建立连线'" @mousedown="startConnect($event, n)" />
-          <template v-if="n.kind === 'arrow'">
-            <span class="oc-rot" title="拖拽旋转箭头方向" @mousedown="startRotate($event, n)">⟳</span>
-            <span class="oc-rs oc-rs-corner" data-dir="se" title="拖拽调整箭头大小" @mousedown="startResize($event, n, 'se')" />
-          </template>
-          <template v-else>
+          <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块/连线/连接点建立连线'" @mousedown="startConnect($event, n)" />
+          <template v-if="n.kind !== 'arrow'">
             <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
             <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
             <span class="oc-rs" data-dir="s" title="拖拽调整高度" @mousedown="startResize($event, n, 's')" />
@@ -1100,15 +1117,6 @@ onBeforeUnmount(() => {
         </div>
       </template>
       <div class="oc-ctx-actions oc-ctx-ops">
-        <template v-if="ctxNode && ctxNode.kind === 'arrow'">
-          <div class="oc-ctx-title oc-ctx-sub">朝向 {{ ctxNode.rot || 0 }}°</div>
-          <div class="oc-ctx-actions oc-ctx-rot">
-            <button class="oc-ctx-item" title="逆时针旋转 90°" @click="ctxAct('rot--90')">↺ 90°</button>
-            <button class="oc-ctx-item" title="顺时针旋转 90°" @click="ctxAct('rot-90')">↻ 90°</button>
-            <button class="oc-ctx-item" title="旋转 180°（反向）" @click="ctxAct('rot-180')">⇅ 180°</button>
-            <button class="oc-ctx-item" title="重置朝向（向右）" @click="work.olnodeSetRot(ctxNode.id, 0)">→ 0°</button>
-          </div>
-        </template>
         <button v-if="ctxNode && ctxNode.kind === 'event'" class="oc-ctx-item" :title="'形状：' + SHAPE_LABEL[ctxNode.shape || 'process'] + '（点击切换）'" @click="ctxAct('shape')"><OIcon name="shape" :size="13" /> {{ SHAPE_LABEL[ctxNode.shape || 'process'] }} ▸</button>
         <button v-if="ctxNode && ctxNode.kind !== 'container' && ctxNode.kind !== 'arrow'" class="oc-ctx-item" title="编辑内容（也可双击模块）" @click="ctxAct('edit')"><OIcon name="edit" :size="13" /> 编辑内容</button>
         <button v-if="ctxNode && ctxNode.kind === 'textbox'" class="oc-ctx-item oc-ctx-oprow" title="文本框透明度" @click.stop>
