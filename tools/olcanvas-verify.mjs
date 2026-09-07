@@ -336,21 +336,26 @@ const m17b = await c.evalx(`(() => {
   return 1
 })()`)
 await c.sleep(400)
-const m17c = await c.evalx(`(() => {
+await c.evalx(`(() => {
   const el = [...document.querySelectorAll('.oc-node.oc-event')][0]
   const nr = el.getBoundingClientRect()
-  const mini = el.querySelector('.oc-mini')
-  const mr = mini.getBoundingClientRect()
-  const inside = mr.left >= nr.left - 2 && mr.right <= nr.right + 2 && mr.top >= nr.top - 2 && mr.bottom <= nr.bottom + 2
+  el.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: nr.left + nr.width / 2, clientY: nr.top + nr.height / 2 }))
+  return 1
+})()`)
+await c.sleep(400)
+const m17c = await c.evalx(`(() => {
+  const el = [...document.querySelectorAll('.oc-node.oc-event')][0]
+  const menu = document.querySelector('.oc-ctx')
+  const miniGone = !el.querySelector('.oc-mini') // v0.4.19：选中不再弹 mini 栏
   const lab = document.querySelector('.oc-elabel')
   let labelAbove = null
   if (lab) {
     const m = new DOMMatrixReadOnly(getComputedStyle(lab).transform)
     labelAbove = m.f < -1 // translateY 为负（元素整体位于中点上方）
   }
-  return { miniInside: inside, labelAbove }
+  return { menuShown: !!menu, miniGone, labelAbove }
 })()`)
-check('视觉几何：锚点伸出节点（无裁剪）+ mini 在节点内 + 标签中点上方', m17.aptProtrudes && parseFloat(m17.aptOpacity) > 0.5 && m17c.miniInside && m17c.labelAbove === true, JSON.stringify({ m17, m17c }))
+check('视觉几何：锚点伸出节点（无裁剪）+ 右键菜单出现 + 标签中点上方', m17.aptProtrudes && parseFloat(m17.aptOpacity) > 0.5 && m17c.menuShown && m17c.miniGone && m17c.labelAbove === true, JSON.stringify({ m17, m17c }))
 const shot = await c.send('Page.captureScreenshot', { format: 'png' }).catch(() => null)
 if (shot) {
   const { writeFileSync } = await import('node:fs')
@@ -415,9 +420,16 @@ const m18c = await c.evalx(`(() => {
   return { saved: tb.text === '自由文本框内容', closed: !document.querySelector('.oc-inline-edit') }
 })()`)
 check('文本框模块：侧栏添加 + 双击行内编辑落库', m18.created && m18.grew === 1 && !m18b.err && m18c.saved && m18c.closed, JSON.stringify({ m18, m18b, m18c }))
+await c.evalx(`(() => {
+  const tbEl = [...document.querySelectorAll('.oc-node.oc-textbox')][0]
+  const tr = tbEl.getBoundingClientRect()
+  tbEl.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: tr.left + tr.width / 2, clientY: tr.top + tr.height / 2 }))
+  return 1
+})()`)
+await c.sleep(400)
 const m18e = await c.evalx(`(() => {
   const w = ${store}
-  const rng = document.querySelector('.oc-mini input[type="range"]')
+  const rng = document.querySelector('.oc-ctx input[type="range"]')
   if (!rng) return { err: 'no range' }
   Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(rng, '0.4')
   rng.dispatchEvent(new Event('input', { bubbles: true }))

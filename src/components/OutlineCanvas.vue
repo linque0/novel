@@ -408,6 +408,12 @@ function createAt(kind) {
 }
 /* Delete 键删除选中模块（输入态不劫持） */
 function onKey(e) {
+  if (e.key === 'Escape') {
+    ctxMenu.value = null
+    blankCtx.value = null
+    edgeEdit.value = null
+    return
+  }
   const t = e.target
   if (t && (t.matches?.('input, textarea, [contenteditable="true"]') || t.isContentEditable)) return
   if (e.key === 'Delete' || e.key === 'Backspace') {
@@ -429,13 +435,30 @@ function onKey(e) {
     work.olnodeRedo()
   }
 }function onNodeCtx(e, n) {
-  if (n.kind !== 'container') return
   e.preventDefault()
+  work.selOlnodeId = n.id
   ctxMenu.value = { x: e.clientX, y: e.clientY, nodeId: n.id }
 }
 function applyColor(c) {
   if (ctxMenu.value) work.olnodeSetColor(ctxMenu.value.nodeId, c)
-  ctxMenu.value = null
+}
+const ctxNode = computed(() => (ctxMenu.value ? visNodes.value.find((n) => n.id === ctxMenu.value.nodeId) : null))
+function ctxAct(kind) {
+  const n = ctxNode.value
+  if (!n) return
+  if (kind === 'shape') work.olnodeSetShape(n.id, nextShape(n.shape))
+  else if (kind === 'mtype') cycleMtype(n)
+  else if (kind === 'pin') work.olnodeSetPin(n.id, !n.pin)
+  else if (kind === 'edit') {
+    ctxMenu.value = null
+    startInlineEdit(n)
+    return
+  } else if (kind === 'remove') {
+    ctxMenu.value = null
+    onRemove(n)
+    return
+  }
+  /* 形状/类型/固定保持菜单开启，便于连续调整 */
 }
 function startInlineEdit(n) {
   editText.value = { id: n.id, value: n.text || '' }
@@ -883,17 +906,6 @@ onBeforeUnmount(() => {
             </div>
           </template>
 
-          <div v-if="work.selOlnodeId === n.id" class="oc-mini" @mousedown.stop>
-            <button v-if="n.kind === 'event'" :title="'形状：' + SHAPE_LABEL[n.shape || 'process'] + '（点击切换）'" @click.stop="work.olnodeSetShape(n.id, nextShape(n.shape))"><OIcon name="shape" :size="13" /></button>
-            <button v-if="n.kind !== 'container'" title="编辑内容（也可双击模块）" @click.stop="startInlineEdit(n)"><OIcon name="edit" :size="13" /></button>
-            <span v-if="n.kind === 'textbox'" class="oc-mini-op" title="文本框透明度">
-              <input type="range" min="0.15" max="1" step="0.05" :value="n.opacity != null ? n.opacity : 1" @input="work.olnodeSetOpacity(n.id, $event.target.value)" />
-              透
-            </span>
-            <button v-if="work.olTypes.length" :title="'自定义类型：' + (n.mtype || '无') + '（点击切换）'" @click.stop="cycleMtype(n)"><OIcon name="tag" :size="13" /></button>
-            <button :title="n.pin ? '取消固定' : '固定位置（「整理」时不动）'" @click.stop="work.olnodeSetPin(n.id, !n.pin)"><OIcon name="pin" :size="13" :class="{ on: n.pin }" /></button>
-            <button class="oc-mini-x" title="删除模块" @click.stop="onRemove(n)"><OIcon name="close" :size="13" /></button>
-          </div>
           <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块建立连线'" @mousedown="startConnect($event, n)" />
           <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
           <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
@@ -983,14 +995,27 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- 容器右键色彩快捷栏（fixed 定位须在 transform 层外） -->
-    <div v-if="ctxMenu" class="oc-ctx" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }" @mousedown.stop>
-      <div class="oc-ctx-title">容器颜色</div>
-      <div class="oc-ctx-swatches">
-        <span v-for="c in PALETTE" :key="c" class="oc-ctx-sw" :style="{ background: c }" :title="c" @click="applyColor(c)" />
-      </div>
-      <div class="oc-ctx-actions">
-        <span class="oc-ctx-reset" title="恢复自动配色（按容器顺序）" @click="applyColor('')">↺ 自动配色</span>
+    <!-- 模块右键操作栏（v0.4.19：mini 工具栏改右键触发，可 Esc / 点空白关闭；fixed 定位须在 transform 层外） -->
+    <div v-if="ctxMenu" class="oc-ctx" :style="{ left: ctxMenu.x + 'px', top: ctxMenu.y + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
+      <div class="oc-ctx-title">{{ ctxNode?.title || KIND_META[ctxNode?.kind]?.label || '模块' }}</div>
+      <template v-if="ctxNode && ctxNode.kind === 'container'">
+        <div class="oc-ctx-swatches">
+          <span v-for="c in PALETTE" :key="c" class="oc-ctx-sw" :style="{ background: c }" :title="c" @click="applyColor(c)" />
+        </div>
+        <div class="oc-ctx-actions">
+          <span class="oc-ctx-reset" title="恢复自动配色（按容器顺序）" @click="applyColor('')">↺ 自动配色</span>
+        </div>
+      </template>
+      <div class="oc-ctx-actions oc-ctx-ops">
+        <button v-if="ctxNode && ctxNode.kind === 'event'" class="oc-ctx-item" :title="'形状：' + SHAPE_LABEL[ctxNode.shape || 'process'] + '（点击切换）'" @click="ctxAct('shape')"><OIcon name="shape" :size="13" /> {{ SHAPE_LABEL[ctxNode.shape || 'process'] }} ▸</button>
+        <button v-if="ctxNode && ctxNode.kind !== 'container'" class="oc-ctx-item" title="编辑内容（也可双击模块）" @click="ctxAct('edit')"><OIcon name="edit" :size="13" /> 编辑内容</button>
+        <button v-if="ctxNode && ctxNode.kind === 'textbox'" class="oc-ctx-item oc-ctx-oprow" title="文本框透明度" @click.stop>
+          <OIcon name="textbox" :size="13" /> 透明度
+          <input type="range" min="0.15" max="1" step="0.05" :value="ctxNode.opacity != null ? ctxNode.opacity : 1" @input="work.olnodeSetOpacity(ctxNode.id, $event.target.value)" />
+        </button>
+        <button v-if="ctxNode && work.olTypes.length" class="oc-ctx-item" :title="'自定义类型：' + (ctxNode.mtype || '无') + '（点击切换）'" @click="ctxAct('mtype')"><OIcon name="tag" :size="13" /> {{ ctxNode.mtype || '自定义类型' }} ▸</button>
+        <button v-if="ctxNode" class="oc-ctx-item" :title="ctxNode.pin ? '取消固定（「整理」时将参与重排）' : '固定位置（「整理」时不动）'" @click="ctxAct('pin')"><OIcon name="pin" :size="13" /> {{ ctxNode.pin ? '取消固定' : '固定位置' }}</button>
+        <button v-if="ctxNode" class="oc-ctx-item oc-ctx-danger" title="删除模块（容器会连同子模块）" @click="ctxAct('remove')"><OIcon name="close" :size="13" /> 删除</button>
       </div>
     </div>
 

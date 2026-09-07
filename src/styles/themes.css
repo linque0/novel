@@ -3018,3 +3018,43 @@ button:focus-visible,
   background: var(--bg-hover);
   color: var(--accent);
 }
+
+/* 模块右键操作栏（v0.4.19：mini 改右键触发）：菜单项带图标、危险项标红、透明度行内滑杆 */
+.oc-ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+}
+.oc-ctx-item .oicon {
+  color: var(--text-dim);
+}
+.oc-ctx-danger {
+  color: var(--danger);
+}
+.oc-ctx-danger .oicon {
+  color: var(--danger);
+}
+.oc-ctx-ops {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border-top: 1px solid var(--border);
+  padding-top: 4px;
+  margin-top: 4px;
+}
+.oc-ctx-ops .oc-ctx-item {
+  border: none;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.oc-ctx-ops .oc-ctx-item:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+.oc-ctx-oprow input[type='range'] {
+  flex: 1;
+  min-width: 60px;
+}
