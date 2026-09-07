@@ -486,7 +486,7 @@ onBeforeUnmount(() => {
             :d="e.d"
             fill="none"
             :stroke="e.stroke"
-            stroke-width="1.7"
+            :stroke-width="work.canvasPrefs.edgeWidth || 1.8"
             :stroke-dasharray="e.dash"
             :opacity="dimEdgeIds.has(e.rel.id) ? 0.1 : 0.8"
           />

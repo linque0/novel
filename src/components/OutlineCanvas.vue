@@ -147,11 +147,11 @@ const edgeDecor = computed(() => {
   for (const e of edges.value) {
     const a = e.rel.arrows || '->'
     if (a === '->' || a === '<->') {
-      heads.push(arrowHeadDir(e.b.x, e.b.y, e.endDir))
+      heads.push(arrowHeadDir(e.b.x, e.b.y, e.endDir, 7 * (work.canvasPrefs.arrowSize || 1)))
       fills.push(e.color)
     }
     if (a === '<->') {
-      heads.push(arrowHeadDir(e.a.x, e.a.y, e.startDir))
+      heads.push(arrowHeadDir(e.a.x, e.a.y, e.startDir, 7 * (work.canvasPrefs.arrowSize || 1)))
       fills.push(e.color)
     }
   }
@@ -226,6 +226,10 @@ function setPref(k, v) {
 const edgeWidthModel = computed({
   get: () => work.canvasPrefs.edgeWidth || 1.8,
   set: (v) => setPref('edgeWidth', v)
+})
+const arrowSizeModel = computed({
+  get: () => work.canvasPrefs.arrowSize || 1,
+  set: (v) => setPref('arrowSize', v)
 })
 function snap(v) {
   return work.canvasPrefs.snap ? Math.round(v / 16) * 16 : Math.round(v)
@@ -811,7 +815,12 @@ onBeforeUnmount(() => {
             <NSlider v-model:value="edgeWidthModel" :min="0.8" :max="5" :step="0.2" style="width: 150px" />
             <span class="oc-settings-val">{{ (work.canvasPrefs.edgeWidth || 1.8).toFixed(1) }}px</span>
           </div>
-          <div class="oc-settings-tip">调整画布全部连线的显示粗细；线型（实线/虚线/点线）在连线编辑浮层中按条设置。</div>
+          <div class="oc-settings-row">
+            <span class="oc-settings-label">箭头大小</span>
+            <NSlider v-model:value="arrowSizeModel" :min="0.5" :max="3" :step="0.1" style="width: 150px" />
+            <span class="oc-settings-val">{{ (work.canvasPrefs.arrowSize || 1).toFixed(1) }}×</span>
+          </div>
+          <div class="oc-settings-tip">调整画布全部连线与箭头的显示大小；线型（实线/虚线/点线）与箭头方向在连线编辑浮层中按条设置。</div>
         </div>
       </NPopover>
       <span style="flex: 1"></span>

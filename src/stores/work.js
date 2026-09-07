@@ -44,7 +44,7 @@ export const useWorkStore = defineStore('work', {
     outlineView: 'text', // 大纲视图：text 文本 | canvas 画布
     selOlnodeId: null,
     canvasFocusTick: 0, // 侧边栏请求画布居中定位的信号
-    canvasPrefs: { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8 }, // 画布偏好（appconfig 按作品隔离）
+    canvasPrefs: { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8, arrowSize: 1 }, // 画布偏好（appconfig 按作品隔离）
     olTypes: [], // 自定义模块类型（8.8.2-G2）：[{ name, color }]，节点以 mtype 引用
     olUndo: [],
     olRedo: [],
@@ -1350,7 +1350,7 @@ export const useWorkStore = defineStore('work', {
     async loadCanvasPrefs() {
       try {
         const row = await db.appconfig.get('olcanvas:' + this.work?.id)
-        if (row?.value) this.canvasPrefs = { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8, ...row.value }
+        if (row?.value) this.canvasPrefs = { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8, arrowSize: 1, ...row.value }
       } catch {
         /* 保持默认 */
       }
