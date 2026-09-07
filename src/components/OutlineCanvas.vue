@@ -329,11 +329,13 @@ function reparentAfterDrop(n, pt) {
 
 /* ---------- 模块八向边缘拖拽调整大小（n/w 方向同步移动原点；拖拽中短过渡实时跟手，落库取整） ---------- */
 const resizing = ref(false)
+const resizeSmooth = ref(false) // 容器大盒子：调整过程用过渡动画平滑跟随鼠标
 function startResize(e, n, dir) {
   if (e.button !== 0) return
   e.stopPropagation()
   e.preventDefault()
   resizing.value = n.id
+  resizeSmooth.value = n.kind === 'container'
   const base = { ...(dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)) }
   const p0 = { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
   const mx = e.clientX
@@ -371,6 +373,7 @@ function startResize(e, n, dir) {
     dragSize.delete(n.id)
     dragPos.delete(n.id)
     resizing.value = false
+    resizeSmooth.value = false
     if (pos) work.olnodeSetCanvas(n.id, pos.x, pos.y)
     if (p) work.olnodeSetSize(n.id, canW ? p.w : n.w, canH ? p.h : n.h)
   }
@@ -853,7 +856,7 @@ onBeforeUnmount(() => {
           v-for="n in visNodes"
           :key="n.id"
           class="oc-node"
-          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
+          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'resize-smooth': resizeSmooth && resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
           :style="nodeStyle(n)"
           :data-dl-target="n.kind === 'cite' && n.refId ? n.refId : null"
           :data-dl-title="n.kind === 'cite' ? labelOf(n) : null"

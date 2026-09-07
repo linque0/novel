@@ -3058,3 +3058,11 @@ button:focus-visible,
   flex: 1;
   min-width: 60px;
 }
+
+/* 容器模块调整大小时的四轴平滑跟随（美化方案 §4.4）：宽度/高度/位移一起缓动，
+ * 每次 mousemove 重定向过渡 → 呈现“追着鼠标走”的跟随动画；非容器保持 0.08s 跟手 */
+.oc-node.resize-smooth {
+  transition: width 0.18s var(--ease, ease-out), height 0.18s var(--ease, ease-out),
+    left 0.18s var(--ease, ease-out), top 0.18s var(--ease, ease-out),
+    box-shadow 0.15s ease, opacity 0.15s ease;
+}

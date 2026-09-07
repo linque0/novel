@@ -559,7 +559,7 @@ export const gridCols = (cnt) => Math.max(1, Math.min(3, Math.ceil(Math.sqrt(Mat
  * 无可见子项（空 / 折叠）时用基准尺寸。
  */
 export function containerRect(n, kids, posOf, sizeOf) {
-  const base = effSize(n) // 容器自定义尺寸优先，空态用基准尺寸
+  const base = sizeOf ? sizeOf(n) : effSize(n) // 容器自定义尺寸优先（拖拽调整时经 sizeOf 读 dragSize 实时尺寸，盒子才能跟随鼠标），空态用基准尺寸
   const p = posOf(n)
   let x = p.x
   let y = p.y
