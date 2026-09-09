@@ -16,8 +16,6 @@ export function canvasNodeSize(n, density = 'detail') {
     case 'anchor':
     case 'volume':
       return c ? { w: 142, h: 38 } : { w: 180, h: 48 }
-    case 'arrow':
-      return { w: 20, h: 20 } // 连接点（接线柱）：小热区，渲染为圆点
     default:
       return { w: 280, h: 120 } // container
   }
@@ -509,7 +507,7 @@ export function routeEdge(a, fromSide, b, toSide, obstacles = [], style = 'bezie
     const c2 = { x: b.x + de.x * dx, y: b.y + de.y * dx }
     const d = `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
     const mid = { x: (a.x + 3 * c1.x + 3 * c2.x + b.x) / 8, y: (a.y + 3 * c1.y + 3 * c2.y + b.y) / 8 }
-    return { d, mid, startDir: { x: c1.x - a.x, y: c1.y - a.y }, endDir: { x: b.x - c2.x, y: b.y - c2.y }, a, b, avoided: false }
+    return { d, mid, startDir: { x: c1.x - a.x, y: c1.y - a.y }, endDir: { x: b.x - c2.x, y: b.y - c2.y }, a, b, c1, c2, avoided: false }
   }
   const pts = routeOrthogonal(a, fromSide, b, toSide, obstacles, stub, margin)
   const p1 = pts[1] || a
@@ -522,8 +520,178 @@ export function routeEdge(a, fromSide, b, toSide, obstacles = [], style = 'bezie
     endDir: { x: last.x - p0.x, y: last.y - p0.y },
     a,
     b,
+    pts,
     avoided: true
   }
+}
+
+/**
+ * 按箭头长度截短连线路径（v1.0.14）：箭头尖端顶在真实端点上，线画到箭头底边为止，
+ * 消除粗线帽盖住三角内部的"穿线"感。trime/trtrims 分别为末/首端回缩长度（=箭头尺寸）。
+ */
+export function trimEdgeD(g, trime = 0, trims = 0) {
+  if (!g || (!trime && !trims)) return g.d
+  if (g.pts && g.pts.length > 1) {
+    const pts = g.pts.map((p) => ({ ...p }))
+    /* 末端回退：沿折线从终点向内走 trime 长度（越过拐点就继续） */
+    if (trime > 0) {
+      let rem = trime
+      for (let i = pts.length - 1; i > 0 && rem > 0; i--) {
+        const l = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y)
+        if (l > rem) {
+          const f = (l - rem) / l
+          pts[i] = { x: pts[i - 1].x + (pts[i].x - pts[i - 1].x) * f, y: pts[i - 1].y + (pts[i].y - pts[i - 1].y) * f }
+          rem = 0
+        } else {
+          rem -= l
+          pts.splice(i, 1)
+        }
+      }
+    }
+    /* 首端回退同理 */
+    if (trims > 0) {
+      let rem = trims
+      for (let i = 0; i < pts.length - 1 && rem > 0; i++) {
+        const l = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
+        if (l > rem) {
+          const f = rem / l
+          pts[i] = { x: pts[i].x + (pts[i + 1].x - pts[i].x) * f, y: pts[i].y + (pts[i + 1].y - pts[i].y) * f }
+          rem = 0
+        } else {
+          rem -= l
+          pts.splice(i, 1)
+          i--
+        }
+      }
+    }
+    return pathFromPoints(pts)
+  }
+  if (g.c1 && g.c2) {
+    /* 贝塞尔：de Casteljau 在 t 处细分（公式已数值验证）。
+     * 一阶：B1=lerp(a,c1,t) B2=lerp(c1,c2,t) B3=lerp(c2,b,t)
+     * 二阶：C1=lerp(B1,B2,t) C2=lerp(B2,B3,t)  P(t)=lerp(C1,C2,t)
+     * 前段 = [a, B1, C1, P]（曲线 0→t）；后段 = [P, C2, B3, b]（曲线 t→1）。
+     * 回缩量按弧长给（=箭头底边深度），而参数 t 与弧长非线性——端部控制点外拉时
+     * 端头行进更快，直接 t=回缩量/弦长 会多缩出缝隙。
+     * 改为数值搜索：沿 t 细分采样累计弧长，二分找到「从端点起弧长 = trim」的 t 再细分取段 */
+    const lerp = (p, q, f) => ({ x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f })
+    let a = g.a
+    let c1 = g.c1
+    let c2 = g.c2
+    let b = g.b
+    const pointOn = (t) => {
+      const u = 1 - t
+      return {
+        x: u * u * u * a.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * b.x,
+        y: u * u * u * a.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * b.y
+      }
+    }
+    /* 从 fromEnd 侧端点起，累计弧长达到 trim 的参数 t（采样 + 线性内插） */
+    const tForArc = (trim, fromEnd) => {
+      const N = 40
+      const pts = []
+      for (let i = 0; i <= N; i++) pts.push(pointOn(i / N))
+      if (fromEnd) pts.reverse()
+      let acc = 0
+      for (let i = 0; i < N; i++) {
+        const l = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
+        if (acc + l >= trim) {
+          const f = (trim - acc) / (l || 1)
+          const t = fromEnd ? 1 - (i + f) / N : (i + f) / N
+          return Math.max(0, Math.min(1, t))
+        }
+        acc += l
+      }
+      return fromEnd ? 0 : 1
+    }
+    const split = (t) => {
+      const B1 = lerp(a, c1, t)
+      const B2 = lerp(c1, c2, t)
+      const B3 = lerp(c2, b, t)
+      const C1 = lerp(B1, B2, t)
+      const C2 = lerp(B2, B3, t)
+      return { B1, C1, C2, B3, P: lerp(C1, C2, t) }
+    }
+    if (trime > 0) {
+      /* 末端回缩：保留前段，细分点 = 从 b 端量起弧长 trime 处 */
+      const { B1, C1, P } = split(tForArc(trime, true))
+      c1 = B1
+      c2 = C1
+      b = P
+    }
+    if (trims > 0) {
+      /* 首端回缩：保留后段，细分点 = 从 a 端量起弧长 trims 处 */
+      const { C2, B3, P } = split(tForArc(trims, false))
+      a = P
+      c1 = C2
+      c2 = B3
+    }
+    return `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
+  }
+  return g.d
+}
+
+/**
+ * 自定义弯曲连线（v1.0.16 左键拖拽塑形）：端点 a→b，控制点 c（拖拽位置）。
+ * 二次贝塞尔提升为三次（对称控制点），返回与 routeEdge 同构（c1/c2 供 pointAtT/trimEdgeD 用）。
+ * 拖到接近 a-b 直线时（垂距 < 6px）视为拉直，返回 null 由调用方回退自动路由。
+ */
+export function customEdgeGeom(a, b, c) {
+  if (!a || !b || !c) return null
+  /* 控制点到 a-b 弦的垂距：太近 = 拉直 */
+  const abx = b.x - a.x
+  const aby = b.y - a.y
+  const l2 = abx * abx + aby * aby || 1
+  const dist = Math.abs((c.x - a.x) * aby - (c.y - a.y) * abx) / Math.sqrt(l2)
+  if (dist < 6) return null
+  /* 二次 → 三次：控制点缩放 2/3 对称放置 */
+  const c1 = { x: a.x + (c.x - a.x) * (2 / 3), y: a.y + (c.y - a.y) * (2 / 3) }
+  const c2 = { x: b.x + (c.x - b.x) * (2 / 3), y: b.y + (c.y - b.y) * (2 / 3) }
+  const d = `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
+  const mid = { x: (a.x + 3 * c1.x + 3 * c2.x + b.x) / 8, y: (a.y + 3 * c1.y + 3 * c2.y + b.y) / 8 }
+  return {
+    d,
+    mid,
+    startDir: { x: c1.x - a.x, y: c1.y - a.y },
+    endDir: { x: b.x - c2.x, y: b.y - c2.y },
+    a,
+    b,
+    c1,
+    c2,
+    avoided: false
+  }
+}
+
+/** 连线路径参数 t∈[0,1] 处的点：折线按弧长插值，贝塞尔按三次曲线求值。
+ * 连接点位置由宿主连线路径派生（v1.0.13），节点挪位/重排后连线重算，连接点随之回到线上。 */
+export function pointAtT(g, t) {
+  if (!g) return null
+  const tt = Math.max(0, Math.min(1, t))
+  if (g.pts && g.pts.length > 1) {
+    const ls = []
+    let total = 0
+    for (let i = 0; i < g.pts.length - 1; i++) {
+      const l = Math.hypot(g.pts[i + 1].x - g.pts[i].x, g.pts[i + 1].y - g.pts[i].y)
+      ls.push(l)
+      total += l
+    }
+    let rem = total * tt
+    for (let i = 0; i < ls.length; i++) {
+      if (rem <= ls[i] || i === ls.length - 1) {
+        const f = ls[i] ? rem / ls[i] : 0
+        return { x: g.pts[i].x + (g.pts[i + 1].x - g.pts[i].x) * f, y: g.pts[i].y + (g.pts[i + 1].y - g.pts[i].y) * f }
+      }
+      rem -= ls[i]
+    }
+  }
+  if (g.c1 && g.c2) {
+    const u = 1 - tt
+    return {
+      x: u * u * u * g.a.x + 3 * u * u * tt * g.c1.x + 3 * u * tt * tt * g.c2.x + tt * tt * tt * g.b.x,
+      y: u * u * u * g.a.y + 3 * u * u * tt * g.c1.y + 3 * u * tt * tt * g.c2.y + tt * tt * tt * g.b.y
+    }
+  }
+  return { x: g.a.x + (g.b.x - g.a.x) * tt, y: g.a.y + (g.b.y - g.a.y) * tt }
 }
 
 /**
@@ -619,8 +787,7 @@ export const KIND_META = {
   textbox: { icon: 'textbox', label: '文本框' },
   container: { icon: 'container', label: '容器' },
   anchor: { icon: 'flag', label: '锚点' },
-  volume: { icon: 'rows', label: '卷' },
-  arrow: { icon: 'link', label: '连接点' }
+  volume: { icon: 'rows', label: '卷' }
 }
 
 /* ---------- 布局算法 ---------- */

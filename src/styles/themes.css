@@ -1852,35 +1852,36 @@ body,
 .oc-edge-hit:hover + path {
   stroke-width: 3.4;
 }
-/* 连接点模块（v1.0.12）：微观透明的接线柱——直径 6px、低透明度小圆点，
- * 平时几乎隐形不遮挡所吸附的连线；悬停/选中时才显形（放大光晕）便于操作 */
-.oc-junction {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 6px;
-  height: 6px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: var(--accent);
-  opacity: 0.18; /* 微观透明：默认几乎融进连线 */
-  transition: opacity 0.12s ease, width 0.12s ease, height 0.12s ease;
-  pointer-events: none; /* 命中交给外层 .oc-node 热区 */
+/* 连接点（v1.0.13 推倒重建）：不再是画布模块，而是 SVG 连线层内钉在宿主连线路径上的小圆点。
+ * 微观透明：半径 2.5、透明度 0.14，默认几乎融进连线、不遮挡；悬停显形放大。
+ * flash（创建后 1.6s）：加深显形（实色 + 光环）方便确认位置，随 bornAt 过期淡出回隐藏态。
+ * 命中交给同组的透明热区圆（r=10）：mousedown 引出连线 / 被拖线接入 / 右键删除 */
+.oc-junc-dot {
+  fill: var(--accent);
+  opacity: 0.14;
+  pointer-events: none;
+  transition: opacity 0.45s ease, r 0.45s ease;
 }
-.oc-node:hover .oc-junction,
-.oc-arrow.sel .oc-junction {
-  opacity: 0.9;
-  width: 9px;
-  height: 9px;
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+.oc-junc:hover .oc-junc-dot {
+  opacity: 0.75;
+  r: 4;
 }
-.oc-arrow {
-  background: transparent;
+.oc-junc.flash .oc-junc-dot {
+  opacity: 0.95;
+  r: 5;
+  stroke: color-mix(in srgb, var(--accent) 45%, transparent);
+  stroke-width: 2;
 }
-.oc-arrow.sel {
-  outline: 1.5px dashed color-mix(in srgb, var(--accent) 60%, transparent);
-  outline-offset: 3px;
-  border-radius: 50%;
+.oc-junc.flash:hover .oc-junc-dot {
+  opacity: 0.95;
+  r: 5;
+}
+.oc-junc-hit {
+  pointer-events: all; /* 父级 .om-edges 为 none；热区圆必须显式开启，mousedown 引出连线 / 右键删除才能命中 */
+  cursor: crosshair;
+}
+.oc-junc-hit:hover {
+  cursor: crosshair;
 }
 .oc-node {
   position: absolute;
@@ -2507,23 +2508,53 @@ body,
   box-shadow: var(--shadow);
 }
 .oc-eedit {
-  position: absolute;
+  position: fixed;
   transform: translate(-50%, calc(-100% - 14px));
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: var(--shadow);
-  padding: 6px 8px;
+  /* 与模块右键菜单（.oc-ctx）同一美术语言：内距 8px、行间 hover 态、分区线 */
+  padding: 8px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  z-index: 10;
-  min-width: 220px;
+  gap: 6px;
+  /* Teleport 到 body 后与全应用同处根层叠上下文，抬高到画布右键菜单之上 */
+  z-index: 1000;
+  min-width: 224px;
+}
+/* 浮层标题（与 .oc-ctx-title 同款） */
+.oc-eedit-title {
+  font-size: 11.5px;
+  color: var(--text-dim);
+  margin-bottom: 2px;
+  user-select: none;
+}
+/* 浮层内「在此处创建连接点」操作行（与模块右键菜单 item 同款 hover 态） */
+.oc-eedit-juncbtn {
+  margin: 2px 0;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 5px 10px;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease;
+}
+.oc-eedit-juncbtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 .oc-eedit-row {
   display: flex;
   align-items: center;
   gap: 4px;
+}
+/* 属性区（线型/颜色/尺寸）与首行编辑区分隔，同 .oc-ctx-ops 的分区线语言 */
+.oc-eedit-row.oc-eedit-sec {
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
 }
 .oc-eedit-row .rp-input {
   height: 24px;
@@ -2791,7 +2822,7 @@ body,
   width: 150px;
 }
 .rg-eedit {
-  position: absolute;
+  position: fixed;
   transform: translate(-50%, calc(-100% - 12px));
   display: flex;
   flex-wrap: wrap;
@@ -2802,7 +2833,8 @@ body,
   border-radius: 8px;
   box-shadow: var(--shadow);
   padding: 5px 7px;
-  z-index: 12;
+  /* Teleport 到 body 后与全应用同处根层叠上下文，抬高到画布右键菜单之上 */
+  z-index: 1000;
 }
 /* 边编辑浮层翻转：连线贴近可视区顶部时向下弹出，避免被画布 overflow 裁掉（v0.4.12） */
 .rg-eedit.flip,

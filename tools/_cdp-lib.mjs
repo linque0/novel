@@ -1,6 +1,6 @@
-/* CDP helper: 连接 9222 端口的应用页面，提供 evalx / send / sleep */
-export async function connect(match = 'app://') {
-  const list = await (await fetch('http://127.0.0.1:9222/json/list')).json()
+/* CDP helper: 连接调试端口的应用页面，提供 evalx / send / sleep；端口可用 CDP_PORT 环境变量覆盖（默认 9222） */
+export async function connect(match = 'app://', port = process.env.CDP_PORT || '9222') {
+  const list = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
   const t = list.find((x) => x.type === 'page' && x.url.includes(match)) || list.find((x) => x.type === 'page')
   const ws = new WebSocket(t.webSocketDebuggerUrl)
   await new Promise((r, j) => ((ws.onopen = r), (ws.onerror = j)))

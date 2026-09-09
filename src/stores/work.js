@@ -1148,8 +1148,10 @@ export const useWorkStore = defineStore('work', {
     },
 
     liveOlnodes() {
+      /* v1.0.13 起连接点不再作为画布模块（改为钉在宿主连线 rel.junctions 上）；
+       * 旧版本创建的 kind:'arrow' 模块一律按已删除处理，不进渲染与统计 */
       return this.olnodes
-        .filter((n) => !n.deletedAt)
+        .filter((n) => !n.deletedAt && n.kind !== 'arrow')
         .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
     },
 
@@ -1227,6 +1229,8 @@ export const useWorkStore = defineStore('work', {
           autosave.mark('olnodes', n)
         }
       }
+      // 级联：指向被删节点连线上连接点的连线一并删除（连接点随宿主连线消亡）
+      for (const rid of removed) this.olnodeRemoveCascadeJunctions(rid)
     },
 
     olnodeDescendants(id) {
@@ -1514,11 +1518,15 @@ export const useWorkStore = defineStore('work', {
       return true
     },
 
-    /* ---------- 统一关系层（8.8.2-G3）：边存储于源节点 rels 数组 [{ id, toId, label, kind, arrows, style }] ---------- */
+    /* ---------- 统一关系层（8.8.2-G3）：边存储于源节点 rels 数组 [{ id, toId, label, kind, arrows, style }] ----------
+     * 连接点（v1.0.13 推倒重建）：不再作为画布模块节点，直接挂在宿主连线上——
+     * rel.junctions = [{ id, t }]（t 为宿主连线路径参数 0–1）；
+     * 连线可以接到连接点上：rel.toJunction = { ownerId, relId, junctionId }，
+     * 连接点屏幕位置由宿主连线路径实时派生，节点挪位/整理布局后仍在原线上。 */
     olnodeRelsOf(id) {
       const n = this.olnodes.find((x) => x.id === id)
       const arr = n && Array.isArray(n.rels) ? n.rels : []
-      return arr.map((r) => ({ arrows: '->', style: '', label: '', kind: '关联', ...r }))
+      return arr.map((r) => ({ arrows: '->', style: '', label: '', kind: '关联', junctions: [], ...r }))
     },
     olnodeRelAdd(fromId, toId, fields = {}) {
       if (fromId === toId) return null
@@ -1527,7 +1535,7 @@ export const useWorkStore = defineStore('work', {
       const arr = this.olnodeRelsOf(fromId)
       if (arr.some((r) => r.toId === toId && r.kind === (fields.kind || '关联'))) return null
       this.olnodePushUndo(true)
-      const rel = { id: uid(), toId, label: '', kind: '关联', arrows: '->', style: '', ...fields }
+      const rel = { id: uid(), toId, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
       n.rels = [...arr, rel]
       autosave.mark('olnodes', n)
       return rel
@@ -1538,11 +1546,144 @@ export const useWorkStore = defineStore('work', {
       n.rels = n.rels.map((r) => (r.id === relId ? { ...r, ...patch } : r))
       autosave.mark('olnodes', n)
     },
+    /** 通用 rel 补丁（v1.0.16 塑形用）：目标可以是节点 rels 中的连线，也可以是宿主 rel._out 中的引出连线 */
+    olnodeRelPatchAny(ownerId, relId, patch) {
+      const n = this.olnodes.find((x) => x.id === ownerId)
+      if (!n || !Array.isArray(n.rels)) return
+      for (const r of n.rels) {
+        if (r.id === relId) {
+          Object.assign(r, patch)
+          autosave.mark('olnodes', n)
+          return r
+        }
+        const o = (r._out || []).find((x) => x.id === relId)
+        if (o) {
+          Object.assign(o, patch)
+          autosave.mark('olnodes', n)
+          return o
+        }
+      }
+    },
     olnodeRelRemove(ownerId, relId) {
       const n = this.olnodes.find((x) => x.id === ownerId)
       if (!n || !Array.isArray(n.rels)) return
+      this.olnodePushUndo(true)
       n.rels = n.rels.filter((r) => r.id !== relId)
       autosave.mark('olnodes', n)
+      // 级联：删除连线上所有连接点 → 引用这些连接点的连线一并删除（含递归：被删连线上的连接点同理）
+      const dead = new Set([`${ownerId}:${relId}`])
+      for (let round = 0; round < 8; round++) {
+        let changed = false
+        for (const n2 of this.liveOlnodes()) {
+          if (!Array.isArray(n2.rels)) continue
+          const kept = []
+          for (const r of n2.rels) {
+            if (r.toJunction && dead.has(`${r.toJunction.ownerId}:${r.toJunction.relId}`)) {
+              dead.add(`${n2.id}:${r.id}`)
+              changed = true
+            } else kept.push(r)
+          }
+          if (changed && kept.length !== n2.rels.length) {
+            n2.rels = kept
+            autosave.mark('olnodes', n2)
+          }
+        }
+        if (!changed) break
+      }
+    },
+
+    /* ---------- 连接点（挂在宿主连线上，v1.0.13） ---------- */
+    /** 在宿主连线 (ownerId, relId) 的路径参数 t 处创建连接点，返回 { id, t, bornAt }；
+     * bornAt 用于创建后短暂高亮（方便确认位置），随后淡出隐藏 */
+    olnodeJunctionAdd(ownerId, relId, t) {
+      const n = this.olnodes.find((x) => x.id === ownerId)
+      if (!n || !Array.isArray(n.rels)) return null
+      const rel = n.rels.find((r) => r.id === relId)
+      if (!rel) return null
+      this.olnodePushUndo(true)
+      const j = { id: uid(), t: Math.max(0, Math.min(1, t)), bornAt: Date.now() }
+      rel.junctions = [...(rel.junctions || []), j]
+      autosave.mark('olnodes', n)
+      return j
+    },
+    olnodeJunctionRemove(ownerId, relId, junctionId) {
+      const n = this.olnodes.find((x) => x.id === ownerId)
+      if (!n || !Array.isArray(n.rels)) return
+      const rel = n.rels.find((r) => r.id === relId)
+      if (!rel || !Array.isArray(rel.junctions)) return
+      this.olnodePushUndo(true)
+      rel.junctions = rel.junctions.filter((j) => j.id !== junctionId)
+      // 级联：从该连接点引出的连线（宿主 rel._out）一并删除
+      if (Array.isArray(rel._out)) rel._out = rel._out.filter((r) => !(r.fromJunction && r.fromJunction.junctionId === junctionId))
+      autosave.mark('olnodes', n)
+      // 级联：接到该连接点上的连线一并删除
+      for (const n2 of this.liveOlnodes()) {
+        if (!Array.isArray(n2.rels)) continue
+        const kept = n2.rels.filter((r) => !(r.toJunction && r.toJunction.ownerId === ownerId && r.toJunction.relId === relId && r.toJunction.junctionId === junctionId))
+        if (kept.length !== n2.rels.length) {
+          n2.rels = kept
+          autosave.mark('olnodes', n2)
+        }
+      }
+    },
+    /** 建一条指向连接点的连线：fromId → 宿主连线上的连接点（连接点作终点） */
+    olnodeRelAddToJunction(fromId, host, fields = {}) {
+      const n = this.olnodes.find((x) => x.id === fromId)
+      if (!n) return null
+      const hostNode = this.olnodes.find((x) => x.id === host.ownerId)
+      const hostRel = hostNode?.rels?.find((r) => r.id === host.relId)
+      if (!hostRel || !(hostRel.junctions || []).some((j) => j.id === host.junctionId)) return null
+      this.olnodePushUndo(true)
+      const rel = { id: uid(), toId: null, toJunction: { ...host }, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
+      n.rels = [...(n.rels || []), rel]
+      autosave.mark('olnodes', n)
+      return rel
+    },
+    /** 建一条从连接点引出的连线：连接点（起点）→ toId 目标节点 */
+    olnodeRelAddFromJunction(host, toId, fields = {}) {
+      const hostNode = this.olnodes.find((x) => x.id === host.ownerId)
+      const hostRel = hostNode?.rels?.find((r) => r.id === host.relId)
+      if (!hostRel || !(hostRel.junctions || []).some((j) => j.id === host.junctionId)) return null
+      const target = this.olnodes.find((x) => x.id === toId)
+      if (!target) return null
+      this.olnodePushUndo(true)
+      const rel = { id: uid(), toId, fromJunction: { ...host }, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
+      hostRel._out = hostRel._out || [] // 引出连线挂在宿主 rel 上（与 junctions 同址，避免新建顶层结构）
+      const outs = hostRel._out.filter((r) => r.toId !== toId)
+      outs.push(rel)
+      hostRel._out = outs
+      autosave.mark('olnodes', hostNode)
+      return rel
+    },
+    /** 建一条连接点 → 连接点的连线（线连到线，v1.0.15）：
+     * fromHost 上引出，落到 toHost 的连接点上；两端都钉在各自宿主连线路径上 */
+    olnodeRelAddJunctionToJunction(fromHost, toHost, fields = {}) {
+      const fromNode = this.olnodes.find((x) => x.id === fromHost.ownerId)
+      const fromRel = fromNode?.rels?.find((r) => r.id === fromHost.relId)
+      if (!fromRel || !(fromRel.junctions || []).some((j) => j.id === fromHost.junctionId)) return null
+      const toNode = this.olnodes.find((x) => x.id === toHost.ownerId)
+      const toRel = toNode?.rels?.find((r) => r.id === toHost.relId)
+      if (!toRel || !(toRel.junctions || []).some((j) => j.id === toHost.junctionId)) return null
+      this.olnodePushUndo(true)
+      const rel = { id: uid(), toId: null, toJunction: { ...toHost }, fromJunction: { ...fromHost }, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
+      fromRel._out = fromRel._out || []
+      /* 去重：同源同目标连接点只留一条 */
+      const outs = fromRel._out.filter((r) => !(r.toJunction && r.toJunction.junctionId === toHost.junctionId))
+      outs.push(rel)
+      fromRel._out = outs
+      autosave.mark('olnodes', fromNode)
+      return rel
+    },
+    /** 节点删除时级联清理其 rels 中指向连接点的连线（宿主连线仍可独立存在） */
+    olnodeRemoveCascadeJunctions(nodeId) {
+      for (const n2 of this.liveOlnodes()) {
+        if (n2.id === nodeId || !Array.isArray(n2.rels)) continue
+        const kept = n2.rels.filter((r) => !(r.toJunction && r.toJunction.ownerId === nodeId))
+        if (kept.length !== n2.rels.length) {
+          n2.rels = kept
+          autosave.mark('olnodes', n2)
+        }
+      }
     },
 
     /* ---------- 书签（章节快捷收藏） ---------- */

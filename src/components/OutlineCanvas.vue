@@ -10,9 +10,10 @@ import {
   relayoutAll, containerRect, effSize, freeSpotFor,
   relColor, relDashed, cycleArrow, nextShape, SHAPE_LABEL,
   REL_KINDS, KIND_META, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES, EDGE_COLORS, edgeColor,
-  sideBetween, routeEdge
+  sideBetween, routeEdge, pointAtT, trimEdgeD, customEdgeGeom
 } from './outline/canvas-model'
 import { uid } from '../db/database'
+import { autosave } from '../services/autosave'
 import { NPopover, NSlider } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import DLinkPicker from './DLinkPicker.vue'
@@ -85,54 +86,150 @@ const edges = computed(() => {
   const out = []
   for (const n of visNodes.value) {
     for (const r of work.olnodeRelsOf(n.id)) {
-      const m = nodeById(r.toId)
-      if (!m || !posOf(m) || hiddenIds.value.has(m.id)) continue
+      /* 接连接点的连线 toId 为空，跳过目标节点守卫（几何由 edgeGeomFor 从宿主连线派生） */
+      if (!r.toJunction) {
+        const m = nodeById(r.toId)
+        if (!m || !posOf(m) || hiddenIds.value.has(m.id)) continue
+      }
       const g = edgeGeomFor(n, r)
       if (!g) continue
-      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, color: edgeColor(r), dashed: relDashed(r.kind) })
+      /* 箭头端回缩：线画到箭头三角形底边为止（dTrim），箭头尖顶在真实端点——既不穿进三角内部、也不留缝。
+       * 回缩量 = 三角底边深度 size·cos(0.42)（arrowHeadDir 的翼张角）+ 半个线宽（粗线线端面藏进三角内部，不露头） */
+      const arrows = r.arrows || '->'
+      const arrowTrim = (rel) => 7 * relArrowScale(rel) * Math.cos(0.42) + (relEdgeWidth(rel) / 2) * 0.8
+      const dTrim = r.toJunction
+        ? trimEdgeD(g, arrows === '<->' ? arrowTrim(r) : 0, arrows !== '--' ? arrowTrim(r) : 0)
+        : trimEdgeD(g, arrows !== '--' ? arrowTrim(r) : 0, arrows === '<->' ? arrowTrim(r) : 0)
+      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, dTrim, color: edgeColor(r), dashed: relDashed(r.kind) })
+      /* 从连接点引出的连线（宿主 rel._out）：连接点作起点，终点为普通模块或另一连接点（v1.0.15 线连到线） */
+      for (const r2 of r._out || []) {
+        if (!r2.toJunction) {
+          const m2 = nodeById(r2.toId)
+          if (!m2 || !posOf(m2) || hiddenIds.value.has(m2.id)) continue
+        }
+        const g2 = edgeGeomFromJunction(n, r, r2)
+        if (!g2) continue
+        const a2 = r2.arrows || '->'
+        const dTrim2 = trimEdgeD(g2, a2 !== '--' ? 7 * relArrowScale(r2) * Math.cos(0.42) + (relEdgeWidth(r2) / 2) * 0.8 : 0, 0)
+        out.push({ key: r2.id, ownerId: n.id, rel: { ...r2, kind: r2.kind || r.kind }, ...g2, dTrim: dTrim2, color: edgeColor(r2), dashed: relDashed(r2.kind) })
+      }
     }
   }
   return out
 })
 /* v0.4.15 严格端口：从哪个接口来就从哪个接口出，接入侧同样在建立时记录（toSide）；
  * 旧连线缺端口记录时按首次渲染位置**一次性补记**（此后不再随挪位重算）；
- * 连线途经任何模块（含两端节点本体）时正交绕行 */
+ * 连线途经任何模块（含两端节点本体）时正交绕行。
+ * v1.0.13：连线可接到「连接点」（挂在另一条连线 rel.junctions 上）——端点取
+ * 宿主连线路径参数 t 处的点，由 pointAtT 实时派生，宿主怎么挪点都钉在线上。 */
 const migratedSides = new Set()
 function edgeGeomFor(n, r) {
-  const m = nodeById(r.toId)
-  if (!m || !posOf(m)) return null
+  let to = null
+  let toSide = r.toSide
+  let toNode = null
+  if (r.toJunction) {
+    const g = hostJunctionGeom(r.toJunction)
+    if (!g) return null
+    to = g.point
+    toSide = g.side
+  } else {
+    toNode = nodeById(r.toId)
+    if (!toNode || !posOf(toNode)) return null
+  }
   const A = rectOf(n)
-  const B = rectOf(m)
+  const B = toNode ? rectOf(toNode) : { x: to.x - 1, y: to.y - 1, w: 2, h: 2 }
   const sb = sideBetween(A, B)
   const fromSide = r.fromSide || sb.from
-  const toSide = r.toSide || sb.to
-  if ((!r.fromSide || !r.toSide) && !migratedSides.has(r.id)) {
+  /* 缺端口记录的旧连线/模板连线按当前几何回退（toSide 留空表示未补记，连接点连线不落库） */
+  if (!toSide) toSide = sb.to
+  if (toNode) to = anchorsOf(B)[toSide]
+  if ((!r.fromSide || !r.toSide) && toNode && !migratedSides.has(r.id)) {
     migratedSides.add(r.id)
     work.olnodeRelUpdate(n.id, r.id, { fromSide, toSide })
   }
   const from = anchorsOf(A)[fromSide]
-  const to = anchorsOf(B)[toSide]
-  if (!from || !to) return null
-  /* 两端节点本体也是障碍：端口严格后，连线中段不得从节点身上穿过 */
+  if (!from || !to || !toSide) return null
+  /* v1.0.16 左键拖拽塑形：有 custom 控制点时走自定义弯曲（垂距过近 = 拉直回退自动路由） */
+  if (r.custom) {
+    const g = customEdgeGeom(from, to, r.custom)
+    if (g) return g
+  }
   const obstacles = [
     { x: A.x, y: A.y, w: A.w, h: A.h },
-    { x: B.x, y: B.y, w: B.w, h: B.h },
-    ...edgeObstacles(n.id, m.id)
+    ...(toNode ? [{ x: B.x, y: B.y, w: B.w, h: B.h }] : []),
+    ...edgeObstacles(n.id, toNode?.id)
   ]
-  /* 连接点（arrow）两端不出桩（stub=0）：线直接从点中心出发，
-   * 与连接点所吸附的既有连线无缝衔接 */
-  const isJunc = n.kind === 'arrow' || m.kind === 'arrow'
-  return isJunc
-    ? routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle, 0)
+  /* 接连接点的连线零桩直出：从连接点中心（即宿主连线上）出发，视觉无缝衔接 */
+  return r.toJunction
+    ? routeEdge(to, toSide, from, fromSide, obstacles, work.canvasPrefs.edgeStyle, 0)
     : routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle)
 }
-/* 障碍集合：除两端节点外的可见模块矩形；容器仅当两端都在其外时才算障碍（子模块边必然穿越所在容器）；
- * 连接点（arrow）是接线柱不是遮挡物——线从它身上过才是常态，不作障碍 */
+/* 宿主连线上的连接点几何：位置 = pointAtT(host, t)；端口朝向取连接点附近路径切线方向，
+ * 保证新线沿宿主连线走向出发，衔接处不拐直角弯。
+ * 宿主几何直接重算（edgeGeomFor），禁止读 edges.value——computed 内自引用会死循环 */
+function hostJunctionGeom(ref) {
+  const hostNode = nodeById(ref.ownerId)
+  if (!hostNode) return null
+  const hostRel = (hostNode.rels || []).find((r0) => r0.id === ref.relId)
+  if (!hostRel) return null
+  const j = (hostRel.junctions || []).find((x) => x.id === ref.junctionId)
+  if (!j) return null
+  const host = edgeGeomFor(hostNode, hostRel)
+  if (!host) return null
+  const p0 = pointAtT(host, Math.max(0, j.t - 0.02))
+  const p1 = pointAtT(host, Math.min(1, j.t + 0.02))
+  if (!p0 || !p1) return null
+  const dx = p1.x - p0.x
+  const dy = p1.y - p0.y
+  const side = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top'
+  return { point: pointAtT(host, j.t), side }
+}
+/* 从连接点引出的连线（v1.0.13）：起点 = 宿主连线路径上的连接点，终点 = 目标节点端口。
+ * v1.0.15：终点也可以是另一条连线上的连接点（r.toJunction，线连到线）——两端都钉在各自宿主上。
+ * 起点零桩直出、方向沿宿主连线切线，与所在连线无缝衔接。
+ * 注意：宿主几何直接用 edgeGeomFor 重算，禁止回读 edges.value（computed 自引用会死循环卡死画布） */
+function edgeGeomFromJunction(hostNode, hostRel, r) {
+  const j = (hostRel.junctions || []).find((x) => x.id === r.fromJunction.junctionId)
+  if (!j) return null
+  const hostG = edgeGeomFor(hostNode, hostRel)
+  if (!hostG) return null
+  const p0 = pointAtT(hostG, Math.max(0, j.t - 0.02))
+  const p1 = pointAtT(hostG, Math.min(1, j.t + 0.02))
+  if (!p0 || !p1) return null
+  const dx = p1.x - p0.x
+  const dy = p1.y - p0.y
+  const side = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top'
+  const start = pointAtT(hostG, j.t)
+  /* 终点为连接点：位置/朝向由目标宿主连线路径派生 */
+  if (r.toJunction) {
+    const g2 = hostJunctionGeom(r.toJunction)
+    if (!g2) return null
+    if (r.custom) {
+      const g3 = customEdgeGeom(start, g2.point, r.custom)
+      if (g3) return g3
+    }
+    return routeEdge(start, side, g2.point, g2.side, edgeObstacles(hostNode.id, null), work.canvasPrefs.edgeStyle, 0)
+  }
+  const m = nodeById(r.toId)
+  if (!m || !posOf(m)) return null
+  const B = rectOf(m)
+  const toSide = r.toSide || sideBetween({ x: start.x - 1, y: start.y - 1, w: 2, h: 2 }, B).to
+  const to = anchorsOf(B)[toSide]
+  if (r.custom) {
+    const g3 = customEdgeGeom(start, to, r.custom)
+    if (g3) return g3
+  }
+  const obstacles = [
+    { x: B.x, y: B.y, w: B.w, h: B.h },
+    ...edgeObstacles(hostNode.id, m.id)
+  ]
+  return routeEdge(start, side, to, toSide, obstacles, work.canvasPrefs.edgeStyle, 0)
+}
+/* 障碍集合：除两端节点外的可见模块矩形；容器仅当两端都在其外时才算障碍（子模块边必然穿越所在容器） */
 function edgeObstacles(fromId, toId) {
   const out = []
   for (const n of visNodes.value) {
     if (n.id === fromId || n.id === toId) continue
-    if (n.kind === 'arrow') continue
     if (n.kind === 'container' && (insideContainer(fromId, n.id) || insideContainer(toId, n.id))) continue
     const r = rectOf(n)
     if (r) out.push({ x: r.x, y: r.y, w: r.w, h: r.h })
@@ -155,12 +252,20 @@ const edgeDecor = computed(() => {
   const fills = []
   for (const e of edges.value) {
     const a = e.rel.arrows || '->'
+    /* 几何方向判别（v1.0.16 修正倒错）：
+     * - 普通连线 / 从连接点引出的 _out 连线（fromJunction，起点=连接点）：正常方向，箭头在 e.b（接入端）
+     * - 模块→连接点的连线（仅 toJunction 无 fromJunction）：路由时 to 在前，几何反转，箭头在 e.a */
+    const reversed = !!e.rel.toJunction && !e.rel.fromJunction
+    const tip = reversed ? e.a : e.b
+    const dir = reversed ? e.startDir : e.endDir
+    const tail = reversed ? e.b : e.a
+    const tdir = reversed ? e.endDir : e.startDir
     if (a === '->' || a === '<->') {
-      heads.push(arrowHeadDir(e.b.x, e.b.y, e.endDir, 7 * relArrowScale(e.rel)))
+      heads.push(arrowHeadDir(tip.x, tip.y, dir, 7 * relArrowScale(e.rel)))
       fills.push(e.color)
     }
     if (a === '<->') {
-      heads.push(arrowHeadDir(e.a.x, e.a.y, e.startDir, 7 * relArrowScale(e.rel)))
+      heads.push(arrowHeadDir(tail.x, tail.y, tdir, 7 * relArrowScale(e.rel)))
       fills.push(e.color)
     }
   }
@@ -398,13 +503,14 @@ function startResize(e, n, dir) {
 const ctxMenu = ref(null) // { x, y, nodeId }
 /* 空白右键（v0.4.9）：在右键落点选建各模块（锚点/卷需选章节/卷参数，不在菜单内） */
 const blankCtx = ref(null) // { x, y, px, py }  px/py = 画布坐标落点
-/* 连线右键（v1.0.11）：弹「创建连接点」菜单——在右键落点（吸附到连线上最近点）建接线柱 */
+/* 连线右键（v1.0.17）：直接打开编辑浮层（含「在此处创建连接点」）——右键落点记录用于连接点定位 */
 const edgeCtx = ref(null) // { x, y, ownerId, relId, px, py }  屏幕坐标 + 画布落点
-/* 连线命中路径自身的 contextmenu（.stop 阻止冒泡，画布层收不到）——直接在此建菜单态。
- * 不做 elementFromPoint 反查也能命中：事件目标就是连线命中路径 */
 function openEdgeCtxFromEvent(e, edge) {
   const pt = canvasPt(e)
+  const g = edge.mid
+  /* 浮层锚定连线中点，但保留右键落点供「创建连接点」精确定位 */
   edgeCtx.value = { x: e.clientX, y: e.clientY, ownerId: edge.ownerId, relId: edge.rel.id, px: pt.x, py: pt.y }
+  openEdgeEdit(edge.ownerId, edge.rel.id, g)
 }
 const CREATE_KINDS = Object.fromEntries(Object.entries(KIND_META).filter(([k]) => k !== 'anchor' && k !== 'volume'))
 function onCanvasCtx(e) {
@@ -413,11 +519,11 @@ function onCanvasCtx(e) {
   const t = document.elementFromPoint(e.clientX, e.clientY)
   const hitEl = t && (t.classList?.contains('oc-edge-hit') ? t : t.closest?.('.oc-edge-hit'))
   if (hitEl && hitEl.dataset.owner && hitEl.dataset.rel) {
-    const pt = canvasPt(e)
-    edgeCtx.value = { x: e.clientX, y: e.clientY, ownerId: hitEl.dataset.owner, relId: hitEl.dataset.rel, px: pt.x, py: pt.y }
+    const edge = edges.value.find((x) => x.ownerId === hitEl.dataset.owner && x.rel.id === hitEl.dataset.rel)
+    if (edge) openEdgeCtxFromEvent(e, edge)
     return
   }
-  if (e.target.closest?.('.oc-node, .oc-elabel, .oc-edge-hit, .oc-eedit, .rg-eedit, .oc-ctx')) return // 节点/连线/标签/浮层/菜单上不弹创建菜单（容器右键走调色板，连线右键走连接点菜单）
+  if (e.target.closest?.('.oc-node, .oc-elabel, .oc-edge-hit, .oc-eedit, .rg-eedit, .oc-ctx')) return // 节点/连线/标签/浮层/菜单上不弹创建菜单（容器右键走调色板，连线右键开编辑浮层）
   const pt = canvasPt(e)
   blankCtx.value = { x: e.clientX, y: e.clientY, px: pt.x, py: pt.y }
 }
@@ -437,6 +543,7 @@ function onKey(e) {
     ctxMenu.value = null
     blankCtx.value = null
     edgeCtx.value = null
+    juncCtx.value = null
     edgeEdit.value = null
     return
   }
@@ -503,79 +610,139 @@ function commitInline() {
 }
 
 /* ---------- 锚点拖线建边（从拖出的接口出发，fromSide 随边存储） ---------- */
-/* 点到折线/贝塞尔路径的最近距离（采样法）：连线落点检测用 */
-function distToEdge(pt, e) {
-  // e.a/e.b 为两端锚点；正交折线采样 pathFromPoints 的拐点不可得，用均匀采样近似
-  const N = 24
-  let best = Infinity
-  let prev = null
-  for (let i = 0; i <= N; i++) {
-    const t = i / N
-    let p
-    if (e.d.startsWith('M') && e.d.includes('C ') && !e.d.includes(' L ')) {
-      // 贝塞尔：控制点未知，按两端点连线近似中段采样（贝塞尔落点检测退化处理）
-      p = { x: e.a.x + (e.b.x - e.a.x) * t, y: e.a.y + (e.b.y - e.a.y) * t }
-    } else {
-      p = { x: e.a.x + (e.b.x - e.a.x) * t, y: e.a.y + (e.b.y - e.a.y) * t }
-    }
-    if (prev) {
-      // 线段 prev→p 上最近点
-      const dx = p.x - prev.x
-      const dy = p.y - prev.y
-      const l2 = dx * dx + dy * dy || 1
-      let s = ((pt.x - prev.x) * dx + (pt.y - prev.y) * dy) / l2
-      s = Math.max(0, Math.min(1, s))
-      const qx = prev.x + dx * s
-      const qy = prev.y + dy * s
-      best = Math.min(best, Math.hypot(pt.x - qx, pt.y - qy))
-    }
-    prev = p
+/* ---------- 连接点：右键投影 + 创建（v1.0.13 推倒重建） ---------- */
+/* 画布点到连线路径的最近点：先沿真实几何（折线 pts / 贝塞尔 c1c2）采样，再逐段投影。
+ * 返回 { point, t }——t 为路径参数，连接点按 t 钉在宿主连线上。 */
+function projectOnEdge(pt, e) {
+  const points = []
+  const N = 64
+  if (e.pts && e.pts.length > 1) {
+    for (const p of e.pts) points.push(p)
+  } else if (e.c1 && e.c2) {
+    for (let i = 0; i <= N; i++) points.push(pointAtT(e, i / N))
+  } else {
+    for (let i = 0; i <= N; i++) points.push({ x: e.a.x + (e.b.x - e.a.x) * (i / N), y: e.a.y + (e.b.y - e.a.y) * (i / N) })
   }
-  return best
+  let best = null
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i]
+    const b = points[i + 1]
+    const dx = b.x - a.x
+    const dy = b.y - a.y
+    const l2 = dx * dx + dy * dy || 1
+    let s = ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / l2
+    s = Math.max(0, Math.min(1, s))
+    const q = { x: a.x + dx * s, y: a.y + dy * s }
+    const dist = Math.hypot(pt.x - q.x, pt.y - q.y)
+    if (!best || dist < best.dist) best = { point: q, dist, seg: i, segT: s }
+  }
+  if (!best) return { point: pt, t: 0.5, dist: Infinity }
+  const t = (best.seg + best.segT) / (points.length - 1)
+  return { point: best.point, t: Math.max(0, Math.min(1, t)), dist: best.dist }
 }
-/* 落点命中既有连线：返回被命中的边（距路径 < 12px），供拖线释放时建连接点 */
-function hitEdgeAt(pt, excludeOwnerId) {
+/* 编辑浮层内「在此处创建连接点」：在右键落点对应的路径参数处直接建（浮层保持开启） */
+function edgeCtxCreate() {
+  const st = edgeCtx.value
+  if (!st) return
+  const e = edges.value.find((x) => x.ownerId === st.ownerId && x.rel.id === st.relId)
+  if (!e) return
+  const { t } = projectOnEdge({ x: st.px, y: st.py }, e)
+  work.olnodeJunctionAdd(st.ownerId, st.relId, t)
+}
+/* 连接点右键：仅删除（创建只来自连线右键） */
+const juncCtx = ref(null) // { x, y, ownerId, relId, junctionId }
+function openJunctionCtx(e, j) {
+  juncCtx.value = { x: e.clientX, y: e.clientY, ownerId: j.ownerId, relId: j.relId, junctionId: j.junctionId }
+}
+function juncCtxRemove() {
+  const st = juncCtx.value
+  juncCtx.value = null
+  if (st) work.olnodeJunctionRemove(st.ownerId, st.relId, st.junctionId)
+}
+/* 连接点渲染集合：宿主连线 × junctions → SVG 层小圆点 + 命中热区；
+ * bornAt（创建 1.6s 内）驱动 flash 高亮态——加深显形方便确认位置，随后淡出隐藏 */
+const juncFlashTick = ref(0)
+let juncFlashTimer = null // 驱动 bornAt 高亮过期重算（挂载期轮询，卸载即停）
+const junctionItems = computed(() => {
+  void juncFlashTick.value
+  const now = Date.now()
+  const out = []
   for (const e of edges.value) {
-    if (excludeOwnerId && e.ownerId === excludeOwnerId) continue
-    if (distToEdge(pt, e) < 12) return e
+    for (const j of e.rel.junctions || []) {
+      const p = pointAtT(e, j.t)
+      if (p) out.push({ key: j.id, ownerId: e.ownerId, relId: e.rel.id, junctionId: j.id, x: p.x, y: p.y, flash: now - (j.bornAt || 0) < 1600 })
+    }
+  }
+  return out
+})
+/* 拖线落点命中连接点（热区 12px）：返回 { ownerId, relId, junctionId } */
+function hitJunctionAt(pt, excludeFromId) {
+  for (const j of junctionItems.value) {
+    const owner = nodeById(j.ownerId)
+    if (owner && owner.id === excludeFromId) continue
+    if (Math.hypot(pt.x - j.x, pt.y - j.y) <= 12) return j
   }
   return null
 }
-/* 点到连线上的最近点（采样法）：连接点吸附到被右键的连线上 */
-function snapPtOnEdge(pt, e) {
-  const N = 48
-  let best = null
-  let prev = null
-  for (let i = 0; i <= N; i++) {
-    const t = i / N
-    const p = { x: e.a.x + (e.b.x - e.a.x) * t, y: e.a.y + (e.b.y - e.a.y) * t }
-    if (prev) {
-      const dx = p.x - prev.x
-      const dy = p.y - prev.y
-      const l2 = dx * dx + dy * dy || 1
-      let s = ((pt.x - prev.x) * dx + (pt.y - prev.y) * dy) / l2
-      s = Math.max(0, Math.min(1, s))
-      const q = { x: prev.x + dx * s, y: prev.y + dy * s }
-      if (!best || Math.hypot(pt.x - q.x, pt.y - q.y) < Math.hypot(pt.x - best.x, pt.y - best.y)) best = q
-    }
-    prev = p
+/* 拖线落点命中连线本体（12px 容差）：返回被命中的边（供落线自动建连接点接线，v1.0.15）。
+ * 排除拖线起点所在的宿主连线（不能把线接回自己）。 */
+function hitEdgeAt(pt, excludeEdgeKey) {
+  for (const e of edges.value) {
+    if (excludeEdgeKey && e.key === excludeEdgeKey) continue
+    if (projectOnEdge(pt, e).dist < 12) return e
   }
-  return best || pt
+  return null
 }
-/* 在连线落点处生成连接点节点（kind:'arrow'，接线柱），返回该节点 */
-function junctionAt(pt) {
-  const row = work.olnodeAdd(null, { kind: 'arrow', title: '', canvasX: snap(pt.x - 10), canvasY: snap(pt.y - 10), w: 20, h: 20 })
-  return row
-}
-/* 连线右键菜单动作：在右键落点（吸附到被右键连线路径最近点）直接创建连接点 */
-function edgeCtxCreate() {
-  const st = edgeCtx.value
-  edgeCtx.value = null
-  if (!st) return
-  const e = edges.value.find((x) => x.ownerId === st.ownerId && x.rel.id === st.relId)
-  const pt = e ? snapPtOnEdge({ x: st.px, y: st.py }, e) : { x: st.px, y: st.py }
-  const row = junctionAt(pt)
-  work.selOlnodeId = row.id
+/* 连接点作为起点引出连线：mousedown 拖线 → 落点为模块/连接点/连线本体皆可接（v1.0.15 线连到线） */
+function startConnectFromJunction(e, j) {
+  e.stopPropagation()
+  e.preventDefault()
+  const host = { ownerId: j.ownerId, relId: j.relId, junctionId: j.junctionId }
+  const g = hostJunctionGeom(host)
+  const origin = { x: g?.point.x ?? j.x, y: g?.point.y ?? j.y }
+  connecting.value = { fromId: null, fromJunction: host, side: g?.side || 'right', x: origin.x, y: origin.y, x0: origin.x, y0: origin.y }
+  const move = (ev) => {
+    const p = canvasPt(ev)
+    connecting.value = { ...connecting.value, x: p.x, y: p.y }
+  }
+  const up = (ev) => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+    const st = connecting.value
+    connecting.value = null
+    if (!st) return
+    const pt = canvasPt(ev)
+    /* 1. 落到既有连接点：直接接（含连接点→连接点） */
+    const junc = hitJunctionAt(pt, null)
+    if (junc && junc.junctionId !== j.junctionId) {
+      const rel = work.olnodeRelAddJunctionToJunction(host, { ownerId: junc.ownerId, relId: junc.relId, junctionId: junc.junctionId })
+      if (rel) openEdgeEdit(host.ownerId, rel.id, { x: (origin.x + junc.x) / 2, y: (origin.y + junc.y) / 2 })
+      return
+    }
+    /* 2. 落到另一条连线本体：在落点自动创建新连接点并接上（线→线） */
+    const hitEdge = hitEdgeAt(pt, j.relId)
+    if (hitEdge) {
+      const { t, point } = projectOnEdge(pt, hitEdge)
+      const nj = work.olnodeJunctionAdd(hitEdge.ownerId, hitEdge.rel.id, t)
+      if (nj) {
+        const rel = work.olnodeRelAddJunctionToJunction(host, { ownerId: hitEdge.ownerId, relId: hitEdge.rel.id, junctionId: nj.id })
+        if (rel) openEdgeEdit(host.ownerId, rel.id, { x: (origin.x + point.x) / 2, y: (origin.y + point.y) / 2 })
+      }
+      return
+    }
+    /* 3. 落到模块：常规建边 */
+    const target = hitConnTarget(pt, new Set())
+    if (!target) return
+    const tb = rectOf(target)
+    const toSide = sideBetween({ x: origin.x - 1, y: origin.y - 1, w: 2, h: 2 }, tb).to
+    const rel = work.olnodeRelAddFromJunction(host, target.id, { toSide })
+    if (rel) {
+      const mid = { x: (origin.x + (tb.x + tb.w / 2)) / 2, y: (origin.y + (tb.y + tb.h / 2)) / 2 }
+      openEdgeEdit(host.ownerId, rel.id, mid)
+    }
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
 }
 function startConnect(e, n) {
   e.stopPropagation()
@@ -594,26 +761,19 @@ function startConnect(e, n) {
     connecting.value = null
     if (!st) return
     const pt = canvasPt(ev)
-    const target = hitConnTarget(pt, new Set([n.id]))
-    let finalTarget = target
-    let createdJunction = null
-    /* 线连线（v1.0.10）：落点不在任何模块上、但贴近某条既有连线 → 在该处自动生成连接点，接到连接点上 */
-    if (!target) {
-      const hitEdge = hitEdgeAt(pt, n.id)
-      if (hitEdge) {
-        createdJunction = junctionAt(pt)
-        finalTarget = createdJunction
-      }
+    /* 优先接连接点（线→线互连）；否则按模块建立 */
+    const junc = hitJunctionAt(pt, n.id)
+    if (junc) {
+      work.olnodeRelAddToJunction(n.id, { ownerId: junc.ownerId, relId: junc.relId, junctionId: junc.junctionId }, { fromSide: side })
+      return
     }
+    const finalTarget = hitConnTarget(pt, new Set([n.id]))
     if (!finalTarget) return
     /* 记录两侧端口：从拖出的接口（fromSide）来，接入侧取面向源节点一侧（toSide） */
     const tb = rectOf(finalTarget)
     const toSide = sideBetween(rectOf(n), tb).to
     const rel = work.olnodeRelAdd(n.id, finalTarget.id, { fromSide: side, toSide })
-    if (!rel) {
-      if (createdJunction) work.olnodeRemove(createdJunction.id) // 建边失败回滚连接点
-      return
-    }
+    if (!rel) return
     const g = edgeGeomFor(n, rel) || { mid: pt }
     openEdgeEdit(n.id, rel.id, g.mid)
   }
@@ -623,58 +783,145 @@ function startConnect(e, n) {
 const connPath = computed(() => {
   const c = connecting.value
   if (!c) return ''
+  /* 从连接点引出的拖线：起点固定为连接点中心（钉在宿主连线上） */
+  if (c.fromJunction) return `M ${c.x0 ?? c.x} ${c.y0 ?? c.y} L ${c.x} ${c.y}`.replace('NaN', '')
   const from = nodeById(c.fromId)
   const anchor = from && rectOf(from) ? anchorsOf(rectOf(from))[c.side] : null
   const start = anchor || c
   return `M ${start.x} ${start.y} L ${c.x} ${c.y}`
 })
 
-/* ---------- 边编辑浮层 ---------- */
+/* ---------- 左键拖拽塑形（v1.0.16）：替换「点击连线开编辑浮层」 ----------
+ * 按住连线拖动 → 弯曲（custom 控制点跟随鼠标，实时预览）；拖回近直线（垂距 < 6px）→ 自动拉直；
+ * 点击不动 → 无操作；编辑浮层入口只剩：拖线建边完成后自动弹出。 */
+let shaping = null // { ownerId, relId, moved }
+function startEdgeShape(e, edge) {
+  if (e.button !== 0) return
+  e.stopPropagation()
+  /* 双击拉直：preventDefault 会抑制原生 dblclick 派发，改在 mousedown 里按 e.detail 判定 */
+  if (e.detail >= 2) {
+    e.preventDefault()
+    work.olnodeRelPatchAny(edge.ownerId, edge.rel.id, { custom: null })
+    return
+  }
+  e.preventDefault()
+  shaping = { ownerId: edge.ownerId, relId: edge.rel.id, moved: false }
+  const move = (ev) => {
+    if (!shaping) return
+    const p = canvasPt(ev)
+    if (!shaping.moved) {
+      work.olnodePushUndo(true)
+      shaping.moved = true
+    }
+    /* 拖回近直线（与 a-b 端点连线垂距 < 6px）→ 清除 custom 恢复自动路由（拉直） */
+    const a = edge.a
+    const b = edge.b
+    const abx = b.x - a.x
+    const aby = b.y - a.y
+    const l2 = abx * abx + aby * aby || 1
+    const dist = Math.abs((p.x - a.x) * aby - (p.y - a.y) * abx) / Math.sqrt(l2)
+    work.olnodeRelPatchAny(shaping.ownerId, shaping.relId, dist < 6 ? { custom: null } : { custom: { x: p.x, y: p.y } })
+  }
+  const up = () => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+    /* 未移动的点击不再打开编辑浮层（v1.0.16 取消该入口） */
+    shaping = null
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
+}
+/* 连线中点手柄：已有 custom 弯曲的连线显示微型手柄，拖它 = 继续调整弯曲；双击连线 = 拉直恢复自动路由 */
+function onEdgeDbl(edge) {
+  work.olnodeRelPatchAny(edge.ownerId, edge.rel.id, { custom: null })
+}
+
+/* ---------- 边编辑浮层（与容器右键菜单同模式：fixed + 屏幕坐标 + 不随画布缩放重定位） ---------- */
 const edgeLabelInput = ref(null)
-/* 浮层弹出方向：中点上方空间不足时翻转向下（否则被画布 overflow 裁掉），横向夹在可视区内 */
 function popPlacement(mid) {
   const el = canvasEl.value
-  if (!el) return { mx: mid.x, flip: false }
+  if (!el) return { mx: mid.x, my: mid.y, flip: false }
   const r = el.getBoundingClientRect()
   const sx = r.left + tx.value + mid.x * zoom.value
   const sy = r.top + ty.value + mid.y * zoom.value
-  const halfW = 120 * zoom.value
-  const cx = Math.min(Math.max(sx, r.left + 6 + halfW), r.right - 6 - halfW)
+  const halfW = 120
+  const cx = Math.min(Math.max(sx, r.left + 6 + halfW), Math.max(r.left + 6 + halfW, r.right - 6 - halfW))
   const roomUp = sy - r.top
-  return { mx: (cx - r.left - tx.value) / zoom.value, flip: roomUp < 170 * zoom.value && r.bottom - sy > roomUp }
+  return { mx: cx, my: sy, flip: roomUp < 170 && r.bottom - sy > roomUp }
 }
 function openEdgeEdit(ownerId, relId, mid) {
   const p = popPlacement(mid)
-  edgeEdit.value = { ownerId, relId, mx: p.mx, my: mid.y, flip: p.flip }
+  edgeEdit.value = { ownerId, relId, mx: p.mx, my: p.my, flip: p.flip }
   nextTick(() => edgeLabelInput.value?.focus())
 }
 function curRel() {
   const st = edgeEdit.value
   if (!st) return null
   const n = nodeById(st.ownerId)
-  return (n && Array.isArray(n.rels) ? n.rels.find((r) => r.id === st.relId) : null) || null
+  if (!n || !Array.isArray(n.rels)) return null
+  /* 编辑对象可能是宿主 rel 本身，也可能是它某个连接点引出的 _out 连线 */
+  for (const r of n.rels) {
+    if (r.id === st.relId) return r
+    const o = (r._out || []).find((x) => x.id === st.relId)
+    if (o) return o
+  }
+  return null
 }
 function patchRel(patch) {
   const st = edgeEdit.value
-  if (st) work.olnodeRelUpdate(st.ownerId, st.relId, patch)
+  if (!st) return
+  const n = nodeById(st.ownerId)
+  if (!n || !Array.isArray(n.rels)) return
+  for (const r of n.rels) {
+    if (r.id === st.relId) {
+      work.olnodeRelUpdate(st.ownerId, st.relId, patch)
+      return
+    }
+    const i = (r._out || []).findIndex((x) => x.id === st.relId)
+    if (i >= 0) {
+      r._out = r._out.map((x, k) => (k === i ? { ...x, ...patch } : x))
+      autosave.mark('olnodes', n)
+      return
+    }
+  }
 }
 function removeRel() {
   const st = edgeEdit.value
-  if (st) work.olnodeRelRemove(st.ownerId, st.relId)
+  if (!st) return
+  const n = nodeById(st.ownerId)
+  if (n && Array.isArray(n.rels)) {
+    for (const r of n.rels) {
+      if (r.id === st.relId) {
+        work.olnodeRelRemove(st.ownerId, st.relId)
+        break
+      }
+      if ((r._out || []).some((x) => x.id === st.relId)) {
+        r._out = r._out.filter((x) => x.id !== st.relId)
+        autosave.mark('olnodes', n)
+        break
+      }
+    }
+  }
   edgeEdit.value = null
+  edgeCtx.value = null
 }
 function closeFloaters() {
   edgeEdit.value = null
+  edgeCtx.value = null
   citePick.value = null
   editTitle.value = null
 }
 function onWinDown(e) {
-  if (edgeEdit.value && !e.target.closest?.('.oc-eedit, .oc-edge-hit, .oc-elabel')) edgeEdit.value = null
+  /* 浮层与其落点数据（edgeCtx）同生共死：点浮层/连线外即一并关闭 */
+  if (edgeEdit.value && !e.target.closest?.('.oc-eedit, .oc-edge-hit, .oc-elabel')) {
+    edgeEdit.value = null
+    edgeCtx.value = null
+  }
   if (citePick.value && !e.target.closest?.('.oc-pick')) citePick.value = null
   if (editTitle.value && !e.target.closest?.('.oc-title-edit')) commitTitle()
   if (ctxMenu.value && !e.target.closest?.('.oc-ctx')) ctxMenu.value = null
   if (blankCtx.value && !e.target.closest?.('.oc-ctx')) blankCtx.value = null
-  if (edgeCtx.value && !e.target.closest?.('.oc-ctx, .oc-edge-hit')) edgeCtx.value = null
+  if (juncCtx.value && !e.target.closest?.('.oc-ctx, .oc-junc-hit')) juncCtx.value = null
 }
 
 /* ---------- 节点操作 ---------- */
@@ -686,7 +933,6 @@ function onRemove(n) {
   work.olnodeRemove(n.id)
 }
 function onDblNode(n) {
-  if (n.kind === 'arrow') return // 箭头无文字内容，双击不进编辑
   if (n.kind === 'anchor' && n.refId) {
     work.navTo('chapters', n.refId)
     return
@@ -767,7 +1013,7 @@ function nodeStyle(n) {
     width: r.w + 'px',
     // 非容器一律显式高度：与 rectOf（连线锚点/容器派生盒）一致，高度拖拽才能生效；
     // 编辑态给足最小编辑区（否则 absolute 编辑器撑不开节点，内容不可见）
-    height: n.kind === 'container' ? r.h + 'px' : editing ? Math.max(r.h, 96) + 'px' : n.kind === 'arrow' ? r.h + 'px' : Math.max(r.h, 36) + 'px',
+    height: n.kind === 'container' ? r.h + 'px' : editing ? Math.max(r.h, 96) + 'px' : Math.max(r.h, 36) + 'px',
     zIndex: editing ? 8 : n.kind === 'container' ? 1 : work.selOlnodeId === n.id ? 6 : 3,
     ...(n.kind === 'container' ? { '--bc': branchColor(n) } : {})
   }
@@ -898,11 +1144,13 @@ onMounted(() => {
   }
   window.addEventListener('keydown', onKey)
   window.addEventListener('mousedown', onWinDown, true)
+  juncFlashTimer = setInterval(() => juncFlashTick.value++, 400)
   if (live.value.length) nextTick(fitView)
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
   window.removeEventListener('mousedown', onWinDown, true)
+  clearInterval(juncFlashTimer)
 })
 </script>
 
@@ -952,13 +1200,13 @@ onBeforeUnmount(() => {
           :height="svgBox.h"
           :viewBox="svgBox.x + ' ' + svgBox.y + ' ' + svgBox.w + ' ' + svgBox.h"
         >
-          <path v-for="e in edges" :key="'h' + e.key" class="oc-edge-hit" :d="e.d" :data-owner="e.ownerId" :data-rel="e.rel.id" @mousedown.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)" @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)">
-            <title>点击编辑连线 · 右键创建连接点</title>
+          <path v-for="e in edges" :key="'h' + e.key" class="oc-edge-hit" :d="e.d" :data-owner="e.ownerId" :data-rel="e.rel.id" @mousedown.stop="startEdgeShape($event, e)" @dblclick.stop="onEdgeDbl(e)" @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)">
+            <title>按住拖动弯曲连线 · 双击拉直 · 右键编辑（含创建连接点）</title>
           </path>
           <path
             v-for="e in edges"
             :key="'v' + e.key"
-            :d="e.d"
+            :d="e.dTrim || e.d"
             fill="none"
             :stroke="e.color"
             :stroke-width="relEdgeWidth(e.rel)"
@@ -966,6 +1214,14 @@ onBeforeUnmount(() => {
             :opacity="edgeEdit && edgeEdit.relId === e.key ? 1 : 0.85"
           />
           <polygon v-for="(h, i) in edgeDecor.heads" :key="'a' + i" :points="h" :fill="edgeDecor.fills[i]" />
+          <!-- 连接点（v1.0.13）：钉在宿主连线路径上——默认微观透明小圆点；创建后 1.6s 内 flash 高亮（加深显形）便于确认位置，随后淡出隐藏。
+               热区圆承担两类操作：mousedown 引出连线（连接点作起点）、被模块锚点拖线命中（作终点）、右键删除 -->
+          <g v-for="j in junctionItems" :key="'j' + j.key" class="oc-junc" :class="{ flash: j.flash }">
+            <circle class="oc-junc-hit" :cx="j.x" :cy="j.y" r="10" fill="transparent" :data-junc="j.key" @mousedown.stop.prevent="startConnectFromJunction($event, j)" @contextmenu.prevent.stop="openJunctionCtx($event, j)">
+              <title>连接点——按住拖出连线 / 模块锚点拖到此接线 · 右键删除</title>
+            </circle>
+            <circle class="oc-junc-dot" :cx="j.x" :cy="j.y" r="2.5" />
+          </g>
           <path v-if="connecting" :d="connPath" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4" />
         </svg>
 
@@ -999,13 +1255,8 @@ onBeforeUnmount(() => {
             </div>
           </template>
           <template v-else>
-            <!-- 连接点模块（v1.0.10）：线与线之间的接线柱——小圆点本体，四向锚点可拖线；
-                 拖线落到既有连线上时自动在该处生成连接点，实现连线↔连线互连 -->
-            <template v-if="n.kind === 'arrow'">
-              <span class="oc-junction" :title="'连接点' + (n.title ? ' · ' + n.title : '') + '——拖四向锚点接线'"></span>
-            </template>
             <!-- 菱形/平行四边形：SVG 描边代替 clip-path（clip 会裁掉边框、锚点与手柄） -->
-            <svg v-else-if="n.kind === 'event' && (n.shape === 'diamond' || n.shape === 'para')" class="oc-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <svg v-if="n.kind === 'event' && (n.shape === 'diamond' || n.shape === 'para')" class="oc-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <polygon :points="shapePoly(n)" />
             </svg>
             <div v-if="n.kind === 'textbox'" class="oc-tbbg" :style="{ opacity: n.opacity != null ? n.opacity : 1 }"></div>
@@ -1032,8 +1283,8 @@ onBeforeUnmount(() => {
             </div>
           </template>
 
-          <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块/连线/连接点建立连线'" @mousedown="startConnect($event, n)" />
-          <template v-if="n.kind !== 'arrow'">
+          <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块或连接点建立连线'" @mousedown="startConnect($event, n)" />
+          <template v-if="n.kind !== 'container'">
             <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
             <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
             <span class="oc-rs" data-dir="s" title="拖拽调整高度" @mousedown="startResize($event, n, 's')" />
@@ -1061,24 +1312,31 @@ onBeforeUnmount(() => {
           <span class="om-sat-text">{{ st.display }}</span>
         </a>
 
-        <!-- 连线标签 -->
+        <!-- 连线标签（纯展示 + 双击拉直；左键编辑入口已随塑形改版取消） -->
         <div
           v-for="e in edges.filter((x) => x.rel.label)"
           :key="'l' + e.key"
           class="oc-elabel"
           :style="{ left: e.mid.x + 'px', top: e.mid.y + 'px', borderColor: e.color, color: e.color }"
-          @mousedown.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)"
-          @contextmenu.prevent.stop="openEdgeEdit(e.ownerId, e.rel.id, e.mid)"
+          @dblclick.stop="onEdgeDbl(e)"
+          @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)"
         >{{ e.rel.label }}</div>
 
-        <!-- 边编辑浮层 -->
-        <div v-if="edgeEdit" class="oc-eedit" :class="{ flip: edgeEdit.flip }" :style="{ left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
+        <!-- 边编辑浮层：挂 .app-root（theme-* 的 CSS 变量在此元素上，Teleport 到 body 会丢失背景色变透明），
+           fixed 定位不受画布缩放影响，尺寸恒定 -->
+      <Teleport to=".app-root" v-if="edgeEdit">
+      <div class="oc-eedit" :class="{ flip: edgeEdit.flip }" :style="{ position: 'fixed', left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
+          <div class="oc-eedit-title">编辑连线</div>
           <div class="oc-eedit-row">
             <input ref="edgeLabelInput" class="rp-input" :value="curRel()?.label || ''" placeholder="连线标签…" @input="patchRel({ label: $event.target.value })" @keydown.enter="edgeEdit = null" @keydown.esc="edgeEdit = null" />
             <button class="om-btn" :title="edgeEdit && curRel() ? '箭头：' + { '->': '单向', '<->': '双向', '--': '无向' }[curRel().arrows || '->'] : '箭头'" @click="patchRel({ arrows: cycleArrow(curRel()?.arrows || '->') })">{{ arrowsGlyph(curRel()?.arrows) }}</button>
             <button class="om-btn oc-mini-x" title="删除连线" @click="removeRel"><OIcon name="close" :size="12" /></button>
           </div>
-          <div class="oc-eedit-row oc-kindrow">
+          <!-- 右键打开时提供「在此处创建连接点」（落点 = 右键位置，投影到真实路径） -->
+          <button v-if="edgeCtx" class="oc-ctx-item oc-eedit-juncbtn" title="在右键位置的连线上创建连接点（模块锚点拖线到连接点、或按住连接点拖出连线互连）" @click="edgeCtxCreate">
+            <OIcon name="link" :size="13" /> 在此处创建连接点
+          </button>
+          <div class="oc-eedit-row oc-kindrow oc-eedit-sec">
             <span
               v-for="k in REL_KINDS"
               :key="k.key"
@@ -1097,7 +1355,7 @@ onBeforeUnmount(() => {
               @click="patchRel({ style: s.key === 'solid' ? '' : s.key })"
             >{{ s.label }}</span>
           </div>
-          <div class="oc-eedit-row oc-eedit-swatches">
+          <div class="oc-eedit-row oc-eedit-swatches oc-eedit-sec">
             <span
               class="oc-ctx-sw"
               :class="{ on: !(curRel()?.color || '') }"
@@ -1144,6 +1402,7 @@ onBeforeUnmount(() => {
             <button v-if="curRel()?.arrowScale" class="oc-eedit-szreset" title="恢复跟随全局箭头大小" @click="patchRel({ arrowScale: null })">↺</button>
           </div>
         </div>
+      </Teleport>
 
         <!-- 引用卡目标选择浮层 -->
         <div v-if="citePick" class="oc-pick" :style="{ left: citePick.x + 'px', top: citePick.y + 40 + 'px' }" @mousedown.stop>
@@ -1165,7 +1424,7 @@ onBeforeUnmount(() => {
       </template>
       <div class="oc-ctx-actions oc-ctx-ops">
         <button v-if="ctxNode && ctxNode.kind === 'event'" class="oc-ctx-item" :title="'形状：' + SHAPE_LABEL[ctxNode.shape || 'process'] + '（点击切换）'" @click="ctxAct('shape')"><OIcon name="shape" :size="13" /> {{ SHAPE_LABEL[ctxNode.shape || 'process'] }} ▸</button>
-        <button v-if="ctxNode && ctxNode.kind !== 'container' && ctxNode.kind !== 'arrow'" class="oc-ctx-item" title="编辑内容（也可双击模块）" @click="ctxAct('edit')"><OIcon name="edit" :size="13" /> 编辑内容</button>
+        <button v-if="ctxNode && ctxNode.kind !== 'container'" class="oc-ctx-item" title="编辑内容（也可双击模块）" @click="ctxAct('edit')"><OIcon name="edit" :size="13" /> 编辑内容</button>
         <button v-if="ctxNode && ctxNode.kind === 'textbox'" class="oc-ctx-item oc-ctx-oprow" title="文本框透明度" @click.stop>
           <OIcon name="textbox" :size="13" /> 透明度
           <input type="range" min="0.15" max="1" step="0.05" :value="ctxNode.opacity != null ? ctxNode.opacity : 1" @input="work.olnodeSetOpacity(ctxNode.id, $event.target.value)" />
@@ -1176,7 +1435,7 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- 画布空白右键：选建模块（v0.4.9） -->
+    <!-- 画布空白右键：选建模块（连接点必须在连线上右键创建） -->
     <div v-if="blankCtx" class="oc-ctx oc-blankctx" :style="{ left: blankCtx.x + 'px', top: blankCtx.y + 'px' }" @mousedown.stop>
       <div class="oc-ctx-title">在此处新建模块</div>
       <button v-for="(m, k) in CREATE_KINDS" :key="k" class="oc-ctx-item" @click="createAt(k)">
@@ -1184,10 +1443,10 @@ onBeforeUnmount(() => {
       </button>
     </div>
 
-    <!-- 连线右键（v1.0.12）：仅创建连接点（吸附在连线路径上） -->
-    <div v-if="edgeCtx" class="oc-ctx oc-blankctx" :style="{ left: edgeCtx.x + 'px', top: edgeCtx.y + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
-      <button class="oc-ctx-item" title="在右键位置创建连接点（吸附在连线上，从它拖出新连线与原线无缝衔接）" @click="edgeCtxCreate">
-        <OIcon name="link" :size="13" /> 创建连接点
+    <!-- 连接点右键：仅删除 -->
+    <div v-if="juncCtx" class="oc-ctx oc-blankctx" :style="{ left: juncCtx.x + 'px', top: juncCtx.y + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
+      <button class="oc-ctx-item oc-ctx-danger" title="删除该连接点（接到它上面的连线一并删除）" @click="juncCtxRemove">
+        <OIcon name="close" :size="13" /> 删除连接点
       </button>
     </div>
 
