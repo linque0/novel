@@ -2837,9 +2837,19 @@ body,
   z-index: 1000;
 }
 /* 边编辑浮层翻转：连线贴近可视区顶部时向下弹出，避免被画布 overflow 裁掉（v0.4.12） */
-.rg-eedit.flip,
-.oc-eedit.flip {
+.rg-eedit.flip {
   transform: translate(-50%, 14px);
+}
+/* 避线方位变体（v1.0.18）：放置器挑不遮挡连线的方向弹出——up 为默认（压在锚点上方），
+ * down/left/right 由 transform 把浮层挪到锚点另一侧（14px 与默认上方的间隙一致） */
+.oc-eedit.dir-down {
+  transform: translate(-50%, 14px);
+}
+.oc-eedit.dir-left {
+  transform: translate(calc(-100% - 14px), -50%);
+}
+.oc-eedit.dir-right {
+  transform: translate(14px, -50%);
 }
 .rg-eedit .rp-input {
   height: 24px;
@@ -3022,15 +3032,15 @@ button:focus-visible,
   outline-offset: 1px;
 }
 
-/* 浮层入场动效：140ms 淡入下滑；flip 变体靠 transform 定位，仅做淡入避免位移冲突 */
+/* 浮层入场动效：140ms 淡入下滑；flip/dir-* 变体靠 transform 定位，仅做淡入避免位移冲突 */
 .oc-ctx,
 .rg-ctx,
 .rg-relinput,
-.oc-eedit:not(.flip),
+.oc-eedit.dir-up,
 .rg-eedit:not(.flip) {
   animation: pop-in 0.14s ease-out;
 }
-.oc-eedit.flip,
+.oc-eedit:not(.dir-up),
 .rg-eedit.flip {
   animation: pop-fade 0.14s ease-out;
 }

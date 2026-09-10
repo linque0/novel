@@ -507,10 +507,9 @@ const blankCtx = ref(null) // { x, y, px, py }  px/py = 画布坐标落点
 const edgeCtx = ref(null) // { x, y, ownerId, relId, px, py }  屏幕坐标 + 画布落点
 function openEdgeCtxFromEvent(e, edge) {
   const pt = canvasPt(e)
-  const g = edge.mid
   /* 浮层锚定连线中点，但保留右键落点供「创建连接点」精确定位 */
   edgeCtx.value = { x: e.clientX, y: e.clientY, ownerId: edge.ownerId, relId: edge.rel.id, px: pt.x, py: pt.y }
-  openEdgeEdit(edge.ownerId, edge.rel.id, g)
+  openEdgeEdit(edge.ownerId, edge.rel.id, edge)
 }
 const CREATE_KINDS = Object.fromEntries(Object.entries(KIND_META).filter(([k]) => k !== 'anchor' && k !== 'volume'))
 function onCanvasCtx(e) {
@@ -716,7 +715,10 @@ function startConnectFromJunction(e, j) {
     const junc = hitJunctionAt(pt, null)
     if (junc && junc.junctionId !== j.junctionId) {
       const rel = work.olnodeRelAddJunctionToJunction(host, { ownerId: junc.ownerId, relId: junc.relId, junctionId: junc.junctionId })
-      if (rel) openEdgeEdit(host.ownerId, rel.id, { x: (origin.x + junc.x) / 2, y: (origin.y + junc.y) / 2 })
+      if (rel) {
+        const g = edgeGeomFromJunction(nodeById(host.ownerId), nodeById(host.ownerId)?.rels?.find((x) => x.id === j.relId), rel) || { mid: { x: (origin.x + junc.x) / 2, y: (origin.y + junc.y) / 2 } }
+        openEdgeEdit(host.ownerId, rel.id, g)
+      }
       return
     }
     /* 2. 落到另一条连线本体：在落点自动创建新连接点并接上（线→线） */
@@ -726,7 +728,10 @@ function startConnectFromJunction(e, j) {
       const nj = work.olnodeJunctionAdd(hitEdge.ownerId, hitEdge.rel.id, t)
       if (nj) {
         const rel = work.olnodeRelAddJunctionToJunction(host, { ownerId: hitEdge.ownerId, relId: hitEdge.rel.id, junctionId: nj.id })
-        if (rel) openEdgeEdit(host.ownerId, rel.id, { x: (origin.x + point.x) / 2, y: (origin.y + point.y) / 2 })
+        if (rel) {
+          const g = edgeGeomFromJunction(nodeById(host.ownerId), nodeById(host.ownerId)?.rels?.find((x) => x.id === j.relId), rel) || { mid: { x: (origin.x + point.x) / 2, y: (origin.y + point.y) / 2 } }
+          openEdgeEdit(host.ownerId, rel.id, g)
+        }
       }
       return
     }
@@ -737,8 +742,8 @@ function startConnectFromJunction(e, j) {
     const toSide = sideBetween({ x: origin.x - 1, y: origin.y - 1, w: 2, h: 2 }, tb).to
     const rel = work.olnodeRelAddFromJunction(host, target.id, { toSide })
     if (rel) {
-      const mid = { x: (origin.x + (tb.x + tb.w / 2)) / 2, y: (origin.y + (tb.y + tb.h / 2)) / 2 }
-      openEdgeEdit(host.ownerId, rel.id, mid)
+      const g = edgeGeomFromJunction(nodeById(host.ownerId), nodeById(host.ownerId)?.rels?.find((x) => x.id === j.relId), rel)
+      openEdgeEdit(host.ownerId, rel.id, g || { mid: { x: (origin.x + (tb.x + tb.w / 2)) / 2, y: (origin.y + (tb.y + tb.h / 2)) / 2 } })
     }
   }
   window.addEventListener('mousemove', move)
@@ -775,7 +780,7 @@ function startConnect(e, n) {
     const rel = work.olnodeRelAdd(n.id, finalTarget.id, { fromSide: side, toSide })
     if (!rel) return
     const g = edgeGeomFor(n, rel) || { mid: pt }
-    openEdgeEdit(n.id, rel.id, g.mid)
+    openEdgeEdit(n.id, rel.id, g)
   }
   window.addEventListener('mousemove', move)
   window.addEventListener('mouseup', up)
@@ -838,21 +843,60 @@ function onEdgeDbl(edge) {
 
 /* ---------- 边编辑浮层（与容器右键菜单同模式：fixed + 屏幕坐标 + 不随画布缩放重定位） ---------- */
 const edgeLabelInput = ref(null)
-function popPlacement(mid) {
+/* 避线放置（v1.0.18）：以锚点为基准沿 上/下/左/右 四方位生成候选框（与 .oc-eedit.dir-* transform 变体一一对应），
+ * 统计连线路径采样点落入框内的数量（遮挡少者优先），越出画布可视区的面积占比高者罚分，
+ * 同分按 上>下>右>左 偏好——浮层弹在不压住连线本体的一侧。size 缺省用估值，挂载后可按真实尺寸复检 */
+function popPlacement(mid, geom, size) {
   const el = canvasEl.value
-  if (!el) return { mx: mid.x, my: mid.y, flip: false }
+  if (!el) return { mx: mid?.x ?? 0, my: mid?.y ?? 0, dir: 'up' }
   const r = el.getBoundingClientRect()
-  const sx = r.left + tx.value + mid.x * zoom.value
-  const sy = r.top + ty.value + mid.y * zoom.value
-  const halfW = 120
-  const cx = Math.min(Math.max(sx, r.left + 6 + halfW), Math.max(r.left + 6 + halfW, r.right - 6 - halfW))
-  const roomUp = sy - r.top
-  return { mx: cx, my: sy, flip: roomUp < 170 && r.bottom - sy > roomUp }
+  const sx = r.left + tx.value + (mid?.x ?? 0) * zoom.value
+  const sy = r.top + ty.value + (mid?.y ?? 0) * zoom.value
+  const gap = 14
+  const w = size?.w || 238
+  const h = size?.h || (edgeCtx.value ? 206 : 172)
+  /* 几何缺失时回退旧逻辑：默认上方弹出，顶部空间不足且下方更宽敞则向下（v0.4.12 行为） */
+  if (!geom || (!geom.pts && !geom.c1)) {
+    const roomUp = sy - r.top
+    return { mx: sx, my: sy, dir: roomUp < h + gap && r.bottom - sy > roomUp ? 'down' : 'up' }
+  }
+  const N = 32
+  const samples = []
+  for (let i = 0; i <= N; i++) {
+    const p = pointAtT(geom, i / N)
+    if (p) samples.push({ x: r.left + tx.value + p.x * zoom.value, y: r.top + ty.value + p.y * zoom.value })
+  }
+  const pref = { up: 0, down: 1, right: 2, left: 3 }
+  const cands = [
+    { dir: 'up', x: sx - w / 2, y: sy - gap - h },
+    { dir: 'down', x: sx - w / 2, y: sy + gap },
+    { dir: 'left', x: sx - gap - w, y: sy - h / 2 },
+    { dir: 'right', x: sx + gap, y: sy - h / 2 }
+  ]
+  let best = null
+  for (const rc of cands) {
+    let inside = 0
+    for (const p of samples) {
+      if (p.x > rc.x && p.x < rc.x + w && p.y > rc.y && p.y < rc.y + h) inside++
+    }
+    const ix = Math.max(0, Math.min(rc.x + w, r.right) - Math.max(rc.x, r.left))
+    const iy = Math.max(0, Math.min(rc.y + h, r.bottom) - Math.max(rc.y, r.top))
+    const clipped = 1 - (ix * iy) / (w * h)
+    const score = inside * 2 + clipped * 64 + pref[rc.dir]
+    if (best === null || score < best.score) best = { score, dir: rc.dir }
+  }
+  return { mx: sx, my: sy, dir: best.dir }
 }
-function openEdgeEdit(ownerId, relId, mid) {
-  const p = popPlacement(mid)
-  edgeEdit.value = { ownerId, relId, mx: p.mx, my: p.my, flip: p.flip }
-  nextTick(() => edgeLabelInput.value?.focus())
+function openEdgeEdit(ownerId, relId, geom) {
+  const p = popPlacement(geom?.mid, geom)
+  edgeEdit.value = { ownerId, relId, mx: p.mx, my: p.my, dir: p.dir }
+  nextTick(() => {
+    edgeLabelInput.value?.focus()
+    /* 挂载后按真实尺寸复检方位（估值有偏差时纠正：锚点不变，仅切换 transform 变体） */
+    const el = document.querySelector('.oc-eedit')
+    if (!el || !edgeEdit.value) return
+    edgeEdit.value.dir = popPlacement(geom?.mid, geom, { w: el.offsetWidth, h: el.offsetHeight }).dir
+  })
 }
 function curRel() {
   const st = edgeEdit.value
@@ -1325,7 +1369,7 @@ onBeforeUnmount(() => {
         <!-- 边编辑浮层：挂 .app-root（theme-* 的 CSS 变量在此元素上，Teleport 到 body 会丢失背景色变透明），
            fixed 定位不受画布缩放影响，尺寸恒定 -->
       <Teleport to=".app-root" v-if="edgeEdit">
-      <div class="oc-eedit" :class="{ flip: edgeEdit.flip }" :style="{ position: 'fixed', left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
+      <div class="oc-eedit" :class="'dir-' + (edgeEdit.dir || 'up')" :style="{ position: 'fixed', left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
           <div class="oc-eedit-title">编辑连线</div>
           <div class="oc-eedit-row">
             <input ref="edgeLabelInput" class="rp-input" :value="curRel()?.label || ''" placeholder="连线标签…" @input="patchRel({ label: $event.target.value })" @keydown.enter="edgeEdit = null" @keydown.esc="edgeEdit = null" />
