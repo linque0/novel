@@ -1,4 +1,10 @@
-## [1.0.18] - 2026-09-10
+## [1.0.18] - 2026-09-11
+
+### 文档交付
+- **`docs/产品介绍-图文版.html` + `.pdf`**（24 页 A4 排版）：封面 / 目录 / 11 章 / 封底，22 张真实界面截图全部编号引用（图 1–22）；设计令牌集中在 CSS `:root`，改主色与字体即可整体换肤；配套 `tools/html-to-pdf.mjs`（无头 Chrome → `Page.printToPDF`）一键重建，并内置图片完整性、破损图片、**页面溢出检测**（`.page` 固定 A4 高，超页内容会被静默裁掉，必须机器自检）
+- 图文版生成中发现并修复两处排版缺陷：① 初版单页容纳过多图片导致 7 页内容被裁（p8/p9/p12/p16/p17/p19/p21），重组章节后 24 页全部容纳；② 深色提示块内 `strong` 继承全局深墨色，在深底上不可见（末尾「无任何网络请求」整句消失），补 `.callout.dark strong/b/code` 配色
+- **`docs/产品介绍.md`**（Markdown 图文版）与 **`docs/开发流程.md`**（工程方法：架构分层 / 版本纪律 / 五步开发法 / 验证体系 / 打包发布 / 11 条缺陷经验）随本次提交入库，README 增「文档」索引表
+- 截图工具链入库：`tools/seed-demo.mjs`（幂等播种演示作品《星尘旅人》）· `tools/shot-docs.mjs`（按组驱动 store 状态截图）· `tools/_capture-main.mjs`（主进程 `capturePage` 取图，规避窗口被遮挡时 `Page.captureScreenshot` 不产帧而挂起）
 
 ### 交付
 - **安装程序 `novel-studio-setup-1.0.18.exe`（76.1 MB）发布至 GitHub Releases**（https://github.com/linque0/novel/releases），tag `v1.0.18`；同步更新至交付文件夹 `F:/deepseek workplace/小说工坊/`
