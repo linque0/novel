@@ -42,7 +42,9 @@ function selectNode(id) {
   work.selOlnodeId = id
 }
 
-/* 切换节点时装载内容（html 优先）；输入期间以编辑器为准，不回写 DOM 防光标跳动 */
+/* 切换节点时装载内容（html 优先）；输入期间以编辑器为准，不回写 DOM 防光标跳动。
+ * 视图切换（画布↔文本）会经 v-if 重建 contenteditable——必须一并重载，
+ * 否则编辑器为空白，输入即以空内容覆盖节点全文（v1.0.22 修复） */
 function loadEditor() {
   const n = cur.value
   if (!editorEl.value) return
@@ -53,7 +55,7 @@ function loadEditor() {
   if (n.html != null) editorEl.value.innerHTML = n.html
   else editorEl.value.textContent = n.text || ''
 }
-watch(() => work.selOlnodeId, () => nextTick(loadEditor), { immediate: true })
+watch(() => [work.selOlnodeId, work.outlineView], () => nextTick(loadEditor), { immediate: true })
 
 function onInput(e) {
   const n = cur.value

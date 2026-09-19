@@ -271,11 +271,14 @@ function relGeom(rel) {
   const fa = anchorsOf(A)[fromSide]
   const ta = anchorsOf(B)[toSide]
   if (!fa || !ta) return null
+  /* 障碍集与渲染用 edges 同一口径：排除两端后再 unshift 两端矩形（v1.0.22 对齐，
+   * 此前漏掉两端 → 退化路由判定不一致，编辑浮层锚定在偏离连线的位置） */
   const obs = chars.value
     .map((c) => posOf(c))
     .filter(Boolean)
     .map((p) => ({ x: p.x, y: p.y, w: NODE_W, h: NODE_H }))
-    .filter((o) => o.x !== A.x || o.y !== A.y)
+    .filter((o) => !(o.x === A.x && o.y === A.y) && !(o.x === B.x && o.y === B.y))
+  obs.unshift({ x: A.x, y: A.y, w: NODE_W, h: NODE_H }, { x: B.x, y: B.y, w: NODE_W, h: NODE_H })
   return routeEdge(fa, fromSide, ta, toSide, obs, 'bezier')
 }
 function saveRelInput() {
@@ -426,6 +429,16 @@ function maybeFocus() {
   }
 }
 watch(() => work.charFocusTick, maybeFocus)
+
+/* 关系图打开期间新增的人物：补布局坐标并持久化——否则 posOf 为 null → display:none，
+ * 新人物在画布上隐身，须切视图才出现（v1.0.22 修复） */
+watch(
+  () => chars.value.map((c) => c.id).join('|'),
+  () => {
+    ensureLayout()
+    scheduleSave()
+  }
+)
 
 onMounted(async () => {
   await loadLayout()

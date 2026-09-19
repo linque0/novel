@@ -138,7 +138,7 @@ function onEnter(el, done) {
 }
 function onLeave(el, done) {
   el.classList.add('dl-pop-leave-to')
-  setTimeout(done, 140)
+  setTimeout(done, 170) // 与 .dl-pop 的 0.17s 过渡对齐（140ms 会裁掉淡出尾部）
 }
 
 function onMouseMove(e) {

@@ -998,7 +998,9 @@ export const useWorkStore = defineStore('work', {
         const targetParent = t.parentId || null
         const wasParent = n.parentId
         n.parentId = targetParent
-        const siblings = this.mubuChildren(targetParent)
+        /* 同层排序也须先把被移动节点剔除再插回——否则数组出现重复项，末次赋值让排序错乱
+         * （v1.0.22 修复；对照 olnodeMoveTo 的同名处理） */
+        const siblings = this.mubuChildren(targetParent).filter((s) => s.id !== id)
         const ti = siblings.findIndex((s) => s.id === targetId)
         siblings.splice(ti + (zone === 'after' ? 1 : 0), 0, n)
         siblings.forEach((s, i) => {
@@ -1654,7 +1656,8 @@ export const useWorkStore = defineStore('work', {
       this.olnodePushUndo(true)
       const rel = { id: uid(), toId, fromJunction: { ...host }, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
       hostRel._out = hostRel._out || [] // 引出连线挂在宿主 rel 上（与 junctions 同址，避免新建顶层结构）
-      const outs = hostRel._out.filter((r) => r.toId !== toId)
+      /* 去重仅限「同一连接点 → 同一目标」：同一条宿主连线上其他连接点引出的同目标连线要保留（v1.0.22 修复） */
+      const outs = hostRel._out.filter((r) => !(r.fromJunction && r.fromJunction.junctionId === host.junctionId && r.toId === toId))
       outs.push(rel)
       hostRel._out = outs
       autosave.mark('olnodes', hostNode)

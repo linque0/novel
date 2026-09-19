@@ -1,7 +1,15 @@
 /* CDP helper: 连接调试端口的应用页面，提供 evalx / send / sleep；端口可用 CDP_PORT 环境变量覆盖（默认 9222） */
 export async function connect(match = 'app://', port = process.env.CDP_PORT || '9222') {
   const list = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json()
-  const t = list.find((x) => x.type === 'page' && x.url.includes(match)) || list.find((x) => x.type === 'page')
+  /* 主页面优先：dev 下 URL 不含 app://，且拆窗验收遗留的面板页会排在列表前面——
+   * 一律优先选非 panel 页（panel 页须显式 connect('panel=')） */
+  const pages = list.filter((x) => x.type === 'page')
+  const nonPanel = (x) => !x.url.includes('panel=')
+  const t =
+    pages.find((x) => nonPanel(x) && x.url.includes(match)) ||
+    (match !== 'app://' ? pages.find((x) => x.url.includes(match)) : null) ||
+    pages.find(nonPanel) ||
+    pages[0]
   const ws = new WebSocket(t.webSocketDebuggerUrl)
   await new Promise((r, j) => ((ws.onopen = r), (ws.onerror = j)))
   let id = 0

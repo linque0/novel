@@ -14,6 +14,8 @@
  */
 import { Mark } from '@tiptap/core'
 import { ref } from 'vue'
+import { useWorkStore } from '../stores/work'
+import { isPopped } from './panelwindows'
 
 /** 批注用途预设：颜色即用途（下划线颜色可编辑，用于区分不同功能的批注） */
 export const ANNOTATION_KINDS = [
@@ -127,6 +129,22 @@ export function scanNoteMarks(html) {
 
 /* ---------- 正文标记操作（按 noteId 定位，不依赖位置） ---------- */
 
+/** 可写的活动编辑器：章节已被其他窗口拆出时，本窗口编辑器内容是过期的快照，
+ *  在其上改标记会经 onUpdate 把整篇旧内容写回、覆盖面板窗口的较新编辑
+ *  （v1.0.22 门禁；editable 只挡键盘输入，挡不住程序化命令）。返回 null 表示禁止写。 */
+function writableEditorFor(noteId) {
+  const ed = getActiveEditor()
+  if (!ed || !noteId) return null
+  try {
+    const work = useWorkStore()
+    const a = work?.liveAnnotations.find((x) => x.noteId === noteId)
+    if (a && work.work && isPopped(work, 'chapter', a.chapterId)) return null
+  } catch {
+    /* store 未就绪时按可写处理（批注表调用方均已挂载） */
+  }
+  return ed
+}
+
 /** 收集某批注在文档中的文本区间 */
 function rangesOfNote(doc, noteId) {
   const out = []
@@ -141,8 +159,8 @@ function rangesOfNote(doc, noteId) {
 
 /** 改批注下划线颜色（同步正文标记；返回是否命中） */
 export function recolorNoteMark(noteId, color) {
-  const ed = getActiveEditor()
-  if (!ed || !noteId) return false
+  const ed = writableEditorFor(noteId)
+  if (!ed) return false
   const c = normalizeNoteColor(color)
   let hit = false
   ed.chain()
@@ -159,8 +177,8 @@ export function recolorNoteMark(noteId, color) {
 
 /** 移除批注标记（保留文字；返回是否命中） */
 export function removeNoteMark(noteId) {
-  const ed = getActiveEditor()
-  if (!ed || !noteId) return false
+  const ed = writableEditorFor(noteId)
+  if (!ed) return false
   const type = ed.schema.marks.annotation
   if (!type) return false
   let hit = false

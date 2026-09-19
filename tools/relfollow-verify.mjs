@@ -251,10 +251,11 @@ check('9 预置字段为 外貌+性格', dfCheck.keys.join(',') === '外貌,性�
   if (!ohit) {
     check('10 大纲画布颜色编辑（色板+跟随+恢复）', false, 'no edge hit')
   } else {
+    /* v1.0.16/17 起连线交互：左键=塑形，右键=编辑浮层——本检查同步改为右键打开（原左键点击预期已过期） */
     await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: ohit.x, y: ohit.y, button: 'none' })
-    await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: ohit.x, y: ohit.y, button: 'left', buttons: 1, clickCount: 1 })
+    await c.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: ohit.x, y: ohit.y, button: 'right', buttons: 2, clickCount: 1 })
     await c.sleep(60)
-    await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: ohit.x, y: ohit.y, button: 'left', buttons: 0, clickCount: 1 })
+    await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: ohit.x, y: ohit.y, button: 'right', buttons: 0, clickCount: 1 })
     await c.sleep(300)
     const sw = await c.evalx(`(() => {
       const box = document.querySelector('.oc-eedit')

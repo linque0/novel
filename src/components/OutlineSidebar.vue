@@ -3,7 +3,7 @@
 <script setup>
 import OIcon from './OIcon.vue'
 import { computed, ref } from 'vue'
-import { NButton, NPopover } from 'naive-ui'
+import { NButton, NPopover, NModal, NInput } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { targetById } from '../services/doublelinks'
 import DLinkPicker from './DLinkPicker.vue'
@@ -140,9 +140,14 @@ function onCitePick(t) {
   work.canvasFocusTick++
 }
 function rename(m) {
-  const v = window.prompt('重命名模块', m.label)
-  if (v == null) return
-  work.olnodeSetTitle(m.n.id, v.trim())
+  /* Electron 不支持 window.prompt（实测抛异常），改用弹窗输入 */
+  renameState.value = { show: true, id: m.n.id, value: m.label }
+}
+function confirmRename() {
+  const r = renameState.value
+  if (!r.value.trim()) return
+  work.olnodeSetTitle(r.id, r.value.trim())
+  renameState.value = { show: false, id: null, value: '' }
 }
 function remove(m) {
   const hasKids = work.olnodeChildren(m.n.id).length
@@ -150,6 +155,7 @@ function remove(m) {
   if (!hasKids && !window.confirm(`删除「${m.label}」？`)) return
   work.olnodeRemove(m.n.id)
 }
+const renameState = ref({ show: false, id: null, value: '' })
 </script>
 
 <template>
@@ -228,5 +234,13 @@ function remove(m) {
       <span style="flex: 1"></span>
       <span style="font-size: 11px; color: var(--text-dim)">共 {{ modules.length }} 模块</span>
     </div>
+
+    <NModal v-model:show="renameState.show" preset="dialog" title="重命名模块">
+      <NInput v-model:value="renameState.value" placeholder="模块名称" @keyup.enter="confirmRename" />
+      <template #action>
+        <NButton size="small" @click="renameState.show = false">取消</NButton>
+        <NButton size="small" type="primary" @click="confirmRename">确定</NButton>
+      </template>
+    </NModal>
   </div>
 </template>

@@ -69,6 +69,14 @@ export const autosave = {
   async flushAll() {
     clearTimeout(flushTimer)
     await doFlush()
+  },
+
+  /** 丢弃全部待存脏行（不落盘）。用于「恢复备份」前：恢复语义以备份为准，
+   *  队列里恢复前的旧状态若在恢复后落盘，会把备份内容覆盖回去（v1.0.22 修复）。 */
+  discardPending() {
+    clearTimeout(flushTimer)
+    pending.clear()
+    ui().autosave.pending = 0
   }
 }
 

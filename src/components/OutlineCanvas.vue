@@ -121,8 +121,26 @@ const edges = computed(() => {
  * 旧连线缺端口记录时按首次渲染位置**一次性补记**（此后不再随挪位重算）；
  * 连线途经任何模块（含两端节点本体）时正交绕行。
  * v1.0.13：连线可接到「连接点」（挂在另一条连线 rel.junctions 上）——端点取
- * 宿主连线路径参数 t 处的点，由 pointAtT 实时派生，宿主怎么挪点都钉在线上。 */
-const migratedSides = new Set()
+ * 宿主连线路径参数 t 处的点，由 pointAtT 实时派生，宿主怎么挪点都钉在线上。
+ * v1.0.22：补记从 edges computed 移至 onMounted 的 migrateSides（渲染保持纯读） */
+function migrateSides() {
+  for (const n of work.olnodes) {
+    if (n.deletedAt || !Array.isArray(n.rels)) continue
+    const fromNode = n
+    const A = rectOf(fromNode)
+    if (!A) continue
+    for (const r of n.rels) {
+      if (r.fromSide && r.toSide) continue
+      if (r.toJunction) continue // 连接点连线端口不落库
+      const toNode = nodeById(r.toId)
+      if (!toNode || toNode.deletedAt) continue
+      const B = rectOf(toNode)
+      if (!B) continue
+      const sb = sideBetween(A, B)
+      work.olnodeRelUpdate(n.id, r.id, { fromSide: r.fromSide || sb.from, toSide: r.toSide || sb.to })
+    }
+  }
+}
 function edgeGeomFor(n, r) {
   let to = null
   let toSide = r.toSide
@@ -140,18 +158,17 @@ function edgeGeomFor(n, r) {
   const B = toNode ? rectOf(toNode) : { x: to.x - 1, y: to.y - 1, w: 2, h: 2 }
   const sb = sideBetween(A, B)
   const fromSide = r.fromSide || sb.from
-  /* 缺端口记录的旧连线/模板连线按当前几何回退（toSide 留空表示未补记，连接点连线不落库） */
+  /* 缺端口记录的旧连线/模板连线按当前几何回退渲染（toSide 留空表示未补记，连接点连线不落库）；
+   * 补记落库已移至 onMounted 的 migrateSides——computed 内写 store 会破坏「渲染=纯读」（v1.0.22） */
   if (!toSide) toSide = sb.to
   if (toNode) to = anchorsOf(B)[toSide]
-  if ((!r.fromSide || !r.toSide) && toNode && !migratedSides.has(r.id)) {
-    migratedSides.add(r.id)
-    work.olnodeRelUpdate(n.id, r.id, { fromSide, toSide })
-  }
   const from = anchorsOf(A)[fromSide]
   if (!from || !to || !toSide) return null
-  /* v1.0.16 左键拖拽塑形：有 custom 控制点时走自定义弯曲（垂距过近 = 拉直回退自动路由） */
+  /* v1.0.16 左键拖拽塑形：有 custom 控制点时走自定义弯曲（垂距过近 = 拉直回退自动路由）。
+   * 端点顺序必须与下方直连渲染一致（toJunction 连线直连渲染为 routeEdge(to, from)），
+   * 否则曲线端点倒置、箭头画到模块端（v1.0.22 修复）；端口缺记的补记已移出本函数 */
   if (r.custom) {
-    const g = customEdgeGeom(from, to, r.custom)
+    const g = r.toJunction ? customEdgeGeom(to, from, r.custom) : customEdgeGeom(from, to, r.custom)
     if (g) return g
   }
   const obstacles = [
@@ -636,7 +653,23 @@ function projectOnEdge(pt, e) {
     if (!best || dist < best.dist) best = { point: q, dist, seg: i, segT: s }
   }
   if (!best) return { point: pt, t: 0.5, dist: Infinity }
-  const t = (best.seg + best.segT) / (points.length - 1)
+  /* t 的口径必须与 pointAtT 一致：折线按弧长加权（v1.0.22 修复——此前按段序均分，
+   * 长短段悬殊时连接点会偏离点击位置数十像素）；贝塞尔采样点按 t 均匀生成，段序即参数 */
+  let t
+  if (e.pts && e.pts.length > 1) {
+    const ls = []
+    let total = 0
+    for (let i = 0; i < points.length - 1; i++) {
+      const l = Math.hypot(points[i + 1].x - points[i].x, points[i + 1].y - points[i].y)
+      ls.push(l)
+      total += l
+    }
+    let acc = 0
+    for (let i = 0; i < best.seg; i++) acc += ls[i]
+    t = total ? (acc + ls[best.seg] * best.segT) / total : 0.5
+  } else {
+    t = (best.seg + best.segT) / (points.length - 1)
+  }
   return { point: best.point, t: Math.max(0, Math.min(1, t)), dist: best.dist }
 }
 /* 编辑浮层内「在此处创建连接点」：在右键落点对应的路径参数处直接建（浮层保持开启） */
@@ -1164,6 +1197,7 @@ watch(
 
 /* ---------- 键盘 / 生命周期 ---------- */
 onMounted(() => {
+  migrateSides()
   ensurePlaced()
   // v0.4.2：容器内嵌 textboxes（上一实现）迁移为独立文本框子节点（可拖拽/连线/缩放）
   const legacy = live.value.filter((x) => x.kind === 'container' && (Array.isArray(x.textboxes) && x.textboxes.length))

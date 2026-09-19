@@ -194,10 +194,17 @@ ipcMain.handle('clip:readText', () => clipboard.readText())
 ipcMain.handle('clip:writeText', (_e, text) => clipboard.writeText(String(text ?? '')))
 
 ipcMain.handle('export:save', async (_e, payload) => {  /* v1.0.6：带 dirPath 时跳过对话框直接写入（逐章分批导出仅首次确认位置） */
+  /* v1.0.22 路径加固：dirPath 必须是绝对路径且解析后不含 .. 逃逸；文件名取 basename 防拼接逃逸 */
+  if (!payload || typeof payload.content !== 'string') return { canceled: true }
   let filePath
   if (payload.dirPath) {
-    fs.mkdirSync(payload.dirPath, { recursive: true })
-    filePath = path.join(payload.dirPath, payload.defaultName || 'export.txt')
+    if (typeof payload.dirPath !== 'string' || !path.isAbsolute(payload.dirPath) || payload.dirPath.includes('\0')) {
+      return { canceled: true }
+    }
+    const dir = path.resolve(payload.dirPath)
+    if (dir.split(path.sep).includes('..')) return { canceled: true }
+    fs.mkdirSync(dir, { recursive: true })
+    filePath = path.join(dir, path.basename(String(payload.defaultName || 'export.txt')))
   } else {
     const res = await dialog.showSaveDialog(win, { defaultPath: payload.defaultName || 'export.txt' })
     if (res.canceled || !res.filePath) return { canceled: true }

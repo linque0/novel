@@ -1,6 +1,7 @@
 import { exportBackupJson, importBackupJson, buildBookText, collectExportChapters } from '../db/repo'
 import { saveTextFile } from './fileio'
 import { decodeText, htmlToMd, htmlToPlain } from './importers'
+import { autosave } from './autosave'
 import JSZip from 'jszip'
 
 const stamp = () => {
@@ -15,6 +16,10 @@ export async function backupAll() {
 }
 
 export async function restoreBackup(arrayBuffer) {
+  /* 恢复语义以备份为准：先落盘在途脏数据、再丢弃待存队列——否则恢复完成后的防抖落盘
+   * 会把「恢复前的旧状态」写回新库，覆盖备份内容（v1.0.22 修复，已实测复现） */
+  await autosave.flushAll()
+  autosave.discardPending()
   const { text } = decodeText(arrayBuffer)
   await importBackupJson(text)
 }
@@ -178,7 +183,14 @@ function htmlToParas(html) {
   const out = []
   const H = { h1: 1, h2: 2, h3: 3, h4: 4, h5: 5, h6: 6 }
   const ALIGN = { left: 'left', center: 'center', right: 'right', justify: 'both' }
-  for (const el of doc.body.children) {
+  /* 顶层裸文本节点也成段（v1.0.22：此前只遍历元素子节点，块级标签外的裸文本会整段丢失） */
+  for (const node of doc.body.childNodes) {
+    if (node.nodeType === 3) {
+      if (node.textContent.trim()) out.push(paraXml([{ t: node.textContent.replace(/\s+/g, ' ').trim() }]))
+      continue
+    }
+    if (node.nodeType !== 1) continue
+    const el = node
     const tag = el.tagName.toLowerCase()
     if (tag === 'p' || tag === 'div') {
       const style = el.getAttribute('style') || ''

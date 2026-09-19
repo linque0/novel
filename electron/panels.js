@@ -85,12 +85,20 @@ function openPanel(spec) {
 
   const saved = loadGeom()[spec.type]
   const mainB = mainWindow && !mainWindow.isDestroyed() ? mainWindow.getBounds() : null
-  const base = saved || {
-    width: meta.w,
-    height: meta.h,
-    x: mainB ? mainB.x + 48 + (panels.length % 5) * 28 : undefined,
-    y: mainB ? mainB.y + 42 + (panels.length % 5) * 26 : undefined
-  }
+  const base = saved
+    ? { ...saved }
+    : mainB
+      ? {
+          width: meta.w,
+          height: meta.h,
+          x: mainB.x + 48 + (panels.length % 5) * 28,
+          y: mainB.y + 42 + (panels.length % 5) * 26
+        }
+      : (() => {
+          /* 主窗口不可用时按主屏居中（v1.0.22：此前 x/y 为 undefined → 钳制得 NaN） */
+          const wa = screen.getPrimaryDisplay().workArea
+          return { width: meta.w, height: meta.h, x: wa.x + Math.max(0, (wa.width - meta.w) / 2), y: wa.y + Math.max(0, (wa.height - meta.h) / 2) }
+        })()
   const bounds = clampToScreen(base)
 
   const win = new BrowserWindow({

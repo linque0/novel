@@ -37,18 +37,20 @@ async function changeAvatar() {
   await work.warmUrls([meta.id])
 }
 
-/* 新人物默认字段（外貌/性格角色要素，可删可改名） */
+/* 新人物默认字段（外貌/性格角色要素，可删可改名）。
+ * 播种标记放会话级 Set——此前挂在人物行对象上，会经 autosave 引用落库污染数据（v1.0.22 修复） */
 const DEFAULT_FIELDS = ['外貌', '性格']
+const defaultsSeeded = new Set()
 function ensureDefaultFields() {
   const c0 = c.value
-  if (!c0 || c0.__defaultsSeeded) return
+  if (!c0 || defaultsSeeded.has(c0.id)) return
   const hasAny = Object.keys(c0.fields || {}).length > 0
   if (!hasAny) {
     const f = {}
     for (const k of DEFAULT_FIELDS) f[k] = ''
     work.updateCharacter(c0.id, { fields: f })
-    c0.__defaultsSeeded = true
   }
+  defaultsSeeded.add(c0.id)
 }
 watch(c, ensureDefaultFields, { immediate: true })
 

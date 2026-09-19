@@ -27,23 +27,24 @@ export function splitTxtChapters(text, fallbackTitle = '导入章节') {
     const m = line.match(TXT_TITLE_RE)
     if (m) {
       const suffix = (m[2] || '').trim()
-      cur = { title: (suffix ? `${m[1]} ${suffix}` : m[1]).slice(0, 60), text: [] }
+      cur = { title: (suffix ? `${m[1]} ${suffix}` : m[1]).slice(0, 60), text: [], fromHeading: true }
       sections.push(cur)
     } else {
       if (!cur) {
-        cur = { title: fallbackTitle.slice(0, 60), text: [] }
+        cur = { title: fallbackTitle.slice(0, 60), text: [], fromHeading: false }
         sections.push(cur)
       }
       cur.text.push(line)
     }
   }
-  const out = sections.map((s) => ({ title: s.title, text: s.text.join('\n').trim() })).filter((s) => s.text.length > 0)
+  const out = sections.map((s) => ({ title: s.title, text: s.text.join('\n').trim(), fromHeading: s.fromHeading })).filter((s) => s.text.length > 0)
   if (out.length < 2) {
     const firstLine = text.trim().split('\n')[0]?.trim() || fallbackTitle
     return [{ title: firstLine.slice(0, 40), text: text.trim() }]
   }
-  // 开头无章节标题的短前言（书名/作者行）并入第一章，避免产生孤章
-  if (out.length >= 2 && out[0].text.length < 120) {
+  // 开头无章节标题的短前言（书名/作者行）并入第一章，避免产生孤章。
+  // 仅限「文件开头本就没有章节标题」的段——真正的短首章（如短楔子）标题不丢（v1.0.22 修复）
+  if (out.length >= 2 && !out[0].fromHeading && out[0].text.length < 120) {
     out[1].text = (out[0].text + '\n\n' + out[1].text).trim()
     out.shift()
   }
@@ -333,6 +334,7 @@ export async function parseImportFiles(files, onProgress = () => {}) {
       const { text } = decodeText(f.data)
       docs.push({ file: f.name, encoding: 'utf-8', sections: splitMarkdown(text, baseName(f.name)) })
     } else if (f.ext === 'docx') {
+      if (!window.native?.docxToHtml) throw new Error('网页版暂不支持 Word(.docx) 导入，请使用桌面版')
       const r = await window.native.docxToHtml(f.data)
       docs.push({ file: f.name, encoding: 'docx', sections: splitHtmlByHeadings(r.html, baseName(f.name)) })
     } else if (f.ext === 'epub') {

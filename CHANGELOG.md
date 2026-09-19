@@ -1,3 +1,38 @@
+## [1.0.22] - 2026-09-19
+
+### 缺陷修复专项：全项目代码审查 3 高 / 7 中 / 12 低全部修复
+审查方式：数据层 / 服务层 / 编辑器组件群 / Electron 主进程逐文件通读 + 画布群（OutlineCanvas / canvas-model / MubuView / CharacterGraph）代理审查并逐条对照源码核实，3 个高危缺陷全部实机复现后修复。
+
+**数据丢失类（高，3）**
+- **恢复备份会把恢复前的脏数据写回、覆盖备份内容**【实测复现】：`restoreBackup` 先清库写备份、`closeWork` 后落盘——防抖队列里恢复前的旧状态在恢复后写回新库。修复：`autosave.discardPending()`（新增，清队列+停定时器）并在 `exporter.restoreBackup` 入口先 `flushAll` 再 discard（覆盖工作台与书架两条恢复路径）
+- **大纲「文本↔画布」视图切换后编辑器空白，输入即清空节点全文**：`loadEditor` 只挂在 `selOlnodeId` 上，视图切换经 v-if 重建 contenteditable 后不再装载；侧栏定位模块会强制切画布，该路径高频。修复：watch 改为 `[selOlnodeId, outlineView]`
+- **幕布行首 Backspace 合并节点丢字**【代码实锤】：`onBackspace` 第二次 `mubuSetText` 回传拷贝行里的旧文本（rows 为副本非 store 引用），把刚拼接的文本覆盖掉。修复：文本/HTML 一次性合并写入，纯文本节点保持 html=null 语义
+
+**功能坏 / 错（中，7）**
+- 幕布工具栏「同级 / 子级」永不命中焦点节点（focusedId 存 'm:id' 键却与裸 id 比较）：子级必抛 TypeError、同级永远建在根级 → 新增 `focusedRow` 计算属性按键匹配，无焦点时两钮禁用
+- 幕布同层拖拽排序错乱：`mubuMove` before/after 分支未把被移动节点从兄弟数组剔除（重复插入，同对象末次赋值生效）→ 补 `.filter`（对照 olnodeMoveTo）
+- 大纲侧栏「重命名」按钮在 Electron 必然失败（`window.prompt` 抛异常，实测确认）→ 改为 NModal 弹窗输入
+- 人物关系图打开时新增人物隐身（无布局坐标 → display:none，ensureLayout 仅 onMounted 调用）→ watch 人物 id 集变化补位并持久化
+- 「模块→连接点」连线拖弯后箭头画到模块端、回缩错端：custom 分支端点顺序与直连渲染相反 → toJunction 时按渲染口径 `customEdgeGeom(to, from, custom)`
+- 折线连线上创建连接点偏离落点数十像素：`projectOnEdge` 的 t 按**段序**均分而 `pointAtT` 按**弧长**插值 → 折线分支改弧长口径（贝塞尔/直线分支维持参数口径）
+- 章节拆出后主窗口批注侧栏绕过只读锁经旧编辑器整篇写回、覆盖面板窗口较新编辑【实测复现】→ `annotations.js` 新增 `writableEditorFor` 门禁：该章被其他窗口锁定时拒绝改标记（editable 只挡键盘挡不住程序化命令），批注表更新照常
+
+**低（12）**
+- `export:save` IPC 路径加固：dirPath 须绝对路径且解析后无 .. 逃逸、文件名取 basename（此前渲染层可写任意路径）
+- docx 导出丢弃块级标签外的裸文本 → htmlToParas 改遍历 childNodes，裸文本成段
+- TXT 分章把 <120 字的短首章（有标题，如短楔子）并入次章丢标题 → 仅无标题前言才合并（fromHeading 标记）
+- 章节树拖卷到「未分卷」伪节点排序错位（伪节点无 id）→ allowDrop 拒绝卷拖入伪节点；章节拖入伪节点按 orphans 语义移入未分卷
+- 人物默认字段播种标记 `__defaultsSeeded` 挂在行对象上经 autosave 落库污染数据 → 改会话级 Set
+- 连接点引出连线按 toId 去重误删同宿主连线其他连接点的同目标连线 → 去重加 junctionId 条件
+- 人物关系图编辑浮层锚定偏移：relGeom 障碍集与渲染 edges 不同口径（漏两端矩形）→ 对齐
+- `stripTags` 对行内标签一律插空格，被双链/批注标记拆开的名字「出场人物」检测失配 → 块级换行、行内剥除（字数统计不受影响）
+- 网页版 Word 导入报「解析失败」无因由 → 明确提示「网页版暂不支持，请用桌面版」
+- OutlineCanvas 在 edges computed 内写 store（端口一次性补记）破坏渲染纯读 → 移至 onMounted 的 migrateSides（新连线建边时本就随建随记）
+- 双链浮窗离场 done(140ms) 早于过渡(170ms)，淡出尾部被裁 → 对齐 170ms
+- panels.js 面板几何在主窗口不可用时 x/y 为 undefined → NaN → 按主屏工作区居中兜底
+
+**验收**：新增 `tools/bugfix-verify.mjs` **14/14**（stripTags 行内/分块 / 分章短首章与前言 / docx 裸文本 / 恢复时序反转断言 / 侧栏重命名弹窗 / 视图切换内容保留 / 幕布子级按钮 / mubuMove 同层 / 连接点引出去重 / 拆窗写回门禁端到端）；回归 `dl-verify` 20/20、`annotation-verify` 28/28、`dlpop-verify` **19/19**（验证窗口可见，进场 opacity 硬断言真实通过）、`shelf-verify` 15/15、`canvas-model-test` 48/48、`chargraph-verify` 12/12、`relfollow-verify` 15/15（其检查 10「左键开浮层」预期系 v1.0.16/17 交互改版前的遗留，同步为右键打开）、`olcanvas-verify` **28/29**——唯一失败「容器高度调整生效」经**单文件回退对照实验**确认为 v1.0.17/18 画布重构后的存量问题（与本次改动无关），已录入待办；`npm run build` 通过
+
 ## [1.0.21] - 2026-09-19
 
 ### 双链浮窗 · 出现/消失动画 + 拖动钉住

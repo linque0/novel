@@ -215,6 +215,8 @@ function onTextFocus(e) {
   focusedId.value = row?.dataset.node || null
   ui.mubuSelectedId = row?.dataset.node?.slice(2) || null
 }
+/* 焦点行：focusedId 存的是 'm:id' 键，须按键匹配（此前拿它与裸 node.id 比较，永不命中） */
+const focusedRow = computed(() => visible.value.find((r) => r.node.key === focusedId.value) || null)
 
 /* ---------- 编辑操作 ---------- */
 function onInput(row, e) {
@@ -416,11 +418,17 @@ function onBackspace(row) {
   const prev = i > 0 ? sib[i - 1] : null
   pushUndo()
   if (prev) {
-    // 合并到上一节点
-    work.mubuSetText(prev.node.id, prev.node.text + row.node.text)
-    const r = document.querySelector(`[data-node="${prev.node.key}"] .ob-text`)
-    const mergedHtml = (r ? r.innerHTML : '') + (row.node.html || '')
-    work.mubuSetText(prev.node.id, prev.node.text, mergedHtml)
+    // 合并到上一节点（v1.0.22：文本/HTML 一次性合并写入——此前第二次调用回传拷贝里的旧
+    // prev.node.text，把刚拼接的文本又覆盖掉，行首 Backspace 会丢掉被并入行的文字）
+    const prevEl = document.querySelector(`[data-node="${prev.node.key}"] .ob-text`)
+    const rowEl = document.querySelector(`[data-node="${row.node.key}"] .ob-text`)
+    const mergedText = (prevEl ? prevEl.textContent : prev.node.text || '') + (rowEl ? rowEl.textContent : row.node.text || '')
+    if (prev.node.html != null || row.node.html != null) {
+      const mergedHtml = (prevEl ? prevEl.innerHTML : '') + (rowEl ? rowEl.innerHTML : (row.node.html || ''))
+      work.mubuSetText(prev.node.id, mergedText, mergedHtml)
+    } else {
+      work.mubuSetText(prev.node.id, mergedText)
+    }
     if (row.node.children.length) {
       // 子节点上提到本层
       for (const c of [...row.node.children].reverse()) work.mubuMove(c.id, row.node.id, 'after')
@@ -744,8 +752,8 @@ onBeforeUnmount(() => {
       <span class="tb-sep" />
       <button class="tb" title="导入 MD / TXT（标题层级自动转为节点层级）" @click="importMd"><OIcon name="upload" :size="12" /> 导入</button>
       <span class="tb-sep" />
-      <button class="tb" title="新建同级节点" @click="addSibling(visible.find((r) => r.node.id === focusedId))"><OIcon name="plus" :size="11" /> 同级</button>
-      <button class="tb" title="新建子节点（先点击选中一个节点）" :disabled="!focusedId" @click="addChild(visible.find((r) => r.node.id === focusedId))"><OIcon name="plus" :size="11" /> 子级</button>
+      <button class="tb" title="新建同级节点" :disabled="!focusedRow" @click="addSibling(focusedRow)"><OIcon name="plus" :size="11" /> 同级</button>
+      <button class="tb" title="新建子节点（先点击选中一个节点）" :disabled="!focusedRow" @click="addChild(focusedRow)"><OIcon name="plus" :size="11" /> 子级</button>
       <span class="ob-count">{{ nodeCount }} 节点</span>
     </div>
 

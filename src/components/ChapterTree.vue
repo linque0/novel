@@ -45,14 +45,14 @@ function onSelect(keys) {
 }
 
 const allowDrop = ({ dragNode, node, dropPosition }) => {
-  if (dragNode.type === 'volume') return node.type === 'volume' && dropPosition !== 'inside'
+  if (dragNode.type === 'volume') return node.type === 'volume' && dropPosition !== 'inside' && !!node.id /* 「未分卷」伪节点无 id，不参与卷排序 */
   return dropPosition === 'inside' ? node.type === 'volume' : true
 }
 
 function onDrop({ node, dragNode, dropPosition }) {
   if (!dragNode) return
   if (dragNode.type === 'volume') {
-    if (node.type !== 'volume' || dropPosition === 'inside') return
+    if (node.type !== 'volume' || dropPosition === 'inside' || !node.id) return
     const ids = work.liveVolumes.map((v) => v.id)
     const from = ids.indexOf(dragNode.id)
     if (from < 0) return
@@ -71,7 +71,8 @@ function onDrop({ node, dragNode, dropPosition }) {
   }
   const cid = dragNode.id
   if (dropPosition === 'inside') {
-    work.moveChapterTo(cid, node.id, 'inside')
+    /* 「未分卷」伪节点无 id → 按 orphans 语义移入未分卷 */
+    work.moveChapterTo(cid, node.id ?? 'orphans', 'inside')
   } else if (node.type === 'chapter') {
     const target = work.chapters.find((c) => c.id === node.id)
     work.moveChapterTo(cid, target?.volumeId ?? null, dropPosition, node.id)
