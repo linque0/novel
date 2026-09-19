@@ -3,6 +3,7 @@ import { db, uid, now } from '../db/database'
 import * as repo from '../db/repo'
 import { autosave, installWordLogHook } from '../services/autosave'
 import { countWords, stripTags } from '../services/wordcount'
+import { scanNoteMarks, removeNoteMark, normalizeNoteColor, noteKindOf, DEFAULT_NOTE_COLOR } from '../services/annotations'
 import { useUiStore } from './ui'
 import { useShelfStore } from './shelf'
 
@@ -41,6 +42,7 @@ export const useWorkStore = defineStore('work', {
     mubu: [],
     bookmarks: [],
     olnodes: [],
+    annotations: [],
     outlineView: 'text', // 大纲视图：text 文本 | canvas 画布
     selOlnodeId: null,
     canvasFocusTick: 0, // 侧边栏请求画布居中定位的信号
@@ -85,6 +87,7 @@ export const useWorkStore = defineStore('work', {
         }),
     liveCategories: (s) => s.lorecats.filter((c) => !c.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder),
     liveSnippets: (s) => s.snippets.filter((x) => !x.deletedAt).sort((a, b) => b.createdAt - a.createdAt),
+    liveAnnotations: (s) => s.annotations.filter((a) => !a.deletedAt).sort((a, b) => a.createdAt - b.createdAt),
     activeChapter() {
       return this.liveChapters.find((c) => c.id === this.selChapterId) || null
     },
@@ -158,6 +161,7 @@ export const useWorkStore = defineStore('work', {
       await this.migrateMubu(workId)
       this.mubu = await db.mubu.where('workId').equals(workId).toArray()
       this.bookmarks = await db.bookmarks.where('workId').equals(workId).toArray()
+      this.annotations = await db.annotations.where('workId').equals(workId).toArray()
       await this.migrateOlnodes(workId)
       this.olnodes = await db.olnodes.where('workId').equals(workId).toArray()
       await this.loadCanvasPrefs()
@@ -810,6 +814,7 @@ export const useWorkStore = defineStore('work', {
     async purgeItem(table, row) {
       await repo.purgeRow(table, row)
       this[table] = this[table].filter((x) => x.id !== row.id)
+      if (table === 'chapters') await this.purgeAnnotationsForChapter(row.id)
     },
 
     /* ---------- 幕布节点体系（设定库） ---------- */
@@ -1707,6 +1712,95 @@ export const useWorkStore = defineStore('work', {
       this.bookmarks.push(row)
       db.bookmarks.put(JSON.parse(JSON.stringify(row)))
       return true
+    },
+
+    /* ---------- 正文批注 ----------
+     * 正文 HTML 只存锚点（span[data-note-id]）与用途色，批注正文/用途元信息存本表；
+     * 文字被整段删除时锚点消失，批注转为「已失效」（由侧栏判定与清理），改字不丢批注。 */
+
+    /** 本章批注（含已失效的，按正文出现顺序排列；失效的排最后）
+     *  引用文字以正文实时锚点为准（改字后侧栏跟着变），无锚点时回落到建档时的快照。
+     *  无批注的章节直接返回，不做 HTML 解析——本 getter 依赖正文内容，每次输入都会重算。 */
+    annotationsForChapter(chapterId) {
+      const list = this.liveAnnotations.filter((a) => a.chapterId === chapterId)
+      if (!list.length) return []
+      const ch = this.chapters.find((x) => x.id === chapterId)
+      const { ids, texts, order } = scanNoteMarks(ch?.content || '')
+      const rank = new Map(order.map((id, i) => [id, i]))
+      return list
+        .map((a) => {
+          const orphan = !ids.has(a.noteId)
+          return { ...a, text: orphan ? a.text : texts.get(a.noteId) || a.text, orphan }
+        })
+        .sort((a, b) => {
+          const ra = rank.has(a.noteId) ? rank.get(a.noteId) : 1e9
+          const rb = rank.has(b.noteId) ? rank.get(b.noteId) : 1e9
+          return ra !== rb ? ra - rb : a.createdAt - b.createdAt
+        })
+    },
+
+    addAnnotation({ chapterId, noteId, text = '', note = '', color = DEFAULT_NOTE_COLOR, kind = '' }) {
+      const row = {
+        id: uid(),
+        workId: this.work.id,
+        chapterId,
+        noteId,
+        text: String(text || '').slice(0, 400),
+        note: String(note || ''),
+        color: normalizeNoteColor(color),
+        kind: kind || noteKindOf(color)?.key || '',
+        createdAt: now(),
+        updatedAt: now(),
+        deletedAt: null
+      }
+      this.annotations.push(row)
+      autosave.mark('annotations', row)
+      return row
+    },
+
+    updateAnnotation(id, patch = {}) {
+      const a = this.annotations.find((x) => x.id === id)
+      if (!a) return
+      if (patch.note != null) a.note = String(patch.note)
+      if (patch.text != null) a.text = String(patch.text).slice(0, 400)
+      if (patch.color != null) {
+        a.color = normalizeNoteColor(patch.color)
+        a.kind = noteKindOf(a.color)?.key || ''
+      }
+      autosave.mark('annotations', a)
+      return a
+    },
+
+    /** 删除批注：先摘正文标记再落库软删（正文标记失败也照删记录，避免残留条目） */
+    deleteAnnotation(id) {
+      const a = this.annotations.find((x) => x.id === id)
+      if (!a) return
+      removeNoteMark(a.noteId)
+      a.deletedAt = now()
+      autosave.mark('annotations', a)
+    },
+
+    /** 清理本章全部已失效批注（正文里锚点已不存在的） */
+    pruneOrphanAnnotations(chapterId) {
+      const ch = this.chapters.find((x) => x.id === chapterId)
+      const { ids } = scanNoteMarks(ch?.content || '')
+      let n = 0
+      for (const a of this.annotations) {
+        if (a.deletedAt || a.chapterId !== chapterId) continue
+        if (ids.has(a.noteId)) continue
+        a.deletedAt = now()
+        autosave.mark('annotations', a)
+        n++
+      }
+      return n
+    },
+
+    /** 章节彻底删除时一并清理其批注（软删除保留，随章节可恢复） */
+    async purgeAnnotationsForChapter(chapterId) {
+      const rows = this.annotations.filter((a) => a.chapterId === chapterId)
+      if (!rows.length) return
+      for (const r of rows) await repo.purgeRow('annotations', r)
+      this.annotations = this.annotations.filter((a) => a.chapterId !== chapterId)
     },
 
     /* ---------- 搜索 ---------- */

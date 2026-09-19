@@ -98,6 +98,28 @@ db.version(5).stores({
   olnodes: 'id, workId, parentId, refId, [workId+deletedAt], [workId+parentId]'
 })
 
+// v6：正文批注——正文 HTML 内以 span[data-note-id] 锚点标记，批注正文与用途颜色存本表
+db.version(6).stores({
+  works: 'id, updatedAt, deletedAt',
+  volumes: 'id, workId, [workId+sortOrder]',
+  chapters: 'id, workId, volumeId, [workId+deletedAt], updatedAt',
+  outlines: 'id, workId, level, refId, [workId+level]',
+  characters: 'id, workId, [workId+deletedAt], name',
+  relations: 'id, workId, fromId, toId',
+  lorecats: 'id, workId, parentId, [workId+sortOrder]',
+  lore: 'id, workId, categoryId, [workId+deletedAt]',
+  mubu: 'id, workId, parentId, [workId+deletedAt], [workId+parentId]',
+  snippets: 'id, workId, [workId+deletedAt], createdAt',
+  assets: 'id, workId, [workId+deletedAt]',
+  links: 'id, [entityType+entityId], assetId',
+  revisions: 'id, [entityType+entityId], createdAt',
+  wordlog: 'id, date, workId, [workId+date], [date+chapterId]',
+  appconfig: 'key',
+  bookmarks: 'id, workId, targetId, [workId+targetId]',
+  olnodes: 'id, workId, parentId, refId, [workId+deletedAt], [workId+parentId]',
+  annotations: 'id, workId, chapterId, [workId+deletedAt], [chapterId+deletedAt], createdAt'
+})
+
 export const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()

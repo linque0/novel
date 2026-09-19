@@ -17,6 +17,7 @@ import { autosave } from '../services/autosave'
 import { FontSize } from '../services/richtext'
 import { isImageExt } from '../services/fileio'
 import { DlLinkMark } from '../services/doublelinks'
+import { AnnotationMark, setActiveEditor } from '../services/annotations'
 import { isPopped, focusPopped } from '../services/panelwindows'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorContextMenu from './EditorContextMenu.vue'
@@ -76,6 +77,7 @@ const extensions = [
   Color,
   Highlight,
   DlLinkMark,
+  AnnotationMark,
   Link.configure({ openOnClick: false, autolink: true }),
   TextAlign.configure({ types: ['heading', 'paragraph'] }),
   Placeholder.configure({ placeholder: '落笔成章……' })
@@ -149,6 +151,7 @@ function mountEditor() {
     }
   })
   window.__ns.editor = editor.value
+  setActiveEditor(editor.value) // 右侧批注栏据此操作正文标记
 }
 
 watch(
@@ -161,6 +164,7 @@ watch(
 onMounted(mountEditor)
 onBeforeUnmount(() => {
   autosave.flushAll()
+  setActiveEditor(null)
   editor.value?.destroy()
   editor.value = null
 })

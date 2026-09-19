@@ -1,11 +1,15 @@
 <script setup>
 import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { parseTarget, targetById, findByTitle, jumpTo } from '../services/doublelinks'
+import { ANNOTATION_KINDS, normalizeNoteColor, noteKindOf } from '../services/annotations'
+import { useWorkStore } from '../stores/work'
+import { uid } from '../db/database'
 import DLinkPicker from './DLinkPicker.vue'
 
 const props = defineProps({ editor: { type: Object, required: true } })
+const work = useWorkStore()
 
-const st = reactive({ open: false, x: 0, y: 0, sub: null, subX: 0, subY: 0, linkEdit: false, linkHref: '', dlPicker: false, dlFrom: 0, dlTo: 0, savedFrom: null, savedTo: null, dlQuery: '' })
+const st = reactive({ open: false, x: 0, y: 0, sub: null, subX: 0, subY: 0, linkEdit: false, linkHref: '', dlPicker: false, dlFrom: 0, dlTo: 0, savedFrom: null, savedTo: null, dlQuery: '', noteEdit: false, noteText: '', noteColor: ANNOTATION_KINDS[0].color, noteFrom: 0, noteTo: 0, noteExistingId: null, noteQuote: '' })
 const rootEl = ref(null)
 
 const SIZES = [12, 14, 16, 18, 20, 24, 28, 32]
@@ -36,6 +40,9 @@ function refresh() {
   act.dl = ed.isActive('dlLink')
   act.dlTarget = ed.getAttributes('dlLink')?.target || ''
   act.dlTitle = ed.getAttributes('dlLink')?.title || ''
+  act.note = ed.isActive('annotation')
+  act.noteId = ed.getAttributes('annotation')?.noteId || ''
+  act.noteColor = ed.getAttributes('annotation')?.color || ''
 }
 
 /* ---------- 双链（多模块内容互联）：选中文字标记为指向全书任意内容的双链 ---------- */
@@ -87,6 +94,93 @@ function jumpDl() {
   const resolved = targetById(parseTarget(act.dlTarget)?.kind, parseTarget(act.dlTarget)?.id)
   jumpTo(resolved || findByTitle(act.dlTitle))
   close()
+}
+
+/* ---------- 正文批注：选中文字 → 建/改批注（正文留下划线锚点，内容进右侧批注栏） ---------- */
+const noteDisabled = () => selEmpty() && !act.note && st.savedFrom == null
+
+/** 范围两侧已有的批注 id（避免同类型标记重叠把原批注切断） */
+function existingNoteIdForRange(from, to) {
+  const doc = props.editor.state.doc
+  const pick = (pos) => {
+    try {
+      const r = doc.resolve(Math.min(Math.max(pos, 0), doc.content.size))
+      return r.marks().find((m) => m.type.name === 'annotation') || null
+    } catch {
+      return null
+    }
+  }
+  const m = pick(from) || pick(Math.max(from, to - 1))
+  return m?.attrs?.noteId || ''
+}
+
+function openNote() {
+  const ed = props.editor
+  let from
+  let to
+  if (st.savedFrom != null) {
+    // 右键落在选区上：作用于选中文字
+    from = st.savedFrom
+    to = st.savedTo
+  } else if (selEmpty()) {
+    if (!act.note) return
+    // 光标落在既有批注内：扩展为整条批注再编辑
+    chain().extendMarkRange('annotation').run()
+    const s = ed.state.selection
+    from = s.from
+    to = s.to
+  } else {
+    const s = ed.state.selection
+    from = s.from
+    to = s.to
+  }
+  st.noteFrom = from
+  st.noteTo = to
+  const existingId = act.note && selEmpty() ? act.noteId : existingNoteIdForRange(from, to)
+  st.noteExistingId = existingId || null
+  const rec = existingId ? work.annotations.find((x) => x.id === existingId && !x.deletedAt) : null
+  let quote = ''
+  try {
+    quote = ed.state.doc.textBetween(from, to, ' ')
+  } catch {
+    quote = ''
+  }
+  st.noteQuote = String(quote || rec?.text || '').replace(/\s+/g, ' ').trim().slice(0, 40)
+  st.noteText = rec?.note || ''
+  st.noteColor = rec?.color || normalizeNoteColor(act.noteColor)
+  st.noteEdit = true
+}
+
+function applyNote() {
+  const ed = props.editor
+  const chapterId = work.selChapterId
+  if (!chapterId) return close()
+  const color = normalizeNoteColor(st.noteColor)
+  let noteId = st.noteExistingId
+  if (noteId) work.updateAnnotation(noteId, { note: st.noteText, color, text: st.noteQuote })
+  else {
+    noteId = uid()
+    work.addAnnotation({ chapterId, noteId, text: st.noteQuote, note: st.noteText, color })
+  }
+  try {
+    ed.chain().setTextSelection({ from: st.noteFrom, to: st.noteTo }).setMark('annotation', { noteId, color }).run()
+  } catch {
+    /* 选区越界：记录已建，侧栏按「已失效」提示清理 */
+  }
+  close()
+  refocus()
+}
+
+function removeNote() {
+  const id = st.noteExistingId || act.noteId || ''
+  try {
+    chain().extendMarkRange('annotation').unsetMark('annotation').run()
+  } catch {
+    /* 光标不在批注内：仅删记录 */
+  }
+  if (id) work.deleteAnnotation(id)
+  close()
+  refocus()
 }
 
 const selEmpty = () => props.editor.state.selection.empty
@@ -181,6 +275,7 @@ async function open(x, y, savedSel = null) {
   st.sub = null
   st.linkEdit = false
   st.dlPicker = false
+  st.noteEdit = false
   await nextTick()
   const el = rootEl.value
   if (el) {
@@ -194,6 +289,7 @@ function close() {
   st.sub = null
   st.linkEdit = false
   st.dlPicker = false
+  st.noteEdit = false
 }
 
 /** 展开二级飞出菜单：fixed 定位，按父项实测坐标放置并防出屏（escape 祖先 overflow 裁剪） */
@@ -246,7 +342,43 @@ defineExpose({ open, close })
 
 <template>
   <div v-if="st.open" ref="rootEl" class="ctx-menu" :style="{ left: st.x + 'px', top: st.y + 'px' }" @contextmenu.prevent @scroll="st.sub = null">
-    <template v-if="st.linkEdit">
+    <template v-if="st.noteEdit">
+      <div class="ctx-notedit">
+        <div class="ctx-note-quote">{{ st.noteQuote || '（未选中文字）' }}</div>
+        <textarea
+          v-model="st.noteText"
+          class="rp-textarea ctx-note-area"
+          placeholder="批注内容：这段文字要改什么、疑问点、埋的伏笔……"
+          @keydown.stop
+        ></textarea>
+        <div class="ctx-note-label">下划线颜色 · 用途</div>
+        <div class="note-kind-row">
+          <button
+            v-for="k in ANNOTATION_KINDS"
+            :key="k.key"
+            type="button"
+            class="note-kind"
+            :class="{ on: normalizeNoteColor(st.noteColor) === k.color }"
+            :style="{ '--k-color': k.color }"
+            @click="st.noteColor = k.color"
+          >
+            <span class="note-kind-dot" :style="{ background: k.color }"></span>{{ k.label }}
+          </button>
+        </div>
+        <div class="ctx-note-custom">
+          <input v-model="st.noteColor" type="color" class="note-color-input" title="自定义下划线颜色" />
+          <input v-model="st.noteColor" class="rp-input" placeholder="#c0392b" @keyup.enter="applyNote" />
+        </div>
+        <div class="ctx-note-cur">当前：{{ noteKindOf(st.noteColor)?.label || '自定义' }} {{ normalizeNoteColor(st.noteColor) }}</div>
+        <div style="display: flex; gap: 6px; margin-top: 8px">
+          <button class="ctx-btn primary" @click="applyNote">{{ st.noteExistingId ? '保存批注' : '添加批注' }}</button>
+          <button v-if="st.noteExistingId" class="ctx-btn" @click="removeNote">移除</button>
+          <button class="ctx-btn" @click="st.noteEdit = false">返回</button>
+        </div>
+      </div>
+    </template>
+
+    <template v-else-if="st.linkEdit">
       <div class="ctx-linkedit">
         <input v-model="st.linkHref" class="rp-input" placeholder="https://…" @keyup.enter="applyLink" />
         <div style="display: flex; gap: 6px; margin-top: 8px">
@@ -348,6 +480,14 @@ defineExpose({ open, close })
       <div class="ctx-item" @click="doLink"><span>{{ act.link ? '编辑链接…' : '超链接…' }}</span></div>
       <div v-if="act.link" class="ctx-item" @click="openLink"><span>打开链接</span></div>
       <div v-if="act.link" class="ctx-item" @click="removeLink"><span>清除链接</span></div>
+
+      <div class="ctx-sep" />
+      <div class="ctx-item" :class="{ disabled: noteDisabled() }" @click="openNote">
+        <span>{{ act.note && !noteDisabled() ? '编辑批注…' : '添加批注…' }}</span>
+        <span v-if="act.note" class="note-mini-dot" :style="{ background: normalizeNoteColor(act.noteColor) }"></span>
+        <span v-else class="hint">批注</span>
+      </div>
+      <div v-if="act.note" class="ctx-item" @click="removeNote"><span>移除批注</span></div>
 
       <div class="ctx-sep" />
       <div class="ctx-item" :class="{ disabled: dlDisabled() }" @click="openDlPicker">

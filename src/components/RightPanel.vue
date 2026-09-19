@@ -1,13 +1,77 @@
 <script setup>
-import { computed, watch } from 'vue'
-import { NButton, NTag, NSelect } from 'naive-ui'
+import { computed, ref, watch } from 'vue'
+import { NButton, NTag, NSelect, NPopconfirm } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
 import { stripTags } from '../services/wordcount'
+import { ANNOTATION_KINDS, normalizeNoteColor, noteKindLabel, focusNoteMark, recolorNoteMark } from '../services/annotations'
 
 const work = useWorkStore()
 const ch = computed(() => work.activeChapter)
+
+/* ---------- 正文批注（右侧批注栏）：逐条对应正文中被批注的文字 ---------- */
+const notes = computed(() => (ch.value ? work.annotationsForChapter(ch.value.id) : []))
+const liveNotes = computed(() => notes.value.filter((n) => !n.orphan))
+const orphanNotes = computed(() => notes.value.filter((n) => n.orphan))
+const activeNoteId = ref(null)
+const editingId = ref(null)
+const draft = ref('')
+const draftColor = ref(ANNOTATION_KINDS[0].color)
+const editOrigin = ref(null)
+
+watch(
+  () => ch.value?.id,
+  () => {
+    activeNoteId.value = null
+    editingId.value = null
+    editOrigin.value = null
+  }
+)
+
+function locate(n) {
+  activeNoteId.value = n.id
+  focusNoteMark(n.noteId)
+}
+function startEdit(n) {
+  editingId.value = n.id
+  draft.value = n.note || ''
+  draftColor.value = normalizeNoteColor(n.color)
+  editOrigin.value = { id: n.id, noteId: n.noteId, color: normalizeNoteColor(n.color) }
+}
+/** 取消编辑：颜色是即时预览落库的，需回滚到进入编辑时的值 */
+function cancelEdit() {
+  const o = editOrigin.value
+  if (o) {
+    work.updateAnnotation(o.id, { color: o.color })
+    recolorNoteMark(o.noteId, o.color)
+  }
+  editingId.value = null
+  editOrigin.value = null
+}
+function saveEdit(n) {
+  work.updateAnnotation(n.id, { note: draft.value, color: draftColor.value })
+  recolorNoteMark(n.noteId, draftColor.value)
+  editingId.value = null
+  editOrigin.value = null
+}
+function onEditColor(n, c) {
+  draftColor.value = c
+  // 颜色即时预览：正文下划线随之变化，保存时一并落库
+  work.updateAnnotation(n.id, { color: c })
+  recolorNoteMark(n.noteId, c)
+}
+function removeNote(n) {
+  work.deleteAnnotation(n.id)
+  if (activeNoteId.value === n.id) activeNoteId.value = null
+  if (editingId.value === n.id) editingId.value = null
+  window.$msg?.success('批注已移除')
+}
+function pruneOrphans() {
+  const n = work.pruneOrphanAnnotations(ch.value.id)
+  window.$msg?.success(n ? `已清理 ${n} 条失效批注` : '没有失效批注')
+}
+const fmtTime = (t) => new Date(t || Date.now()).toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 const outline = computed(() => (ch.value ? work.olnodeByRef(ch.value.id) : null))
 function onSpeedNote(e) {
@@ -68,6 +132,77 @@ watch(
 
 <template>
   <div v-if="ch" class="right-panel">
+    <div class="rp-section">
+      <div class="rp-title">
+        本章批注
+        <span class="rp-title-tools">
+          <span v-if="notes.length" class="note-count">{{ liveNotes.length }} 条<span v-if="orphanNotes.length"> · {{ orphanNotes.length }} 失效</span></span>
+          <NButton v-if="orphanNotes.length" size="tiny" quaternary @click="pruneOrphans">清理失效</NButton>
+        </span>
+      </div>
+      <div v-if="!notes.length" style="font-size: 12px; color: var(--text-dim)">
+        选中正文后右键「添加批注」，被批注的文字会带彩色下划线，在此逐条查看。
+      </div>
+
+      <div
+        v-for="n in notes"
+        :key="n.id"
+        class="note-item"
+        :class="{ active: activeNoteId === n.id, orphan: n.orphan }"
+        :style="{ '--note-color': normalizeNoteColor(n.color) }"
+        role="button"
+        tabindex="0"
+        @click="locate(n)"
+        @keydown.enter="locate(n)"
+      >
+        <div class="note-head">
+          <span class="note-dot" :style="{ background: normalizeNoteColor(n.color) }"></span>
+          <span class="note-kind-label">{{ noteKindLabel(n.color) }}</span>
+          <span class="note-time">{{ fmtTime(n.createdAt) }}</span>
+        </div>
+        <div class="note-quote" :class="{ dim: n.orphan }">{{ n.text || '（无引用文字）' }}</div>
+
+        <template v-if="editingId === n.id">
+          <textarea v-model="draft" class="rp-textarea note-edit-area" placeholder="批注内容…" @click.stop @keydown.stop></textarea>
+          <div class="note-kind-row" @click.stop>
+            <button
+              v-for="k in ANNOTATION_KINDS"
+              :key="k.key"
+              type="button"
+              class="note-kind"
+              :class="{ on: normalizeNoteColor(draftColor) === k.color }"
+              @click="onEditColor(n, k.color)"
+            >
+              <span class="note-kind-dot" :style="{ background: k.color }"></span>{{ k.label }}
+            </button>
+            <input
+              :value="normalizeNoteColor(draftColor)"
+              type="color"
+              class="note-color-input"
+              title="自定义下划线颜色"
+              @input="onEditColor(n, $event.target.value)"
+            />
+          </div>
+          <div class="note-actions" @click.stop>
+            <NButton size="tiny" type="primary" @click="saveEdit(n)">保存</NButton>
+            <NButton size="tiny" @click="cancelEdit">取消</NButton>
+          </div>
+        </template>
+        <template v-else>
+          <div v-if="n.note" class="note-body">{{ n.note }}</div>
+          <div v-else class="note-body empty">（未填写批注内容）</div>
+          <div v-if="n.orphan" class="note-orphan-tip">原文已改动，锚点失效——点击无法定位</div>
+          <div class="note-actions" @click.stop>
+            <NButton size="tiny" quaternary @click="startEdit(n)">编辑</NButton>
+            <NPopconfirm @positive-click="removeNote(n)">
+              <template #trigger><NButton size="tiny" quaternary type="error">删除</NButton></template>
+              删除该批注（保留正文文字）？
+            </NPopconfirm>
+          </div>
+        </template>
+      </div>
+    </div>
+
     <div class="rp-section">
       <div class="rp-title">
         本章大纲
