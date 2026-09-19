@@ -1,5 +1,7 @@
-/* 双链全链路验证（开发调试版实例 --profile=dev）：正文/幕布/大纲三链路 + 搜索命中选段 + 悬浮保持 */
+/* 双链全链路验证（开发调试版实例 --profile=dev）：正文/幕布/大纲三链路 + 搜索命中选段 + 悬浮保持
+ * 种子统一走 tools/verify-seeds.mjs 注册表（验证书与开发调试版书架同源） */
 import { connect } from './_cdp-lib.mjs'
+import { buildSeedExpr } from './verify-seeds.mjs'
 
 const c = await connect('app://')
 await c.sleep(2500)
@@ -10,30 +12,10 @@ const rclick = async (x, y) => {
   await c.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: Math.round(x), y: Math.round(y), button: 'right', buttons: 0, clickCount: 1 })
 }
 
-/* 0) 种子 */
-const seed = await c.evalx(`(async () => {
-  const { db, uid, now } = window.__ns
-  const old = (await db.works.toArray()).find(w => w.title === '双链验证书')
-  if (old) { await db.works.delete(old.id) }
-  const t = now()
-  const workId = uid()
-  await db.works.add({ id: workId, title: '双链验证书', author: '', genre: '', status: '', intro: '', createdAt: t, updatedAt: t, deletedAt: null })
-  await db.outlines.add({ id: uid(), workId, level: 'master', refId: workId, content: '主线围绕铜刻星辰的异动展开。', createdAt: t, updatedAt: t, deletedAt: null })
-  const volId = uid()
-  await db.volumes.add({ id: volId, workId, title: '第一卷', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
-  await db.chapters.add({ id: uid(), workId, volumeId: volId, title: '第一章 · 初雪', content: '<p>他抬头看去，三百六十枚铜刻星辰缓缓归位。</p>', wordCount: 0, status: 'draft', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
-  await db.mubu.bulkAdd([
-    { id: uid(), workId, parentId: null, sortOrder: 0, text: '观测站', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t },
-    { id: uid(), workId, parentId: null, sortOrder: 1000, text: '穹顶大厅', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t }
-  ])
-  const mb = (await db.mubu.toArray()).filter(n => n.workId === workId)
-  const gz = mb.find(n => n.text === '观测站')
-  await db.mubu.add({ id: uid(), workId, parentId: gz.id, sortOrder: 0, text: '建于界脊之上，穹顶内悬三百六十枚铜刻星辰的活星图。', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
-  await db.characters.add({ id: uid(), workId, name: '林远', aliases: '', role: '主角', tags: [], fields: {}, avatarAssetId: null, content: '他在穹顶大厅值守，熟悉每一枚铜刻星辰。', createdAt: t, updatedAt: t, deletedAt: null })
-  await db.snippets.add({ id: uid(), workId, content: '穹顶大厅的第十二响钟声是关键伏笔。', tags: [], createdAt: t, updatedAt: t, deletedAt: null })
-  return workId
-})()`)
-console.log('seed:', seed)
+/* 0) 种子（reset 删除重建，保证每轮确定性） */
+const seed = await c.evalx(buildSeedExpr('双链验证书', { reset: true }))
+console.log('seed:', JSON.stringify(seed))
+if (!seed.ok) process.exit(1)
 await c.evalx(`location.reload()`)
 await c.sleep(2500)
 

@@ -39,9 +39,24 @@ async function boot() {
   startAutosave()
   await ui.loadPrefs()
   if (panelMode) return
+  await seedDevVerifyBooks()
   await shelf.refresh()
 }
 onMounted(boot)
+
+/* 开发调试版专属：npm run dev 启动时把全部验证书种入书架（tools/verify-seeds.mjs 注册表）。
+ * 仅 DEV 生效且只补种缺失的；正式版（app://，DEV=false）不会加载，绝不写入测试数据。 */
+async function seedDevVerifyBooks() {
+  if (!import.meta.env.DEV) return
+  try {
+    const { seedVerifyBooks } = await import('./dev/verifyBooks.js')
+    const r = await seedVerifyBooks()
+    const made = (r.books || []).filter((b) => b.created)
+    if (made.length) console.info('[dev] 已种入验证书 ' + made.length + ' 本：' + made.map((b) => b.title).join('、'))
+  } catch (e) {
+    console.warn('[dev] 验证书种入失败（不影响正常使用，可执行 node tools/seed-verify.mjs 重试）', e)
+  }
+}
 </script>
 
 <template>

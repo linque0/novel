@@ -5,6 +5,7 @@
  * 用法：node tools/annotation-verify.mjs
  */
 import { connect } from './_cdp-lib.mjs'
+import { buildSeedExpr } from './verify-seeds.mjs'
 
 const c = await connect('app://')
 await c.sleep(2500)
@@ -87,34 +88,10 @@ async function addNote(kw, body, kindLabel = null) {
   return { ok: true, sel }
 }
 
-/* ---------- 0) 种子：一本含双链的测试书 ---------- */
-const seed = await c.evalx(`(async () => {
-  const { db, uid, now } = window.__ns
-  // 幂等：清掉本脚本历次运行与临时探针留下的测试书，避免脏数据跨轮干扰
-  for (const title of ['批注验证书', '批注探针书']) {
-    const old = (await db.works.toArray()).find(w => w.title === title)
-    if (!old) continue
-    for (const t of ['annotations','chapters','volumes','outlines','mubu','characters','snippets']) {
-      const rows = await db.table(t).where('workId').equals(old.id).toArray().catch(() => [])
-      for (const r of rows) await db.table(t).delete(r.id)
-    }
-    await db.works.delete(old.id)
-  }
-  const t = now()
-  const workId = uid()
-  await db.works.add({ id: workId, title: '批注验证书', author: '', genre: '', status: '', intro: '', createdAt: t, updatedAt: t, deletedAt: null })
-  const volId = uid()
-  await db.volumes.add({ id: volId, workId, title: '第一卷', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
-  // 正文含一个双链（铜刻星辰），用于验证批注与双链共存
-  await db.chapters.add({
-    id: uid(), workId, volumeId: volId, title: '第一章 · 初雪', fmt: 'html',
-    content: '<p>他抬头看去，三百六十枚<span class="dl-link" data-dl-target="mubu:x1" data-dl-title="星图">铜刻星辰</span>缓缓归位，雪落在界脊之上。</p>',
-    wordCount: 0, status: 'draft', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null
-  })
-  await db.mubu.add({ id: uid(), workId, parentId: null, sortOrder: 0, text: '星图', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
-  return workId
-})()`)
-console.log('seed:', seed)
+/* ---------- 0) 种子：一本含双链的测试书（统一走 tools/verify-seeds.mjs 注册表） ---------- */
+const seed = await c.evalx(buildSeedExpr('批注验证书', { reset: true }))
+console.log('seed:', JSON.stringify(seed))
+if (!seed.ok) process.exit(1)
 await c.evalx(`location.reload()`)
 await c.sleep(2600)
 await c.evalx(`[...document.querySelectorAll('.book-card')].find(x => x.textContent.includes('批注验证书'))?.click()`)

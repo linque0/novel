@@ -1,6 +1,8 @@
 /* 自由模块画布验收（8.8.2 / 计划书 9.4.1-S14）：迁移v2 / 快速开始模板 / 模块CRUD / 拖动落位 /
-   锚点连线与边编辑 / 断线检测 / 双链卫星 / 容器归组 / 撤销重做 / 持久化 */
+   锚点连线与边编辑 / 断线检测 / 双链卫星 / 容器归组 / 撤销重做 / 持久化
+   种子统一走 tools/verify-seeds.mjs 注册表（验证书与开发调试版书架同源） */
 import { connect } from './_cdp-lib.mjs'
+import { buildSeedExpr } from './verify-seeds.mjs'
 
 const c = await connect('app://')
 await c.sleep(2500)
@@ -10,34 +12,11 @@ const NL = String.fromCharCode(10)
 const store = `document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work')`
 
 /* 种子A：带旧大纲的书（测迁移v2）；种子B：空书（测快速开始） */
-const seed = await c.evalx(`(async () => {
-  try {
-    const { db, uid, now } = window.__ns
-    const t = now()
-    for (const title of ['画布验证书A', '画布验证书B']) {
-      const old = (await db.works.toArray()).find(w => w.title === title)
-      if (old) await db.works.delete(old.id)
-    }
-    const mk = async (title) => {
-      const workId = uid()
-      await db.works.add({ id: workId, title, author: '', genre: '', status: '', intro: '', createdAt: t, updatedAt: t, deletedAt: null })
-      return workId
-    }
-    const wa = await mk('画布验证书A')
-    const volId = uid()
-    await db.volumes.add({ id: volId, workId: wa, title: '第一卷', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
-    const chId = uid()
-    await db.chapters.add({ id: chId, workId: wa, volumeId: volId, title: '第一章 · 启程', content: '<p>启程。</p>', wordCount: 3, status: 'draft', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
-    await db.mubu.add({ id: uid(), workId: wa, parentId: null, sortOrder: 0, text: '雾都钟楼', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
-    await db.outlines.add({ id: uid(), workId: wa, level: 'master', refId: wa, content: '主线：寻找黎明之城。', createdAt: t, updatedAt: t, deletedAt: null })
-    await db.outlines.add({ id: uid(), workId: wa, level: 'chapter', refId: chId, content: '目标：进入雾都' + ${JSON.stringify(NL)} + '线索：[[雾都钟楼]]', createdAt: t, updatedAt: t, deletedAt: null })
-    const wb = await mk('画布验证书B')
-    await db.mubu.add({ id: uid(), workId: wb, parentId: null, sortOrder: 0, text: '雾都钟楼', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
-    return { ok: true, wa, wb, chId }
-  } catch (e) { return { ok: false, err: String(e).slice(0, 200) } }
-})()`)
+const seed = await c.evalx(buildSeedExpr(['画布验证书A', '画布验证书B'], { reset: true }))
 console.log('seed:', JSON.stringify(seed))
 if (!seed.ok) process.exit(1)
+const seedA = seed.books.find((b) => b.title === '画布验证书A') || {}
+const chId = seedA.chId
 await c.evalx(`location.reload()`)
 await c.sleep(3000)
 
@@ -47,7 +26,7 @@ await c.sleep(1800)
 const m1 = await c.evalx(`(() => {
   const w = ${store}
   const kinds = w.liveOlnodes().map(n => n.kind)
-  const ch = w.olnodeByRef(${JSON.stringify(seed.chId)})
+  const ch = w.olnodeByRef(${JSON.stringify(chId)})
   return {
     hasOld: kinds.some(k => ['master', 'volumes', 'chapters', 'lines', 'chapter', 'line'].includes(k)),
     containers: kinds.filter(k => k === 'container').length,

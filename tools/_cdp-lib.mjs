@@ -19,6 +19,16 @@ export async function connect(match = 'app://', port = process.env.CDP_PORT || '
     ws.send(JSON.stringify({ id: i, method, params }))
     return new Promise((r) => pending.set(i, { res: r }))
   }
+  // 环境预警：窗口最小化 / 被完全遮挡时 Chromium 节流定时器（260ms 实测可到 ~1s）并停止产帧，
+  // 时序类断言会假失败、Page.captureScreenshot 会挂起（见 开发流程.md 5.3）——先恢复窗口再跑。
+  try {
+    const probe = await send('Runtime.evaluate', { expression: 'document.visibilityState', returnByValue: true })
+    if (probe?.result?.value === 'hidden') {
+      console.warn('[cdp] 警告：页面处于隐藏态（窗口最小化/被遮挡）——定时器被节流、截图会挂起，验收结果可能失真。请先恢复窗口可见再跑。')
+    }
+  } catch (e) {
+    /* 探测失败不阻塞连接 */
+  }
   return {
     send,
     evalx: async (expr) => {

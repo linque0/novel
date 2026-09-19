@@ -1,3 +1,15 @@
+## [1.0.20] - 2026-09-19
+
+### 工程化 · 验证书统一收编开发调试版（注册表 + 自动种入 + npm run dev 自带 CDP）
+- **全部 15 本验证书收编为 `tools/verify-seeds.mjs` 注册表（唯一权威定义处）**：双链验证书 / 批注验证书 / 关系图验证书 / 画布验证书A·B / 关系跟随验证书（带数据）+ 多窗口 / 画布右键 / 连接点修复 / 线连到线 / 塑形 / 浮层避线 / 右键浮层 / 侧栏 / 验收测试作品（空书，等价书架「新建作品」：作品 + 总纲 + 第一卷 + 默认设定分类）；此前散落在各脚本的内联种子直写 `db.works.add`（且只删 works 行、子表残留成孤儿），收编后统一由 `seedBooks` 管理
+- **`npm run dev` 启动自动种入书架**：渲染层在 `import.meta.env.DEV` 下动态加载注册表（新增 `src/dev/verifyBooks.js`，App.vue boot 挂钩），只补缺失不覆盖，书架即见全部验证书；**正式版（npm start / 安装包，app://）DEV 恒为 false，注册表不进运行时，绝不写入测试数据**（构建产物实测：主包体积不变，种子代码未入包）
+- **不重启补种 / 重置**：新增 `node tools/seed-verify.mjs [--reset] [--only 书名]`——默认只补缺失；`--reset` 按 title 删除重建并**级联清理该作品全部子表**（works/volumes/chapters/outlines/characters/relations/lorecats/lore/snippets/mubu/annotations/bookmarks/olnodes/links/revisions/wordlog），种完自动刷新书架
+- **验收脚本与书架同源**：dl-verify（20 项）/ annotation-verify（28 项）/ chargraph-verify（12 项）/ olcanvas-verify（29 项）四个脚本的内联种子全部改走 `buildSeedExpr(书名, { reset: true })`，删除重复代码约 120 行；附加字段（chId / 人物 id 等）经种子返回值透传，断言不变
+- **CDP 连接库内置隐藏态告警**：`_cdp-lib.mjs` 连接时探测 `document.visibilityState`，隐藏态（窗口最小化 / 被完全遮挡）立即告警——此时 Chromium 节流定时器（实测 260ms 定时器跑到 ~1019ms）且不产帧，时序断言假失败、`Page.captureScreenshot` 挂起
+- **新增验收脚本 `tools/shelf-verify.mjs`（15 项）**：核验 15 本验证书全部在架 + 无未注册的「验证书」命名残留
+- **纪律入文档**：`开发流程.md` 新增 5.1.1「验证书统一注册」（机制表 + 15 本清单 + 新增验证书登记流程），协作纪律新增第 11 条（验证书只在开发调试版创建，脚本内联种书视为违规）与第 12 条（CDP 验收前确认窗口可见）
+- 验收：`shelf-verify.mjs` **15/15**（15 本在架、无残留）；重构回归 `annotation-verify` **28/28**、`chargraph-verify` **12/12**、`olcanvas-verify` 前 **18 项全过**（其后为截图像素类断言，验证窗口处于最小化态挂起——环境限制非回归，相关代码本次未改动）、`dl-verify` **19/20**（唯一失败项为悬浮宽限期 260ms 时序断言，隐藏窗口下定时器节流所致，悬浮窗代码未改动）；`npm run build` 通过
+
 ## [1.0.19] - 2026-09-18
 
 ### 正文 · 批注功能（右键添加 + 右侧批注栏 + 彩色下划线，与双链不冲突）

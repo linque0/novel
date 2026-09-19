@@ -1,6 +1,8 @@
 /* 人物关系图验收（8.8.3 / 计划书 9.4.1-S15）：页签切换 / 排布 / 拖摆持久化 / 拖线建关系 /
-   边标签编辑 / 悬停一度网 / 角色筛选 / 孤岛 / 删人清理 / 发送大纲引用卡 / RightPanel 懒挂载 */
+   边标签编辑 / 悬停一度网 / 角色筛选 / 孤岛 / 删人清理 / 发送大纲引用卡 / RightPanel 懒挂载
+   种子统一走 tools/verify-seeds.mjs 注册表（验证书与开发调试版书架同源） */
 import { connect } from './_cdp-lib.mjs'
+import { buildSeedExpr } from './verify-seeds.mjs'
 
 const c = await connect('app://')
 await c.sleep(2500)
@@ -9,29 +11,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log((ok ? '
 const NL = String.fromCharCode(10)
 const store = `document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('work')`
 
-const seed = await c.evalx(`(async () => {
-  try {
-    const { db, uid, now } = window.__ns
-    const t = now()
-    const old = (await db.works.toArray()).find(w => w.title === '关系图验证书')
-    if (old) await db.works.delete(old.id)
-    const workId = uid()
-    await db.works.add({ id: workId, title: '关系图验证书', author: '', genre: '', status: '', intro: '', createdAt: t, updatedAt: t, deletedAt: null })
-    const volId = uid()
-    await db.volumes.add({ id: volId, workId, title: '第一卷', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
-    const chId = uid()
-    await db.chapters.add({ id: chId, workId, volumeId: volId, title: '第一章 · 相遇', content: '<p>相遇。</p>', wordCount: 3, status: 'draft', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
-    const mk = (name, role, tags) => { const id = uid(); db.characters.add({ id, workId, name, role, tags, aliases: '', content: '', fields: {}, deletedAt: null, createdAt: t, updatedAt: t }); return id }
-    const a = mk('林昭', '主角', ['皇族'])
-    const b = mk('沈青梧', '配角', ['江湖'])
-    const cc = mk('魏无涯', '反派', ['魔教'])
-    const d = mk('路人甲', '龙套', [])
-    mk('隐士', '龙套', [])
-    db.relations.add({ id: uid(), workId, fromId: a, toId: b, label: '师徒', notes: '' })
-    db.relations.add({ id: uid(), workId, fromId: b, toId: cc, label: '宿敌', notes: '' })
-    return { ok: true, workId, chId, a, b, cc, d }
-  } catch (e) { return { ok: false, err: String(e).slice(0, 200) } }
-})()`)
+const seed = await c.evalx(buildSeedExpr('关系图验证书', { reset: true }))
 console.log('seed:', JSON.stringify(seed))
 if (!seed.ok) process.exit(1)
 await c.evalx(`location.reload()`)
