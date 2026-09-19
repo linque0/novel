@@ -79,8 +79,10 @@ await c.sleep(400)
 const keep = await c.evalx(`!!document.querySelector('.dl-pop')`)
 check('移入浮窗保持显示', keep)
 await c.evalx(`document.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: 30, clientY: 300 }))`)
-await c.sleep(450)
-check('宽限期后正常消失', await c.evalx(`!document.querySelector('.dl-pop')`))
+// v1.0.21 起浮窗离场带 140ms 过渡（260ms 宽限 + 过渡）；隐藏窗口下定时器节流至 ~1s，故轮询等待
+let gone = false
+for (let i = 0; i < 18 && !gone; i++) { gone = !(await c.evalx(`!!document.querySelector('.dl-pop')`)); if (!gone) await c.sleep(300) }
+check('宽限期后正常消失', gone)
 await c.evalx(`(() => { const el = document.querySelector('.rich-host .dl-link'); const r = el.getBoundingClientRect(); el.dispatchEvent(new MouseEvent('mousemove', { bubbles: true, clientX: r.left + 5, clientY: r.top + 5 })); return 1 })()`)
 await c.sleep(500)
 await c.evalx(`document.querySelector('.dl-pop .dl-pop-jump')?.click()`)
