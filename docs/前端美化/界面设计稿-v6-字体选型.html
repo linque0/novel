@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小说工坊 · 封面与界面字体选型 · 2026-09-20</title>
+<link rel="stylesheet" href="./fonts/fonts.css" />
+<link rel="stylesheet" href="./fonts/fonts-art.css" />
+<style>
+:root {
+  --ikb: #002FA7; --ivory: #FBF9F3; --paper: #FDFCF8; --desk: #F2EFE7;
+  --ink: #1E1E1E; --ink-2: #6E6A60; --ink-3: #A9A496;
+  --hair: #DCD6C6; --rust: #8C2F1B;
+  --serif: 'Noto Serif SC', Georgia, serif;
+  --disp: 'Playfair Display', Georgia, serif;
+  --sans: 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #E8E3D6; background-image: var(--noise); font-family: var(--sans); color: #26221c; }
+.doc-head { max-width: 1180px; margin: 0 auto; padding: 46px 24px 8px; }
+.doc-head .ver { font-family: var(--disp); font-size: 11px; letter-spacing: .3em; color: var(--ikb); font-weight: 600; text-transform: uppercase; }
+.doc-head h1 { font-family: var(--serif); font-size: 34px; margin: 10px 0 12px; font-weight: 700; }
+.doc-head p { margin: 0 0 6px; color: #6e6960; font-size: 13px; line-height: 1.9; }
+.doc-head p b { color: #26221c; }
+.sheet { max-width: 1180px; margin: 38px auto; padding: 0 24px; }
+.sheet-tag { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.sheet-tag .k { font-family: var(--serif); font-size: 21px; font-weight: 700; }
+.sheet-tag .k em { font-style: normal; font-family: var(--disp); font-size: 13px; color: var(--ikb); margin-right: 8px; letter-spacing: .12em; }
+.sheet-tag .n { font-size: 12px; color: #857c6d; }
+.frame { background: var(--desk); border: 1px solid var(--hair); border-radius: 3px; overflow: hidden; position: relative; padding: 22px 30px 26px; }
+.cand { background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; margin-bottom: 18px; overflow: hidden; }
+.cand .hd { display: flex; align-items: baseline; gap: 12px; padding: 13px 18px 11px; border-bottom: 1px solid var(--hair); }
+.cand .hd .nm { font-family: var(--serif); font-size: 17px; font-weight: 700; }
+.cand .hd .lc { font-family: var(--disp); font-size: 9px; letter-spacing: .2em; color: var(--ikb); border: 1px solid rgba(0,47,167,.3); background: rgba(0,47,167,.06); padding: 2px 8px; border-radius: 2px; text-transform: uppercase; font-weight: 600; }
+.cand .hd .ds { font-size: 11.5px; color: var(--ink-2); }
+.cand .hd .star { margin-left: auto; font-size: 11.5px; color: var(--ink); }
+.cand .bd { display: flex; gap: 24px; padding: 18px; align-items: flex-start; }
+.cv { width: 230px; height: 132px; background: var(--ikb); position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; flex: none; }
+.cv .tt { font-size: 23px; color: var(--ivory); letter-spacing: .1em; font-weight: 400; }
+.cv .sub { font-family: var(--disp); font-size: 8px; letter-spacing: .3em; color: rgba(251,249,243,.75); font-weight: 600; text-transform: uppercase; }
+.cv .col { width: 27px; height: 27px; border-radius: 50%; border: 1px solid rgba(251,249,243,.8); color: var(--ivory); font-size: 7.5px; line-height: 1.12; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+.uis { flex: 1; border: 1px solid var(--hair); border-radius: 3px; background: var(--paper); overflow: hidden; }
+.uis .ubar { height: 36px; display: flex; align-items: center; gap: 10px; padding: 0 12px; background: var(--ivory); border-bottom: 1px solid var(--hair); font-size: 13px; }
+.uis .ubar .lg { font-weight: 700; }
+.uis .ubar .sp { flex: 1; }
+.uis .ubtn { background: var(--ikb); color: var(--ivory); font-size: 11px; padding: 3px 10px; border-radius: 2px; }
+.uis .ubtn.o { background: transparent; color: var(--ink); border: 1px solid var(--hair); }
+.uis .urow { display: flex; align-items: center; gap: 10px; padding: 7px 12px; font-size: 12.5px; border-bottom: 1px solid var(--hair-2, #EFEDE6); }
+.uis .urow:hover { background: rgba(0,47,167,.05); color: var(--ikb); }
+.uis .urow .sp { flex: 1; }
+.uis .urow .k { border: 1px solid var(--hair); border-radius: 2px; padding: 0 5px; font-size: 10px; color: var(--ink-2); }
+.uis .utxt { padding: 12px 14px; font-size: 13px; line-height: 1.8; color: var(--ink); }
+.glyphs { display: flex; gap: 22px; padding: 0 18px 14px; font-size: 22px; color: var(--ink); align-items: baseline; flex-wrap: wrap; }
+.glyphs .lb { font-size: 9px; letter-spacing: .2em; color: var(--ink-2); font-family: var(--disp); text-transform: uppercase; font-weight: 600; }
+.verdict { padding: 10px 18px 14px; font-size: 12px; color: var(--ink-2); border-top: 1px dashed var(--hair); line-height: 1.8; }
+.verdict b { color: var(--ink); }
+.verdict .ok { color: var(--ikb); font-weight: 600; }
+.verdict .no { color: var(--rust); font-weight: 600; }
+
+/* 自绘面板 */
+.draw { display: flex; gap: 30px; padding: 6px 18px 8px; align-items: flex-start; flex-wrap: wrap; }
+.draw .cell { background: var(--paper); border: 1px solid var(--hair); border-radius: 3px; padding: 16px 18px; }
+.draw .cell .cap { font-size: 10px; letter-spacing: .2em; color: var(--ink-2); font-family: var(--disp); text-transform: uppercase; font-weight: 600; margin-bottom: 10px; }
+svg.fk { display: block; }
+.cal { position: absolute; width: 19px; height: 19px; border-radius: 50%; background: var(--ikb); color: var(--ivory);
+  font-size: 10.5px; display: flex; align-items: center; justify-content: center; z-index: 9; font-weight: 700; }
+.legend { background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; padding: 13px 18px; margin-top: 14px; font-size: 12.5px; line-height: 2; color: #33302a; }
+.legend b { color: var(--ikb); font-weight: 700; margin-right: 4px; font-family: var(--disp); }
+.legend .note { color: #857c6d; font-size: 12px; }
+table.rec { width: 100%; border-collapse: collapse; font-size: 12.5px; background: var(--ivory); }
+table.rec th, table.rec td { border: 1px solid var(--hair); padding: 8px 12px; text-align: left; }
+table.rec th { background: var(--desk); font-family: var(--serif); }
+table.rec td b { color: var(--ikb); }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <div class="ver">Type Selection · 2026-09-20</div>
+  <h1>小说工坊 · 封面与界面字体选型稿</h1>
+  <p>两条线并行：<b>①联网素材获取</b>——4 款 SIL OFL 授权艺术字体全部下载实样（得意黑 Smiley Sans 取自 GitHub Release 官方 webfont；站酷小薇 / 马善政楷书 / 霞鹜文楷取自 Google Fonts，均已本地化于 <code>./fonts/</code>），连同现役思源宋体共 5 个候选同台对比；<b>②自行创作</b>——自绘「坊刻本」刀刻字形（JS  Stroke 构造，非临摹），覆盖品牌字标、书名示范、数字与四字印。本稿不经软件渲染，浏览器直开。</p>
+</header>
+
+<!-- ================= 候选对比 ================= -->
+<section class="sheet" id="cands">
+  <div class="sheet-tag"><span class="k"><em>Ⅰ</em>字体候选实样对比</span><span class="n">同一封面 + 同一段 UI 微排版，看性格也看小字可读性</span></div>
+  <div class="frame" style="height:1720px;">
+    <div id="candbox"></div>
+  </div>
+  <div class="legend">
+    <b>读法</b>每个候选三件套：蓝色封面样（书名+作者印+NOVEL 微标签全用该字体）、界面微排版样（顶栏/菜单/正文小字号）、字样行（永国风长夜将尽 0123 检测可读性与数字形态）。下方结论行给出适用场景判定。<span class="note">授权备注：得意黑官方明确「不推荐正文/手机界面」；霞鹜文楷适合中等长度文本而非大段正文；站酷小薇与思源宋体通用性最好。</span>
+  </div>
+</section>
+
+<!-- ================= 自绘字体 ================= -->
+<section class="sheet" id="draw">
+  <div class="sheet-tag"><span class="k"><em>Ⅱ</em>自绘「坊刻本」FangKe Cut</span><span class="n">刀刻斜切笔画构造字 · 品牌字标 / 书名示范 / 数字 / 四字印</span></div>
+  <div class="frame" style="height:660px;">
+    <div class="draw">
+      <div class="cell">
+        <div class="cap">品牌字标 · 小说工坊</div>
+        <svg class="fk" id="fk-brand" width="330" height="82" viewBox="0 0 440 100"></svg>
+      </div>
+      <div class="cell">
+        <div class="cap">书名示范 · 长夜将尽</div>
+        <svg class="fk" id="fk-title" width="330" height="82" viewBox="0 0 440 100"></svg>
+      </div>
+      <div class="cell">
+        <div class="cap">数字 · 0123456789</div>
+        <svg class="fk" id="fk-digits" width="340" height="52" viewBox="0 0 1000 100"></svg>
+      </div>
+      <div class="cell">
+        <div class="cap">四字印 · 小说工坊</div>
+        <svg class="fk" id="fk-seal" width="120" height="120" viewBox="0 0 120 120"></svg>
+      </div>
+    </div>
+    <div style="padding:4px 18px 6px;font-size:12px;color:var(--ink-2);line-height:1.9;">
+      构造规则：100×100 字身，横画 5–8% 字重、竖画 7% 字重、撇捺为折线多段；所有笔画末端一律<b>斜切 20°</b>（刀刻感），无圆头无衬脚。字标「小说工坊」四字按 1:0.72:1:1.15 字面宽排布；印文取 2×2 传统读序（左上起）。<b>混排策略</b>：已定义字形直接呈现，未定义字回退 Noto Serif SC 600——封面书名可先按「坊刻本标题 + 思源兜底」混排上线。
+    </div>
+    <span class="cal" style="left:46px;top:70px;">1</span>
+    <span class="cal" style="left:420px;top:70px;">2</span>
+  </div>
+  <div class="legend">
+    <b>1</b>字标「小说工坊」四字全自绘：小（竖钩+左右点）·说（讠+兑）·工（三横一竖）·坊（土+方）——斜切笔画带来「刻出来」的力度，与蓝色封面的平涂形成材质对比。<br>
+    <b>2</b>书名示范「长夜将尽」四字为同样的构造逻辑。<span class="note">全字符集（8105 常用字）是后续生产课题，当前交付的是字标+示范字+数字的可运行原型与构造规则。</span>
+  </div>
+</section>
+
+<!-- ================= 推荐结论 ================= -->
+<section class="sheet" id="rec">
+  <div class="sheet-tag"><span class="k"><em>Ⅲ</em>分场景推荐结论</span><span class="n">封面 / 界面 / 正文 / 品牌分治，不做单一字体all-in</span></div>
+  <div class="frame" style="padding:18px 30px 20px;">
+    <table class="rec">
+      <tr><th style="width:170px;">场景</th><th style="width:190px;">推荐</th><th>理由</th></tr>
+      <tr><td>封面书名（丛书墙主角）</td><td><b>得意黑 Smiley Sans</b></td><td>窄斜字身+美术字细节，6 本书并排时斜势统一、序列感最强；官方推荐场景即书报标题。代价：风格强，需接受「现代感」而非「古典型」</td></tr>
+      <tr><td>封面书名（文学备选）</td><td><b>站酷小薇 ZCOOL XiaoWei</b></td><td>高挑娟秀的展示衬线，与 Fitzcarraldo 的居中衬线传统最同构；气质文气内敛</td></tr>
+      <tr><td>作者印 / 微标签</td><td><b>同封面字体</b>（印用该字 500 字重）</td><td>印与书名同族，保持封面只有「一种声音」；圆印内小字用该字体的数字标点集</td></tr>
+      <tr><td>品牌字标 / 空态大字</td><td><b>自绘坊刻本</b>（+思源兜底）</td><td>全 App 仅此处使用自绘字，形成独家记忆点；零授权风险（自有绘造）</td></tr>
+      <tr><td>界面 UI / 工具栏 / 菜单</td><td><b>系统黑体</b>（不变）</td><td>五候选无一适合界面小字（得意黑官方不推荐界面、楷书太浓）——界面保持中性，把性格让给封面，这是「高级感」的分寸</td></tr>
+      <tr><td>正文阅读（可选档）</td><td><b>霞鹜文楷</b> → 思源宋体</td><td>沉浸/夜读模式正文用霞鹜文楷（温润手书），默认档思源宋体保稳</td></tr>
+    </table>
+    <div style="font-size:12px;color:var(--ink-2);margin-top:12px;line-height:1.9;">底线：全部 SIL OFL-1.1，允许嵌入软件与商用；得意黑/霞鹜文楷保留名限制仅影响改字命名，直接原样嵌入不受影响。</div>
+  </div>
+</section>
+
+<footer style="max-width:1180px;margin:30px auto 70px;padding:0 24px;font-size:12px;color:#857c6d;line-height:2;">
+  小说工坊 · 字体选型稿 v6 · 2026-09-20 · 素材：Smiley Sans 得意黑（OFL，atelier-anchor GitHub Release）/ ZCOOL XiaoWei 站酷小薇（OFL，Google Fonts）/ Ma Shan Zheng 马善政楷书（OFL，Google Fonts）/ LXGW WenKai TC 霞鹜文楷（OFL，Google Fonts）/ Noto Serif SC 思源宋体（OFL）/ Playfair Display（OFL），本地化于 ./fonts/ · 配套《前端美化方案-v2-美术升级.md》。
+</footer>
+
+<script>
+/* ============ 一、候选卡片渲染 ============ */
+const CANDS = [
+  { fam: "'Smiley Sans', 'Noto Serif SC', serif", name: '得意黑 Smiley Sans', lic: 'SIL OFL · GitHub Release',
+    ds: '窄而斜（6°/8°），手绘美术字细节，书报标题气质', star: '封面 ★★★★★ · 界面 ✗',
+    verdict: '<b>封面首选</b>：斜势与弧线让 6 本并列形成统一动势，是候选里唯一「一眼有作者」的封面字。<span class="no">界面禁用</span>（官方明确不推荐界面/正文，小字可读性差）。作者印可用（小圆内 2 字仍清晰）。' },
+  { fam: "'ZCOOL XiaoWei', 'Noto Serif SC', serif", name: '站酷小薇 ZCOOL XiaoWei', lic: 'SIL OFL · Google Fonts',
+    ds: '高挑娟秀的展示衬线，文气、内敛、文学杂志感', star: '封面 ★★★★ · 界面 ★★★',
+    verdict: '<b>文学向封面首选</b>：与 Fitzcarraldo 居中衬线传统最同构，气质比得意黑安静、比思源宋体有性格。小字 12px 仍可读，若想要「封面界面统一一种字体」它是唯一及格选项。' },
+  { fam: "'Ma Shan Zheng', 'Noto Serif SC', serif", name: '马善政楷书 Ma Shan Zheng', lic: 'SIL OFL · Google Fonts',
+    ds: '毛笔楷书，笔意强、人格浓', star: '封面 ★★★ · 界面 ✗',
+    verdict: '<span class="no">风格风险最高</span>：毛笔感强但易俗、易腻，且与平涂封面的现代感打架。仅建议做特定题材（仙侠/民国）的备用封面字或空态题字。' },
+  { fam: "'LXGW WenKai TC', 'Noto Serif SC', serif", name: '霞鹜文楷 LXGW WenKai TC', lic: 'SIL OFL · Google Fonts',
+    ds: '手书楷体，温润克制，中等长度文本阅读友好', star: '正文 ★★★★★ · 封面 ★★★',
+    verdict: '<b>正文/沉浸模式首选</b>：长文阅读不累、有「稿纸」感；封面用则偏柔、压不住丛书墙的序列感。作者「非专业」自述但质量已足。' },
+  { fam: "'Noto Serif SC', serif", name: '思源宋体 Noto Serif SC（现役）', lic: 'SIL OFL · Google Fonts',
+    ds: '通用展示衬线，稳、全、无短板也无记忆点', star: '稳 ★★★★ · 记忆点 ★★',
+    verdict: '<b>保底选项</b>：字重齐全（400/500/600/700）、覆盖全，UI 数字与界面混排也顺。缺点：作为封面字「设计感」不足——这正是引入候选的原因。' }
+]
+const box = document.getElementById('candbox')
+for (const c of CANDS) {
+  const el = document.createElement('div')
+  el.className = 'cand'
+  el.innerHTML = `
+    <div class="hd"><span class="nm">${c.name}</span><span class="lc">${c.lic}</span><span class="ds">${c.ds}</span><span class="star">${c.star}</span></div>
+    <div class="bd">
+      <div class="cv" style="font-family:${c.fam}">
+        <span class="tt">长夜将尽</span><span class="sub">Novel · 连载中</span><span class="col" style="font-family:${c.fam}">林<br>却</span>
+      </div>
+      <div class="uis" style="font-family:${c.fam}">
+        <div class="ubar"><span class="lg">小说工坊</span><span style="font-size:10px;color:var(--ink-2);">NOVEL STUDIO</span><span class="sp"></span><span class="ubtn">新建作品</span><span class="ubtn o">导入</span></div>
+        <div class="urow"><span>第一章 · 初雪</span><span class="sp"></span><span style="font-size:10.5px;color:var(--ink-2);">3 247 字</span><span class="k">Ctrl</span><span style="font-size:10.5px;color:var(--ink-2);">+</span><span class="k">S</span></div>
+        <div class="urow"><span>本章批注</span><span class="sp"></span><span style="font-size:10.5px;color:var(--ink-2);">3 条 · 1 失效</span></div>
+        <div class="urow"><span>导入导出</span><span class="sp"></span><span style="font-size:10.5px;color:var(--ink-2);">Word / TXT / JSON</span></div>
+        <div class="utxt">他抬头看去，三百六十枚铜刻星辰沿界脊缓缓归位，雪落无声。</div>
+      </div>
+    </div>
+    <div class="glyphs" style="font-family:${c.fam}"><span class="lb">Glyphs</span><span>永</span><span>国</span><span>风</span><span>长</span><span>夜</span><span>将</span><span>尽</span><span style="font-size:19px;">0123456789</span><span style="font-size:16px;">Nn ·「」—</span></div>
+    <div class="verdict">${c.verdict}</div>`
+  box.appendChild(el)
+}
+
+/* ============ 二、自绘「坊刻本」字形构造器 ============ */
+/* 笔画 = 折线 + 字重 + 端部斜切；JS 计算外轮廓多边形 */
+function strokePath(pts, w, cut = 0, closed = false) {
+  const n = pts.length
+  const dirs = [], norms = []
+  for (let i = 0; i < n - 1; i++) {
+    const dx = pts[i + 1][0] - pts[i][0], dy = pts[i + 1][1] - pts[i][1]
+    const l = Math.hypot(dx, dy) || 1
+    dirs.push([dx / l, dy / l]); norms.push([-dy / l, dx / l])
+  }
+  const left = [], right = []
+  for (let i = 0; i < n; i++) {
+    let nx, ny
+    if (i === 0) { nx = norms[0][0]; ny = norms[0][1] }
+    else if (i === n - 1) { nx = norms[n - 2][0]; ny = norms[n - 2][1] }
+    else {
+      nx = norms[i - 1][0] + norms[i][0]; ny = norms[i - 1][1] + norms[i][1]
+      const l = Math.hypot(nx, ny) || 1; nx /= l; ny /= l
+    }
+    let [x, y] = pts[i]
+    if (!closed && i === 0 && cut) { x += dirs[0][0] * cut; y += dirs[0][1] * cut }
+    if (!closed && i === n - 1 && cut) { x -= dirs[n - 2][0] * cut; y -= dirs[n - 2][1] * cut }
+    left.push([x + nx * w / 2, y + ny * w / 2]); right.push([x - nx * w / 2, y - ny * w / 2])
+  }
+  const p = left.concat(right.reverse())
+  if (closed) p.push(p[0])
+  return 'M' + p.map((t) => t.map((v) => Math.round(v * 10) / 10).join(' ')).join('L') + 'Z'
+}
+/* 字形库：每字 = 笔画数组 [点集, 字重]；100×100 字身 */
+const H = 6.5 /* 横画字重 */
+const G = {
+  '小': [[[[50, 16], [50, 68], [57, 79]], 7], [[[32, 30], [21, 49]], 6], [[[68, 30], [79, 47]], 6]],
+  '说': [
+    [[[12, 15], [17, 24]], 5],
+    [[[8, 33], [23, 33], [23, 55], [9, 63]], 5],
+    [[[41, 15], [35, 25]], 5], [[[55, 15], [61, 25]], 5],
+    [[[38, 33], [38, 52], [52, 52], [70, 52]], 5], [[[38, 33], [70, 33]], 5],
+    [[[46, 54], [38, 82]], 5], [[[62, 54], [62, 76], [71, 84]], 5]
+  ],
+  '工': [[[[12, 20], [88, 20]], 7], [[[50, 25], [50, 71]], 7], [[[8, 76], [92, 76]], 8]],
+  '坊': [
+    [[[10, 14], [40, 14]], 6], [[[25, 18], [25, 44]], 6], [[[8, 48], [42, 48]], 7],
+    [[[46, 12], [53, 19]], 5], [[[44, 28], [92, 28]], 6],
+    [[[48, 32], [86, 32], [86, 63], [76, 72]], 6], [[[52, 35], [40, 66]], 5]
+  ],
+  '长': [[[[30, 10], [25, 44]], 6], [[[16, 46], [62, 41]], 6], [[[58, 16], [58, 69], [67, 78]], 7], [[[40, 38], [82, 70]], 6]],
+  '夜': [
+    [[[46, 8], [54, 15]], 5], [[[24, 18], [76, 18]], 6],
+    [[[30, 26], [24, 52]], 5], [[[44, 28], [44, 76]], 5],
+    [[[62, 26], [75, 47]], 5], [[[65, 43], [78, 57]], 5], [[[59, 55], [85, 71]], 5], [[[74, 24], [83, 32]], 5]
+  ],
+  '将': [
+    [[[28, 10], [35, 16]], 5], [[[22, 22], [40, 30]], 5], [[[38, 8], [38, 54]], 6],
+    [[[49, 18], [44, 42]], 5], [[[55, 18], [64, 30], [57, 41]], 5],
+    [[[58, 40], [86, 40]], 6], [[[72, 45], [72, 70], [81, 77]], 7], [[[63, 52], [68, 57]], 5]
+  ],
+  '尽': [
+    [[[20, 14], [78, 14]], 6], [[[26, 14], [26, 40], [50, 40]], 6],
+    [[[40, 32], [33, 64]], 6], [[[48, 32], [69, 62]], 6],
+    [[[22, 56], [18, 64]], 5], [[[20, 70], [36, 78]], 5]
+  ]
+}
+const DIGITS = {
+  '0': [[[[50, 8], [78, 15], [87, 50], [78, 85], [50, 92], [22, 85], [13, 50], [22, 15], [50, 8]], 6.5, true]],
+  '1': [[[[28, 16], [50, 8], [50, 86]], 6.5], [[[32, 88], [68, 88]], 6.5]],
+  '2': [[[[26, 20], [50, 9], [70, 20], [65, 38], [30, 68], [30, 88], [74, 88]], 6.5]],
+  '3': [[[[24, 12], [54, 16], [66, 34], [52, 46], [74, 52], [64, 74], [44, 87], [26, 84]], 6.5]],
+  '4': [[[[68, 86], [66, 8], [20, 60], [88, 60]], 6.5]],
+  '5': [[[[74, 8], [30, 8], [27, 42], [52, 37], [69, 55], [62, 78], [40, 87], [25, 82]], 6.5]],
+  '6': [[[[70, 10], [52, 20], [34, 44], [29, 72], [52, 87], [73, 74], [62, 53], [40, 49]], 6.5]],
+  '7': [[[[20, 8], [80, 8], [46, 86]], 6.5], [[[34, 38], [58, 38]], 6]],
+  '8': [[[[52, 8], [71, 20], [56, 40], [43, 43], [26, 57], [43, 87], [53, 89], [62, 84], [47, 58], [53, 38], [72, 22], [52, 10]], 6, true]],
+  '9': [[[[30, 90], [49, 81], [67, 56], [71, 27], [48, 12], [27, 27], [39, 46], [62, 50]], 6.5]]
+}
+function drawGlyph(ch, x, scale, y = 0) {
+  return (G[ch] || []).map(([pts, w]) => {
+    const p = pts.map(([px, py]) => [px * scale + x, py * scale + y])
+    return `<path d="${strokePath(p, w * scale, 4 * scale)}" fill="var(--ink)"/>`
+  }).join('')
+}
+function drawDigit(ch, x, y, w, h) {
+  const s = w / 100
+  return (DIGITS[ch] || []).map((st) => {
+    const closed = st[2]
+    const p = st[0].map(([px, py]) => [px * s + x, py * s + y])
+    return `<path d="${strokePath(p, st[1] * s, closed ? 0 : 3.4 * s, closed)}" fill="var(--ink)"/>`
+  }).join('')
+}
+function drawWord(svgId, text, cellW, cellH, scale, gapX) {
+  const svg = document.getElementById(svgId)
+  let d = ''
+  const sc = scale
+  text.split('').forEach((ch, i) => {
+    const x = i * gapX
+    const y = (cellH - 100 * sc) / 2
+    d += drawGlyph(ch, x, sc, y)
+  })
+  svg.innerHTML = d
+}
+function fillSVG(id, w, h) {
+  const svg = document.getElementById(id)
+  svg.setAttribute('width', w); svg.setAttribute('height', h)
+}
+/* 品牌字标：小说工坊（字面宽不等，逐字排） */
+{
+  const svg = document.getElementById('fk-brand')
+  const widths = [0.78, 1.05, 0.78, 1.08]
+  let x = 0, d = ''
+  '小说工坊'.split('').forEach((ch, i) => {
+    d += drawGlyph(ch, x, 0.82)
+    x += widths[i] * 82 + 14
+  })
+  svg.innerHTML = d
+  svg.setAttribute('viewBox', `0 0 ${x - 14 + 8} 100`)
+  svg.setAttribute('width', Math.round(x * 0.9)); svg.setAttribute('height', 74)
+}
+/* 书名示范：长夜将尽（等宽 100 字身） */
+{
+  const svg = document.getElementById('fk-title')
+  let d = ''
+  '长夜将尽'.split('').forEach((ch, i) => { d += drawGlyph(ch, i * 112, 0.9) })
+  svg.innerHTML = d
+  svg.setAttribute('viewBox', '0 0 446 100'); svg.setAttribute('width', 330); svg.setAttribute('height', 74)
+}
+/* 数字 */
+{
+  const svg = document.getElementById('fk-digits')
+  let d = ''
+  '0123456789'.split('').forEach((ch, i) => { d += drawDigit(ch, 8 + i * 99, 0, 82, 82) })
+  svg.innerHTML = d
+  svg.setAttribute('viewBox', '0 0 1000 100'); svg.setAttribute('width', 340); svg.setAttribute('height', 40)
+}
+/* 四字印：2×2（左上→右上→左下→右下 = 小 说 工 坊），外框回文圆角方 */
+{
+  const svg = document.getElementById('fk-seal')
+  let d = ''
+  const grid = [['小', '说'], ['工', '坊']]
+  const scale = 0.4, ox = 12, oy = 12, step = 48
+  grid.forEach((row, r) => row.forEach((ch, c) => {
+    d += drawGlyph(ch, ox + c * step, scale, oy + r * step)
+  }))
+  d += `<rect x="4" y="4" width="112" height="112" rx="10" fill="none" stroke="var(--ikb)" stroke-width="3"/>`
+  svg.innerHTML = d
+  svg.setAttribute('width', 112); svg.setAttribute('height', 112)
+}
+</script>
+
+</body>
+</html>

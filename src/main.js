@@ -3,6 +3,8 @@ import { createPinia } from 'pinia'
 import naive from 'naive-ui'
 import App from './App.vue'
 import './styles/themes.css'
+import './assets/fonts/fonts.css'
+import './assets/fonts/fonts-user.css'
 
 import { decodeText, splitTxtChapters, splitMarkdown, htmlToMd, parseMubuMd } from './services/importers'
 import { countWords } from './services/wordcount'

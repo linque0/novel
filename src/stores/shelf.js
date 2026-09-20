@@ -25,6 +25,9 @@ export const useShelfStore = defineStore('shelf', {
     async updateWork(work, patch) {
       Object.assign(work, patch)
       autosave.mark('works', work)
+      /* 防抖写有 1s 延迟：若直接 refresh 会把库里的旧行读回来、覆盖刚做的修改
+       * （编辑切换封面/标题不生效的根因）——先flush再refresh */
+      await autosave.flushAll()
       await this.refresh()
     },
     async deleteWork(work) {

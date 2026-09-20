@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小说工坊 · 界面方向探索 v4（2026-09-19）</title>
+<style>
+:root {
+  --serif: Georgia, 'Times New Roman', 'Source Han Serif SC', '思源宋体', 'SimSun', serif;
+  --sans: 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  --mono: 'Courier New', ui-monospace, monospace;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #e7e2d6; background-image: var(--noise); font-family: var(--sans); color: #26221c; }
+.doc-head { max-width: 1180px; margin: 0 auto; padding: 44px 24px 8px; }
+.doc-head .ver { font-size: 12px; letter-spacing: .22em; color: #1F3A5F; font-weight: 700; }
+.doc-head h1 { font-family: var(--serif); font-size: 36px; margin: 8px 0 10px; font-weight: 700; }
+.doc-head p { margin: 0 0 6px; color: #6e6960; font-size: 13px; line-height: 1.8; }
+.doc-head p b { color: #26221c; }
+.sheet { max-width: 1180px; margin: 36px auto; padding: 0 24px; }
+.sheet-tag { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.sheet-tag .k { font-family: var(--serif); font-size: 21px; font-weight: 700; }
+.sheet-tag .n { font-size: 12px; color: #857c6d; }
+.frame { background: var(--bg); border: 1px solid var(--hair); border-radius: 4px; overflow: hidden; position: relative; }
+.tbar { height: 38px; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: var(--panel); border-bottom: 1px solid var(--hair); }
+.tbar .dots { display: flex; gap: 6px; }
+.tbar .dots i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+.tbar .tt { font-size: 12px; color: var(--ink-2); letter-spacing: .04em; }
+.shelf-top { height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 22px; background: var(--panel); border-bottom: 1px solid var(--hair); }
+.logo { display: flex; align-items: baseline; gap: 9px; }
+.logo .cn { font-family: var(--serif); font-size: 19px; font-weight: 700; color: var(--ink); }
+.logo .en { font-size: 9px; letter-spacing: .26em; color: var(--ink-2); font-weight: 600; }
+.mark { width: 21px; height: 21px; border-radius: 50%; background: var(--acc); color: var(--on-acc); font-family: var(--serif); font-size: 11px;
+  display: inline-flex; align-items: center; justify-content: center; font-weight: 700; align-self: center; }
+.mark.diamond { border-radius: 2px; transform: rotate(45deg); }
+.mark.diamond span { transform: rotate(-45deg); display: block; }
+.search { flex: 1; max-width: 400px; margin: 0 auto; height: 30px; border: 1px solid var(--hair); background: var(--bg); border-radius: 3px;
+  display: flex; align-items: center; gap: 8px; padding: 0 11px; color: var(--ink-2); font-size: 12px; }
+.chip { height: 26px; padding: 0 12px; border: 1px solid var(--hair); border-radius: 3px; background: var(--bg); font-size: 12px; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
+.btn { height: 30px; padding: 0 15px; border-radius: 3px; border: 1px solid var(--hair); background: var(--bg); font-size: 12.5px; color: var(--ink); display: inline-flex; align-items: center; }
+.btn.primary { background: var(--acc); border-color: var(--acc); color: var(--on-acc); font-weight: 600; }
+.btn.ghost:hover { border-color: var(--acc); color: var(--acc); }
+.tokens { margin: 14px 30px 24px; padding: 16px 20px; border: 1px solid var(--hair); border-radius: 3px; background: var(--panel);
+  display: flex; gap: 30px; align-items: center; flex-wrap: wrap; }
+.tokens .lb { font-size: 8.5px; letter-spacing: .24em; color: var(--ink-2); font-weight: 700; margin-bottom: 8px; }
+.sw { display: flex; gap: 10px; }
+.sw .c { width: 30px; height: 30px; border-radius: 3px; border: 1px solid var(--hair); }
+.ty { display: flex; align-items: baseline; gap: 22px; }
+.ty .d { font-family: var(--serif); font-size: 27px; font-weight: 700; color: var(--ink); }
+.ty .t2 { font-family: var(--serif); font-size: 15px; color: var(--ink); }
+.ty .u { font-size: 11px; color: var(--ink-2); }
+.cal { position: absolute; width: 19px; height: 19px; border-radius: 50%; background: var(--acc); color: var(--on-acc);
+  font-size: 10.5px; display: flex; align-items: center; justify-content: center; z-index: 9; font-weight: 700; }
+.legend { background: #fffefa; border: 1px solid #ded7c8; border-radius: 4px; padding: 13px 18px; margin-top: 14px; font-size: 12.5px; line-height: 2; color: #33302a; }
+.legend b { color: #1F3A5F; font-weight: 700; margin-right: 4px; }
+.legend .note { color: #857c6d; font-size: 12px; }
+
+/* ===== E · 画廊目录（横向条目 + 巨型序号） ===== */
+.board.g { --bg: #FAFAF8; --panel: #FFFFFF; --ink: #17150F; --ink-2: #8A857A; --hair: #E6E3DA; --acc: #B03A2E; --on-acc: #FAFAF8; }
+.ghead { display: flex; align-items: baseline; justify-content: space-between; padding: 30px 34px 6px; }
+.ghead .tt { font-family: var(--serif); font-size: 25px; font-weight: 700; color: var(--ink); }
+.ghead .ct { font-size: 11px; color: var(--ink-2); letter-spacing: .2em; font-variant-numeric: tabular-nums; }
+.rows { padding: 8px 34px 6px; }
+.row { display: flex; align-items: center; gap: 20px; padding: 15px 0; border-bottom: 1px solid var(--hair); }
+.row .idx { font-family: var(--serif); font-size: 34px; font-weight: 700; color: var(--hair); width: 58px; line-height: 1; font-variant-numeric: tabular-nums; }
+.row .sq { width: 34px; height: 46px; border-radius: 1px; flex: none; }
+.row .rt { flex: 1; }
+.row .rt .t { font-family: var(--serif); font-size: 16.5px; font-weight: 700; color: var(--ink); }
+.row .rt .s { font-size: 8.5px; letter-spacing: .22em; color: var(--ink-2); margin-top: 4px; font-weight: 600; }
+.row .pc { font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; width: 44px; text-align: right; }
+.row .ln { width: 90px; height: 1px; background: var(--hair); position: relative; }
+.row .ln i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--ink); display: block; }
+.row.hot .idx { color: var(--acc); }
+
+/* ===== F · 墨奢黑金 ===== */
+.board.l { --bg: #0E0D0B; --panel: #141310; --ink: #E9E3D5; --ink-2: #938D7E; --hair: rgba(198,161,91,.24); --acc: #C6A15B; --on-acc: #141310;
+  background-image: var(--noise); }
+.board.l .legend { background: #141310; border-color: rgba(198,161,91,.24); color: #CFC8B6; }
+.board.l .legend b { color: #C6A15B; }
+.board.l .legend .note { color: #938D7E; }
+.grid6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 30px; padding: 28px 30px 10px; }
+.bk .cv { height: 128px; border: 1px solid var(--hair); position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.bk .cv .tt { font-family: var(--serif); font-size: 20px; color: var(--ink); font-weight: 700; letter-spacing: .08em; }
+.bk .cv .sub { font-size: 8.5px; letter-spacing: .3em; color: var(--ink-2); font-weight: 600; }
+.bk .bo { padding: 11px 2px 0; display: flex; justify-content: space-between; align-items: baseline; }
+.bk .bo .t { font-family: var(--serif); font-size: 15px; font-weight: 700; color: var(--ink); }
+.bk .bo .m { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.bk .bo .p { color: var(--acc); font-size: 12px; font-variant-numeric: tabular-nums; }
+.bk .frame2 { position: absolute; inset: 5px; border: 1px solid var(--hair); pointer-events: none; }
+
+/* ===== G · 色带书封（Fitzcarraldo 式） ===== */
+.board.f { --bg: #F2EFE7; --panel: #FBF9F3; --ink: #191713; --ink-2: #83806F; --hair: #DCD6C6; --acc: #1F3A8C; --on-acc: #FBF9F3; }
+.gridf { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px 32px; padding: 28px 32px 10px; }
+.fb .cv { height: 150px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; }
+.fb .cv .tt { font-family: var(--serif); font-size: 21px; font-weight: 700; letter-spacing: .1em; text-align: center; }
+.fb .cv .sub { font-size: 8.5px; letter-spacing: .3em; font-weight: 600; }
+.fb .cv .col { width: 15px; height: 15px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  font-size: 9px; font-family: var(--serif); font-weight: 700; }
+.fb .bo { padding: 10px 2px 0; display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--hair); margin-top: 2px; }
+.fb .bo .t { font-family: var(--serif); font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.fb .bo .m { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+
+/* ===== H · 档案卡（图书馆卡片目录） ===== */
+.board.a { --bg: #ECE5D3; --panel: #F6F1E2; --ink: #2B2517; --ink-2: #8B7F63; --hair: #C9BC97; --acc: #8C2F1B; --on-acc: #F6F1E2; }
+.board.a .tbar, .board.a .shelf-top { border-bottom: 3px double var(--hair); }
+.grida { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 30px; padding: 26px 30px 10px; }
+.ab .cv { height: 112px; background: #D9CBA8; position: relative; border: 1px solid #B8A87E; display: flex; align-items: center; justify-content: center; }
+.ab .cv .tt { font-family: var(--serif); font-size: 19px; font-weight: 700; color: #2B2517; letter-spacing: .06em; }
+.ab .cv .stamp { position: absolute; top: 9px; right: 9px; border: 1.5px solid #8C2F1B; color: #8C2F1B; font-size: 8.5px; font-weight: 700;
+  padding: 2px 5px; letter-spacing: .18em; transform: rotate(6deg); font-family: var(--mono); }
+.ab .bo { padding: 9px 2px 0; font-family: var(--mono); font-size: 11px; color: var(--ink-2); }
+.ab .bo .t { font-family: var(--serif); font-size: 14.5px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.ab .bo .lead { display: flex; align-items: baseline; gap: 6px; }
+.ab .bo .lead .dots { flex: 1; border-bottom: 1px dotted #B8A87E; transform: translateY(-3px); }
+.ab .bo .lead b { color: var(--ink); font-weight: 400; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <div class="ver">DIRECTION EXPLORATION · v4 · 2026-09-19</div>
+  <h1>小说工坊 · 界面美术方向探索（第二批）</h1>
+  <p>继 v3（A 墨白编辑部 / B 夜航深色 / C 暖纸现代）之后新增四个方向，共同要求：<b>高级感、设计感、风格互异</b>。参考：Fitzcarraldo Editions 双色制书封（克莱因蓝/白、居中衬线、盲压圆标）、画廊目录排版（巨型序号+细线横条）、黑金文人器物、图书馆卡片目录档案语汇。终版字体：Playfair Display + 思源宋体 + Inter（均 OFL）；图中以 Georgia/宋体/Courier 近似。</p>
+</header>
+
+<!-- ================= E · 画廊目录 ================= -->
+<section class="sheet" id="e1">
+  <div class="sheet-tag"><span class="k">E · 画廊目录</span><span class="n">Gallery List —— 巨型序号 + 细线横条：整屏一本书一行，博物馆/画廊图录气质</span></div>
+  <div class="frame board g" style="height:636px;">
+    <div class="tbar"><div class="dots"><i style="background:#E05C55"></i><i style="background:#E0A93C"></i><i style="background:#4FA85A"></i></div><span class="tt">小说工坊 · 画廊目录</span></div>
+    <div class="shelf-top">
+      <div class="logo"><span class="mark">坊</span><span class="cn">小说工坊</span><span class="en">NOVEL&nbsp;STUDIO</span></div>
+      <div class="search">🔍&nbsp;&nbsp;搜索作品、章节、人物…</div>
+      <span class="chip">画廊 ▾</span>
+      <span class="btn primary">＋ 新建作品</span>
+    </div>
+    <div class="ghead"><span class="tt">全部作品</span><span class="ct">06 部 · 15.4 万字</span></div>
+    <div class="rows">
+      <div class="row hot"><span class="idx">01</span><span class="sq" style="background:#1F3A5F;"></span><div class="rt"><div class="t">长夜将尽</div><div class="s">NOVEL · 连载中 · 18 章</div></div><span class="ln"><i style="width:62%"></i></span><span class="pc">62%</span></div>
+      <div class="row"><span class="idx">02</span><span class="sq" style="background:#9E2B25;"></span><div class="rt"><div class="t">雪落界脊之上</div><div class="s">NOVEL · 完结 · 11 章</div></div><span class="ln"><i style="width:41%"></i></span><span class="pc">41%</span></div>
+      <div class="row"><span class="idx">03</span><span class="sq" style="background:#3F5D45;"></span><div class="rt"><div class="t">山海拾遗录</div><div class="s">NOVEL · 草稿 · 24 章</div></div><span class="ln"><i style="width:88%"></i></span><span class="pc">88%</span></div>
+      <div class="row"><span class="idx">04</span><span class="sq" style="background:#2B2B2B;"></span><div class="rt"><div class="t">第七位访客</div><div class="s">NOVEL · 连载中 · 7 章</div></div><span class="ln"><i style="width:23%"></i></span><span class="pc">23%</span></div>
+      <div class="row"><span class="idx">05</span><span class="sq" style="background:#8A6D3B;"></span><div class="rt"><div class="t">青鸾记事</div><div class="s">NOVEL · 搁笔 · 5 章</div></div><span class="ln"><i style="width:15%"></i></span><span class="pc">15%</span></div>
+      <div class="row"><span class="idx">06</span><span class="sq" style="background:#5B4E6B;"></span><div class="rt"><div class="t">春不晚</div><div class="s">NOVEL · 连载中 · 13 章</div></div><span class="ln"><i style="width:47%"></i></span><span class="pc">47%</span></div>
+    </div>
+    <div class="tokens">
+      <div><div class="lb">PALETTE</div><div class="sw"><span class="c" style="background:#FAFAF8"></span><span class="c" style="background:#17150F"></span><span class="c" style="background:#8A857A"></span><span class="c" style="background:#E6E3DA"></span><span class="c" style="background:#B03A2E"></span></div></div>
+      <div><div class="lb">TYPE</div><div class="ty"><span class="d">全部作品</span><span class="t2">长夜将尽</span><span class="u">大写字母 NOVEL · 连载中</span></div></div>
+      <div><div class="lb">BUTTONS</div><div class="btns"><span class="btn primary">新建作品</span><span class="btn ghost">导入</span><span class="chip">⋯ 更多</span></div></div>
+    </div>
+    <span class="cal" style="left:52px;top:206px;">1</span>
+    <span class="cal" style="left:660px;top:206px;">2</span>
+    <span class="cal" style="left:660px;top:268px;">3</span>
+  </div>
+  <div class="legend">
+    <b>1</b>行结构 = 巨型衬线序号（34px，常态取 hairline 色、当前行转朱）+ 34×46 纯色书封小方块 + 衬线书名 + uppercase 微标签行 + 90px 细进度线 + 右对齐百分比。一行一书，图录式呼吸感。<br>
+    <b>2</b>「全部作品」大标题 25px/700 + 右侧大写统计（06 部 · 15.4 万字，tabular-nums）。<br>
+    <b>3</b>进度裸绘为 1px 线（无轨道底、无填充色）——数字本身即是数据。<span class="note">全站唯一 accent 朱砂 #B03A2E 仅出现在当前行序号与主按钮；无卡片、无投影、无圆角（radius 0-1px）。</span>
+  </div>
+</section>
+
+<!-- ================= F · 墨奢黑金 ================= -->
+<section class="sheet" id="e2">
+  <div class="sheet-tag"><span class="k">F · 墨奢黑金</span><span class="n">Ink &amp; Gold —— 近黑暖底 + 古铜金细线：书房夜宴、文人器物、克制的奢华</span></div>
+  <div class="frame board l" style="height:660px;">
+    <div class="tbar"><div class="dots"><i style="background:#E05C55"></i><i style="background:#E0A93C"></i><i style="background:#4FA85A"></i></div><span class="tt">小说工坊 · 墨奢黑金</span></div>
+    <div class="shelf-top">
+      <div class="logo"><span class="mark diamond"><span>坊</span></span><span class="cn">小说工坊</span><span class="en">NOVEL&nbsp;STUDIO</span></div>
+      <div class="search">🔍&nbsp;&nbsp;搜索作品、章节、人物…</div>
+      <span class="chip">墨奢 ▾</span>
+      <span class="btn primary">＋ 新建作品</span>
+    </div>
+    <div class="grid6">
+      <div class="bk">
+        <div class="cv" style="background:#1A1712;"><span class="frame2"></span><span class="tt">长夜将尽</span><span class="sub">NOVEL · 连载中</span></div>
+        <div class="bo"><span class="t">长夜将尽</span><span class="m">4.2 万字 · 18 章</span><span class="p">62%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv" style="background:#1A1712;"><span class="frame2"></span><span class="tt">雪落界脊之上</span><span class="sub">NOVEL · 完结</span></div>
+        <div class="bo"><span class="t">雪落界脊之上</span><span class="m">2.8 万字 · 11 章</span><span class="p">41%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv" style="background:#1A1712;"><span class="frame2"></span><span class="tt">山海拾遗录</span><span class="sub">NOVEL · 草稿</span></div>
+        <div class="bo"><span class="t">山海拾遗录</span><span class="m">6.1 万字 · 24 章</span><span class="p">88%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv" style="background:#1A1712;"><span class="frame2"></span><span class="tt">第七位访客</span><span class="sub">NOVEL · 连载中</span></div>
+        <div class="bo"><span class="t">第七位访客</span><span class="m">1.4 万字 · 7 章</span><span class="p">23%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv" style="background:#1A1712;"><span class="frame2"></span><span class="tt">青鸾记事</span><span class="sub">NOVEL · 搁笔</span></div>
+        <div class="bo"><span class="t">青鸾记事</span><span class="m">0.9 万字 · 5 章</span><span class="p">15%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv" style="background:#1A1712;"><span class="frame2"></span><span class="tt">春不晚</span><span class="sub">NOVEL · 连载中</span></div>
+        <div class="bo"><span class="t">春不晚</span><span class="m">3.1 万字 · 13 章</span><span class="p">47%</span></div>
+      </div>
+    </div>
+    <div class="tokens">
+      <div><div class="lb">PALETTE</div><div class="sw"><span class="c" style="background:#0E0D0B"></span><span class="c" style="background:#141310"></span><span class="c" style="background:#E9E3D5"></span><span class="c" style="background:#938D7E"></span><span class="c" style="background:#C6A15B"></span></div></div>
+      <div><div class="lb">TYPE</div><div class="ty"><span class="d">长夜将尽</span><span class="t2">第一章 · 初雪</span><span class="u">雅黑 11px · 界面</span></div></div>
+      <div><div class="lb">BUTTONS</div><div class="btns"><span class="btn primary">新建作品</span><span class="btn ghost">导入</span><span class="chip">⋯ 更多</span></div></div>
+    </div>
+    <span class="cal" style="left:232px;top:118px;">1</span>
+    <span class="cal" style="left:30px;top:74px;">2</span>
+  </div>
+  <div class="legend">
+    <b>1</b>封面 = 近黑纸 + 双层古铜金细框（外 1px、内 inset 5px）+ 居中衬线金灰书名 + 微标签。金只做「线」不做「面」——六本书 = 六只墨盒并排，奢华来自克制与对齐，不来自金色面积。<br>
+    <b>2</b>品牌标 = 菱形金印（呼应篆刻但极度简化）；进度数字取金 #C6A15B。<span class="note">皮革噪点以 feTurbulence 5% 叠底；正文/对比度红线不变（#E9E3D5 on #0E0D0B ≈ 15:1）。</span>
+  </div>
+</section>
+
+<!-- ================= G · 色带书封 ================= -->
+<section class="sheet" id="e3">
+  <div class="sheet-tag"><span class="k">G · 色带书封</span><span class="n">Fitzcarraldo 式双色制 —— 字体即封面：双色代码 + 居中衬线 + 盲压圆标</span></div>
+  <div class="frame board f" style="height:714px;">
+    <div class="tbar"><div class="dots"><i style="background:#E05C55"></i><i style="background:#E0A93C"></i><i style="background:#4FA85A"></i></div><span class="tt">小说工坊 · 色带书封</span></div>
+    <div class="shelf-top">
+      <div class="logo"><span class="mark" style="border-radius:50%;font-size:10px;">坊</span><span class="cn">小说工坊</span><span class="en">NOVEL&nbsp;STUDIO</span></div>
+      <div class="search">🔍&nbsp;&nbsp;搜索作品、章节、人物…</div>
+      <span class="chip">色带 ▾</span>
+      <span class="btn primary">＋ 新建作品</span>
+    </div>
+    <div class="gridf">
+      <div class="fb">
+        <div class="cv" style="background:#002FA7;"><span class="tt" style="color:#FBF9F3;">长夜将尽</span><span class="sub" style="color:rgba(251,249,243,.75);">NOVEL · 连载中</span><span class="col" style="background:#FBF9F3;color:#002FA7;">坊</span></div>
+        <div class="bo"><span class="t">长夜将尽</span><span class="m">4.2 万字 · 18 章 · 62%</span></div>
+      </div>
+      <div class="fb">
+        <div class="cv" style="background:#FBF9F3;border:1px solid #DCD6C6;"><span class="tt" style="color:#002FA7;">雪落界脊之上</span><span class="sub" style="color:rgba(0,47,167,.65);">NOVEL · 完结</span><span class="col" style="background:#002FA7;color:#FBF9F3;">坊</span></div>
+        <div class="bo"><span class="t">雪落界脊之上</span><span class="m">2.8 万字 · 11 章 · 41%</span></div>
+      </div>
+      <div class="fb">
+        <div class="cv" style="background:#1E1E1E;"><span class="tt" style="color:#FBF9F3;">山海拾遗录</span><span class="sub" style="color:rgba(251,249,243,.75);">NOVEL · 草稿</span><span class="col" style="background:#FBF9F3;color:#1E1E1E;">坊</span></div>
+        <div class="bo"><span class="t">山海拾遗录</span><span class="m">6.1 万字 · 24 章 · 88%</span></div>
+      </div>
+      <div class="fb">
+        <div class="cv" style="background:#002FA7;"><span class="tt" style="color:#FBF9F3;">第七位访客</span><span class="sub" style="color:rgba(251,249,243,.75);">NOVEL · 连载中</span><span class="col" style="background:#FBF9F3;color:#002FA7;">坊</span></div>
+        <div class="bo"><span class="t">第七位访客</span><span class="m">1.4 万字 · 7 章 · 23%</span></div>
+      </div>
+      <div class="fb">
+        <div class="cv" style="background:#FBF9F3;border:1px solid #DCD6C6;"><span class="tt" style="color:#002FA7;">青鸾记事</span><span class="sub" style="color:rgba(0,47,167,.65);">NOVEL · 搁笔</span><span class="col" style="background:#002FA7;color:#FBF9F3;">坊</span></div>
+        <div class="bo"><span class="t">青鸾记事</span><span class="m">0.9 万字 · 5 章 · 15%</span></div>
+      </div>
+      <div class="fb">
+        <div class="cv" style="background:#8C2F1B;"><span class="tt" style="color:#FBF9F3;">春不晚</span><span class="sub" style="color:rgba(251,249,243,.78);">NOVEL · 连载中</span><span class="col" style="background:#FBF9F3;color:#8C2F1B;">坊</span></div>
+        <div class="bo"><span class="t">春不晚</span><span class="m">3.1 万字 · 13 章 · 47%</span></div>
+      </div>
+    </div>
+    <div class="tokens">
+      <div><div class="lb">PALETTE</div><div class="sw"><span class="c" style="background:#F2EFE7"></span><span class="c" style="background:#FBF9F3"></span><span class="c" style="background:#002FA7"></span><span class="c" style="background:#1E1E1E"></span><span class="c" style="background:#8C2F1B"></span></div></div>
+      <div><div class="lb">TYPE</div><div class="ty"><span class="d" style="color:#002FA7;">春不晚</span><span class="t2">第一章 · 初雪</span><span class="u">克莱因蓝 · IK B</span></div></div>
+      <div><div class="lb">BUTTONS</div><div class="btns"><span class="btn primary" style="background:#002FA7;border-color:#002FA7;">新建作品</span><span class="btn ghost">导入</span><span class="chip">⋯ 更多</span></div></div>
+    </div>
+    <span class="cal" style="left:256px;top:126px;">1</span>
+    <span class="cal" style="left:640px;top:126px;">2</span>
+    <span class="cal" style="left:352px;top:498px;">3</span>
+  </div>
+  <div class="legend">
+    <b>1</b>虚构类作品 = 克莱因蓝 #002FA7 满地封面 + 居中象牙白衬线书名 + 象牙白「盲压圆标」（印刷 colophon 的数字等价物）。<br>
+    <b>2</b>非虚构类（设定/考据向）= 反相：象牙白底 + 蓝字。<b>双色制即品牌</b>——全站只允许 IKB / 象牙 / 墨黑三色 + 一枚朱备色（#8C2F1B 仅特殊状态用），书架像一条自家丛书墙。<br>
+    <b>3</b>卡体去封面化：细线分隔 + 衬线书名 + meta 单行收尾。<span class="note">不做进度条——数字直排。落地时可按「作品类型」自动分配蓝/白封面，用户亦可指定。</span>
+  </div>
+</section>
+
+<!-- ================= H · 档案卡 ================= -->
+<section class="sheet" id="e4">
+  <div class="sheet-tag"><span class="k">H · 档案卡</span><span class="n">Archive —— 图书馆卡片目录：牛皮纸 + 打字机微排版 + 点线引导 + 双线规 + 印章状态</span></div>
+  <div class="frame board a" style="height:646px;">
+    <div class="tbar"><div class="dots"><i style="background:#E05C55"></i><i style="background:#E0A93C"></i><i style="background:#4FA85A"></i></div><span class="tt">小说工坊 · 档案卡</span></div>
+    <div class="shelf-top">
+      <div class="logo"><span class="mark" style="border-radius:2px;">档</span><span class="cn">小说工坊</span><span class="en">CATALOG · 001</span></div>
+      <div class="search">🔍&nbsp;&nbsp;检索书目、章、人物…</div>
+      <span class="chip">牛皮纸 ▾</span>
+      <span class="btn primary">＋ 归档新作</span>
+    </div>
+    <div class="grida">
+      <div class="ab">
+        <div class="cv"><span class="tt">长夜将尽</span><span class="stamp">连载中</span></div>
+        <div class="bo"><div class="t">长夜将尽</div><div class="lead"><span>字数</span><span class="dots"></span><b>4.2 万字</b></div><div class="lead"><span>章数 / 进度</span><span class="dots"></span><b>18 章 · 62%</b></div></div>
+      </div>
+      <div class="ab">
+        <div class="cv"><span class="tt">雪落界脊之上</span><span class="stamp" style="border-color:#2F5D50;color:#2F5D50;">已完结</span></div>
+        <div class="bo"><div class="t">雪落界脊之上</div><div class="lead"><span>字数</span><span class="dots"></span><b>2.8 万字</b></div><div class="lead"><span>章数 / 进度</span><span class="dots"></span><b>11 章 · 41%</b></div></div>
+      </div>
+      <div class="ab">
+        <div class="cv"><span class="tt">山海拾遗录</span><span class="stamp" style="border-color:#8B7F63;color:#8B7F63;">草稿</span></div>
+        <div class="bo"><div class="t">山海拾遗录</div><div class="lead"><span>字数</span><span class="dots"></span><b>6.1 万字</b></div><div class="lead"><span>章数 / 进度</span><span class="dots"></span><b>24 章 · 88%</b></div></div>
+      </div>
+      <div class="ab">
+        <div class="cv"><span class="tt">第七位访客</span><span class="stamp">连载中</span></div>
+        <div class="bo"><div class="t">第七位访客</div><div class="lead"><span>字数</span><span class="dots"></span><b>1.4 万字</b></div><div class="lead"><span>章数 / 进度</span><span class="dots"></span><b>7 章 · 23%</b></div></div>
+      </div>
+      <div class="ab">
+        <div class="cv"><span class="tt">青鸾记事</span><span class="stamp" style="border-color:#8B7F63;color:#8B7F63;">搁笔</span></div>
+        <div class="bo"><div class="t">青鸾记事</div><div class="lead"><span>字数</span><span class="dots"></span><b>0.9 万字</b></div><div class="lead"><span>章数 / 进度</span><span class="dots"></span><b>5 章 · 15%</b></div></div>
+      </div>
+      <div class="ab">
+        <div class="cv"><span class="tt">春不晚</span><span class="stamp">连载中</span></div>
+        <div class="bo"><div class="t">春不晚</div><div class="lead"><span>字数</span><span class="dots"></span><b>3.1 万字</b></div><div class="lead"><span>章数 / 进度</span><span class="dots"></span><b>13 章 · 47%</b></div></div>
+      </div>
+    </div>
+    <div class="tokens">
+      <div><div class="lb">PALETTE</div><div class="sw"><span class="c" style="background:#ECE5D3"></span><span class="c" style="background:#F6F1E2"></span><span class="c" style="background:#D9CBA8"></span><span class="c" style="background:#2B2517"></span><span class="c" style="background:#8C2F1B"></span></div></div>
+      <div><div class="lb">TYPE</div><div class="ty"><span class="d">长夜将尽</span><span class="t2" style="font-family:var(--mono);font-size:12px;">COURIER NEW · 打字机微排版</span><span class="u">编号 CATALOG · 001</span></div></div>
+      <div><div class="lb">BUTTONS</div><div class="btns"><span class="btn primary">归档新作</span><span class="btn ghost">导入</span><span class="chip">⋯ 更多</span></div></div>
+    </div>
+    <span class="cal" style="left:262px;top:126px;">1</span>
+    <span class="cal" style="left:272px;top:520px;">2</span>
+    <span class="cal" style="left:30px;top:74px;">3</span>
+  </div>
+  <div class="legend">
+    <b>1</b>封面 = 牛皮纸卡 + 居中衬线书名 + 右上「印章」（旋转 6° 的描边状态章：连载中朱砂 / 已完结墨绿 / 草稿灰）——目录卡即展品。<br>
+    <b>2</b>卡体 = 打字机字体（Courier）数据行 + 点线引导（dotted leader）+ tabular-nums；书名唯一衬线。<br>
+    <b>3</b>全站「双线规」（3px double）替代常规分隔；顶栏/按钮文案用档案语言（归档新作 / 检索书目）。<span class="note">失真风险控制：印章仅 6° 微斜、单枚，不做破损做旧效果；噪点 4% 以内。</span>
+  </div>
+</section>
+
+<footer style="max-width:1180px;margin:28px auto 64px;padding:0 24px;font-size:12px;color:#857c6d;line-height:1.9;">
+  小说工坊 · 界面美术方向探索 v4 · 2026-09-19 · 参考：Fitzcarraldo Editions（Ray O'Meara 设计，克莱因蓝/白双色制、居中衬线、盲压圆标、Éditions Gallimard 式极简书目传统）、画廊图录排版、图书馆卡片目录 · 手法参考 TypeUI Refined / minimalist-ui / Dillinger / Writer · 字体授权：Playfair Display / 思源宋体 / Inter 均 SIL OFL。
+</footer>
+
+</body>
+</html>

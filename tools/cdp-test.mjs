@@ -261,8 +261,10 @@ await sleep(400)
 v = await cdp.eval(`!!document.querySelector('.rich-host .tiptap')`)
 check('搜索结果跳转到正文', v, '')
 
-/* 11. 统计 */
-await clickBtnWithText('统计', `document.querySelector('.topbar')`)
+/* 11. 统计（v1.0.23 起收进顶栏「⚙ 设置」面板 → 更多 → 写作统计） */
+await clickBtnWithText('设置', `document.querySelector('.topbar')`)
+await sleep(600)
+await cdp.eval(`[...document.querySelectorAll('.g-set .g-item')].find(o => o.textContent.includes('写作统计'))?.click()`)
 await sleep(1200)
 v = await cdp.eval(`({ canvas: document.querySelectorAll('.n-modal canvas').length, nums: [...document.querySelectorAll('.stat-card .num')].map(x => x.textContent) })`)
 check('统计看板（卡片 + 双图表）', v.canvas >= 2 && v.nums.length === 4, JSON.stringify(v))
@@ -270,17 +272,15 @@ await cdp.shot('shot-stats.png')
 await cdp.eval(`document.querySelector('.n-modal .n-base-close')?.click()`)
 await sleep(300)
 
-/* 12. 主题切换 */
-await cdp.eval(`document.querySelector('.topbar .n-select .n-base-selection').dispatchEvent(new MouseEvent('click', { bubbles: true }))`)
-await sleep(400)
-await cdp.eval(`[...document.querySelectorAll('.n-base-select-option')].find(o => o.textContent.includes('暗夜'))?.click()`)
+/* 12. 主题切换（v1.0.23 起主题是设置面板里的 chip，不再是顶栏下拉） */
+await cdp.eval(`[...document.querySelectorAll('.topbar button')].find(b => b.textContent.includes('设置'))?.click()`)
+await sleep(600)
+await cdp.eval(`[...document.querySelectorAll('.g-set .chip')].find(o => o.textContent.includes('暗夜'))?.click()`)
 await sleep(500)
 v = await cdp.eval(`document.querySelector('.app-root').className`)
 check('暗夜书房主题生效', v.includes('theme-night'), v)
 await cdp.shot('shot-night.png')
-await cdp.eval(`document.querySelector('.topbar .n-select .n-base-selection').dispatchEvent(new MouseEvent('click', { bubbles: true }))`)
-await sleep(400)
-await cdp.eval(`[...document.querySelectorAll('.n-base-select-option')].find(o => o.textContent.includes('宣纸'))?.click()`)
+await cdp.eval(`[...document.querySelectorAll('.g-set .chip')].find(o => o.textContent.includes('宣纸'))?.click()`)
 await sleep(400)
 
 /* 工作台截图 */

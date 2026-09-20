@@ -120,6 +120,17 @@ body,
   --dur-fast: 120ms;
   --dur: 180ms;
   --dur-slow: 250ms;
+  /* 色带书封（G）令牌：封面三色制 + 展示衬线（§前端美化 v6 选型结论） */
+  --ikb: #002fa7;
+  --ivory: #fbf9f3;
+  --g-black: #1e1e1e;
+  --g-hair: #dcd6c6;
+  --g-serif: 'Noto Serif SC', 'Source Han Serif SC', Georgia, serif;
+  --g-disp: 'Playfair Display', Georgia, serif;
+  /* 封面配色对位：每底色配一对字色（冷暖对位，非纯白） */
+  --g-duo-cedar: #e8c989; /* 松绿 × 麦金 */
+  --g-duo-violet: #efd3d8; /* 藤紫 × 藕粉 */
+  --g-duo-claret: #f2dca6; /* 绛红 × 米金 */
 }
 
 /* ============ 布局通用 ============ */
@@ -171,7 +182,7 @@ body,
   color: #c2564a;
 }
 
-/* ============ 书架 ============ */
+/* ============ 书架 · 色带书封（G，2026-09-20） ============ */
 
 .shelf-body {
   flex: 1;
@@ -181,56 +192,150 @@ body,
 
 .shelf-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 22px;
-  max-width: 1280px;
+  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
+  gap: 26px 32px;
+  max-width: 1080px;
   margin: 0 auto;
 }
 
+/* 卡片 = 封面 + 细线信息行，无卡面无投影（丛书墙逻辑） */
 .book-card {
-  border-radius: 10px;
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
-  overflow: hidden;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  overflow: visible;
   cursor: pointer;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: transform 0.15s;
 }
 .book-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
+/* 封面：双色制 —— 虚构=克莱因蓝满地 / 非虚构=象牙白反相 / 特殊=墨黑 */
 .book-cover {
-  height: 150px;
+  height: 132px;
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: rgba(255, 255, 255, 0.92);
+  gap: 10px;
+  overflow: hidden;
 }
-.book-cover .cover-char {
-  font-size: 58px;
+/* 封面：双色制 + 同风格扩展色 —— 虚构=克莱因蓝 / 非虚构=象牙反相 / 特殊=墨黑，
+   扩展款（松绿/绛红/藤紫）同为平涂单色+衬线书名+作者圆印的同一构造，仅换色 */
+.book-cover.k-novel { background: var(--ikb); }
+.book-cover.k-note { background: var(--ivory); border: 1px solid var(--g-hair); }
+.book-cover.k-ink { background: var(--g-black); border: 1px solid var(--g-hair); }
+.book-cover.k-cedar { background: #2f5d50; border: 1px solid var(--g-hair); }
+.book-cover.k-claret { background: #8c2f1b; border: 1px solid var(--g-hair); }
+.book-cover.k-violet { background: #5b4e6b; border: 1px solid var(--g-hair); }
+.book-cover .cover-tt {
   font-family: var(--editor-font);
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-align: center;
+  padding: 0 8px;
+  line-height: 1.3;
 }
+.book-cover.k-novel .cover-tt,
+.book-cover.k-ink .cover-tt { color: var(--ivory); }
+.book-cover.k-cedar .cover-tt { color: var(--g-duo-cedar); }
+.book-cover.k-violet .cover-tt { color: var(--g-duo-violet); }
+.book-cover.k-claret .cover-tt { color: var(--g-duo-claret); }
+.book-cover.k-note .cover-tt { color: var(--ikb); }
+.book-cover .cover-sub {
+  font-family: var(--g-disp);
+  font-size: 8px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.book-cover.k-novel .cover-sub,
+.book-cover.k-ink .cover-sub { color: rgba(251, 249, 243, 0.75); }
+.book-cover.k-cedar .cover-sub { color: rgba(232, 201, 137, 0.78); }
+.book-cover.k-violet .cover-sub { color: rgba(239, 211, 216, 0.78); }
+.book-cover.k-claret .cover-sub { color: rgba(242, 220, 166, 0.78); }
+.book-cover.k-note .cover-sub { color: rgba(0, 47, 167, 0.6); }
+/* 作者名圆印：2 字竖排 / 3-4 字两行，颜色随封面反相 */
+.cover-seal {
+  width: 27px;
+  height: 27px;
+  border-radius: 50%;
+  border: 1px solid;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--editor-font);
+  font-size: 7.5px;
+  font-weight: 500;
+  line-height: 1.12;
+  text-align: center;
+}
+.book-cover.k-novel .cover-seal,
+.book-cover.k-ink .cover-seal { border-color: rgba(251, 249, 243, 0.8); color: var(--ivory); }
+.book-cover.k-cedar .cover-seal { border-color: rgba(232, 201, 137, 0.85); color: var(--g-duo-cedar); }
+.book-cover.k-violet .cover-seal { border-color: rgba(239, 211, 216, 0.85); color: var(--g-duo-violet); }
+.book-cover.k-claret .cover-seal { border-color: rgba(242, 220, 166, 0.85); color: var(--g-duo-claret); }
+.book-cover.k-note .cover-seal { border-color: var(--ikb); color: var(--ikb); }
+.cover-menu {
+  position: absolute;
+  right: 6px;
+  top: 6px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.book-card:hover .cover-menu { opacity: 1; }
+.cover-menu .n-button { color: rgba(255, 255, 255, 0.85); }
+.book-cover.k-note .cover-menu .n-button { color: var(--ikb); }
 
+/* 卡体：细线分隔 + 衬线书名 + tabular-nums 数字 */
 .book-info {
-  padding: 12px 14px 14px;
+  padding: 10px 2px 0;
+  border-top: 1px solid var(--border);
+  margin-top: 3px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
 }
 .book-title {
-  font-size: 16px;
+  font-family: var(--g-serif);
+  font-size: 14.5px;
   font-weight: 700;
-  margin-bottom: 6px;
+  color: var(--text);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .book-meta {
-  display: flex;
-  gap: 12px;
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
+
+/* 顶栏 · G：品牌块（方印 + 衬线名 + 拉丁微标） */
+.shelf-brand { display: flex; align-items: center; gap: 10px; }
+.shelf-brand .logo {
+  width: 24px;
+  height: 24px;
+  background: var(--ikb);
+  color: var(--ivory);
+  font-family: var(--g-serif);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+}
+.shelf-brand .cn { font-family: var(--g-serif); font-size: 17px; font-weight: 700; color: var(--text); }
+.shelf-brand .en { font-family: var(--g-disp); font-size: 8.5px; letter-spacing: 0.3em; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
+.shelf-search { flex: 1; max-width: 400px; margin: 0 auto; }
 
 .empty-shelf {
   text-align: center;
@@ -240,7 +345,10 @@ body,
 .empty-shelf .big {
   font-size: 44px;
   margin-bottom: 12px;
-  font-family: var(--editor-font);
+  font-family: var(--g-serif);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text);
 }
 
 /* ============ 工作台 ============ */

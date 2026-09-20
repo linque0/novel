@@ -4,6 +4,7 @@ import { NButton, NSelect, NDropdown, NModal, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { useShelfStore } from '../stores/shelf'
+import SettingsPanel from './SettingsPanel.vue'
 import { backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles } from '../services/fileio'
 import OIcon from './OIcon.vue'
@@ -62,18 +63,7 @@ const badgeText = computed(() => {
   return ui.autosave.lastSavedAt ? `已保存 ${fmtTime(ui.autosave.lastSavedAt)}` : '自动保存就绪'
 })
 
-const THEME_OPTS = [
-  { label: '宣纸', value: 'xuan' },
-  { label: '羊皮纸', value: 'parchment' },
-  { label: '暗夜书房', value: 'night' }
-]
-
-const exportOptions = [
-  { label: '导出正文（选章节 · TXT/MD/Word）…', key: 'book' },
-  { type: 'divider', key: 'd1' },
-  { label: '备份全部数据 (JSON)', key: 'backup' },
-  { label: '恢复备份 (JSON)', key: 'restore' }
-]
+/* 低频操作已收编至 SettingsPanel（设置面板）：主题/字体/数据/书签/统计/帮助 */
 async function onExport(key) {
   if (key === 'book') {
     ui.exportOpen = true
@@ -186,23 +176,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <NDropdown trigger="click" :options="splitOptions" @select="onSplit">
         <NButton size="small" title="把模块拆出为独立窗口，可边看大纲边写正文"><OIcon name="split" :size="14" /> 拆窗 <OIcon name="caret-down" :size="11" /></NButton>
       </NDropdown>
-      <NButton size="small" @click="ui.importOpen = true"><OIcon name="download" :size="14" /> 导入</NButton>
-      <NDropdown :options="exportOptions" trigger="click" @select="onExport">
-        <NButton size="small">导出 ▾</NButton>
-      </NDropdown>
-      <NButton size="small" @click="ui.statsOpen = true">统计</NButton>
-      <NButton size="small" @click="ui.trashOpen = true">回收站</NButton>
-      <NButton size="small" title="查看功能介绍与键位详解" @click="ui.helpOpen = true">帮助</NButton>
-      <NDropdown trigger="click" :options="bookmarkOptions" @select="onBookmarkSelect">
-        <NButton size="small"><OIcon name="bookmark" :size="14" /> 书签</NButton>
-      </NDropdown>
-      <NSelect
-        size="small"
-        :value="ui.theme"
-        :options="THEME_OPTS"
-        style="width: 110px"
-        @update:value="(v) => ui.setPref('theme', v)"
-      />
+      <SettingsPanel :bookmarks="bookmarkOptions" @backup="onExport('backup')" @restore="onExport('restore')" @bookmark="onBookmarkSelect" />
       <NButton size="small" :type="ui.focusMode ? 'primary' : 'default'" @click="ui.focusMode = !ui.focusMode">沉浸</NButton>
     </div>
 

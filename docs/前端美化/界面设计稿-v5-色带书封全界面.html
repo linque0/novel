@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小说工坊 · G 色带书封 · 全界面设计稿（2026-09-20）</title>
+<link rel="stylesheet" href="./fonts/fonts.css" />
+<style>
+:root {
+  --ikb: #002FA7; --ikb-deep: #00247E; --ikb-soft: rgba(0,47,167,.07); --ikb-soft2: rgba(0,47,167,.12);
+  --ivory: #FBF9F3; --paper: #FDFCF8; --desk: #F2EFE7;
+  --ink: #1E1E1E; --ink-2: #6E6A60; --ink-3: #A9A496;
+  --hair: #DCD6C6; --hair-2: #EAE5D8;
+  --rust: #8C2F1B; --ok: #2F5D50; --warn: #B9770E;
+  --serif: 'Noto Serif SC', 'Source Han Serif SC', '思源宋体', Georgia, serif;
+  --disp: 'Playfair Display', 'Noto Serif SC', Georgia, serif;
+  --sans: 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei', 'PingFang SC', system-ui, sans-serif;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #E8E3D6; background-image: var(--noise); font-family: var(--sans); color: #26221c; }
+.doc-head { max-width: 1180px; margin: 0 auto; padding: 46px 24px 8px; }
+.doc-head .ver { font-family: var(--disp); font-size: 11px; letter-spacing: .3em; color: var(--ikb); font-weight: 600; text-transform: uppercase; }
+.doc-head h1 { font-family: var(--serif); font-size: 36px; margin: 10px 0 12px; font-weight: 700; letter-spacing: .02em; }
+.doc-head p { margin: 0 0 6px; color: #6e6960; font-size: 13px; line-height: 1.9; }
+.doc-head p b { color: #26221c; }
+.sheet { max-width: 1180px; margin: 38px auto; padding: 0 24px; }
+.sheet-tag { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.sheet-tag .k { font-family: var(--serif); font-size: 21px; font-weight: 700; }
+.sheet-tag .k em { font-style: normal; font-family: var(--disp); font-size: 13px; color: var(--ikb); margin-right: 8px; letter-spacing: .12em; }
+.sheet-tag .n { font-size: 12px; color: #857c6d; }
+.frame { background: var(--desk); border: 1px solid var(--hair); border-radius: 3px; overflow: hidden; position: relative; }
+.tbar { height: 38px; display: flex; align-items: center; gap: 10px; padding: 0 14px; background: var(--ivory); border-bottom: 1px solid var(--hair); }
+.tbar .dots { display: flex; gap: 6px; }
+.tbar .dots i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+.tbar .tt { font-size: 12px; color: var(--ink-2); letter-spacing: .04em; }
+.topbar { height: 52px; display: flex; align-items: center; gap: 12px; padding: 0 18px; background: var(--ivory); border-bottom: 1px solid var(--hair); }
+.brand { display: flex; align-items: center; gap: 9px; }
+.brand .logo { width: 24px; height: 24px; background: var(--ikb); color: var(--ivory); font-family: var(--serif); font-size: 12px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+.brand .cn { font-family: var(--serif); font-size: 17px; font-weight: 700; color: var(--ink); }
+.brand .en { font-family: var(--disp); font-size: 8.5px; letter-spacing: .3em; color: var(--ink-2); font-weight: 600; text-transform: uppercase; }
+.btn { height: 28px; padding: 0 13px; border-radius: 2px; border: 1px solid var(--hair); background: var(--ivory); font-size: 12px; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; font-family: var(--sans); }
+.btn.primary { background: var(--ikb); border-color: var(--ikb); color: var(--ivory); font-weight: 600; }
+.btn.ghost:hover { border-color: var(--ikb); color: var(--ikb); }
+.chip { height: 26px; padding: 0 11px; border: 1px solid var(--hair); border-radius: 2px; background: var(--ivory); font-size: 11.5px; color: var(--ink); display: inline-flex; align-items: center; gap: 6px; }
+.search { flex: 1; max-width: 380px; margin: 0 auto; height: 29px; border: 1px solid var(--hair); background: var(--paper); border-radius: 2px;
+  display: flex; align-items: center; gap: 8px; padding: 0 11px; color: var(--ink-3); font-size: 12px; }
+.sp { flex: 1; }
+.cal { position: absolute; width: 19px; height: 19px; border-radius: 50%; background: var(--ikb); color: var(--ivory);
+  font-size: 10.5px; display: flex; align-items: center; justify-content: center; z-index: 9; font-weight: 700; }
+.legend { background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; padding: 13px 18px; margin-top: 14px; font-size: 12.5px; line-height: 2; color: #33302a; }
+.legend b { color: var(--ikb); font-weight: 700; margin-right: 4px; font-family: var(--disp); }
+.legend .note { color: #857c6d; font-size: 12px; }
+svg.ic { stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ===== 令牌页 ===== */
+.tok { background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; padding: 26px 30px; }
+.tok h3 { font-family: var(--serif); margin: 0 0 4px; font-size: 17px; }
+.tok .sub { font-size: 12px; color: var(--ink-2); margin-bottom: 18px; line-height: 1.7; }
+.tok .row { display: flex; gap: 34px; flex-wrap: wrap; margin-bottom: 24px; align-items: flex-start; }
+.sw .c { width: 44px; height: 30px; border: 1px solid var(--hair); }
+.sw { display: flex; gap: 14px; }
+.sw .it .nm { font-size: 11px; font-weight: 700; margin-top: 5px; }
+.sw .it .hv { font-size: 10px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.tyrow { display: flex; align-items: baseline; gap: 30px; flex-wrap: wrap; }
+.tyrow .a { font-family: var(--serif); font-size: 34px; font-weight: 700; color: var(--ink); }
+.tyrow .b { font-family: var(--serif); font-size: 19px; font-weight: 600; color: var(--ikb); }
+.tyrow .c { font-family: var(--serif); font-size: 14px; color: var(--ink); font-weight: 400; }
+.tyrow .d { font-family: var(--disp); font-size: 10px; letter-spacing: .3em; color: var(--ink-2); text-transform: uppercase; font-weight: 600; }
+.cover-demo { display: flex; gap: 22px; flex-wrap: wrap; }
+
+/* ===== 封面（双色制 + 作者印） ===== */
+.cv { width: 216px; height: 128px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 11px; }
+.cv.f { background: var(--ikb); }
+.cv.n { background: var(--ivory); border: 1px solid var(--hair); }
+.cv.b { background: var(--ink); }
+.cv .tt { font-family: var(--serif); font-size: 21px; font-weight: 600; letter-spacing: .12em; text-align: center; }
+.cv.f .tt, .cv.b .tt { color: var(--ivory); }
+.cv.n .tt { color: var(--ikb); }
+.cv .sub { font-family: var(--disp); font-size: 8px; letter-spacing: .3em; font-weight: 600; text-transform: uppercase; }
+.cv.f .sub, .cv.b .sub { color: rgba(251,249,243,.75); }
+.cv.n .sub { color: rgba(0,47,167,.6); }
+.col { width: 27px; height: 27px; border-radius: 50%; border: 1px solid; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--serif); font-size: 7.5px; font-weight: 500; line-height: 1.15; text-align: center; }
+.cv.f .col { border-color: rgba(251,249,243,.8); color: var(--ivory); }
+.cv.b .col { border-color: rgba(251,249,243,.8); color: var(--ivory); }
+.cv.n .col { border-color: var(--ikb); color: var(--ikb); }
+
+/* ===== S1 书架 ===== */
+.grid6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px 32px; padding: 26px 32px 8px; }
+.bk .bo { padding: 10px 2px 0; display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid var(--hair); margin-top: 3px; }
+.bk .bo .t { font-family: var(--serif); font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.bk .bo .m { font-size: 11px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.addtile { border: 1px dashed var(--ink-3); height: 128px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: var(--ink-3); font-size: 12px; font-family: var(--serif); }
+.addtile .plus { width: 26px; height: 26px; border: 1px solid var(--ink-3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+
+/* ===== S2 编辑器 ===== */
+.wb { display: flex; min-height: 470px; }
+.rail { width: 62px; background: var(--ivory); border-right: 1px solid var(--hair); padding: 10px 0; flex: none; }
+.ritem { height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; position: relative; color: var(--ink-2); }
+.ritem .zi { font-family: var(--serif); font-size: 18px; font-weight: 700; }
+.ritem .cap { writing-mode: vertical-rl; font-size: 9px; letter-spacing: 2px; height: 26px; }
+.ritem.active { color: var(--ikb); background: var(--ikb-soft); }
+.ritem.active::before { content: ''; position: absolute; left: 0; top: 7px; bottom: 7px; width: 2px; background: var(--ikb); }
+.ritem:hover { color: var(--ikb); }
+.ritem.toggle { margin: 8px auto 0; width: 42px; height: 42px; border-radius: 50%; border: 1px solid var(--hair); flex-direction: row; }
+.tree { width: 208px; background: var(--ivory); border-right: 1px solid var(--hair); padding: 12px 10px; font-size: 13px; flex: none; }
+.tree .vol { font-size: 11.5px; color: var(--ink-2); margin: 4px 0 4px; display: flex; align-items: center; gap: 6px; }
+.tree .ch { height: 29px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 2px; color: var(--ink); }
+.tree .ch:hover { background: var(--desk); }
+.tree .ch.active { background: var(--ikb-soft); color: var(--ikb); font-weight: 600; }
+.tree .ch i { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.toolbar { height: 42px; display: flex; align-items: center; gap: 3px; padding: 0 12px; background: var(--ivory); border-bottom: 1px solid var(--hair); }
+.tbtn { min-width: 27px; height: 27px; padding: 0 5px; border-radius: 2px; border: 1px solid transparent; display: inline-flex; align-items: center; justify-content: center; gap: 4px; color: var(--ink-2); font-size: 11.5px; font-family: var(--serif); }
+.tbtn:hover { border-color: var(--ikb); color: var(--ikb); background: var(--ikb-soft); }
+.tbtn.on { background: var(--ikb-soft); color: var(--ikb); border-color: var(--ikb-soft); }
+.tbtn.txt { font-weight: 600; }
+.sep { width: 1px; height: 17px; background: var(--hair); margin: 0 5px; }
+.wc { font-size: 11.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.paper { flex: 1; background: var(--paper); padding: 30px 44px 54px; position: relative; }
+.paper::before { content: ''; position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 23px, color-mix(in srgb, var(--ikb) 4%, transparent) 23px 24px); }
+.paper h1.cht { font-family: var(--serif); font-size: 22px; margin: 0 0 24px; font-weight: 700; position: relative; }
+.paper p.bd { font-family: var(--serif); font-size: 14.5px; line-height: 2.05; margin: 0 0 10px; letter-spacing: .02em; max-width: 42em; position: relative; color: var(--ink); }
+.dl { border-bottom: 2px dotted var(--ikb); color: var(--ikb); padding-bottom: 2px; }
+.note-m { border-bottom: 2px solid var(--rust); padding-bottom: 3px; background: rgba(140,47,27,.06); }
+.ann-sel { background: rgba(185,119,14,.16); box-shadow: inset 0 -2px 0 var(--warn); }
+.right { width: 252px; background: var(--ivory); border-left: 1px solid var(--hair); padding: 15px 14px; flex: none; }
+.rsec { margin-bottom: 19px; }
+.rsec h4 { margin: 0 0 9px; font-size: 11.5px; color: var(--ink-2); font-weight: 700; display: flex; align-items: center; gap: 7px; letter-spacing: .06em; }
+.rsec h4::before { content: ''; width: 3px; height: 11px; background: var(--ikb); border-radius: 1px; }
+.note-item { background: var(--paper); border: 1px solid var(--hair); border-radius: 2px; padding: 8px 10px; margin-bottom: 7px; }
+.note-item .q { font-size: 12.5px; font-family: var(--serif); }
+.note-item .d { font-size: 11px; color: var(--ink-2); margin-top: 3px; display: flex; justify-content: space-between; }
+.kd { display: inline-block; width: 7px; height: 7px; border-radius: 1px; margin-right: 5px; }
+.chip2 { display: inline-flex; align-items: center; height: 23px; padding: 0 10px; border-radius: 999px; background: var(--paper); border: 1px solid var(--hair); font-size: 11.5px; margin: 0 5px 5px 0; color: var(--ink); }
+
+/* ===== S3 画布 ===== */
+.cvs { display: flex; min-height: 440px; }
+.cside { width: 158px; background: var(--ivory); border-right: 1px solid var(--hair); padding: 13px 11px; flex: none; }
+.cside .cbtn { height: 29px; display: flex; align-items: center; gap: 8px; padding: 0 8px; border-radius: 2px; font-size: 12px; color: var(--ink); }
+.cside .cbtn:hover { background: var(--desk); }
+.cside .cbtn svg { color: var(--ink-2); }
+.cmain { flex: 1; background: var(--desk); position: relative; background-image: var(--noise); }
+.cmain .chips { position: absolute; top: 13px; left: 15px; right: 15px; display: flex; gap: 7px; z-index: 3; align-items: center; }
+.chipf { height: 24px; padding: 0 11px; border-radius: 999px; background: var(--ivory); border: 1px solid var(--hair); font-size: 11px; color: var(--ink-2); display: inline-flex; align-items: center; }
+.chipf.on { border-color: var(--ikb); color: var(--ikb); background: var(--ikb-soft); }
+.cn { position: absolute; background: var(--ivory); border-radius: 3px; box-shadow: 0 1px 2px rgba(30,30,30,.07); padding: 10px 12px 9px 14px; min-width: 126px; z-index: 2; border: 1px solid var(--hair); }
+.cn::before { content: ''; position: absolute; left: 0; top: 8px; bottom: 8px; width: 3px; border-radius: 2px; background: var(--nt); }
+.cn .nt { font-family: var(--serif); font-size: 13px; font-weight: 700; }
+.cn .nd { font-size: 10.5px; color: var(--ink-2); margin-top: 2px; }
+.cn.sel { border: 1.5px solid var(--ikb); box-shadow: 0 0 0 3px var(--ikb-soft2), 0 1px 2px rgba(30,30,30,.07); }
+.cn.txt { border: 1px dashed var(--hair); background: color-mix(in srgb, var(--ivory) 72%, transparent); }
+.cn.txt::before { display: none; }
+.cn .st { position: absolute; top: -4px; right: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 1.5px var(--ivory); }
+.cn .j { position: absolute; width: 9px; height: 9px; border-radius: 50%; background: var(--desk); border: 1.5px solid var(--ink); }
+
+/* ===== S4 人物关系图 ===== */
+.cg { position: relative; min-height: 420px; background: var(--desk); background-image: var(--noise); }
+.chn { position: absolute; background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; box-shadow: 0 1px 2px rgba(30,30,30,.07); padding: 9px 12px 8px 13px; z-index: 2; }
+.chn::before { content: ''; position: absolute; left: 0; top: 7px; bottom: 7px; width: 3px; border-radius: 2px; background: var(--rc); }
+.chn .nm { font-family: var(--serif); font-size: 13px; font-weight: 700; }
+.chn .rl { font-size: 10px; color: var(--ink-2); margin-top: 1px; }
+.chn.sel { border: 1.5px solid var(--ikb); box-shadow: 0 0 0 3px var(--ikb-soft2); }
+.cg .lg { position: absolute; left: 15px; bottom: 13px; background: var(--ivory); border: 1px solid var(--hair); border-radius: 2px; padding: 8px 12px; font-size: 10.5px; color: var(--ink-2); display: flex; gap: 14px; z-index: 3; }
+.cg .lg i { display: inline-block; width: 8px; height: 8px; border-radius: 1px; margin-right: 4px; }
+
+/* ===== S5 幕布 ===== */
+.mb { display: flex; min-height: 420px; }
+.mside { width: 190px; background: var(--ivory); border-right: 1px solid var(--hair); padding: 13px 11px; flex: none; }
+.mrow { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 9px; border-radius: 2px; font-size: 12.5px; }
+.mrow:hover { background: var(--desk); }
+.mrow.sel { background: var(--ikb-soft); color: var(--ikb); font-weight: 600; }
+.mrow .dia { width: 8px; height: 8px; border: 1.5px solid var(--ikb); transform: rotate(45deg); flex: none; }
+.mrow .dia.o { border-color: var(--ink-3); background: var(--ink-3); }
+
+/* ===== S6 素材 ===== */
+.sn { padding: 22px 30px 10px; }
+.sn .srow { display: flex; align-items: center; gap: 14px; padding: 13px 2px; border-bottom: 1px solid var(--hair); }
+.sn .srow .tt { font-family: var(--serif); font-size: 14px; font-weight: 700; flex: 1; }
+.sn .srow .tx { font-size: 11.5px; color: var(--ink-2); width: 300px; }
+.tag { font-family: var(--disp); font-size: 8.5px; letter-spacing: .18em; text-transform: uppercase; font-weight: 600; color: var(--ikb); border: 1px solid var(--ikb-soft2); background: var(--ikb-soft); padding: 2px 7px; border-radius: 2px; }
+.tag.ink { color: var(--ink); border-color: var(--hair); background: var(--ivory); }
+.tag.rust { color: var(--rust); border-color: rgba(140,47,27,.25); background: rgba(140,47,27,.06); }
+
+/* ===== S7 浮层 ===== */
+.ov { position: relative; min-height: 470px; background: var(--desk); background-image: var(--noise); padding: 26px 30px; }
+.ov .back { position: absolute; inset: 0; background: rgba(30,30,30,.28); }
+.layer { position: absolute; background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; box-shadow: 0 10px 34px rgba(30,30,40,.22); z-index: 4; }
+.modal { width: 380px; left: 40px; top: 60px; padding: 20px 22px; }
+.modal h3 { font-family: var(--serif); margin: 0 0 3px; font-size: 17px; }
+.modal .sub { font-size: 11px; color: var(--ink-2); margin-bottom: 16px; }
+.bars { display: flex; align-items: flex-end; gap: 10px; height: 96px; border-bottom: 1px solid var(--hair); padding-bottom: 2px; }
+.bars .b { flex: 1; background: var(--ikb); position: relative; }
+.bars .b.alt { background: var(--ink-3); }
+.bars .b span { position: absolute; bottom: -16px; left: 0; right: 0; text-align: center; font-size: 9px; color: var(--ink-2); }
+.stat-row { display: flex; justify-content: space-between; font-size: 11.5px; padding: 5px 0; color: var(--ink-2); }
+.stat-row b { color: var(--ink); font-variant-numeric: tabular-nums; font-weight: 600; }
+.menu { width: 172px; left: 460px; top: 74px; padding: 5px; }
+.menu .mi { height: 30px; display: flex; align-items: center; gap: 9px; padding: 0 10px; border-radius: 2px; font-size: 12px; color: var(--ink); }
+.menu .mi:hover { background: var(--ikb-soft); color: var(--ikb); }
+.menu .mi.dis { color: var(--ink-3); }
+.menu .msep { height: 1px; background: var(--hair); margin: 4px 6px; }
+.ctx { width: 186px; left: 660px; top: 130px; padding: 5px; }
+.pop { width: 250px; left: 250px; top: 250px; padding: 13px 15px; }
+.pop .pt { font-family: var(--serif); font-size: 14px; font-weight: 700; color: var(--ikb); }
+.pop .pm { font-size: 11px; color: var(--ink-2); margin-top: 2px; }
+.pop .pq { font-size: 12px; margin-top: 8px; font-family: var(--serif); line-height: 1.7; }
+.pop .pf { display: flex; gap: 10px; margin-top: 10px; font-size: 10.5px; color: var(--ink-2); }
+.pop .pf span { border: 1px solid var(--hair); border-radius: 2px; padding: 2px 8px; }
+</style>
+</head>
+<body>
+
+<!-- 图标精灵 -->
+<svg width="0" height="0" style="position:absolute">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></symbol>
+  <symbol id="i-split" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M12 4v16"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7.1-7.1l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7.1 7.1l1.7-1.7"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-stats" viewBox="0 0 24 24"><path d="M5 20v-8"/><path d="M12 20V6"/><path d="M19 20v-5"/><path d="M3 20h18"/></symbol>
+  <symbol id="i-b" viewBox="0 0 24 24"><path d="M6 4h8a4 4 0 0 1 0 8H6z"/><path d="M6 12h9a4 4 0 0 1 0 8H6z"/></symbol>
+  <symbol id="i-i" viewBox="0 0 24 24"><path d="M19 4h-9L7 12l3 3 8-8z"/><path d="M5 14l-1 6 6-1"/></symbol>
+  <symbol id="i-u" viewBox="0 0 24 24"><path d="M6 4v7a6 6 0 0 0 12 0V4"/><path d="M12 17v3"/></symbol>
+  <symbol id="i-s" viewBox="0 0 24 24"><path d="M17 4l4 4L9 20H5v-4z"/><path d="M14 7l4 4"/></symbol>
+  <symbol id="i-al" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h16"/><path d="M4 18h10"/></symbol>
+  <symbol id="i-ac" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M7 12h10"/><path d="M9 18h6"/></symbol>
+  <symbol id="i-ar" viewBox="0 0 24 24"><path d="M4 6h16"/><path d="M4 12h11"/><path d="M4 18h16"/></symbol>
+  <symbol id="i-ul" viewBox="0 0 24 24"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="4" cy="6" r="1"/><circle cx="4" cy="12" r="1"/><circle cx="4" cy="18" r="1"/></symbol>
+  <symbol id="i-ol" viewBox="0 0 24 24"><path d="M9 6h12"/><path d="M9 12h12"/><path d="M9 18h12"/><path d="M4 5h1v4"/><path d="M4 11h1v4"/><path d="M4 17h1v4"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.6-8.5L3 7"/></symbol>
+  <symbol id="i-undo2" viewBox="0 0 24 24"><path d="M21 7v6h-6"/><path d="M20.5 13a9 9 0 1 1-2.6-8.5L21 7"/></symbol>
+  <symbol id="i-updown" viewBox="0 0 24 24"><path d="M12 19V5"/><path d="M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14"/><path d="M5 12h14"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-net" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5"/><path d="M15 4h5v5"/><path d="M20 15v5h-5"/><path d="M9 20H4v-5"/></symbol>
+  <symbol id="i-shape" viewBox="0 0 24 24"><path d="M12 3l8 9-8 9-8-9z"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
+</svg>
+
+<header class="doc-head">
+  <div class="ver">Design Spec · Band Covers · Full UI · 2026-09-20</div>
+  <h1>小说工坊 ·「色带书封」全界面设计稿</h1>
+  <p>以 <b>G 色带书封（Fitzcarraldo 式双色制）</b>为主体的完整界面规范：封面双色制 + <b>作者名圆印</b>（替代原「坊」字盖章）+ <b>封面特殊字体 Noto Serif SC（思源宋体，SIL OFL，已随稿本地化）</b>；全文 Playfair Display 作拉丁展示字。色板收敛为克莱因蓝 #002FA7 / 象牙白 #FBF9F3 / 墨黑 #1E1E1E 三色 + 一枚朱备用。含书架、编辑器、大纲画布、人物关系图、设定幕布、素材、弹窗浮层共 <b>8 屏</b>，红色编号为规格说明。本稿不经软件渲染，浏览器直接打开即可。</p>
+</header>
+
+<!-- ================= S0 封面规则与令牌 ================= -->
+<section class="sheet" id="s0">
+  <div class="sheet-tag"><span class="k"><em>00</em>封面规则与设计令牌</span><span class="n">双色制 · 作者印 · 特殊字体 · 全站色板</span></div>
+  <div class="frame" style="height:640px;">
+    <div class="tbar"><div class="dots"><i style="background:#E05C55"></i><i style="background:#E0A93C"></i><i style="background:#4FA85A"></i></div><span class="tt">小说工坊 · 色带书封</span></div>
+    <div class="tok" style="margin:22px 30px 0;">
+      <h3>封面三规则</h3>
+      <div class="sub">① 双色制：虚构类 = 克莱因蓝满地 + 象牙白衬线书名；非虚构（设定/考据向）= 象牙白底 + 蓝字反相；墨黑/朱仅作特殊状态备用。② 作者印：圆 27px 单线描边，作者名两行竖排（2 字拆分 / 3-4 字两行），替代原「坊」字盖章，颜色随封面反相。③ 特殊字体：封面书名与作者印一律使用 Noto Serif SC 600/500（思源宋体），字距 .12em——全站唯一使用衬线展示字的封面区。</div>
+      <div class="cover-demo">
+        <div>
+          <div class="cv f"><span class="tt">长夜将尽</span><span class="sub">Novel · 连载中</span><span class="col">林<br>却</span></div>
+          <div style="font-size:10.5px;color:var(--ink-2);margin-top:7px;text-align:center;">虚构 · 蓝 / 作者印 2 字竖排</div>
+        </div>
+        <div>
+          <div class="cv n"><span class="tt">雪落界脊之上</span><span class="sub">Novel · 完结</span><span class="col">沈砚<br>秋</span></div>
+          <div style="font-size:10.5px;color:var(--ink-2);margin-top:7px;text-align:center;">非虚构 · 象牙反相 / 3 字两行</div>
+        </div>
+        <div>
+          <div class="cv b"><span class="tt">山海拾遗录</span><span class="sub">Novel · 草稿</span><span class="col">苏<br>暮</span></div>
+          <div style="font-size:10.5px;color:var(--ink-2);margin-top:7px;text-align:center;">特殊状态 · 墨黑备用</div>
+        </div>
+      </div>
+    </div>
+    <div class="tok" style="margin:16px 30px 24px;">
+      <h3>色彩与字阶</h3>
+      <div class="sub">三色制 + 语义色仅用于批注六用途与状态点；界面无第二种彩色。</div>
+      <div class="row">
+        <div class="sw">
+          <div class="it"><div class="c" style="background:#002FA7;"></div><div class="nm">克莱因蓝</div><div class="hv">#002FA7</div></div>
+          <div class="it"><div class="c" style="background:#FBF9F3;"></div><div class="nm">象牙白</div><div class="hv">#FBF9F3</div></div>
+          <div class="it"><div class="c" style="background:#F2EFE7;"></div><div class="nm">桌面</div><div class="hv">#F2EFE7</div></div>
+          <div class="it"><div class="c" style="background:#1E1E1E;"></div><div class="nm">墨黑</div><div class="hv">#1E1E1E</div></div>
+          <div class="it"><div class="c" style="background:#DCD6C6;"></div><div class="nm">细线</div><div class="hv">#DCD6C6</div></div>
+          <div class="it"><div class="c" style="background:#8C2F1B;"></div><div class="nm">朱（备用）</div><div class="hv">#8C2F1B</div></div>
+        </div>
+      </div>
+      <div class="tyrow">
+        <span class="a">长夜将尽</span>
+        <span class="b">第一章 · 初雪</span>
+        <span class="c">他抬头看去，三百六十枚铜刻星辰沿界脊缓缓归位，雪落无声。</span>
+        <span class="d">Novel Studio</span>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <b>封</b>面区 128px、居中排版：书名（Noto Serif SC 600 · 21px · 字距 .12em）+ uppercase 拉丁微标签 + 底部作者圆印；无图片、无水印、无渐变。<b>批</b>注六用途色（待改 #C0392B / 疑问 #2980B9 / 伏笔 #8E44AD / 灵感 #27AE60 / 考据 #D35400 / 待定 #7F8C8D）为全站仅有的功能性彩色，双链 = 点线下划线（克莱因蓝）。
+  </div>
+</section>
+
+<!-- ================= S1 书架 ================= -->
+<section class="sheet" id="s1">
+  <div class="sheet-tag"><span class="k"><em>01</em>书架</span><span class="n">双色制封面墙 · 作者印 · 全部作品一语</span></div>
+  <div class="frame" style="height:640px;">
+    <div class="tbar"><div class="dots"><i style="background:#E05C55"></i><i style="background:#E0A93C"></i><i style="background:#4FA85A"></i></div><span class="tt">小说工坊 · 色带书封</span></div>
+    <div class="topbar">
+      <div class="brand"><span class="logo">坊</span><span class="cn">小说工坊</span><span class="en">Novel&nbsp;Studio</span></div>
+      <div class="search"><svg class="ic" width="13" height="13"><use href="#i-search"/></svg>搜索作品、章节、人物…</div>
+      <span class="chip">色带 ▾</span>
+      <span class="btn primary"><svg class="ic" width="12" height="12"><use href="#i-plus"/></svg>新建作品</span>
+    </div>
+    <div class="grid6">
+      <div class="bk">
+        <div class="cv f"><span class="tt">长夜将尽</span><span class="sub">Novel · 连载中</span><span class="col">林<br>却</span></div>
+        <div class="bo"><span class="t">长夜将尽</span><span class="m">4.2 万字 · 18 章 · 62%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv n"><span class="tt">雪落界脊之上</span><span class="sub">Novel · 完结</span><span class="col">沈砚<br>秋</span></div>
+        <div class="bo"><span class="t">雪落界脊之上</span><span class="m">2.8 万字 · 11 章 · 41%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv b"><span class="tt">山海拾遗录</span><span class="sub">Novel · 草稿</span><span class="col">苏<br>暮</span></div>
+        <div class="bo"><span class="t">山海拾遗录</span><span class="m">6.1 万字 · 24 章 · 88%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv f"><span class="tt">第七位访客</span><span class="sub">Novel · 连载中</span><span class="col">顾<br>挽</span></div>
+        <div class="bo"><span class="t">第七位访客</span><span class="m">1.4 万字 · 7 章 · 23%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv n"><span class="tt">青鸾记事</span><span class="sub">Novel · 搁笔</span><span class="col">青<br>梧</span></div>
+        <div class="bo"><span class="t">青鸾记事</span><span class="m">0.9 万字 · 5 章 · 15%</span></div>
+      </div>
+      <div class="bk">
+        <div class="cv f"><span class="tt">春不晚</span><span class="sub">Novel · 连载中</span><span class="col">白<br>度</span></div>
+        <div class="bo"><span class="t">春不晚</span><span class="m">3.1 万字 · 13 章 · 47%</span></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:6px 34px 20px;font-size:11.5px;color:var(--ink-2);font-variant-numeric:tabular-nums;">
+      <span>06 部作品 · 15.4 万字 · 65 章</span><span>本地优先 · 自动保存已开启</span>
+    </div>
+    <span class="cal" style="left:260px;top:118px;">1</span>
+    <span class="cal" style="left:660px;top:118px;">2</span>
+    <span class="cal" style="left:30px;top:62px;">3</span>
+  </div>
+  <div class="legend">
+    <b>1</b>虚构类蓝封面：克莱因蓝满地 + 象牙白衬线书名 + 象牙白作者圆印（林却竖排）。<br>
+    <b>2</b>非虚构/设定类象牙封面：反相蓝字 + 蓝作者印（沈砚秋两行排）。书架并列时蓝白相间，即「自家丛书墙」。<br>
+    <b>3</b>顶栏唯一主按钮（新建作品）；作品类型决定封面蓝/白，用户可在作品信息中指定；卡体细线分隔、数字 tabular-nums。
+  </div>
+</section>
+
+<!-- ================= S2 编辑器 ================= -->
+<section class="sheet" id="s2">
+  <div class="sheet-tag"><span class="k"><em>02</em>编辑器 · 工作台</span><span class="n">象牙纸面 · 衬线正文 · 双链点线蓝 · 批注六色</span></div>
+  <div class="frame" style="height:760px;">
+    <div class="topbar">
+      <span class="btn ghost" style="border:none;padding:0 6px;"><svg class="ic" width="14" height="14"><use href="#i-back"/></svg></span>
+      <span style="font-family:var(--serif);font-size:16.5px;font-weight:700;color:var(--ikb);">长夜将尽</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink-2);"><i style="width:7px;height:7px;border-radius:50%;background:var(--ok);display:block;"></i>已保存</span>
+      <span class="sp"></span>
+      <span class="btn ghost" style="border:none;"><svg class="ic" width="14" height="14" style="color:var(--ink-2)"><use href="#i-search"/></svg></span>
+      <span class="btn ghost" style="border:none;"><svg class="ic" width="14" height="14" style="color:var(--ink-2)"><use href="#i-split"/></svg></span>
+      <span class="btn ghost">⋯</span>
+      <span class="btn primary">进入沉浸</span>
+    </div>
+    <div class="wb">
+      <nav class="rail">
+        <div class="ritem active"><span class="zi">文</span><span class="cap">正文</span></div>
+        <div class="ritem"><span class="zi">纲</span><span class="cap">大纲</span></div>
+        <div class="ritem"><span class="zi">人</span><span class="cap">人物</span></div>
+        <div class="ritem"><span class="zi">设</span><span class="cap">设定</span></div>
+        <div class="ritem"><span class="zi">灵</span><span class="cap">素材</span></div>
+        <div class="ritem toggle" title="昼夜切换"><svg class="ic" width="15" height="15"><use href="#i-sun"/></svg></div>
+      </nav>
+      <aside class="tree">
+        <div class="vol">▾ 第一卷 · 长夜</div>
+        <div class="ch active"><i style="background:var(--ok)"></i>第一章 · 初雪</div>
+        <div class="ch"><i style="background:var(--warn)"></i>第二章 · 界脊</div>
+        <div class="ch"><i style="background:var(--ink-3)"></i>第三章 · 守夜人</div>
+        <div class="ch"><i style="background:var(--ink-3)"></i>第四章 · 归位</div>
+        <div class="vol">▾ 第二卷 · 天明</div>
+        <div class="ch"><i style="background:var(--ink-3)"></i>第五章 · 远行</div>
+      </aside>
+      <main class="main">
+        <div class="toolbar">
+          <span class="tbtn txt on">正文</span><span class="tbtn txt">H1</span><span class="tbtn txt">H2</span><span class="tbtn txt">H3</span><span class="tbtn txt">引</span>
+          <span class="sep"></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-b"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-i"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-u"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-s"/></svg></span>
+          <span class="sep"></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-al"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-ac"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-ar"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-ul"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-ol"/></svg></span>
+          <span class="sep"></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-dl"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-undo"/></svg></span>
+          <span class="tbtn"><svg class="ic" width="13" height="13"><use href="#i-undo2"/></svg></span>
+          <span class="sp"></span>
+          <span class="wc">本章 3 247 字</span>
+        </div>
+        <div class="paper">
+          <h1 class="cht">第一章 · 初雪</h1>
+          <p class="bd">【面板新增句】他抬头看去，三百六十枚<span class="dl">铜刻星辰</span>沿界脊缓缓归位，雪落无声。</p>
+          <p class="bd"><span class="ann-sel">雪落在界脊之上</span>，盖住了昨夜巡山人的脚印。他握紧提灯，向隘口走去——这世上最后一座观星台，今夜只剩他一个守夜人。</p>
+          <p class="bd">「若星辰尽归天上，人间会记得谁？」老人说过的话在耳边响起。他没有答案，只有灯，和一场越下越大的雪。</p>
+        </div>
+      </main>
+      <aside class="right">
+        <div class="rsec">
+          <h4>本章批注</h4>
+          <div class="note-item"><div class="q"><span class="kd" style="background:#c0392b"></span>雪落在界脊之上</div><div class="d"><span>待改 · 改「覆住」更古</span></div></div>
+          <div class="note-item"><div class="q"><span class="kd" style="background:#2980b9"></span>界脊</div><div class="d"><span>疑问 · 与第三章是否重复</span></div></div>
+          <div class="note-item"><div class="q"><span class="kd" style="background:#8e44ad"></span>守夜人</div><div class="d"><span>伏笔 · 第二卷回收</span></div></div>
+        </div>
+        <div class="rsec"><h4>本章大纲</h4><div style="font-size:12.5px;color:var(--ink-2);line-height:1.8;font-family:var(--serif);">初雪夜归星，独守最后一座观星台</div></div>
+        <div class="rsec"><h4>本章出场人物</h4><span class="chip2">守夜人</span><span class="chip2">巡山人</span><span class="chip2">老人</span></div>
+        <div class="rsec"><h4>本章信息</h4><div style="font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums;line-height:1.8;">3 247 字 · 12 分钟读完<br>更新于 昨天 23:41</div></div>
+      </aside>
+    </div>
+    <span class="cal" style="left:576px;top:66px;">1</span>
+    <span class="cal" style="left:294px;top:108px;">2</span>
+    <span class="cal" style="left:648px;top:212px;">3</span>
+    <span class="cal" style="left:1000px;top:66px;">4</span>
+  </div>
+  <div class="legend">
+    <b>1</b>工具栏全图标化，hover = 蓝边 + 蓝图标 + 淡蓝底；文字仅留 正文/H1-H3/引。<br>
+    <b>2</b>正文 = Noto Serif SC 400 · 14.5px · 行距 2.05 · 限宽 42em； Ivory 纸面 + 极淡蓝色稿纸竖线（4% 透明）。<br>
+    <b>3</b>双链 = 点状下划线 2px 克莱因蓝贴字；批注 = 实线下划线 2px 偏下 3px + 用途色淡底——错位共存不冲突。<br>
+    <b>4</b>顶栏：书名用蓝衬线 + 保存绿点；一屏唯一主按钮（进入沉浸）。
+  </div>
+</section>
+
+<!-- ================= S3 大纲画布 ================= -->
+<section class="sheet" id="s3">
+  <div class="sheet-tag"><span class="k"><em>03</em>大纲 · 画布</span><span class="n">墨色连线 · 类型色条 · 选中蓝晕 · 噪点桌面</span></div>
+  <div class="frame" style="height:620px;">
+    <div class="topbar" style="height:46px;">
+      <span class="btn ghost" style="border:none;padding:0 6px;"><svg class="ic" width="14" height="14"><use href="#i-back"/></svg></span>
+      <span style="font-family:var(--serif);font-size:15px;font-weight:700;">大纲</span>
+      <span style="font-size:11px;color:var(--ink-2);">自由模块画布 · 双链联动 · 文本与画布双视图</span>
+      <span class="sp"></span>
+      <span class="btn ghost">⋯</span>
+    </div>
+    <div class="cvs">
+      <aside class="cside">
+        <div class="cbtn"><svg class="ic" width="13" height="13"><use href="#i-grid"/></svg>分栏模式</div>
+        <div class="cbtn"><svg class="ic" width="13" height="13"><use href="#i-shape"/></svg>塑形工具</div>
+        <div class="cbtn"><svg class="ic" width="13" height="13"><use href="#i-trash"/></svg>删除</div>
+        <div class="cbtn"><svg class="ic" width="13" height="13"><use href="#i-fit"/></svg>适应视图</div>
+      </aside>
+      <div class="cmain" style="min-height:534px;">
+        <div class="chips"><span class="chipf on">全部</span><span class="chipf">事件</span><span class="chipf">便签</span><span class="chipf">引用</span><span class="chipf">文本框</span><span class="chipf">章节</span><span class="sp"></span><span class="chipf"><svg class="ic" width="10" height="10" style="margin-right:4px;"><use href="#i-plus"/></svg>新建节点</span></div>
+        <svg style="position:absolute;inset:0;z-index:1;" width="1022" height="534" viewBox="0 0 1022 534" fill="none">
+          <defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#1E1E1E"/></marker></defs>
+          <path d="M296 150 C 356 150, 410 216, 478 222" stroke="#1E1E1E" stroke-opacity=".85" stroke-width="1.7" marker-end="url(#ar2)"/>
+          <path d="M478 330 C 410 336, 356 400, 298 400" stroke="#1E1E1E" stroke-opacity=".85" stroke-width="1.7" marker-end="url(#ar2)"/>
+          <path d="M624 292 C 690 292, 720 190, 782 180" stroke="#1E1E1E" stroke-opacity=".85" stroke-width="1.7" marker-end="url(#ar2)"/>
+          <path d="M624 306 C 690 316, 720 396, 780 398" stroke="#1E1E1E" stroke-opacity=".85" stroke-width="1.7" marker-end="url(#ar2)"/>
+          <circle cx="686" cy="288" r="4.5" fill="var(--desk)" stroke="#1E1E1E" stroke-width="1.7"/>
+          <circle cx="682" cy="310" r="4.5" fill="var(--desk)" stroke="#1E1E1E" stroke-width="1.7"/>
+        </svg>
+        <div class="cn" style="--nt:var(--ikb);left:140px;top:120px;min-width:156px;"><div class="nt">第一卷 · 长夜</div><div class="nd">4 模块 · 18 章</div><span class="st"></span></div>
+        <div class="cn" style="--nt:var(--warn);left:140px;top:368px;min-width:156px;"><div class="nt">便签 · 观星台设定</div><div class="nd">最后一座观星台</div></div>
+        <div class="cn sel" style="--nt:#2980b9;left:478px;top:196px;min-width:146px;"><div class="nt">引用卡 · 界脊</div><div class="nd">第三章 · 地理</div></div>
+        <div class="cn" style="--nt:var(--ikb);left:478px;top:312px;min-width:146px;"><div class="nt">事件 · 归星之夜</div><div class="nd">第一章高潮</div><span class="st" style="background:var(--warn);"></span></div>
+        <div class="cn txt" style="left:782px;top:140px;min-width:170px;"><div class="nt">文本框</div><div class="nd">雪落无声，人不知</div></div>
+        <div class="cn" style="--nt:#2980b9;left:780px;top:360px;min-width:170px;"><div class="nt">引用卡 · 巡山人</div><div class="nd">第五章 · 人物</div></div>
+        <span class="cal" style="left:152px;top:512px;">1</span>
+        <span class="cal" style="left:478px;top:192px;">2</span>
+        <span class="cal" style="left:688px;top:280px;">3</span>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <b>1</b>节点：象牙卡 + 左侧 3px 类型色条（模块/事件=蓝、便签=#B9770E、引用卡=#2980B9、文本框=虚线无框）+ 右上状态点。<br>
+    <b>2</b>选中 = 蓝 1.5px 边 + 3px 淡蓝晕。<b>3</b>连线统一墨黑 1.7px/.85，箭头同色；连接点 = 墨色小环。画布桌面叠 5% 噪点。<span class="note">语义色（关系/因果/伏笔）仅在 hover/选中时短暂上线，常态保持单色墨线。</span>
+  </div>
+</section>
+
+<!-- ================= S4 人物关系图 ================= -->
+<section class="sheet" id="s4">
+  <div class="sheet-tag"><span class="k"><em>04</em>人物 · 关系图</span><span class="n">力导向布局 · 关系标签胶囊 · 角色色条</span></div>
+  <div class="frame" style="height:620px;">
+    <div class="topbar" style="height:46px;">
+      <span class="btn ghost" style="border:none;padding:0 6px;"><svg class="ic" width="14" height="14"><use href="#i-back"/></svg></span>
+      <span style="font-family:var(--serif);font-size:15px;font-weight:700;">人物</span>
+      <span style="font-size:11px;color:var(--ink-2);">9 人物 · 14 关系</span>
+      <span class="sp"></span>
+      <span class="chip">布局 ▾</span>
+      <span class="btn primary"><svg class="ic" width="12" height="12"><use href="#i-plus"/></svg>新建人物</span>
+    </div>
+    <div class="wb" style="min-height:0;">
+      <aside class="tree" style="width:180px;">
+        <div class="vol">▾ 主角</div>
+        <div class="ch active"><i style="background:#c0392b"></i>守夜人</div>
+        <div class="ch"><i style="background:#c0392b"></i>巡山人</div>
+        <div class="vol">▾ 配角</div>
+        <div class="ch"><i style="background:#2980b9"></i>老人</div>
+        <div class="ch"><i style="background:#2980b9"></i>提灯匠</div>
+        <div class="vol">▾ 反派</div>
+        <div class="ch"><i style="background:#d35400"></i>观星使</div>
+        <div class="ch"><i style="background:#d35400"></i>夜巡官</div>
+      </aside>
+      <div class="cg" style="flex:1;min-height:534px;">
+        <svg style="position:absolute;inset:0;z-index:1;" width="860" height="534" viewBox="0 0 860 534" fill="none">
+          <path d="M220 150 C 320 120, 420 100, 520 118" stroke="#1E1E1E" stroke-opacity=".8" stroke-width="1.5"/>
+          <path d="M520 118 C 620 140, 640 220, 560 268" stroke="#1E1E1E" stroke-opacity=".8" stroke-width="1.5"/>
+          <path d="M220 150 C 320 260, 380 300, 420 400" stroke="#1E1E1E" stroke-opacity=".8" stroke-width="1.5"/>
+          <path d="M560 268 C 520 330, 480 360, 420 400" stroke="#1E1E1E" stroke-opacity=".8" stroke-width="1.5"/>
+        </svg>
+        <div class="chn" style="--rc:#c0392b;left:130px;top:120px;"><div class="nm">守夜人</div><div class="rl">主角 · 第一章登场</div></div>
+        <div class="chn" style="--rc:#c0392b;left:480px;top:92px;"><div class="nm">巡山人</div><div class="rl">主角 · 已故</div></div>
+        <div class="chn" style="--rc:#2980b9;left:470px;top:242px;"><div class="nm">老人</div><div class="rl">配角 · 预言者</div></div>
+        <div class="chn sel" style="--rc:#d35400;left:330px;top:376px;"><div class="nm">观星使</div><div class="rl">反派 · 第五章现身</div></div>
+        <div class="lg"><span><i style="background:#c0392b;"></i>主角</span><span><i style="background:#2980b9;"></i>配角</span><span><i style="background:#d35400;"></i>反派</span><span><i style="background:#7f8c8d;"></i>龙套</span></div>
+        <span class="cal" style="left:346px;top:372px;">1</span>
+        <span class="cal" style="left:488px;top:238px;">2</span>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <b>1</b>人物卡 = 象牙底 + 左侧 3px 角色色条（主角 #C0392B / 配角 #2980B9 / 反派 #D35400 / 龙套 #7F8C8D）+ 衬线姓名；选中 = 蓝边 + 蓝晕。<br>
+    <b>2</b>关系线 = 墨黑细线；关系类型（关联/因果/伏笔/冲突）在 hover/边标签上以小色点显示，常态不抢色。<span class="note">左侧人物树与画布同源联动，列表行样式与章节树一致（细线+状态点）。</span>
+  </div>
+</section>
+
+<!-- ================= S5 设定幕布 ================= -->
+<section class="sheet" id="s5">
+  <div class="sheet-tag"><span class="k"><em>05</em>设定 · 幕布</span><span class="n">自由大纲树 · 菱形符号 · 蓝色激活语言</span></div>
+  <div class="frame" style="height:600px;">
+    <div class="topbar" style="height:46px;">
+      <span class="btn ghost" style="border:none;padding:0 6px;"><svg class="ic" width="14" height="14"><use href="#i-back"/></svg></span>
+      <span style="font-family:var(--serif);font-size:15px;font-weight:700;">设定</span>
+      <span style="font-size:11px;color:var(--ink-2);">幕布式自由大纲 · 所有内容根节点</span>
+      <span class="sp"></span>
+      <span class="btn ghost">全部折叠</span><span class="btn ghost">全部展开</span>
+    </div>
+    <div class="mb">
+      <aside class="mside">
+        <div class="mrow"><span class="dia"></span>星图</div>
+        <div class="mrow"><span class="dia"></span>排序父节点</div>
+        <div class="mrow" style="padding-left:24px;"><span class="dia o"></span>B</div>
+        <div class="mrow" style="padding-left:34px;"><span class="dia o"></span>A</div>
+        <div class="mrow" style="padding-left:34px;"><span class="dia o"></span>T</div>
+      </aside>
+      <div class="cmain" style="flex:1;min-height:514px;">
+        <div style="position:absolute;left:30px;right:30px;top:22px;">
+          <div class="mrow" style="background:var(--ivory);border:1px solid var(--hair);border-radius:2px;"><span class="dia"></span><b style="font-family:var(--serif);">星图</b><span style="font-size:10.5px;color:var(--ink-2);">Enter 新建 · Tab 升级 · Shift+Tab 降级</span></div>
+        </div>
+        <svg style="position:absolute;inset:0;z-index:1;" width="1022" height="514" viewBox="0 0 1022 514" fill="none">
+          <path d="M70 120 L70 260" stroke="#DCD6C6" stroke-width="1.5"/>
+          <path d="M70 120 L320 120 L320 196" stroke="#DCD6C6" stroke-width="1.5" fill="none"/>
+          <path d="M70 260 L320 260 L320 336" stroke="#DCD6C6" stroke-width="1.5" fill="none"/>
+        </svg>
+        <div class="cn" style="left:320px;top:150px;min-width:200px;"><div class="nt">世界观 · 观星台</div><div class="nd">最后一座观星台建于大历 437 年</div></div>
+        <div class="cn" style="left:320px;top:290px;min-width:200px;"><div class="nt">人物 · 守夜人</div><div class="nd">提灯者 · 记得所有归位的星辰</div></div>
+        <span class="cal" style="left:342px;top:146px;">1</span>
+      </div>
+    </div>
+  </div>
+  <div class="legend">
+    <b>1</b>幕布节点沿用画布节点规格（象牙卡 + 类型色条），父子连线用 1.5px 细线（hairline 色）——大纲树与画布共用一套节点语言，只是连线更轻。<span class="note">菱形 bullet = 蓝描边（有内容）/ 灰填（空节点）；侧栏树行高 32px、hover 桌面色。</span>
+  </div>
+</section>
+
+<!-- ================= S6 素材 ================= -->
+<section class="sheet" id="s6">
+  <div class="sheet-tag"><span class="k"><em>06</em>素材 · 灵感库</span><span class="n">列表行 · 希腊标签 · 无尽草稿</span></div>
+  <div class="frame" style="height:520px;">
+    <div class="topbar" style="height:46px;">
+      <span class="btn ghost" style="border:none;padding:0 6px;"><svg class="ic" width="14" height="14"><use href="#i-back"/></svg></span>
+      <span style="font-family:var(--serif);font-size:15px;font-weight:700;">素材</span>
+      <span style="font-size:11px;color:var(--ink-2);">37 条 · 8 标签</span>
+      <span class="sp"></span>
+      <div class="search" style="margin:0;max-width:240px;"><svg class="ic" width="13" height="13"><use href="#i-search"/></svg>搜索素材…</div>
+      <span class="btn primary"><svg class="ic" width="12" height="12"><use href="#i-plus"/></svg>记一条</span>
+    </div>
+    <div class="sn">
+      <div class="srow"><span class="tag">灵感</span><span class="tt">雪落无声的第三种写法</span><span class="tx">不要写雪安静，写雪盖住了什么声音——脚步声、灯芯爆裂声…</span><span style="font-size:10.5px;color:var(--ink-3);">9/18</span></div>
+      <div class="srow"><span class="tag ink">摘录</span><span class="tt">大历 437 年的观星台志</span><span class="tx">台高三十丈，铜刻星辰三百六十枚，夜则自鸣…</span><span style="font-size:10.5px;color:var(--ink-3);">9/15</span></div>
+      <div class="srow"><span class="tag">灵感</span><span class="tt">守夜人的灯是什么颜色</span><span class="tx">琥珀色太暖，用「将熄未熄的橘」——和雪夜的冷对抗</span><span style="font-size:10.5px;color:var(--ink-3);">9/12</span></div>
+      <div class="srow"><span class="tag rust">待写</span><span class="tt">巡山人的脚印伏笔</span><span class="tx">第二章收：雪化后脚印还在，但不是人留下的…</span><span style="font-size:10.5px;color:var(--ink-3);">9/10</span></div>
+      <div class="srow"><span class="tag ink">摘录</span><span class="tt">「人间会记得谁」对白变体</span><span class="tx">问三遍，答三次，每次答案都少一个字</span><span style="font-size:10.5px;color:var(--ink-3);">9/03</span></div>
+    </div>
+    <span class="cal" style="left:64px;top:112px;">1</span>
+  </div>
+  <div class="legend">
+    <b>1</b>素材行 = 希腊小标签（关键字距 uppercase，蓝/墨/朱三档）+ 衬线标题 + 摘要单行截断 + 右侧日期；行间 1px 细线，无卡片。<span class="note">「记一条」即建档，无尽草稿不打时戳压力；标签即希腊色带逻辑的微缩复刻。</span>
+  </div>
+</section>
+
+<!-- ================= S7 弹窗与浮层 ================= -->
+<section class="sheet" id="s7">
+  <div class="sheet-tag"><span class="k"><em>07</em>弹窗与浮层</span><span class="n">统计 · 导出菜单 · 右键菜单 · 双链浮窗</span></div>
+  <div class="frame" style="height:540px;">
+    <div class="tbar"><div class="dots"><i style="background:#E05C55"></i><i style="background:#E0A93C"></i><i style="background:#4FA85A"></i></div><span class="tt">小说工坊 · 浮层族</span></div>
+    <div class="ov">
+      <div class="back"></div>
+      <div class="layer modal">
+        <h3>统计</h3>
+        <div class="sub">长夜将尽 · 最近 7 天</div>
+        <div class="bars">
+          <div class="b" style="height:38%;"><span>一</span></div>
+          <div class="b" style="height:62%;"><span>二</span></div>
+          <div class="b alt" style="height:12%;"><span>三</span></div>
+          <div class="b" style="height:81%;"><span>四</span></div>
+          <div class="b" style="height:55%;"><span>五</span></div>
+          <div class="b" style="height:96%;"><span>六</span></div>
+          <div class="b" style="height:44%;"><span>日</span></div>
+        </div>
+        <div style="height:26px;"></div>
+        <div class="stat-row"><span>总字数</span><b>42 318</b></div>
+        <div class="stat-row"><span>本周新增</span><b>6 204</b></div>
+        <div class="stat-row"><span>连续写作</span><b>12 天</b></div>
+      </div>
+      <div class="layer menu">
+        <div class="mi"><svg class="ic" width="13" height="13"><use href="#i-dl"/></svg>导出 JSON 备份</div>
+        <div class="mi"><svg class="ic" width="13" height="13"><use href="#i-dl"/></svg>导出 Word 全书</div>
+        <div class="mi"><svg class="ic" width="13" height="13"><use href="#i-dl"/></svg>导出 TXT 全文</div>
+        <div class="msep"></div>
+        <div class="mi dis">导出 PDF（计划中）</div>
+      </div>
+      <div class="layer menu ctx">
+        <div class="mi">添加批注…</div>
+        <div class="mi">编辑批注…</div>
+        <div class="mi">移除批注</div>
+        <div class="msep"></div>
+        <div class="mi">插入双链…</div>
+        <div class="mi">复制</div>
+      </div>
+      <div class="layer pop">
+        <div class="pt">界脊</div>
+        <div class="pm">地理 · 第三章正式登场</div>
+        <div class="pq">大陆西缘的褶皱山系，星辰归位时山脊会发出低频共鸣……</div>
+        <div class="pf"><span>定位</span><span>编辑</span></div>
+      </div>
+    </div>
+    <span class="cal" style="left:44px;top:64px;">1</span>
+    <span class="cal" style="left:466px;top:78px;">2</span>
+    <span class="cal" style="left:666px;top:134px;">3</span>
+    <span class="cal" style="left:254px;top:254px;">4</span>
+  </div>
+  <div class="legend">
+    <b>1</b>统计弹窗：象牙卡 + 蓝柱状图（今日高亮、空窗日灰柱）+ tabular-nums 数字。<br>
+    <b>2</b>菜单族：28px 行高、hover 淡蓝底 + 蓝字；禁选项降灰；分隔 = 1px 细线。<br>
+    <b>3</b>右键菜单：玻璃-less 扁平分组（批注三连 / 双链 / 编辑）。<br>
+    <b>4</b>双链浮窗：象牙卡 + 蓝色点线 token + 衬线标题；出现/消失走 170/140ms 淡入上浮（既有 js 钩子动效），标题栏可拖动钉住。
+  </div>
+</section>
+
+<footer style="max-width:1180px;margin:30px auto 70px;padding:0 24px;font-size:12px;color:#857c6d;line-height:2;">
+  小说工坊 ·「色带书封」全界面设计稿 v5 · 2026-09-20 · 字体：Noto Serif SC（思源宋体，SIL OFL-1.1）与 Playfair Display（SIL OFL-1.1），已随稿本地化于 ./fonts/（Google Fonts 子集，中文简体+拉丁）· 参考：Fitzcarraldo Editions（Ray O'Meara 设计：克莱因蓝/象牙双色制、居中衬线、盲压圆标传统）· 配套文档《前端美化方案-v2-美术升级.md》。
+</footer>
+
+</body>
+</html>
