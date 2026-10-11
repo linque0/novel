@@ -5,9 +5,13 @@ const panels = require('./panels')
 
 const isDev = !!process.env.NOVEL_STUDIO_DEV || process.argv.includes('--dev')
 
-/* 多配置支持：--profile=xxx 使用独立数据目录（测试/多开互不干扰） */
+/* 多配置支持：--profile=xxx 使用独立数据目录（测试/多开互不干扰）。
+   profile 名走锚定白名单校验（仅字母/数字/下划线/连字符，1–32 位），不合法一律回退默认目录，
+   确保命令行参数没有任何字符能进入路径拼接 */
 const profileArg = process.argv.find((a) => a.startsWith('--profile='))
-const profileName = profileArg ? profileArg.split('=')[1].replace(/[^\w-]/g, '').slice(0, 32) : null
+const PROFILE_NAME_RE = /^[A-Za-z0-9_-]{1,32}$/
+const profileRaw = profileArg ? profileArg.slice('--profile='.length) : ''
+const profileName = PROFILE_NAME_RE.test(profileRaw) ? profileRaw : null
 
 /* 自定义数据存储位置：指针文件固定存放在默认 userData 下（不随迁移移动），启动最早期重定向。
    所选目录只作为父目录，实际数据目录固定为其中的「小说工坊」子目录；指针目录须已含数据
@@ -30,7 +34,10 @@ function isInside(child, parent) {
 function readDataDirPointer() {
   try {
     const parsed = JSON.parse(fs.readFileSync(DATA_DIR_FILE, 'utf-8'))
-    return typeof parsed?.dir === 'string' ? parsed.dir : null
+    const dir = typeof parsed?.dir === 'string' ? parsed.dir : null
+    /* 指针文件可能被磁盘写入者篡改：只接受绝对路径，拒绝 NUL 与任意分隔符写法的 .. 上跳 */
+    if (!dir || !path.isAbsolute(dir) || dir.includes('\0') || /(^|[\\/])\.\.(?:[\\/]|$)/.test(dir)) return null
+    return dir
   } catch {
     return null
   }
@@ -333,7 +340,8 @@ ipcMain.handle('data:move', (_e, payload) => {
     landing = path.resolve(defaultUserData)
   } else {
     const dir = payload.dir.trim()
-    if (!path.isAbsolute(dir) || dir.includes('\0') || dir.split(path.sep).includes('..')) {
+    /* .. 检查须同时覆盖 \ 与 / 写法（仅查 path.sep 会被 C:/a/../b 绕过） */
+    if (!path.isAbsolute(dir) || dir.includes('\0') || /(^|[\\/])\.\.(?:[\\/]|$)/.test(dir)) {
       return { ok: false, error: '目录路径无效' }
     }
     landing = path.resolve(path.join(dir, '小说工坊'))
