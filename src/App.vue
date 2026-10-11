@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NButton, zhCN, dateZhCN, darkTheme } from 'naive-ui'
 import { useUiStore } from './stores/ui'
 import { startAutosave } from './services/autosave'
@@ -28,6 +28,18 @@ const overrides = computed(() => {
   const accent = { xuan: '#8c6f4e', parchment: '#a0642f', night: '#d4a95c' }[ui.theme] || '#8c6f4e'
   return { common: { primaryColor: accent, primaryColorHover: accent, primaryColorPressed: accent, primaryColorSuppl: accent } }
 })
+
+/* 主题类镜像到 body：naive 的 popover/modal 等浮层 teleport 到 body 下，
+   继承不到 .app-root 上的主题变量——var(--bg-panel) 等会整条声明失效
+   （设置面板变全透明、帮助手册回落默认白板的根因）。body 挂同类即可继承。 */
+watch(
+  () => ui.theme,
+  (t) => {
+    document.body.classList.remove('theme-xuan', 'theme-parchment', 'theme-night')
+    document.body.classList.add('theme-' + t)
+  },
+  { immediate: true }
+)
 
 async function boot() {
   ui.dbError = false

@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小说工坊 · 美术层落地 v10 · 2026-09-21</title>
+<link rel="stylesheet" href="./fonts/fonts.css" />
+<link rel="stylesheet" href="./fonts/fonts-art.css" />
+<style>
+:root {
+  --ikb: #002FA7; --ivory: #FBF9F3; --paper: #FDFCF8; --desk: #F2EFE7;
+  --ink: #1E1E1E; --ink-2: #6E6A60; --hair: #DCD6C6;
+  --serif: 'Noto Serif SC', Georgia, serif;
+  --disp: 'Playfair Display', Georgia, serif;
+  --dh: 'Smiley Sans', 'Noto Serif SC', serif;            /* 得意黑：斜体 40°，仅 400 字重 */
+  --sans: 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  /* 同色相五阶明度阶（L2） */
+  --ikb-1: #001A5C; --ikb-2: #002FA7; --ikb-3: #2E56C4; --ikb-4: #6E8AD8; --ikb-5: #C9D4F0;
+  --ced-1: #16332B; --ced-2: #2F5D50; --ced-3: #4E8272; --ced-4: #8FB5A6; --gold: #E8C989;
+  --ppr-1: #FBF9F3; --ppr-2: #F2EFE7; --ppr-3: #E8E3D6; --ppr-4: #DCD6C6;
+  /* 动效令牌（L3） */
+  --ease: cubic-bezier(.25, .46, .45, .94);
+  --dur: 200ms;
+  --dur-cover: 320ms;
+  --grain: .025;   /* 封面颗粒 2.5%，随尺度衰减 */
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #E8E3D6; background-image: var(--noise); font-family: var(--sans); color: #26221c; }
+.doc-head { max-width: 1180px; margin: 0 auto; padding: 46px 24px 8px; }
+.doc-head .ver { font-family: var(--disp); font-size: 11px; letter-spacing: .3em; color: var(--ikb); font-weight: 600; text-transform: uppercase; }
+.doc-head h1 { font-family: var(--serif); font-size: 34px; margin: 10px 0 12px; font-weight: 700; }
+.doc-head p { margin: 0 0 6px; color: #6e6960; font-size: 13px; line-height: 1.9; }
+.doc-head p b { color: #26221c; }
+.sheet { max-width: 1180px; margin: 38px auto; padding: 0 24px; }
+.sheet-tag { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.sheet-tag .k { font-family: var(--serif); font-size: 21px; font-weight: 700; }
+.sheet-tag .k em { font-style: normal; font-family: var(--disp); font-size: 13px; color: var(--ikb); margin-right: 8px; letter-spacing: .12em; }
+.sheet-tag .n { font-size: 12px; color: #857c6d; }
+.frame { background: var(--desk); border: 1px solid var(--hair); border-radius: 3px; padding: 24px 30px 28px; position: relative; }
+
+/* ============ 封面构件（2:3 竖版，继承 v9） ============ */
+.cov { width: 168px; aspect-ratio: 2 / 3; position: relative; overflow: hidden; flex: none; color: var(--ivory); isolation: isolate; }
+.cov::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 9px; z-index: 3;
+  background: linear-gradient(90deg, rgba(0,0,0,.26), rgba(0,0,0,.07) 58%, rgba(255,255,255,.07)); }
+/* L2-1 纸纹颗粒：::after multiply 2.5%，物理上覆于墨层之上 */
+.cov::after { content: ''; position: absolute; inset: 0; z-index: 5; pointer-events: none;
+  background-image: var(--noise); opacity: var(--grain); mix-blend-mode: multiply; }
+.cov.no-grain::after { display: none; }
+.cov.k-note { color: var(--ikb); background: var(--ivory); border: 1px solid var(--hair); }
+.cov.k-note::before { background: linear-gradient(90deg, rgba(0,47,167,.16), rgba(0,47,167,.04) 58%, rgba(0,47,167,.06)); }
+.cov.k-novel { background: var(--ikb); }
+.cov.k-cedar { color: #E8C989; background: #2F5D50; border: 1px solid var(--hair); }
+.cov.k-cedar::before { background: linear-gradient(90deg, rgba(0,0,0,.24), rgba(0,0,0,.06) 58%, rgba(255,255,255,.08)); }
+.cov .tt { font-family: var(--serif); font-weight: 600; }
+.cov .sub { position: absolute; font-family: var(--serif); font-size: 9px; font-weight: 500; letter-spacing: .32em; white-space: nowrap; }
+.cov.k-novel .sub, .cov.k-cedar .sub { color: rgba(251,249,243,.72); }
+.cov.k-note .sub { color: rgba(0,47,167,.58); }
+.cov .seal { position: absolute; left: 15px; width: 28px; height: 28px; border-radius: 50%; border: 1px solid; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--serif); font-size: 8px; font-weight: 500; line-height: 1.1; text-align: center; z-index: 4; }
+.cov.k-novel .seal, .cov.k-cedar .seal { border-color: rgba(251,249,243,.8); color: var(--ivory); }
+.cov.k-note .seal { border-color: var(--ikb); color: var(--ikb); }
+
+/* ============ 海报信息层（继承 v9） ============ */
+.p-tl { position: absolute; left: 15px; top: 13px; font-family: var(--disp); font-size: 6.5px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; opacity: .72; z-index: 4; }
+.p-tr { position: absolute; right: 13px; top: 13px; font-family: var(--disp); font-size: 6.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; opacity: .72; z-index: 4; }
+.p-lock { position: absolute; left: 15px; right: 13px; bottom: 12px; display: flex; align-items: center; gap: 8px; z-index: 4; }
+.p-lock .no { font-family: var(--disp); font-size: 8px; font-weight: 700; letter-spacing: .14em; }
+.p-lock .ln { flex: 1; height: 1px; background: currentColor; opacity: .35; }
+.p-lock .st { font-family: var(--serif); font-size: 8px; letter-spacing: .3em; opacity: .8; }
+/* L2-3 烫金 sheen：雪松组锁定行细线与圆印描边走麦金渐变高光 */
+.cov.k-cedar .p-lock .ln { background: linear-gradient(90deg, transparent, var(--gold) 30%, var(--gold) 70%, transparent); opacity: .55; }
+.cov.k-cedar .seal { border-color: rgba(232,201,137,.85); box-shadow: inset 0 0 0 .5px rgba(232,201,137,.25); }
+
+/* ============ P1 巨字立骨（继承 v9） ============ */
+.p1-first { position: absolute; font-weight: 700; line-height: 1; z-index: 2; }
+.p1-rest { position: absolute; writing-mode: vertical-rl; font-weight: 600; z-index: 2; }
+.p1-sub { position: absolute; font-family: var(--disp); font-size: 7px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; opacity: .66; z-index: 4; }
+.p1-first.dh { font-family: var(--dh); font-weight: 400; letter-spacing: 0; font-style: oblique; }  /* 得意黑轨：斜势即张力，不吃字重 */
+.p1-rest.dh { font-style: oblique; }
+
+/* ============ P2 解构笔画（继承 v9） ============ */
+.p2 { position: absolute; writing-mode: vertical-rl; display: flex; font-weight: 600; z-index: 2; }
+.p2 i { font-style: normal; display: block; }
+.p2 i:nth-child(3n+1) { transform: translate(2px, -4px) rotate(-2.2deg); }
+.p2 i:nth-child(3n+2) { transform: translate(-3px, 3px) rotate(1.8deg); opacity: .9; }
+.p2 i:nth-child(3n) { transform: translate(1px, 5px) rotate(-1deg); opacity: .78; }
+.stroke { position: absolute; background: currentColor; z-index: 1; }
+
+/* ============ P3 光栅错层（继承 v9） ============ */
+.p3 { position: absolute; writing-mode: vertical-rl; font-weight: 600; z-index: 2; }
+.p3 span { position: absolute; inset: 0; display: block; }
+.p3 .l1 { color: #E8C989; opacity: .85; clip-path: inset(0 0 58% 0); transform: translateX(-4px); }
+.p3 .l2 { color: var(--ivory); opacity: .5; clip-path: inset(40% 0 22% 0); transform: translateX(3px); }
+.cov.k-note .p3 .l1 { color: var(--ikb); opacity: .5; }
+.cov.k-note .p3 .l2 { color: #2F5D50; opacity: .4; }
+
+/* ============ P4 几何线描（继承 v9 + 三变体） ============ */
+.p4-art { position: absolute; z-index: 1; }
+.p4-lock { position: absolute; z-index: 2; text-align: center; }
+.p4-lock .cn { font-family: var(--serif); font-weight: 700; }
+.p4-lock .py { font-family: var(--disp); font-size: 8px; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; opacity: .72; margin-top: 5px; }
+.p4-quote { position: absolute; z-index: 2; font-family: var(--serif); font-size: 7.5px; letter-spacing: .18em; opacity: .62; line-height: 1.9; }
+
+/* ============ P5 渐变海境（继承 v9） ============ */
+.cov.grad-novel { background: linear-gradient(180deg, #002FA7 0%, #00409e 46%, #0a2f6e 100%); }
+.cov.grad-cedar { background: linear-gradient(180deg, #2F5D50 0%, #356b5c 52%, #1e4238 100%); }
+.p5-col { position: absolute; writing-mode: vertical-rl; font-weight: 600; z-index: 2; }
+.p5-en { position: absolute; font-family: var(--disp); font-weight: 600; letter-spacing: .3em; text-transform: uppercase; opacity: .8; z-index: 2; }
+
+/* ============ L1-1 雾海母题（纯 CSS duotone，零位图） ============ */
+.sea { position: absolute; left: 0; right: 0; bottom: 0; height: 46%; z-index: 1; pointer-events: none;
+  background: linear-gradient(180deg, rgba(201,212,240,.10) 0%, rgba(201,212,240,0) 16%, rgba(0,26,92,.38) 100%); }
+.sea .hz { position: absolute; left: 12%; right: 30%; top: 0; height: 1px; background: rgba(251,249,243,.5); }
+.sea .mist { position: absolute; left: 8%; right: 30%; height: 2px; border-radius: 1px; background: rgba(251,249,243,.14); }
+.sea .mist.m2 { left: 34%; right: 10%; background: rgba(251,249,243,.09); }
+.sea .disc { position: absolute; right: 30%; top: -34px; width: 26px; height: 26px; border-radius: 50%; background: rgba(251,249,243,.12); }
+/* 海境水位：巨字与微信息保持在雾线之上 */
+.sea .m1 { top: 20%; } .sea .m2b { top: 70%; }
+
+/* ============ L3-2 hover 书脊光扫 ============ */
+.sheen { position: absolute; inset: 0; z-index: 6; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgba(251,249,243,.16) 50%, transparent 58%);
+  transform: translateX(-130%); transition: transform .4s var(--ease); }
+.cov:hover .sheen { transform: translateX(130%); }
+
+/* ============ L3 动效关键帧 ============ */
+@keyframes covReveal { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: .72; } }
+@keyframes fadeIn80 { from { opacity: 0; } to { opacity: .8; } }
+@keyframes drawX { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes stamp { from { opacity: 0; transform: scale(.92); } to { opacity: 1; transform: scale(1); } }
+@keyframes breathe { from { transform: translateX(-3px); } to { transform: translateX(3px); } }
+/* 揭幕编排：巨字 320ms 划入 → 微标 80ms 错峰 → 锁定行 draw-in → 圆印落款 */
+.play .p1-first, .play .p2, .play .p3, .play .p4-art, .play .p5-col { animation: covReveal var(--dur-cover) var(--ease) both; }
+.play .p-tl { animation: fadeIn 240ms var(--ease) .08s both; }
+.play .p-tr { animation: fadeIn 240ms var(--ease) .16s both; }
+.play .p1-sub, .play .p5-en, .play .p4-lock .py { animation: fadeIn 240ms var(--ease) .24s both; }
+.play .p-lock .no { animation: fadeIn80 240ms var(--ease) .28s both; }
+.play .p-lock .ln { animation: drawX 240ms var(--ease) .30s both; transform-origin: left center; }
+.play .p-lock .st { animation: fadeIn80 240ms var(--ease) .40s both; }
+.play .seal { animation: stamp 200ms var(--ease) .36s both; }
+.play .sea { animation: fadeIn 400ms var(--ease) .44s both; }
+.play .p4-quote { animation: fadeIn 240ms var(--ease) .48s both; }
+/* 待机呼吸：只动偏移色层，主层恒定可读 */
+.p3 .l1, .p3 .l2 { animation: breathe 8s var(--ease) infinite alternate; }
+@media (prefers-reduced-motion: reduce) {
+  .play .p1-first, .play .p2, .play .p3, .play .p4-art, .play .p5-col,
+  .play .p-tl, .play .p-tr, .play .p1-sub, .play .p5-en, .play .p4-lock .py,
+  .play .p-lock .no, .play .p-lock .ln, .play .p-lock .st, .play .seal, .play .sea, .play .p4-quote { animation: none; }
+  .p3 .l1, .p3 .l2 { animation: none; }
+  .sheen { transition: none; }
+}
+
+/* ============ 版式 ============ */
+.trio { display: flex; gap: 30px; }
+.spec { flex: 1; min-width: 0; }
+.spec .cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.spec .cap .nm { font-family: var(--serif); font-size: 13.5px; font-weight: 700; }
+.spec .cap .len { font-size: 10.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.spec .note { font-size: 11.5px; color: var(--ink-2); line-height: 1.75; margin-top: 4px; }
+.spec .note b { color: #26221c; }
+.why { background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; padding: 13px 18px; margin-top: 16px; font-size: 12.5px; line-height: 2; color: #33302a; }
+.why b { color: var(--ikb); font-weight: 700; margin-right: 4px; }
+.why .no { color: #a03d2e; font-weight: 700; margin-right: 4px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+table.mx { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 6px; }
+table.mx th, table.mx td { border: 1px solid var(--hair); padding: 7px 10px; text-align: left; line-height: 1.7; }
+table.mx th { background: var(--ivory); font-family: var(--serif); }
+table.mx td .tag { display: inline-block; font-family: var(--disp); font-size: 11px; color: var(--ikb); font-weight: 700; margin-right: 6px; letter-spacing: .08em; }
+.thumb-row { display: flex; gap: 26px; align-items: flex-end; margin-top: 8px; flex-wrap: wrap; }
+.thumb-row .tb { text-align: center; }
+.thumb-row .tb .lb { font-size: 10.5px; color: var(--ink-2); margin-top: 6px; font-variant-numeric: tabular-nums; }
+
+/* 明度阶色板 */
+.scale-strip { display: flex; gap: 0; margin: 10px 0 4px; border: 1px solid var(--hair); border-radius: 3px; overflow: hidden; }
+.scale-strip .sw { flex: 1; height: 44px; position: relative; }
+.scale-strip .sw span { position: absolute; left: 6px; bottom: 4px; font-family: var(--disp); font-size: 8.5px; letter-spacing: .06em; }
+.scale-cap { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-2); margin-bottom: 14px; }
+.scale-cap b { color: #26221c; }
+
+/* 重播按钮 */
+.replay { font-family: var(--disp); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--ikb);
+  background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; padding: 6px 14px; cursor: pointer; margin-top: 14px; }
+.replay:hover { border-color: var(--ikb); }
+.motion-tab { border-collapse: collapse; width: 100%; font-size: 12px; margin-top: 6px; }
+.motion-tab th, .motion-tab td { border: 1px solid var(--hair); padding: 6px 9px; text-align: left; line-height: 1.65; }
+.motion-tab th { background: var(--ivory); font-family: var(--serif); }
+.motion-tab td b { color: var(--ikb); }
+.motion-tab td code { font-family: var(--disp); font-size: 11px; background: var(--ivory); padding: 1px 5px; border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <div class="ver">Art Layers · v10 · 2026-09-21</div>
+  <h1>美术层落地 · 质感 × 图像锚 × 动效</h1>
+  <p>依据《前端美术提示词库.md》把 v9 缺的三层补完：<b>L2 质感层</b>（封面纸纹颗粒 2.5% + 同色相五阶明度 + 巨字字体双轨 + 雪松组烫金 sheen）、<b>L1 图像锚</b>（雾海母题：地平线 + 雾带 + 月盘 + 深水渐变，全部 CSS/SVG 构造、duotone 已内置色板，<b>零新增位图</b>）、<b>L3 动效层</b>（巨字 clip-path 揭幕 320ms + 微标 80ms 错峰 + 锁定行 draw-in + 圆印落款 + hover 光扫 + P3 呼吸，尊重 prefers-reduced-motion）。G 双色制、书脊、作者圆印与海报信息层全部保留（<b>P1 巨字占满左轴，左上微标让位——信息层退化为右上类型标 + 底部锁定行；P2–P5 四角齐全</b>）——<b>张扬在封面，纪律在系统</b>。</p>
+</header>
+
+<!-- ================= A 质感层 L2 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>A</em>质感层 · 明度阶 × 颗粒 × 烫金</span><span class="n">零生成成本，观感收益最大的一层</span></div>
+  <div class="frame">
+    <div class="spec" style="margin-bottom: 18px;">
+      <div class="cap" style="margin-top: 0;"><span class="nm">同色相五阶明度阶</span><span class="len">雾海 / 雪松 / 纸白</span></div>
+      <div class="scale-strip">
+        <div class="sw" style="background: var(--ikb-1);"><span style="color: rgba(251,249,243,.75);">#001A5C</span></div>
+        <div class="sw" style="background: var(--ikb-2);"><span style="color: rgba(251,249,243,.75);">#002FA7</span></div>
+        <div class="sw" style="background: var(--ikb-3);"><span style="color: rgba(251,249,243,.75);">#2E56C4</span></div>
+        <div class="sw" style="background: var(--ikb-4);"><span style="color: rgba(251,249,243,.75);">#6E8AD8</span></div>
+        <div class="sw" style="background: var(--ikb-5);"><span style="color: #26221c;">#C9D4F0</span></div>
+      </div>
+      <div class="scale-cap"><span><b>雾海·蓝</b>：P1/P3 巨字层、雾带、深水</span><span>基色 #002FA7 不动</span></div>
+      <div class="scale-strip">
+        <div class="sw" style="background: var(--ced-1);"><span style="color: rgba(232,201,137,.8);">#16332B</span></div>
+        <div class="sw" style="background: var(--ced-2);"><span style="color: rgba(232,201,137,.8);">#2F5D50</span></div>
+        <div class="sw" style="background: var(--ced-3);"><span style="color: rgba(251,249,243,.8);">#4E8272</span></div>
+        <div class="sw" style="background: var(--ced-4);"><span style="color: #26221c;">#8FB5A6</span></div>
+        <div class="sw" style="background: var(--gold);"><span style="color: #26221c;">#E8C989</span></div>
+      </div>
+      <div class="scale-cap"><span><b>雪松·绿</b>：P4/P5，麦金为受控第三色（&lt;5% 面积）</span><span>渐变只走同色相三阶</span></div>
+      <div class="scale-strip">
+        <div class="sw" style="background: var(--ppr-1); border-right: 1px solid var(--hair);"><span style="color: var(--ink-2);">#FBF9F3</span></div>
+        <div class="sw" style="background: var(--ppr-2); border-right: 1px solid var(--hair);"><span style="color: var(--ink-2);">#F2EFE7</span></div>
+        <div class="sw" style="background: var(--ppr-3); border-right: 1px solid var(--hair);"><span style="color: var(--ink-2);">#E8E3D6</span></div>
+        <div class="sw" style="background: var(--ppr-4);"><span style="color: var(--ink-2);">#DCD6C6</span></div>
+      </div>
+      <div class="scale-cap"><span><b>纸白</b>：k-note 反相款与文档底</span><span>禁纯黑 #000 / 纯白 #FFF</span></div>
+    </div>
+    <div class="trio">
+      <div class="spec">
+        <div class="cov k-novel no-grain">
+          <span class="p-tr">Fiction</span>
+          <span class="p1-first" style="left: 14px; top: -16px; font-size: 78px;">浮</span>
+          <span class="p1-rest" style="right: 20px; top: 96px; font-size: 21px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 17px; bottom: 74px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">对照 · 无颗粒</span><span class="len">v9 构成</span></div>
+        <div class="note">纯色平涂，「设计稿」感来源：墨色太匀、太新。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="p-tr">Fiction</span>
+          <span class="p1-first" style="left: 14px; top: -16px; font-size: 78px;">浮</span>
+          <span class="p1-rest" style="right: 20px; top: 96px; font-size: 21px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 17px; bottom: 74px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">v10 颗粒</span><span class="len">::after · 2.5%</span></div>
+        <div class="note"><b>纸纹颗粒</b>：内联 SVG feTurbulence，multiply 混合覆于墨层之上（z-5）。零资产、零请求，成熟度主要来源。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-cedar">
+          <span class="p-tl">Novel Studio</span>
+          <svg class="p4-art" style="left: 29px; top: 68px;" width="110" height="120" viewBox="0 0 118 130" fill="none">
+            <circle cx="44" cy="86" r="30" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            <path d="M62 18 L104 4 L86 96 L62 96 Z" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            <line x1="62" y1="18" x2="86" y2="96" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            <circle cx="90" cy="30" r="3.4" fill="currentColor" opacity=".9"/>
+          </svg>
+          <span class="p4-lock" style="left: 0; right: 0; top: 180px;">
+            <span class="cn" style="font-size: 23px; letter-spacing: .3em;">浮世</span>
+            <span class="py">Fu · Shi</span>
+          </span>
+          <span class="seal bl" style="bottom: 26px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">v10 烫金</span><span class="len">麦金 sheen</span></div>
+        <div class="note">雪松组锁定行细线改麦金渐变高光、圆印描边缀金——<b>专色细节替代大金块</b>，面积仍 &lt;5%。</div>
+      </div>
+    </div>
+    <div class="why"><b>手法</b>颗粒 opacity 2.5%（88px 缩略图衰减至 1.2%）；明度阶只作雾带/深水/雾海母题的取色来源，<b>基色 #002FA7 / #2F5D50 不动</b>；渐变严格同色相三阶。<b>成本</b>纯 CSS 三条声明，包体 +0。<b>注意</b>颗粒层 z-5 高于微标 z-4——物理正确（颗粒在墨上），但 opacity 不得超过 3%，过则显脏。</div>
+  </div>
+</section>
+
+<!-- ================= B 巨字字体双轨 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>B</em>巨字字体双轨</span><span class="n">得意黑（虚构/实验）× 思源宋（文学/别藏）——v6 选型结论入封面</span></div>
+  <div class="frame">
+    <div class="trio">
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="p-tr">Fiction</span>
+          <span class="p1-first dh" style="left: 12px; top: -14px; font-size: 80px;">浮</span>
+          <span class="p1-rest dh" style="right: 20px; top: 100px; font-size: 22px; letter-spacing: .2em; writing-mode: vertical-rl; transform: rotate(0deg);">世</span>
+          <span class="p1-sub" style="left: 17px; bottom: 74px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">得意黑轨</span><span class="len">Smiley Sans · 斜 40°</span></div>
+        <div class="note">斜势即张力，<b>海报感的直接来源</b>；仅 400 字重但字面方正重实，靠字号不吃字重。用于虚构/实验款（P1/P2/P3）。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="p-tr">Fiction</span>
+          <span class="p1-first" style="left: 14px; top: -16px; font-size: 78px;">浮</span>
+          <span class="p1-rest" style="right: 20px; top: 96px; font-size: 21px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 17px; bottom: 74px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">思源宋轨</span><span class="len">Noto Serif SC 700</span></div>
+        <div class="note">v8/v9 现行骨架，文学性与「正经出版」气质。用于别藏/诗辑（P4/P5）与默认保守档。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="p-tr">Fiction</span>
+          <span class="p1-first dh" style="left: 12px; top: -12px; font-size: 66px;">星</span>
+          <span class="p1-rest" style="right: 18px; top: 92px; font-size: 13px; letter-spacing: .12em; writing-mode: horizontal-tb; width: 92px; line-height: 1.7;">尘旅人</span>
+          <span class="p1-sub" style="left: 17px; bottom: 74px;">Xing Chen</span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.02</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">5 字兼容</span><span class="len">66px + 13px</span></div>
+        <div class="note">得意黑斜势在 5 字以上不失控：首字锚 + 小字块结构不变。<b>全篇幅兼容是种族优势</b>。</div>
+      </div>
+    </div>
+    <div class="why"><b>选轨规则</b>作品 kind = novel/experiment → 得意黑；kind = note/poem → 思源宋；用户自设封面款时两轨都可手动切。<b>授权</b>得意黑 SIL OFL，保留名「得意 / Smiley」原样嵌入不受限（v6 结论）。<b>注意</b>得意黑是斜体字形（font-style: oblique），与竖排余字同轨时保持同一 rotate，不叠加额外 transform。</div>
+  </div>
+</section>
+
+<!-- ================= C 图像锚 L1 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>C</em>图像锚 · 雾海母题 × 线描三变体</span><span class="n">P1/P5 加海境，P4 按体裁换线描——纯 CSS/SVG，零位图</span></div>
+  <div class="frame">
+    <div class="grid2">
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov k-novel">
+            <span class="sea">
+              <span class="disc"></span>
+              <span class="hz"></span>
+              <span class="mist m1"></span>
+              <span class="mist m2 m2b"></span>
+            </span>
+            <span class="p1-first" style="left: 14px; top: -16px; font-size: 78px;">浮</span>
+            <span class="p1-rest" style="right: 20px; top: 96px; font-size: 21px; letter-spacing: .2em;">世</span>
+            <span class="p1-sub" style="left: 17px; bottom: 74px;">Fu Shi</span>
+            <span class="seal bl" style="bottom: 40px;">林蛟</span>
+            <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov k-novel">
+            <span class="sea">
+              <span class="disc"></span>
+              <span class="hz"></span>
+              <span class="mist m1"></span>
+            </span>
+            <span class="p1-first dh" style="left: 12px; top: -12px; font-size: 66px;">星</span>
+            <span class="p1-rest" style="right: 18px; top: 86px; font-size: 13px; letter-spacing: .12em; writing-mode: horizontal-tb; width: 92px; line-height: 1.7;">尘旅人</span>
+            <span class="p1-sub" style="left: 17px; bottom: 74px;">Xing Chen</span>
+            <span class="seal bl" style="bottom: 40px;">林蛟</span>
+            <span class="p-lock"><span class="no">NO.02</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">P1 + 雾海带</span><span class="len">2 / 5 字</span></div>
+        <div class="note">底部 46% 海境：<b>地平线 1px</b>（象牙 50%）+ 两道雾带（象牙 9–14%）+ 月盘（象牙 12%）+ 深水渐变至 #001A5C。巨字与微信息恒定在雾线之上——母题做锚不做主角。</div>
+      </div>
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov grad-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="sea" style="height: 52%;">
+              <span class="disc" style="right: 26%; top: -30px; width: 22px; height: 22px;"></span>
+              <span class="hz" style="top: 0;"></span>
+              <span class="mist m1" style="top: 30%;"></span>
+              <span class="mist m2 m2b" style="top: 74%;"></span>
+            </span>
+            <span class="p5-col" style="left: 30px; top: 30px; font-size: 26px; letter-spacing: .26em;">浮</span>
+            <span class="p5-col" style="right: 26px; top: 58px; font-size: 26px; letter-spacing: .26em;">世</span>
+            <span class="p5-en" style="left: 0; right: 0; top: 108px; text-align: center; font-size: 9px;">Island View</span>
+            <span class="seal bl" style="bottom: 40px;">林蛟</span>
+            <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov grad-cedar">
+            <span class="p-tl">Novel Studio</span>
+            <span class="sea" style="height: 52%; background: linear-gradient(180deg, rgba(143,181,166,.12) 0%, rgba(143,181,166,0) 16%, rgba(22,51,43,.42) 100%);">
+              <span class="disc" style="right: 26%; top: -30px; width: 22px; height: 22px; background: rgba(232,201,137,.16);"></span>
+              <span class="hz" style="top: 0; background: rgba(232,201,137,.4);"></span>
+              <span class="mist m1" style="top: 30%;"></span>
+              <span class="mist m2 m2b" style="top: 74%;"></span>
+            </span>
+            <span class="p5-col" style="left: 24px; top: 26px; font-size: 14px; letter-spacing: .12em;">长夜漫漫</span>
+            <span class="p5-col" style="right: 22px; top: 54px; font-size: 14px; letter-spacing: .12em;">机械之心</span>
+            <span class="p5-en" style="left: 0; right: 0; top: 106px; text-align: center; font-size: 8px;">Machina</span>
+            <span class="seal bl" style="bottom: 40px;">测试</span>
+            <span class="p-lock"><span class="no">NO.03</span><span class="ln"></span><span class="st">构思</span></span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">P5 + 地平线</span><span class="len">蓝 / 绿双色组</span></div>
+        <div class="note">渐变海境上补<b>地平线与月盘</b>，海有了焦点；雪松组全部元素换同色相取色（雾带 #8FB5A6、月盘麦金 16%）。</div>
+      </div>
+    </div>
+    <div class="trio" style="margin-top: 24px;">
+      <div class="spec">
+        <div class="cov k-cedar">
+          <span class="p-tl">Novel Studio</span>
+          <svg class="p4-art" style="left: 29px; top: 68px;" width="110" height="120" viewBox="0 0 118 130" fill="none">
+            <path d="M18 96 A44 44 0 0 1 100 96" stroke="currentColor" stroke-width="2.2" opacity=".9"/>
+            <path d="M30 96 A32 32 0 0 1 88 96" stroke="currentColor" stroke-width="1.4" opacity=".75"/>
+            <path d="M42 96 A20 20 0 0 1 76 96" stroke="currentColor" stroke-width="0.8" opacity=".6"/>
+            <line x1="14" y1="100" x2="104" y2="100" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            <circle cx="90" cy="26" r="3.4" fill="currentColor" opacity=".9"/>
+          </svg>
+          <span class="p4-lock" style="left: 0; right: 0; top: 180px;">
+            <span class="cn" style="font-size: 23px; letter-spacing: .3em;">浮世</span>
+            <span class="py">Fu · Shi</span>
+          </span>
+          <span class="seal bl" style="bottom: 26px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">海 · 弧线组</span><span class="len">stroke 2.2/1.4/0.8</span></div>
+        <div class="note">三同心弧 + 地平线 + 一枚实心点。<b>stroke-weight 三档化</b>是线描成熟度的刻度。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-cedar">
+          <span class="p-tl">Novel Studio</span>
+          <svg class="p4-art" style="left: 29px; top: 68px;" width="110" height="120" viewBox="0 0 118 130" fill="none">
+            <line x1="20" y1="110" x2="98" y2="14" stroke="currentColor" stroke-width="2.2" opacity=".9"/>
+            <line x1="36" y1="110" x2="98" y2="34" stroke="currentColor" stroke-width="1.4" opacity=".75"/>
+            <line x1="52" y1="110" x2="98" y2="54" stroke="currentColor" stroke-width="0.8" opacity=".6"/>
+            <circle cx="46" cy="60" r="22" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            <circle cx="46" cy="60" r="4" fill="currentColor" opacity=".9"/>
+          </svg>
+          <span class="p4-lock" style="left: 0; right: 0; top: 180px;">
+            <span class="cn" style="font-size: 17px; letter-spacing: .2em;">星尘旅人</span>
+            <span class="py">Xing Chen</span>
+          </span>
+          <span class="seal bl" style="bottom: 26px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.02</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">机械 · 斜线组</span><span class="len">辐射 + 芯圆</span></div>
+        <div class="note">三条辐射斜线 + 芯圆实心点，齿轮意象不直说。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-cedar">
+          <span class="p-tl">Novel Studio</span>
+          <svg class="p4-art" style="left: 29px; top: 68px;" width="110" height="120" viewBox="0 0 118 130" fill="none">
+            <circle cx="34" cy="34" r="1.8" fill="currentColor" opacity=".9"/>
+            <circle cx="59" cy="34" r="1.8" fill="currentColor" opacity=".7"/>
+            <circle cx="84" cy="34" r="1.8" fill="currentColor" opacity=".5"/>
+            <circle cx="34" cy="59" r="1.8" fill="currentColor" opacity=".7"/>
+            <circle cx="59" cy="59" r="10" stroke="currentColor" stroke-width="1.4" opacity=".9"/>
+            <circle cx="59" cy="59" r="2.6" fill="currentColor" opacity=".9"/>
+            <circle cx="84" cy="59" r="1.8" fill="currentColor" opacity=".7"/>
+            <circle cx="34" cy="84" r="1.8" fill="currentColor" opacity=".5"/>
+            <circle cx="59" cy="84" r="1.8" fill="currentColor" opacity=".7"/>
+            <circle cx="84" cy="84" r="1.8" fill="currentColor" opacity=".9"/>
+          </svg>
+          <span class="p4-lock" style="left: 0; right: 0; top: 180px;">
+            <span class="cn" style="font-size: 13px; letter-spacing: .14em;">长夜漫漫<br />机械之心</span>
+            <span class="py">Long Night</span>
+          </span>
+          <span class="seal bl" style="bottom: 26px;">测试</span>
+          <span class="p-lock"><span class="no">NO.03</span><span class="ln"></span><span class="st">构思</span></span>
+        </div>
+        <div class="cap"><span class="nm">星 · 点阵</span><span class="len">3×3 衰减</span></div>
+        <div class="note">点阵透明度向心衰减（.9→.5），中央圆环受托。</div>
+      </div>
+    </div>
+    <div class="why"><b>为什么不用位图</b>提示词库 §6.2 的雾海摄影母题经 gradient map 后处理后的结果，与这里的 CSS 构造等效——而 CSS 版零请求、零授权登记、缩放无损、随主题对位。<b>位图母题仅在做「实体书导出预览」时启用</b>。<b>纪律</b>海境元素全部取自同色相五阶（蓝组 #001A5C/#C9D4F0/象牙，绿组 #16332B/#8FB5A6/麦金），色相计数仍为 2。<b>净空规则（防前后遮挡）</b>信息层（拼音/圆印/锁定行）统一 z-4 压在海境之上；地平线右缩 30% 避让世字列；雾带避开拼音与圆印带（20% / 70% 水位）；拼音与圆印垂直净空 ≥6px；P1 左上微标让位巨字；P4 引文移右上、标题锁定行居下、圆印贴底——线描墨迹与标题顶缘保持 ≥5px。</div>
+  </div>
+</section>
+
+<!-- ================= D 动效层 L3 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>D</em>动效层 · 揭幕编排 × hover 光扫 × 待机呼吸</span><span class="n">只动 transform/opacity；尊重 prefers-reduced-motion</span></div>
+  <div class="frame">
+    <div class="trio play" id="demoRow">
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="sheen"></span>
+          <span class="p-tr">Fiction</span>
+          <span class="sea">
+            <span class="disc"></span>
+            <span class="hz"></span>
+            <span class="mist m1"></span>
+            <span class="mist m2 m2b"></span>
+          </span>
+          <span class="p1-first" style="left: 14px; top: -16px; font-size: 78px;">浮</span>
+          <span class="p1-rest" style="right: 20px; top: 96px; font-size: 21px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 17px; bottom: 74px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">P1 揭幕</span><span class="len">320ms 编排</span></div>
+        <div class="note">巨字 clip-path 自上缘划入 → 微标 80ms 错峰 → 锁定行细线 draw-in → 圆印落款。<b>悬停任意封面试光扫。</b></div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="sheen"></span>
+          <span class="p-tl">Novel Studio</span>
+          <span class="p3" style="left: 60px; top: 28px; font-size: 27px; letter-spacing: .22em;">浮世<span class="l1">浮世</span><span class="l2">浮世</span></span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">P3 呼吸</span><span class="len">8s alternate</span></div>
+        <div class="note">麦金/象牙两个偏移色层 ±3px 极缓慢呼吸，<b>主层恒定不动</b>——动势而不伤读。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-cedar">
+          <span class="sheen"></span>
+          <span class="p-tl">Novel Studio</span>
+          <svg class="p4-art" style="left: 29px; top: 68px;" width="110" height="120" viewBox="0 0 118 130" fill="none">
+            <path d="M18 96 A44 44 0 0 1 100 96" stroke="currentColor" stroke-width="2.2" opacity=".9"/>
+            <path d="M30 96 A32 32 0 0 1 88 96" stroke="currentColor" stroke-width="1.4" opacity=".75"/>
+            <path d="M42 96 A20 20 0 0 1 76 96" stroke="currentColor" stroke-width="0.8" opacity=".6"/>
+            <line x1="14" y1="100" x2="104" y2="100" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            <circle cx="90" cy="26" r="3.4" fill="currentColor" opacity=".9"/>
+          </svg>
+          <span class="p4-lock" style="left: 0; right: 0; top: 180px;">
+            <span class="cn" style="font-size: 23px; letter-spacing: .3em;">浮世</span>
+            <span class="py">Fu · Shi</span>
+          </span>
+          <span class="p4-quote" style="right: 13px; top: 30px; text-align: right;">一场大雾里的<br />清醒梦</span>
+          <span class="seal bl" style="bottom: 26px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">P4 揭幕 + 引文</span><span class="len">线描同入</span></div>
+        <div class="note">线描与巨字同刻揭幕，引文最后淡入（.48s）——文学款收尾最慢。</div>
+      </div>
+    </div>
+    <button class="replay" id="replay">↻ 重播揭幕</button>
+    <table class="motion-tab">
+      <tr><th style="width: 40px;">#</th><th>动画</th><th style="width: 300px;">规格</th><th>降级 / 门控</th></tr>
+      <tr><td><b>A1</b></td><td>上架交错入场</td><td><code>opacity 0→1 + translateY(6px)→0 · 30ms 步进</code></td><td>v1 既有令牌</td></tr>
+      <tr><td><b>A2</b></td><td>hover 书脊光扫</td><td><code>sheen translateX(-130%→130%) · 400ms</code></td><td>仅 hover；reduced-motion 直切</td></tr>
+      <tr><td><b>A3</b></td><td>巨字/线描揭幕</td><td><code>clip-path inset(0 0 100% 0)→inset(0) · 320ms</code></td><td>reduced-motion 静态</td></tr>
+      <tr><td><b>A4</b></td><td>微标错峰淡入</td><td><code>每层 +80ms · opacity→.72/.8</code></td><td>reduced-motion 静态</td></tr>
+      <tr><td><b>A5</b></td><td>P3 扫描带呼吸</td><td><code>translateX ±3px · 8s infinite alternate</code></td><td>reduced-motion 关闭</td></tr>
+      <tr><td><b>A6</b></td><td>圆印落款</td><td><code>scale(.92)→1 + opacity · 200ms</code></td><td>挂载时一次</td></tr>
+      <tr><td><b>A7</b></td><td>锁定行 draw-in</td><td><code>scaleX(0→1) · origin left · 240ms</code></td><td>随 A3 编排</td></tr>
+    </table>
+    <div class="why"><b>纪律</b>只动 transform / opacity（v1 性能红线）；封面是唯一允许 &gt;240ms 编排的界面位置；<code>--dur-cover: 320ms</code> 为新令牌。<b>尺度门控</b>揭幕编排只在 ≥120px 尺度播放——书架缩略卡只保留 A1/A2（悬停抬起 + 光扫），实现用容器查询 <code>@container (min-width: 120px)</code> 或 JS 尺度类。<b>reduced-motion</b>全部降为静态或 opacity 200ms。</div>
+  </div>
+</section>
+
+<!-- ================= E 缩略图检验 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>E</em>缩略图尺度检验</span><span class="n">颗粒衰减、海境简化、微标退化——88px 极限位</span></div>
+  <div class="frame">
+    <div class="thumb-row">
+      <div class="tb">
+        <div class="cov k-novel" style="width: 160px;">
+          <span class="sea">
+            <span class="disc"></span><span class="hz"></span>
+            <span class="mist m1"></span><span class="mist m2 m2b"></span>
+          </span>
+          <span class="p1-first" style="left: 13px; top: -15px; font-size: 74px;">浮</span>
+          <span class="p1-rest" style="right: 19px; top: 91px; font-size: 20px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 16px; bottom: 72px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 38px; width: 26px; height: 26px; font-size: 7.5px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="lb">160px · 全层级 + 颗粒 2.5%</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 120px; --grain: .018;">
+          <span class="sea">
+            <span class="hz"></span>
+          </span>
+          <span class="p1-first" style="left: 12px; top: -11px; font-size: 56px;">浮</span>
+          <span class="p1-rest" style="right: 16px; top: 70px; font-size: 15px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 14px; bottom: 58px; font-size: 6px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 30px; width: 22px; height: 22px; font-size: 6.5px;">林蛟</span>
+          <span class="p-lock" style="bottom: 9px;"><span class="no" style="font-size: 7px;">NO.01</span><span class="ln"></span><span class="st" style="font-size: 7px;">连载</span></span>
+        </div>
+        <div class="lb">120px · 颗粒 1.8% + 海境减一道雾带</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 88px; --grain: .012;">
+          <span class="sea" style="height: 40%;"><span class="hz"></span></span>
+          <span class="p1-first" style="left: 10px; top: -8px; font-size: 41px;">浮</span>
+          <span class="p1-rest" style="right: 12px; top: 52px; font-size: 11px; letter-spacing: .2em;">世</span>
+          <span class="seal bl" style="bottom: 26px; width: 18px; height: 18px; font-size: 5.5px;">林蛟</span>
+          <span class="p-lock" style="bottom: 8px; left: 11px;"><span class="no" style="font-size: 6px;">01</span><span class="ln"></span></span>
+        </div>
+        <div class="lb">88px · 颗粒 1.2% + 海境只留地平线</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-cedar" style="width: 160px;">
+          <span class="p-tl">Novel Studio</span>
+          <svg class="p4-art" style="left: 27px; top: 64px;" width="105" height="114" viewBox="0 0 118 130" fill="none">
+            <path d="M18 96 A44 44 0 0 1 100 96" stroke="currentColor" stroke-width="2.2" opacity=".9"/>
+            <path d="M30 96 A32 32 0 0 1 88 96" stroke="currentColor" stroke-width="1.4" opacity=".75"/>
+            <path d="M42 96 A20 20 0 0 1 76 96" stroke="currentColor" stroke-width="0.8" opacity=".6"/>
+            <line x1="14" y1="100" x2="104" y2="100" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            <circle cx="90" cy="26" r="3.4" fill="currentColor" opacity=".9"/>
+          </svg>
+          <span class="p4-lock" style="left: 0; right: 0; top: 171px;">
+            <span class="cn" style="font-size: 23px; letter-spacing: .3em;">浮世</span>
+            <span class="py">Fu · Shi</span>
+          </span>
+          <span class="seal bl" style="bottom: 25px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="lb">P4 · 160px</div>
+      </div>
+      <div class="tb">
+        <div class="cov grad-novel" style="width: 88px; --grain: .012;">
+          <span class="sea" style="height: 40%;"><span class="hz"></span></span>
+          <span class="p5-col" style="left: 16px; top: 24px; font-size: 15px; letter-spacing: .2em;">浮</span>
+          <span class="p5-col" style="right: 14px; top: 46px; font-size: 15px; letter-spacing: .2em;">世</span>
+          <span class="seal bl" style="bottom: 26px; width: 18px; height: 18px; font-size: 5.5px;">林蛟</span>
+          <span class="p-lock" style="bottom: 8px; left: 11px;"><span class="no" style="font-size: 6px;">01</span><span class="ln"></span></span>
+        </div>
+        <div class="lb">P5 · 88px（拉丁词退化省略）</div>
+      </div>
+    </div>
+    <div class="why"><b>结论</b>颗粒按尺度衰减（2.5% → 1.8% → 1.2%）：140px 噪点平铺到 88px 会变密，不减 opacity 则显脏；海境同步简化（双雾带 → 单雾带 → 只留地平线）；P1 左上微标让位巨字（右上类型标 + 底行保留）；微标按 v9 规则退化。巨字在 88px 仍是第一视觉。<b>全部以软件内 160px 实截为最终验收</b>。</div>
+  </div>
+</section>
+
+<!-- ================= F 矩阵更新 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>M</em>选型矩阵 · v10 × v9 合流</span></div>
+  <div class="frame">
+    <table class="mx">
+      <tr><th style="width: 90px;">篇幅</th><th>v10 推荐（已含美术层）</th><th style="width: 220px;">手工换款池</th><th>说明</th></tr>
+      <tr><td><b>2 字</b></td><td><span class="tag">P1</span>巨字 + 雾海带（得意黑轨）</td><td>P5 双侧 + 地平线</td><td>虚构默认；海境做锚</td></tr>
+      <tr><td><b>3–4 字</b></td><td><span class="tag">P4</span>线描三变体 + 双语锁定</td><td>P1</td><td>最像正经出版；按体裁换弧线/斜线/点阵</td></tr>
+      <tr><td><b>5–8 字</b></td><td><span class="tag">P3</span>光栅错层 + 呼吸</td><td>P4 · P2</td><td>动势与可读兼得</td></tr>
+      <tr><td><b>9 字以上</b></td><td><span class="tag">P1</span>巨字锚 + 小字块</td><td>P4 · F（v8 通栏底）</td><td>海境可省</td></tr>
+    </table>
+    <div class="why">
+      <b>1</b>推荐落地面：<b>P1 + P3 + P4</b> 按 title.length 分流（同 v9），美术层全款叠加：颗粒 2.5%、雾海母题（P1/P5）、线描三变体（P4）、得意黑/思源宋双轨（kind 决定）。<b>2</b>P2 解构款叠加颗粒即可，不加海境（乱上加重）。<b>3</b><b>资产预算 +0</b>：三层全部 CSS/SVG 构造，无新位图、无新字体文件（得意黑已在 fonts-art.css 入库）。<b>4</b>动效落地：书架卡只上 A1/A2；作品详情/大图预览才播 A3–A7 完整编排。<b>5</b>实施后验收：shelf-verify 15/15 + 三主题 160px 实截 + 88px 极限位抽检 + reduced-motion 抽检。
+    </div>
+    <div class="ref" style="font-size: 11.5px; color: #857c6d; line-height: 1.9; margin-top: 10px;">依据：《前端美术提示词库.md》（2026-09-21）§6/§7；母本：《界面设计稿-v9-海报感封面.html》。自检：Edge 无头全页渲染通过。</div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var row = document.getElementById('demoRow');
+  var btn = document.getElementById('replay');
+  btn.addEventListener('click', function () {
+    row.classList.remove('play');
+    void row.offsetWidth; /* 强制回流以重启动画 */
+    row.classList.add('play');
+  });
+})();
+</script>
+
+</body>
+</html>

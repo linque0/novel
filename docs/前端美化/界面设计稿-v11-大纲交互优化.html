@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小说工坊 · 大纲交互优化设计稿 v11 · 2026-09-24</title>
+<link rel="stylesheet" href="./fonts/fonts.css" />
+<style>
+:root {
+  --ikb: #002FA7; --ivory: #FBF9F3; --paper: #FDFCF8; --desk: #F2EFE7;
+  --ink: #1E1E1E; --ink-2: #6E6A60; --hair: #DCD6C6;
+  --serif: 'Noto Serif SC', Georgia, serif;
+  --disp: 'Playfair Display', Georgia, serif;
+  --sans: 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  --c-cause: #c0392b; --c-foreshadow: #7d5ba6; --c-conflict: #d68438; --c-rel: #4a7ba6;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #E8E3D6; background-image: var(--noise); font-family: var(--sans); color: #26221c; }
+.doc-head { max-width: 1180px; margin: 0 auto; padding: 46px 24px 8px; }
+.doc-head .ver { font-family: var(--disp); font-size: 11px; letter-spacing: .3em; color: var(--ikb); font-weight: 600; text-transform: uppercase; }
+.doc-head h1 { font-family: var(--serif); font-size: 33px; margin: 10px 0 12px; font-weight: 700; }
+.doc-head p { margin: 0 0 6px; color: #6e6960; font-size: 13px; line-height: 1.9; }
+.doc-head p b { color: #26221c; }
+.sheet { max-width: 1180px; margin: 38px auto; padding: 0 24px; }
+.sheet-tag { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.sheet-tag .k { font-family: var(--serif); font-size: 21px; font-weight: 700; }
+.sheet-tag .k em { font-style: normal; font-family: var(--disp); font-size: 13px; color: var(--ikb); margin-right: 8px; letter-spacing: .12em; }
+.sheet-tag .n { font-size: 12px; color: #857c6d; }
+.frame { background: var(--desk); border: 1px solid var(--hair); border-radius: 3px; padding: 22px 26px 26px; position: relative; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
+.why { background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; padding: 13px 18px; margin-top: 16px; font-size: 12.5px; line-height: 2; color: #33302a; }
+.why b { color: var(--ikb); font-weight: 700; margin-right: 4px; }
+.why .no { color: #a03d2e; font-weight: 700; margin-right: 4px; }
+
+/* ============ 画布 mockup 构件 ============ */
+.canvas { position: relative; background: var(--paper); border: 1px solid var(--hair); border-radius: 4px; overflow: hidden;
+  background-image: radial-gradient(circle, rgba(0,0,0,.045) 1px, transparent 1px); background-size: 18px 18px; }
+.czoom { position: absolute; right: 10px; bottom: 8px; font-size: 10px; color: #98917f; font-variant-numeric: tabular-nums; z-index: 5; }
+.nd { position: absolute; background: var(--ivory); border: 1px solid var(--hair); border-left: 3px solid var(--ikb); border-radius: 3px;
+  padding: 5px 9px; font-family: var(--serif); font-size: 11px; line-height: 1.5; color: var(--ink); box-shadow: 0 1px 3px rgba(60,45,20,.08); }
+.nd .t { font-weight: 600; }
+.nd .s { font-size: 9px; color: var(--ink-2); font-family: var(--sans); }
+.nd.diamond { border-left-color: var(--c-conflict); }
+.nd.ellipse { border-left-color: var(--c-rel); border-radius: 14px; }
+.nd.note-nd { border-left-color: #d8c46a; background: #FBF4DC; font-size: 10.5px; }
+.nd.cite-nd { border-left-color: #8a8a8a; }
+.nd.cite-nd .k { font-size: 8px; letter-spacing: .18em; color: var(--ink-2); font-family: var(--sans); text-transform: uppercase; }
+.nd.sel { border-color: var(--ikb); box-shadow: 0 0 0 2px rgba(0,47,167,.18); }
+.ctn { position: absolute; border: 1.5px dashed #b9ac8d; border-radius: 4px; background: rgba(251, 249, 243, .55); }
+.ctn-head { position: absolute; font-family: var(--serif); font-size: 11px; font-weight: 700; color: #7d7259; }
+.ctn-head .caret { font-family: var(--sans); font-size: 9px; margin-right: 4px; }
+.edge { position: absolute; pointer-events: none; }
+.elabel { position: absolute; font-size: 8.5px; background: var(--ivory); border: 1px solid var(--hair); border-radius: 8px; padding: 0 6px; color: var(--ink-2); z-index: 2; }
+.marquee { position: absolute; border: 1.5px dashed var(--ikb); background: rgba(0,47,167,.05); border-radius: 2px; }
+
+/* 摘要卡（折叠容器） */
+.sumcard { position: absolute; background: var(--ivory); border: 1px solid var(--hair); border-top: 3px solid var(--ikb); border-radius: 3px;
+  padding: 6px 10px; box-shadow: 0 2px 8px rgba(60,45,20,.12); z-index: 3; }
+.sumcard .h { font-family: var(--serif); font-size: 12px; font-weight: 700; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+.sumcard .h .c { font-family: var(--sans); font-size: 9px; color: var(--ink-2); }
+.sumcard .b { display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap; }
+.chip { font-size: 8.5px; font-family: var(--sans); border: 1px solid var(--hair); border-radius: 8px; padding: 0 6px; color: var(--ink-2); background: var(--paper); }
+.chip.warn { border-color: #d8a7a0; color: #a03d2e; }
+.chip.blue { color: var(--ikb); border-color: rgba(0,47,167,.35); }
+
+/* 侧栏 mockup */
+.side { width: 285px; background: var(--ivory); border: 1px solid var(--hair); border-radius: 4px; font-family: var(--sans); font-size: 11.5px; overflow: hidden; }
+.side .sh { padding: 8px 12px 6px; font-size: 10.5px; color: var(--ink-2); border-bottom: 1px solid var(--hair); }
+.side .add { display: flex; gap: 5px; padding: 7px 10px; border-bottom: 1px solid var(--hair); flex-wrap: wrap; }
+.side .add button { font-size: 10px; border: 1px solid var(--hair); background: var(--paper); border-radius: 3px; padding: 2px 7px; color: var(--ink-2); cursor: pointer; }
+.side .filters { display: flex; gap: 4px; padding: 6px 10px; flex-wrap: wrap; border-bottom: 1px solid var(--hair); }
+.side .filters span { font-size: 9.5px; border: 1px solid var(--hair); border-radius: 8px; padding: 1px 7px; color: var(--ink-2); cursor: pointer; }
+.side .filters span.on { background: var(--ikb); color: var(--ivory); border-color: var(--ikb); }
+.side .filters span.warnf { color: #a03d2e; border-color: #d8a7a0; }
+.sitem { display: flex; align-items: center; gap: 6px; padding: 4px 10px; border-bottom: 1px solid rgba(220,214,198,.4); position: relative; }
+.sitem:hover { background: rgba(0,47,167,.04); }
+.sitem.active { background: rgba(0,47,167,.08); }
+.sitem .ar { width: 12px; font-size: 8px; color: var(--ink-2); text-align: center; flex: none; }
+.sitem .ic { color: var(--ikb); font-size: 10px; flex: none; }
+.sitem .lb { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--serif); font-size: 11.5px; }
+.sitem .lb .par { color: #a89d86; font-size: 10px; }
+.sitem .bd { font-size: 9px; color: var(--ink-2); font-variant-numeric: tabular-nums; flex: none; }
+.sitem .bd.linky { cursor: pointer; border: 1px solid var(--hair); border-radius: 8px; padding: 0 5px; }
+.sitem .bd.linky.on { background: var(--ikb); color: var(--ivory); border-color: var(--ikb); }
+.srel { display: flex; align-items: center; gap: 6px; padding: 3px 10px 3px 34px; background: rgba(0,47,167,.03); border-bottom: 1px solid rgba(220,214,198,.35); font-size: 10px; color: var(--ink-2); cursor: pointer; }
+.srel:hover { background: rgba(0,47,167,.07); }
+.srel .dir { width: 12px; text-align: center; flex: none; }
+.srel .dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+.srel .rl { color: var(--ink); }
+.srel .peer { font-family: var(--serif); font-size: 11px; color: var(--ink); }
+.srel .pp { color: #a89d86; font-size: 9px; }
+
+/* 浮窗详情 mockup */
+.pop { position: absolute; width: 330px; background: var(--ivory); border: 1px solid var(--hair); border-radius: 5px;
+  box-shadow: 0 10px 34px rgba(40,32,18,.22); z-index: 10; font-family: var(--sans); overflow: hidden; }
+.pop .ph { display: flex; align-items: center; gap: 7px; padding: 7px 11px; border-bottom: 1px solid var(--hair); cursor: grab; background: rgba(0,47,167,.04); }
+.pop .ph .kd { font-size: 8.5px; letter-spacing: .16em; color: var(--ivory); background: var(--ikb); border-radius: 2px; padding: 1px 6px; text-transform: uppercase; }
+.pop .ph .tt { flex: 1; font-family: var(--serif); font-size: 13px; font-weight: 700; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pop .ph .x { color: var(--ink-2); font-size: 12px; cursor: pointer; }
+.pop .meta { padding: 5px 12px 0; font-size: 10px; color: var(--ink-2); }
+.pop .body { padding: 6px 12px 10px; font-size: 11px; line-height: 1.85; color: #3a352c; max-height: 150px; overflow: hidden; }
+.pop .stats { display: flex; gap: 5px; padding: 0 12px 9px; flex-wrap: wrap; }
+.pop .act { display: flex; gap: 8px; padding: 8px 11px; border-top: 1px solid var(--hair); background: var(--paper); }
+.pop .act .go { flex: 1; text-align: center; background: var(--ikb); color: var(--ivory); font-size: 11px; padding: 5px 0; border-radius: 3px; cursor: pointer; font-family: var(--serif); font-weight: 600; }
+.pop .act .split { text-align: center; border: 1px solid var(--hair); color: var(--ink-2); font-size: 11px; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+
+.cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.cap .nm { font-family: var(--serif); font-size: 13px; font-weight: 700; }
+.cap .len { font-size: 10.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.note2 { font-size: 11.5px; color: var(--ink-2); line-height: 1.75; margin-top: 4px; }
+.note2 b { color: #26221c; }
+table.mx { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 6px; }
+table.mx th, table.mx td { border: 1px solid var(--hair); padding: 7px 10px; text-align: left; line-height: 1.7; }
+table.mx th { background: var(--ivory); font-family: var(--serif); }
+table.mx td .tag { display: inline-block; font-family: var(--disp); font-size: 11px; color: var(--ikb); font-weight: 700; margin-right: 6px; letter-spacing: .08em; }
+.vs { font-family: var(--disp); font-size: 11px; color: #a03d2e; font-weight: 700; letter-spacing: .1em; text-align: center; padding: 0 4px; }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <div class="ver">Outline Interaction Spec · v11 · 2026-09-24</div>
+  <h1>大纲交互优化 · 嵌套收纳 / 侧栏关系 / 引用浮窗详情</h1>
+  <p>配套方案文档：<b>docs/大纲功能优化方案.md</b>（交互规格 / 落文件改动点 / 分期验收）。三组 mockup 均按宣纸主题、演示作品《星尘旅人》数据绘制；<b>本稿为设计稿，未实施</b>。</p>
+</header>
+
+<!-- ================= A 嵌套收纳 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>A</em>嵌套收纳</span><span class="n">容器套容器 + 折叠摘要卡 + 框选归组 —— 同一部书的大纲，从「一张摊不开的桌布」到「一层抽屉」</span></div>
+  <div class="frame">
+    <div class="grid2">
+      <div class="spec">
+        <div class="canvas" style="height: 375px;">
+          <span class="czoom">缩放 34% —— 字已不可读</span>
+          <svg class="edge" style="left:0; top:0; width:100%; height:100%">
+            <path d="M 95 60 C 150 60, 175 62, 228 62" stroke="#c0392b" fill="none" stroke-width="1.2"/>
+            <path d="M 300 60 C 355 60, 380 62, 430 62" stroke="#4a7ba6" fill="none" stroke-width="1.2" stroke-dasharray="4 3"/>
+            <path d="M 500 60 C 555 60, 580 62, 630 62" stroke="#c0392b" fill="none" stroke-width="1.2"/>
+            <path d="M 700 60 C 740 90, 400 130, 340 90" stroke="#7d5ba6" fill="none" stroke-width="1.2" stroke-dasharray="4 3"/>
+          </svg>
+          <div class="nd" style="left: 12px; top: 48px; width: 84px;"><span class="t">铜星熄灭</span></div>
+          <div class="nd diamond" style="left: 228px; top: 50px; width: 74px;"><span class="t">测试</span></div>
+          <div class="nd ellipse" style="left: 430px; top: 50px; width: 72px;"><span class="t">钟楼星图</span></div>
+          <div class="nd" style="left: 630px; top: 48px; width: 72px;"><span class="t">十二响</span></div>
+          <div class="nd" style="left: 300px; top: 118px; width: 90px;"><span class="t">雾都钟楼</span><div class="s">第二章 · 铜与锈</div></div>
+          <div class="nd" style="left: 440px; top: 118px; width: 90px;"><span class="t">界脊之上</span><div class="s">第七章 · 界脊</div></div>
+          <div class="nd" style="left: 580px; top: 118px; width: 90px;"><span class="t">白鸦劫钟</span><div class="s">第五章 · 白鸦</div></div>
+          <div class="nd note-nd" style="left: 40px; top: 150px; width: 120px;">伏笔：父亲日志最后一页字迹最新</div>
+          <div class="nd note-nd" style="left: 180px; top: 200px; width: 120px;">悬念：星图是路，得有人走</div>
+          <div class="nd" style="left: 340px; top: 230px; width: 84px;"><span class="t">苏黎登场</span></div>
+          <div class="nd diamond" style="left: 470px; top: 230px; width: 74px;"><span class="t">夺钟</span></div>
+          <div class="nd" style="left: 590px; top: 230px; width: 84px;"><span class="t">守钟人</span></div>
+          <div class="nd cite-nd" style="left: 40px; top: 250px; width: 100px;"><span class="k">引用 · 设定</span><br /><span class="t">钟楼铜钟</span></div>
+          <div class="nd cite-nd" style="left: 160px; top: 290px; width: 100px;"><span class="k">引用 · 人物</span><br /><span class="t">沈砚</span></div>
+          <div class="nd" style="left: 40px; top: 330px; width: 84px;"><span class="t">铜星熄灭</span></div>
+          <div class="nd diamond" style="left: 150px; top: 330px; width: 74px;"><span class="t">测试</span></div>
+          <div class="nd ellipse" style="left: 250px; top: 330px; width: 72px;"><span class="t">钟楼星图</span></div>
+        </div>
+        <div class="cap"><span class="nm">现状</span><span class="len">全摊开 · 17 模块一屏</span></div>
+        <div class="note2">总纲事件链、各卷事件、散装便签引用卡全部摊在同一张画布——<b>看全貌必须缩到 34%，字完全不可读</b>。</div>
+      </div>
+      <div class="vs">→</div>
+      <div class="spec">
+        <div class="canvas" style="height: 375px;">
+          <span class="czoom">缩放 86% —— 全程可读</span>
+          <div class="ctn" style="left: 10px; top: 26px; width: 396px; height: 250px;"></div>
+          <div class="ctn-head" style="left: 16px; top: 31px;"><span class="caret">▾</span>总纲 · 三幕主线<span class="chip blue" style="margin-left: 6px;">容器 · 2 子结构</span></div>
+          <svg class="edge" style="left:0; top:0; width:100%; height:100%">
+            <path d="M 150 106 C 190 106, 205 108, 240 108" stroke="#c0392b" fill="none" stroke-width="1.2"/>
+            <path d="M 312 106 C 347 106, 355 108, 385 108" stroke="#4a7ba6" fill="none" stroke-width="1.2" stroke-dasharray="4 3"/>
+          </svg>
+          <div class="nd" style="left: 66px; top: 94px; width: 84px;"><span class="t">铜星熄灭</span></div>
+          <div class="nd diamond" style="left: 240px; top: 96px; width: 74px;"><span class="t">测试</span></div>
+          <div class="nd ellipse" style="left: 385px; top: 96px; width: 72px;"><span class="t">钟楼星图</span></div>
+          <div class="sumcard" style="left: 62px; top: 168px; width: 205px;">
+            <div class="h"><span class="c">▾</span>第一卷 · 星图初醒</div>
+            <div class="b"><span class="chip">3 模块</span><span class="chip">事件×3</span><span class="chip blue">↔4</span></div>
+          </div>
+          <div class="sumcard" style="left: 290px; top: 168px; width: 205px;">
+            <div class="h"><span class="c">▸</span>第二卷 · 雾都钟楼</div>
+            <div class="b"><span class="chip">5 模块</span><span class="chip">事件×3 · 便签×1 · 引用×1</span><span class="chip blue">↔6</span><span class="chip warn">断线 1</span></div>
+          </div>
+          <div class="ctn" style="left: 10px; top: 288px; width: 396px; height: 74px; border-color: #c8bda0;"></div>
+          <div class="ctn-head" style="left: 16px; top: 293px;"><span class="caret">▾</span>素材池 · 待归位<span class="chip" style="margin-left: 6px;">4 模块</span></div>
+          <div class="nd note-nd" style="left: 130px; top: 316px; width: 105px;">伏笔：日志最后一页字迹最新</div>
+          <div class="nd cite-nd" style="left: 250px; top: 313px; width: 92px;"><span class="k">引用 · 人物</span><br /><span class="t">沈砚</span></div>
+        </div>
+        <div class="cap"><span class="nm">方案</span><span class="len">嵌套 + 折叠收纳 · 同一批内容</span></div>
+        <div class="note2">「总纲」容器装下两个「卷」容器：卷一展开看链、卷二<b>折叠成摘要卡</b>；素材池独立。全程 86% 缩放，字字可读。</div>
+      </div>
+    </div>
+
+    <div class="grid2" style="margin-top: 20px;">
+      <div class="spec">
+        <div class="canvas" style="height: 150px;">
+          <div class="marquee" style="left: 30px; top: 22px; width: 250px; height: 100px;"></div>
+          <div class="nd sel" style="left: 48px; top: 40px; width: 84px;"><span class="t">苏黎登场</span></div>
+          <div class="nd diamond sel" style="left: 170px; top: 40px; width: 74px;"><span class="t">夺钟</span></div>
+          <div class="nd sel" style="left: 96px; top: 92px; width: 84px;"><span class="t">守钟人</span></div>
+          <div class="nd" style="left: 310px; top: 40px; width: 84px; opacity: .45;"><span class="t">界脊之上</span></div>
+        </div>
+        <div class="cap"><span class="nm">框选归组</span><span class="len">marquee + 右键</span></div>
+        <div class="note2">空白处左键拖框选模块（命中高亮），右键「<b>归入新容器</b>」——新容器盒按选区包围盒自动生成；<code>Ctrl+G</code> 归组 / <code>Ctrl+Shift+G</code> 解组。散装模块一键成结构。</div>
+      </div>
+      <div class="spec">
+        <div class="canvas" style="height: 150px;">
+          <div class="sumcard" style="left: 26px; top: 40px; width: 240px; border-top-color: #8a8a8a;">
+            <div class="h"><span class="c">▸</span>第二卷 · 雾都钟楼</div>
+            <div class="b"><span class="chip">5 模块</span><span class="chip">事件×3 · 便签×1 · 引用×1</span><span class="chip blue">↔6</span><span class="chip warn">断线 1</span></div>
+          </div>
+          <div class="nd" style="left: 320px; top: 52px; width: 84px;"><span class="t">摘要卡</span><div class="s">拖动 = 整组搬运</div></div>
+        </div>
+        <div class="cap"><span class="nm">摘要卡构造</span><span class="len">h ≈ 44px · 占地 −75%</span></div>
+        <div class="note2">标题 + caret + 徽标串（模块数 / 类型构成 / 连线数 / 断线告警）。<b>拖摘要卡 = 整组搬运</b>（容器连带后代机制已有）；折叠只影响可见性，展开即回原坐标。</div>
+      </div>
+    </div>
+
+    <div class="why"><b>原则</b>不强制定性层级——没有「总纲/卷纲/章纲」类型绑定，容器标题自由命名，需要标签感时贴现有自定义类型 chip；层级只是<b>空间收纳</b>。<b>零迁移</b>：嵌套复用 parentId，折叠复用 fold（递归隐藏已实现），仅放开「容器不可入容器」的现行排除并升级折叠渲染。<b>实现要点</b>：派生盒需按深度<b>拓扑序</b>构建（父盒要包住子容器的派生盒，而非基准 280×120）。</div>
+  </div>
+</section>
+
+<!-- ================= B 侧栏关系 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>B</em>侧栏连线关系</span><span class="n">↔n 徽标可点开「关联」子列表 —— 连线从画布专属变成侧栏可查</span></div>
+  <div class="frame">
+    <div class="grid2">
+      <div class="spec">
+        <div class="side" style="margin: 0 auto;">
+          <div class="sh">模块条目 · 点击定位画布</div>
+          <div class="add"><button>＋事件</button><button>＋便签</button><button>＋引用卡</button><button>＋容器</button></div>
+          <div class="filters"><span class="on">全部</span><span>事件</span><span>容器</span><span>章节</span><span class="linky">有连线</span><span class="linky">孤岛 3</span><span class="warnf">断线 2</span></div>
+          <div style="padding: 2px 0;">
+            <div class="sitem"><span class="ar">▾</span><span class="ic">▣</span><span class="lb">总纲 · 三幕主线</span><span class="bd">2 项</span></div>
+            <div class="sitem" style="padding-left: 30px;"><span class="ar">▾</span><span class="ic">▣</span><span class="lb">第一卷 · 星图初醒</span><span class="bd">3 项</span></div>
+            <div class="sitem active" style="padding-left: 50px;"><span class="ar">·</span><span class="ic">◆</span><span class="lb">铜星依次熄灭</span><span class="bd linky on">↔3</span></div>
+            <div class="srel"><span class="dir">→</span><span class="dot" style="background: var(--c-cause)"></span><span class="rl">触发</span><span class="peer">领航员测试</span></div>
+            <div class="srel"><span class="dir">←</span><span class="dot" style="background: var(--c-foreshadow)"></span><span class="rl">闭环</span><span class="peer">终局对决</span><span class="pp">总纲</span></div>
+            <div class="srel"><span class="dir">↔</span><span class="dot" style="background: var(--c-rel)"></span><span class="rl">呼应</span><span class="peer">沈砚</span><span class="pp">素材池</span></div>
+            <div class="sitem" style="padding-left: 50px;"><span class="ar">·</span><span class="ic">◆</span><span class="lb">领航员测试</span><span class="bd linky">↔3</span></div>
+            <div class="sitem" style="padding-left: 50px;"><span class="ar">·</span><span class="ic">◯</span><span class="lb">钟楼即星图</span><span class="bd linky">↔2</span></div>
+            <div class="sitem" style="padding-left: 30px;"><span class="ar">▸</span><span class="ic">▣</span><span class="lb">第二卷 · 雾都钟楼</span><span class="bd">5 项</span></div>
+            <div class="sitem"><span class="ar">·</span><span class="ic">✎</span><span class="lb"><span class="par">素材池 / </span>伏笔 · 日志</span><span class="bd linky">↔1</span></div>
+            <div class="sitem"><span class="ar">·</span><span class="ic">🔗</span><span class="lb"><span class="par">素材池 / </span>沈砚</span><span class="bd">引用</span></div>
+            <div class="sitem"><span class="ar">·</span><span class="ic">◆</span><span class="lb">雾都的雨</span><span class="bd">孤岛</span></div>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">结构树 + 关联子列表</span><span class="len">徽标即开关</span></div>
+      </div>
+      <div class="spec">
+        <div class="canvas" style="height: 352px;">
+          <div class="nd sel" style="left: 40px; top: 60px; width: 96px;"><span class="t">铜星依次熄灭</span><div class="s">事件 · 总纲</div></div>
+          <div class="nd" style="left: 220px; top: 60px; width: 96px; opacity: .8;"><span class="t">领航员测试</span></div>
+          <div class="nd" style="left: 220px; top: 170px; width: 96px; opacity: .8;"><span class="t">终局对决</span></div>
+          <div class="nd" style="left: 40px; top: 190px; width: 96px; opacity: .8;"><span class="t">沈砚</span><div class="s">素材池</div></div>
+          <svg class="edge" style="left:0; top:0; width:100%; height:100%">
+            <path d="M 136 78 C 170 78, 185 80, 218 80" stroke="#c0392b" fill="none" stroke-width="1.6"/>
+            <path d="M 136 84 C 180 160, 170 190, 218 190" stroke="#7d5ba6" fill="none" stroke-width="1.6" stroke-dasharray="4 3"/>
+            <path d="M 88 112 C 88 150, 80 175, 88 188" stroke="#4a7ba6" fill="none" stroke-width="1.6"/>
+          </svg>
+          <div class="elabel" style="left: 152px; top: 64px;">触发</div>
+          <div class="elabel" style="left: 150px; top: 150px;">闭环</div>
+          <div class="elabel" style="left: 94px; top: 150px;">呼应</div>
+        </div>
+        <div class="cap"><span class="nm">双向联动</span><span class="len">点关联行 → 画布定位对端</span></div>
+        <div class="note2">点关联行：对端<b>选中 + 居中 + 闪烁</b>（复用画布 flash 机制）；hover 关联行 = 对应连线高亮。画布点选节点 → 侧栏滚动定位并自动展开其关联。</div>
+      </div>
+    </div>
+    <div class="why"><b>关联行读法</b>：方向（→ 出 / ← 入 / ↔ 双向）+ 类型色点（因果红 / 伏笔紫 / 冲突橙 / 关联蓝——沿用画布四类着色）+ 连线标签 + 对端名 + 对端所属容器短前缀。<b>筛选增强</b>：「有连线」「孤岛」（0 连线模块）与断线检测互补——断线=有边但烂尾/缺铺垫，孤岛=完全无边。<b>性能</b>：relsCount 已做全库扫入边，方案只是把计数升级为明细；百模块规模无压力。</div>
+  </div>
+</section>
+
+<!-- ================= C 引用浮窗详情 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>C</em>引用浮窗详情</span><span class="n">单击 = 查资料卡，跳转是浮窗里的显式决定 —— 双击保留直跳</span></div>
+  <div class="frame">
+    <div class="grid2">
+      <div class="spec">
+        <div class="canvas" style="height: 330px; position: relative;">
+          <div class="nd" style="left: 24px; top: 30px; width: 84px;"><span class="t">铜星熄灭</span></div>
+          <div class="nd" style="left: 24px; top: 120px; width: 84px;"><span class="t">十二响</span></div>
+          <div class="nd cite-nd sel" style="left: 150px; top: 96px; width: 108px;"><span class="k">引用 · 设定</span><br /><span class="t">钟楼铜钟</span><div class="s">引用卡 · 单击选卡开浮窗</div></div>
+          <div class="nd note-nd" style="left: 30px; top: 220px; width: 130px;">伏笔：日志最后一页字迹最新</div>
+          <div class="nd" style="left: 330px; top: 40px; width: 84px;"><span class="t">雾都钟楼</span></div>
+          <div class="pop" style="left: 285px; top: 88px;">
+            <div class="ph"><span class="kd">设定</span><span class="tt">钟楼铜钟</span><span class="x">×</span></div>
+            <div class="meta">器物与设定 / 观测站 · 关联 1 条连线</div>
+            <div class="body">雾都城心的巨型铜钟，钟壁刻痕与观测站星图连线完全一致；传说第十二响可照彻全城之雾。与三百六十枚铜刻星辰同源而铸……</div>
+            <div class="stats"><span class="chip">子节点 2</span><span class="chip blue">↔1</span><span class="chip">更新 3 日前</span></div>
+            <div class="act"><span class="go">前往 ↗</span><span class="split">拆窗打开</span></div>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">画布引用卡 · 单击详情</span><span class="len">钉住态 · 原位换内容</span></div>
+        <div class="note2">单击选卡 + 开详情浮窗；<b>再点别的引用卡，浮窗原位换内容</b>（钉住态既有语义）——连续查资料不打断流。Esc / × / 点画布空白关闭。</div>
+      </div>
+      <div class="spec">
+        <div class="canvas" style="height: 330px; position: relative;">
+          <div class="nd" style="left: 30px; top: 36px; width: 90px;"><span class="t">终局对决</span></div>
+          <div class="nd" style="left: 30px; top: 140px; width: 90px;"><span class="t">守钟人</span></div>
+          <span class="nd" style="left: 190px; top: 48px; width: 128px; border-left-color: #8a8a8a;"><span class="k" style="color: var(--ikb); background: var(--ivory); border: 1px solid var(--hair); border-radius: 2px; padding: 0 4px;">章节</span> <span class="t">第三章 · 雾中的钟楼</span><div class="s">双链卫星词 · 单击详情</div></span>
+          <div class="pop" style="left: 205px; top: 92px; width: 340px;">
+            <div class="ph"><span class="kd">正文</span><span class="tt">第三章 · 雾中的钟楼</span><span class="x">×</span></div>
+            <div class="meta">第二卷 · 雾都钟楼 · 156 字 · 完成</div>
+            <div class="body">雾都的名字起得毫不客气——这座城一年有三百天泡在雾里，剩下的六十五天在下雨。钟楼立在城的正中，比雾高出整整一层。传说钟楼的第十二响能唤回迷航的船……</div>
+            <div class="stats"><span class="chip">156 字</span><span class="chip">状态 完成</span><span class="chip">更新 2026/9/15</span><span class="chip blue">批注 1</span></div>
+            <div class="act"><span class="go">前往 ↗</span><span class="split">拆窗打开</span><span class="split">关闭</span></div>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">双链卫星词 · 同一语义</span><span class="len">hover 轻预览不变</span></div>
+        <div class="note2">卫星词与引用卡统一：<b>hover=轻预览（跟随鼠标，现状保留），单击=详情浮窗（钉住宽体），双击=直跳</b>。跳转从「被动传送」变成浮窗里的显式决定；「拆窗打开」把目标章节/设定拆成独立窗口，边看边写。</div>
+      </div>
+    </div>
+    <div class="why"><b>复用而非新建</b>：详情浮窗是 DLinkPopover 的宽体变体——previewFor 六类富预览、拖拽钉住、进出场动画、「跳转 ↗」全部现成，本次仅加统计行、拆窗按钮与三处点击改线（citeJump / om-sat / 双击直跳保留）。<b>边角</b>：目标被删时走「目标不存在」missing 视图（已有），不再发生「点了直接跳到空气」；面板窗口内画布行为一致（PanelHost 已挂浮窗）。</div>
+  </div>
+</section>
+
+<!-- ================= D 分期 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>D</em>分期与验收</span><span class="n">三期相互独立 · 零数据库迁移 · 全部复用现有机制</span></div>
+  <div class="frame">
+    <table class="mx">
+      <tr><th style="width: 150px;">期</th><th>内容</th><th>主要落点</th><th>验收口径</th></tr>
+      <tr><td><span class="tag">M1</span>引用浮窗详情</td><td>方案三全部（改线为主，成本最低、收益直接）</td><td>DLinkPopover 详情模式 + OutlineCanvas 三处改线</td><td>单击不跳转且浮窗出现（钉住含「前往/拆窗」）、浮窗跳转落点正确、双击直跳保留、目标缺失走 missing 视图；新增 outline-detail-verify + olcanvas 回归</td></tr>
+      <tr><td><span class="tag">M2</span>侧栏关系</td><td>方案二全部</td><td>OutlineSidebar relsOf + 关联子列表 + 筛选/联动</td><td>关联明细与画布连线一致（抽样方向/标签/对端）、点击定位对端并 flash、孤岛筛选正确、选中联动滚动</td></tr>
+      <tr><td><span class="tag">M3</span>嵌套收纳</td><td>方案一全部（几何改动最重，放最后）</td><td>OutlineCanvas + canvas-model（拓扑序派生盒 + 摘要卡 + marquee）</td><td>容器套容器含循环拒绝、父盒包住子容器派生盒（截图断言）、递归折叠、摘要卡徽标、整组搬运、框选归组/解组与快捷键；olcanvas 回归 + 文本视图回归</td></tr>
+    </table>
+    <div class="why"><b>顺序建议</b>M1 → M2 → M3（M3 最重放最后；M1/M2 可并行）。<b>不做的事</b>：不引入强制「总纲/卷纲/章纲」类型系统、不做自动布局、不改 olnodes schema、不动现有画布手势（拖线/塑形/吸附/端口）。落地按《开发流程》纪律：每期一个版本一个提交，先登记规格再写代码。</div>
+  </div>
+</section>
+
+</body>
+</html>

@@ -101,6 +101,14 @@ function sealLines(author) {
   if (a.length === 3) return [a.slice(0, 2), a.slice(2)]
   return [a.slice(0, 2), a.slice(2, 4)]
 }
+/* 书名排版分级（畅销书封面惯例：短名竖排显书卷气，长名横排保识别）：
+   ≤4 字大字竖排 / ≤8 字常规竖排 / 其余横排居中 */
+function ttCls(title) {
+  const n = (title || '').trim().length
+  if (n <= 4) return 'tt-v1'
+  if (n <= 8) return 'tt-v2'
+  return 'tt-h'
+}
 function fmtWords(n) {
   const v = Number(n) || 0
   return v >= 10000 ? (v / 10000).toFixed(1) + ' 万字' : v + ' 字'
@@ -150,9 +158,9 @@ async function onCardMenu(key, w) {
             @click="onWorkClick(w)"
             @keydown.enter="onWorkClick(w)"
           >
-            <div class="book-cover" :class="'k-' + (w.kind || 'novel')">
+            <div class="book-cover" :class="['k-' + (w.kind || 'novel'), ttCls(w.title)]">
               <span class="cover-tt">{{ w.title }}</span>
-              <span class="cover-sub">Novel · {{ w.status || '连载中' }}</span>
+              <span class="cover-sub">{{ w.status || '连载中' }}</span>
               <span v-if="sealLines(w.author).length" class="cover-seal"><template v-for="(ln, i) in sealLines(w.author)" :key="i">{{ ln }}<br v-if="i < sealLines(w.author).length - 1" /></template></span>
               <div class="cover-menu" @click.stop>
                 <NDropdown :options="cardMenu(w)" @select="(k) => onCardMenu(k, w)" trigger="click">

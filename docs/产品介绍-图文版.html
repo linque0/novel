@@ -258,7 +258,8 @@ kbd{
       <span>幕布式设定库</span>
       <span>跨模块双链</span>
       <span>拆窗多窗口</span>
-      <span>三套主题</span>
+      <span>三套主题 · 中英文字体切换</span>
+      <span>色带书封封面</span>
     </div>
   </div>
 
@@ -268,7 +269,7 @@ kbd{
 
   <div class="cover-bot">
     <div>产品介绍 · 图文版<br />github.com/linque0/novel</div>
-    <div class="ver">v1.0.18</div>
+    <div class="ver">v1.0.23</div>
   </div>
 </section>
 
@@ -294,14 +295,14 @@ kbd{
     <div class="toc-item"><span class="toc-num">06</span><span class="toc-t">灵感 · 随手记</span><span class="toc-d"></span><span class="toc-p">15</span></div>
     <div class="toc-item"><span class="toc-num">07</span><span class="toc-t">全局工具 · 搜索 / 统计 / 双链 / 导入导出</span><span class="toc-d"></span><span class="toc-p">16</span></div>
     <div class="toc-item"><span class="toc-num">08</span><span class="toc-t">多窗口 · 边看大纲边写正文</span><span class="toc-d"></span><span class="toc-p">19</span></div>
-    <div class="toc-item"><span class="toc-num">09</span><span class="toc-t">视觉与主题</span><span class="toc-d"></span><span class="toc-p">21</span></div>
-    <div class="toc-item"><span class="toc-num">10</span><span class="toc-t">内置帮助 · 数据安全</span><span class="toc-d"></span><span class="toc-p">22</span></div>
-    <div class="toc-item"><span class="toc-num">11</span><span class="toc-t">安装运行 · 技术一览</span><span class="toc-d"></span><span class="toc-p">23</span></div>
+    <div class="toc-item"><span class="toc-num">09</span><span class="toc-t">视觉与主题 · 色带书封 / 字体切换 / 设置面板</span><span class="toc-d"></span><span class="toc-p">21</span></div>
+    <div class="toc-item"><span class="toc-num">10</span><span class="toc-t">内置帮助 · 数据安全</span><span class="toc-d"></span><span class="toc-p">23</span></div>
+    <div class="toc-item"><span class="toc-num">11</span><span class="toc-t">安装运行 · 技术一览</span><span class="toc-d"></span><span class="toc-p">24</span></div>
   </div>
 
   <div class="toc-note">
-    <strong>阅读说明</strong>　本文档全部配图均为软件真实界面截图，取自演示作品《星尘旅人》
-    （3 卷 9 章 · 6 人物 · 13 条设定 · 17 个画布模块），未做任何界面美化修饰。<br />
+    <strong>阅读说明</strong>　本文档全部配图均为软件真实界面截图：工作台内各模块取自演示作品《星尘旅人》
+    （3 卷 9 章 · 6 人物 · 13 条设定 · 17 个画布模块），书架页为在架书目全览（15 本验证书 + 该演示作品），未做任何界面美化修饰。<br />
     相关文档：<code>docs/开发流程.md</code>（工程方法）· <code>docs/使用手册.md</code>（操作说明）· <code>CHANGELOG.md</code>（版本历史）
   </div>
 </section>
@@ -380,20 +381,21 @@ kbd{
   </div>
 
   <p>
-    入口是书架页：每部作品一张封面卡，显示书名、总字数、章节数与创作状态（构思 / 连载 / 完结）。
-    卡片右上角是编辑与删除（软删除，可回收站恢复）菜单。
-    顶栏常驻备份、恢复、统计与帮助入口，右上角「＋ 新建作品」一键开书。
+    入口是书架页：每部作品一张<strong>竖版书封</strong>——平涂单色 + 衬线书名 + 作者名圆印，
+    封面下方一行细信息呈现总字数与章节数，创作状态（构思 / 连载 / 完结）印在封底角落。
+    封面悬停出现编辑与删除（软删除，可回收站恢复）菜单。顶栏常驻本地搜索（书名 / 作者 / 类型）、
+    「⚙ 设置」面板与「＋ 新建作品」。
   </p>
 
   <figure>
     <div class="frame"><img src="assets/01-shelf.png" alt="书架页" /></div>
-    <figcaption><b>图 1</b>　书架页。封面卡上直接呈现作品规模与状态，无需进书即可掌握进度。</figcaption>
+    <figcaption><b>图 1</b>　书架页。色带书封沿墙陈列，封面即进度——书名、规模与状态无需进书即可掌握。</figcaption>
   </figure>
 
   <div class="grid2">
     <div class="card">
       <h4>整库备份 / 恢复</h4>
-      <p>导出 JSON 全库快照（含图片 base64），可整体还原；跨设备迁移或换机重装都靠它。</p>
+      <p>「⚙ 设置 → 数据」导出 JSON 全库快照（含图片 base64），可整体还原；跨设备迁移或换机重装都靠它。</p>
     </div>
     <div class="card">
       <h4>多配置隔离</h4>
@@ -446,7 +448,7 @@ kbd{
     </div>
     <div class="card">
       <h4>章节状态与书签</h4>
-      <p>每章可标记<strong>草稿 / 完成 / 待修改</strong>；书签三入口——侧栏右键、工具栏 ☆ 键、顶栏 🔖 下拉跳转。</p>
+      <p>每章可标记<strong>草稿 / 完成 / 待修改</strong>；书签三入口——侧栏右键、工具栏 ☆ 键、「⚙ 设置」面板书签区跳转。</p>
     </div>
   </div>
 
@@ -1141,14 +1143,15 @@ kbd{
   </div>
 
   <p>
-    提供<strong>宣纸</strong>（默认，暖米色纸纹）、<strong>羊皮纸</strong>、<strong>暗夜书房</strong>（深色）三套皮肤。
+    提供<strong>宣纸</strong>（默认，暖米色纸纹）、<strong>羊皮纸</strong>、<strong>暗夜书房</strong>（深色）三套皮肤，
+    在顶栏「⚙ 设置」面板一键切换（导航底部 ☀/🌙 亦可快速昼夜切换）。
     全局采用衬线排版与纸张纹理，配统一的图标体系与视觉令牌（圆角 / 间距 / 投影 / 动效时长），
     并支持 <code>prefers-reduced-motion</code> 降级与键盘焦点环。
   </p>
 
   <figure>
     <div class="frame"><img src="assets/04-theme-night.png" alt="暗夜书房主题" /></div>
-    <figcaption><b>图 20</b>　暗夜书房主题下的正文视图。导航栏底部可一键昼夜切换。</figcaption>
+    <figcaption><b>图 20</b>　暗夜书房主题下的正文视图。深色纸底配金色强调，与封面墨黑款同一套对位逻辑。</figcaption>
   </figure>
 
   <div class="grid3">
@@ -1177,7 +1180,49 @@ kbd{
   </div>
 </section>
 
-<!-- ============================= 22 · 10 帮助与安全 ============================= -->
+<!-- ============================= 21+1 · 09 封面与字体 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">09 · 视觉与主题</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">COVERS &amp; TYPE</div>
+    <h2>色带书封 · 六款封面 · 字体切换</h2>
+    <div class="bar"></div>
+  </div>
+
+  <p>
+    书架封面采用<strong>「色带书封」</strong>体系：竖版 2:3 开本、平涂单色、左侧一道书脊装订带，
+    封面上只有书名、状态细线与作者名圆印三种元素——丛书墙逻辑，封面即全部。
+    六款配色（虚构 · 克莱因蓝 / 非虚构 · 象牙白 / 文集 · 松绿 / 诗辑 · 藤紫 / 别藏 · 绛红 / 特殊 · 墨黑）
+    同一构造仅换色，每款底色配一对冷暖对位的字色；新建或编辑作品时任选一款。
+  </p>
+
+  <figure>
+    <div class="frame" style="width:72%; margin:0 auto"><img src="assets/24-cover-styles.png" alt="六款封面同架" /></div>
+    <figcaption><b>图 21</b>　六款封面同架示范。书名竖排衬线、作者名钤于圆印、状态细线压底；封面书名跟随正文字体切换。</figcaption>
+  </figure>
+
+  <p>
+    正文字体支持<strong>中 / 西文分离切换</strong>：中文六款（思源宋体 / 霞鹜文楷 / 京华老宋体 / 朝华标题 / 云游手书 / 系统黑体）、
+    西文三款（跟随中文 / Playfair Display / Montenegrin Gothic One），全部为随包本地 OFL 字体、零网络请求；
+    书架封面书名与圆印同步跟随，正文字号 13–24px 无级调节。
+  </p>
+
+  <figure>
+    <div class="frame" style="width:72%; margin:0 auto"><img src="assets/23-settings-panel.png" alt="设置面板" /></div>
+    <figcaption><b>图 22</b>　「⚙ 设置」面板：主题 / 中英文字体 / 字号 / 数据 / 书签 / 统计 / 帮助收编于同一入口，纸感底板随三套主题自适应。</figcaption>
+  </figure>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">22</span>
+  </div>
+</section>
+
+<!-- ============================= 22+1 · 10 帮助与安全 ============================= -->
 <section class="page">
   <div class="p-head">
     <div class="brand"><b>小说工坊</b> Novel Studio</div>
@@ -1194,13 +1239,13 @@ kbd{
     <div class="col">
       <figure class="mb0">
         <div class="frame"><img src="assets/18-help.png" alt="内置使用手册" /></div>
-        <figcaption><b>图 21</b>　内置使用手册，含功能详解、键位详解、导出行为表与 FAQ。</figcaption>
+        <figcaption><b>图 23</b>　内置使用手册，含功能详解、键位详解、导出行为表与 FAQ。</figcaption>
       </figure>
     </div>
     <div class="col">
       <h4 class="side-h4">手册与源码同源</h4>
       <p class="side-p">
-        顶栏「帮助」按钮（书架页与书内均有）打开内置手册。手册以 Markdown 原文打包进构建、
+        「⚙ 设置 → 帮助与键位手册」（书架页与书内均有）打开内置手册。手册以 Markdown 原文打包进构建、
         <code>marked</code> 实时渲染，<strong>与源码手册同源</strong>——功能一变，手册跟着变，永不失同步。
       </p>
       <h4 class="side-h4" style="margin-top:4.5mm">回收站</h4>
@@ -1212,7 +1257,7 @@ kbd{
 
   <figure style="margin-top:4.5mm">
     <div class="frame"><img src="assets/19-trash.png" alt="回收站" /></div>
-    <figcaption><b>图 22</b>　回收站按正文 / 人物 / 设定 / 灵感分页，支持恢复与彻底删除。</figcaption>
+    <figcaption><b>图 24</b>　回收站按正文 / 人物 / 设定 / 灵感分页，支持恢复与彻底删除。</figcaption>
   </figure>
 
   <div class="callout dark">
@@ -1226,11 +1271,11 @@ kbd{
 
   <div class="p-foot">
     <span>小说工坊 Novel Studio · 产品介绍</span>
-    <span class="pg">22</span>
+    <span class="pg">23</span>
   </div>
 </section>
 
-<!-- ============================= 23 · 11 安装与技术 ============================= -->
+<!-- ============================= 24 · 11 安装与技术 ============================= -->
 <section class="page">
   <div class="p-head">
     <div class="brand"><b>小说工坊</b> Novel Studio</div>
@@ -1248,7 +1293,7 @@ kbd{
     <tbody>
       <tr>
         <td><strong>安装程序</strong></td>
-        <td><code>novel-studio-setup-1.0.18.exe</code><br /><span style="color:var(--muted);font-size:8.5pt">来自 GitHub Releases</span></td>
+        <td><code>novel-studio-setup-1.0.23.exe</code><br /><span style="color:var(--muted);font-size:8.5pt">来自 GitHub Releases</span></td>
         <td>Windows x64，NSIS 向导式（可选安装路径、创建桌面与开始菜单快捷方式）</td>
       </tr>
       <tr>
@@ -1298,23 +1343,23 @@ kbd{
 
   <div class="p-foot">
     <span>小说工坊 Novel Studio · 产品介绍</span>
-    <span class="pg">23</span>
+    <span class="pg">24</span>
   </div>
 </section>
 
-<!-- ============================= 24 封底 ============================= -->
+<!-- ============================= 25 封底 ============================= -->
 <section class="page back">
   <div class="mark">小说工坊</div>
   <div class="rule"></div>
   <div class="info">
-    <div><span class="k">版本</span>v1.0.18 · Windows x64</div>
+    <div><span class="k">版本</span>v1.0.23 · Windows x64</div>
     <div><span class="k">仓库</span>github.com/linque0/novel</div>
     <div><span class="k">下载</span>github.com/linque0/novel/releases</div>
     <div style="margin-top:6mm;font-size:9pt;color:var(--muted)">
       本地优先 · 输入即存 · 数据留在本机
     </div>
   </div>
-  <div class="foot">本文档配图均为软件真实界面截图，取自演示作品《星尘旅人》</div>
+  <div class="foot">本文档配图均为软件真实界面截图，工作台取自演示作品《星尘旅人》</div>
 </section>
 
 </body>

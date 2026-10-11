@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小说工坊 · 海报感封面系统 v9 · 2026-09-21</title>
+<link rel="stylesheet" href="./fonts/fonts.css" />
+<link rel="stylesheet" href="./fonts/fonts-art.css" />
+<style>
+:root {
+  --ikb: #002FA7; --ivory: #FBF9F3; --paper: #FDFCF8; --desk: #F2EFE7;
+  --ink: #1E1E1E; --ink-2: #6E6A60; --hair: #DCD6C6;
+  --serif: 'Noto Serif SC', Georgia, serif;
+  --disp: 'Playfair Display', Georgia, serif;
+  --sans: 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #E8E3D6; background-image: var(--noise); font-family: var(--sans); color: #26221c; }
+.doc-head { max-width: 1180px; margin: 0 auto; padding: 46px 24px 8px; }
+.doc-head .ver { font-family: var(--disp); font-size: 11px; letter-spacing: .3em; color: var(--ikb); font-weight: 600; text-transform: uppercase; }
+.doc-head h1 { font-family: var(--serif); font-size: 34px; margin: 10px 0 12px; font-weight: 700; }
+.doc-head p { margin: 0 0 6px; color: #6e6960; font-size: 13px; line-height: 1.9; }
+.doc-head p b { color: #26221c; }
+.sheet { max-width: 1180px; margin: 38px auto; padding: 0 24px; }
+.sheet-tag { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.sheet-tag .k { font-family: var(--serif); font-size: 21px; font-weight: 700; }
+.sheet-tag .k em { font-style: normal; font-family: var(--disp); font-size: 13px; color: var(--ikb); margin-right: 8px; letter-spacing: .12em; }
+.sheet-tag .n { font-size: 12px; color: #857c6d; }
+.frame { background: var(--desk); border: 1px solid var(--hair); border-radius: 3px; padding: 24px 30px 28px; position: relative; }
+
+/* ============ 封面构件（2:3 竖版） ============ */
+.cov { width: 168px; aspect-ratio: 2 / 3; position: relative; overflow: hidden; flex: none; color: var(--ivory); }
+.cov::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 9px; z-index: 3;
+  background: linear-gradient(90deg, rgba(0,0,0,.26), rgba(0,0,0,.07) 58%, rgba(255,255,255,.07)); }
+.cov.k-note { color: var(--ikb); background: var(--ivory); border: 1px solid var(--hair); }
+.cov.k-note::before { background: linear-gradient(90deg, rgba(0,47,167,.16), rgba(0,47,167,.04) 58%, rgba(0,47,167,.06)); }
+.cov.k-novel { background: var(--ikb); }
+.cov.k-cedar { color: #E8C989; background: #2F5D50; border: 1px solid var(--hair); }
+.cov.k-cedar::before { background: linear-gradient(90deg, rgba(0,0,0,.24), rgba(0,0,0,.06) 58%, rgba(255,255,255,.08)); }
+.cov .tt { font-family: var(--serif); font-weight: 600; }
+.cov .sub { position: absolute; font-family: var(--serif); font-size: 9px; font-weight: 500; letter-spacing: .32em; white-space: nowrap; }
+.cov.k-novel .sub, .cov.k-cedar .sub { color: rgba(251,249,243,.72); }
+.cov.k-note .sub { color: rgba(0,47,167,.58); }
+.cov .seal { position: absolute; width: 28px; height: 28px; border-radius: 50%; border: 1px solid; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--serif); font-size: 8px; font-weight: 500; line-height: 1.1; text-align: center; }
+.cov.k-novel .seal, .cov.k-cedar .seal { border-color: rgba(251,249,243,.8); color: var(--ivory); }
+.cov.k-note .seal { border-color: var(--ikb); color: var(--ikb); }
+
+/* ============ 海报信息层（四角微标 + 底部锁定行） ============ */
+.p-tl { position: absolute; left: 15px; top: 13px; font-family: var(--disp); font-size: 6.5px; font-weight: 600; letter-spacing: .26em; text-transform: uppercase; opacity: .72; z-index: 4; }
+.p-tr { position: absolute; right: 13px; top: 13px; font-family: var(--disp); font-size: 6.5px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; opacity: .72; z-index: 4; }
+.p-lock { position: absolute; left: 15px; right: 13px; bottom: 12px; display: flex; align-items: center; gap: 8px; z-index: 4; }
+.p-lock .no { font-family: var(--disp); font-size: 8px; font-weight: 700; letter-spacing: .14em; }
+.p-lock .ln { flex: 1; height: 1px; background: currentColor; opacity: .35; }
+.p-lock .st { font-family: var(--serif); font-size: 8px; letter-spacing: .3em; opacity: .8; }
+
+/* ============ P1 巨字立骨 ============ */
+.p1-first { position: absolute; font-weight: 700; line-height: 1; z-index: 2; }
+.p1-rest { position: absolute; writing-mode: vertical-rl; font-weight: 600; z-index: 2; }
+.p1-sub { position: absolute; font-family: var(--disp); font-size: 7px; font-weight: 600; letter-spacing: .24em; text-transform: uppercase; opacity: .66; }
+
+/* ============ P2 解构笔画 ============ */
+.p2 { position: absolute; writing-mode: vertical-rl; display: flex; font-weight: 600; z-index: 2; }
+.p2 i { font-style: normal; display: block; }
+.p2 i:nth-child(3n+1) { transform: translate(2px, -4px) rotate(-2.2deg); }
+.p2 i:nth-child(3n+2) { transform: translate(-3px, 3px) rotate(1.8deg); opacity: .9; }
+.p2 i:nth-child(3n) { transform: translate(1px, 5px) rotate(-1deg); opacity: .78; }
+.stroke { position: absolute; background: currentColor; z-index: 1; }
+
+/* ============ P3 光栅错层 ============ */
+.p3 { position: absolute; writing-mode: vertical-rl; font-weight: 600; z-index: 2; }
+.p3 span { position: absolute; inset: 0; display: block; }
+.p3 .l1 { color: #E8C989; opacity: .85; clip-path: inset(0 0 58% 0); transform: translateX(-4px); }
+.p3 .l2 { color: var(--ivory); opacity: .5; clip-path: inset(40% 0 22% 0); transform: translateX(3px); }
+.cov.k-note .p3 .l1 { color: var(--ikb); opacity: .5; }
+.cov.k-note .p3 .l2 { color: #2F5D50; opacity: .4; }
+
+/* ============ P4 几何线描 + 双语锁定 ============ */
+.p4-art { position: absolute; z-index: 1; }
+.p4-lock { position: absolute; z-index: 2; text-align: center; }
+.p4-lock .cn { font-family: var(--serif); font-weight: 700; }
+.p4-lock .py { font-family: var(--disp); font-size: 8px; font-weight: 600; letter-spacing: .3em; text-transform: uppercase; opacity: .72; margin-top: 5px; }
+.p4-quote { position: absolute; z-index: 2; font-family: var(--serif); font-size: 7.5px; letter-spacing: .18em; opacity: .62; line-height: 1.9; }
+
+/* ============ P5 渐变海境 + 双侧竖排 ============ */
+.cov.grad-novel { background: linear-gradient(180deg, #002FA7 0%, #00409e 46%, #0a2f6e 100%); }
+.cov.grad-cedar { background: linear-gradient(180deg, #2F5D50 0%, #356b5c 52%, #1e4238 100%); }
+.p5-col { position: absolute; writing-mode: vertical-rl; font-weight: 600; z-index: 2; }
+.p5-en { position: absolute; font-family: var(--disp); font-weight: 600; letter-spacing: .3em; text-transform: uppercase; opacity: .8; z-index: 2; }
+
+/* ============ 版式 ============ */
+.trio { display: flex; gap: 30px; }
+.spec { flex: 1; min-width: 0; }
+.spec .cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.spec .cap .nm { font-family: var(--serif); font-size: 13.5px; font-weight: 700; }
+.spec .cap .len { font-size: 10.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.spec .note { font-size: 11.5px; color: var(--ink-2); line-height: 1.75; margin-top: 4px; }
+.spec .note b { color: #26221c; }
+.why { background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; padding: 13px 18px; margin-top: 16px; font-size: 12.5px; line-height: 2; color: #33302a; }
+.why b { color: var(--ikb); font-weight: 700; margin-right: 4px; }
+.why .no { color: #a03d2e; font-weight: 700; margin-right: 4px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+table.mx { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 6px; }
+table.mx th, table.mx td { border: 1px solid var(--hair); padding: 7px 10px; text-align: left; line-height: 1.7; }
+table.mx th { background: var(--ivory); font-family: var(--serif); }
+table.mx td .tag { display: inline-block; font-family: var(--disp); font-size: 11px; color: var(--ikb); font-weight: 700; margin-right: 6px; letter-spacing: .08em; }
+.ref-tab { border-collapse: collapse; width: 100%; font-size: 12px; }
+.ref-tab th, .ref-tab td { border: 1px solid var(--hair); padding: 6px 9px; text-align: left; line-height: 1.65; }
+.ref-tab th { background: var(--ivory); font-family: var(--serif); }
+.ref-tab td b { color: var(--ikb); }
+.thumb-row { display: flex; gap: 26px; align-items: flex-end; margin-top: 8px; }
+.thumb-row .tb { text-align: center; }
+.thumb-row .tb .lb { font-size: 10.5px; color: var(--ink-2); margin-top: 6px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <div class="ver">Poster Cover System · v9 · 2026-09-21</div>
+  <h1>海报感封面系统 · 五款 + 海报信息层级</h1>
+  <p>v8 解决「书名怎么排」，本稿回答「封面怎么像<b>海报</b>」。六张参考图的技法拆解与转译见下表——共同点：<b>极端字号对比</b>（巨字 vs 6px 微标）、<b>文字即图形</b>（解构/错层/线描）、<b>海报信息层级</b>（四角微标 + 底部锁定行 + 编号）。全部保留 G 双色制、书脊、作者圆印与衬线骨架——<b>张扬在封面，纪律在系统</b>。</p>
+</header>
+
+<!-- ================= 参考拆解 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>R</em>参考图技法拆解 → G 体系转译</span></div>
+  <div class="frame">
+    <table class="ref-tab">
+      <tr><th style="width: 130px;">参考</th><th>技法提取</th><th>G 体系转译（落地款）</th></tr>
+      <tr><td><b>《蜃楼》</b></td><td>竖排巨字占满右轴、左侧只有微信息块、极端留白；「一个字」即主视觉</td><td>首字/次字放到 60–80px，其余信息压到 6.5–8px 微标 → <b>P1 巨字立骨</b></td></tr>
+      <tr><td><b>《檀香刑》</b></td><td>几何线描插图（圆+水滴+斜线）压场、作者名竖排小字、标题+拼音双语锁定、奖项行</td><td>SVG 圆/弧/斜线线描 + 标题拼音双行锁定 + 底部「SELECTION」行 → <b>P4 几何线描</b></td></tr>
+      <tr><td><b>《山海亂》</b></td><td>解构笔画：三点水脱位、笔画散落浮空、字大可撑破版面；字成为抽象图形</td><td>逐字位移/旋转/透明度 +  floating 笔画细线 → <b>P2 解构笔画</b></td></tr>
+      <tr><td><b>岛の眺め</b></td><td>渐变海境、双侧竖排夹英文、海报式日期层级、展览信息分角落位</td><td>双色渐变（深→浅同色相）+ 左右双竖排夹拉丁 + 编号锁定行 → <b>P5 渐变海境</b></td></tr>
+      <tr><td><b>《劳伦斯》</b></td><td>巨型首字母 L 作海报锚、图像区、底部通栏 NATIONAL BESTSELLER 标语</td><td>巨字首字兼作「字母锚」+ 底部通栏标语行（NOVEL STUDIO · NO.xx）→ <b>P1 / 海报信息层</b></td></tr>
+      <tr><td><b>Dust in the Wind</b></td><td>光栅错层：同一文字复制多层、横向位移、扫描线切带、故障感动势</td><td>三层复制 + clip-path 切带 + 位移 → <b>P3 光栅错层</b></td></tr>
+    </table>
+    <div class="why"><b>海报信息层（全款通用）</b>左上 <b>NOVEL STUDIO</b> 微标（Playfair 6.5px 字距 .26em）｜右上<b>类型/编号微标</b>｜底部<b>锁定行</b>：作者圆印 — 细线 — NO.01 编号 — 细线 — 状态。参考《劳伦斯》的 BESTSELLER 通栏与蜃楼的微信息块：编号是丛书感的来源（Fitzcarraldo 同思路），细线让信息成「带」不成「堆」。</div>
+  </div>
+</section>
+
+<!-- ================= P1 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>P1</em>巨字立骨</span><span class="n">《蜃楼》×《劳伦斯》——首字冲出边缘，余字降为微字</span></div>
+  <div class="frame">
+    <div class="trio">
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="p-tl">Novel Studio</span>
+          <span class="p-tr">Fiction</span>
+          <span class="p1-first" style="left: 14px; top: -16px; font-size: 78px;">浮</span>
+          <span class="p1-rest" style="right: 20px; top: 96px; font-size: 21px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 17px; bottom: 58px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">浮世</span><span class="len">2 字 · 78px 巨字</span></div>
+        <div class="note"><b>海报锚。</b>「浮」78px 冲出顶缘（留 2/3），「世」21px 竖排右下，拼音小字补第三层。缩略图下巨字仍是第一视觉。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="p-tl">Novel Studio</span>
+          <span class="p-tr">Fiction</span>
+          <span class="p1-first" style="left: 14px; top: -12px; font-size: 66px;">星</span>
+          <span class="p1-rest" style="right: 18px; top: 92px; font-size: 13px; letter-spacing: .12em; writing-mode: horizontal-tb; width: 92px; line-height: 1.7;">尘旅人</span>
+          <span class="p1-sub" style="left: 17px; bottom: 58px;">Xing Chen</span>
+          <span class="seal bl" style="bottom: 40px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.02</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="cap"><span class="nm">星尘旅人</span><span class="len">5 字 · 66px + 13px</span></div>
+        <div class="note">首字 66px + 余字 13px 横排小字块（蜃楼左侧微信息块的镜像用法）。<b>5–12 字通吃</b>：余字永远有地方去。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="p-tl">Novel Studio</span>
+          <span class="p-tr">Sci-Fi</span>
+          <span class="p1-first" style="left: 14px; top: -10px; font-size: 58px;">长</span>
+          <span class="p1-rest" style="right: 16px; top: 86px; font-size: 12px; letter-spacing: .1em; writing-mode: horizontal-tb; width: 90px; line-height: 1.65;">夜漫漫唯有机械之心</span>
+          <span class="p1-sub" style="left: 17px; bottom: 58px;">Long Night</span>
+          <span class="seal bl" style="bottom: 40px;">测试</span>
+          <span class="p-lock"><span class="no">NO.03</span><span class="ln"></span><span class="st">构思</span></span>
+        </div>
+        <div class="cap"><span class="nm">长夜漫漫唯有机械之心</span><span class="len">12 字 · 58px + 12px</span></div>
+        <div class="note">12 字也不狼狈：巨字立骨 + 小字块两行。<b>全篇幅兼容是 P1 的种族优势</b>——海报锚永远在。</div>
+      </div>
+    </div>
+    <div class="why"><b>手法</b>字号跳变 ≥4 倍（张力来源）；首字 top 负值冲顶缘（出血）；余字块宽 ≤92px 右对齐成「信息柱」。<b>适用</b>全部篇幅，2 字效果最炸。<b>注意</b>巨字与圆印/锁定行保持 ≥24px 净空，避免微信息被吞。</div>
+  </div>
+</section>
+
+<!-- ================= P2 / P3 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>P2</em>解构笔画</span><span class="n">＋ <em>P3</em>光栅错层</span><span class="n">《山海亂》× Dust in the Wind</span></div>
+  <div class="frame">
+    <div class="grid2">
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov k-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="stroke" style="left: 22px; top: 60px; width: 34px; height: 1.5px; opacity: .5; transform: rotate(-18deg);"></span>
+            <span class="stroke" style="left: 40px; top: 150px; width: 1.5px; height: 26px; opacity: .4;"></span>
+            <span class="p2" style="left: 52px; top: 30px; font-size: 30px; letter-spacing: .24em;"><i>浮</i><i>世</i></span>
+            <span class="seal bl">林蛟</span>
+            <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov k-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="stroke" style="left: 24px; top: 74px; width: 40px; height: 1.5px; opacity: .5; transform: rotate(14deg);"></span>
+            <span class="p2" style="left: 48px; top: 26px; font-size: 21px; letter-spacing: .2em;"><i>星</i><i>尘</i><i>旅</i><i>人</i><i>篇</i></span>
+            <span class="seal bl">林蛟</span>
+            <span class="p-lock"><span class="no">NO.02</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov k-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="p2" style="left: 44px; top: 22px; font-size: 15px; letter-spacing: .12em;"><i>长</i><i>夜</i><i>漫</i><i>漫</i><i>唯</i><i>有</i><i>机</i><i>械</i><i>之</i><i>心</i></span>
+            <span class="seal bl">测试</span>
+            <span class="p-lock"><span class="no">NO.03</span><span class="ln"></span><span class="st">构思</span></span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">P2 · 逐字散落</span><span class="len">2 / 5 / 10 字</span></div>
+        <div class="note">每字按 3n+1/3n+2/3n 三组位移旋转（确定性「乱」），穿插 1–2 根 floating 笔画细线模拟脱位笔画。<b>10 字以上降 15px 仍成立</b>，但建议 ≤8 字——解构的尽头是可读。</div>
+      </div>
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov k-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="p3" style="left: 60px; top: 28px; font-size: 27px; letter-spacing: .22em;">浮世<span class="l1">浮世</span><span class="l2">浮世</span></span>
+            <span class="seal bl">林蛟</span>
+            <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov k-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="p3" style="left: 56px; top: 24px; font-size: 20px; letter-spacing: .18em;">星尘旅人<span class="l1">星尘旅人</span><span class="l2">星尘旅人</span></span>
+            <span class="seal bl">林蛟</span>
+            <span class="p-lock"><span class="no">NO.02</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov k-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="p3" style="left: 50px; top: 20px; font-size: 14px; letter-spacing: .12em;">长夜漫漫机械之心<span class="l1">长夜漫漫机械之心</span><span class="l2">长夜漫漫机械之心</span></span>
+            <span class="seal bl">测试</span>
+            <span class="p-lock"><span class="no">NO.03</span><span class="ln"></span><span class="st">构思</span></span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">P3 · 三层错位</span><span class="len">2 / 5 / 8 字</span></div>
+        <div class="note">同文三层：麦金层（上带、左移 4px）+ 象牙 50% 层（中带、右移 3px）+ 主层。clip-path 切出扫描带，<b>动势而不伤读</b>——主层永远完整可读。</div>
+      </div>
+    </div>
+    <div class="why"><b>P2</b> 是七款里最「设计展」的一款，适合实验性/短篇集；<b>P3</b> 是唯一给长标题也留全场的大动作款（扫描带横向切，与字数无关）。两款均纯 CSS（transform / clip-path），无图片依赖。</div>
+  </div>
+</section>
+
+<!-- ================= P4 / P5 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>P4</em>几何线描 + 双语锁定</span><span class="n">＋ <em>P5</em>渐变海境</span><span class="n">《檀香刑》× 岛の眺め</span></div>
+  <div class="frame">
+    <div class="grid2">
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov k-cedar">
+            <span class="p-tl">Novel Studio</span>
+            <svg class="p4-art" style="left: 26px; top: 52px;" width="118" height="130" viewBox="0 0 118 130" fill="none">
+              <circle cx="44" cy="86" r="30" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+              <path d="M62 18 L104 4 L86 96 L62 96 Z" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+              <line x1="62" y1="18" x2="86" y2="96" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+              <circle cx="90" cy="30" r="3.4" fill="currentColor" opacity=".9"/>
+            </svg>
+            <span class="p4-lock" style="left: 0; right: 0; top: 156px;">
+              <span class="cn" style="font-size: 23px; letter-spacing: .3em;">浮世</span>
+              <span class="py">Fu · Shi</span>
+            </span>
+            <span class="p4-quote" style="left: 17px; bottom: 62px;">一场大雾里的<br />清醒梦</span>
+            <span class="seal bl" style="bottom: 36px;">林蛟</span>
+            <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov k-cedar">
+            <span class="p-tl">Novel Studio</span>
+            <svg class="p4-art" style="left: 30px; top: 48px;" width="110" height="118" viewBox="0 0 118 130" fill="none">
+              <circle cx="44" cy="86" r="30" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+              <path d="M62 18 L104 4 L86 96 L62 96 Z" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+              <line x1="62" y1="18" x2="86" y2="96" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            </svg>
+            <span class="p4-lock" style="left: 0; right: 0; top: 152px;">
+              <span class="cn" style="font-size: 17px; letter-spacing: .2em;">星尘旅人</span>
+              <span class="py">Xing Chen Lü Ren</span>
+            </span>
+            <span class="seal bl" style="bottom: 36px;">林蛟</span>
+            <span class="p-lock"><span class="no">NO.02</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov k-cedar">
+            <span class="p-tl">Novel Studio</span>
+            <svg class="p4-art" style="left: 34px; top: 44px;" width="102" height="104" viewBox="0 0 118 130" fill="none">
+              <circle cx="44" cy="86" r="30" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+              <path d="M62 18 L104 4 L86 96 L62 96 Z" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+              <line x1="62" y1="18" x2="86" y2="96" stroke="currentColor" stroke-width="1.4" opacity=".85"/>
+            </svg>
+            <span class="p4-lock" style="left: 0; right: 0; top: 148px;">
+              <span class="cn" style="font-size: 13px; letter-spacing: .14em;">长夜漫漫<br />机械之心</span>
+              <span class="py">Long Night</span>
+            </span>
+            <span class="seal bl" style="bottom: 36px;">测试</span>
+            <span class="p-lock"><span class="no">NO.03</span><span class="ln"></span><span class="st">构思</span></span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">P4 · 线描 + 双语</span><span class="len">2 / 5 / 12 字</span></div>
+        <div class="note">SVG 几何线描（圆+水滴四边形+斜线+实心点）压场上部，标题+拼音居中锁定，一句引文小字补文学性。<b>最像「正经出版的书」</b>，适合别藏/诗辑。</div>
+      </div>
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov grad-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="p5-col" style="left: 30px; top: 30px; font-size: 26px; letter-spacing: .26em;">浮</span>
+            <span class="p5-col" style="right: 26px; top: 58px; font-size: 26px; letter-spacing: .26em;">世</span>
+            <span class="p5-en" style="left: 0; right: 0; top: 118px; text-align: center; font-size: 9px;">Island View</span>
+            <span class="seal bl" style="bottom: 40px;">林蛟</span>
+            <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov grad-novel">
+            <span class="p-tl">Novel Studio</span>
+            <span class="p5-col" style="left: 26px; top: 28px; font-size: 19px; letter-spacing: .2em;">星尘</span>
+            <span class="p5-col" style="right: 24px; top: 56px; font-size: 19px; letter-spacing: .2em;">旅人</span>
+            <span class="p5-en" style="left: 0; right: 0; top: 112px; text-align: center; font-size: 8px;">Stardust</span>
+            <span class="seal bl" style="bottom: 40px;">林蛟</span>
+            <span class="p-lock"><span class="no">NO.02</span><span class="ln"></span><span class="st">连载</span></span>
+          </div>
+          <div class="cov grad-cedar">
+            <span class="p-tl">Novel Studio</span>
+            <span class="p5-col" style="left: 24px; top: 26px; font-size: 14px; letter-spacing: .12em;">长夜漫漫</span>
+            <span class="p5-col" style="right: 22px; top: 54px; font-size: 14px; letter-spacing: .12em;">机械之心</span>
+            <span class="p5-en" style="left: 0; right: 0; top: 106px; text-align: center; font-size: 8px;">Machina</span>
+            <span class="seal bl" style="bottom: 40px;">测试</span>
+            <span class="p-lock"><span class="no">NO.03</span><span class="ln"></span><span class="st">构思</span></span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">P5 · 双侧竖排</span><span class="len">2 / 5 / 12 字</span></div>
+        <div class="note">同色相渐变（深→浅）造海境，标题对半切两列分置左右、下列下沉 28px 成「夹岛」构图，中间拉丁词作渡。<b>12 字 6+6 均分也稳</b>——双侧天然分栏。</div>
+      </div>
+    </div>
+    <div class="why"><b>P4</b> 线描是矢量内联（无图片依赖），引文位可放作品类型关键词；<b>P5</b> 渐变严格限制在同色相三阶（不引入第三个色相），保住 G 的纪律。两款都带编号锁定行，丛书感最强。</div>
+  </div>
+</section>
+
+<!-- ================= 缩略图检验 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>T</em>缩略图尺度检验</span><span class="n">海报款更吃尺度——巨字与错层在 88px 下是否还成立</span></div>
+  <div class="frame">
+    <div class="thumb-row">
+      <div class="tb">
+        <div class="cov k-novel" style="width: 160px;">
+          <span class="p-tl">Novel Studio</span>
+          <span class="p1-first" style="left: 13px; top: -15px; font-size: 74px;">浮</span>
+          <span class="p1-rest" style="right: 19px; top: 91px; font-size: 20px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 16px; bottom: 55px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 38px; width: 26px; height: 26px; font-size: 7.5px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="lb">P1 · 160px</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 120px;">
+          <span class="p-tl">Novel Studio</span>
+          <span class="p1-first" style="left: 12px; top: -11px; font-size: 56px;">浮</span>
+          <span class="p1-rest" style="right: 16px; top: 70px; font-size: 15px; letter-spacing: .2em;">世</span>
+          <span class="p1-sub" style="left: 14px; bottom: 44px; font-size: 6px;">Fu Shi</span>
+          <span class="seal bl" style="bottom: 32px; width: 22px; height: 22px; font-size: 6.5px;">林蛟</span>
+          <span class="p-lock" style="bottom: 9px;"><span class="no" style="font-size: 7px;">NO.01</span><span class="ln"></span><span class="st" style="font-size: 7px;">连载</span></span>
+        </div>
+        <div class="lb">P1 · 120px</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 88px;">
+          <span class="p-tl" style="font-size: 5.5px;">NS</span>
+          <span class="p1-first" style="left: 10px; top: -8px; font-size: 41px;">浮</span>
+          <span class="p1-rest" style="right: 12px; top: 52px; font-size: 11px; letter-spacing: .2em;">世</span>
+          <span class="seal bl" style="bottom: 26px; width: 18px; height: 18px; font-size: 5.5px;">林蛟</span>
+          <span class="p-lock" style="bottom: 8px; left: 11px;"><span class="no" style="font-size: 6px;">01</span><span class="ln"></span></span>
+        </div>
+        <div class="lb">P1 · 88px（微标开始退化，巨字仍在）</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 160px;">
+          <span class="p-tl">Novel Studio</span>
+          <span class="p3" style="left: 58px; top: 26px; font-size: 26px; letter-spacing: .22em;">浮世<span class="l1">浮世</span><span class="l2">浮世</span></span>
+          <span class="seal bl">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="lb">P3 · 160px</div>
+      </div>
+      <div class="tb">
+        <div class="cov grad-novel" style="width: 160px;">
+          <span class="p-tl">Novel Studio</span>
+          <span class="p5-col" style="left: 28px; top: 28px; font-size: 25px; letter-spacing: .26em;">浮</span>
+          <span class="p5-col" style="right: 24px; top: 55px; font-size: 25px; letter-spacing: .26em;">世</span>
+          <span class="p5-en" style="left: 0; right: 0; top: 112px; text-align: center; font-size: 8.5px;">Island View</span>
+          <span class="seal bl" style="bottom: 38px;">林蛟</span>
+          <span class="p-lock"><span class="no">NO.01</span><span class="ln"></span><span class="st">连载</span></span>
+        </div>
+        <div class="lb">P5 · 160px</div>
+      </div>
+    </div>
+    <div class="why"><b>结论</b>P1 巨字在 88px 仍是第一视觉（微标按 5.5–6px 退化，编号行精简为「01—」）；P3 主层完整故缩略图可读；P5 渐变在小尺度会糊成纯色——<b>渐变幅度按封面宽度衰减</b>（大稿三阶、小稿两阶）可解。全部款式仍以软件内 160px 实截为最终验收。</div>
+  </div>
+</section>
+
+<!-- ================= 矩阵与落地 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>M</em>选型矩阵 · v9 × v8 合流</span></div>
+  <div class="frame">
+    <table class="mx">
+      <tr><th style="width: 90px;">篇幅</th><th>海报款（v9）</th><th style="width: 210px;">书籍款（v8）</th><th>自动分流建议</th></tr>
+      <tr><td><b>2 字</b></td><td><span class="tag">P1</span>巨字立骨 · <span class="tag">P5</span>双侧 · <span class="tag">P3</span>错层</td><td>A 出血 · B 虚实</td><td>虚构默认 <b>P1</b>；诗集/别藏 <b>P5</b></td></tr>
+      <tr><td><b>3–4 字</b></td><td><span class="tag">P1</span> · <span class="tag">P4</span>线描 · <span class="tag">P3</span></td><td>B · E</td><td><b>P4</b>（最像正经出版）</td></tr>
+      <tr><td><b>5–8 字</b></td><td><span class="tag">P4</span> · <span class="tag">P3</span> · <span class="tag">P2</span></td><td>E · F</td><td><b>P3</b>（动势与可读兼得）</td></tr>
+      <tr><td><b>9 字以上</b></td><td><span class="tag">P1</span> · <span class="tag">P4</span> · <span class="tag">P5</span>（均分）</td><td>F · C</td><td><b>P1</b>（巨字锚+小字块）</td></tr>
+    </table>
+    <div class="why">
+      <b>1</b>推荐落地面：<b>P1 + P3 + P4</b> 三款按 title.length 分流（P1 默认、P3 中长名、P4 别藏/诗辑），P2/P5 留作手工换款池。<b>2</b>海报信息层（四角微标 + NO. 编号锁定行）全款通用——编号取作品创建序号，零依赖。<b>3</b>P2/P3/P5 均纯 CSS（transform/clip-path/linear-gradient）；P4 线描为内联 SVG path，无图片资源。<b>4</b>巨字与微标的字号跳变 ≥4 倍是「海报感」的刻度尺；微标层 88px 以下允许退化（编号行可省为「01—」）。<b>5</b>全部款式继续随 --editor-font 与六款底色对位体系运作，不破坏 G 纪律。<b>6</b>实施后验收：shelf-verify 15/15 + 三主题 160px 实截 + 88px 极限位抽检。
+    </div>
+    <div class="ref" style="font-size: 11.5px; color: #857c6d; line-height: 1.9; margin-top: 10px;">参考：用户提供六图（《蜃楼》《檀香刑》《山海亂》、まなじの島の眺め、《阿拉伯的劳伦斯》、Dust in the Wind 2024）+ Fitzcarraldo 编号丛书传统。</div>
+  </div>
+</section>
+
+</body>
+</html>

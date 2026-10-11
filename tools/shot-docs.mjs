@@ -1,6 +1,6 @@
 /* 文档截图采集：CDP 驱动 UI 状态（store 直控，避免点错按钮），主进程 capturePage() 取图
    （渲染进程被遮挡/最小化时 Page.captureScreenshot 不产帧会挂起，capturePage 无此问题）。
-   用法：node tools/shot-docs.mjs <group>    group = a|b|c|d|e|all                       */
+   用法：node tools/shot-docs.mjs <group>    group = a|b|c|d|e|f|all（f=v1.0.24 设置面板+六款封面，拍后还原 kind） */
 import { writeFileSync, mkdirSync } from 'node:fs'
 import { resolve, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -58,6 +58,9 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const ins = await connectInspector()
 
 const shot = async (name, match = '127.0.0.1:5173/', exclude = 'panel=') => {
+  /* 先把鼠标挪到左上角中立位：早前真实鼠标事件留下的 hover 态会把卡片 ⋯ 菜单等悬停元素拍进图里 */
+  try { await cdp.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 4, y: 4 }) } catch {}
+  await sleep(120)
   const r = await captureWindow(ins, match, resolve(outDir, name + '.png'), { exclude })
   console.log(`  ✓ ${name}.png  ${r.size.width}x${r.size.height}`)
 }
@@ -86,6 +89,15 @@ const HELPERS = `window.__doc = {
     return { opened: w.work?.title, chapters: w.chapters.length, chars: w.characters.length }
   },
   shelf() { const { w, u } = this.st(); u.view = 'shelf'; u.theme = 'xuan'; u.focusMode = false; for (const k of ['searchOpen','statsOpen','trashOpen','importOpen','exportOpen','helpOpen']) u[k] = false; w.$reset(); return u.view },
+  /* 文档截图规范化：关掉残留的设置面板浮层 + 还原默认字体偏好（早前测试会话可能改过） */
+  async resetPrefs() {
+    const { u } = this.st()
+    if (document.querySelector('.g-set')) { const b = [...document.querySelectorAll('.topbar button')].find(x => x.textContent.includes('设置')); b?.click(); await new Promise(r => setTimeout(r, 350)) }
+    await u.setPref('editorFont', 'song')
+    await u.setPref('editorLatin', 'none')
+    await u.setPref('fontSize', 17)
+    return { font: u.editorFont, latin: u.editorLatin, fs: u.fontSize, panel: !!document.querySelector('.g-set') }
+  },
   set(patch) {
     const { w, u } = this.st()
     if (patch.tab) w.tab = patch.tab
@@ -138,6 +150,42 @@ const HELPERS = `window.__doc = {
     n.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 }))
     return 'ok'
   },
+  /* v1.0.24 新增：设置面板（NPopover 合成 click 可开）。注意 shelf() 切视图是异步渲染的，
+     必须等新顶栏挂载再点齿轮，否则点到的还是旧视图即将卸载的按钮 */
+  async settings() {
+    for (let i = 0; i < 3; i++) {
+      await new Promise(r => setTimeout(r, 500))
+      const b = [...document.querySelectorAll('.topbar button')].find(x => x.textContent.includes('设置'))
+      if (b) b.click()
+      await new Promise(r => setTimeout(r, 600))
+      if (document.querySelector('.g-set')) return { panel: true, tries: i + 1 }
+    }
+    return { panel: false, err: 'popover not open' }
+  },
+  /* 关面板（再点一次齿轮 toggle）；顺带等渲染 */
+  async settingsOff() {
+    for (let i = 0; i < 3; i++) {
+      if (!document.querySelector('.g-set')) return { panel: false }
+      const b = [...document.querySelectorAll('.topbar button')].find(x => x.textContent.includes('设置'))
+      if (b) b.click()
+      await new Promise(r => setTimeout(r, 500))
+    }
+    return { panel: !!document.querySelector('.g-set') }
+  },
+  /* v1.0.24 新增：六款封面款式演示（循环应用到全部书——updateWork 会改 updatedAt 触发重排，
+     只改前 N 本会被重排打乱，全量循环保证每款都稳定可见） */
+  async coverKinds(kinds) {
+    const { s } = this.st()
+    await s.refresh()
+    for (let i = 0; i < s.works.length; i++) await s.updateWork(s.works[i], { kind: kinds[i % kinds.length] })
+    return s.works.map(w => w.kind)
+  },
+  async restoreKinds() {
+    const { s } = this.st()
+    await s.refresh()
+    for (const w of s.works) if (w.kind && w.kind !== 'novel') await s.updateWork(w, { kind: 'novel' })
+    return s.works.filter(w => w.kind !== 'novel').length
+  },
   panelOpen(spec) { return window.native.panelOpen(spec) },
   panelList() { return window.native.panelList() },
   panelClose(key) { return window.native.panelCloseSelf ? null : null },
@@ -148,10 +196,14 @@ const run = (expr) => cdp.eval(expr)
 const runAsync = (expr) => cdp.eval('(async () => (' + expr + '))()')
 const info = (v) => console.log('   ', typeof v === 'object' ? JSON.stringify(v) : v)
 
+/* 全局规范化：残留浮层/字体偏好一律归位（早前测试会话可能改过 appconfig） */
+await run(HELPERS + '; 1')
+info(await runAsync(`(await window.__doc.resetPrefs(), 1)`))
+
 /* ---------- 步骤表 ---------- */
 const GROUPS = {
   a: [
-    ['01-shelf', `window.__doc.shelf()`, 1400],
+    ['01-shelf', `(await window.__doc.resetPrefs(), await window.__doc.restoreKinds(), window.__doc.shelf(), 1)`, 1400],
     ['02-chapter-editor', `(await window.__doc.open('星尘旅人'), window.__doc.set({ tab: 'chapters', theme: 'xuan', chapterTitle: '初雪', focus: false }), 1)`, 1500],
     ['03-chapter-contextmenu', `window.__doc.ctxOnEditor()`, 900],
     ['04-theme-night', `(window.__doc.esc(), window.__doc.set({ theme: 'night' }), 1)`, 1000],
@@ -176,6 +228,10 @@ const GROUPS = {
     ['17-import', `(window.__doc.modal(null), window.__doc.modal('importOpen'), 1)`, 1200],
     ['18-help', `(window.__doc.modal(null), window.__doc.modal('helpOpen'), 1)`, 1600],
     ['19-trash', `(window.__doc.modal(null), window.__doc.modal('trashOpen'), 1)`, 1200]
+  ],
+  f: [
+    ['23-settings-panel', `(await window.__doc.resetPrefs(), await window.__doc.restoreKinds(), window.__doc.shelf(), await window.__doc.settings(), 1)`, 900],
+    ['24-cover-styles', `(await window.__doc.settingsOff(), await window.__doc.coverKinds(['novel','note','cedar','violet','claret','ink']), 1)`, 1800]
   ]
 }
 
@@ -215,7 +271,7 @@ if (group === 'e') {
   process.exit(0)
 }
 
-const plan = group === 'all' ? [...GROUPS.a, ...GROUPS.b, ...GROUPS.c, ...GROUPS.d] : GROUPS[group]
+const plan = group === 'all' ? [...GROUPS.a, ...GROUPS.b, ...GROUPS.c, ...GROUPS.d, ...GROUPS.f] : GROUPS[group]
 if (!plan) throw new Error('unknown group: ' + group)
 
 for (const [name, expr, wait] of plan) {
@@ -226,6 +282,12 @@ for (const [name, expr, wait] of plan) {
   if (name === '02-chapter-editor') info(r)
   await sleep(wait)
   await shot(name)
+}
+
+/* f 组收尾：六款封面演示后把 dev 库的 kind 全部还原为 novel（验证书保持规范数据） */
+if (group === 'f') {
+  const restored = await runAsync(`(await window.__doc.restoreKinds(), 1)`)
+  info({ restored })
 }
 
 console.log('done')

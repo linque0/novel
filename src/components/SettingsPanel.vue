@@ -29,6 +29,7 @@ function bumpFont(d) {
       <NButton size="small" title="设置：主题 / 字体 / 数据 / 帮助"><OIcon name="gear" :size="14" /> 设置</NButton>
     </template>
     <div class="g-set">
+      <div class="g-set-head"><span class="cn">设置</span><span class="en">Settings</span></div>
       <div class="g-set-h"><span class="en">Appearance</span>外观</div>
       <div class="g-row">
         <span class="lb">主题</span>
@@ -78,7 +79,33 @@ function bumpFont(d) {
 </template>
 
 <style scoped>
-.g-set { width: 308px; padding: 4px 2px 6px; font-size: 12.5px; color: var(--text); }
+.g-set {
+  width: 308px;
+  padding: 4px 2px 6px;
+  font-size: 12.5px;
+  color: var(--text);
+  /* 纸感底板：顶部极淡的品牌蓝渐沉 + 主题纸底（三主题各自适配，非纯白） */
+  background:
+    linear-gradient(180deg, rgba(0, 47, 167, 0.04), rgba(0, 47, 167, 0) 110px),
+    var(--bg-panel, #faf7ec);
+}
+.theme-night .g-set {
+  background:
+    linear-gradient(180deg, rgba(0, 47, 167, 0.1), rgba(0, 47, 167, 0) 110px),
+    var(--bg-panel);
+}
+/* 面板头：衬线中文 + Playfair 微标 + 双细线（书版式扉页感） */
+.g-set-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 10px 2px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 var(--bg-panel);
+}
+.g-set-head .cn { font-family: var(--g-serif); font-size: 14px; font-weight: 700; color: var(--ikb); }
+.g-set-head .en { font-family: var(--g-disp); font-size: 8px; letter-spacing: 0.28em; color: var(--text-dim); text-transform: uppercase; font-weight: 600; }
 .g-set-h {
   display: flex; align-items: baseline; gap: 8px;
   font-family: var(--g-serif); font-size: 12.5px; font-weight: 700; color: var(--ikb, #002fa7);
@@ -98,4 +125,19 @@ function bumpFont(d) {
 .g-item:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); color: var(--accent); }
 .g-empty { padding: 2px 12px 6px; font-size: 11px; color: var(--text-faint, #b3a892); }
 .g-foot { margin: 12px 10px 2px; padding-top: 8px; border-top: 1px solid var(--border); font-size: 10px; letter-spacing: .08em; color: var(--text-faint, #b3a892); }
+</style>
+
+/* NPopover 容器 teleport 到 body，scoped 选不中——这里非 scoped 覆盖底板与顶规；
+   主题变量经 App.vue 的 body 镜像继承，兜底值防变量失效时整条声明透明 */
+<style>
+.g-set-pop.n-popover {
+  background: var(--bg-panel, #faf7ec);
+  border: 1px solid var(--border-strong, #d0c4a6);
+  border-top: 2px solid var(--ikb);
+  box-shadow: 0 12px 32px rgba(30, 30, 30, 0.18);
+}
+.g-set-pop .n-popover__content {
+  padding: 0;
+  background: transparent;
+}
 </style>

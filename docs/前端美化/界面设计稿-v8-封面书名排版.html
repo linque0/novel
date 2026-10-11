@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小说工坊 · 封面书名排版方案 v8 · 2026-09-21</title>
+<link rel="stylesheet" href="./fonts/fonts.css" />
+<link rel="stylesheet" href="./fonts/fonts-art.css" />
+<style>
+:root {
+  --ikb: #002FA7; --ivory: #FBF9F3; --paper: #FDFCF8; --desk: #F2EFE7;
+  --ink: #1E1E1E; --ink-2: #6E6A60; --hair: #DCD6C6;
+  --serif: 'Noto Serif SC', Georgia, serif;
+  --disp: 'Playfair Display', Georgia, serif;
+  --sans: 'Helvetica Neue', 'Segoe UI', 'Microsoft YaHei', system-ui, sans-serif;
+  --noise: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: #E8E3D6; background-image: var(--noise); font-family: var(--sans); color: #26221c; }
+.doc-head { max-width: 1180px; margin: 0 auto; padding: 46px 24px 8px; }
+.doc-head .ver { font-family: var(--disp); font-size: 11px; letter-spacing: .3em; color: var(--ikb); font-weight: 600; text-transform: uppercase; }
+.doc-head h1 { font-family: var(--serif); font-size: 34px; margin: 10px 0 12px; font-weight: 700; }
+.doc-head p { margin: 0 0 6px; color: #6e6960; font-size: 13px; line-height: 1.9; }
+.doc-head p b { color: #26221c; }
+.sheet { max-width: 1180px; margin: 38px auto; padding: 0 24px; }
+.sheet-tag { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; }
+.sheet-tag .k { font-family: var(--serif); font-size: 21px; font-weight: 700; }
+.sheet-tag .k em { font-style: normal; font-family: var(--disp); font-size: 13px; color: var(--ikb); margin-right: 8px; letter-spacing: .12em; }
+.sheet-tag .n { font-size: 12px; color: #857c6d; }
+.frame { background: var(--desk); border: 1px solid var(--hair); border-radius: 3px; padding: 24px 30px 28px; position: relative; }
+
+/* ============ 封面构件（2:3 竖版，与 v1.0.24 实现同构造） ============ */
+.cov { width: 168px; aspect-ratio: 2 / 3; position: relative; overflow: hidden; flex: none; }
+.cov::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 9px; z-index: 3;
+  background: linear-gradient(90deg, rgba(0,0,0,.26), rgba(0,0,0,.07) 58%, rgba(255,255,255,.07)); }
+.cov.k-note::before { background: linear-gradient(90deg, rgba(0,47,167,.16), rgba(0,47,167,.04) 58%, rgba(0,47,167,.06)); }
+.cov.k-novel { background: var(--ikb); }
+.cov.k-note { background: var(--ivory); border: 1px solid var(--hair); }
+.cov.k-cedar { background: #2F5D50; border: 1px solid var(--hair); }
+/* 封面墨色上提到容器：所有书名层（.tt 与各技法类）统一继承，seal/sub 自带规则例外 */
+.cov { color: var(--ivory); }
+.cov.k-note { color: var(--ikb); }
+.cov.k-cedar { color: #E8C989; }
+.cov .tt { font-family: var(--serif); font-weight: 600; }
+.cov .sub { position: absolute; font-family: var(--serif); font-size: 9px; font-weight: 500; letter-spacing: .32em; white-space: nowrap; }
+.cov.k-novel .sub, .cov.k-cedar .sub { color: rgba(251,249,243,.72); }
+.cov.k-note .sub { color: rgba(0,47,167,.58); }
+.cov .seal { position: absolute; width: 28px; height: 28px; border-radius: 50%; border: 1px solid; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: var(--serif); font-size: 8px; font-weight: 500; line-height: 1.1; text-align: center; }
+.cov.k-novel .seal, .cov.k-cedar .seal { border-color: rgba(251,249,243,.8); color: var(--ivory); }
+.cov.k-note .seal { border-color: var(--ikb); color: var(--ikb); }
+
+/* 默认位（与现实现一致）：圆印左下 / 状态右下 */
+.seal.bl { left: 16px; bottom: 14px; }
+.sub.br { right: 15px; bottom: 15px; }
+
+/* ============ A 款 · 右缘出血竖排（缥缈） ============ */
+/* 列右缘外移半个字宽 → 封面裁掉每字右半；遮罩在「裁切线=列宽 56% 处」前完成渐隐，
+   可见的左半字呈「实→虚」过渡（渐隐必须落在可见区内，早版全泄在封面外等于没渐隐） */
+.a-tt { position: absolute; writing-mode: vertical-rl; font-weight: 600; z-index: 2;
+  -webkit-mask-image: linear-gradient(to left, #000 0%, #000 34%, rgba(0,0,0,.32) 48%, transparent 56%);
+  mask-image: linear-gradient(to left, #000 0%, #000 34%, rgba(0,0,0,.32) 48%, transparent 56%); }
+.a-ghost { position: absolute; writing-mode: vertical-rl; font-weight: 600; opacity: .16; filter: blur(.3px); z-index: 1; }
+
+/* ============ B 款 · 虚实相间中轴竖排 ============ */
+.b-tt { position: absolute; left: 50%; transform: translateX(-50%); writing-mode: vertical-rl; display: flex; }
+.b-tt i { font-style: normal; }
+.b-tt i:nth-child(2n) { opacity: .36; }
+
+/* ============ D 款 · 首字图腾 ============ */
+.d-first { position: absolute; font-weight: 700; line-height: 1; }
+.d-rest { position: absolute; writing-mode: vertical-rl; font-weight: 600; }
+
+/* ============ E 款 · 双行错位竖排 ============ */
+.e-col { position: absolute; writing-mode: vertical-rl; font-weight: 600; display: flex; }
+
+/* ============ G 款 · 重复淡出 ============ */
+.g-layer { position: absolute; left: 50%; transform: translateX(-50%); writing-mode: vertical-rl; font-weight: 600; }
+
+/* ============ 版式 ============ */
+.trio { display: flex; gap: 30px; }
+.spec { flex: 1; min-width: 0; }
+.spec .cap { display: flex; justify-content: space-between; align-items: baseline; margin-top: 10px; border-top: 1px solid var(--hair); padding-top: 8px; }
+.spec .cap .nm { font-family: var(--serif); font-size: 13.5px; font-weight: 700; }
+.spec .cap .len { font-size: 10.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.spec .note { font-size: 11.5px; color: var(--ink-2); line-height: 1.75; margin-top: 4px; }
+.spec .note b { color: #26221c; }
+.why { background: var(--ivory); border: 1px solid var(--hair); border-radius: 3px; padding: 13px 18px; margin-top: 16px; font-size: 12.5px; line-height: 2; color: #33302a; }
+.why b { color: var(--ikb); font-weight: 700; margin-right: 4px; }
+.why .no { color: #a03d2e; font-weight: 700; margin-right: 4px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+table.mx { border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 6px; }
+table.mx th, table.mx td { border: 1px solid var(--hair); padding: 7px 10px; text-align: left; line-height: 1.7; }
+table.mx th { background: var(--ivory); font-family: var(--serif); }
+table.mx td .tag { display: inline-block; font-family: var(--disp); font-size: 11px; color: var(--ikb); font-weight: 700; margin-right: 6px; letter-spacing: .08em; }
+.thumb-row { display: flex; gap: 26px; align-items: flex-end; margin-top: 8px; }
+.thumb-row .tb { text-align: center; }
+.thumb-row .tb .lb { font-size: 10.5px; color: var(--ink-2); margin-top: 6px; font-variant-numeric: tabular-nums; }
+.thumb-row .tb .cov { transform-origin: bottom center; }
+.ref { font-size: 11.5px; color: #857c6d; line-height: 1.9; margin-top: 10px; }
+.ref a { color: var(--ikb); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header class="doc-head">
+  <div class="ver">Cover Title Typography · v8 · 2026-09-21</div>
+  <h1>封面书名排版方案 · 七款 + 字数空间分配</h1>
+  <p>配合 v1.0.24 <b>2:3 竖版书封</b>：现实现的书名是「居中竖排一个字号」，不随篇幅呼吸、也没有虚实层次。本稿给出 <b>7 款书名排版</b>，核心手法三条——<b>文字出血</b>（书名被裁切缘切掉一半，专业装帧的标准动作，可读性分级里的 medium 档正是「轻微裁切 + 非常规间距」，适配绝大多数文学小说）、<b>虚实相生</b>（实心字与半透明字混排，Faber《Unsheltered》用这招让字体「不再硬挺地浮在画面上」）、<b>文字主体化</b>（王志弘：书名即主视觉，可被部分藏匿、歪斜占版、化为抽象）。</p>
+  <p>每款按 <b>2 字 / 5 字 / 12 字</b> 三种篇幅演示——书架封面只有 168×252px，且真实书架是缩略图场景，<b>篇幅一长就必须降字号或换款</b>，矩阵见末节。检索参考：Fonts In Use / Faber 设计访谈 / Helen Yentus 实验排版分级 / 站酷装帧案例。</p>
+</header>
+
+<!-- ================= A 款 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>A</em>右缘出血竖排 · 缥缈</span><span class="n">用户点题款 —— 「只露出字整体的左半边」+ 全字淡影托底</span></div>
+  <div class="frame">
+    <div class="trio">
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="a-ghost" style="right: 13px; top: 40px; font-size: 21px; letter-spacing: .2em;">浮世</span>
+          <span class="a-tt" style="right: -0.52em; top: 36px; font-size: 26px; letter-spacing: .2em;">浮世</span>
+          <span class="seal bl">林蛟</span>
+          <span class="sub" style="left: 54px; bottom: 21px;">连载</span>
+        </div>
+        <div class="cap"><span class="nm">浮世</span><span class="len">2 字 · 26px</span></div>
+        <div class="note"><b>理想态。</b>实＝右缘切掉半字的左半竖排（遮罩向左渐隐）；虚＝完整两字的 13% 淡影偏左托底。半字可辨、全字可感——「似有还无」。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="a-ghost" style="right: 13px; top: 44px; font-size: 16px; letter-spacing: .18em;">星尘旅人</span>
+          <span class="a-tt" style="right: -0.5em; top: 40px; font-size: 17px; letter-spacing: .18em;">星尘旅人</span>
+          <span class="seal bl">林蛟</span>
+          <span class="sub" style="left: 54px; bottom: 21px;">连载</span>
+        </div>
+        <div class="cap"><span class="nm">星尘旅人</span><span class="len">5 字 · 17px</span></div>
+        <div class="note"><b>仍成立。</b>字号降至 17px 保持单列不出头；淡影与实字错开 4px 形成呼吸。五字以上建议遮罩渐隐起点提前到 50%，裁切更克制。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="a-ghost" style="right: 13px; top: 46px; font-size: 12px; letter-spacing: .14em;">长夜漫漫唯有机械之心</span>
+          <span class="a-tt" style="right: -0.48em; top: 42px; font-size: 12px; letter-spacing: .14em;">长夜漫漫唯有机械之心</span>
+          <span class="seal bl">测试</span>
+          <span class="sub" style="left: 54px; bottom: 21px;">构思</span>
+        </div>
+        <div class="cap"><span class="nm">长夜漫漫唯有机械之心</span><span class="len">12 字 · 12px ⚠</span></div>
+        <div class="note"><b>临界，不建议。</b>12px 在半字裁切后笔画尽碎，缩略图尺度只剩纹理感。长标题请转 <b>F / C</b>——出血是短名的特权。</div>
+      </div>
+    </div>
+    <div class="why">
+      <b>手法</b>竖排列右缘外移半个字宽（right: -0.5em），封面 overflow:hidden 即得「左半字」；mask-image 线性渐隐让裁切缘不生硬；同文 13% 淡影 + 0.3px 模糊托底补全可读性。<b>适用</b>2–5 字首选；状态线与圆印让位至左下（右侧全让给书名）。<b>风险</b>遮罩需 -webkit- 前缀兜底（Chromium/Electron 33 无碍）；缩略图下淡影先消失、实字半部仍在，层次自然。
+    </div>
+  </div>
+</section>
+
+<!-- ================= B 款 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>B</em>虚实相间 · 中轴竖排</span><span class="n">不裁切也缥缈——奇数字实、偶数字虚</span></div>
+  <div class="frame">
+    <div class="trio">
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="b-tt" style="top: 34px; font-size: 30px; letter-spacing: .24em;"><i>浮</i><i>世</i></span>
+          <span class="seal bl">林蛟</span>
+          <span class="sub br">连载</span>
+        </div>
+        <div class="cap"><span class="nm">浮世</span><span class="len">2 字 · 30px</span></div>
+        <div class="note"><b>短名双璧。</b>「浮」实「世」虚，一词两境——与 A 款并列为 2 字首选。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="b-tt" style="top: 30px; font-size: 21px; letter-spacing: .2em;"><i>星</i><i>尘</i><i>旅</i><i>人</i><i>篇</i></span>
+          <span class="seal bl">林蛟</span>
+          <span class="sub br">连载</span>
+        </div>
+        <div class="cap"><span class="nm">星尘旅人篇</span><span class="len">5 字 · 21px</span></div>
+        <div class="note"><b>舒适区。</b>奇偶交替 36% 透明度，竖列如读数脉动；全字可读，氛围最稳。</div>
+      </div>
+      <div class="spec">
+        <div class="cov k-novel">
+          <span class="b-tt" style="top: 26px; font-size: 14px; letter-spacing: .14em;"><i>长</i><i>夜</i><i>漫</i><i>漫</i><i>唯</i><i>有</i><i>机</i><i>械</i><i>之</i><i>心</i><i>不</i><i>负</i></span>
+          <span class="seal bl">测试</span>
+          <span class="sub br">构思</span>
+        </div>
+        <div class="cap"><span class="nm">长夜漫漫唯有机械心不负</span><span class="len">12 字 · 14px</span></div>
+        <div class="note"><b>可用但平。</b>满栏无留白，虚实节奏被字数稀释；12 字更推荐横排款。</div>
+      </div>
+    </div>
+    <div class="why">
+      <b>手法</b>中轴对称竖排（现实现的升级方向），仅追加奇偶透明度交替——CSS 三行（nth-child(2n){opacity:.36}），零布局风险。<b>适用</b>2–8 字全兼容，是七款中「最不容易错」的基底款；若要更烈，可把虚字降到 22% 并加 0.3px 模糊。
+    </div>
+  </div>
+</section>
+
+<!-- ================= C / D ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>C</em>顶天留白横排</span><span class="n">＋ <em>D</em>首字图腾</span><span class="n">经典文学款 / 图形化款</span></div>
+  <div class="frame">
+    <div class="grid2">
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov k-note">
+            <span class="tt" style="position: absolute; top: 30px; left: 0; right: 0; text-align: center; font-size: 26px; letter-spacing: .3em;">浮世</span>
+            <span class="seal bl">林蛟</span>
+            <span class="sub br">连载</span>
+          </div>
+          <div class="cov k-note">
+            <span class="tt" style="position: absolute; top: 30px; left: 0; right: 0; text-align: center; font-size: 19px; letter-spacing: .22em;">星尘旅人</span>
+            <span class="seal bl">林蛟</span>
+            <span class="sub br">连载</span>
+          </div>
+          <div class="cov k-note">
+            <span class="tt" style="position: absolute; top: 26px; left: 12px; right: 12px; text-align: center; font-size: 14px; letter-spacing: .14em; line-height: 1.5;">长夜漫漫<br />机械之心</span>
+            <span class="seal bl">测试</span>
+            <span class="sub br">构思</span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">C · 象牙白反相款示范</span><span class="len">2 / 5 / 12 字</span></div>
+        <div class="note">书名沉顶、<b>中段整幅留白</b>——「留白即叙事」。12 字手动断行成两行，行距 1.5。最像传统文学书：稳、哑、耐看。圆印左下 + 状态右下不变。</div>
+      </div>
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov k-cedar">
+            <span class="d-first" style="left: 18px; top: -14px; font-size: 74px;">浮</span>
+            <span class="d-rest" style="right: 22px; top: 96px; font-size: 19px; letter-spacing: .2em;">世</span>
+            <span class="seal bl">林蛟</span>
+            <span class="sub br">连载</span>
+          </div>
+          <div class="cov k-cedar">
+            <span class="d-first" style="left: 18px; top: -10px; font-size: 62px;">星</span>
+            <span class="d-rest" style="right: 20px; top: 92px; font-size: 13px; letter-spacing: .12em; writing-mode: horizontal-tb; width: 96px; line-height: 1.6;">尘旅人</span>
+            <span class="seal bl">林蛟</span>
+            <span class="sub br">连载</span>
+          </div>
+          <div class="cov k-cedar">
+            <span class="d-first" style="left: 18px; top: -8px; font-size: 54px;">长</span>
+            <span class="d-rest" style="right: 18px; top: 86px; font-size: 12px; letter-spacing: .1em; writing-mode: horizontal-tb; width: 92px; line-height: 1.55;">夜漫漫唯有机械之心</span>
+            <span class="seal bl">测试</span>
+            <span class="sub br">构思</span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">D · 松绿扩展款示范</span><span class="len">2 / 5 / 12 字</span></div>
+        <div class="note"><b>首字冲出顶缘</b>（top 负值）成图腾，余字小字退居右下——「一字立骨」。12 字时首字 54px + 余字 12px 两行仍成立。字号跳变 ≥3 倍是张力的来源。</div>
+      </div>
+    </div>
+    <div class="why">
+      <b>C</b> 是「反缩略图」款：越小的封面越显得干净，适合非虚构/文集气质。<b>D</b> 把书名当图形：首字出血顶缘 + 余字降为 1/4 字号，制造「一字读题、数字读感」的双层阅读。两款都不需要遮罩，实现成本最低。
+    </div>
+  </div>
+</section>
+
+<!-- ================= E / F / G ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>E</em>双行错位竖排</span><span class="n">＋ <em>F</em>通栏底横排 ＋ <em>G</em>重复淡出</span></div>
+  <div class="frame">
+    <div class="grid2">
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov k-novel">
+            <span class="e-col" style="left: 56px; top: 30px; font-size: 22px; letter-spacing: .2em;">浮世</span>
+            <span class="seal bl">林蛟</span>
+            <span class="sub br">连载</span>
+          </div>
+          <div class="cov k-novel">
+            <span class="e-col" style="left: 46px; top: 28px; font-size: 19px; letter-spacing: .18em;">星尘</span>
+            <span class="e-col" style="left: 86px; top: 62px; font-size: 19px; letter-spacing: .18em;">旅人</span>
+            <span class="seal bl">林蛟</span>
+            <span class="sub br">连载</span>
+          </div>
+          <div class="cov k-novel">
+            <span class="e-col" style="left: 40px; top: 24px; font-size: 14px; letter-spacing: .12em;">长夜漫漫</span>
+            <span class="e-col" style="left: 82px; top: 58px; font-size: 14px; letter-spacing: .12em;">机械之心</span>
+            <span class="seal bl">测试</span>
+            <span class="sub br">构思</span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">E · 双列错位</span><span class="len">2 字退化单列</span></div>
+        <div class="note">标题对半切两列、<b>下列下沉 1.5 字</b>成斜向节奏；2 字退化为单列（无意义）。5–12 字的最佳「有设计感又保可读」解。</div>
+      </div>
+      <div class="spec">
+        <div class="trio" style="gap: 20px;">
+          <div class="cov k-novel">
+            <span class="tt" style="position: absolute; left: 16px; right: 16px; bottom: 52px; text-align: center; font-size: 22px; letter-spacing: .42em;">浮世</span>
+            <span class="seal bl">林蛟</span>
+            <span class="sub br">连载</span>
+          </div>
+          <div class="cov k-novel">
+            <span class="tt" style="position: absolute; left: 16px; right: 16px; bottom: 52px; text-align: center; font-size: 19px; letter-spacing: .3em;">星尘旅人</span>
+            <span class="seal bl">林蛟</span>
+            <span class="sub br">连载</span>
+          </div>
+          <div class="cov k-novel">
+            <span class="tt" style="position: absolute; left: 12px; right: 12px; bottom: 46px; text-align: center; font-size: 13px; letter-spacing: .12em; line-height: 1.5;">长夜漫漫唯有机械之心</span>
+            <span class="seal bl">测试</span>
+            <span class="sub br">构思</span>
+          </div>
+        </div>
+        <div class="cap"><span class="nm">F · 通栏压底</span><span class="len">2 / 5 / 12 字</span></div>
+        <div class="note">书名横贯底部 1/3、<b>超宽字距 (.3–.42em)</b>，上段全空——12 字也不狼狈（降字距即可）。与竖排款混架时最能「破」一致性。</div>
+      </div>
+    </div>
+    <div class="spec" style="margin-top: 26px;">
+      <div class="trio" style="gap: 20px;">
+        <div class="cov k-note">
+          <span class="g-layer" style="top: 26px; font-size: 24px; letter-spacing: .22em; opacity: .16;">浮世</span>
+          <span class="g-layer" style="top: 34px; font-size: 24px; letter-spacing: .22em; opacity: .38;">浮世</span>
+          <span class="g-layer" style="top: 42px; font-size: 24px; letter-spacing: .22em; opacity: 1;">浮世</span>
+          <span class="seal bl">林蛟</span>
+          <span class="sub br">连载</span>
+        </div>
+        <div class="cov k-note">
+          <span class="g-layer" style="top: 30px; font-size: 19px; letter-spacing: .18em; opacity: .16;">星尘旅人</span>
+          <span class="g-layer" style="top: 38px; font-size: 19px; letter-spacing: .18em; opacity: .38;">星尘旅人</span>
+          <span class="g-layer" style="top: 46px; font-size: 19px; letter-spacing: .18em; opacity: 1;">星尘旅人</span>
+          <span class="seal bl">林蛟</span>
+          <span class="sub br">连载</span>
+        </div>
+        <div class="cov k-note">
+          <span class="tt" style="position: absolute; top: 40px; left: 0; right: 0; text-align: center; font-size: 13px; color: #857c6d;">长标题不适用 G</span>
+          <span class="seal bl">测试</span>
+          <span class="sub br">构思</span>
+        </div>
+      </div>
+      <div class="cap"><span class="nm">G · 重复淡出（Sahre 式）</span><span class="len">限 2–6 字</span></div>
+      <div class="note">同一书名三遍、每遍下沉 8px 且透明度 .16→.38→1，<b>「书名渐逝、作者浮现」</b>的戏剧感。纯堆叠无裁切，缩略图下仍读得出。超过 6 字高度爆掉。</div>
+    </div>
+    <div class="why">
+      <b>选型建议</b>E 是中长名的安全牌，F 是混架破格牌，G 是氛围牌但受字数硬限。三款均无需遮罩、无字体依赖，纯定位 + 透明度。
+    </div>
+  </div>
+</section>
+
+<!-- ================= 矩阵 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>M</em>字数 × 空间分配矩阵</span><span class="n">封面 168×252（2:3），竖排单列容量 ≈ 9 字 @19px / 12 字 @14px</span></div>
+  <div class="frame">
+    <table class="mx">
+      <tr><th style="width: 90px;">篇幅</th><th>空间账</th><th style="width: 200px;">首选</th><th style="width: 190px;">次选</th><th>禁用 / 注意</th></tr>
+      <tr><td><b>2 字</b></td><td>竖排富余 60%+ → 可放大、可裁切、可图腾化</td><td><span class="tag">A</span>出血竖排 · <span class="tag">B</span>虚实相间</td><td><span class="tag">D</span>首字图腾 · <span class="tag">C</span></td><td>G 亦可（氛围最强）</td></tr>
+      <tr><td><b>3–4 字</b></td><td>竖排舒适区，留白≈ 40%</td><td><span class="tag">B</span>虚实相间 · <span class="tag">E</span>双列</td><td><span class="tag">A</span>出血 · <span class="tag">C</span></td><td>A 需降 22px 左右</td></tr>
+      <tr><td><b>5–8 字</b></td><td>竖排近满栏（7 字 @21px ≈ 顶天）</td><td><span class="tag">E</span>双列错位 · <span class="tag">F</span>通栏底</td><td><span class="tag">B</span> · <span class="tag">A</span>17px</td><td>B 勿超 8 字；G 上限 6 字</td></tr>
+      <tr><td><b>9 字以上</b></td><td>竖排必降 ≤14px 或断行 → 竖排气质尽失</td><td><span class="tag">F</span>通栏底 · <span class="tag">C</span>顶天断行</td><td><span class="tag">D</span>首字 + 小字</td><td><span style="color:#a03d2e;font-weight:700">禁 A / G</span>；B 仅兜底</td></tr>
+    </table>
+    <div class="why">
+      <b>总原则</b>书名永远是一封面上视觉权重最高的元素（>作者印 > 状态线）；篇幅越长越早放弃「竖排 + 大字号」的执念；出血与虚化只属于短名。软件落地时可按 `title.length` 自动选款（见下）。
+    </div>
+  </div>
+</section>
+
+<!-- ================= 缩略图检验 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>T</em>缩略图尺度检验</span><span class="n">书架真实场景：160px 卡片 / 列表密度 120px / 更小 88px</span></div>
+  <div class="frame">
+    <div class="thumb-row">
+      <div class="tb">
+        <div class="cov k-novel" style="width: 160px;">
+          <span class="a-ghost" style="right: 12px; top: 38px; font-size: 20px; letter-spacing: .2em;">浮世</span>
+          <span class="a-tt" style="right: -0.52em; top: 34px; font-size: 25px; letter-spacing: .2em;">浮世</span>
+          <span class="seal bl" style="width: 26px; height: 26px; font-size: 7.5px;">林蛟</span>
+          <span class="sub" style="left: 50px; bottom: 20px;">连载</span>
+        </div>
+        <div class="lb">A 款 · 160px（书架标准）</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 120px;">
+          <span class="a-ghost" style="right: 10px; top: 32px; font-size: 15px; letter-spacing: .2em;">浮世</span>
+          <span class="a-tt" style="right: -0.52em; top: 28px; font-size: 19px; letter-spacing: .2em;">浮世</span>
+          <span class="seal bl" style="width: 24px; height: 24px; font-size: 7px;">林蛟</span>
+          <span class="sub" style="left: 44px; bottom: 17px; font-size: 8px;">连载</span>
+        </div>
+        <div class="lb">A 款 · 120px</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 88px;">
+          <span class="a-ghost" style="right: 8px; top: 26px; font-size: 11px; letter-spacing: .2em;">浮世</span>
+          <span class="a-tt" style="right: -0.52em; top: 22px; font-size: 14px; letter-spacing: .2em;">浮世</span>
+          <span class="seal bl" style="width: 20px; height: 20px; font-size: 6px;">林蛟</span>
+          <span class="sub" style="left: 34px; bottom: 13px; font-size: 7px;">连载</span>
+        </div>
+        <div class="lb">A 款 · 88px（极限）</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 160px;">
+          <span class="b-tt" style="top: 32px; font-size: 28px; letter-spacing: .24em;"><i>浮</i><i>世</i></span>
+          <span class="seal bl">林蛟</span>
+          <span class="sub br">连载</span>
+        </div>
+        <div class="lb">B 款 · 160px</div>
+      </div>
+      <div class="tb">
+        <div class="cov k-novel" style="width: 160px;">
+          <span class="tt" style="position: absolute; left: 16px; right: 16px; bottom: 50px; text-align: center; font-size: 21px; letter-spacing: .42em;">浮世</span>
+          <span class="seal bl">林蛟</span>
+          <span class="sub br">连载</span>
+        </div>
+        <div class="lb">F 款 · 160px</div>
+      </div>
+    </div>
+    <div class="why">
+      <b>结论</b>A 款缩到 88px 时淡影先消失、半字仍可辨（配合封面下方信息行的全名，识别无虞）；B/F 在缩略图下最稳。<b>任何一款都通过了「1.5 米外看成书」的初筛——但最终以软件内 160px 实截为准。</b>
+    </div>
+  </div>
+</section>
+
+<!-- ================= 落地建议 ================= -->
+<section class="sheet">
+  <div class="sheet-tag"><span class="k"><em>I</em>软件落地建议（本次不改，待选型后实施）</span></div>
+  <div class="frame">
+    <div class="why" style="margin-top: 0;">
+      <b>1</b>推荐组合：<b>A（2–5 字）+ B（3–8 字兜底）+ F（9 字以上）</b>三款自动分流，按 `title.trim().length` 选；E/D 作为后续手工换款池。<br />
+      <b>2</b>A 款落地要点：`.cover-tt` 加 `writing-mode: vertical-rl` + `right: -0.5em` + `mask-image` 线性渐隐（Chromium 130 无需前缀，加 `-webkit-` 兜底）；淡影层是同一个 `<span>` 的 `::before` 复刻（`content: attr(data-title)`，opacity .13），不必改 DOM 结构。<br />
+      <b>3</b>状态线与圆印在 A 款需让位：圆印保持左下，状态线移到圆印右侧（`left: 54px`）——封面右侧全权让给出血书名。<br />
+      <b>4</b>全部七款均随 `--editor-font` 走（用户已选字体即时生效），无需额外字体资源；遮罩/透明度在 Electron 33（Chromium 130）零风险。<br />
+      <b>5</b>实施后须过 shelf-verify 15/15 + 三主题实机截图（160px 标准位）。
+    </div>
+    <div class="ref">参考：Fonts In Use（Fitzcarraldo / The World Goes On 重复裁切）、Faber《Unsheltered》实虚混排访谈、Helen Yentus「实验排版可读性分级」（medium = 轻微裁切 + 非常规间距，适配文学小说）、王志弘文字主体化书系、站酷《别裁》半透明拆字装帧。</div>
+  </div>
+</section>
+
+</body>
+</html>

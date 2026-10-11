@@ -56,6 +56,7 @@ export async function createWorkRow(payload) {
     genre: payload.genre || '其他',
     intro: payload.intro || '',
     status: payload.status || '构思',
+    kind: payload.kind || 'novel', // 封面款式（色带书封六选一，缺省虚构·克莱因蓝）
     createdAt: t,
     updatedAt: t,
     deletedAt: null

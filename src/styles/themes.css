@@ -192,9 +192,9 @@ body,
 
 .shelf-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(216px, 1fr));
-  gap: 26px 32px;
-  max-width: 1080px;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 26px 30px;
+  max-width: 1020px;
   margin: 0 auto;
 }
 
@@ -211,17 +211,35 @@ body,
 .book-card:hover {
   transform: translateY(-3px);
 }
+/* 悬停像从书架上抽出一册：极淡投影（明主题可见即可，暗主题自动加深） */
+.book-card:hover .book-cover {
+  box-shadow: 0 10px 26px rgba(30, 30, 30, 0.22);
+}
+.theme-night .book-card:hover .book-cover {
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.5);
+}
 
-/* 封面：双色制 —— 虚构=克莱因蓝满地 / 非虚构=象牙白反相 / 特殊=墨黑 */
+/* 封面：竖版 2:3（图书标准开本比例）——双色制平涂 + 书脊装订带 + 竖排书名 + 作者圆印。
+   排版参考畅销书封面惯例：书名竖排（书卷气）、状态细线横排底部（方向对比）、
+   作者圆印落左下（传统钤印位）；长书名自动改横排居中保识别 */
 .book-cover {
-  height: 132px;
+  aspect-ratio: 2 / 3;
   position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
   overflow: hidden;
+}
+/* 书脊：左侧压深色带 + 一道高光细线（装订质感，不破坏平涂双色制） */
+.book-cover::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 9px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.26), rgba(0, 0, 0, 0.07) 58%, rgba(255, 255, 255, 0.07));
+  pointer-events: none;
+}
+.book-cover.k-note::before {
+  background: linear-gradient(90deg, rgba(0, 47, 167, 0.16), rgba(0, 47, 167, 0.04) 58%, rgba(0, 47, 167, 0.06));
 }
 /* 封面：双色制 + 同风格扩展色 —— 虚构=克莱因蓝 / 非虚构=象牙反相 / 特殊=墨黑，
    扩展款（松绿/绛红/藤紫）同为平涂单色+衬线书名+作者圆印的同一构造，仅换色 */
@@ -231,14 +249,34 @@ body,
 .book-cover.k-cedar { background: #2f5d50; border: 1px solid var(--g-hair); }
 .book-cover.k-claret { background: #8c2f1b; border: 1px solid var(--g-hair); }
 .book-cover.k-violet { background: #5b4e6b; border: 1px solid var(--g-hair); }
+/* 书名：默认竖排（vertical-rl，自右起笔——传统书卷方向）；tt-h 长书名改横排 */
 .book-cover .cover-tt {
+  position: absolute;
+  right: 17px;
+  top: 42px;
+  bottom: 46px;
+  writing-mode: vertical-rl;
   font-family: var(--editor-font);
-  font-size: 21px;
+  font-size: 19px;
   font-weight: 600;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
+  line-height: 1.12;
+}
+.book-cover.tt-v1 .cover-tt { font-size: 26px; letter-spacing: 0.22em; }
+.book-cover.tt-v2 .cover-tt { font-size: 19px; }
+.book-cover.tt-h .cover-tt {
+  writing-mode: horizontal-tb;
+  left: 15px;
+  right: 15px;
+  top: 44px;
+  bottom: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
-  padding: 0 8px;
-  line-height: 1.3;
+  font-size: 17px;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
 }
 .book-cover.k-novel .cover-tt,
 .book-cover.k-ink .cover-tt { color: var(--ivory); }
@@ -246,23 +284,35 @@ body,
 .book-cover.k-violet .cover-tt { color: var(--g-duo-violet); }
 .book-cover.k-claret .cover-tt { color: var(--g-duo-claret); }
 .book-cover.k-note .cover-tt { color: var(--ikb); }
+/* 状态细线：底部横排小字（与竖排书名形成方向对比，畅销书封面底部社标位） */
 .book-cover .cover-sub {
-  font-family: var(--g-disp);
-  font-size: 8px;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-  font-weight: 600;
+  position: absolute;
+  right: 15px;
+  bottom: 15px;
+  font-family: var(--g-serif);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  white-space: nowrap;
+}
+.book-cover.tt-h .cover-sub {
+  right: 0;
+  left: 0;
+  text-align: center;
 }
 .book-cover.k-novel .cover-sub,
-.book-cover.k-ink .cover-sub { color: rgba(251, 249, 243, 0.75); }
-.book-cover.k-cedar .cover-sub { color: rgba(232, 201, 137, 0.78); }
-.book-cover.k-violet .cover-sub { color: rgba(239, 211, 216, 0.78); }
-.book-cover.k-claret .cover-sub { color: rgba(242, 220, 166, 0.78); }
-.book-cover.k-note .cover-sub { color: rgba(0, 47, 167, 0.6); }
-/* 作者名圆印：2 字竖排 / 3-4 字两行，颜色随封面反相 */
+.book-cover.k-ink .cover-sub { color: rgba(251, 249, 243, 0.72); }
+.book-cover.k-cedar .cover-sub { color: rgba(232, 201, 137, 0.75); }
+.book-cover.k-violet .cover-sub { color: rgba(239, 211, 216, 0.75); }
+.book-cover.k-claret .cover-sub { color: rgba(242, 220, 166, 0.75); }
+.book-cover.k-note .cover-sub { color: rgba(0, 47, 167, 0.58); }
+/* 作者名圆印：2 字竖排 / 3-4 字两行，颜色随封面反相；落左下（传统钤印位，避开书脊） */
 .cover-seal {
-  width: 27px;
-  height: 27px;
+  position: absolute;
+  left: 16px;
+  bottom: 14px;
+  width: 28px;
+  height: 28px;
   border-radius: 50%;
   border: 1px solid;
   display: flex;
@@ -270,9 +320,9 @@ body,
   align-items: center;
   justify-content: center;
   font-family: var(--editor-font);
-  font-size: 7.5px;
+  font-size: 8px;
   font-weight: 500;
-  line-height: 1.12;
+  line-height: 1.1;
   text-align: center;
 }
 .book-cover.k-novel .cover-seal,
