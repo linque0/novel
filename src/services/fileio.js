@@ -63,3 +63,13 @@ export function triggerDownload(blob, filename) {
 }
 
 export const arrayBufferToBlob = (data, mime) => new Blob([data], { type: mime })
+
+/* ---------- 数据存储位置（仅 Electron；网页版降级返回 null / canceled） ---------- */
+export const getDataLocation = () =>
+  window.native?.getDataLocation ? window.native.getDataLocation() : Promise.resolve(null)
+export const pickDataDir = () =>
+  window.native?.pickDataDir ? window.native.pickDataDir() : Promise.resolve({ canceled: true })
+export const openDataFolder = () =>
+  window.native?.openDataFolder ? window.native.openDataFolder() : Promise.resolve(false)
+export const moveDataDir = (dir) =>
+  window.native?.moveDataDir ? window.native.moveDataDir(dir) : Promise.resolve({ ok: false, error: '网页版不支持更改存储位置' })

@@ -1,5 +1,6 @@
 import { useUiStore } from '../stores/ui'
 import { putRow, addRevision, addWordLog } from '../db/repo'
+import { markChapterStale } from './ai/summarize'
 
 /**
  * 自动保存服务：
@@ -13,6 +14,8 @@ let flushTimer = null
 let started = false
 const lastSnapshotAt = new Map()
 const lastSnapshotContent = new Map()
+/** 各章节本窗口上次落盘的正文内容：仅在正文较上次落盘变化时打 AI 摘要失效标记（方案 §四「仅变化章节重算」） */
+const flushedChapterContent = new Map()
 
 const ui = () => useUiStore()
 
@@ -33,7 +36,16 @@ async function doFlush() {
       await autosave.hooks.beforePut?.(it.table, row)
       row.updatedAt = Date.now()
       await putRow(it.table, row)
-      if (it.table === 'chapters') maybeSnapshot(row, it.forceSnapshot)
+      if (it.table === 'chapters') {
+        /* 章节落盘钩子（方案 §四/§七）：正文较上次落盘有变化 → 打 aisum 摘要失效标记
+           （只标记不触发生成，下次 AI 任务前惰性重算）；首次落盘不标——跨窗口/窗口重开场景
+           由 summarize.js 的 contentHash 比对兜底，避免误废仍有效的缓存 */
+        if (flushedChapterContent.has(row.id) && row.content !== flushedChapterContent.get(row.id)) {
+          markChapterStale(row.id)
+        }
+        flushedChapterContent.set(row.id, row.content)
+        maybeSnapshot(row, it.forceSnapshot)
+      }
     }
     ui().autosave.lastSavedAt = Date.now()
   } catch (err) {

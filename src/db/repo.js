@@ -167,7 +167,12 @@ export async function removeLink(linkId) {
 export async function exportBackupJson() {
   const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'snippets', 'links', 'wordlog', 'appconfig', 'bookmarks', 'olnodes', 'annotations']
   const dump = { version: 1, exportedAt: now(), assets: [], data: {} }
-  for (const t of tables) dump.data[t] = await db.table(t).toArray()
+  for (const t of tables) {
+    const rows = await db.table(t).toArray()
+    /* 密钥绝不进备份 JSON（方案 §三/§六.4）：appconfig 的 ai.credential（safeStorage 密文）导出时剔除，
+       恢复备份后需在设置面板重新配置 API 密钥 */
+    dump.data[t] = t === 'appconfig' ? rows.filter((r) => r?.key !== 'ai.credential') : rows
+  }
   const assetRows = await db.assets.toArray()
   for (const a of assetRows) {
     const base64 = a.blob ? await blobToDataUrl(a.blob) : null

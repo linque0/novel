@@ -910,7 +910,7 @@ export const useWorkStore = defineStore('work', {
     },
 
     mubuAddTree(parentId, afterId, treeNodes) {
-      // 幕布顺序（DFS）扁平插入：栈记录每层的父节点
+      // 幕布顺序（DFS）扁平插入：lastAt[d] 记录最近创建的深度 d 节点，作为下一层（d+1）的挂载父
       const flat = []
       const walk = (list, depth) => {
         for (const n of list) {
@@ -919,20 +919,20 @@ export const useWorkStore = defineStore('work', {
         }
       }
       walk(treeNodes || [], 0)
-      const stack = [parentId || null]
+      const lastAt = []
       let prevId = afterId
       let prevDepth = 0
       const created = []
       for (const item of flat) {
-        stack.length = item.depth + 1
-        const parent = stack[item.depth] != null ? stack[item.depth] : stack[stack.length - 1]
+        lastAt.length = item.depth // 回到浅层时丢弃更深层记录，防旧层级残留误挂
+        const parent = item.depth === 0 ? parentId || null : lastAt[item.depth - 1]
         const sameParent = prevDepth === item.depth
         const r = this.mubuAdd(parent, sameParent ? prevId : null, item.text, item.html)
         if (item.fold) {
           r.fold = true
           autosave.mark('mubu', r)
         }
-        stack[item.depth] = r.id
+        lastAt[item.depth] = r.id
         created.push(r)
         prevId = r.id
         prevDepth = item.depth

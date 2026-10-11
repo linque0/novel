@@ -19,6 +19,7 @@ import MubuView from './MubuView.vue'
 import MubuTree from './MubuTree.vue'
 import SnippetCenter from './SnippetCenter.vue'
 import RightPanel from './RightPanel.vue'
+import AiAssistantPanel from './ai/AiAssistantPanel.vue'
 import DLinkPopover from './DLinkPopover.vue'
 import { popOut, isPopped, focusPopped } from '../services/panelwindows'
 
@@ -233,6 +234,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </div>
 
       <RightPanel v-if="!ui.focusMode && !modulePopped && work.tab === 'chapters'" />
+      <!-- AI 助手侧栏（方案 §五/§七）：与批注侧栏并列常驻右栏，随当前模块携带上下文；写入一律走卡片提案，不经此面板直改 -->
+      <AiAssistantPanel v-if="!ui.focusMode && !modulePopped" />
     </div>
 
     <!-- 双链悬浮预览窗（全局唯一，悬停双链标签 / 纯文本令牌时展示目标内容） -->

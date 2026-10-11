@@ -46,7 +46,9 @@ const ICONS = {
   'circle-layout': '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/>',
   star: '<path d="M12 3l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.3l6-.9z"/>',
   'star-filled': '<path fill="currentColor" stroke="none" d="M12 3l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.3l6-.9z"/>',
-  fit: '<path d="M4 9V4h5"/><path d="M15 4h5v5"/><path d="M20 15v5h-5"/><path d="M9 20H4v-5"/>'
+  fit: '<path d="M4 9V4h5"/><path d="M15 4h5v5"/><path d="M20 15v5h-5"/><path d="M9 20H4v-5"/>',
+  folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+  external: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6"/>'
 }
 const body = computed(() => ICONS[props.name] || '')
 </script>

@@ -14,11 +14,13 @@ import {
 } from './outline/canvas-model'
 import { uid } from '../db/database'
 import { autosave } from '../services/autosave'
+import { useAiStore } from '../stores/ai'
 import { NPopover, NSlider } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import DLinkPicker from './DLinkPicker.vue'
 
 const work = useWorkStore()
+const ai = useAiStore()
 const canvasEl = ref(null)
 const { zoom, tx, ty, innerStyle, onWheel, onPanStart, fit: fitTo, centerOn } = usePanZoom(canvasEl)
 
@@ -33,6 +35,7 @@ const editTitle = ref(null) // { id, value } 容器标题原位编辑
 const flashIds = reactive(new Set())
 const STATUS_LABEL = { draft: '草稿', done: '完成', revise: '待修改' }
 const PALETTE = ['#c0392b', '#2980b9', '#27ae60', '#8e44ad', '#d35400', '#16a085', '#b8860b']
+const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
 
 /* ---------- 基础几何 ---------- */
 const live = computed(() => work.liveOlnodes())
@@ -601,6 +604,12 @@ function ctxAct(kind) {
   else if (kind === 'edit') {
     ctxMenu.value = null
     startInlineEdit(n)
+    return
+  } else if (kind === 'ai') {
+    /* AI：规划线路（方案 §五.2）：对该大纲节点生成 2–3 套分支线路方案（提案，不直接落库） */
+    ctxMenu.value = null
+    if (!ai.ready) return window.$msg?.warning(AI_UNSET_HINT)
+    ai.startOutlinePlan(n.id)
     return
   } else if (kind === 'remove') {
     ctxMenu.value = null
@@ -1197,6 +1206,7 @@ watch(
 
 /* ---------- 键盘 / 生命周期 ---------- */
 onMounted(() => {
+  if (!ai.loaded) ai.loadSettings() // 保障入口置灰判定基于已装载的配置（幂等）
   migrateSides()
   ensurePlaced()
   // v0.4.2：容器内嵌 textboxes（上一实现）迁移为独立文本框子节点（可拖拽/连线/缩放）
@@ -1509,6 +1519,7 @@ onBeforeUnmount(() => {
         </button>
         <button v-if="ctxNode && work.olTypes.length" class="oc-ctx-item" :title="'自定义类型：' + (ctxNode.mtype || '无') + '（点击切换）'" @click="ctxAct('mtype')"><OIcon name="tag" :size="13" /> {{ ctxNode.mtype || '自定义类型' }} ▸</button>
         <button v-if="ctxNode" class="oc-ctx-item" :title="ctxNode.pin ? '取消固定（「整理」时将参与重排）' : '固定位置（「整理」时不动）'" @click="ctxAct('pin')"><OIcon name="pin" :size="13" /> {{ ctxNode.pin ? '取消固定' : '固定位置' }}</button>
+        <button v-if="ctxNode" class="oc-ctx-item" :disabled="!ai.ready" :title="ai.ready ? 'AI：规划线路（为该节点生成 2–3 套分支线路方案，确认后挂载）' : AI_UNSET_HINT" @click="ctxAct('ai')"><OIcon name="star" :size="13" /> AI：规划线路</button>
         <button v-if="ctxNode" class="oc-ctx-item oc-ctx-danger" title="删除模块（容器会连同子模块）" @click="ctxAct('remove')"><OIcon name="close" :size="13" /> 删除</button>
       </div>
     </div>

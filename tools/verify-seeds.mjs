@@ -123,6 +123,45 @@ async function canvasBBook(ctx, meta) {
   return workId
 }
 
+/* ---------- AI 验证书：AI 助手四能力全链路（ai-verify，docs/AI助手接入方案.md §八） ----------
+ * 三章正文（林昭贯穿三章、沈青梧见第二章）供 plot 装配（前情摘要 / L2 反查片段），
+ * 幕布两根节点（同层断言用）、双人物 + 预置关系、大纲根 + 两个子节点（祖先/同级断言用）。 */
+async function aiBook(ctx, meta) {
+  const { db, uid, now } = ctx
+  const t = now()
+  const workId = uid()
+  await db.works.add({ id: workId, title: meta.title, author: '', genre: '仙侠', status: '连载中', intro: '界脊之上，星辰易位。', createdAt: t, updatedAt: t, deletedAt: null })
+  await db.outlines.add({ id: uid(), workId, level: 'master', refId: workId, content: '', createdAt: t, updatedAt: t, deletedAt: null })
+  const volId = uid()
+  await db.volumes.add({ id: volId, workId, title: '第一卷', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
+  const chapters = [
+    { title: '第一章 · 雾都启程', content: '<p>林昭背起行囊离开雾都，铜镜里的星图缺了一角。</p>' },
+    { title: '第二章 · 驿站夜谈', content: '<p>沈青梧在界脊驿站拦住林昭，交给他半枚铜符。</p>' },
+    { title: '第三章 · 灯下铜符', content: '<p>林昭在灯下端详铜符，远处更夫的梆子声由远及近。</p>' }
+  ]
+  const chIds = []
+  for (let i = 0; i < chapters.length; i++) {
+    const id = uid()
+    chIds.push(id)
+    await db.chapters.add({ id, workId, volumeId: volId, title: chapters[i].title, fmt: 'html', content: chapters[i].content, wordCount: 0, status: 'draft', sortOrder: i, createdAt: t, updatedAt: t, deletedAt: null })
+  }
+  const rootId = uid()
+  await db.mubu.add({ id: rootId, workId, parentId: null, sortOrder: 0, text: '界脊设定', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
+  await db.mubu.add({ id: uid(), workId, parentId: rootId, sortOrder: 0, text: '界脊横断南北，穹顶悬三百六十枚铜刻星辰。', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
+  await db.mubu.add({ id: uid(), workId, parentId: null, sortOrder: 1000, text: '更夫梆子', html: null, fold: false, deletedAt: null, createdAt: t, updatedAt: t })
+  const charA = uid()
+  await db.characters.add({ id: charA, workId, name: '林昭', aliases: '', role: '主角', tags: ['界脊'], fields: { 境界: '凝气三层' }, avatarAssetId: null, content: '雾都少年，性情沉毅。', createdAt: t, updatedAt: t, deletedAt: null })
+  const charB = uid()
+  await db.characters.add({ id: charB, workId, name: '沈青梧', aliases: '', role: '配角', tags: [], fields: { 身份: '界脊驿站掌柜' }, avatarAssetId: null, content: '', createdAt: t, updatedAt: t, deletedAt: null })
+  await db.relations.add({ id: uid(), workId, fromId: charA, toId: charB, label: '萍水相逢', notes: '' })
+  const olRoot = uid()
+  await db.olnodes.add({ id: olRoot, workId, parentId: null, refId: null, kind: 'event', title: '主线', text: '三章之内抵达界脊之心。', html: null, fold: false, sortOrder: 0, canvasX: null, canvasY: null, w: null, h: null, shape: 'process', pin: false, rels: [], deletedAt: null, createdAt: t, updatedAt: t })
+  const olChild = uid()
+  await db.olnodes.add({ id: olChild, workId, parentId: olRoot, refId: null, kind: 'event', title: '第一站：雾都', text: '', html: null, fold: false, sortOrder: 0, canvasX: null, canvasY: null, w: null, h: null, shape: 'process', pin: false, rels: [], deletedAt: null, createdAt: t, updatedAt: t })
+  await db.olnodes.add({ id: uid(), workId, parentId: olRoot, refId: null, kind: 'event', title: '第二站：星炉', text: '', html: null, fold: false, sortOrder: 1000, canvasX: null, canvasY: null, w: null, h: null, shape: 'process', pin: false, rels: [], deletedAt: null, createdAt: t, updatedAt: t })
+  return { workId, ch1: chIds[0], ch2: chIds[1], ch3: chIds[2], mubuRoot: rootId, charA, charB, olRoot, olChild }
+}
+
 /* ---------- 关系跟随验证书：关系图拖线改关系（relfollow-verify，甲/乙/丙 三人物） ---------- */
 async function relfollowBook(ctx, meta) {
   const { db, uid, now } = ctx
@@ -145,6 +184,7 @@ export const VERIFY_BOOKS = [
   { title: '画布验证书A', owner: 'olcanvas-verify.mjs', desc: '旧三级大纲迁移 v2（含章纲双链令牌）', create: canvasABook },
   { title: '画布验证书B', owner: 'olcanvas-verify.mjs', desc: '空书快速开始（仅一个幕布节点）', create: canvasBBook },
   { title: '关系跟随验证书', owner: 'relfollow-verify.mjs', desc: '关系图拖线改关系（甲 / 乙 / 丙 三人物）', create: relfollowBook },
+  { title: 'AI 验证书', owner: 'ai-verify.mjs', desc: 'AI 助手四能力全链路：设置区 / 装配器 / 端到端 / 锁门禁（方案 §八）', create: aiBook },
   { title: '多窗口验证书', owner: 'multiwindow-verify.mjs', desc: '拆窗 / 锁 / 落库 / 锁跟随', create: emptyBook },
   { title: '画布右键验证书', owner: 'canvasctx-verify.mjs', desc: '画布右键建模块 + Delete 删除', create: emptyBook },
   { title: '连接点修复验证书', owner: 'junction-fix-verify.mjs / freeze-repro-verify.mjs / visual-fix-verify.mjs', desc: '连接点全链路 + 卡死复现 + 视觉专项（三脚本共用）', create: emptyBook },

@@ -4,12 +4,14 @@ import { NButton, NPopover } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
+import { useAiStore } from '../stores/ai'
 import { pickFiles } from '../services/fileio'
 import { decodeText, parseMubuMd } from '../services/importers'
 import DLinkPicker from './DLinkPicker.vue'
 
 const work = useWorkStore()
 const ui = useUiStore()
+const ai = useAiStore()
 const rootEl = ref(null)
 const ver = ref(0)
 const rows = ref([])
@@ -613,6 +615,15 @@ function runCtx(fn) {
 function ctxRow() {
   return visible.value.find((r) => r.node.id === ctx.rowId) || visible.value[0]
 }
+
+/* AI：扩展设定（方案 §五.3）：对选中幕布节点生成新增条目草案或扩写草案（diff 确认后写入） */
+const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
+function aiLoreExpand() {
+  if (!ai.ready) return window.$msg?.warning(AI_UNSET_HINT)
+  if (!ctx.rowId) return closeCtx()
+  ai.startLoreExpand(ctx.rowId)
+  closeCtx()
+}
 function toggleCtxFold() {
   if (ctx.hasChildren) work.mubuToggleFold(ctx.rowId)
 }
@@ -700,6 +711,7 @@ watch(
 )
 
 onMounted(() => {
+  if (!ai.loaded) ai.loadSettings() // 保障入口置灰判定基于已装载的配置（幂等）
   window.addEventListener('mousedown', onWinMouseDown, true)
   window.addEventListener('keydown', onWinKeyDown)
   window.addEventListener('wheel', onWinWheel, { passive: true })
@@ -841,6 +853,10 @@ onBeforeUnmount(() => {
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => addChild(visible.find((r) => r.node.id === ctx.rowId)))"><span>新建子节点</span></div>
         <div v-if="ctx.hasChildren" class="ctx-item" @mousedown.prevent @click="runCtx(toggleCtxFold)"><span>{{ ctx.folded ? '展开子节点' : '折叠子节点' }}</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => deleteRow(visible.find((r) => r.node.id === ctx.rowId)))"><span>删除节点</span></div>
+        <div class="ctx-sep" />
+        <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? 'AI：扩展设定（为该节点生成新增条目草案或扩写草案）' : AI_UNSET_HINT" @mousedown.prevent @click="ai.ready && aiLoreExpand()">
+          <span>AI：扩展设定</span><span class="hint">AI</span>
+        </div>
         <div class="ctx-sep" />
         <div class="ctx-item" @mousedown.prevent @click="runCtx(undo)"><span>撤销</span><span class="hint">Ctrl+Z</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(redo)"><span>重做</span><span class="hint">Ctrl+Y</span></div>

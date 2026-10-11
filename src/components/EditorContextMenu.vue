@@ -3,11 +3,13 @@ import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { parseTarget, targetById, findByTitle, jumpTo } from '../services/doublelinks'
 import { ANNOTATION_KINDS, normalizeNoteColor, noteKindOf } from '../services/annotations'
 import { useWorkStore } from '../stores/work'
+import { useAiStore } from '../stores/ai'
 import { uid } from '../db/database'
 import DLinkPicker from './DLinkPicker.vue'
 
 const props = defineProps({ editor: { type: Object, required: true } })
 const work = useWorkStore()
+const ai = useAiStore()
 
 const st = reactive({ open: false, x: 0, y: 0, sub: null, subX: 0, subY: 0, linkEdit: false, linkHref: '', dlPicker: false, dlFrom: 0, dlTo: 0, savedFrom: null, savedTo: null, dlQuery: '', noteEdit: false, noteText: '', noteColor: ANNOTATION_KINDS[0].color, noteFrom: 0, noteTo: 0, noteExistingId: null, noteQuote: '' })
 const rootEl = ref(null)
@@ -258,6 +260,28 @@ function refocus() {
     /* 后台窗口下允许失败 */
   }
 }
+
+/* ---------- AI：剧情选项（方案 §五.1）：锚点 = 当前章，右键时有选中文本则一并作为补充指令透传 ---------- */
+const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
+function aiSelText() {
+  /* 右键落在选区上时编辑器选区可能已塌缩，用右键时刻的快照（与双链/批注同口径） */
+  if (st.savedFrom != null) {
+    try {
+      return props.editor.state.doc.textBetween(st.savedFrom, st.savedTo, '\n')
+    } catch {
+      return ''
+    }
+  }
+  return selectionText()
+}
+function aiPlotBranch() {
+  if (!ai.ready) return window.$msg?.warning(AI_UNSET_HINT)
+  const chapterId = work.selChapterId
+  if (!chapterId) return close()
+  const sel = aiSelText().trim()
+  ai.startPlotBranch(chapterId, sel ? `参考选中文本：${sel.slice(0, 500)}` : '')
+  close()
+}
 function run(fn) {
   fn()
   close()
@@ -325,6 +349,7 @@ function onScroll(e) {
   close()
 }
 onMounted(() => {
+  if (!ai.loaded) ai.loadSettings() // 保障入口置灰判定基于已装载的配置（幂等）
   window.addEventListener('mousedown', onWinMouseDown, true)
   window.addEventListener('keydown', onKey)
   window.addEventListener('resize', close)
@@ -495,6 +520,11 @@ defineExpose({ open, close })
       </div>
       <div v-if="act.dl" class="ctx-item" @click="jumpDl"><span>跳转到双链目标</span></div>
       <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除双链</span></div>
+
+      <div class="ctx-sep" />
+      <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? 'AI：剧情选项（锚点为当前章节）' : AI_UNSET_HINT" @click="ai.ready && aiPlotBranch()">
+        <span>AI：剧情选项</span><span class="hint">AI</span>
+      </div>
 
       <div class="ctx-sep" />
       <div class="ctx-item" @click="run(() => chain().undo().run())"><span>撤销</span><span class="hint">Ctrl+Z</span></div>

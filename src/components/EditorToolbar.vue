@@ -1,11 +1,13 @@
 <script setup>
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { NButton, NSelect, NPopover, NColorPicker } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
+import { useAiStore } from '../stores/ai'
 
 const props = defineProps({ editor: { type: Object, required: true } })
 const work = useWorkStore()
+const ai = useAiStore()
 
 const tick = ref(0)
 const onTr = () => tick.value++
@@ -59,6 +61,21 @@ function openLink() {
   linkHref.value = props.editor.getAttributes('link')?.href || 'https://'
   showLink.value = true
 }
+
+/* AI：剧情选项（方案 §五.1）：锚点 = 当前章，编辑器有选中文本时一并作为补充指令透传 */
+const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
+function aiPlotBranch() {
+  if (!ai.ready) return window.$msg?.warning(AI_UNSET_HINT)
+  const ch = work.activeChapter
+  if (!ch) return
+  const s = props.editor.state.selection
+  const sel = s && !s.empty ? props.editor.state.doc.textBetween(s.from, s.to, '\n').trim() : ''
+  ai.startPlotBranch(ch.id, sel ? `参考选中文本：${sel.slice(0, 500)}` : '')
+}
+
+onMounted(() => {
+  if (!ai.loaded) ai.loadSettings() // 保障入口置灰判定基于已装载的配置（幂等）
+})
 function applyLink() {
   const href = linkHref.value.trim()
   let ok = false
@@ -186,5 +203,7 @@ const isActive = (name, attrs) => {
       :title="bmOn ? '移除书签' : '收藏本书签'"
       @click="toggleBm"
     ><OIcon :name="bmOn ? 'star-filled' : 'star'" :size="14" /></button>
+    <span class="tb-sep" />
+    <button class="tb" :disabled="!ai.ready" :title="ai.ready ? 'AI：剧情选项（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">AI：剧情选项</button>
   </div>
 </template>

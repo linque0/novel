@@ -1,13 +1,15 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
 import { NButton, NInput, NSelect, NTag } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
+import { useAiStore } from '../stores/ai'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
 import DLinkTextMenu from './DLinkTextMenu.vue'
 import CharacterGraph from './CharacterGraph.vue'
 
 const work = useWorkStore()
+const ai = useAiStore()
 const c = computed(() => work.activeCharacter)
 const dlMenu = ref(null)
 /* 角色定位：自定义输入为主 + 常见故事定位快捷项（再点取消） */
@@ -95,6 +97,18 @@ function addRelation() {
   relOther.value = null
   relLabel.value = ''
 }
+
+/* AI：丰富（方案 §五.4）：字段补全 / 小传扩写 / 别名建议 / 关系建议（diff 确认后写入） */
+const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
+function aiEnrich() {
+  if (!ai.ready) return window.$msg?.warning(AI_UNSET_HINT)
+  if (!c.value) return
+  ai.startCharacterEnrich(c.value.id)
+}
+
+onMounted(() => {
+  if (!ai.loaded) ai.loadSettings() // 保障入口置灰判定基于已装载的配置（幂等）
+})
 </script>
 
 <template>
@@ -121,6 +135,7 @@ function addRelation() {
         <div style="display: flex; gap: 8px">
           <NInput class="rp-input" :value="c.aliases" placeholder="别名（用 / 分隔）" style="flex: 1" @update:value="(v) => work.updateCharacter(c.id, { aliases: v })" />
           <NButton size="small" @click="changeAvatar">{{ avatarUrl ? '换头像' : '设头像' }}</NButton>
+          <NButton size="small" :disabled="!ai.ready" :title="ai.ready ? 'AI：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">AI：丰富</NButton>
           <NButton size="small" quaternary type="error" @click="work.deleteCharacter(c.id)">删除</NButton>
         </div>
         <NSelect

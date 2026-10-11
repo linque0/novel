@@ -1,0 +1,127 @@
+import { db, uid, now } from '../../db/database'
+import { stripTags } from '../wordcount'
+
+/**
+ * AI 摘要缓存服务（方案 §四「摘要缓存」/ §七）：
+ * - 章节摘要存 aisum 表（Dexie v7，entityType 固定 'chapter'），按 contentHash 判定新旧：
+ *   正文变化 → 摘要过期 → 下次相关任务前重新生成 150–250 字摘要写回缓存，仅变化章节重算。
+ * - markChapterStale 供 autosave 钩子在章节落盘时打会话级失效标记（本窗口已知过期）；
+ *   跨窗口/未打标记的场景由 contentHash 比对兜底，二者取交集判定缓存有效。
+ * - provider 为注入参数（OpenAI 兼容调用属 services/ai/provider.js，由调用方传入）：
+ *   支持带 chat({ system, user }) 或 complete({ system, user }) 方法的对象，或同签名的函数；
+ *   返回 string 或 { text } / { content }。未传 provider 时只读缓存，绝不发起网络调用。
+ */
+
+/** 会话级失效标记：autosave 落盘后本窗口内已知该章摘要过期 */
+const staleChapters = new Set()
+
+/** FNV-1a 变体（cyrb53）：零依赖短字符串哈希，用于 contentHash 比对（碰撞率对摘要场景足够低） */
+export function hashContent(str = '') {
+  let h1 = 0xdeadbeef
+  let h2 = 0x41c6ce57
+  for (let i = 0; i < str.length; i++) {
+    const ch = str.charCodeAt(i)
+    h1 = Math.imul(h1 ^ ch, 2654435761)
+    h2 = Math.imul(h2 ^ ch, 1597334677)
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909)
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909)
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16)
+}
+
+/** autosave 钩子调用：章节落盘后打失效标记（下次取摘要时强制重算） */
+export function markChapterStale(chapterId) {
+  if (chapterId) staleChapters.add(chapterId)
+}
+
+export function isChapterStale(chapterId) {
+  return staleChapters.has(chapterId)
+}
+
+const SUMMARY_SYSTEM = '你是小说项目的摘要员。只输出章节摘要正文，不要标题、不要「摘要：」之类前缀、不要任何解释。'
+const SUMMARY_INPUT_CAP = 8000 // 超长章节截取首尾投喂，摘要场景足够
+
+const SUMMARY_USER = (title, text) =>
+  `请为下面这章小说写一份 150–250 字的情节摘要：覆盖主要事件、人物动向与留下的悬念/伏笔，供后续章节创作时作前情提要使用。只用中文。\n\n【章节】${title}\n【正文】\n${text}`
+
+/** 摘要超长时在句末标点处截到 ≤max 字（不硬切断句） */
+function clampSummary(text, max = 250) {
+  const t = String(text || '').trim()
+  if (t.length <= max) return t
+  const cut = t.slice(0, max)
+  const lastStop = Math.max(cut.lastIndexOf('。'), cut.lastIndexOf('！'), cut.lastIndexOf('？'), cut.lastIndexOf('；'), cut.lastIndexOf('"'))
+  return lastStop > 80 ? cut.slice(0, lastStop + 1) : cut + '……'
+}
+
+/** 兼容多种 provider 形态，归一化为纯文本输出 */
+async function callProvider(provider, { system, user }) {
+  let raw
+  if (typeof provider === 'function') raw = await provider({ system, user })
+  else if (typeof provider?.chat === 'function') raw = await provider.chat({ system, user })
+  else if (typeof provider?.complete === 'function') raw = await provider.complete({ system, user })
+  else throw new Error('provider 不可用：需要 chat()/complete() 方法或同签名函数')
+  if (typeof raw === 'string') return raw
+  if (raw && typeof raw.text === 'string') return raw.text
+  if (raw && typeof raw.content === 'string') return raw.content
+  return ''
+}
+
+/** 章节投喂文本：HTML 剥标签转纯文本（同字数统计/出场人物口径），超长截首尾 */
+function chapterInputText(chapter) {
+  const text = (chapter.fmt === 'html' ? stripTags(chapter.content) : chapter.content || '').trim()
+  if (text.length <= SUMMARY_INPUT_CAP) return text
+  const head = Math.floor(SUMMARY_INPUT_CAP * 0.75)
+  const tail = SUMMARY_INPUT_CAP - head
+  return text.slice(0, head) + '\n……（中略）……\n' + text.slice(-tail)
+}
+
+/**
+ * 取章节摘要：缓存有效（contentHash 匹配且未打失效标记）直接返回；
+ * 缺失/过期且有 provider 时生成并写回 aisum；无 provider 时返回 null（只读，不触网）。
+ */
+export async function getChapterSummary(chapter, provider = null) {
+  if (!chapter || !chapter.id) return null
+  const hash = hashContent(chapter.content || '')
+  const cached = await db.aisum.where('[entityType+entityId]').equals(['chapter', chapter.id]).first()
+  const fresh = cached && cached.contentHash === hash && !staleChapters.has(chapter.id) && cached.summary
+  if (fresh) return cached.summary
+  if (!provider) return null
+  const raw = await callProvider(provider, {
+    system: SUMMARY_SYSTEM,
+    user: SUMMARY_USER(chapter.title || '未命名章节', chapterInputText(chapter))
+  })
+  const summary = clampSummary(raw)
+  if (!summary) return null
+  await db.aisum.put({
+    id: cached?.id || uid(),
+    workId: chapter.workId,
+    entityType: 'chapter',
+    entityId: chapter.id,
+    contentHash: hash,
+    summary,
+    updatedAt: now()
+  })
+  staleChapters.delete(chapter.id)
+  return summary
+}
+
+/**
+ * 批量取章节摘要（串行，避免并发打爆 API）：返回 Map<chapterId, summary>，
+ * 生成失败/无 provider 的章节不出现在 Map 中。
+ */
+export async function ensureChapterSummaries(chapters, provider = null, onEach = null) {
+  const out = new Map()
+  for (const ch of chapters || []) {
+    if (!ch || !ch.id) continue
+    try {
+      const s = await getChapterSummary(ch, provider)
+      if (s) {
+        out.set(ch.id, s)
+        onEach?.(ch, s)
+      }
+    } catch (err) {
+      console.warn('[ai/summarize] 章节摘要生成失败：', ch.title, String(err))
+    }
+  }
+  return out
+}

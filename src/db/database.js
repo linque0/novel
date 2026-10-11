@@ -120,6 +120,30 @@ db.version(6).stores({
   annotations: 'id, workId, chapterId, [workId+deletedAt], [chapterId+deletedAt], createdAt'
 })
 
+// v7：AI 助手摘要缓存——章节（后续可扩展其他实体）的 AI 生成摘要存本表，
+// 以 contentHash 与实体内容比对判定新旧：正文变化 → 摘要过期 → 下次任务前重算（services/ai/summarize.js）
+db.version(7).stores({
+  works: 'id, updatedAt, deletedAt',
+  volumes: 'id, workId, [workId+sortOrder]',
+  chapters: 'id, workId, volumeId, [workId+deletedAt], updatedAt',
+  outlines: 'id, workId, level, refId, [workId+level]',
+  characters: 'id, workId, [workId+deletedAt], name',
+  relations: 'id, workId, fromId, toId',
+  lorecats: 'id, workId, parentId, [workId+sortOrder]',
+  lore: 'id, workId, categoryId, [workId+deletedAt]',
+  mubu: 'id, workId, parentId, [workId+deletedAt], [workId+parentId]',
+  snippets: 'id, workId, [workId+deletedAt], createdAt',
+  assets: 'id, workId, [workId+deletedAt]',
+  links: 'id, [entityType+entityId], assetId',
+  revisions: 'id, [entityType+entityId], createdAt',
+  wordlog: 'id, date, workId, [workId+date], [date+chapterId]',
+  appconfig: 'key',
+  bookmarks: 'id, workId, targetId, [workId+targetId]',
+  olnodes: 'id, workId, parentId, refId, [workId+deletedAt], [workId+parentId]',
+  annotations: 'id, workId, chapterId, [workId+deletedAt], [chapterId+deletedAt], createdAt',
+  aisum: 'id, workId, [entityType+entityId], updatedAt'
+})
+
 export const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
