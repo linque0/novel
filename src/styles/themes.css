@@ -511,7 +511,45 @@ body,
   border-left: 1px solid var(--border);
   background: var(--bg-panel);
   overflow: auto;
-  padding: 12px;
+  /* 顶部 padding 留 0：吸附顶条 rp-head 自带顶部留白——sticky 只能在内容盒内钉住，
+     面板若有 padding-top，顶条钉住后上方会露出 12px 缝隙（滚动内容从缝里穿出） */
+  padding: 0 12px 12px;
+}
+
+/* 批注栏吸附顶条：负外边距吃掉面板左右 padding 撑满宽度，滚动时钉在顶端，任意位置可收起；
+   下方留白画在自身背景内（用 padding 不用 margin），批注滚动时不会从缝隙穿出 */
+.rp-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -12px;
+  padding: 12px 8px 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-panel);
+}
+.rp-cap {
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+.rp-fold {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.rp-fold:hover {
+  background: color-mix(in srgb, var(--accent, #8c6f4e) 14%, transparent);
+  color: var(--text);
 }
 
 /* ============ 编辑器 ============ */

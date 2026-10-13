@@ -1,0 +1,591 @@
+{
+  "researchDate": "2026-10-13",
+  "sourceRoot": "E:/SillyTavern/SillyTavern-1.19.0/SillyTavern-1.19.0",
+  "packageVersion": "1.19.0",
+  "scope": "本地静态读取，未重放对话或插件，未调用生成 API；不包含正文原文、推理文本或密钥",
+  "chatCount": 10,
+  "backupCount": 139,
+  "worldCount": 26,
+  "worldEntryCount": 4515,
+  "worldEjsEntryCount": 106,
+  "worldHelperMacroEntryCount": 106,
+  "chats": [
+    {
+      "path": "data/default-user/chats/default_Assistant/Assistant - 2025-12-10 @00h 31m 14s 457ms.jsonl",
+      "sha256": "63e31a3f375e610df45c6b27c528f37a0c62f423d9ec1353b06617f608f2f076",
+      "parseErrors": 0,
+      "messageRecords": 0,
+      "userRecords": 0,
+      "nonUserRecords": 0,
+      "hiddenSystemRecords": 0,
+      "selectedTextChars": 0,
+      "updateVariableRecords": 0,
+      "stateSnapshotRecords": 0,
+      "tableSnapshotRecords": 0,
+      "planningFields": [],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "tainted"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/default_Assistant/Assistant - 2025-12-10@00h32m31s.jsonl",
+      "sha256": "8c8426a52a07eada2e3050987a6e86f98a2b133568088dffa34b864b2dd81a06",
+      "parseErrors": 0,
+      "messageRecords": 1,
+      "userRecords": 1,
+      "nonUserRecords": 0,
+      "hiddenSystemRecords": 0,
+      "selectedTextChars": 0,
+      "updateVariableRecords": 0,
+      "stateSnapshotRecords": 0,
+      "tableSnapshotRecords": 0,
+      "planningFields": [],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "tainted",
+        "timedWorldInfo",
+        "variables"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/default_Seraphina/Seraphina - 2023-5-12 @21h 32m 29s 224ms.jsonl",
+      "sha256": "fc030bd694835e880e1ce73c1f6f5339da5d70e33fcd4b54fcdea21aa6eb06ac",
+      "parseErrors": 0,
+      "messageRecords": 4,
+      "userRecords": 1,
+      "nonUserRecords": 3,
+      "hiddenSystemRecords": 0,
+      "selectedTextChars": 1329,
+      "updateVariableRecords": 0,
+      "stateSnapshotRecords": 0,
+      "tableSnapshotRecords": 0,
+      "planningFields": [],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "timedWorldInfo",
+        "tainted",
+        "lastInContextMessageId"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/世界调制器/世界调制器 - 2026-06-09@22h59m04s151ms.jsonl",
+      "sha256": "ad24b791d197be854f99e4cea28a735c3a3f05a069eedf68e487d250a54f06e6",
+      "parseErrors": 0,
+      "messageRecords": 143,
+      "userRecords": 71,
+      "nonUserRecords": 72,
+      "hiddenSystemRecords": 67,
+      "selectedTextChars": 490264,
+      "updateVariableRecords": 69,
+      "stateSnapshotRecords": 25,
+      "tableSnapshotRecords": 20,
+      "planningFields": [
+        "qrf_plot",
+        "qrf_plot_preset",
+        "qrf_plot_tasks"
+      ],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "variables",
+        "timedWorldInfo",
+        "tainted",
+        "lastInContextMessageId",
+        "world_info"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/命定之诗与黄昏之歌v4.1/命定之诗与黄昏之歌v4.1 - 2026-02-24@23h37m15s518ms imported.jsonl",
+      "sha256": "71336fb6a7ba17fffa25bc36f94e5b8dcad9afed1374fbbb17341a59720bd742",
+      "parseErrors": 0,
+      "messageRecords": 231,
+      "userRecords": 115,
+      "nonUserRecords": 116,
+      "hiddenSystemRecords": 105,
+      "selectedTextChars": 1061379,
+      "updateVariableRecords": 115,
+      "stateSnapshotRecords": 31,
+      "tableSnapshotRecords": 50,
+      "planningFields": [
+        "_plot_processed",
+        "qrf_plot",
+        "qrf_plot_preset"
+      ],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "timedWorldInfo",
+        "variables",
+        "tainted",
+        "lastInContextMessageId",
+        "world_info"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/命定之诗与黄昏之歌v4.2/命定之诗与黄昏之歌v4.2 - 2026-04-11@18h24m10s936ms imported.jsonl",
+      "sha256": "8be38cb5d9d213cf2c075f40b7d5435360d3cbd7a01d01133af79c7b2c9bc861",
+      "parseErrors": 0,
+      "messageRecords": 272,
+      "userRecords": 136,
+      "nonUserRecords": 136,
+      "hiddenSystemRecords": 125,
+      "selectedTextChars": 985579,
+      "updateVariableRecords": 135,
+      "stateSnapshotRecords": 32,
+      "tableSnapshotRecords": 1,
+      "planningFields": [
+        "_plot_processed",
+        "qrf_plot",
+        "qrf_plot_preset"
+      ],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "timedWorldInfo",
+        "variables",
+        "tainted",
+        "lastInContextMessageId",
+        "world_info"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/异世界/异世界 - 2026-06-11@03h48m26s565ms.jsonl",
+      "sha256": "b68bdeafc4d7a780cff933c4952eaf5b0061683180f7ca1b8b06ff7d34aa226c",
+      "parseErrors": 0,
+      "messageRecords": 37,
+      "userRecords": 18,
+      "nonUserRecords": 19,
+      "hiddenSystemRecords": 0,
+      "selectedTextChars": 124452,
+      "updateVariableRecords": 0,
+      "stateSnapshotRecords": 0,
+      "tableSnapshotRecords": 8,
+      "planningFields": [
+        "qrf_plot",
+        "qrf_plot_preset",
+        "qrf_plot_tasks"
+      ],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "timedWorldInfo",
+        "variables",
+        "tainted",
+        "lastInContextMessageId"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/第四天灾 v2.8/第四天灾 v2.8 - 2026-06-20@21h28m56s965ms.jsonl",
+      "sha256": "f499f76803f6ddea1a21ea503e8da0dc102a2c8422b0af3f2822f0f800f1b423",
+      "parseErrors": 0,
+      "messageRecords": 41,
+      "userRecords": 20,
+      "nonUserRecords": 21,
+      "hiddenSystemRecords": 0,
+      "selectedTextChars": 115026,
+      "updateVariableRecords": 20,
+      "stateSnapshotRecords": 27,
+      "tableSnapshotRecords": 14,
+      "planningFields": [
+        "_plot_processed",
+        "qrf_plot",
+        "qrf_plot_preset",
+        "qrf_plot_tasks"
+      ],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "variables",
+        "timedWorldInfo",
+        "TavernDB_ACU_ScopedConfig",
+        "TavernDB_ACU_ScopedConfig__chatId",
+        "TavernDB_ACU_InternalSheetGuide",
+        "TavernDB_ACU_InternalSheetGuide__chatId",
+        "tainted",
+        "lastInContextMessageId"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/规则模拟器V1.8（4）/规则模拟器V1.8（4） - 2026-06-11@19h52m03s184ms.jsonl",
+      "sha256": "38ef185393439295481b3cd862dac156049a850baaa606b92979676587523de4",
+      "parseErrors": 0,
+      "messageRecords": 7,
+      "userRecords": 3,
+      "nonUserRecords": 4,
+      "hiddenSystemRecords": 0,
+      "selectedTextChars": 22527,
+      "updateVariableRecords": 5,
+      "stateSnapshotRecords": 7,
+      "tableSnapshotRecords": 4,
+      "planningFields": [
+        "qrf_plot",
+        "qrf_plot_preset",
+        "qrf_plot_tasks"
+      ],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "variables",
+        "timedWorldInfo",
+        "tainted",
+        "lastInContextMessageId"
+      ]
+    },
+    {
+      "path": "data/default-user/chats/诡秘剧场1/诡秘剧场 - 2026-01-29@15h24m51s395ms.jsonl",
+      "sha256": "0736518d7de0e9432f23e349fddfbccd033e973f05dff58d2dea331b71a9a739",
+      "parseErrors": 0,
+      "messageRecords": 1,
+      "userRecords": 0,
+      "nonUserRecords": 1,
+      "hiddenSystemRecords": 0,
+      "selectedTextChars": 14482,
+      "updateVariableRecords": 1,
+      "stateSnapshotRecords": 1,
+      "tableSnapshotRecords": 0,
+      "planningFields": [],
+      "chatMetadataKeys": [
+        "integrity",
+        "chat_id_hash",
+        "note_prompt",
+        "note_interval",
+        "note_position",
+        "note_depth",
+        "note_role",
+        "timedWorldInfo",
+        "variables",
+        "tainted",
+        "lastInContextMessageId"
+      ]
+    }
+  ],
+  "worlds": [
+    {
+      "path": "data/default-user/worlds/1源堡.json",
+      "sha256": "bac3ac9f3a98d5da723c46819424df721781b7237ff80787be9b199f80c0f5da",
+      "entries": 583,
+      "disabledEntries": 79,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 1
+    },
+    {
+      "path": "data/default-user/worlds/1源堡7.json",
+      "sha256": "8aadb11bd06eb777f80b591239598fbf101986f8cdccbf028a29eedb098d2a0d",
+      "entries": 495,
+      "disabledEntries": 77,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 1
+    },
+    {
+      "path": "data/default-user/worlds/1源堡8.json",
+      "sha256": "9a6dea276617827189bd41063bf5421e8c3e7b9e0b6751e1ed2373d1bee4c3ec",
+      "entries": 498,
+      "disabledEntries": 76,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 1
+    },
+    {
+      "path": "data/default-user/worlds/1源堡9.json",
+      "sha256": "a9bc004abada961643fc1efd6db79e0ef8b232843e4e47de2798d2834f308d13",
+      "entries": 499,
+      "disabledEntries": 79,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 1
+    },
+    {
+      "path": "data/default-user/worlds/1诡秘女角色人物书 +鲁恩三大教会概述（教会部分默认关闭，可自开）.json",
+      "sha256": "20a2803fe2709e3e5bba3dd4cfa8140f211ebbb78da39afb1a61606cf6744023",
+      "entries": 9,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/Chat_Book_2026_06_09_22h59m04s151ms.json",
+      "sha256": "48fa736bfd493c8a8e4bdb253181cfc088ed26831f5acfbc81cb520096da90d7",
+      "entries": 0,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/Eldoria.json",
+      "sha256": "bfc2548443c890746a54d54e35e41265b02d1b59fd06d72552b305bf9b1e063c",
+      "entries": 4,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/世界调制器.json",
+      "sha256": "d18d8bf1b71bbb30c3e15ead61a6c9bd20ec6cf6cbf0b3351bdaa1ae97fdf2e6",
+      "entries": 70,
+      "disabledEntries": 7,
+      "summaryEntries": 0,
+      "tableExportEntries": 49,
+      "ejsEntries": 0,
+      "helperMacroEntries": 1
+    },
+    {
+      "path": "data/default-user/worlds/偷盗者途径魔药配方＋非凡特性和唯一性.json",
+      "sha256": "f8d4bac89cb244ca5944f1b9b594f5cb37fe0b5a25394f946e313f21446b8f10",
+      "entries": 20,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/命定之诗-Characters_2026_01_25.json",
+      "sha256": "7519a3e29994f27ad374205f750598f1dea5f33e5536b3d8bf45b3b1e8735c7e",
+      "entries": 5,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/命定之诗-Characters_2026_02_03.json",
+      "sha256": "4b3b01f68842b29e7e8eb59781a07aab9c7534f34a20206e495f8453f4748df7",
+      "entries": 11,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/命定之诗与黄昏之歌v3.1.5.json",
+      "sha256": "22b791749b184dae3e1029b20d8e963d31af7f2cec60a35424652c03075b0321",
+      "entries": 290,
+      "disabledEntries": 44,
+      "summaryEntries": 0,
+      "tableExportEntries": 8,
+      "ejsEntries": 16,
+      "helperMacroEntries": 16
+    },
+    {
+      "path": "data/default-user/worlds/命定之诗与黄昏之歌v4.0.json",
+      "sha256": "3567210a3c97b6e1c6434ce8c6c0417dbe0216ed3da5b897725f12ec555faa5a",
+      "entries": 349,
+      "disabledEntries": 84,
+      "summaryEntries": 0,
+      "tableExportEntries": 8,
+      "ejsEntries": 21,
+      "helperMacroEntries": 19
+    },
+    {
+      "path": "data/default-user/worlds/命定之诗与黄昏之歌v4.1.json",
+      "sha256": "aa0979044403cafd88e47d1520933250dabcc43a0485f6d841ccd665852da752",
+      "entries": 569,
+      "disabledEntries": 136,
+      "summaryEntries": 0,
+      "tableExportEntries": 8,
+      "ejsEntries": 28,
+      "helperMacroEntries": 25
+    },
+    {
+      "path": "data/default-user/worlds/命定之诗与黄昏之歌v4.2.json",
+      "sha256": "142deb3650148e723fe2a7033824adfca09831bc85e917cd96bae85fcf1b63b9",
+      "entries": 511,
+      "disabledEntries": 150,
+      "summaryEntries": 0,
+      "tableExportEntries": 15,
+      "ejsEntries": 36,
+      "helperMacroEntries": 32
+    },
+    {
+      "path": "data/default-user/worlds/命定之诗总结世界书_mm0rz35xrmag.json",
+      "sha256": "17dc89167f068f8f251321252918bb53f6e9a1db74ef2ee708247f1e99b804e1",
+      "entries": 16,
+      "disabledEntries": 2,
+      "summaryEntries": 16,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/塔罗会开会时间与重大事件 1.19小更新.json",
+      "sha256": "a68864396d1c9f95857fec83747398647e8c8661f2233af7914161bc1b20a91b",
+      "entries": 52,
+      "disabledEntries": 2,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/异世界.json",
+      "sha256": "108b495aad4c01cb62825c26358663f4ffb877d8814973c6626b870b462e3f49",
+      "entries": 68,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 22,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/浮世.json",
+      "sha256": "448987454b5a507bcc136b0a5578d44447dbf9a9331db455225ed4d6215606e0",
+      "entries": 1,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/第四天灾 2.9.json",
+      "sha256": "49d315c7a39c7736ac33724049c0f2a65e844ea44603771db6ce1d43e52d8e54",
+      "entries": 357,
+      "disabledEntries": 28,
+      "summaryEntries": 0,
+      "tableExportEntries": 20,
+      "ejsEntries": 5,
+      "helperMacroEntries": 7
+    },
+    {
+      "path": "data/default-user/worlds/维多利亚风格.json",
+      "sha256": "d4ec97ddba7a31ae2bd932a6400f4bcce37106c787bff98a65d1da44c118d899",
+      "entries": 23,
+      "disabledEntries": 0,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/规则系统1.8 (4).json",
+      "sha256": "9aea099f3a9dc4ea25195752997996ea4d5b7c8590221a99d3f02d61d16f25a6",
+      "entries": 35,
+      "disabledEntries": 7,
+      "summaryEntries": 0,
+      "tableExportEntries": 12,
+      "ejsEntries": 0,
+      "helperMacroEntries": 1
+    },
+    {
+      "path": "data/default-user/worlds/规则系统1.8.json",
+      "sha256": "6a2f3c23f5154ee838ebdccb394ee30359cd4975081001d15b7202fb6c912fef",
+      "entries": 25,
+      "disabledEntries": 6,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 1
+    },
+    {
+      "path": "data/default-user/worlds/詭秘之主-補釘表 (1).json",
+      "sha256": "6dd769deff08ad08cb4072a19bc4943c3a51ecae02990e9f38bec9bf3887a783",
+      "entries": 8,
+      "disabledEntries": 5,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/詭秘之主-非凡者瑟瑟加強.json",
+      "sha256": "37e897322e57a79f60929f0d0a1c825ae94ed61abd45cb58e187957dd58d816a",
+      "entries": 8,
+      "disabledEntries": 3,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    },
+    {
+      "path": "data/default-user/worlds/诡秘之主-风味性文化.json",
+      "sha256": "29ee51d82b5c44bd12eaddee558a86c36a7a04f6f3898cfda67bd66a89d1da63",
+      "entries": 9,
+      "disabledEntries": 2,
+      "summaryEntries": 0,
+      "tableExportEntries": 0,
+      "ejsEntries": 0,
+      "helperMacroEntries": 0
+    }
+  ],
+  "installedExtensions": [
+    "JS-Slash-Runner",
+    "ST-Prompt-Template",
+    "World"
+  ],
+  "worklogEvidence": [
+    {
+      "path": ".mimosa/history/run-20261012T164121591Z-26672-839fec5a882d.json",
+      "sha256": "7f0c4ba93cd93092afce6bd5ce27a489fa8075b84d37abc98cf09f377e35cc68",
+      "runStatus": "inconclusive"
+    }
+  ],
+  "limitations": [
+    "备份可能重复，不作为独立对话计数",
+    "mes 字符总量包含提示包装、状态和 HTML，不等同小说正文字数",
+    "JSONL 为选中正文与候选状态的静态快照，不能证明当时实际请求或插件运行成功",
+    "World 插件存储在浏览器 IndexedDB/localStorage，本轮未获取其实际运行存档"
+  ]
+}

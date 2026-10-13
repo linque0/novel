@@ -616,12 +616,12 @@ function ctxRow() {
   return visible.value.find((r) => r.node.id === ctx.rowId) || visible.value[0]
 }
 
-/* AI：扩展设定（方案 §五.3）：对选中幕布节点生成新增条目草案或扩写草案（diff 确认后写入） */
-const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
+/* 发送给恍然梦（方案 §五.3）：对选中幕布节点生成新增条目草案或扩写草案（diff 确认后写入） */
+const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配置'
 function aiLoreExpand() {
   if (!ai.ready) return window.$msg?.warning(AI_UNSET_HINT)
   if (!ctx.rowId) return closeCtx()
-  ai.startLoreExpand(ctx.rowId)
+  ai.prepare('请讨论这条设定。', {loreId:ctx.rowId})
   closeCtx()
 }
 function toggleCtxFold() {
@@ -854,8 +854,8 @@ onBeforeUnmount(() => {
         <div v-if="ctx.hasChildren" class="ctx-item" @mousedown.prevent @click="runCtx(toggleCtxFold)"><span>{{ ctx.folded ? '展开子节点' : '折叠子节点' }}</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => deleteRow(visible.find((r) => r.node.id === ctx.rowId)))"><span>删除节点</span></div>
         <div class="ctx-sep" />
-        <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? 'AI：扩展设定（为该节点生成新增条目草案或扩写草案）' : AI_UNSET_HINT" @mousedown.prevent @click="ai.ready && aiLoreExpand()">
-          <span>AI：扩展设定</span><span class="hint">AI</span>
+        <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? '发送给恍然梦（附带此设定进入对话）' : AI_UNSET_HINT" @mousedown.prevent @click="ai.ready && aiLoreExpand()">
+          <span>发送给恍然梦</span><span class="hint">梦</span>
         </div>
         <div class="ctx-sep" />
         <div class="ctx-item" @mousedown.prevent @click="runCtx(undo)"><span>撤销</span><span class="hint">Ctrl+Z</span></div>

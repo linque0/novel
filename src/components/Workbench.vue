@@ -3,10 +3,6 @@ import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
 import { NButton, NSelect, NDropdown, NModal, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
-import { useShelfStore } from '../stores/shelf'
-import SettingsPanel from './SettingsPanel.vue'
-import { backupAll, restoreBackup } from '../services/exporter'
-import { pickFiles } from '../services/fileio'
 import OIcon from './OIcon.vue'
 import ChapterTree from './ChapterTree.vue'
 import OutlineSidebar from './OutlineSidebar.vue'
@@ -25,7 +21,6 @@ import { popOut, isPopped, focusPopped } from '../services/panelwindows'
 
 const work = useWorkStore()
 const ui = useUiStore()
-const shelf = useShelfStore()
 const msg = useMessage()
 
 /* ---------- 书签（章节快捷收藏） ---------- */
@@ -64,27 +59,13 @@ const badgeText = computed(() => {
   return ui.autosave.lastSavedAt ? `已保存 ${fmtTime(ui.autosave.lastSavedAt)}` : '自动保存就绪'
 })
 
-/* 低频操作已收编至 SettingsPanel（设置面板）：主题/字体/数据/书签/统计/帮助 */
-async function onExport(key) {
-  if (key === 'book') {
-    ui.exportOpen = true
-  } else if (key === 'backup') {
-    const r = await backupAll()
-    if (!r?.canceled) msg.success('备份已保存')
-  } else if (key === 'restore') {
-    const files = await pickFiles(['json'])
-    if (!files.length) return
-    try {
-      await restoreBackup(files[0].data)
-      msg.success('备份已恢复，即将重新载入')
-      const id = work.work?.id
-      await work.closeWork()
-      await shelf.refresh()
-      if (id) await work.open(id)
-    } catch (e) {
-      msg.error('恢复失败：' + e.message)
-    }
+/* ---------- 设置窗口（面板窗口 settings 类型）：外观 / 恍然梦 / 数据 / 关于 ---------- */
+function openSettings() {
+  if (!window.native?.panelOpen) {
+    msg.info('设置窗口仅桌面版可用，网页版暂不支持')
+    return
   }
+  window.native.panelOpen({ type: 'settings', workId: 'app', entityId: '', title: '设置' })
 }
 
 function onKeydown(e) {
@@ -100,7 +81,8 @@ const splitOptions = computed(() => [
   { label: '⧉ 大纲', key: 'outline', disabled: false },
   { label: '⧉ 人物', key: 'characters', disabled: false },
   { label: '⧉ 设定', key: 'lore', disabled: false },
-  { label: '⧉ 灵感', key: 'snippets', disabled: false }
+  { label: '⧉ 灵感', key: 'snippets', disabled: false },
+  { label: '⧉ 恍然梦', key: 'ai', disabled: false }
 ])
 async function onSplit(key) {
   const titles = {
@@ -108,14 +90,16 @@ async function onSplit(key) {
     outline: () => `${work.work?.title || ''} · 大纲`,
     characters: () => `${work.work?.title || ''} · 人物`,
     lore: () => `${work.work?.title || ''} · 设定`,
-    snippets: () => `${work.work?.title || ''} · 灵感`
+    snippets: () => `${work.work?.title || ''} · 灵感`,
+    ai: () => `${work.work?.title || ''} · 恍然梦`
   }
   const entityMap = {
     chapter: () => work.selChapterId,
     outline: () => '',
     characters: () => work.selCharacterId,
     lore: () => '',
-    snippets: () => work.selSnippetId
+    snippets: () => work.selSnippetId,
+    ai: () => ''
   }
   const ok = await popOut(work, key, entityMap[key]?.() || '', titles[key]?.())
   if (ok) msg.success('已在独立窗口打开')
@@ -131,6 +115,8 @@ const modulePopped = computed(() => {
   if (!work.work || work.tab === 'chapters') return false
   return isPopped(work, work.tab, curEntityForTab(work.tab))
 })
+/* 恍然梦已拆出为独立窗口：主窗口停靠列隐藏，避免两处同时展示（锁随面板，关窗自动恢复） */
+const aiPopped = computed(() => (work.work ? isPopped(work, 'ai', '') : false))
 const curTabLabel = computed(() => tabs.find((t) => t.key === work.tab)?.label || '')
 const poppedEntityName = computed(() => {
   if (work.tab === 'characters') return work.activeCharacter?.name || ''
@@ -159,6 +145,27 @@ function startSideResize(e) {
 function resetSideWidth() {
   ui.setPref('sideWidth', 252)
 }
+/* ---------- 恍然梦停靠列宽度拖拽（300–640，appconfig 记忆，双击恢复默认） ---------- */
+function startAiResize(e) {
+  e.preventDefault()
+  const startX = e.clientX
+  const startW = ui.aiDrawerWidth
+  document.body.style.userSelect = 'none'
+  const move = (ev) => {
+    ui.aiDrawerWidth = Math.min(640, Math.max(300, startW - (ev.clientX - startX)))
+  }
+  const up = () => {
+    window.removeEventListener('mousemove', move)
+    window.removeEventListener('mouseup', up)
+    document.body.style.userSelect = ''
+    ui.setPref('aiDrawerWidth', ui.aiDrawerWidth)
+  }
+  window.addEventListener('mousemove', move)
+  window.addEventListener('mouseup', up)
+}
+function resetAiWidth() {
+  ui.setPref('aiDrawerWidth', 400)
+}
 onMounted(() => window.addEventListener('keydown', onKeydown))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
@@ -177,7 +184,10 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <NDropdown trigger="click" :options="splitOptions" @select="onSplit">
         <NButton size="small" title="把模块拆出为独立窗口，可边看大纲边写正文"><OIcon name="split" :size="14" /> 拆窗 <OIcon name="caret-down" :size="11" /></NButton>
       </NDropdown>
-      <SettingsPanel :bookmarks="bookmarkOptions" @backup="onExport('backup')" @restore="onExport('restore')" @bookmark="onBookmarkSelect" />
+      <NDropdown trigger="click" :options="bookmarkOptions" @select="onBookmarkSelect">
+        <NButton size="small" title="章节书签快捷跳转（编辑器工具栏或章节右键添加）"><OIcon name="bookmark" :size="14" /> 书签 <OIcon name="caret-down" :size="11" /></NButton>
+      </NDropdown>
+      <NButton size="small" title="设置：外观 / 恍然梦 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
       <NButton size="small" :type="ui.focusMode ? 'primary' : 'default'" @click="ui.focusMode = !ui.focusMode">沉浸</NButton>
     </div>
 
@@ -196,6 +206,21 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           <div style="text-align: center">
             <div class="ico">{{ t.icon }}</div>
             <div class="rail-label">{{ t.label }}</div>
+          </div>
+        </div>
+        <!-- 恍然梦：独立功能入口，点击开合右侧 AI 界面（不切换中央模块） -->
+        <div
+          class="rail-item rail-item-ai"
+          :class="{ active: ui.aiDrawerOpen }"
+          role="button"
+          tabindex="0"
+          title="恍然梦：AI 写作助手（在右侧弹出，不挤压原界面）"
+          @click="ui.aiDrawerOpen = !ui.aiDrawerOpen"
+          @keydown.enter="ui.aiDrawerOpen = !ui.aiDrawerOpen"
+        >
+          <div style="text-align: center">
+            <div class="ico">梦</div>
+            <div class="rail-label">恍然梦</div>
           </div>
         </div>
       </div>
@@ -233,12 +258,129 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <SnippetCenter v-else-if="work.tab === 'snippets'" />
       </div>
 
-      <RightPanel v-if="!ui.focusMode && !modulePopped && work.tab === 'chapters'" />
-      <!-- AI 助手侧栏（方案 §五/§七）：与批注侧栏并列常驻右栏，随当前模块携带上下文；写入一律走卡片提案，不经此面板直改 -->
-      <AiAssistantPanel v-if="!ui.focusMode && !modulePopped" />
+      <!-- 批注栏收起后的右缘细轨：点击重新展开（仅正文页显示，与批注栏同条件） -->
+      <button
+        v-if="!ui.focusMode && !modulePopped && work.tab === 'chapters' && !ui.rightPanelOpen"
+        class="rp-rail"
+        title="展开批注栏"
+        @click="ui.setPref('rightPanelOpen', true)"
+      >
+        <OIcon name="caret-right" :size="12" class="rp-rail-caret" />
+        <span class="rp-rail-text">批注栏</span>
+      </button>
+
+      <RightPanel v-if="!ui.focusMode && !modulePopped && work.tab === 'chapters' && ui.rightPanelOpen" />
+
+      <!-- 恍然梦停靠列：参与 flex 布局，与原界面并排显示（不遮挡）；左缘可拖宽，拆出独立窗口后此列隐藏 -->
+      <div
+        v-if="ui.aiDrawerOpen && !ui.focusMode && !aiPopped"
+        class="ai-dock-resizer"
+        title="拖拽调整恍然梦宽度（双击恢复默认）"
+        @mousedown="startAiResize"
+        @dblclick="resetAiWidth"
+      ></div>
+      <aside v-if="ui.aiDrawerOpen && !ui.focusMode && !aiPopped" class="ai-dock" :style="{ width: ui.aiDrawerWidth + 'px' }">
+        <div class="ai-drawer-head">
+          <span class="ai-drawer-name serif">恍然梦</span>
+          <span class="ai-drawer-sub">AI WRITING ASSISTANT</span>
+          <div style="flex: 1"></div>
+          <NButton size="tiny" quaternary title="拆出为独立窗口（可与其他模块并排对照）" @click="onSplit('ai')"><OIcon name="split" :size="13" /></NButton>
+          <NButton size="tiny" quaternary title="收起恍然梦" @click="ui.aiDrawerOpen = false"><OIcon name="close" :size="13" /></NButton>
+        </div>
+        <div class="ai-drawer-body">
+          <AiAssistantPanel />
+        </div>
+      </aside>
     </div>
 
     <!-- 双链悬浮预览窗（全局唯一，悬停双链标签 / 纯文本令牌时展示目标内容） -->
     <DLinkPopover />
   </div>
 </template>
+
+<style scoped>
+/* 恍然梦停靠列：正常参与 wb-body 的 flex 布局，与原界面并排（同 VS Code 副侧栏）；
+   左缘拖拽手柄调宽（300–640，appconfig 记忆），拆出独立窗口后此列隐藏 */
+.ai-dock {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--bg, var(--bg-panel));
+  border-left: 1px solid var(--border-strong, var(--border));
+  box-shadow: -8px 0 22px rgba(20, 16, 8, 0.06);
+}
+.ai-dock-resizer {
+  flex: none;
+  width: 5px;
+  margin-left: -5px;
+  cursor: col-resize;
+  z-index: 5;
+}
+.ai-dock-resizer:hover {
+  background: color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.ai-drawer-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-panel);
+  flex: none;
+}
+.ai-drawer-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ikb);
+}
+.ai-drawer-sub {
+  font-family: var(--g-disp, serif);
+  font-size: 8px;
+  letter-spacing: 0.24em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.ai-drawer-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 10px;
+}
+/* 左栏恍然梦入口：与模块项同形，图标用品牌色弱区分 */
+.rail-item-ai .ico {
+  color: var(--accent);
+}
+
+/* 批注栏收起后的右缘细轨：竖排文字，悬停亮起，点击重新展开 */
+.rp-rail {
+  flex: none;
+  align-self: stretch;
+  width: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  padding: 12px 0 10px;
+  border: none;
+  border-left: 1px solid var(--border);
+  background: var(--bg-panel);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.rp-rail:hover {
+  background: color-mix(in srgb, var(--accent, #8c6f4e) 10%, var(--bg-panel));
+  color: var(--text);
+}
+.rp-rail-caret {
+  transform: rotate(180deg);
+}
+.rp-rail-text {
+  writing-mode: vertical-lr;
+  font-size: 11px;
+  letter-spacing: 4px;
+  user-select: none;
+}
+</style>

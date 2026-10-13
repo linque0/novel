@@ -9,6 +9,7 @@
 import { computed, ref } from 'vue'
 import { NButton, NTag } from 'naive-ui'
 import OIcon from '../OIcon.vue'
+import ProposalExtras from './ProposalExtras.vue'
 import { useWorkStore } from '../../stores/work'
 import { autosave } from '../../services/autosave'
 import { isPopped } from '../../services/panelwindows'
@@ -18,82 +19,28 @@ const props = defineProps({
 })
 
 const work = useWorkStore()
-const appliedOutline = ref(false)
-const appliedDraft = ref(false)
+const appliedOutline = computed(() => props.card.appliedActions?.includes('outline'))
+const appliedDraft = computed(() => props.card.appliedActions?.includes('draft'))
 const openingOpen = ref(false)
 
 const anchorLabel = computed(() => props.card.anchorLabel || '当前章节')
 const openingLen = computed(() => String(props.card.opening || '').length)
 
 /** 落到大纲：在章节锚点下新增一条章纲子节点（梗概 + 张力 + 影响合写进节点正文） */
-function applyToOutline() {
-  if (!work.work) return
-  const anchor = work.ensureChapterAnchor(props.card.anchorId)
-  if (!anchor) {
-    window.$msg?.warning('未找到该章节，无法落到大纲（章节可能已被删除）')
-    return
-  }
-  const lines = [
-    props.card.summary || '',
-    props.card.tension ? `张力：${props.card.tension}` : '',
-    props.card.impact ? `对伏笔与大纲的影响：${props.card.impact}` : '',
-    props.card.characters?.length ? `涉及人物：${props.card.characters.join('、')}` : ''
-  ].filter(Boolean)
-  work.olnodeAdd(anchor.id, {
-    kind: 'event',
-    title: props.card.title || 'AI 剧情线路',
-    text: lines.join('\n')
-  })
-  appliedOutline.value = true
-  window.$msg?.success(`已把「${props.card.title || '剧情线路'}」落到《${anchorLabel.value}》章纲下`)
+async function applyToOutline() {
+  try { await work.applyAiProposal(props.card, { action: 'outline' }); window.$msg?.success('已落到章节大纲') }
+  catch (e) { window.$msg?.warning(e.message) }
 }
-
-/** 以示例起笔续写：把起笔示例作为段落数组追加到正文末尾（不覆盖既有内容） */
 async function continueWithOpening() {
-  if (!work.work || !props.card.anchorId) return
-  const chRow = work.chapters.find((x) => x.id === props.card.anchorId && !x.deletedAt)
-  if (!chRow) {
-    window.$msg?.warning('未找到该章节（可能已被删除），无法续写')
-    return
-  }
-  // 锁门禁（方案 §六.2）：章节被拆出为面板窗口锁定时，主窗口拒绝写入
-  if (isPopped(work, 'chapter', props.card.anchorId)) {
-    window.$msg?.warning('该章节已被拆出为独立面板并锁定，请到该面板中操作正文')
-    return
-  }
-  const ed = window.__ns?.editor
-  // 编辑器必须正打开锚点章节（EditorPane 仅在 selChapterId 变化时重挂载），否则插入会落错章节
-  if (!ed || ed.isDestroyed || work.selChapterId !== props.card.anchorId) {
-    window.$msg?.warning(`请先在编辑器中打开《${anchorLabel.value}》，再以示例起笔`)
-    return
-  }
-  // 快照回滚（方案 §六.3）：大块写入前强制版本快照。先冲掉历史脏行，再强制快照当前正文
-  // 并立即落盘，之后的编辑器 onUpdate 落库不会覆盖该快照（content 已变化且 5 分钟冷却未过）
-  await autosave.flushAll()
-  autosave.mark('chapters', chRow, { forceSnapshot: true })
-  await autosave.flushAll()
-
-  const paras = String(props.card.opening || '')
-    .split(/\n+/)
-    .map((s) => s.trim())
-    .filter(Boolean)
-  if (!paras.length) {
-    window.$msg?.warning('该线路没有可用的起笔示例')
-    return
-  }
-  ed.commands.focus('end')
-  ed.chain()
-    .insertContent(paras.map((t) => ({ type: 'paragraph', content: [{ type: 'text', text: t }] })))
-    .run()
-  appliedDraft.value = true
-  window.$msg?.success(`已把起笔示例（约 ${openingLen.value} 字）追加到《${anchorLabel.value}》末尾，可继续润色`)
+  try { await work.applyAiProposal(props.card, { action: 'draft' }); window.$msg?.success('起笔示例已追加，可继续润色') }
+  catch (e) { window.$msg?.warning(e.message) }
 }
 </script>
 
 <template>
   <div class="ai-card">
     <div class="ai-card-head">
-      <span class="ai-card-kicker">线路</span>
+      <span class="ai-card-kicker">线路</span><NTag size="tiny" :type="card.strategy === 'twist' ? 'warning' : 'info'">{{ ({steady:'稳健推进',escalate:'冲突激化',twist:'意外转折',payoff:'伏笔回收',seed:'伏笔铺垫'})[card.strategy] }}</NTag>
       <span class="ai-card-title">{{ card.title || '未命名线路' }}</span>
     </div>
 
@@ -112,7 +59,9 @@ async function continueWithOpening() {
       <pre v-show="openingOpen" class="ai-opening-text">{{ card.opening }}</pre>
     </div>
 
-    <p v-if="card.impact" class="ai-card-line"><b>伏笔与大纲影响</b>{{ card.impact }}</p>
+    <p v-for="(text, key) in card.impact" :key="key" class="ai-card-line"><b>{{ ({foreshadow:'伏笔',characters:'人物',outline:'大纲'})[key] }}</b>{{ text }}</p>
+    <details v-if="card.consistency"><summary>一致性自检</summary>{{ card.consistency }}</details>
+    <ProposalExtras :card="card" />
 
     <div class="ai-card-actions">
       <NButton size="tiny" type="primary" :disabled="appliedOutline" @click="applyToOutline">

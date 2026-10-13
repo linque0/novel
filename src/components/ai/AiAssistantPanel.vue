@@ -1,509 +1,516 @@
 <script setup>
-/* 右侧「AI 助手」侧栏（docs/AI助手接入方案.md §五 界面形态 / §七）：
- * - 不接 props，自读 stores/ai.js 状态：任务类型与锚点、生成中流式预览、卡片列表、
- *   自由问答会话、发送范围报告、用量两行、统一错误条、未配置引导。
- * - 本组件自身零写入：卡片的应用/放弃动作在 BranchCard / PlanCard / DiffCard 内
- *   经 store/work.js 现有动作完成（写入红线 §六.1），这里只负责编排展示与移除已放弃卡片。
- */
-import { computed, onMounted, ref } from 'vue'
-import { NButton, NTag } from 'naive-ui'
-import OIcon from '../OIcon.vue'
-import BranchCard from './BranchCard.vue'
-import PlanCard from './PlanCard.vue'
-import DiffCard from './DiffCard.vue'
-import { useAiStore } from '../../stores/ai'
-
-const ai = useAiStore()
-const question = ref('')
-const reportOpen = ref(false)
-const chatOpen = ref(true)
-
-onMounted(() => {
-  if (!ai.loaded) ai.loadSettings() // 面板可先于设置面板挂载，自行装载 ai.* 配置
-})
-
-const TASK_LABEL = { plot: '正文发展', outline: '大纲规划', lore: '设定扩展', character: '人物丰富' }
-const PHASE_LABEL = { assembling: '装配上下文…', generating: '生成中…', ready: '待应用', failed: '失败' }
-
-const busy = computed(() => ai.phase === 'assembling' || ai.phase === 'generating')
-const showTask = computed(() => busy.value || !!ai.result)
-const taskLabel = computed(() => TASK_LABEL[ai.task] || ai.task || '')
-const anchorLabel = computed(() => ai.result?.anchor?.label || '')
-const isWeb = computed(() => typeof window !== 'undefined' && !window.native?.credentialDecrypt)
-const degradedResult = computed(() => (ai.result && ai.result.degraded ? ai.result : null))
-const streamTail = computed(() => (ai.streamText.length > 600 ? '……' + ai.streamText.slice(-600) : ai.streamText))
-const canSend = computed(() => ai.ready && !ai.chatBusy && !!question.value.trim())
-
-/** 卡片按类型分桶计数（标题徽标用） */
-const cardKinds = computed(() => {
-  const cards = ai.result?.cards || []
-  return {
-    branch: cards.filter((c) => c.kind === 'branch').length,
-    plan: cards.filter((c) => c.kind === 'plan').length,
-    diff: cards.filter((c) => c.kind === 'diff').length
+import { onMounted, ref, watch } from "vue";
+import { NButton, NInput, NSelect, NModal } from "naive-ui";
+import { useAiStore } from "../../stores/ai";
+import { useWorkStore } from "../../stores/work";
+import { useUiStore } from "../../stores/ui";
+import { renderChat, plainChat } from "../../services/ai/chat-text";
+import PresetEvaluation from "./PresetEvaluation.vue";
+import DraftCard from "./DraftCard.vue";
+import PlanCard from "./PlanCard.vue";
+import DiffCard from "./DiffCard.vue";
+import KnowledgePanel from "./KnowledgePanel.vue";
+const ai = useAiStore(),
+  work = useWorkStore(),
+  ui = useUiStore(),
+  question = ref(ai.pendingPrompt || ""),
+  knowledgeOpen = ref(false),
+  evaluationOpen = ref(false),
+  draftPreview = ref(null),
+  chatPane = ref(null),
+  refs = ref({ ...ai.pendingRefs });
+watch(
+  () => ai.pendingPrompt,
+  (v) => {
+    if (v) {
+      question.value = v;
+      refs.value = { ...ai.pendingRefs };
+    }
+  },
+);
+watch(
+  () => ai.chat.map((m) => m.content).join(""),
+  () => {
+    requestAnimationFrame(() => {
+      if (chatPane.value)
+        chatPane.value.scrollTop = chatPane.value.scrollHeight;
+    });
+  },
+);
+onMounted(async () => {
+  if (!ai.loaded) await ai.loadSettings();
+  await ai.loadPresets();
+});
+async function send() {
+  const text = question.value.trim();
+  if (!text || ai.busy || !ai.ready) return;
+  const contextRefs = { ...refs.value };
+  const editor = window.__ns?.editor;
+  if (!contextRefs.chapterId) contextRefs.chapterId = work.selChapterId;
+  if (
+    !contextRefs.selection &&
+    editor &&
+    !editor.isDestroyed &&
+    work.selChapterId === contextRefs.chapterId
+  ) {
+    const s = editor.state.selection;
+    if (!s.empty)
+      contextRefs.selection = editor.state.doc.textBetween(s.from, s.to, "\n");
   }
-})
-
-const kindLabel = computed(() => {
-  const k = cardKinds.value
-  const parts = []
-  if (k.branch) parts.push(`${k.branch} 张线路卡`)
-  if (k.plan) parts.push(`${k.plan} 张方案卡`)
-  if (k.diff) parts.push(`${k.diff} 张草案卡`)
-  return parts.join(' · ')
-})
-
-const fmtUsage = (u) => `${Number(u?.total_tokens) || 0} tokens · ${Number(u?.calls) || 0} 次调用`
-const usageTip = (u) => `输入 ${Number(u?.prompt_tokens) || 0} + 输出 ${Number(u?.completion_tokens) || 0} tokens`
-
-/** 卡片「放弃」：只从提案列表移除，不触碰任何库数据（方案 §五 提案制） */
-function dismissCard(cardId) {
-  if (!ai.result) return
-  ai.result.cards = ai.result.cards.filter((c) => c.id !== cardId)
+  question.value = "";
+  refs.value = {};
+  ai.pendingPrompt = "";
+  ai.pendingRefs = {};
+  await ai.send(text, { contextRefs });
 }
-
-async function onSend() {
-  const q = question.value.trim()
-  if (!q || ai.chatBusy) return
-  question.value = ''
-  await ai.send(q)
-}
-
-/** 问答里模型表达了写入意图 → 引导到对应能力入口（不代写入） */
-function writeTaskLabel(msg) {
-  return TASK_LABEL[msg.writeTask] || msg.writeHint
-}
-
-function errorText(err) {
-  if (!err) return ''
-  const map = {
-    'not-configured': '未配置',
-    network: '网络失败',
-    auth: '鉴权失败',
-    'rate-limit': '请求限流',
-    'insufficient-balance': '余额不足',
-    api: '服务商错误',
-    aborted: '已取消'
+function onKeyDown(event) {
+  if (
+    event.key === "Enter" &&
+    !event.shiftKey &&
+    !event.isComposing &&
+    event.keyCode !== 229
+  ) {
+    event.preventDefault();
+    send();
   }
-  return map[err.code] ? `${map[err.code]}：${err.message}` : err.message
+}
+watch(
+  () => ai.workId,
+  () => {
+    question.value = "";
+    refs.value = {};
+  },
+);
+/* 面板窗口打开：await 结果并反馈失败，避免"点了没反应"（主进程未重启／网页版／被锁定） */
+async function openPanel(spec, label) {
+  if (!window.native?.panelOpen) {
+    window.$msg?.info(`${label}窗口仅桌面版可用，网页版暂不支持`);
+    return;
+  }
+  try {
+    const r = await window.native.panelOpen(spec);
+    if (!r?.ok) {
+      console.warn(`[panels] ${label} 打开失败`, r);
+      window.$msg?.error(
+        `${label}窗口打开失败（${r?.reason || "未知原因"}）。若刚更新过主进程代码，重启应用后再试。`,
+      );
+    }
+  } catch (e) {
+    window.$msg?.error(`${label}窗口打开失败：${e?.message || e}`);
+  }
+}
+function presets() {
+  openPanel(
+    {
+      type: "ai-presets",
+      workId: work.work?.id || "__global__",
+      entityId: work.selChapterId || "",
+    },
+    "预设编辑",
+  );
+}
+function draft(msg, event) {
+  const body = event.currentTarget
+      .closest(".chat-message")
+      ?.querySelector(".chat-body"),
+    selection = window.getSelection();
+  const selected =
+    selection &&
+    body?.contains(selection.anchorNode) &&
+    body?.contains(selection.focusNode)
+      ? selection.toString()
+      : "";
+  draftPreview.value = {
+    msg,
+    index: msg.activeCandidate || 0,
+    text: selected || plainChat(msg.content),
+    selected: !!selected,
+  };
+}
+function acceptDraft() {
+  try {
+    const p = draftPreview.value;
+    if ((p.msg.activeCandidate || 0) !== p.index)
+      throw new Error("候选已切换，请重新预览");
+    ai.draftFromMessage(p.msg, p.text, { visibleSelection: p.selected });
+    draftPreview.value = null;
+  } catch (e) {
+    window.$msg?.warning(e.message);
+  }
+}
+function dismiss(msg, id) {
+  msg.cards = msg.cards.filter((c) => c.id !== id);
 }
 </script>
-
 <template>
   <div class="ai-panel">
-    <div class="rp-section">
-      <div class="rp-title">
-        AI 助手
-        <span class="ai-head-tools">
-          <NButton v-if="busy || ai.chatBusy" size="tiny" quaternary type="error" @click="ai.cancel()">停止</NButton>
-          <NButton v-if="ai.chat.length" size="tiny" quaternary @click="ai.clearChat()">清空会话</NButton>
-        </span>
-      </div>
-
-      <!-- 未配置引导（方案 §三：未配置时全部 AI 入口置灰，设置区可配置） -->
-      <div v-if="!ai.ready" class="ai-guide">
-        <template v-if="isWeb">
-          AI 助手仅桌面版可用（网页版无本地凭据加密通道）。
-        </template>
-        <template v-else>
-          还未完成配置：打开顶栏「设置」→ AI 助手区，选择服务商预设、填写 API 地址与模型，保存 API 密钥后即可使用。
-          <div v-if="ai.baseURL || ai.model" class="ai-guide-miss">
-            当前缺少：{{ !ai.baseURL.trim() ? 'API 地址 ' : '' }}{{ !ai.model.trim() ? '模型 ' : '' }}{{ !ai.hasCredential ? 'API 密钥' : '' }}
-          </div>
-        </template>
-      </div>
-
-      <!-- 统一错误提示条（能力任务与问答共用，方案 §三错误分类） -->
-      <div v-if="ai.error" class="ai-error-bar" role="alert">
-        <span class="ai-error-text">{{ errorText(ai.error) }}</span>
-        <button class="ai-error-x" title="关闭" @click="ai.error = null"><OIcon name="close" :size="11" /></button>
-      </div>
+    <div class="ai-top">
+      <strong>恍然梦</strong
+      ><NButton size="tiny" quaternary @click="presets">预设编辑</NButton
+      ><NButton size="tiny" quaternary @click="knowledgeOpen = true"
+        >作品知识</NButton
+      >
+      <NButton size="tiny" quaternary @click="evaluationOpen = true"
+        >预设对照</NButton
+      >
     </div>
-
-    <!-- 当前任务：类型 / 锚点 / 流式状态 / 解析重试提示 -->
-    <div v-if="showTask" class="rp-section">
-      <div class="rp-title">
-        当前任务
-        <span class="ai-task-phase">
-          <NTag size="tiny" :bordered="false" :type="ai.phase === 'failed' ? 'error' : ai.phase === 'ready' ? 'success' : 'default'">
-            {{ PHASE_LABEL[ai.phase] || ai.phase }}
-          </NTag>
-        </span>
-      </div>
-      <div class="ai-task-meta">
-        <span class="ai-task-kind">{{ taskLabel }}</span>
-        <span v-if="anchorLabel" class="ai-task-anchor">锚点：{{ anchorLabel }}</span>
-      </div>
-      <div v-if="ai.retryNotice" class="ai-retry-tip">{{ ai.retryNotice }}</div>
-      <pre v-if="ai.phase === 'generating' && ai.streamText" class="ai-stream">{{ streamTail }}</pre>
-    </div>
-
-    <!-- 结果：卡片列表 / 降级纯文本 / 发送范围报告 -->
-    <div v-if="ai.result" class="rp-section">
-      <div class="rp-title">
-        提案结果
-        <span class="ai-head-tools">
-          <NButton size="tiny" quaternary @click="ai.resetResult()">关闭</NButton>
-        </span>
-      </div>
-
-      <div v-if="kindLabel && !degradedResult" class="ai-kinds">{{ kindLabel }}</div>
-
-      <!-- 解析失败降级：纯文本展示（方案 §五 统一交互流） -->
-      <template v-if="degradedResult">
-        <div class="ai-degraded">
-          <div v-if="ai.result.parseError" class="ai-degraded-tip">结构化输出解析失败（{{ ai.result.parseError }}），以下为原始回答：</div>
-          <pre class="ai-degraded-text">{{ ai.result.text }}</pre>
+    <NSelect
+      :value="ai.selectedPresetId"
+      :options="ai.presets.map((p) => ({ label: p.name, value: p.id }))"
+      size="small"
+      :disabled="ai.chatBusy"
+      @update:value="
+        (id) =>
+          ai.selectPreset(id).catch((e) => window.$msg?.warning(e.message))
+      "
+    />
+    <p v-if="!ai.ready" class="notice">
+      请在设置中填写 API 地址、模型和密钥后开始对话。
+    </p>
+    <div ref="chatPane" class="chat-scroll">
+      <p v-if="!ai.chat.length" class="empty">
+        与恍然梦讨论作品，或直接描述想创作的内容。当前章节和选段将作为关联材料。
+      </p>
+      <article
+        v-for="msg in ai.chat"
+        :key="msg.id || msg.ts"
+        class="chat-message"
+        :class="msg.role"
+      >
+        <div class="message-head">
+          {{ msg.role === "user" ? "作者" : "恍然梦"
+          }}<small v-if="msg.preset"
+            >{{ msg.preset.name }} · v{{ msg.preset.revision }}</small
+          ><span v-if="msg.streaming">生成中…</span>
         </div>
-      </template>
-
-      <template v-for="c in ai.result.cards" :key="c.id">
-        <BranchCard v-if="c.kind === 'branch'" :card="c" />
-        <PlanCard v-else-if="c.kind === 'plan'" :card="c" />
-        <DiffCard v-else-if="c.kind === 'diff'" :card="c" @dismiss="dismissCard" />
-      </template>
-
-      <!-- 发送范围报告（方案 §四：本次发送清单 + 裁剪透明化） -->
-      <div v-if="ai.result.context" class="ai-report">
-        <button class="ai-fold" type="button" @click="reportOpen = !reportOpen">
-          发送范围（{{ (ai.result.context.report || []).length }} 项 · 约 {{ ai.result.context.tokens?.used || 0 }}/{{ ai.result.context.tokens?.budget || 0 }} tokens）
-        </button>
-        <div v-show="reportOpen" class="ai-report-body">
-          <div v-if="ai.result.context.privacy" class="ai-report-privacy">隐私模式：仅发送摘要，不发送正文原文与检索片段</div>
-          <ul v-if="(ai.result.context.report || []).length" class="ai-report-list">
-            <li v-for="(r, i) in ai.result.context.report" :key="i">{{ r }}</li>
-          </ul>
-          <div v-if="(ai.result.context.dropped || []).length" class="ai-report-dropped">
-            <div class="ai-report-dropped-title">已裁剪 / 压缩</div>
-            <div v-for="(d, i) in ai.result.context.dropped" :key="i" class="ai-report-drop">
-              <NTag size="tiny" :bordered="false">{{ d.layer }}</NTag>
-              <span class="ai-report-drop-label">{{ d.label }}</span>
-              <span class="ai-report-drop-reason">{{ d.reason }}</span>
-            </div>
-          </div>
+        <div
+          class="message-text chat-body"
+          v-html="renderChat(msg.displayText ?? msg.content)"
+        ></div>
+        <details v-if="msg.rawContent" class="scope">
+          <summary>原始文本</summary>
+          <pre>{{ msg.rawContent }}</pre>
+        </details>
+        <details v-if="msg.reasoning?.rawText" class="scope">
+          <summary>模型推理</summary>
+          <div
+            v-html="
+              renderChat(msg.reasoning.displayText ?? msg.reasoning.rawText)
+            "
+          ></div>
+        </details>
+        <div
+          v-if="msg.role === 'assistant' && msg.candidates?.length > 1"
+          class="candidate-controls"
+        >
+          <NButton
+            size="tiny"
+            :disabled="ai.busy || msg.activeCandidate === 0"
+            @click="ai.selectCandidate(msg, msg.activeCandidate - 1)"
+            >‹</NButton
+          >
+          <span
+            >候选 {{ (msg.activeCandidate || 0) + 1 }} /
+            {{ msg.candidates.length }}</span
+          >
+          <NButton
+            size="tiny"
+            :disabled="
+              ai.busy || msg.activeCandidate >= msg.candidates.length - 1
+            "
+            @click="ai.selectCandidate(msg, msg.activeCandidate + 1)"
+            >›</NButton
+          >
         </div>
-      </div>
-    </div>
-
-    <!-- 空态：提示入口在各模块 -->
-    <div v-if="!showTask && ai.ready" class="ai-empty">
-      从编辑器右键「AI：剧情选项」、大纲节点右键「AI：规划线路」等入口发起任务；或在下方直接提问。
-    </div>
-
-    <!-- 自由问答（方案 §五.5：只读工具循环，写入意图则引导用能力卡片） -->
-    <div class="rp-section">
-      <div class="rp-title">自由问答</div>
-      <div v-show="chatOpen" class="ai-chat">
-        <div v-if="!ai.chat.length" class="ai-chat-empty">问任何关于本书的问题：人物、剧情、伏笔、设定……</div>
-        <div v-for="(m, i) in ai.chat" :key="i" class="ai-msg" :class="m.role">
-          <div v-if="m.role === 'user'" class="ai-bubble user">{{ m.content }}</div>
-          <div v-else class="ai-bubble ai">
-            <span class="ai-bubble-text">{{ m.content }}<span v-if="m.streaming" class="ai-caret"></span></span>
-            <div v-if="m.writeHint && !m.streaming" class="ai-write-hint">
-              检测到写入意图（{{ writeTaskLabel(m) }}）——请改用对应能力卡片，问答不会改动作品。
-            </div>
-            <NTag v-if="m.degraded && !m.streaming" size="tiny" :bordered="false">未按结构输出</NTag>
-            <div v-if="m.error" class="ai-msg-error">{{ errorText(m.error) }}</div>
-          </div>
+        <template v-if="!msg.streaming"
+          ><details
+            v-for="card in msg.cards || []"
+            :key="card.id"
+            class="proposal"
+          >
+            <summary>
+              {{
+                card.title ||
+                card.name ||
+                (card.subject === "character" ? "人物建议" : "设定建议")
+              }}
+              ·
+              {{
+                card.status === "applied"
+                  ? "已应用"
+                  : card.complete === false
+                    ? "未完整"
+                    : "待确认"
+              }}
+            </summary>
+            <DraftCard v-if="card.kind === 'draft'" :card="card" /><PlanCard
+              v-else-if="card.kind === 'plan' && card.complete !== false"
+              :card="card"
+            /><DiffCard
+              v-else-if="card.kind === 'diff' && card.complete !== false"
+              :card="card"
+              @dismiss="dismiss(msg, card.id)"
+            /><NButton size="tiny" quaternary @click="dismiss(msg, card.id)"
+              >放弃此提案</NButton
+            >
+          </details></template
+        >
+        <p v-if="msg.error" class="error">{{ msg.error.message }}</p>
+        <details
+          v-if="
+            !msg.streaming &&
+            !msg.complete &&
+            msg.toolOutput &&
+            !msg.cards?.length
+          "
+          class="scope"
+        >
+          <summary>未完整的工具输出（仅供查看）</summary>
+          <div class="message-text">{{ msg.toolOutput }}</div>
+        </details>
+        <div
+          v-if="msg.role === 'assistant' && !msg.streaming"
+          class="message-actions"
+        >
+          <NButton
+            size="tiny"
+            quaternary
+            :disabled="ai.busy"
+            @click="ai.continueMessage(msg)"
+            >继续</NButton
+          ><NButton
+            size="tiny"
+            quaternary
+            :disabled="ai.busy"
+            @click="ai.regenerateMessage(msg)"
+            >重新生成</NButton
+          ><NButton
+            size="tiny"
+            quaternary
+            :disabled="!msg.complete || !!msg.error"
+            @click="draft(msg, $event)"
+            >所选文本／回复作为正文草稿</NButton
+          >
         </div>
-      </div>
-      <div class="ai-chat-input">
-        <textarea
-          v-model="question"
-          class="rp-textarea ai-question"
-          rows="2"
-          placeholder="自由提问（Enter 发送，Shift+Enter 换行）"
-          :disabled="!ai.ready || ai.chatBusy"
-          @keydown.enter.exact.prevent="onSend"
-        ></textarea>
-        <NButton size="tiny" type="primary" :disabled="!canSend" @click="onSend">发送</NButton>
+        <details v-if="msg.context" class="scope">
+          <summary>发送范围与预算</summary>
+          <p
+            v-for="(r, i) in [...msg.context.report, ...msg.context.warnings]"
+            :key="i"
+          >
+            {{ r }}
+          </p>
+          <p v-for="d in msg.context.dropped" :key="d.label">
+            裁剪：{{ d.label }}
+          </p>
+          <p>
+            输入 {{ msg.context.tokens.used }}/{{
+              msg.context.tokens.inputCap
+            }}
+            · 输出预留 {{ msg.context.tokens.outputReserve }}
+          </p>
+          <p v-for="r in msg.rounds || []" :key="r.round">
+            第 {{ r.round }} 轮：{{ r.used }}/{{ r.inputCap }}
+          </p>
+        </details>
+      </article>
+    </div>
+    <p v-if="ai.error" class="error" role="alert">{{ ai.error.message }}</p>
+    <div class="compose">
+      <p
+        v-if="
+          refs.chapterId || refs.outlineId || refs.characterId || refs.loreId
+        "
+        class="notice"
+      >
+        已附带创作对象{{ refs.selection ? "与选段" : "" }}，发送时冻结来源。
+      </p>
+      <NInput
+        v-model:value="question"
+        type="textarea"
+        placeholder="描述需求，Enter 发送，Shift+Enter 换行"
+        :autosize="{ minRows: 3, maxRows: 8 }"
+        @keydown="onKeyDown"
+      />
+      <div class="compose-actions">
+        <small
+          >{{ ai.usage.session.total_tokens }} tokens ·
+          {{ ai.usage.session.calls }} 次{{
+            ai.usage.session.estimatedCalls ? "（含估算）" : ""
+          }}</small
+        ><NButton
+          size="tiny"
+          quaternary
+          :disabled="ai.busy"
+          @click="ai.clearChat().catch((e) => window.$msg?.warning(e.message))"
+          >清空</NButton
+        ><NButton v-if="ai.busy" size="small" type="error" @click="ai.cancel()"
+          >停止</NButton
+        ><NButton
+          v-else
+          type="primary"
+          size="small"
+          :disabled="!ai.ready || !question.trim()"
+          @click="send"
+          >发送</NButton
+        >
       </div>
     </div>
-
-    <!-- 用量两行（方案 §六.5：本会话 + 累计） -->
-    <div class="ai-usage">
-      <div class="ai-usage-row" :title="usageTip(ai.usage.session)">本会话：{{ fmtUsage(ai.usage.session) }}</div>
-      <div class="ai-usage-row" :title="usageTip(ai.usage.total)">累计：{{ fmtUsage(ai.usage.total) }}</div>
-    </div>
+    <NModal
+      :show="!!draftPreview"
+      preset="card"
+      title="正文草稿转换预览"
+      style="width: min(780px, 90vw); max-height: 85vh; overflow: auto"
+      @update:show="draftPreview = null"
+      ><template v-if="draftPreview"
+        ><p>
+          {{
+            draftPreview.selected
+              ? "使用实际选中的可见文本"
+              : "使用当前候选去除展示 HTML 后的处理文本"
+          }}
+          · 候选 {{ draftPreview.index + 1 }}
+        </p>
+        <pre class="message-text">{{ draftPreview.text }}</pre>
+        <NButton
+          type="primary"
+          :disabled="!draftPreview.text.trim()"
+          @click="acceptDraft"
+          >确认为正文草稿</NButton
+        ></template
+      ></NModal
+    >
+    <NModal
+      v-model:show="evaluationOpen"
+      preset="card"
+      title="预设输出对照评测"
+      style="width: min(1000px, 92vw); max-height: 85vh; overflow: auto"
+      ><PresetEvaluation
+    /></NModal>
+    <NModal
+      v-model:show="knowledgeOpen"
+      preset="card"
+      title="作品知识库"
+      style="width: 900px; max-height: 85vh; overflow: auto"
+      ><KnowledgePanel
+    /></NModal>
   </div>
 </template>
-
 <style scoped>
 .ai-panel {
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  font-size: 12.5px;
+  padding: 12px;
+  gap: 10px;
+  color: var(--text);
 }
-.ai-head-tools {
-  display: inline-flex;
+.ai-top {
+  display: flex;
+  align-items: center;
   gap: 4px;
 }
-
-/* 未配置引导 / 错误条 */
-.ai-guide {
-  border: 1px dashed var(--border-strong, var(--border));
-  border-radius: 6px;
-  padding: 8px 10px;
-  font-size: 12px;
-  line-height: 1.7;
-  color: var(--text-dim);
-  background: color-mix(in srgb, var(--accent) 5%, transparent);
-}
-.ai-guide-miss {
-  margin-top: 4px;
-  color: var(--text-faint, var(--text-dim));
-}
-.ai-error-bar {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 6px;
-  padding: 7px 9px;
-  border: 1px solid color-mix(in srgb, #c0392b 45%, transparent);
-  border-radius: 6px;
-  background: color-mix(in srgb, #c0392b 8%, transparent);
-  color: var(--text);
-  font-size: 12px;
-  line-height: 1.6;
-}
-.ai-error-text {
+.ai-top strong {
   flex: 1;
-  min-width: 0;
-  word-break: break-all;
 }
-.ai-error-x {
-  flex: none;
-  border: none;
-  background: none;
-  color: var(--text-dim);
-  cursor: pointer;
-  padding: 1px;
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
 }
-.ai-error-x:hover {
-  color: var(--text);
+.chat-message {
+  padding: 13px 9px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  background: var(--bg-panel);
 }
-
-/* 当前任务 */
-.ai-task-phase {
-  display: inline-flex;
+.chat-message.user {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
 }
-.ai-task-meta {
+.message-head {
   display: flex;
-  align-items: baseline;
   gap: 8px;
-  flex-wrap: wrap;
-}
-.ai-task-kind {
-  font-weight: 700;
-  color: var(--accent);
-}
-.ai-task-anchor {
-  color: var(--text-dim);
-  font-size: 11.5px;
-}
-.ai-retry-tip {
-  margin-top: 5px;
-  padding: 5px 8px;
-  border-radius: 4px;
-  background: color-mix(in srgb, #d9a94a 14%, transparent);
-  color: var(--text);
-  font-size: 11.5px;
-}
-.ai-stream {
-  margin: 6px 0 0;
-  max-height: 140px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-editor);
-  padding: 6px 8px;
-  font-size: 11.5px;
-  line-height: 1.6;
-  color: var(--text-dim);
-  font-family: var(--editor-font);
-}
-
-/* 结果区 */
-.ai-kinds {
-  color: var(--text-dim);
-  font-size: 11.5px;
-  margin-bottom: 6px;
-}
-.ai-degraded-tip {
-  color: var(--text-dim);
-  font-size: 11.5px;
-  margin-bottom: 4px;
-}
-.ai-degraded-text {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-editor);
-  padding: 8px;
-  max-height: 320px;
-  overflow: auto;
   font-size: 12px;
-  line-height: 1.7;
-  font-family: var(--editor-font);
-}
-
-/* 发送范围报告 */
-.ai-report {
-  margin-top: 8px;
-}
-.ai-fold {
-  border: none;
-  background: none;
-  padding: 0;
-  font-size: 11.5px;
   color: var(--text-dim);
-  cursor: pointer;
-}
-.ai-fold:hover {
-  color: var(--accent);
-}
-.ai-report-body {
-  margin-top: 5px;
-  padding: 7px 9px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg-editor);
-  font-size: 11.5px;
-  line-height: 1.7;
-}
-.ai-report-privacy {
-  color: var(--accent);
-  margin-bottom: 4px;
-}
-.ai-report-list {
-  margin: 0;
-  padding-left: 16px;
-  color: var(--text-dim);
-}
-.ai-report-dropped {
-  margin-top: 6px;
-  border-top: 1px dashed var(--border);
-  padding-top: 5px;
-}
-.ai-report-dropped-title {
-  color: var(--text-dim);
-  margin-bottom: 3px;
-}
-.ai-report-drop {
-  display: flex;
-  align-items: baseline;
-  gap: 5px;
-  flex-wrap: wrap;
-}
-.ai-report-drop-label {
-  color: var(--text);
-}
-.ai-report-drop-reason {
-  color: var(--text-faint, var(--text-dim));
-  font-size: 11px;
-}
-
-/* 空态 */
-.ai-empty {
-  border: 1px dashed var(--border);
-  border-radius: 6px;
-  padding: 10px;
-  font-size: 12px;
-  line-height: 1.8;
-  color: var(--text-faint, var(--text-dim));
-}
-
-/* 自由问答 */
-.ai-chat {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  max-height: 320px;
-  overflow: auto;
   margin-bottom: 8px;
 }
-.ai-chat-empty {
-  font-size: 12px;
-  color: var(--text-faint, var(--text-dim));
+.message-head small {
+  flex: 1;
 }
-.ai-msg {
+.message-text {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.85;
+  user-select: text;
+}
+.message-actions,
+.compose-actions {
   display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 8px;
 }
-.ai-msg.user {
-  justify-content: flex-end;
+.compose-actions small {
+  flex: 1;
+  color: var(--text-dim);
+  font-size: 10px;
 }
-.ai-bubble {
-  max-width: 92%;
-  border-radius: 8px;
-  padding: 6px 9px;
-  font-size: 12.5px;
-  line-height: 1.7;
-  white-space: pre-wrap;
-  word-break: break-word;
+.empty {
+  padding: 30px 12px;
+  color: var(--text-dim);
+  line-height: 1.8;
 }
-.ai-bubble.user {
-  background: color-mix(in srgb, var(--accent) 16%, transparent);
-  color: var(--text);
-}
-.ai-bubble.ai {
-  background: var(--bg-editor);
+.proposal,
+.scope {
+  margin-top: 10px;
   border: 1px solid var(--border);
-  color: var(--text);
+  padding: 8px;
 }
-.ai-bubble-text {
+.scope {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+summary {
+  cursor: pointer;
+}
+.error {
+  font-size: 12px;
+  color: #d55;
+}
+.notice {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+}
+.candidate-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 12px;
+}
+pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.chat-body :deep(pre) {
+  overflow: auto;
+  background: var(--bg-hover);
+  padding: 10px;
   white-space: pre-wrap;
 }
-.ai-caret {
-  display: inline-block;
-  width: 6px;
-  height: 13px;
-  margin-left: 2px;
-  vertical-align: -2px;
-  background: var(--accent);
-  animation: ai-blink 0.9s infinite;
+.chat-body :deep(p) {
+  margin: 6px 0;
 }
-@keyframes ai-blink {
-  50% {
-    opacity: 0.2;
-  }
+.chat-body :deep(table) {
+  border-collapse: collapse;
 }
-.ai-write-hint {
-  margin-top: 5px;
-  padding-top: 5px;
-  border-top: 1px dashed var(--border);
-  color: var(--accent);
-  font-size: 11.5px;
-}
-.ai-msg-error {
-  margin-top: 5px;
-  color: #c0392b;
-  font-size: 11.5px;
-}
-.ai-chat-input {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  align-items: flex-end;
-}
-.ai-question {
-  width: 100%;
-  min-height: 46px;
-  resize: none;
-}
-
-/* 用量 */
-.ai-usage {
-  margin-top: auto;
-  padding: 8px 0 2px;
-  border-top: 1px solid var(--border);
-  font-size: 11px;
-  color: var(--text-faint, var(--text-dim));
-  line-height: 1.9;
-  font-variant-numeric: tabular-nums;
+.chat-body :deep(td),
+.chat-body :deep(th) {
+  border: 1px solid var(--border);
+  padding: 4px;
 }
 </style>

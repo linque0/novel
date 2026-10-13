@@ -1,5 +1,6 @@
 import { db, uid, now, todayStr } from './database'
 import { htmlToMd, htmlToPlain } from '../services/importers'
+import { suspendProjection, resumeProjection } from './project-repo.js'
 
 /**
  * Repository 层：所有 Dexie 访问集中在此。
@@ -27,7 +28,8 @@ export async function loadWorkBundle(workId) {
   ])
   // 资产只保留元信息，blob 按需读取，避免大图全部驻留内存
   const assets = assetRows.map(({ blob, ...meta }) => meta)
-  return { work: works, volumes, chapters, outlines, characters, relations, lorecats, lore, snippets, assets, links, mubu, annotations }
+  const olnodes = await db.olnodes.where('workId').equals(workId).toArray()
+  return { work: works, volumes, chapters, outlines, characters, relations, lorecats, lore, snippets, assets, links, mubu, annotations, olnodes }
 }
 
 export async function listWorks() {
@@ -165,18 +167,19 @@ export async function removeLink(linkId) {
 /* ---- 备份 / 恢复 ---- */
 
 export async function exportBackupJson() {
-  const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'snippets', 'links', 'wordlog', 'appconfig', 'bookmarks', 'olnodes', 'annotations']
+  const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'snippets', 'links', 'wordlog', 'appconfig', 'bookmarks', 'olnodes', 'annotations', 'aisum', 'aikb', 'aikbmeta', 'airuns', 'aidecisions', 'aistyle', 'aikbvec', 'aipresets', 'aipresetstate']
   const dump = { version: 1, exportedAt: now(), assets: [], data: {} }
   for (const t of tables) {
     const rows = await db.table(t).toArray()
     /* 密钥绝不进备份 JSON（方案 §三/§六.4）：appconfig 的 ai.credential（safeStorage 密文）导出时剔除，
        恢复备份后需在设置面板重新配置 API 密钥 */
-    dump.data[t] = t === 'appconfig' ? rows.filter((r) => r?.key !== 'ai.credential') : rows
+    dump.data[t] = t === 'appconfig' ? rows.filter((r) => r?.key !== 'ai.credential') : t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: Array.from(new Float32Array(r.vec)) })) : t === 'airuns' ? rows.map((r) => ({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? 'paused' : r.status })) : rows
   }
   const assetRows = await db.assets.toArray()
   for (const a of assetRows) {
     const base64 = a.blob ? await blobToDataUrl(a.blob) : null
-    dump.assets.push({ id: a.id, workId: a.workId, name: a.name, mime: a.mime, size: a.size, createdAt: a.createdAt, deletedAt: a.deletedAt, dataUrl: base64 })
+    const {blob,...meta}=a
+    dump.assets.push({ ...meta, dataUrl: base64 })
   }
   return JSON.stringify(dump)
 }
@@ -184,17 +187,26 @@ export async function exportBackupJson() {
 export async function importBackupJson(text) {
   const dump = JSON.parse(text)
   if (!dump || !dump.data) throw new Error('备份文件格式不正确')
-  await Promise.all(db.tables.map((t) => t.clear()))
-  for (const t of Object.keys(dump.data)) {
-    const rows = dump.data[t] || []
-    if (rows.length) await db.table(t).bulkPut(rows)
+  // Validate before clearing; old backups may omit new AI tables.
+  for (const [t, rows] of Object.entries(dump.data)) {
+    if (!db.tables.some((table) => table.name === t) || !Array.isArray(rows)) throw new Error('备份包含未知数据表或无效条目：' + t)
   }
+  const assets = []
   for (const a of dump.assets || []) {
     const { dataUrl, ...meta } = a
-    let blob = null
-    if (dataUrl) blob = await (await fetch(dataUrl)).blob()
-    await db.assets.put({ ...meta, blob })
+    if (dataUrl && !/^data:/.test(dataUrl)) throw new Error('备份资源必须为内嵌数据')
+    const blob = dataUrl ? await (await fetch(dataUrl)).blob() : null
+    assets.push({ ...meta, blob })
   }
+  suspendProjection()
+  try { await db.transaction('rw', db.tables, async () => {
+    for (const table of db.tables) await table.clear()
+    for (const [t, rows] of Object.entries(dump.data)) {
+      const restored = t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: new Float32Array(r.vec || []).buffer })) : t === 'airuns' ? rows.map((r) => ({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? 'paused' : r.status })) : t === 'appconfig' ? rows.filter((r) => r.key !== 'ai.credential') : rows
+      if (restored.length) await db.table(t).bulkPut(restored)
+    }
+    if (assets.length) await db.assets.bulkPut(assets)
+  }) } finally { resumeProjection() }
   return true
 }
 

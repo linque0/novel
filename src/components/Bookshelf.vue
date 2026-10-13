@@ -2,12 +2,9 @@
 import { ref, computed } from 'vue'
 import { NButton, NModal, NInput, NSelect, NDropdown, NEmpty, NSpin, NCheckbox, useMessage } from 'naive-ui'
 import OIcon from './OIcon.vue'
-import SettingsPanel from './SettingsPanel.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
-import { backupAll, restoreBackup } from '../services/exporter'
-import { pickFiles } from '../services/fileio'
 
 const shelf = useShelfStore()
 const work = useWorkStore()
@@ -77,20 +74,13 @@ async function onWorkClick(w) {
   await work.open(w.id)
 }
 
-async function doBackup() {
-  const r = await backupAll()
-  if (!r?.canceled) msg.success('备份文件已保存')
-}
-async function doRestore() {
-  const files = await pickFiles(['json'])
-  if (!files.length) return
-  try {
-    await restoreBackup(files[0].data)
-    await shelf.refresh()
-    msg.success('备份已恢复')
-  } catch (e) {
-    msg.error('恢复失败：' + e.message)
+/* ---------- 设置窗口（面板窗口 settings 类型）：外观 / 恍然梦 / 数据 / 关于 ---------- */
+function openSettings() {
+  if (!window.native?.panelOpen) {
+    msg.info('设置窗口仅桌面版可用，网页版暂不支持')
+    return
   }
+  window.native.panelOpen({ type: 'settings', workId: 'app', entityId: '', title: '设置' })
 }
 
 /* 作者名圆印：2 字竖排 / 3-4 字两行 / 1 字单行；无作者则不盖印 */
@@ -142,7 +132,7 @@ async function onCardMenu(key, w) {
           <template #prefix><OIcon name="search" :size="13" /></template>
         </NInput>
       </div>
-      <SettingsPanel @backup="doBackup" @restore="doRestore" />
+      <NButton size="small" title="设置：外观 / 恍然梦 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
       <NButton size="small" type="primary" @click="openCreate">＋ 新建作品</NButton>
     </div>
 

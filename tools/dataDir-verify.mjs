@@ -127,16 +127,25 @@ try {
   let loc = await c.evalx('window.native?.getDataLocation?.()')
   ok(!!loc, 'IPC data:location 可用（window.native.getDataLocation）')
   if (loc?.isCustom || loc?.fallback) {
-    console.log('当前不在默认存储位置，先恢复默认…')
-    const r = await c.evalx('window.native.moveDataDir("")')
-    if (!r?.ok) throw new Error('恢复默认失败：' + (r?.error || '未知'))
-    if (!(await waitPointer(false))) throw new Error('恢复默认超时（指针未删除）')
-    await sleep(2000)
-    await killAll()
-    startDev()
-    c = await waitCdp()
-    loc = await c.evalx('window.native.getDataLocation()')
-    ok(!loc?.isCustom && !loc?.fallback, '恢复默认后回到默认位置')
+    if (loc?.fallback && !loc?.isCustom) {
+      /* 指针存在但目标目录已不存在（目录被改名/删除）→ 应用本就在默认位置，清除失效记录即可 */
+      console.log('检测到失效的位置记录（已回退默认位置），清除后继续…')
+      const rp = await c.evalx('window.native.clearDataPointer()')
+      if (!rp?.ok) throw new Error('清除失效位置记录失败：' + (rp?.error || '未知'))
+      loc = await c.evalx('window.native.getDataLocation()')
+      ok(!loc?.isCustom && !loc?.fallback, '清除失效记录后回到默认位置')
+    } else {
+      console.log('当前不在默认存储位置，先恢复默认…')
+      const r = await c.evalx('window.native.moveDataDir("")')
+      if (!r?.ok) throw new Error('恢复默认失败：' + (r?.error || '未知'))
+      if (!(await waitPointer(false))) throw new Error('恢复默认超时（指针未删除）')
+      await sleep(2000)
+      await killAll()
+      startDev()
+      c = await waitCdp()
+      loc = await c.evalx('window.native.getDataLocation()')
+      ok(!loc?.isCustom && !loc?.fallback, '恢复默认后回到默认位置')
+    }
   }
 
   /* ---------- 阶段 1：非法目标拒绝（不重启，应用存活） ---------- */
@@ -179,8 +188,32 @@ try {
   ok(shelfKey(post) === shelfKey(pre), '书架作品迁移前后一致（' + (post || []).length + ' 本）')
   ok(await openWorkAndBack(c, VERIFY_BOOKS[0].title), '打开验证书《' + VERIFY_BOOKS[0].title + '》进工作台并返回')
 
+  /* 旧位置：迁移后应被记录，且可按"只删缓存"清理（保留 IndexedDB 备份与指针） */
+  const old1 = loc?.old || []
+  const iDefault = old1.findIndex((o) => sameP(o.dir, DEV_USERDATA))
+  ok(iDefault >= 0, '旧位置被记录（' + (old1.map((o) => o.dir).join(' | ') || '无') + '）')
+  ok((old1[iDefault]?.bytes || 0) > 0, '旧位置体积已统计（' + (old1[iDefault]?.bytes || 0) + ' 字节）')
+  const rc = await c.evalx(`window.native.cleanOldLocation(${iDefault}, 'caches')`)
+  ok(rc?.ok === true, '清理旧位置缓存成功（释放 ' + (rc?.freed || 0) + ' 字节）')
+  ok((rc?.freed || 0) > 0, '缓存清理确实释放了空间')
+  ok(fs.existsSync(path.join(DEV_USERDATA, 'IndexedDB')), '清理缓存后 IndexedDB 备份仍在')
+  ok(fs.existsSync(POINTER), '清理缓存后指针文件仍在')
+  ok(!fs.existsSync(path.join(DEV_USERDATA, 'Cache')), '缓存目录已删除')
+
+  /* 护栏：记录里的路径若等于当前数据目录，必须被拒绝（人为构造记录验证） */
+  const recPath = path.join(DEV_USERDATA, 'data-dir-old.json')
+  const recRaw = JSON.parse(fs.readFileSync(recPath, 'utf-8'))
+  recRaw.dirs.push({ dir: landing, at: new Date().toISOString(), kind: 'migrated-from' })
+  fs.writeFileSync(recPath, JSON.stringify(recRaw), 'utf-8')
+  const rguard = await c.evalx(`window.native.cleanOldLocation(${recRaw.dirs.length - 1}, 'all')`)
+  ok(rguard?.ok === false, '护栏：当前数据目录被拒绝清理（' + (rguard?.error || '') + '）')
+  ok(fs.existsSync(path.join(landing, 'IndexedDB')), '护栏生效：当前数据目录完好')
+  recRaw.dirs.pop()
+  fs.writeFileSync(recPath, JSON.stringify(recRaw), 'utf-8')
+
   /* ---------- 阶段 3：恢复默认 ---------- */
   console.log('— 阶段 3：恢复默认位置 —')
+  const before3 = new Set((loc.old || []).map((o) => path.resolve(o.dir).toLowerCase()))
   const rr = await c.evalx(`window.native.moveDataDir("")`)
   ok(rr?.ok === true, '恢复默认请求被接受')
   if (!(await waitPointer(false))) throw new Error('恢复默认超时：指针未删除')
@@ -195,6 +228,77 @@ try {
   ok(loc?.isCustom === false && loc?.fallback === false, '重启后位置=默认（' + (loc?.current || '') + '）')
   const post2 = await shelfTitles(c)
   ok(shelfKey(post2) === shelfKey(pre), '恢复默认后书架数据一致（' + (post2 || []).length + ' 本）')
+
+  /* 不对称修复：旧默认快照不再被静默删除，而是保留并记入旧位置列表。
+     只清理本次运行新建的条目，历史遗留条目（可能是用户自己的备份）不动。 */
+  let loc3 = await c.evalx('window.native.getDataLocation()')
+  const fresh = (loc3?.old || []).filter((o) => !before3.has(path.resolve(o.dir).toLowerCase()))
+  ok(fresh.some((o) => o.kind === 'stale-snapshot'), '恢复默认后旧默认快照被保留并记录（本次新增 ' + fresh.length + ' 条）')
+  ok(fresh.some((o) => sameP(o.dir, landing)), '离开的自定义位置同样被记录')
+  for (const o of fresh) {
+    const cur = await c.evalx('window.native.getDataLocation()')
+    const idx = (cur?.old || []).findIndex((x) => sameP(x.dir, o.dir))
+    if (idx < 0) continue
+    const r1 = await c.evalx(`window.native.cleanOldLocation(${idx}, 'all')`)
+    ok(r1?.ok === true, '清理本次旧位置条目（' + o.kind + '，释放 ' + (r1?.freed || 0) + ' 字节）')
+    ok(!fs.existsSync(o.dir), o.kind === 'stale-snapshot' ? '旧快照目录连同其中的过期指针一并删除' : '非指针目录被整体删除')
+  }
+
+  /* ---------- 阶段 4：迁移时当场清理原位置（keepOld:false） ---------- */
+  console.log('— 阶段 4：迁移并清理原位置 —')
+  const pre4 = await shelfTitles(c)
+  const tmpCustom2 = fs.mkdtempSync(path.join(os.tmpdir(), 'ns-dd-verify2-'))
+  const landing2 = path.join(tmpCustom2, '小说工坊')
+  const rm2 = await c.evalx(`window.native.moveDataDir(${JSON.stringify(tmpCustom2)}, { keepOld: false })`)
+  ok(rm2?.ok === true, '「迁移并清理原位置」请求被接受')
+  if (!(await waitPointer(true))) throw new Error('迁移超时：指针未生成')
+  ok(sameP(JSON.parse(fs.readFileSync(POINTER, 'utf-8')).dir || '', landing2), '指针指向新位置')
+  ok(fs.existsSync(path.join(landing2, 'IndexedDB')), '数据已复制到新位置')
+  ok(fs.existsSync(POINTER), '原位置保留指针文件')
+  await sleep(2500)
+  await killAll()
+  startDev()
+  c = await waitCdp()
+
+  const loc5 = await c.evalx('window.native.getDataLocation()')
+  ok(loc5?.isCustom === true && sameP(loc5?.current || '', landing2), '重启后在新位置（' + (loc5?.current || '') + '）')
+  /* 原位置删除由新进程在启动后执行：旧进程仍持有 Chromium 句柄（Cache/IndexedDB/Network…），就地删必 EBUSY */
+  let purged = false
+  for (let i = 0; i < 30; i++) {
+    if (!fs.existsSync(path.join(DEV_USERDATA, 'IndexedDB'))) {
+      purged = true
+      break
+    }
+    await sleep(500)
+  }
+  ok(purged, '原位置 IndexedDB 已被清理（新进程启动后执行）')
+  ok(fs.existsSync(POINTER), '原位置仅保留指针文件')
+  const loc5b = await c.evalx('window.native.getDataLocation()')
+  ok(!(loc5b?.old || []).some((o) => sameP(o.dir, DEV_USERDATA)), '被清理过的原位置不再出现在旧位置列表')
+  const post4 = await shelfTitles(c)
+  ok(shelfKey(post4) === shelfKey(pre4), '清理迁移后书架数据一致（' + (post4 || []).length + ' 本）')
+
+  /* 收尾：回默认位置并清理，让 dev 停在干净状态 */
+  const r4 = await c.evalx(`window.native.moveDataDir("", { keepOld: false })`)
+  ok(r4?.ok === true, '收尾：恢复默认并清理请求被接受')
+  if (!(await waitPointer(false))) throw new Error('收尾：恢复默认超时（指针未删除）')
+  await sleep(2500)
+  await killAll()
+  startDev()
+  c = await waitCdp()
+  const loc6 = await c.evalx('window.native.getDataLocation()')
+  ok(loc6?.isCustom === false && loc6?.fallback === false, '收尾：回到默认位置且无回退告警')
+  let gone = false
+  for (let i = 0; i < 30; i++) {
+    if (!fs.existsSync(landing2)) {
+      gone = true
+      break
+    }
+    await sleep(500)
+  }
+  ok(gone, '收尾：自定义位置已被清理（新进程启动后执行）')
+
+  fs.rmSync(tmpCustom2, { recursive: true, force: true })
 
   fs.rmSync(tmpCustom, { recursive: true, force: true })
   fs.rmSync(tmpBad, { recursive: true, force: true })

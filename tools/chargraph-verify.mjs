@@ -160,7 +160,7 @@ const m9b = await c.evalx(`(() => {
   const node = w.liveOlnodes().find((x) => x.kind === 'cite' && (x.refId || '').startsWith('character:'))
   return { hasCite: !!node, title: node?.title }
 })()`)
-check('发送为大纲画布引用卡并跳转', m9.tab === 'outline' && m9.view === 'canvas' && m9b.hasCite && m9b.title === '林昭', JSON.stringify({ m9, m9b }))
+check('发送为大纲画布引用卡并跳转', m9?.tab === 'outline' && m9?.view === 'canvas' && m9b?.hasCite && m9b?.title === '林昭', JSON.stringify({ m9, m9b }))
 
 /* 10) 引用卡反向跳人物关系图 */
 await c.evalx(`(() => { const w = ${store}; const node = w.liveOlnodes().find((x) => x.kind === 'cite' && (x.refId || '').startsWith('character:')); w.jumpToCharGraph(node.refId.split(':')[1]); return 1 })()`)

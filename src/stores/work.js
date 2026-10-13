@@ -5,7 +5,11 @@ import { autosave, installWordLogHook } from '../services/autosave'
 import { countWords, stripTags } from '../services/wordcount'
 import { scanNoteMarks, removeNoteMark, normalizeNoteColor, noteKindOf, DEFAULT_NOTE_COLOR } from '../services/annotations'
 import { useUiStore } from './ui'
+import { queueProjection } from '../services/project/pipeline.js'
 import { useShelfStore } from './shelf'
+import { applyProposal, undoApplication } from '../services/ai/application'
+import { useAiStore } from './ai'
+import { chapterHash, plainChapter } from '../services/ai/contracts'
 
 const urlCache = new Map()
 
@@ -28,6 +32,7 @@ function loreText(l) {
 export const useWorkStore = defineStore('work', {
   state: () => ({
     loaded: false,
+    aiApplying: false,
     work: null,
     volumes: [],
     chapters: [],
@@ -146,6 +151,7 @@ export const useWorkStore = defineStore('work', {
   actions: {
     /* ---------- 打开 / 关闭 ---------- */
     async open(workId) {
+      useAiStore().switchWork(workId)
       const b = await repo.loadWorkBundle(workId)
       this.work = b.work
       this.volumes = b.volumes
@@ -172,12 +178,14 @@ export const useWorkStore = defineStore('work', {
       this.selChapterId = this.liveChapters[0]?.id || null
       this.selVolumeId = this.liveVolumes[0]?.id || null
       this.loaded = true
+      queueProjection(workId).catch(console.error)
       const ui = useUiStore()
       ui.view = 'work'
       ui.focusMode = false
     },
 
     async closeWork() {
+      useAiStore().switchWork(null)
       await autosave.flushAll()
       this.$reset()
       useUiStore().view = 'shelf'
@@ -1498,6 +1506,7 @@ export const useWorkStore = defineStore('work', {
 
     /* 撤销 / 重做（快照栈）：结构操作前 force 快照，连续文本编辑按 1.2s 合并 */
     olnodePushUndo(force = false) {
+      if (this.aiApplying) return
       const t = Date.now()
       if (!force && this.olUndo.length && t - this.olUndoAt < 1200) {
         this.olUndoAt = t
@@ -1879,6 +1888,16 @@ export const useWorkStore = defineStore('work', {
     },
 
     /* ---------- 版本快照 ---------- */
+    async applyAiProposal(card, options = {}) {
+      return applyProposal(this, card, options)
+    },
+    async undoAiApplication(auditId) {
+      await undoApplication(this, auditId)
+      for (const message of useAiStore().chat) for (const card of [...(message.cards || []),...(message.candidates || []).flatMap(c=>c.cards || [])]) {
+        if (card.auditId === auditId) { card.status='undone';card.appliedActions=[];card.auditId=null }
+      }
+    },
+
     async revisionsFor(chapterId) {
       return repo.listRevisions('chapter', chapterId)
     },

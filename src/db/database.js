@@ -1,4 +1,6 @@
 import Dexie from 'dexie'
+import { SOURCE_TABLES } from '../services/project/normalize.js'
+import { notifySourceChanged } from '../services/project/events.js'
 
 export const db = new Dexie('novel-studio')
 
@@ -143,6 +145,62 @@ db.version(7).stores({
   annotations: 'id, workId, chapterId, [workId+deletedAt], [chapterId+deletedAt], createdAt',
   aisum: 'id, workId, [entityType+entityId], updatedAt'
 })
+
+// v8: AI-private facts, extraction coverage, durable jobs, author decisions and style profiles.
+db.version(8).stores({
+  aikb: 'id, workId, kind, chapterId, [workId+kind], [workId+chapterId], [workId+refType+refId]',
+  aikbmeta: 'id, workId, [workId+chapterId]',
+  airuns: 'id, workId, type, status, [workId+type], updatedAt',
+  aidecisions: 'id, workId, [workId+key]',
+  aistyle: 'id, workId, status, updatedAt'
+})
+db.version(9).stores({ aikbvec: 'id, workId, [workId+cardId], [workId+model]' })
+
+db.version(10).stores({ aipresets: 'id, name, updatedAt', aipresetstate: 'id, workId' })
+
+// Rebuildable read model. Author decisions remain in aidecisions and backups.
+db.version(11).stores({
+  aidoc: 'rowKey, id, workId, [workId+generation], [workId+generation+sourceType], sourceId',
+  aichunk: 'rowKey, id, workId, [workId+generation], [generation+docId+idx], hash',
+  aiindex: 'workId, status, updatedAt',
+  aikbblock: 'id, workId, docId, cacheKey',
+  aientity: 'rowKey, id, workId, [workId+generation], [workId+generation+kind]',
+  aiedge: 'rowKey, id, workId, [workId+generation], [generation+fromId], [generation+toId]',
+  aikbmeta: 'id, workId, [workId+chapterId], [workId+docId]',
+  aikbvec: 'id, workId, [workId+cardId], [workId+model], [workId+refType+refId]'
+}).upgrade((tx) => tx.table('aikbvec').toCollection().modify((row) => {
+  row.refType = row.refType || 'card'
+  row.refId = row.refId || row.cardId
+}))
+
+// Covers direct deletes/imports and all source writes, not just autosave's list.
+async function notifyCommitted(changes) {
+  const works=new Map()
+  for(const {table,row} of changes.values()) {
+    let workId=table==='works'?row.id:row.workId
+    if(!workId&&table==='links') {
+      workId=(await db.assets.get(row.assetId))?.workId
+      if(!workId)for(const t of ['works','chapters','volumes','characters','outlines','olnodes','mubu','snippets']) {
+        const owner=await db.table(t).get(row.entityId)
+        if(owner){workId=t==='works'?owner.id:owner.workId;break}
+      }
+    }
+    if(workId)works.set(workId,{table,row:{...row,workId}})
+  }
+  for(const {table,row} of works.values())notifySourceChanged(table,row)
+}
+function trackSource(transaction,table,row) {
+  if(!transaction._bookSourceChanges) {
+    transaction._bookSourceChanges=new Map()
+    transaction.on('complete',()=>notifyCommitted(transaction._bookSourceChanges).catch(console.error))
+  }
+  transaction._bookSourceChanges.set(table+':'+row.id+':'+(row.workId||''),{table,row})
+}
+for (const table of SOURCE_TABLES) {
+  db.table(table).hook('creating', function (_key, row, transaction) { this.onsuccess = () => trackSource(transaction,table,row) })
+  db.table(table).hook('updating', function (changes, _key, row, transaction) { this.onsuccess = () => {trackSource(transaction,table,row);if(changes.workId&&changes.workId!==row.workId)trackSource(transaction,table,{...row,workId:changes.workId})} })
+  db.table(table).hook('deleting', function (_key, row, transaction) { this.onsuccess = () => trackSource(transaction,table,row) })
+}
 
 export const uid = () =>
   typeof crypto !== 'undefined' && crypto.randomUUID

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { db } from '../db/database'
+import { broadcastAppEvent } from '../services/appbus'
 
 /* 正文字体：中西文分离。--editor-font = 西文栈 + 中文栈（拉丁字符落西文，汉字落中文）。
    素材：思源宋体/霞鹜文楷/京华老宋体/朝华标题/云游手书/Gothic One 均已本地化（src/assets/fonts） */
@@ -39,6 +40,9 @@ export const useUiStore = defineStore('ui', {
     importOpen: false,
     exportOpen: false,
     helpOpen: false,
+    aiDrawerOpen: false, // 恍然梦右侧停靠列开合（点击左栏「恍然梦」）
+    aiDrawerWidth: 400, // 恍然梦停靠列宽度（300–640，左缘拖拽调节，appconfig 记忆）
+    rightPanelOpen: true, // 正文右侧批注栏开合（面板内收起 / 右缘展开轨恢复，appconfig 记忆）
     revisionsCtx: null
   }),
   getters: {
@@ -61,6 +65,8 @@ export const useUiStore = defineStore('ui', {
         if (map.editorLatin) this.editorLatin = map.editorLatin
         if (map.fontSize) this.fontSize = Number(map.fontSize) || 17
         if (map.sideWidth) this.sideWidth = Math.min(480, Math.max(180, Number(map.sideWidth) || 252))
+        if (map.aiDrawerWidth) this.aiDrawerWidth = Math.min(640, Math.max(300, Number(map.aiDrawerWidth) || 400))
+        if (map.rightPanelOpen !== undefined) this.rightPanelOpen = !!map.rightPanelOpen
       } catch {
         /* 首次启动无配置 */
       }
@@ -68,6 +74,8 @@ export const useUiStore = defineStore('ui', {
     async setPref(key, value) {
       this[key] = value
       await db.appconfig.put({ key, value })
+      /* 跨窗口同步：其余窗口重载偏好（主题/字体等即时生效；处理端幂等，自身收到无副作用） */
+      broadcastAppEvent('prefs-changed')
     }
   }
 })

@@ -15,7 +15,10 @@ const PANEL_META = {
   outline: { label: '大纲', w: 1200, h: 780 },
   characters: { label: '人物', w: 1080, h: 740 },
   lore: { label: '设定', w: 1080, h: 740 },
-  snippets: { label: '灵感', w: 960, h: 660 }
+  snippets: { label: '灵感', w: 960, h: 660 },
+  settings: { label: '设置', w: 1000, h: 700, frame: false },
+  'ai-presets': { label: '恍然梦预设', w: 1160, h: 800, minW: 950, minH: 650 },
+  ai: { label: '恍然梦', w: 480, h: 780, minW: 380, minH: 520 }
 }
 
 let mainWindow = null
@@ -23,6 +26,7 @@ const panels = [] // { win, key, spec }
 const locks = new Map() // key -> panelKey
 
 function lockKeyOf(spec) {
+  if (spec.type === 'ai-presets') return '__global__:ai-presets:*'
   return `${spec.workId}:${spec.type}:${spec.entityId || '*'}`
 }
 
@@ -103,8 +107,9 @@ function openPanel(spec) {
 
   const win = new BrowserWindow({
     ...bounds,
-    minWidth: 800,
-    minHeight: 500,
+    minWidth: meta.minW || 800,
+    minHeight: meta.minH || 500,
+    frame: meta.frame !== false,
     backgroundColor: '#f6f2e7',
     title: spec.title || `小说工坊 · ${meta.label}`,
     autoHideMenuBar: true,
@@ -151,8 +156,9 @@ function openPanel(spec) {
   win.on('closed', () => {
     const i = panels.indexOf(record)
     if (i >= 0) panels.splice(i, 1)
-    if (locks.get(key) === key) locks.delete(key)
-    broadcast('panel:event', { kind: 'closed', key, spec, locks: [...locks.keys()] })
+    const closedKey = record.key
+    if (locks.get(closedKey) === closedKey) locks.delete(closedKey)
+    broadcast('panel:event', { kind: 'closed', key: closedKey, spec: record.spec, locks: [...locks.keys()] })
   })
 
   win.loadURL(panelUrl(spec))
@@ -201,6 +207,14 @@ function init() {
     p.key = newKey
     locks.set(newKey, newKey)
     broadcast('panel:event', { kind: 'moved', key: newKey, oldKey, spec: newSpec, locks: [...locks.keys()] })
+    return { ok: true }
+  })
+  /* 应用级事件广播（设置窗口等）：任一窗口请求 → app:event 发到全部窗口（含发送者自身，
+   * 各处理端均为幂等操作：重读偏好 / 刷新书架 / 冲刷脏数据 / 整体重载） */
+  ipcMain.handle('app:broadcast', (_e, payload) => {
+    const kind = typeof payload?.kind === 'string' ? payload.kind.slice(0, 48) : ''
+    if (!kind) return { ok: false, reason: 'bad-kind' }
+    broadcast('app:event', { kind, data: payload?.data ?? null })
     return { ok: true }
   })
 }

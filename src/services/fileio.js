@@ -71,5 +71,11 @@ export const pickDataDir = () =>
   window.native?.pickDataDir ? window.native.pickDataDir() : Promise.resolve({ canceled: true })
 export const openDataFolder = () =>
   window.native?.openDataFolder ? window.native.openDataFolder() : Promise.resolve(false)
-export const moveDataDir = (dir) =>
-  window.native?.moveDataDir ? window.native.moveDataDir(dir) : Promise.resolve({ ok: false, error: '网页版不支持更改存储位置' })
+export const moveDataDir = (dir, opts) =>
+  window.native?.moveDataDir ? window.native.moveDataDir(dir, opts) : Promise.resolve({ ok: false, error: '网页版不支持更改存储位置' })
+export const cleanOldLocation = (index, mode) =>
+  window.native?.cleanOldLocation ? window.native.cleanOldLocation(index, mode) : Promise.resolve({ ok: false, error: '网页版不支持清理旧位置' })
+export const openOldFolder = (index) =>
+  window.native?.openOldFolder ? window.native.openOldFolder(index) : Promise.resolve({ ok: false, error: '网页版不支持打开旧位置' })
+export const clearDataPointer = () =>
+  window.native?.clearDataPointer ? window.native.clearDataPointer() : Promise.resolve({ ok: false, error: '网页版不支持' })

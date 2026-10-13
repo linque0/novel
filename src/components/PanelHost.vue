@@ -23,6 +23,9 @@ import SnippetCenter from './SnippetCenter.vue'
 import RightPanel from './RightPanel.vue'
 import DLinkPopover from './DLinkPopover.vue'
 import RevisionsModal from './RevisionsModal.vue'
+import SettingsWindow from './SettingsWindow.vue'
+import AiAssistantPanel from './ai/AiAssistantPanel.vue'
+import PresetWindow from './ai/PresetWindow.vue'
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -31,7 +34,7 @@ const spec = ref(null) // { type, workId, entityId }
 const status = ref('loading') // loading | ready | error
 const errMsg = ref('')
 
-const PANEL_TITLES = { chapter: '正文', outline: '大纲', characters: '人物', lore: '设定', snippets: '灵感' }
+const PANEL_TITLES = { chapter: '正文', outline: '大纲', characters: '人物', lore: '设定', snippets: '灵感', settings: '设置', 'ai-presets': '恍然梦预设', ai: '恍然梦' }
 const ENTITY_SEL = {
   chapter: () => work.activeChapter?.title,
   characters: () => work.activeCharacter?.name,
@@ -96,6 +99,12 @@ async function boot() {
     return
   }
   spec.value = s
+  /* 设置窗口与全局预设窗口：无作品上下文，不打开作品 */
+  if (s.type === 'settings' || s.type === 'ai-presets' && s.workId === '__global__') {
+    status.value = 'ready'
+    document.title = '小说工坊 · ' + (PANEL_TITLES[s.type] || '面板')
+    return
+  }
   try {
     await work.open(s.workId)
   } catch (e) {
@@ -103,9 +112,10 @@ async function boot() {
     errMsg.value = '作品打开失败：' + (e?.message || e)
     return
   }
-  // 完整界面：切到对应页签并预选中拆窗时的实体
+  // 完整界面：切到对应页签并预选中拆窗时的实体（恍然梦无页签，仅携带作品上下文）
   const tabOf = { chapter: 'chapters', outline: 'outline', characters: 'characters', lore: 'lore', snippets: 'snippets' }
-  work.tab = tabOf[s.type]
+  if (tabOf[s.type]) work.tab = tabOf[s.type]
+  if (s.type === 'ai-presets' && s.entityId) work.selChapterId = s.entityId
   if (s.type === 'chapter') work.selChapterId = s.entityId || work.liveChapters[0]?.id || null
   if (s.type === 'outline') {
     work.outlineView = 'canvas'
@@ -146,36 +156,45 @@ onBeforeUnmount(() => autosave.flushAll())
       <NButton type="primary" @click="closePanel">关闭面板</NButton>
     </div>
     <template v-else-if="status === 'ready'">
-      <div class="panel-topbar">
-        <span class="serif" style="font-weight: 700">{{ work.work?.title }} · {{ panelTitle }}</span>
-        <span class="save-badge">
-          <span class="save-dot" :class="badgeClass"></span>
-          {{ badgeText }}
-        </span>
-        <div style="flex: 1"></div>
-        <NButton size="small" @click="flushAndClose">保存并关闭</NButton>
-        <NButton size="small" quaternary @click="closePanel"><OIcon name="close" :size="13" /></NButton>
-      </div>
-      <div class="panel-body">
-        <div class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
-          <ChapterTree v-if="spec.type === 'chapter'" />
-          <OutlineSidebar v-else-if="spec.type === 'outline'" />
-          <CharacterList v-else-if="spec.type === 'characters'" />
-          <MubuTree v-else-if="spec.type === 'lore'" />
-          <SnippetList v-else-if="spec.type === 'snippets'" />
+      <!-- 设置窗口：独立布局（左导航 + 右内容），无作品顶栏 -->
+      <PresetWindow v-if="spec.type === 'ai-presets'" style="flex: 1; min-height: 0" />
+      <SettingsWindow v-else-if="spec.type === 'settings'" style="flex: 1; min-height: 0" />
+      <template v-else>
+        <div class="panel-topbar">
+          <span class="serif" style="font-weight: 700">{{ work.work?.title }} · {{ panelTitle }}</span>
+          <span class="save-badge">
+            <span class="save-dot" :class="badgeClass"></span>
+            {{ badgeText }}
+          </span>
+          <div style="flex: 1"></div>
+          <NButton size="small" @click="flushAndClose">保存并关闭</NButton>
+          <NButton size="small" quaternary @click="closePanel"><OIcon name="close" :size="13" /></NButton>
         </div>
-        <div class="side-resizer" title="拖拽调整侧栏宽度（双击恢复默认）" @mousedown="startSideResize" @dblclick="ui.setPref('sideWidth', 252)"></div>
-        <div class="center-pane paper-texture">
-          <EditorPane v-if="spec.type === 'chapter'" />
-          <OutlineCenter v-else-if="spec.type === 'outline'" style="flex: 1; min-height: 0" />
-          <CharacterCenter v-else-if="spec.type === 'characters'" />
-          <MubuView v-else-if="spec.type === 'lore'" />
-          <SnippetCenter v-else-if="spec.type === 'snippets'" />
+        <!-- 恍然梦窗口：无侧栏与中央区，全高 AI 界面 -->
+        <div v-if="spec.type === 'ai'" class="ai-win">
+          <AiAssistantPanel />
         </div>
-        <RightPanel v-if="spec.type === 'chapter'" />
-      </div>
-      <DLinkPopover />
-      <RevisionsModal />
+        <div v-else class="panel-body">
+          <div class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
+            <ChapterTree v-if="spec.type === 'chapter'" />
+            <OutlineSidebar v-else-if="spec.type === 'outline'" />
+            <CharacterList v-else-if="spec.type === 'characters'" />
+            <MubuTree v-else-if="spec.type === 'lore'" />
+            <SnippetList v-else-if="spec.type === 'snippets'" />
+          </div>
+          <div class="side-resizer" title="拖拽调整侧栏宽度（双击恢复默认）" @mousedown="startSideResize" @dblclick="ui.setPref('sideWidth', 252)"></div>
+          <div class="center-pane paper-texture">
+            <EditorPane v-if="spec.type === 'chapter'" />
+            <OutlineCenter v-else-if="spec.type === 'outline'" style="flex: 1; min-height: 0" />
+            <CharacterCenter v-else-if="spec.type === 'characters'" />
+            <MubuView v-else-if="spec.type === 'lore'" />
+            <SnippetCenter v-else-if="spec.type === 'snippets'" />
+          </div>
+          <RightPanel v-if="spec.type === 'chapter'" />
+        </div>
+        <DLinkPopover />
+        <RevisionsModal />
+      </template>
     </template>
     <div v-else class="empty-shelf" style="padding-top: 20vh">
       <div class="big">正在打开面板…</div>
@@ -197,5 +216,11 @@ onBeforeUnmount(() => autosave.flushAll())
   flex: 1;
   min-height: 0;
   display: flex;
+}
+.ai-win {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 12px;
 }
 </style>

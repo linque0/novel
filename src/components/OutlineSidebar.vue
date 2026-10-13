@@ -158,11 +158,11 @@ function remove(m) {
   work.olnodeRemove(m.n.id)
 }
 
-/* AI：规划线路（方案 §五.2）：对选中大纲节点生成 2–3 套分支线路方案（提案，确认后挂载） */
-const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
+/* 附带选中大纲节点并打开对话。 */
+const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配置'
 function aiPlan(m) {
   if (!ai.ready) return window.$msg?.warning(AI_UNSET_HINT)
-  ai.startOutlinePlan(m.n.id)
+  ai.prepare('请讨论这个大纲节点的后续安排。', {outlineId:m.n.id})
 }
 
 const renameState = ref({ show: false, id: null, value: '' })
@@ -236,7 +236,7 @@ onMounted(() => {
         <span v-if="m.badge" class="dim">{{ m.badge }}</span>
         <span class="ol-ops">
           <button class="ol-op" title="重命名" @click.stop="rename(m)"><OIcon name="edit" :size="11" /></button>
-          <button class="ol-op" :disabled="!ai.ready" :title="ai.ready ? 'AI：规划线路（为该节点生成分支线路方案）' : AI_UNSET_HINT" @click.stop="aiPlan(m)"><OIcon name="star" :size="11" /></button>
+          <button class="ol-op" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（为该节点生成分支线路方案）' : AI_UNSET_HINT" @click.stop="aiPlan(m)"><OIcon name="star" :size="11" /></button>
           <button class="ol-op ol-op-danger" title="删除" @click.stop="remove(m)"><OIcon name="close" :size="11" /></button>
         </span>
       </div>

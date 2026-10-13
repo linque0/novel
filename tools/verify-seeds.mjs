@@ -177,7 +177,23 @@ async function relfollowBook(ctx, meta) {
   return workId
 }
 
+async function bookSourceBook(ctx,meta) {
+  const {db,uid,now}=ctx,t=now(),workId=uid(),volumeId=uid(),c1=uid(),c2=uid(),characterId=uid(),otherId=uid(),loreId=uid(),childId=uid(),outlineId=uid(),snippetId=uid()
+  await db.works.add({id:workId,title:meta.title,genre:'玄幻',intro:'隔离数据架构验证',createdAt:t,updatedAt:t,deletedAt:null})
+  await db.volumes.add({id:volumeId,workId,title:'第一卷',sortOrder:0})
+  await db.chapters.bulkAdd([{id:c1,workId,volumeId,title:'受伤与铜符',sortOrder:0,fmt:'html',content:'<p>林昭埋下铜符。</p><p>林昭右臂受伤。</p>'},{id:c2,workId,volumeId,title:'未来揭密',sortOrder:1,fmt:'text',content:'林昭用铜符打开石门。\n最终秘密是云宗之主。'}])
+  await db.characters.bulkAdd([{id:characterId,workId,name:'林昭',aliases:'小昭',fields:{身份:'未来云宗之主'},content:'最终秘密不可用于第一章'},{id:otherId,workId,name:'沈青梧',aliases:'',fields:{}}])
+  await db.relations.add({id:uid(),workId,fromId:characterId,toId:otherId,label:'同伴'})
+  await db.mubu.bulkAdd([{id:loreId,workId,text:'世界观',parentId:null,sortOrder:0},{id:childId,workId,text:'云宗禁止复活。',parentId:loreId,sortOrder:0}])
+  await db.olnodes.add({id:outlineId,workId,title:'章纲计划',text:'找到铜符并调查石门。',kind:'anchor',refId:c1,parentId:null,rels:[]})
+  await db.snippets.add({id:snippetId,workId,content:'未采纳：铜符可能开启天宫。',tags:['灵感']})
+  await db.annotations.add({id:uid(),workId,chapterId:c1,text:'右臂受伤',note:'不要忘记伤势',kind:'提醒'})
+  await db.assets.add({id:uid(),workId,name:'未解析地图.png',mime:'image/png',blob:null})
+  return {workId,volumeId,c1,c2,characterId,otherId,loreId,childId,outlineId,snippetId}
+}
+
 export const VERIFY_BOOKS = [
+  {title:'书内知识验证书',owner:'project-verify.mjs',desc:'完整投影、隐私、截止范围、全书知识与增量',create:bookSourceBook},
   { title: '双链验证书', owner: 'dl-verify.mjs', desc: '双链全链路：正文 / 幕布 / 人物 / 灵感 + 大纲令牌', create: dlBook },
   { title: '批注验证书', owner: 'annotation-verify.mjs', desc: '正文批注全链路：正文含一条双链（验证批注与双链共存）', create: annoBook },
   { title: '关系图验证书', owner: 'chargraph-verify.mjs', desc: '人物关系图：5 人物 + 2 关系', create: graphBook },
@@ -207,7 +223,7 @@ export async function seedBooks(specs, ctx, opts) {
       if (t.name === 'appconfig') continue
       try {
         const rows = await t.where('workId').equals(workId).toArray()
-        if (rows.length) await t.bulkDelete(rows.map((r) => r.id))
+        if (rows.length) await t.bulkDelete(rows.map((r) => r[t.schema.primKey.keyPath]))
       } catch (e) {
         // 无 workId 索引的表（links / revisions）退化为全表过滤
         try {

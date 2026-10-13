@@ -261,8 +261,8 @@ function refocus() {
   }
 }
 
-/* ---------- AI：剧情选项（方案 §五.1）：锚点 = 当前章，右键时有选中文本则一并作为补充指令透传 ---------- */
-const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
+/* ---------- 发送给恍然梦（方案 §五.1）：锚点 = 当前章，右键时有选中文本则一并作为补充指令透传 ---------- */
+const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配置'
 function aiSelText() {
   /* 右键落在选区上时编辑器选区可能已塌缩，用右键时刻的快照（与双链/批注同口径） */
   if (st.savedFrom != null) {
@@ -279,7 +279,7 @@ function aiPlotBranch() {
   const chapterId = work.selChapterId
   if (!chapterId) return close()
   const sel = aiSelText().trim()
-  ai.startPlotBranch(chapterId, sel ? `参考选中文本：${sel.slice(0, 500)}` : '')
+  ai.prepare('请基于当前选段帮助我创作。', {chapterId,selection:sel})
   close()
 }
 function run(fn) {
@@ -522,8 +522,8 @@ defineExpose({ open, close })
       <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除双链</span></div>
 
       <div class="ctx-sep" />
-      <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? 'AI：剧情选项（锚点为当前章节）' : AI_UNSET_HINT" @click="ai.ready && aiPlotBranch()">
-        <span>AI：剧情选项</span><span class="hint">AI</span>
+      <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? '发送给恍然梦（锚点为当前章节）' : AI_UNSET_HINT" @click="ai.ready && aiPlotBranch()">
+        <span>发送给恍然梦</span><span class="hint">梦</span>
       </div>
 
       <div class="ctx-sep" />

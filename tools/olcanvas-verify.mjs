@@ -335,7 +335,10 @@ const m17c = await c.evalx(`(() => {
   return { menuShown: !!menu, miniGone, labelAbove }
 })()`)
 check('视觉几何：锚点伸出节点（无裁剪）+ 右键菜单出现 + 标签中点上方', m17.aptProtrudes && parseFloat(m17.aptOpacity) > 0.5 && m17c.menuShown && m17c.miniGone && m17c.labelAbove === true, JSON.stringify({ m17, m17c }))
-const shot = await c.send('Page.captureScreenshot', { format: 'png' }).catch(() => null)
+// Hidden isolated Electron windows do not produce screenshot frames. Functional checks still run.
+const shot = await c.evalx('document.visibilityState') === 'visible'
+  ? await c.send('Page.captureScreenshot', { format: 'png' }).catch(() => null)
+  : null
 if (shot) {
   const { writeFileSync } = await import('node:fs')
   writeFileSync('tools/_canvas-final.png', Buffer.from(shot.data, 'base64'))
@@ -482,20 +485,17 @@ const m21b = await c.evalx(`(() => {
 })()`)
 check('容器右键色彩调整（调色板+重置入口）', m21a.menu && m21a.swatches >= 7 && !!m21b.color && !!m21b.bcVar, JSON.stringify({ m21a, m21b }))
 
-/* 容器高度拖拽：下缘手柄下拖 → 自定义 h 生效 */
+/* 容器尺寸由子模块派生；与当前产品一致，不提供手动缩放柄。 */
 const m22 = await c.evalx(`(() => {
   const w = ${store}
   const cont = w.liveOlnodes().find((x) => x.kind === 'container')
   const el = [...document.querySelectorAll('.oc-node.oc-container')][0]
-  const rs = el.querySelector('.oc-rs[data-dir="s"]')
-  const r = rs.getBoundingClientRect()
-  const h0 = cont.h != null ? cont.h : 120
-  rs.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + 3, clientY: r.top + 3 }))
-  window.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left, clientY: r.top + 64 }))
-  window.dispatchEvent(new MouseEvent('mouseup', { clientX: r.left, clientY: r.top + 64 }))
-  return { h: cont.h, grew: cont.h == null || cont.h >= h0 + 40 }
+  const r = el.getBoundingClientRect()
+  const kids = [...document.querySelectorAll('.oc-node')].filter(k => w.liveOlnodes().some(n => n.id === k.__vnode?.key && n.parentId === cont.id))
+  return { noHandle: !el.querySelector('.oc-rs'), children: kids.length,
+    contains: kids.every(k => {const b=k.getBoundingClientRect();return b.top >= r.top - 1 && b.bottom <= r.bottom + 1}) }
 })()`)
-check('容器高度调整生效', m22.grew, JSON.stringify(m22))
+check('容器自动高度包含子模块且无手动缩放柄', m22.noHandle && m22.children > 0 && m22.contains, JSON.stringify(m22))
 
 /* 11k) 侧栏层级树 + 文本视图容器内容展示 */
 const m23 = await c.evalx(`(() => {

@@ -1,6 +1,7 @@
 import { useUiStore } from '../stores/ui'
 import { putRow, addRevision, addWordLog } from '../db/repo'
 import { markChapterStale } from './ai/summarize'
+import { SOURCE_TABLES } from './project/normalize.js'
 
 /**
  * 自动保存服务：
@@ -10,6 +11,8 @@ import { markChapterStale } from './ai/summarize'
  * - 落盘前通过 hooks.beforePut 处理码字统计（wordlog）
  */
 const pending = new Map() // `${table}:${id}` -> { table, row, forceSnapshot }
+const flushing = new Set()
+let activeFlush = null
 let flushTimer = null
 let started = false
 const lastSnapshotAt = new Map()
@@ -25,9 +28,15 @@ function schedule() {
 }
 
 async function doFlush() {
+  if (activeFlush) { await activeFlush; if (pending.size) return doFlush(); return }
+  activeFlush = flushBatch()
+  try { await activeFlush } finally { activeFlush = null }
+}
+async function flushBatch() {
   if (!pending.size) return
   ui().autosave.saving = true
   const items = [...pending.values()]
+  items.forEach((it) => flushing.add(`${it.table}:${it.row.id}`))
   pending.clear()
   ui().autosave.pending = 0
   try {
@@ -36,6 +45,11 @@ async function doFlush() {
       await autosave.hooks.beforePut?.(it.table, row)
       row.updatedAt = Date.now()
       await putRow(it.table, row)
+      if (SOURCE_TABLES.includes(it.table)) {
+        const data = { workId: row.workId || (it.table==='works'?row.id:null), table: it.table, id: row.id, origin: autosave.origin }
+        window.dispatchEvent(new CustomEvent('ai-source-changed', { detail: data }))
+        window.native?.appBroadcast?.({ kind: 'ai-source-changed', data })
+      }
       if (it.table === 'chapters') {
         /* 章节落盘钩子（方案 §四/§七）：正文较上次落盘有变化 → 打 aisum 摘要失效标记
            （只标记不触发生成，下次 AI 任务前惰性重算）；首次落盘不标——跨窗口/窗口重开场景
@@ -53,6 +67,7 @@ async function doFlush() {
     for (const it of items) pending.set(`${it.table}:${it.row.id}`, it)
     ui().autosave.pending = pending.size
   } finally {
+    items.forEach((it) => flushing.delete(`${it.table}:${it.row.id}`))
     ui().autosave.saving = false
   }
 }
@@ -69,6 +84,8 @@ function maybeSnapshot(row, force) {
 }
 
 export const autosave = {
+  origin: crypto.randomUUID(),
+  hasPending(table, id) { return pending.has(`${table}:${id}`) || flushing.has(`${table}:${id}`) },
   hooks: { beforePut: null },
 
   mark(table, row, opts = {}) {

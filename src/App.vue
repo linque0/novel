@@ -15,10 +15,16 @@ import TrashModal from './components/TrashModal.vue'
 import StatsModal from './components/StatsModal.vue'
 import PrefBridge from './components/PrefBridge.vue'
 import PanelHost from './components/PanelHost.vue'
+import { installAppBus } from './services/appbus'
 import { useShelfStore } from './stores/shelf'
+import { installAiRuntime } from './services/ai/runtime'
+import { useAiStore } from './stores/ai'
 
 const ui = useUiStore()
 const shelf = useShelfStore()
+
+/* 跨窗口事件（偏好同步 / 书架刷新 / 恢复备份协议）：主窗口与面板窗口都在根组件装一次 */
+installAppBus()
 
 /* 功能面板窗口（9.2-W5）：URL 带 ?panel=<type>:<workId>:<entityId> 时渲染精简面板布局 */
 const panelMode = new URLSearchParams(location.search).has('panel')
@@ -49,6 +55,8 @@ async function boot() {
     return
   }
   startAutosave()
+  installAiRuntime()
+  await useAiStore().loadSettings()
   await ui.loadPrefs()
   if (panelMode) return
   await seedDevVerifyBooks()

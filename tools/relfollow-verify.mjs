@@ -140,6 +140,8 @@ check(
 )
 
 /* ---------- 5. 四边锚点存在且热区 16×16 CSS px（画布 pan-zoom 缩放会放大 rect，须除以 scale） ---------- */
+await c.evalx(`(() => { const w = ${store}; w.tab = 'characters'; w.charView = 'graph'; return true })()`)
+await c.sleep(600)
 const apt = await c.evalx(`(() => {
   const node = document.querySelector('.rg-node')
   const sides = [...node.querySelectorAll('.rg-apt')].map((x) => x.dataset.side).sort()

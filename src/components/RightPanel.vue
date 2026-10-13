@@ -3,11 +3,13 @@ import { computed, ref, watch } from 'vue'
 import { NButton, NTag, NSelect, NPopconfirm } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
 import { stripTags } from '../services/wordcount'
 import { ANNOTATION_KINDS, normalizeNoteColor, noteKindLabel, focusNoteMark, recolorNoteMark } from '../services/annotations'
 
 const work = useWorkStore()
+const ui = useUiStore()
 const ch = computed(() => work.activeChapter)
 
 /* ---------- 正文批注（右侧批注栏）：逐条对应正文中被批注的文字 ---------- */
@@ -132,6 +134,13 @@ watch(
 
 <template>
   <div v-if="ch" class="right-panel">
+    <!-- 吸附顶条：内容滚动时始终可见，保证任意滚动位置都能收起 -->
+    <div class="rp-head">
+      <span class="rp-cap">批注栏</span>
+      <button class="rp-fold" title="收起批注栏，留出正文空间（从右缘细轨可再展开）" @click="ui.setPref('rightPanelOpen', false)">
+        <OIcon name="caret-right" :size="13" />
+      </button>
+    </div>
     <div class="rp-section">
       <div class="rp-title">
         本章批注

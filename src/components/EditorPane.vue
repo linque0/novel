@@ -30,7 +30,7 @@ const ctxMenu = ref(null)
 /* 章节已被拆出为面板窗口时，主窗口本章只读（9.2-W5 两级锁） */
 const chapterPopped = computed(() => !!work.activeChapter && isPopped(work, 'chapter', work.activeChapter.id))
 watch(chapterPopped, (popped) => {
-  editor.value?.setEditable(!popped)
+  editor.value?.setEditable(!popped, false)
 })
 
 let savedSelRange = null // 右键时刻的选区快照（浏览器/PM 可能在右键流程中塌缩选区）

@@ -18,6 +18,9 @@ const profileName = PROFILE_NAME_RE.test(profileRaw) ? profileRaw : null
    （IndexedDB）才重定向，否则回退默认位置并在设置面板提示（dataDirFallback）。 */
 const defaultUserData = path.join(app.getPath('appData'), '小说工坊' + (profileName ? '-' + profileName : ''))
 const DATA_DIR_FILE = path.join(defaultUserData, 'data-dir.json')
+/* 旧位置记录（迁移后保留的原位置）：与指针同目录。指针文件语义保持不变（只存 dir、
+   恢复默认时被删除），旧位置另存此文件，供设置面板列出与清理。 */
+const OLD_DIRS_FILE = path.join(defaultUserData, 'data-dir-old.json')
 let dataDirFallback = false
 
 function samePath(a, b) {
@@ -41,6 +44,107 @@ function readDataDirPointer() {
   } catch {
     return null
   }
+}
+
+/* 与指针同级的路径校验：绝对路径、拒绝 NUL 与任意分隔符写法的 .. 上跳 */
+function safeDir(dir) {
+  if (typeof dir !== 'string' || !dir) return null
+  if (!path.isAbsolute(dir) || dir.includes('\0') || /(^|[\\/])\.\.(?:[\\/]|$)/.test(dir)) return null
+  return path.resolve(dir)
+}
+
+/* 旧位置记录读写（记录文件同样可能被外部改写，逐条走 safeDir 校验） */
+function readOldDirs() {
+  try {
+    const parsed = JSON.parse(fs.readFileSync(OLD_DIRS_FILE, 'utf-8'))
+    const list = Array.isArray(parsed?.dirs) ? parsed.dirs : []
+    return list
+      .map((e) => ({
+        dir: safeDir(e?.dir),
+        at: typeof e?.at === 'string' ? e.at : '',
+        kind: e?.kind === 'stale-snapshot' ? 'stale-snapshot' : 'migrated-from',
+        purge: e?.purge === true
+      }))
+      .filter((e) => e.dir)
+  } catch {
+    return []
+  }
+}
+function writeOldDirs(list) {
+  const dirs = (list || []).map((e) => ({
+    dir: e.dir,
+    at: e.at || new Date().toISOString(),
+    kind: e.kind || 'migrated-from',
+    ...(e.purge ? { purge: true } : {})
+  }))
+  try {
+    if (!dirs.length) {
+      fs.rmSync(OLD_DIRS_FILE, { force: true })
+      return
+    }
+    fs.mkdirSync(path.dirname(OLD_DIRS_FILE), { recursive: true })
+    fs.writeFileSync(OLD_DIRS_FILE, JSON.stringify({ dirs, at: new Date().toISOString() }), 'utf-8')
+  } catch (e) {
+    console.warn('[data] 旧位置记录写入失败：', e?.message)
+  }
+}
+function rememberOldDir(dir, kind, purge = false) {
+  const resolved = safeDir(dir)
+  if (!resolved) return
+  const list = readOldDirs().filter((e) => !samePath(e.dir, resolved))
+  list.push({ dir: resolved, at: new Date().toISOString(), kind: kind || 'migrated-from', purge: purge === true })
+  writeOldDirs(list)
+}
+
+/* 迁移时选择「清理原位置」的目录在这里兑现：旧进程仍持有 Chromium 对该目录的文件句柄
+   （Cache / IndexedDB / Network / Local Storage …），就地删除必然 EBUSY，只能留待下次启动——
+   那时 userData 已指向新位置，本进程对旧目录没有任何句柄。失败则保留记录、下次启动重试。 */
+function purgePendingOldDirs() {
+  const list = readOldDirs()
+  if (!list.some((e) => e.purge)) return
+  const remaining = []
+  for (const e of list) {
+    if (!e.purge) {
+      remaining.push(e)
+      continue
+    }
+    if (!fs.existsSync(e.dir)) continue
+    const r = cleanLocation(e.dir, 'all')
+    if (r.ok) console.log('[data] 已清理待删除的旧位置：', e.dir, '释放', r.freed, '字节')
+    else {
+      console.warn('[data] 待删除的旧位置清理未完成，下次启动重试：', e.dir, r.error || r.failed + ' 项失败')
+      remaining.push(e)
+    }
+  }
+  writeOldDirs(remaining)
+}
+
+/* 目录体积（限幅遍历，避免异常目录结构拖死主进程） */
+function dirBytes(dir, cap = 6000) {
+  let total = 0
+  let seen = 0
+  const walk = (p) => {
+    if (seen++ > cap) return
+    let entries
+    try {
+      entries = fs.readdirSync(p, { withFileTypes: true })
+    } catch {
+      return
+    }
+    for (const ent of entries) {
+      const full = path.join(p, ent.name)
+      if (ent.isDirectory()) walk(full)
+      else {
+        try {
+          total += fs.statSync(full).size
+        } catch {
+          /* 单个文件读取失败不影响统计 */
+        }
+      }
+    }
+  }
+  walk(dir)
+  return total
 }
 
 const customDir = readDataDirPointer()
@@ -180,6 +284,9 @@ function startMain() {
   createWindow()
   panels.setMainWindow(win)
 
+  /* 兑现"迁移并清理原位置"：等上一进程完全退出后再删（relaunch 后两个进程会短暂并存） */
+  setTimeout(purgePendingOldDirs, 2500)
+
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow()
   })
@@ -192,8 +299,10 @@ app.on('window-all-closed', () => {
 
 /* ---------------- IPC：文件选择 / 导入 / 导出 ---------------- */
 
-ipcMain.handle('import:pick', async (_e, opts) => {
-  const res = await dialog.showOpenDialog(win, {
+ipcMain.handle('import:pick', async (e, opts) => {
+  /* 对话框父窗口跟随发起窗口（设置窗口等面板窗口发起时落在自身上方） */
+  const parent = BrowserWindow.fromWebContents(e.sender) || win
+  const res = await dialog.showOpenDialog(parent, {
     properties: ['openFile', 'multiSelections'],
     filters: opts?.filters || [
       {
@@ -248,7 +357,7 @@ ipcMain.handle('export:save', async (_e, payload) => {  /* v1.0.6：带 dirPath 
     fs.mkdirSync(dir, { recursive: true })
     filePath = path.join(dir, path.basename(String(payload.defaultName || 'export.txt')))
   } else {
-    const res = await dialog.showSaveDialog(win, { defaultPath: payload.defaultName || 'export.txt' })
+    const res = await dialog.showSaveDialog(BrowserWindow.fromWebContents(e.sender) || win, { defaultPath: payload.defaultName || 'export.txt' })
     if (res.canceled || !res.filePath) return { canceled: true }
     filePath = res.filePath
   }
@@ -310,18 +419,100 @@ function copyProfileDir(src, dest) {
   })
 }
 
+/* ---------- 旧位置清理 ----------
+ * 只删白名单里的缓存/状态条目：IndexedDB、指针与记录文件、以及任何不认识的条目一律保留，
+ * 避免把用户或后续版本新增的数据当垃圾删掉。 */
+const CACHE_EXTRA = new Set([
+  'Crashpad',
+  'Crash Reports',
+  'logs',
+  'lockfile',
+  'DevToolsActivePort',
+  'Dictionaries',
+  'Local State',
+  'Preferences',
+  'Network',
+  'Session Storage',
+  'Shared Dictionary',
+  'SharedStorage',
+  'SharedStorage-wal',
+  'blob_storage',
+  'WebStorage',
+  'Partitions',
+  'Service Worker'
+])
+const PROTECTED_NAMES = new Set(['data-dir.json', 'data-dir-old.json'])
+const isCacheEntry = (name) => CACHE_EXTRA.has(name) || MIGRATE_EXCLUDE.has(name) || /Cache$/.test(name)
+
+/* 清理旧位置。mode='caches' 只删白名单缓存；mode='all' 清空目录但保留指针类文件。
+ * 护栏不通过一律拒绝——本函数是唯一的删除入口，绝不允许删到当前数据目录或其外层。
+ * 注意：本函数只能处理"当前进程没有句柄"的目录；刚迁移离开的原位置要留给下次启动（见 purgePendingOldDirs）。 */
+function cleanLocation(dir, mode) {
+  const target = safeDir(dir)
+  if (!target) return { ok: false, error: '路径无效' }
+  const current = app.getPath('userData')
+  if (samePath(target, current)) return { ok: false, error: '当前正在使用该数据目录，不能清理' }
+  if (isInside(target, current) || isInside(current, target)) return { ok: false, error: '该目录与当前数据目录嵌套，已拒绝' }
+  if (!fs.existsSync(target)) return { ok: false, error: '目录不存在' }
+  const looksLikeData = fs.existsSync(path.join(target, 'IndexedDB')) || [...PROTECTED_NAMES].some((f) => fs.existsSync(path.join(target, f)))
+  if (!looksLikeData) return { ok: false, error: '该目录不像应用数据目录，已拒绝清理' }
+  /* 指针文件只在"指针所在目录"里受保护；旧快照等其他目录里的同名文件是过期副本，可随清理删除 */
+  const isPointerDir = samePath(target, defaultUserData)
+
+  const before = dirBytes(target)
+  let removed = 0
+  let failed = 0
+  let entries = []
+  try {
+    entries = fs.readdirSync(target, { withFileTypes: true })
+  } catch (e) {
+    return { ok: false, error: '目录读取失败：' + (e?.message || '未知错误') }
+  }
+  for (const ent of entries) {
+    if (isPointerDir && PROTECTED_NAMES.has(ent.name)) continue
+    if (mode !== 'all' && !isCacheEntry(ent.name)) continue
+    try {
+      fs.rmSync(path.join(target, ent.name), { recursive: true, force: true })
+      removed++
+    } catch (e) {
+      failed++
+      console.warn('[data] 清理失败（跳过）：', ent.name, e?.message)
+    }
+  }
+  /* 彻底清理且目录里已无保留内容（= 曾经的自定义位置）→ 目录本身也是残留 */
+  let removedDir = false
+  if (mode === 'all' && failed === 0) {
+    try {
+      if (fs.readdirSync(target).length === 0) {
+        fs.rmSync(target, { recursive: true, force: true })
+        removedDir = true
+      }
+    } catch (e) {
+      console.warn('[data] 残留目录删除失败：', target, e?.message)
+    }
+  }
+  const after = fs.existsSync(target) ? dirBytes(target) : 0
+  console.log(`[data] 清理旧位置（${mode}）：${target} 删除 ${removed} 项，释放 ${Math.max(0, before - after)} 字节`)
+  return { ok: failed === 0, freed: Math.max(0, before - after), removed, failed, removedDir }
+}
+
 ipcMain.handle('data:location', () => {
   const current = app.getPath('userData')
+  /* 记录里的旧位置：剔除已消失或与当前重合的条目并回写，避免记录越积越多 */
+  const known = readOldDirs()
+  const alive = known.filter((e) => fs.existsSync(e.dir) && !samePath(e.dir, current))
+  if (alive.length !== known.length) writeOldDirs(alive)
   return {
     current,
     isCustom: !samePath(current, defaultUserData),
     defaultDir: defaultUserData,
-    fallback: dataDirFallback
+    fallback: dataDirFallback,
+    old: alive.map((e) => ({ dir: e.dir, kind: e.kind, at: e.at, purge: e.purge === true, bytes: dirBytes(e.dir) }))
   }
 })
 
-ipcMain.handle('data:pickDir', async () => {
-  const res = await dialog.showOpenDialog(win, {
+ipcMain.handle('data:pickDir', async (e) => {
+  const res = await dialog.showOpenDialog(BrowserWindow.fromWebContents(e.sender) || win, {
     title: '选择数据存储位置',
     buttonLabel: '选择此目录',
     properties: ['openDirectory', 'createDirectory']
@@ -332,9 +523,41 @@ ipcMain.handle('data:pickDir', async () => {
 
 ipcMain.handle('data:openFolder', () => shell.openPath(app.getPath('userData')))
 
+/* 清除失效的位置记录：指针指向的目录已不存在（被改名/删除）时，启动会回退默认位置并长期告警，
+   而「恢复默认」此时是无操作会被拒——这里给用户一个显式出口。只删默认目录下的指针文件。 */
+ipcMain.handle('data:clearPointer', () => {
+  try {
+    if (fs.existsSync(DATA_DIR_FILE)) fs.rmSync(DATA_DIR_FILE, { force: true })
+    dataDirFallback = false
+    return { ok: true }
+  } catch (e) {
+    return { ok: false, error: e?.message || '删除指针文件失败' }
+  }
+})
+
+/* 旧位置清理/打开：渲染层只给记录下标，路径一律由主进程从记录文件读取（不接受任意路径入参） */
+ipcMain.handle('data:cleanOld', (_e, payload) => {
+  const index = Number(payload?.index)
+  const mode = payload?.mode === 'all' ? 'all' : 'caches'
+  const list = readOldDirs()
+  if (!Number.isInteger(index) || index < 0 || index >= list.length) return { ok: false, error: '旧位置记录不存在' }
+  const r = cleanLocation(list[index].dir, mode)
+  if (r.ok && mode === 'all') writeOldDirs(list.filter((_, i) => i !== index))
+  return { ...r, dir: list[index].dir, mode }
+})
+ipcMain.handle('data:openOld', async (_e, payload) => {
+  const index = Number(payload?.index)
+  const list = readOldDirs()
+  if (!Number.isInteger(index) || index < 0 || index >= list.length) return { ok: false, error: '旧位置记录不存在' }
+  const err = await shell.openPath(list[index].dir)
+  return { ok: !err, error: err || '' }
+})
+
 ipcMain.handle('data:move', (_e, payload) => {
   const current = app.getPath('userData')
   const wantDefault = !payload || typeof payload.dir !== 'string' || !payload.dir.trim()
+  /* 旧位置处理：默认保留（记录位置供设置面板清理）；渲染层显式传 false 才当场清理 */
+  const keepOld = payload?.keepOld !== false
   let landing
   if (wantDefault) {
     landing = path.resolve(defaultUserData)
@@ -372,11 +595,11 @@ ipcMain.handle('data:move', (_e, payload) => {
     return { ok: false, error: '目标位置不可写：' + (err?.code || err?.message || '未知错误') }
   }
   /* 校验全部通过：先回复渲染层（显示“正在迁移”），再异步执行迁移 */
-  setTimeout(() => performDataMigration({ current, landing, wantDefault }), 80)
+  setTimeout(() => performDataMigration({ current, landing, wantDefault, keepOld }), 80)
   return { ok: true }
 })
 
-async function performDataMigration({ current, landing, wantDefault }) {
+async function performDataMigration({ current, landing, wantDefault, keepOld = true }) {
   dataMigrating = true // 挂起 window-all-closed 的 app.quit，迁移完成后显式 relaunch+exit
   const stage = landing + '.migrating'
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
@@ -394,8 +617,8 @@ async function performDataMigration({ current, landing, wantDefault }) {
     copyProfileDir(current, stage)
 
     /* 3) 换位：Windows 的 rename 不能落到已存在目录——自定义迁移落地处只可能是校验阶段的
-       空占位（非空已被拒绝），先移除；恢复默认时旧默认目录（迁移前快照）先整体让位再删，
-       换位失败可回滚，避免新旧 LevelDB 文件混杂 */
+       空占位（非空已被拒绝），先移除；恢复默认时旧默认目录（迁移前快照）先整体让位，
+       按 keepOld 决定删除还是改名保留，换位失败可回滚，避免新旧 LevelDB 文件混杂 */
     if (wantDefault) {
       const oldDir = landing + '.old-' + Date.now()
       fs.renameSync(landing, oldDir)
@@ -405,11 +628,9 @@ async function performDataMigration({ current, landing, wantDefault }) {
         fs.renameSync(oldDir, landing)
         throw e
       }
-      try {
-        fs.rmSync(oldDir, { recursive: true, force: true })
-      } catch (e) {
-        console.warn('[data] 旧默认目录清理失败（不影响使用，可手动删除）：', oldDir, e?.message)
-      }
+      /* 原默认目录里的陈旧快照：与 keepOld 同口径——保留则改名留下并记入记录，不再静默删除。
+         选择清理时同样交给下次启动删除（本进程的 userData 此时仍是自定义目录，但统一走 purge 更省事）。 */
+      rememberOldDir(oldDir, 'stale-snapshot', keepOld === false)
     } else {
       fs.rmSync(landing, { recursive: true, force: true })
       fs.renameSync(stage, landing)
@@ -419,6 +640,9 @@ async function performDataMigration({ current, landing, wantDefault }) {
     if (wantDefault) fs.rmSync(DATA_DIR_FILE, { force: true }) // 指针随旧目录让位，此处兜底
     console.log('[data] 换位完成 →', landing)
     if (!fs.existsSync(path.join(landing, 'IndexedDB'))) throw new Error('迁移完成但未找到 IndexedDB 数据目录')
+    /* 离开的原位置：默认只记录位置（供设置面板随时清理）；显式选择清理时打上 purge 标记，
+       交给下次启动的新进程删除——本进程还持有该目录的 Chromium 文件句柄，就地删必失败。 */
+    rememberOldDir(current, 'migrated-from', keepOld === false)
     console.log('[data] 迁移完成，重启应用（指针：' + (wantDefault ? '已删除' : DATA_DIR_FILE) + '）')
     app.relaunch()
     app.exit(0)

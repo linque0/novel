@@ -74,40 +74,40 @@ const replyFor = (body) => (typeof body.mock_reply === 'string' ? body.mock_repl
 const PLOT_REPLY = JSON.stringify({
   lines: [
     {
-      title: '铜符之约',
+      title: '铜符之约', strategy: 'steady', evidence: [],
       summary: '沈青梧道出铜符来历，林昭决意连夜探界脊。',
       tension: '驿站掌柜为何知晓星图缺角',
       characters: ['沈青梧', '林昭'],
-      opening: '山雨初歇，檐角滴水。\n林昭把半枚铜符按进掌心，刻痕硌得生疼。他望向界脊的方向，灯一盏一盏亮了起来。\n「三日后梆子响三声，暗渠开。」沈青梧的话还在耳边回响。',
-      impact: '呼应第一章铜镜星图缺角的伏笔。'
+      opening: '山雨初歇，檐角滴水。\n林昭把半枚铜符按进掌心，刻痕硌得生疼。他望向界脊的方向，灯一盏一盏亮了起来。\n「三日后梆子响三声，暗渠开。」沈青梧的话还在耳边回响。' + '他沿着湿润的石阶慢慢走下去，脚下的水光摇晃着。夜风吹过衣袖，他停下来，仔细想了想铜符上的纹路。远处的灯火始终没有熄灭，仿佛在等待一个迟迟未到的答复。' .repeat(2),
+      impact: { foreshadow: '呼应第一章铜镜星图缺角的伏笔。', characters: '林昭决意探查', outline: '推进主线' }, consistency: '沿用已有设定'
     },
     {
-      title: '更夫引路',
+      title: '更夫引路', strategy: 'escalate', evidence: [],
       summary: '更夫三响梆子引林昭走暗渠入界脊。',
       tension: '更夫的真实身份成谜',
       characters: ['林昭'],
-      opening: '梆子三响。\n巷口的老更夫朝林昭招了招手，灯影把两个人的影子拉得很长。\n林昭攥紧铜符，跟了上去。',
-      impact: '为后续暗渠支线埋线。'
+      opening: '梆子三响。\n巷口的老更夫朝林昭招了招手，灯影把两个人的影子拉得很长。\n林昭攥紧铜符，跟了上去。' + '雨后的路很窄，两侧的院门都已关闭。每走几步，他便回头看一次，记住来路上的灯影和屋檐。手里的铜符越来越凉，他不敢松开，也不敢让更夫离开自己的视线。' .repeat(3),
+      impact: { foreshadow: '为后续暗渠支线埋线。', characters: '林昭进一步调查', outline: '展开支线' }, consistency: '沿用已有设定'
     }
   ]
 })
 const OUTLINE_REPLY = JSON.stringify({
   plans: [
     {
-      name: '界脊之心',
+      name: '界脊之心', positioning: '推进主线',
       idea: '三章之内抵达界脊之心。',
       nodes: [
-        { title: '驿站夜谈', points: '从铜符来历切入', edge: 'cause' },
-        { title: '暗渠入口', points: '更夫引路走暗渠', edge: 'foreshadow' },
-        { title: '星图归位', points: '合符见全图', edge: 'conflict' }
+        { title: '驿站夜谈', points: '从铜符来历切入', purpose: '推进冲突', edge: 'cause' },
+        { title: '暗渠入口', points: '更夫引路走暗渠', purpose: '埋设伏笔', edge: 'foreshadow' },
+        { title: '星图归位', points: '合符见全图', purpose: '推进冲突', edge: 'conflict' }
       ]
     },
     {
-      name: '雾都疑云',
+      name: '雾都疑云', positioning: '调查支线',
       idea: '先解星图缺角之谜。',
       nodes: [
-        { title: '铜镜密语', points: '镜中显现旧主手书', edge: 'foreshadow' },
-        { title: '旧主遗府', points: '寻府得铜符另一半', edge: 'cause' }
+        { title: '铜镜密语', points: '镜中显现旧主手书', purpose: '埋设伏笔', edge: 'foreshadow' },
+        { title: '旧主遗府', points: '寻府得铜符另一半', purpose: '推进冲突', edge: 'cause' }
       ]
     }
   ]
@@ -123,8 +123,7 @@ const CHARACTER_REPLY = JSON.stringify({
   bio: '林昭，雾都少年，凝气三层。\n佩半枚铜符，性情沉毅，重诺。',
   aliases: ['小昭'],
   relations: [
-    { name: '老更夫', label: '引路人' },
-    { name: '巡夜人', label: '旧识' }
+    { name: '沈青梧', label: '同行', basis: '已有出场人物' }
   ]
 })
 const CHAT_REPLY = JSON.stringify({ answer: '（Mock）依据装配的上下文：主角是林昭，目前止步于铜符之谜。', writeHint: '' })
@@ -141,6 +140,26 @@ const TASK_REPLIES = [
 function scriptedReply(body) {
   const sys = (body.messages || []).find((m) => m && m.role === 'system')
   const s = typeof sys?.content === 'string' ? sys.content : JSON.stringify(sys?.content ?? '')
+  const user = (body.messages || []).filter(m => m.role === 'user').at(-1)?.content || ''
+  let data = {}
+  try { data = JSON.parse(user) } catch {}
+  if (s.includes('【任务：知识库提取】')) {
+    const text = data.text || '', quote = text.split(/(?<=[。！？])|\n/)[0] || text
+    const names = (data.characters || []).filter(c => text.includes(c.name)).map(c => c.name)
+    const foreshadows = []
+    if (text.includes('埋下铜符')) foreshadows.push({action:'set',content:'铜符之谜',target:'石门',ref:'',evidence:quote})
+    if ((text.includes('铜符发光') || text.includes('铜符打开石门')) && data.active?.length) foreshadows.push({action:text.includes('打开石门')?'payoff':'progress',content:'铜符之谜',target:'石门',ref:data.active[0].id,evidence:quote})
+    return JSON.stringify({ events: text ? [{summary:quote,characters:names,conflict:'',result:quote,evidence:quote}] : [], foreshadows, charstates: names.length ? [{name:names[0],dimension:'能力',change:'继续调查',evidence:quote}] : [], lore_terms: text.includes('铜符') ? [{name:'铜符',category:'物品',desc:'正文中的铜符',evidence:quote}] : [], new_entities: text.includes('夜行客') ? [{name:'夜行客',type:'人物',hint:'未登记人物',evidence:quote}] : [] })
+  }
+  if (s.includes('【任务：记忆聚合】')) return JSON.stringify({summary:(data.items||[]).map(x=>x.summary).join('；').slice(0,500),sourceIds:(data.items||[]).map(x=>x.id)})
+  if (s.includes('【任务：文风分析】')) return JSON.stringify({profile:{视角:'第三人称',句段节奏:'短句，分段清晰',对白:'克制',描写密度:'适中',措辞:'具体',禁忌:data.taboos||''},notes:'依据所选样本'})
+  if (s.includes('【任务：正文改稿】')) {
+    const original = (data.text || '').split('\n')[0]
+    return JSON.stringify({patches:original?[{original,replacement:original+' 风声渐起。',reason:'补充节奏停顿',evidence:[]}]:[]})
+  }
+  if (s.includes('【任务：一致性审稿】')) return JSON.stringify({issues:[{category:'人物状态',severity:'medium',finding:'需要核对当前人物状态与档案：'+data.chapterId,suggestion:'核对后再决定修改',evidence:data.text?[{sourceType:'chapter',sourceId:data.chapterId,quote:data.text.split('\n')[0]}]:[]}]})
+  if (s.includes('【任务：结果复核】')) return JSON.stringify({warnings:[],summary:'已核对提供的来源'})
+  if (s.includes('【任务：自由问答】') && user.includes('工具测试') && !user.includes('【工具')) return JSON.stringify({tool:'search_chapters',args:{query:'林昭'}})
   for (const [marker, reply] of TASK_REPLIES) {
     if (s.includes(marker)) return reply
   }
@@ -221,6 +240,7 @@ function log(req, u, body, status, key) {
   console.log(`[mock-ai] ${t} ${req.method} ${u.pathname} stream=${body.stream ? 1 : 0} model=${body.model || '-'} key=${key ? key.slice(0, 10) + '…' : '(无)'} → ${status}`)
 }
 
+const requests = []
 const server = http.createServer(async (req, res) => {
   // CORS：dev 渲染层（http://127.0.0.1:5173）与 app://local 直连需要
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -233,8 +253,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   const u = new URL(req.url, `http://127.0.0.1:${PORT}`)
+  if (u.pathname === '/__requests') { sendJson(res, 200, requests); return }
+  if (u.pathname === '/__reset') { requests.length = 0; sendJson(res, 200, {ok:true}); return }
+  const isEmbedding = req.method === 'POST' && u.pathname.endsWith('/embeddings')
   const isChat = req.method === 'POST' && u.pathname.replace(/\/+$/, '').endsWith('/chat/completions')
-  if (!isChat) {
+  if (!isChat && !isEmbedding) {
     sendJson(res, 404, errorPayload(`未知路径 ${req.method} ${u.pathname}；本 mock 仅支持 POST /v1/chat/completions`, 'invalid_request_error'))
     return
   }
@@ -247,6 +270,36 @@ const server = http.createServer(async (req, res) => {
     return
   }
 
+  requests.push({ path: u.pathname, body })
+  // Preset dialogue acceptance fixtures. No real provider or author data is used.
+  if (String(body.model).startsWith('preset-')) {
+    if(body.model==='preset-prefill'&&body.messages.at(-1)?.role==='assistant'){sendJson(res,400,errorPayload('assistant prefill unsupported'));return}
+    if(body.model==='preset-param-reject'&&body.seed!=null){sendJson(res,400,errorPayload('Unsupported parameter: seed'));return}
+    if (body.model === 'preset-no-tools' && body.tools?.length) { sendJson(res,400,errorPayload('tools unsupported'));return }
+    const question = body.messages.filter(m=>m.role==='user').at(-1)?.content || ''
+    const combined = JSON.stringify(body.messages)
+    const followup = body.messages.some(m=>m.role==='tool')
+    if (body.model === 'preset-draft-fail' && followup) { sendJson(res,503,errorPayload('followup failed'));return }
+    let calls=[]
+    if (!followup && body.tools?.length && body.tool_choice!=='none' && /生成草稿|继续上一条/.test(question)) calls=[{id:'call-draft',type:'function',function:{name:'submit_draft',arguments:JSON.stringify({title:'雾中来客',text:/继续/.test(question)?'\n来客放下灯，露出铜符上的刻痕。':'林昭推开窗，雾气漫入屋内。\n远处的一盏灯逐渐逼近。',summary:'雾中的悬念场景'})}}]
+    if (!followup && body.tools?.length && /只读检索/.test(question)) calls=[{id:'call-read',type:'function',function:{name:'search_chapters',arguments:'{"query":"林昭","limit":2}'}}]
+    const reply=followup?'已生成草稿，等待作者确认。':combined.includes('短句测试')?'门开了。风停了。':'林昭望向石门，夜色沉静而绵长。'
+    const finish=body.model==='preset-length'?'length':calls.length?'tool_calls':'stop'
+    if(body.model==='preset-native-json'||body.stream===false) {sendJson(res,200,{choices:[{message:{content:calls.length?null:reply,tool_calls:calls,...(body.model==='preset-reasoning'?{reasoning_content:'思考铜符的来历。'}:{})},finish_reason:finish}]});return}
+    res.writeHead(200,{'Content-Type':'text/event-stream','Cache-Control':'no-cache'})
+    const frame=(delta,finish_reason=null)=>'data: '+JSON.stringify({choices:[{index:0,delta,finish_reason}]})+'\n\n'
+    const frames=[]
+    if(calls.length) for(const call of calls) {const a=call.function.arguments,half=Math.floor(a.length/2);frames.push(frame({tool_calls:[{index:0,id:call.id,type:'function',function:{name:call.function.name,arguments:a.slice(0,half)}}]}));frames.push(frame({tool_calls:[{index:0,function:{arguments:a.slice(half)}}]}))}
+    else for(const content of splitChunks(reply,6))frames.push(frame({content}))
+    frames.push(frame({},finish),'data: [DONE]\n\n')
+    let index=0;const timer=setInterval(()=>{if(res.destroyed){clearInterval(timer);return}if(index<frames.length)res.write(frames[index++]);else{clearInterval(timer);res.end()}},body.model==='preset-slow'?400:15)
+    res.on('close',()=>clearInterval(timer));return
+  }
+  if (isEmbedding) {
+    if (body.model === 'missing') { sendJson(res,404,errorPayload('not found')); return }
+    sendJson(res,200,{data:body.input.map((text,index)=>({index,embedding:[1,text.length%11,(text.charCodeAt(0)||0)%7,0.5]})),usage:{prompt_tokens:body.input.join('').length,total_tokens:body.input.join('').length}})
+    return
+  }
   // 错误模拟：按 API Key 后缀返回对应 HTTP 错误，供错误分类验收
   const key = String(req.headers['authorization'] || '').replace(/^Bearer\s*/i, '').trim()
   const failBySuffix = {

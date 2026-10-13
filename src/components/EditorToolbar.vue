@@ -62,15 +62,15 @@ function openLink() {
   showLink.value = true
 }
 
-/* AI：剧情选项（方案 §五.1）：锚点 = 当前章，编辑器有选中文本时一并作为补充指令透传 */
-const AI_UNSET_HINT = 'AI 未配置：请先在设置中完成 AI 助手配置'
+/* 发送给恍然梦（方案 §五.1）：锚点 = 当前章，编辑器有选中文本时一并作为补充指令透传 */
+const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配置'
 function aiPlotBranch() {
   if (!ai.ready) return window.$msg?.warning(AI_UNSET_HINT)
   const ch = work.activeChapter
   if (!ch) return
   const s = props.editor.state.selection
   const sel = s && !s.empty ? props.editor.state.doc.textBetween(s.from, s.to, '\n').trim() : ''
-  ai.startPlotBranch(ch.id, sel ? `参考选中文本：${sel.slice(0, 500)}` : '')
+  ai.prepare('请基于当前章节帮助我创作。', {chapterId:ch.id,selection:sel})
 }
 
 onMounted(() => {
@@ -204,6 +204,6 @@ const isActive = (name, attrs) => {
       @click="toggleBm"
     ><OIcon :name="bmOn ? 'star-filled' : 'star'" :size="14" /></button>
     <span class="tb-sep" />
-    <button class="tb" :disabled="!ai.ready" :title="ai.ready ? 'AI：剧情选项（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">AI：剧情选项</button>
+    <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
   </div>
 </template>

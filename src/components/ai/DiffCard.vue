@@ -5,20 +5,25 @@
  * - 人物丰富（subject:'character'）：字段补全（字段级对照）、小传扩写、别名建议、关系建议。
  * 操作「确认应用 / 放弃」都走 store 现有动作（写入红线 §六.1，agent 只产提案不落库）：
  * mubuAddTree / mubuSetText / updateCharacter / addCharacter / addRelation；
- * 「放弃」只从 ai.result.cards 移除提案，不触碰任何库数据。
+ * 「放弃」只从 对话提案 移除提案，不触碰任何库数据。
  */
 import { computed, ref } from 'vue'
 import { NButton, NTag } from 'naive-ui'
 import OIcon from '../OIcon.vue'
+import ProposalExtras from './ProposalExtras.vue'
 import { useWorkStore } from '../../stores/work'
 
 const props = defineProps({
-  card: { type: Object, required: true } // agent.js diff 卡：lore { mode, tree, revised, note } / character { fields, bio, aliases, relations }
+  card: { type: Object, required: true } // 对话 diff 卡：lore { mode, tree, revised, note } / character { fields, bio, aliases, relations }
 })
 const emit = defineEmits(['dismiss'])
 
 const work = useWorkStore()
-const applied = ref(false)
+const applied = computed(() => props.card.appliedActions?.includes('apply'))
+const selectedFields = ref(Object.keys(props.card.fields || {}))
+const selectedBio = ref(!!props.card.bio)
+const selectedAliases = ref((props.card.aliases || []).map((_,i) => i))
+const selectedRelations = ref((props.card.relations || []).map((_,i) => i))
 
 const isLore = computed(() => props.card.subject === 'lore')
 const isChar = computed(() => props.card.subject === 'character')
@@ -153,60 +158,17 @@ const relationRows = computed(() => {
 
 const STATUS_META = {
   existing: { text: '已有人物', type: 'default' },
-  create: { text: '将新建人物', type: 'warning' },
+  create: { text: '需单独确认实体', type: 'warning' },
   dup: { text: '已有关系', type: 'info' }
 }
 
 /* ---------- 应用 / 放弃 ---------- */
 
-function apply() {
-  if (!work.work || !canApply.value) return
-  if (isLore.value) {
-    if (isAdd.value) {
-      // 新增条目草案：整棵子树挂到锚点幕布节点下（mubuAddTree 按 DFS 顺序扁平插入；入参是节点数组，单根草案需包一层）
-      work.mubuAddTree(props.card.anchorId, null, [props.card.tree])
-      window.$msg?.success('新增条目草案已挂到设定节点下')
-    } else {
-      // 扩写稿整体替换节点文本；AI 产出为纯文本，html 置 null 保持纯文本节点（v1.0.22 口径）
-      work.mubuSetText(props.card.anchorId, props.card.revised || '', null)
-      window.$msg?.success('设定节点已按扩写稿更新（转为纯文本）')
-    }
-  } else {
-    const row = charRow.value
-    const patch = {}
-    if (props.card.fields && Object.keys(props.card.fields).length) {
-      patch.fields = { ...(row.fields || {}), ...props.card.fields } // 缺项补全：浅合并保留已有字段
-    }
-    if (props.card.bio) patch.content = props.card.bio
-    if (aliasAdds.value.length) {
-      const exist = (row.aliases || '').split(/[,，、/\s]+/).filter(Boolean)
-      patch.aliases = [...exist, ...aliasAdds.value].join('、')
-    }
-    if (Object.keys(patch).length) work.updateCharacter(props.card.anchorId, patch)
-    let created = 0
-    let linked = 0
-    for (const r of relationRows.value) {
-      if (r.status === 'dup') continue
-      let target = findCharByName(r.name)
-      if (!target) {
-        // 对端人物不存在 → 新建后恢复当前模块选中，不让用户被跳走
-        const prevTab = work.tab
-        const prevSel = work.selCharacterId
-        target = work.addCharacter(r.name)
-        work.tab = prevTab
-        work.selCharacterId = prevSel
-        created++
-      }
-      work.addRelation(props.card.anchorId, target.id, r.label)
-      linked++
-    }
-    const parts = []
-    if (Object.keys(patch).length) parts.push('档案已更新')
-    if (linked) parts.push(`新增关系 ${linked} 条`)
-    if (created) parts.push(`新建对端人物 ${created} 位`)
-    window.$msg?.success(parts.length ? `人物丰富已应用：${parts.join('，')}` : '没有可应用的建议')
-  }
-  applied.value = true
+async function apply() {
+  try {
+    await work.applyAiProposal(props.card, { selected: { fields: selectedFields.value, bio: selectedBio.value, aliases: selectedAliases.value, relations: selectedRelations.value } })
+    window.$msg?.success('勾选提案已应用')
+  } catch (e) { window.$msg?.warning(e.message) }
 }
 
 function dismiss() {
@@ -224,6 +186,9 @@ function dismiss() {
       <button v-if="!applied" class="ai-diff-x" title="放弃（不写入）" @click="dismiss"><OIcon name="close" :size="11" /></button>
     </div>
 
+    <div v-if="card.conflict_note" class="ai-diff-note">潜在冲突：{{ card.conflict_note }}</div>
+    <div v-for="(b, i) in card.basis || []" :key="i">{{ b.claim }} · {{ b.source }}</div>
+    <ProposalExtras :card="card" />
     <div v-if="card.note" class="ai-diff-note">{{ card.note }}</div>
 
     <!-- 设定：新增子树 -->
@@ -255,14 +220,14 @@ function dismiss() {
     <template v-if="isChar">
       <div v-if="fieldRows.length" class="ai-field-rows">
         <div v-for="f in fieldRows" :key="f.key" class="ai-field-row">
-          <span class="ai-field-key">{{ f.key }}</span>
+          <label class="ai-field-key"><input v-model="selectedFields" type="checkbox" :value="f.key" />{{ f.key }}</label>
           <span class="ai-field-old">{{ f.old }}</span>
           <span class="ai-field-arrow">→</span>
           <span class="ai-field-next">{{ f.next }}</span>
         </div>
       </div>
       <template v-if="bioDiff">
-        <div class="ai-diff-sec-title">小传扩写</div>
+        <label class="ai-diff-sec-title"><input v-model="selectedBio" type="checkbox" />小传扩写</label>
         <div class="ai-diff">
           <div v-for="(r, i) in bioDiff" :key="i" class="ai-diff-row" :class="r.t">
             <template v-if="r.t === 'gap'">{{ r.text }}</template>
@@ -272,12 +237,13 @@ function dismiss() {
       </template>
       <div v-if="aliasAdds.length" class="ai-alias-row">
         <span class="ai-diff-sec-title inline">别名建议</span>
-        <NTag v-for="a in aliasAdds" :key="a" size="tiny" :bordered="false">{{ a }}</NTag>
+        <label v-for="(a, i) in card.aliases" :key="a"><input v-model="selectedAliases" type="checkbox" :value="i" />{{ a }}</label>
       </div>
       <div v-if="relationRows.length" class="ai-rel-rows">
         <div class="ai-diff-sec-title">关系建议</div>
         <div v-for="(r, i) in relationRows" :key="i" class="ai-rel-row">
           <NTag size="tiny" :bordered="false" :type="STATUS_META[r.status].type">{{ STATUS_META[r.status].text }}</NTag>
+          <input v-model="selectedRelations" type="checkbox" :value="i" />
           <span class="ai-rel-name">{{ r.name }}</span>
           <span class="ai-rel-label">{{ r.label }}</span>
         </div>
