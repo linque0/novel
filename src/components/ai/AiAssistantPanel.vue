@@ -7,6 +7,8 @@ import { useUiStore } from "../../stores/ui";
 import { renderChat, plainChat } from "../../services/ai/chat-text";
 import PresetEvaluation from "./PresetEvaluation.vue";
 import DraftCard from "./DraftCard.vue";
+import WorkflowCard from './WorkflowCard.vue';
+import { TASK_PROFILES } from '../../services/ai/task-profiles.js';
 import PlanCard from "./PlanCard.vue";
 import DiffCard from "./DiffCard.vue";
 import KnowledgePanel from "./KnowledgePanel.vue";
@@ -38,6 +40,7 @@ watch(
   },
 );
 onMounted(async () => {
+  if(work.work)ai.switchWork(work.work.id);
   if (!ai.loaded) await ai.loadSettings();
   await ai.loadPresets();
 });
@@ -138,8 +141,8 @@ function acceptDraft() {
     window.$msg?.warning(e.message);
   }
 }
-function dismiss(msg, id) {
-  msg.cards = msg.cards.filter((c) => c.id !== id);
+async function dismiss(msg, id) {
+  try{await ai.dismissCard(msg,id)}catch(e){window.$msg?.warning(e.message)}
 }
 </script>
 <template>
@@ -182,6 +185,7 @@ function dismiss(msg, id) {
           }}<small v-if="msg.preset"
             >{{ msg.preset.name }} · v{{ msg.preset.revision }}</small
           ><span v-if="msg.streaming">生成中…</span>
+          <small v-if="msg.source?.taskRequest">{{ TASK_PROFILES[msg.source.taskRequest.type]?.label }}</small>
         </div>
         <div
           class="message-text chat-body"
@@ -243,7 +247,7 @@ function dismiss(msg, id) {
                     : "待确认"
               }}
             </summary>
-            <DraftCard v-if="card.kind === 'draft'" :card="card" /><PlanCard
+            <WorkflowCard v-if="card.kind === 'workflow'" :card="card" /><DraftCard v-else-if="card.kind === 'draft'" :card="card" /><PlanCard
               v-else-if="card.kind === 'plan' && card.complete !== false"
               :card="card"
             /><DiffCard

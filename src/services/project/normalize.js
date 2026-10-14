@@ -1,7 +1,7 @@
 import { normalizeText, hashContent, rowHash, chapterHash, stableStringify, tokens } from './text.js'
 import { chunkText, paragraphRanges } from './chunker.js'
 
-export const PROJECTION_VERSION = 1
+export const PROJECTION_VERSION = 2
 export const SOURCE_TABLES = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'olnodes', 'snippets', 'annotations', 'assets', 'links']
 export const TABLE_FOR_TYPE = { work: 'works', volume: 'volumes', chapter: 'chapters', outline: 'outlines', character: 'characters', relation: 'relations', lorecat: 'lorecats', lore: 'lore', mubu: 'mubu', olnode: 'olnodes', snippet: 'snippets', annotation: 'annotations', asset: 'assets', link: 'links' }
 export function orderedChapters(bundle) {
@@ -70,8 +70,9 @@ export function projectBook(bundle, previous = []) {
       const body = normalizeText(row.html || row.text || row.content || '', row.html ? 'html' : undefined)
       const boxes = (row.textboxes || []).map((b) => normalizeText(b.text)).filter(Boolean)
       const rels = (row.rels || []).map((r) => `${r.kind || '关联'} → ${byId.get(r.to)?.title || byId.get(r.toId)?.title || r.to || r.toId || ''}`)
-      add(type, row, [row.title, body, ...boxes, ...rels].filter(Boolean).join('\n'), [rootLabel, ...ancestors.map((n) => n.title || normalizeText(n.text || n.html).split('\n')[0] || '空节点')], semanticClass,
-        { parentId: row.parentId, refId: row.refId, kind: row.kind, rels: row.rels || [], chapterId: chapterIndex.has(row.refId) ? row.refId : null }, ancestors.slice(0,-1).map((n) => versions(table,n)))
+      const written = type === 'olnode' && row.outlineNature === 'written'
+      add(type, row, [row.title, body, ...boxes, ...rels].filter(Boolean).join('\n'), [written?'已写内容纲':rootLabel, ...ancestors.map((n) => n.title || normalizeText(n.text || n.html).split('\n')[0] || '空节点')], written?'summary':semanticClass,
+        { parentId: row.parentId, refId: row.refId, kind: row.kind, rels: row.rels || [], chapterId: chapterIndex.has(row.refId) ? row.refId : null, outlineNature:row.outlineNature, sourceChapterVersions:row.sourceChapterVersions || [] }, [...ancestors.slice(0,-1).map((n) => versions(table,n)),...(written?(row.sourceChapterVersions||[]).map(v=>({table:'chapters',id:v.id,hash:v.hash})):[])])
       rows.filter((r) => r.parentId === row.id).sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0) || String(a.id).localeCompare(String(b.id))).forEach((r) => walk(r, ancestors))
     }
     rows.filter((r) => !r.parentId || !byId.has(r.parentId)).sort((a,b) => (a.sortOrder || 0) - (b.sortOrder || 0)).forEach((r) => walk(r))

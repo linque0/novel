@@ -115,8 +115,8 @@ await test('switching books isolates history and results', `
 await test('lease prevents simultaneous knowledge writers', `
   const {leaseJob,updateJob}=await import('/src/db/ai-repo.js');const first=await leaseJob({id:'test-lease',workId:'v2-work',type:'knowledge',owner:'one'});const second=await leaseJob({id:'test-lease',workId:'v2-work',type:'knowledge',owner:'two'});await updateJob('test-lease','one',{owner:null,leaseUntil:0,status:'paused'});return !!first&&second===null;
 `)
-await test('automatic budget prevents request before cap is exceeded', `
-  const {a}=window.__v2;await a.saveSettings({options:{...a.options,kb:{auto:true,usageCap:1}}});await fetch('http://127.0.0.1:18700/__reset');await a.buildKnowledge({auto:true,onlyIds:['v2-ch0']});const requests=await(await fetch('http://127.0.0.1:18700/__requests')).json();await a.saveSettings({options:{...a.options,kb:{auto:false,usageCap:0}}});return requests.length===0&&a.kb.error.includes('预算');
+await test('automatic memory runs with no daily-cap blocking (setting removed)', `
+  const {a}=window.__v2;await a.saveSettings({options:{...a.options,kb:{auto:true}}});await fetch('http://127.0.0.1:18700/__reset');await a.buildKnowledge({auto:true,onlyIds:['v2-ch0']});const requests=await(await fetch('http://127.0.0.1:18700/__requests')).json();await a.saveSettings({options:{...a.options,kb:{auto:false}}});return requests.length>0&&!String(a.kb.error||'').includes('预算');
 `)
 await test('style keeps author/external sources and needs explicit confirmation', `
   const {a}=window.__v2;const p=await a.addStyle({name:'验证文风',samples:[{source:'author',text:'林昭静静望着灯火。',label:'作者选段'},{source:'external',text:'夜色沉沉。风停了。',label:'外部范文'}],dimensions:'句段节奏'});await a.analyzeStyle(p.id,true);const learned=a.styles.find(x=>x.id===p.id);if(learned.status!=='review'||learned.samples[0].source!=='author'||learned.samples[1].source!=='external')return false;await a.confirmStyle(learned);return a.styles.find(x=>x.id===p.id).status==='confirmed';
@@ -166,7 +166,7 @@ await test('vector persistence and missing endpoint fall back to lexical recall'
   const {a,w}=window.__v2;await a.buildKnowledge();const {rebuildVectors,kbQuery}=await import('/src/services/ai/retrieval.js');const opts=await a.buildOpts();const vec=await rebuildVectors({work:w,opts,model:'mock-embed'});const {vectors,replaceVectors}=await import('/src/db/ai-repo.js');await replaceVectors(w.work.id,(await vectors(w.work.id)).map(v=>({...v,model:'missing'})));const r=await kbQuery({work:w,query:'铜符',embeddings:{enabled:true,model:'missing'},opts});return vec.done>0&&r.cards.length>0&&r.vectorFallback;
 `)
 await test('backup contains AI state, explicit vectors and excludes credentials', `
-  const {exportBackupJson}=await import('/src/db/repo.js');const backup=JSON.parse(await exportBackupJson());return ['aisum','aikb','aikbmeta','airuns','aidecisions','aistyle','aikbvec'].every(t=>Array.isArray(backup.data[t]))&&!backup.data.appconfig.some(r=>r.key==='ai.credential')&&backup.data.aikbvec.every(r=>Array.isArray(r.vec));
+  const {exportBackupJson}=await import('/src/db/repo.js');const backup=JSON.parse(await exportBackupJson());return ['aisum','aikb','aikbmeta','airuns','aidecisions','aistyle','aikbvec'].every(t=>Array.isArray(backup.data[t]))&&!backup.data.appconfig.some(r=>String(r.key||'').startsWith('ai.cred'))&&backup.data.aikbvec.every(r=>Array.isArray(r.vec));
 `)
 await test('deleting setup invalidates downstream payoff and historical register', `
   const {w}=window.__v2;const {knowledgeSnapshot,replayForeshadows}=await import('/src/services/ai/knowledge.js');w.chapters.find(c=>c.id==='v2-ch0').deletedAt=Date.now();const snap=await knowledgeSnapshot(w);return replayForeshadows(snap.cards).length===0&&!snap.cards.some(c=>c.kind==='foreshadow'&&c.body.action==='payoff');

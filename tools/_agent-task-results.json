@@ -1,0 +1,62 @@
+{
+  "at": "2026-10-13T07:58:12.743Z",
+  "model": null,
+  "results": [
+    {
+      "name": "five module entries render in their modules",
+      "ok": true
+    },
+    {
+      "name": "runtime schemas expose only the current task output",
+      "ok": true
+    },
+    {
+      "name": "character and relation apply together, then undo together",
+      "ok": true
+    },
+    {
+      "name": "database failure aborts the whole entity batch",
+      "ok": true
+    },
+    {
+      "name": "changed source blocks an old proposal without partial writes",
+      "ok": true
+    },
+    {
+      "name": "memory is available only after author approval and becomes stale on chapter edits",
+      "ok": true
+    },
+    {
+      "name": "inspiration apply and undo never change other modules",
+      "ok": true
+    },
+    {
+      "name": "planned outline and written outline retain different retrieval semantics",
+      "ok": true
+    },
+    {
+      "name": "lore revisions preserve their target and support undo",
+      "ok": true
+    },
+    {
+      "name": "extraction range refuses later chapters and future outline tools",
+      "ok": true
+    },
+    {
+      "name": "rejected task proposals stay rejected after history restoration",
+      "ok": true
+    },
+    {
+      "name": "character state approval affects sourced memory only and can be undone",
+      "ok": true
+    },
+    {
+      "name": "writing reads author character constraints while historical facts remain separate",
+      "ok": true
+    },
+    {
+      "name": "confirmed fresh summary clears the invalidation marker left by manuscript saves",
+      "ok": true
+    }
+  ]
+}

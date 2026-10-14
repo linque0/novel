@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="236 186 448 428" role="img" aria-label="小说工坊 东方水墨 标识">
+
+  <rect width="900" height="900" fill="#F7F3EA"/>
+  
+  <path d="M523.9,603.0
+           A216,216 0 0 1 275.1,522.5
+           A213.5,213.5 0 0 1 288.4,264.3
+           A211,211 0 0 1 538.2,211.1
+           A208.5,208.5 0 0 1 654.9,436.2
+           L649.0,435.1
+           A202,202 0 0 0 535.2,217.4
+           A201.5,201.5 0 0 0 297.6,272.0
+           A199,199 0 0 0 289.1,512.8
+           A196.5,196.5 0 0 0 516.4,582.4 Z"
+        fill="#1A1A1A" opacity="0.16"/>
+
+  <path d="M444,336 C 402,314 352,305 312,311 C 307,372 307,428 312,482 C 356,474 404,482 444,506 C 448,450 448,392 444,336 Z" fill="#1F1F1F"/>
+  <path d="M456,336 C 498,314 548,305 588,311 C 593,372 593,428 588,482 C 544,474 496,482 456,506 C 452,450 452,392 456,336 Z" fill="#303030"/>
+
+  <g stroke="#F7F3EA" stroke-width="4.5" stroke-linecap="round" fill="none">
+    <path d="M336,336 L336,474"/>
+    <path d="M358,340 L358,478"/>
+    <path d="M380,344 L380,482"/>
+    <path d="M402,348 L402,486"/>
+    <path d="M422,352 L422,490"/>
+    <path d="M478,352 L478,490"/>
+    <path d="M498,348 L498,486"/>
+    <path d="M520,344 L520,482"/>
+    <path d="M542,340 L542,478"/>
+    <path d="M564,336 L564,474"/>
+  </g>
+
+  <rect x="582" y="510" width="92" height="92" rx="9" fill="#B93A32"/>
+  <text x="628" y="556" font-family='KaiTi,"Kaiti SC",STKaiti,"LXGW WenKai","Source Han Serif SC",SimSun,serif' font-size="54" fill="#F7F3EA"
+        text-anchor="middle" dominant-baseline="central">坊</text>
+  <circle cx="300" cy="524" r="7" fill="#1A1A1A" opacity="0.16"/>
+  <circle cx="322" cy="554" r="4" fill="#1A1A1A" opacity="0.11"/>
+  <circle cx="676" cy="466" r="5" fill="#1A1A1A" opacity="0.12"/>
+
+</svg>

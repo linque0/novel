@@ -97,6 +97,12 @@ await c.sleep(2600)
 await c.evalx(`[...document.querySelectorAll('.book-card')].find(x => x.textContent.includes('批注验证书'))?.click()`)
 await c.sleep(1800)
 check('打开测试书', await c.evalx(`!!document.querySelector('.rich-host .tiptap')`))
+/* v1.0.24 批注栏可折叠（偏好持久）：若为收起态（右缘细轨在）先展开，保证侧栏断言可运行 */
+if (await c.evalx(`!!document.querySelector('.rp-rail')`)) {
+  await c.evalx(`document.querySelector('.rp-rail')?.click()`)
+  await c.sleep(400)
+}
+check('批注栏处于展开态', await c.evalx(`!!document.querySelector('.right-panel')`))
 
 /* ---------- 1) 右键「雪落在界脊之上」→ 添加批注（伏笔紫） ---------- */
 const sel1 = await c.evalx(mkSel('雪落在界脊之上'))

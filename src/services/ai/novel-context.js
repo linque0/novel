@@ -7,17 +7,19 @@ import { sourceManifest } from '../project/normalize.js'
 import { readBook, queryBook } from './booksource.js'
 import { constraintPack } from './constraints.js'
 import { stateAt } from './state.js'
+import { normalizeTaskRequest, taskProfile } from './task-profiles.js'
 
 /** Freeze the source range before any credential or network await. */
 export function freezeContext(work, request = {}, question = '') {
+  const taskRequest = normalizeTaskRequest(request.taskRequest, work)
   const refs = request.contextRefs || {}
-  const chapterId = refs.chapterId || request.chapterId || work.selectedChapterId || null
+  const chapterId = taskRequest ? taskRequest.chapterId : refs.chapterId || request.chapterId || work.selectedChapterId || null
   const chapters = ordered(work)
   const chapter = chapters.find((c) => c.id === chapterId)
   if (chapterId && !chapter) throw new Error('关联章节不存在，请重新选择')
-  const wholeBook = request.scope === 'book' || /全书|全作品|全部章节/.test(question)
+  const wholeBook = taskRequest ? !taskRequest.type.startsWith('chapter.') && taskRequest.type !== 'memory.extract' : request.scope === 'book' || /全书|全作品|全部章节/.test(question)
   const cutoff = chapter && !wholeBook ? chapters.findIndex((c) => c.id === chapter.id) : chapters.length - 1
-  const selection = String(refs.selection || '')
+  const selection = String(taskRequest?.selection || refs.selection || '')
   if (selection && (!chapter || !plainChapter(chapter).includes(selection))) throw new Error('选段不属于关联章节')
   return {
     workId: work.work.id,
@@ -27,16 +29,18 @@ export function freezeContext(work, request = {}, question = '') {
     sourceHash: chapter ? chapterHash(chapter) : entityHash(work.work),
     order: chapters.map((c) => c.id),
     layoutHash: fingerprint(chapters.map((c) => [c.id, c.volumeId])),
-    allowedIds: chapters.slice(0, cutoff + 1).map((c) => c.id),
+    allowedIds: taskRequest && taskProfile(taskRequest.type).extraction ? taskRequest.chapterIds : chapters.slice(0, cutoff + 1).map((c) => c.id),
     asOfChapterId: wholeBook ? null : chapter?.id || null,
     scope: wholeBook ? 'book' : 'chapter',
     selection,
+    taskRequest,
     refs: copy(refs),
     sourceVersions: [],
     anchorLength: chapter ? plainChapter(chapter).length : 0,
   }
 }
 export async function assembleSlots(work, frozen, adaptation = {}, privacy = false, question = '') {
+  const extraction = !!frozen.taskRequest && taskProfile(frozen.taskRequest.type).extraction
   const report = [],
     slots = {},
     chapter = work.chapters.find((c) => c.id === frozen.chapterId)
@@ -81,11 +85,12 @@ export async function assembleSlots(work, frozen, adaptation = {}, privacy = fal
       ...(privacy ? { privacy: '正文与选段已屏蔽' } : {}),
     })
   remaining -= estimate(slots.chapterAnchor)
-  const session=await readBook(work,{asOfChapterId:frozen.asOfChapterId,allowedIds:frozen.allowedIds,privacy,sourceRevision:frozen.bookRevision})
+  const authorProfiles = !privacy && !!frozen.taskRequest?.type.startsWith('chapter.')
+  const session=await readBook(work,{asOfChapterId:frozen.asOfChapterId,allowedIds:frozen.allowedIds,authorProfiles,planScope:extraction?'none':'all',privacy,sourceRevision:frozen.bookRevision})
   const chars = work.characters.filter((c) => !c.deletedAt)
   const namesContext=question+' '+(privacy?'':frozen.selection || plainChapter(chapter).slice(-2400))
   const relevant=chars.filter((c)=>frozen.refs.characterId===c.id || [c.name,...String(c.aliases||'').split(/[、，,\s]+/)].filter(Boolean).some((n)=>namesContext.includes(n)))
-  const states=relevant.length?await stateAt(work,{entityIds:relevant.map((c)=>c.id),asOfChapterId:frozen.asOfChapterId,privacy}):[]
+  const states=!extraction&&relevant.length?await stateAt(work,{entityIds:relevant.map((c)=>c.id),asOfChapterId:frozen.asOfChapterId,privacy}):[]
   const constraints=constraintPack(session,{chapterId:frozen.chapterId,outlineId:frozen.refs.outlineId,states,budget:Math.max(0,remaining-128)})
   remaining-=estimate(constraints.text)
   for(const v of constraints.sourceVersions)if(!frozen.sourceVersions.some((x)=>x.table===v.table&&x.id===v.id))frozen.sourceVersions.push(v)
@@ -95,7 +100,7 @@ export async function assembleSlots(work, frozen, adaptation = {}, privacy = fal
   add('workBrief', '作品概况／作者登记', [
     { id: work.work.id, title: work.work.title, genre: work.work.genre, description: work.work.description || work.work.synopsis || '' },
   ])
-  const knowledge = await kbQuery({
+  const knowledge = extraction ? {cards:[],snapshot:{valid:new Set(),stale:[]}} : await kbQuery({
     work,
     query: question,
     asOfChapterId: frozen.asOfChapterId,
@@ -117,10 +122,11 @@ export async function assembleSlots(work, frozen, adaptation = {}, privacy = fal
       id: c.id,
       name: c.name,
       aliases: c.aliases,
-      fields: frozen.asOfChapterId ? {} : c.fields,
-      ...(privacy || frozen.asOfChapterId ? {} : { content: c.content }),
-      relationships: frozen.asOfChapterId ? [] : work.relations.filter((r) => r.fromId === c.id || r.toId === c.id),
-      temporalStatus:'unknown',
+      fields: privacy || (frozen.asOfChapterId && !authorProfiles) ? {} : c.fields,
+      ...(privacy || (frozen.asOfChapterId && !authorProfiles) ? {} : { content: c.content }),
+      relationships: privacy || (frozen.asOfChapterId && !authorProfiles) ? [] : work.relations.filter((r) => !r.deletedAt && (r.fromId === c.id || r.toId === c.id) && (!r.effectiveChapterId || allowed.has(r.effectiveChapterId))),
+      temporalStatus:authorProfiles?'author-profile':'unknown',
+      note:'作者设定是创作约束，阶段状态以正文证据为准；不将当前档案推断为历史事实。',
     })),
   )
   const lore = work.mubu.filter((c) => !c.deletedAt)
@@ -147,10 +153,10 @@ export async function assembleSlots(work, frozen, adaptation = {}, privacy = fal
   add(
     'outlinePlan',
     '大纲计划／尚未发生',
-    [...plan.values()].map((n) => ({ id: n.id, parentId: n.parentId, title: n.title, ...(privacy ? {} : { text: n.text }) })),
+    extraction ? [] : [...plan.values()].filter(n=>n.outlineNature!=='written').map((n) => ({ id: n.id, parentId: n.parentId, title: n.title, ...(privacy ? {} : { text: n.text }) })),
   )
   const previous = []
-  const previousCount = Math.max(0, Math.min(20, Number(adaptation.historyChapters ?? 3)))
+  const previousCount = extraction ? 0 : Math.max(0, Math.min(20, Number(adaptation.historyChapters ?? 3)))
   for (const ch of previousCount ? chapters.filter((c) => c.id !== frozen.chapterId).slice(-previousCount) : []) {
     const summary = await getChapterSummary(ch, null)
     if (summary) previous.push({ id: ch.id, title: ch.title, summary, nature: '已保存正文的摘要' })
@@ -192,6 +198,8 @@ export function scopedHistory(messages, frozen, privacy) {
         m.workId === frozen.workId &&
         !m.streaming &&
         !m.error &&
+        (m.source?.taskRequest?.type || null) === (frozen.taskRequest?.type || null) &&
+        (!frozen.taskRequest || (m.source?.taskRequest?.targetId || null) === (frozen.taskRequest.targetId || null)) &&
         m.content &&
         (!m.source?.chapterId || allowed.has(m.source.chapterId)) &&
         !(frozen.scope !== 'book' && m.source?.scope === 'book'),

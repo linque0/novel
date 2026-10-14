@@ -160,7 +160,7 @@ await test(
 await test(
   'backup contains AI state, explicit vectors and excludes credentials',
   `
-  const {exportBackupJson}=await import('/src/db/repo.js');const backup=JSON.parse(await exportBackupJson());return ['aisum','aikb','aikbmeta','airuns','aidecisions','aistyle','aikbvec'].every(t=>Array.isArray(backup.data[t]))&&!backup.data.appconfig.some(r=>r.key==='ai.credential')&&backup.data.aikbvec.every(r=>Array.isArray(r.vec));
+  const {exportBackupJson}=await import('/src/db/repo.js');const backup=JSON.parse(await exportBackupJson());return ['aisum','aikb','aikbmeta','airuns','aidecisions','aistyle','aikbvec'].every(t=>Array.isArray(backup.data[t]))&&!backup.data.appconfig.some(r=>String(r.key||'').startsWith('ai.cred'))&&backup.data.aikbvec.every(r=>Array.isArray(r.vec));
 `,
 )
 

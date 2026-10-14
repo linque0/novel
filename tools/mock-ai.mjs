@@ -1,15 +1,20 @@
 #!/usr/bin/env node
 /**
- * tools/mock-ai.mjs — 本地 OpenAI 兼容假服务器（node 零依赖，docs/AI助手接入方案.md §七/§八）
+ * tools/mock-ai.mjs — 本地假服务器（OpenAI 兼容 + Anthropic Messages，node 零依赖，docs/AI助手接入方案.md §七/§八）
  *
  * 用途：AI 助手验收与设置区「连接测试」，验收绝不连真实 API。
  * 启动：node tools/mock-ai.mjs [--port 18700]
- * 连接：baseURL 填 http://127.0.0.1:18700/v1，API Key 随意（以 -401/-429/-402 结尾则模拟对应错误）。
+ * 连接：OpenAI 格式填 baseURL=http://127.0.0.1:18700/v1；Anthropic 格式填 http://127.0.0.1:18700
+ *       （API Key 随意：Authorization Bearer 或 x-api-key 均可；以 -401/-429/-402 结尾则模拟对应错误）
  *
  * 行为：
  *   POST /v1/chat/completions（也兼容无 /v1 前缀的 /chat/completions）
  *     stream:true  → SSE：固定脚本按片输出 → usage → data: [DONE]
  *     stream:false → 一次性 chat.completion JSON（同样带 usage）
+ *   POST /v1/messages（Anthropic Messages：system 顶层、tools 为 input_schema 形态）
+ *     stream:true  → SSE：message_start → content_block_* → message_delta → message_stop
+ *     stream:false → 一次性 message JSON（content 块数组）
+ *   两种格式的任务脚本（【任务：××】标记）与 mock_reply 覆盖一致；Anthropic 下 system 取自顶层字段
  *   usage 的 token 数按字符数估算，仅保证字段存在与数量级合理
  *
  * 测试钩子（仅本 mock 识别，勿发给真实服务商）：
@@ -235,6 +240,96 @@ function handleNonStream(res, body, promptTokens) {
   })
 }
 
+/* ---------- Anthropic Messages（/v1/messages） ----------
+ * 请求侧特征：system 顶层字段、messages 无 system 角色、tools 为 { name, input_schema } 形态。
+ * 复用同一套任务脚本：把顶层 system 还原成 messages[0] 供 scriptedReply 识别任务标记。 */
+
+const anthropicView = (body) =>
+  body.system ? { ...body, messages: [{ role: 'system', content: body.system }, ...(body.messages || [])] } : body
+
+/** Anthropic 分支的工具模拟（与 OpenAI 分支同规则：「只读检索」→ search_chapters） */
+function anthropicToolUse(body, view) {
+  if (!body.tools?.length || body.tool_choice?.type === 'none') return null
+  const q = (view.messages || []).filter((m) => m.role === 'user').at(-1)?.content
+  if (/只读检索/.test(typeof q === 'string' ? q : JSON.stringify(q ?? '')))
+    return { id: 'toolu-mock-1', name: 'search_chapters', input: { query: '林昭', limit: 2 } }
+  return null
+}
+
+const anthropicErrorPayload = (message, type = 'invalid_request_error') => ({ type: 'error', error: { type, message } })
+
+function handleAnthropicStream(res, body, promptTokens) {
+  const model = body.model || 'mock-model'
+  const view = anthropicView(body)
+  const toolUse = anthropicToolUse(body, view)
+  const reply = toolUse ? '' : replyFor(view)
+  const outputTokens = estimateTokens(reply) + (toolUse ? estimateTokens(JSON.stringify(toolUse.input)) : 0)
+  const stop = toolUse ? 'tool_use' : 'end_turn'
+
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache',
+    Connection: 'keep-alive'
+  })
+
+  const ev = (o) => 'event: ' + o.type + '\ndata: ' + JSON.stringify(o) + '\n\n'
+  const frames = [
+    ev({
+      type: 'message_start',
+      message: { id: 'msg-mock-' + Date.now().toString(36), type: 'message', role: 'assistant', model, content: [], usage: { input_tokens: promptTokens, output_tokens: 1 } }
+    })
+  ]
+  if (toolUse) {
+    frames.push(ev({ type: 'content_block_start', index: 0, content_block: { type: 'tool_use', id: toolUse.id, name: toolUse.name, input: {} } }))
+    const args = JSON.stringify(toolUse.input)
+    const half = Math.floor(args.length / 2)
+    frames.push(ev({ type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: args.slice(0, half) } }))
+    frames.push(ev({ type: 'content_block_delta', index: 0, delta: { type: 'input_json_delta', partial_json: args.slice(half) } }))
+    frames.push(ev({ type: 'content_block_stop', index: 0 }))
+  } else {
+    frames.push(ev({ type: 'content_block_start', index: 0, content_block: { type: 'text', text: '' } }))
+    for (const piece of splitChunks(reply, CHUNK_CHARS))
+      frames.push(ev({ type: 'content_block_delta', index: 0, delta: { type: 'text_delta', text: piece } }))
+    frames.push(ev({ type: 'content_block_stop', index: 0 }))
+  }
+  frames.push(ev({ type: 'message_delta', delta: { stop_reason: stop, stop_sequence: null }, usage: { output_tokens: outputTokens } }))
+  frames.push(ev({ type: 'message_stop' }))
+
+  let i = 0
+  const timer = setInterval(() => {
+    if (res.destroyed) {
+      clearInterval(timer)
+      return
+    }
+    if (i < frames.length) res.write(frames[i++])
+    else {
+      clearInterval(timer)
+      res.end()
+    }
+  }, CHUNK_DELAY)
+  res.on('close', () => clearInterval(timer))
+}
+
+function handleAnthropicNonStream(res, body, promptTokens) {
+  const view = anthropicView(body)
+  const toolUse = anthropicToolUse(body, view)
+  const reply = toolUse ? '' : replyFor(view)
+  const content = toolUse
+    ? [{ type: 'tool_use', id: toolUse.id, name: toolUse.name, input: toolUse.input }]
+    : [{ type: 'text', text: reply }]
+  const outputTokens = estimateTokens(reply) + (toolUse ? estimateTokens(JSON.stringify(toolUse.input)) : 0)
+  sendJson(res, 200, {
+    id: 'msg-mock-' + Date.now().toString(36),
+    type: 'message',
+    role: 'assistant',
+    model: body.model || 'mock-model',
+    content,
+    stop_reason: toolUse ? 'tool_use' : 'end_turn',
+    stop_sequence: null,
+    usage: { input_tokens: promptTokens, output_tokens: outputTokens }
+  })
+}
+
 function log(req, u, body, status, key) {
   const t = new Date().toISOString().slice(11, 19)
   console.log(`[mock-ai] ${t} ${req.method} ${u.pathname} stream=${body.stream ? 1 : 0} model=${body.model || '-'} key=${key ? key.slice(0, 10) + '…' : '(无)'} → ${status}`)
@@ -242,10 +337,10 @@ function log(req, u, body, status, key) {
 
 const requests = []
 const server = http.createServer(async (req, res) => {
-  // CORS：dev 渲染层（http://127.0.0.1:5173）与 app://local 直连需要
+  // CORS：dev 渲染层（http://127.0.0.1:5173）与 app://local 直连需要；x-api-key/anthropic-version 供 Anthropic 格式
   res.setHeader('Access-Control-Allow-Origin', '*')
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
-  res.setHeader('Access-Control-Allow-Headers', 'authorization, content-type')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'authorization, content-type, x-api-key, anthropic-version')
   if (req.method === 'OPTIONS') {
     res.writeHead(204)
     res.end()
@@ -257,8 +352,9 @@ const server = http.createServer(async (req, res) => {
   if (u.pathname === '/__reset') { requests.length = 0; sendJson(res, 200, {ok:true}); return }
   const isEmbedding = req.method === 'POST' && u.pathname.endsWith('/embeddings')
   const isChat = req.method === 'POST' && u.pathname.replace(/\/+$/, '').endsWith('/chat/completions')
-  if (!isChat && !isEmbedding) {
-    sendJson(res, 404, errorPayload(`未知路径 ${req.method} ${u.pathname}；本 mock 仅支持 POST /v1/chat/completions`, 'invalid_request_error'))
+  const isAnthropic = req.method === 'POST' && u.pathname.replace(/\/+$/, '').endsWith('/v1/messages')
+  if (!isChat && !isEmbedding && !isAnthropic) {
+    sendJson(res, 404, errorPayload(`未知路径 ${req.method} ${u.pathname}；本 mock 支持 POST /v1/chat/completions（OpenAI 兼容）与 /v1/messages（Anthropic Messages）`, 'invalid_request_error'))
     return
   }
 
@@ -300,8 +396,8 @@ const server = http.createServer(async (req, res) => {
     sendJson(res,200,{data:body.input.map((text,index)=>({index,embedding:[1,text.length%11,(text.charCodeAt(0)||0)%7,0.5]})),usage:{prompt_tokens:body.input.join('').length,total_tokens:body.input.join('').length}})
     return
   }
-  // 错误模拟：按 API Key 后缀返回对应 HTTP 错误，供错误分类验收
-  const key = String(req.headers['authorization'] || '').replace(/^Bearer\s*/i, '').trim()
+  // 错误模拟：按 API Key 后缀返回对应 HTTP 错误，供错误分类验收（Anthropic 走 x-api-key，错误体按其格式返回）
+  const key = String(req.headers['x-api-key'] || req.headers['authorization'] || '').replace(/^Bearer\s*/i, '').trim()
   const failBySuffix = {
     '-401': [401, 'Incorrect API key provided. （mock 模拟鉴权失败）', 'invalid_request_error'],
     '-429': [429, 'Rate limit reached for requests. （mock 模拟限流）', 'rate_limit_exceeded'],
@@ -310,16 +406,22 @@ const server = http.createServer(async (req, res) => {
   for (const [suffix, [status, msg, type]] of Object.entries(failBySuffix)) {
     if (key.endsWith(suffix)) {
       log(req, u, body, status, key)
-      sendJson(res, status, errorPayload(msg, type))
+      sendJson(res, status, isAnthropic ? anthropicErrorPayload(msg, type) : errorPayload(msg, type))
       return
     }
   }
 
-  const promptTokens = (body.messages || []).reduce(
-    (s, m) => s + estimateTokens(typeof m?.content === 'string' ? m.content : JSON.stringify(m?.content ?? '')),
-    0
-  )
+  const promptTokens =
+    (body.messages || []).reduce(
+      (s, m) => s + estimateTokens(typeof m?.content === 'string' ? m.content : JSON.stringify(m?.content ?? '')),
+      0
+    ) + (body.system ? estimateTokens(body.system) : 0)
   log(req, u, body, 200, key)
+  if (isAnthropic) {
+    if (body.stream && !body.mock_nonstream && !req.headers['x-mock-nonstream']) handleAnthropicStream(res, body, promptTokens)
+    else handleAnthropicNonStream(res, body, promptTokens)
+    return
+  }
   if (body.stream && !body.mock_nonstream && !req.headers['x-mock-nonstream']) handleStream(res, body, promptTokens)
   else handleNonStream(res, body, promptTokens)
 })

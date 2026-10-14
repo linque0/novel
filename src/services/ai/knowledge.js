@@ -55,14 +55,18 @@ export async function knowledgeSnapshot(work, asOfChapterId = null) {
     const m = byChapter.get(ch.id)
     return m?.status === 'success' && m.version === EXTRACTION_VERSION && m.sourceHash === chapterHash(ch) && m.orderIdx === i && m.dependenciesHash === memoryDependencyHash(work,ch.id,decisions)
   }).map((ch) => ch.id))
-  let cards = rows.filter((r) => !r.deletedAt && r.kind !== 'arc' && valid.has(r.chapterId) && idx.get(r.chapterId) <= cut && r.verified)
+  let cards = rows.filter((r) => !r.deletedAt && r.kind !== 'arc' && r.assertionStatus === 'confirmed' &&
+    (r.taskMemory ? chs.some(ch=>ch.id===r.chapterId && chapterHash(ch)===r.sourceHash) && (r.sourceVersions || []).every(v=>{
+      const row=v.table==='works'?work.work:work[v.table]?.find(x=>x.id===v.id&&!x.deletedAt)
+      return row && (v.table==='chapters'?chapterHash(row):rowHash(row))===v.hash
+    }) : valid.has(r.chapterId)) && idx.get(r.chapterId) <= cut && r.verified)
   const ignored = new Set(decisions.filter((d) => d.action === 'ignore').map((d) => d.key))
   cards = cards.filter((r) => !ignored.has('card:' + r.id) && !ignored.has(r.decisionKey) && !(r.kind === 'entity' && ignored.has('entity:' + r.body.name))).map((r) => ({ ...r, orderIdx: idx.get(r.chapterId) }))
   const setIds = new Set(cards.filter((c) => c.kind === 'foreshadow' && c.body.action === 'set').map((c) => c.body.foreshadowId))
   cards = cards.filter((c) => c.kind !== 'foreshadow' || c.body.action === 'set' || setIds.has(c.body.foreshadowId))
   const allIds = new Set(cards.map((c) => c.id))
   // Only complete aggregates whose entire source set fits the historical cutoff may be recalled.
-  cards.push(...rows.filter((r) => r.kind === 'arc' && !r.deletedAt && r.sourceLayout === sourceLayout(work) && r.dependencies?.every((id) => allIds.has(id)) && r.sourceChapters?.every((id) => valid.has(id) && idx.get(id) <= cut)))
+  cards.push(...rows.filter((r) => r.kind === 'arc' && r.assertionStatus === 'confirmed' && !r.deletedAt && r.sourceLayout === sourceLayout(work) && r.dependencies?.every((id) => allIds.has(id)) && r.sourceChapters?.every((id) => valid.has(id) && idx.get(id) <= cut)))
   const stale = chs.filter((ch) => !valid.has(ch.id) && byChapter.has(ch.id))
   return { cards, rows, metas, sourceMetas:allMetas.filter((m)=>m.docId), decisions, chapters: chs, valid, stale, missing: chs.filter((ch) => !byChapter.has(ch.id)), index: idx }
 }

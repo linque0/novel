@@ -1,0 +1,29 @@
+{
+  "page": "0:3",
+  "items": [
+    {
+      "name": "T:Beditor:t-top-chap",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\t-top-chap.png"
+    },
+    {
+      "name": "T:Beditor:ds-saved",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-saved.png"
+    },
+    {
+      "name": "T:Beditor:t-ed-title-b",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\t-ed-title-b.png"
+    },
+    {
+      "name": "T:Beditor:t-p1b",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\t-p1b.png"
+    },
+    {
+      "name": "T:Beditor:t-p2b",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\t-p2b.png"
+    },
+    {
+      "name": "T:Beditor:t-words",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\t-words.png"
+    }
+  ]
+}

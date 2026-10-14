@@ -1,10 +1,13 @@
 /**
- * services/ai/provider.js — OpenAI 兼容调用层（docs/AI助手接入方案.md §三/§七）
+ * services/ai/provider.js — 模型调用层（docs/AI助手接入方案.md §三/§七）
  *
  * 设计要点：
  * - 仅用 fetch + ReadableStream 实现 SSE 流式解析，零新依赖
- * - POST {baseURL}/chat/completions，stream:true；baseURL 形如 https://api.deepseek.com/v1
- *   （末尾斜杠可有可无；DeepSeek/智谱 GLM/OpenAI/Ollama 本地等一套协议全覆盖）
+ * - 双 API 格式（opts.apiFormat，见供应商预设的「API 格式」下拉）：
+ *     'openai'（默认）    POST {baseURL}/chat/completions，stream:true；baseURL 形如 https://api.deepseek.com/v1
+ *                          （末尾斜杠可有可无；DeepSeek/智谱 GLM/OpenAI/Ollama 本地等一套协议全覆盖）
+ *     'anthropic'         POST {baseURL}/v1/messages（Anthropic Messages）；进入本文件 Anthropic 适配区，
+ *                          请求/响应与 OpenAI 形态互转后归一输出，上层（dialogue 工具循环）无感
  * - 错误统一抛 AiProviderError，code 见 AI_ERROR_CODES：
  *     not-configured（未配置）/ network（网络失败，含超时）/ auth（鉴权失败 401/403）
  *     rate-limit（限流 429）/ insufficient-balance（余额不足 402）/ api（其他服务商错误）
@@ -77,6 +80,191 @@ function buildUrl(baseURL) {
   return s.endsWith("/chat/completions") ? s : s + "/chat/completions";
 }
 
+/* ================= Anthropic Messages 适配（apiFormat: 'anthropic'） =================
+ * 把 OpenAI 形态的调用（messages 含 system/tool 消息、tools、toolChoice）与 Anthropic
+ * Messages API 互转；SSE 事件解析后归一为 OpenAI 形态输出
+ * （{ text, toolCalls:[{id,type:'function',function:{name,arguments}}], usage, finishReason }），
+ * dialogue.js 的工具循环与 usage 统计无需感知格式差异。
+ */
+
+const ANTHROPIC_VERSION = "2023-06-01";
+const ANTHROPIC_DEFAULT_MAX_TOKENS = 4096; // Messages API 的 max_tokens 必填
+const ANTHROPIC_STOP_REASON = {
+  end_turn: "stop",
+  stop_sequence: "stop",
+  refusal: "stop",
+  pause_turn: "stop",
+  max_tokens: "length",
+  tool_use: "tool_calls",
+};
+
+/** 拼 {baseURL}/v1/messages：容忍末尾斜杠 / 已带 /v1 / 已带 /v1/messages 三种写法 */
+function buildAnthropicUrl(baseURL) {
+  const s = String(baseURL || "")
+    .trim()
+    .replace(/\/+$/, "");
+  if (!s)
+    throw new AiProviderError(
+      AI_ERROR_CODES.NOT_CONFIGURED,
+      "恍然梦未配置：请先在设置中填写 API 地址（baseURL）",
+    );
+  if (!isHttpUrl(s))
+    throw new AiProviderError(
+      AI_ERROR_CODES.NOT_CONFIGURED,
+      `恍然梦未配置：API 地址无效（仅支持 http/https）——${s}`,
+    );
+  if (s.endsWith("/v1/messages")) return s;
+  if (s.endsWith("/v1")) return s + "/messages";
+  return s + "/v1/messages";
+}
+
+/** OpenAI 形态 messages → Anthropic：system 上提合并；tool 消息转 tool_result；assistant tool_calls 转 tool_use */
+function toAnthropicMessages(messages = []) {
+  const systems = [];
+  const out = [];
+  for (const m of messages) {
+    const role = m?.role;
+    const content = m?.content;
+    if (role === "system") {
+      if (typeof content === "string" && content) systems.push(content);
+      continue;
+    }
+    if (role === "tool") {
+      /* Anthropic 要求 tool_result 位于 user 消息内且紧跟对应 tool_use；连续工具结果合并进同一 user turn */
+      const block = {
+        type: "tool_result",
+        tool_use_id: String(m.tool_call_id || ""),
+        content:
+          typeof content === "string" ? content : JSON.stringify(content ?? ""),
+      };
+      const last = out[out.length - 1];
+      if (
+        last &&
+        last.role === "user" &&
+        Array.isArray(last.content) &&
+        last.content.every((b) => b.type === "tool_result")
+      )
+        last.content.push(block);
+      else out.push({ role: "user", content: [block] });
+      continue;
+    }
+    if (role === "assistant") {
+      const blocks = [];
+      if (typeof content === "string" && content)
+        blocks.push({ type: "text", text: content });
+      for (const call of m.tool_calls || []) {
+        let input = {};
+        try {
+          const parsed = JSON.parse(call?.function?.arguments || "{}");
+          if (parsed && typeof parsed === "object") input = parsed;
+        } catch {
+          /* 参数不完整时以空对象占位，保持消息结构可发送 */
+        }
+        blocks.push({
+          type: "tool_use",
+          id: String(call?.id || ""),
+          name: String(call?.function?.name || ""),
+          input,
+        });
+      }
+      if (!blocks.length) blocks.push({ type: "text", text: "" });
+      out.push({ role: "assistant", content: blocks });
+      continue;
+    }
+    out.push({
+      role: "user",
+      content:
+        typeof content === "string"
+          ? content
+          : Array.isArray(content)
+            ? content
+            : String(content ?? ""),
+    });
+  }
+  return { system: systems.join("\n\n"), messages: out };
+}
+
+function toAnthropicTools(tools = []) {
+  return tools.map((t) => {
+    const f = t?.function || {};
+    return {
+      name: String(f.name || ""),
+      ...(f.description ? { description: String(f.description) } : {}),
+      input_schema:
+        f.parameters && typeof f.parameters === "object"
+          ? f.parameters
+          : { type: "object", properties: {} },
+    };
+  });
+}
+
+/** 'none' → null（调用方省略 tools）；'auto' → 默认不传；指定函数 → {type:'tool'} */
+function toAnthropicToolChoice(toolChoice) {
+  if (toolChoice === "none") return null;
+  if (toolChoice === "required" || toolChoice === "any") return { type: "any" };
+  if (
+    toolChoice &&
+    typeof toolChoice === "object" &&
+    toolChoice.function?.name
+  )
+    return { type: "tool", name: String(toolChoice.function.name) };
+  return { type: "auto" };
+}
+
+function buildAnthropicBody(opts) {
+  const { model, messages, temperature, maxTokens } = opts;
+  const { system, messages: msgs } = toAnthropicMessages(messages);
+  const body = {
+    model,
+    messages: msgs,
+    max_tokens:
+      Number(maxTokens) > 0
+        ? Math.round(Number(maxTokens))
+        : ANTHROPIC_DEFAULT_MAX_TOKENS,
+    stream: opts.stream !== false,
+  };
+  if (system) body.system = system;
+  if (temperature != null) body.temperature = temperature;
+  if (opts.top_p != null) body.top_p = opts.top_p;
+  const choice = toAnthropicToolChoice(opts.toolChoice);
+  if (opts.tools?.length && choice) {
+    body.tools = toAnthropicTools(opts.tools);
+    if (choice.type !== "auto") body.tool_choice = choice;
+  }
+  return body;
+}
+
+/** 外部 signal 与空闲超时合并为一个中止控制器（毫秒超时：未建立连接 / 相邻数据块静默超时） */
+function createIdleGuard(timeout, signal) {
+  const ctrl = new AbortController();
+  const onOuterAbort = () => ctrl.abort(signal.reason);
+  let timedOut = false;
+  let idleTimer = null;
+  if (signal) {
+    if (signal.aborted) ctrl.abort(signal.reason);
+    else signal.addEventListener("abort", onOuterAbort, { once: true });
+  }
+  return {
+    signal: ctrl.signal,
+    get timedOut() {
+      return timedOut;
+    },
+    arm() {
+      clearTimeout(idleTimer);
+      if (timeout > 0) {
+        idleTimer = setTimeout(() => {
+          timedOut = true;
+          ctrl.abort(new Error("ai-idle-timeout"));
+        }, timeout);
+      }
+    },
+    cleanup() {
+      clearTimeout(idleTimer);
+      if (signal) signal.removeEventListener("abort", onOuterAbort);
+    },
+  };
+}
+
 function normalizeUsage(u) {
   if (!u || typeof u !== "object") return null;
   const prompt = Number(u.prompt_tokens) || 0;
@@ -142,6 +330,8 @@ function throwFailure(status, serverMsg, detail) {
 /* ---- 核心调用 ---- */
 
 async function chatStreamOnce(opts, onDelta) {
+  if (opts?.apiFormat === "anthropic")
+    return anthropicChatStreamOnce(opts, onDelta);
   const {
     baseURL,
     apiKey = "",
@@ -401,10 +591,298 @@ async function chatStreamOnce(opts, onDelta) {
 }
 
 /**
- * 流式对话：POST {baseURL}/chat/completions（stream:true）。
- * @param {object} opts { baseURL, apiKey, model, messages, temperature?, timeout?=60000, signal?, includeUsage?=true, extraHeaders? }
+ * Anthropic Messages 流式调用（apiFormat:'anthropic'）：ANTHROPIC_STOP_REASON / toAnthropic* 见上方适配区。
+ * 输出与 OpenAI 分支完全一致：{ text, toolCalls, usage, finishReason }。
+ */
+async function anthropicChatStreamOnce(opts, onDelta) {
+  const {
+    baseURL,
+    apiKey = "",
+    model,
+    messages,
+    timeout = 60000,
+    signal = null,
+    extraHeaders = {},
+  } = opts || {};
+
+  if (!model)
+    throw new AiProviderError(
+      AI_ERROR_CODES.NOT_CONFIGURED,
+      "恍然梦未配置：请先在设置中选择模型",
+    );
+  if (!Array.isArray(messages) || !messages.length) {
+    throw new AiProviderError(
+      AI_ERROR_CODES.NOT_CONFIGURED,
+      "AI 调用缺少 messages 消息数组",
+    );
+  }
+
+  const url = buildAnthropicUrl(baseURL);
+  const headers = {
+    "Content-Type": "application/json",
+    "anthropic-version": ANTHROPIC_VERSION,
+    ...extraHeaders,
+  };
+  if (apiKey) headers["x-api-key"] = apiKey;
+  const body = buildAnthropicBody(opts);
+  const guard = createIdleGuard(timeout, signal);
+  const toToolCalls = (blocks) =>
+    (blocks || [])
+      .filter((b) => b?.type === "tool_use")
+      .map((b) => ({
+        id: String(b.id || ""),
+        type: "function",
+        function: {
+          name: String(b.name || ""),
+          arguments: JSON.stringify(b.input ?? {}),
+        },
+      }));
+
+  try {
+    let res;
+    try {
+      guard.arm();
+      res = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: guard.signal,
+      });
+    } catch (err) {
+      if (guard.timedOut)
+        throw new AiProviderError(
+          AI_ERROR_CODES.NETWORK,
+          `连接超时：${timeout}ms 内未收到响应`,
+        );
+      if (signal?.aborted) throw err; // 调用方主动取消，原样上抛
+      throw new AiProviderError(
+        AI_ERROR_CODES.NETWORK,
+        `网络请求失败：无法连接 ${hostOf(url)}`,
+        { detail: String(err?.message || err) },
+      );
+    }
+
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      throwFailure(res.status, extractServerMessage(text), text);
+    }
+
+    const ctype = (res.headers.get("content-type") || "").toLowerCase();
+
+    // 个别服务无视 stream:true 直接回整段 JSON —— 解析 content 块数组为一次性增量
+    if (!res.body || ctype.includes("application/json")) {
+      const text = await res.text().catch(() => "");
+      let obj = null;
+      try {
+        obj = JSON.parse(text);
+      } catch {
+        /* ignore */
+      }
+      if (!obj)
+        throw new AiProviderError(
+          AI_ERROR_CODES.API,
+          "服务商返回了无法解析的空响应",
+          { detail: text.slice(0, 300) },
+        );
+      if (obj.type === "error" || obj.error)
+        throwFailure(null, obj.error?.message || "", text);
+      const blocks = Array.isArray(obj.content) ? obj.content : [];
+      const reply = blocks
+        .filter((b) => b?.type === "text")
+        .map((b) => b.text || "")
+        .join("");
+      const toolCalls = toToolCalls(blocks);
+      if (!reply && !toolCalls.length) {
+        throw new AiProviderError(
+          AI_ERROR_CODES.API,
+          `服务商响应格式异常（content-type: ${ctype || "未知"}）`,
+          { detail: text.slice(0, 300) },
+        );
+      }
+      if (reply) onDelta?.(reply);
+      toolCalls.forEach((call) => opts.onToolDelta?.(call));
+      const u = obj.usage || {};
+      const input = Number(u.input_tokens) || 0;
+      const output = Number(u.output_tokens) || 0;
+      return {
+        text: reply,
+        toolCalls,
+        usage:
+          input || output
+            ? normalizeUsage({
+                prompt_tokens: input,
+                completion_tokens: output,
+                total_tokens: input + output,
+              })
+            : null,
+        finishReason:
+          ANTHROPIC_STOP_REASON[obj.stop_reason] ||
+          (obj.stop_reason ? "stop" : null),
+      };
+    }
+
+    // SSE 流式解析：data: 行为 JSON，按事件 type 分发
+    const decoder = new TextDecoder("utf-8");
+    const reader = res.body.getReader();
+    let buf = "";
+    let text = "";
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let finishReason = null;
+    let sawStop = false;
+    const calls = new Map(); // content block index → { call, initial, gotDelta }
+
+    const handleLine = (line) => {
+      if (!line || line.startsWith(":")) return false;
+      if (!line.startsWith("data:")) return false;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") return false;
+      let obj;
+      try {
+        obj = JSON.parse(payload);
+      } catch {
+        return false; // 容忍残缺分片
+      }
+      const type = obj?.type;
+      if (type === "error") {
+        throwFailure(
+          null,
+          obj?.error?.message || "",
+          JSON.stringify(obj.error || obj).slice(0, 500),
+        );
+      }
+      if (type === "message_start") {
+        inputTokens = Number(obj?.message?.usage?.input_tokens) || inputTokens;
+        return false;
+      }
+      if (type === "content_block_start") {
+        const block = obj?.content_block;
+        if (block?.type === "tool_use") {
+          const entry = {
+            call: {
+              id: String(block.id || ""),
+              type: "function",
+              function: { name: String(block.name || ""), arguments: "" },
+            },
+            initial: block.input,
+            gotDelta: false,
+          };
+          calls.set(obj.index ?? 0, entry);
+          opts.onToolDelta?.(entry.call);
+        }
+        return false;
+      }
+      if (type === "content_block_delta") {
+        const delta = obj?.delta || {};
+        if (delta.type === "text_delta" && typeof delta.text === "string") {
+          text += delta.text;
+          onDelta?.(delta.text);
+        } else if (
+          delta.type === "input_json_delta" &&
+          typeof delta.partial_json === "string"
+        ) {
+          const entry = calls.get(obj.index ?? 0);
+          if (entry) {
+            entry.call.function.arguments += delta.partial_json;
+            entry.gotDelta = true;
+            opts.onToolDelta?.(entry.call);
+          }
+        } else if (
+          delta.type === "thinking_delta" &&
+          typeof delta.thinking === "string"
+        ) {
+          opts.onReasoningDelta?.(delta.thinking);
+        }
+        return false;
+      }
+      if (type === "content_block_stop") {
+        /* 少数服务商在 start 事件里直接给完整 input 且不发增量 —— 此处兜底 */
+        const entry = calls.get(obj.index ?? 0);
+        if (
+          entry &&
+          !entry.gotDelta &&
+          entry.initial &&
+          typeof entry.initial === "object" &&
+          Object.keys(entry.initial).length
+        ) {
+          entry.call.function.arguments = JSON.stringify(entry.initial);
+          entry.gotDelta = true;
+        }
+        return false;
+      }
+      if (type === "message_delta") {
+        outputTokens = Number(obj?.usage?.output_tokens) || outputTokens;
+        if (obj?.delta?.stop_reason)
+          finishReason =
+            ANTHROPIC_STOP_REASON[obj.delta.stop_reason] || "stop";
+        return false;
+      }
+      if (type === "message_stop") return true;
+      return false;
+    };
+
+    try {
+      while (!sawStop) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        guard.arm();
+        buf += decoder.decode(value, { stream: true });
+        let idx;
+        while ((idx = buf.indexOf("\n")) >= 0) {
+          const line = buf.slice(0, idx).replace(/\r$/, "");
+          buf = buf.slice(idx + 1);
+          if (handleLine(line)) {
+            sawStop = true;
+            break;
+          }
+        }
+      }
+      if (!sawStop && buf.trim()) handleLine(buf.trim()); // 冲刷无换行收尾的残包
+    } catch (err) {
+      if (err instanceof AiProviderError) throw err;
+      try {
+        await reader.cancel();
+      } catch {
+        /* ignore */
+      }
+      if (guard.timedOut)
+        throw new AiProviderError(
+          AI_ERROR_CODES.NETWORK,
+          `响应超时：${timeout}ms 内未收到新数据块`,
+        );
+      if (signal?.aborted) throw err;
+      throw new AiProviderError(
+        AI_ERROR_CODES.NETWORK,
+        `流式响应中断：${String(err?.message || err)}`,
+        { detail: String(err) },
+      );
+    }
+
+    return {
+      text,
+      toolCalls: [...calls.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([, v]) => v.call),
+      usage:
+        inputTokens || outputTokens
+          ? normalizeUsage({
+              prompt_tokens: inputTokens,
+              completion_tokens: outputTokens,
+              total_tokens: inputTokens + outputTokens,
+            })
+          : null,
+      finishReason,
+    };
+  } finally {
+    guard.cleanup();
+  }
+}
+
+/**
+ * 流式对话：apiFormat='openai'（默认）POST {baseURL}/chat/completions；'anthropic' POST {baseURL}/v1/messages。
+ * @param {object} opts { baseURL, apiKey, apiFormat?='openai', model, messages, temperature?, maxTokens?, timeout?=60000, signal?, includeUsage?=true, extraHeaders?, tools?, toolChoice? }
  * @param {(delta: string) => void} [onDelta] 文本增量回调（可能一次收到整段——服务商无视流式时）
- * @returns {Promise<{text: string, usage: {prompt_tokens, completion_tokens, total_tokens}|null, finishReason: string|null}>}
+ * @returns {Promise<{text: string, toolCalls: Array, usage: {prompt_tokens, completion_tokens, total_tokens}|null, finishReason: string|null}>}
  */
 export async function chatStream(opts, onDelta) {
   try {
@@ -444,6 +922,11 @@ export async function testConnection(opts) {
  * @returns {Promise<string[]>} 模型 id 列表（去重、排序）；失败抛 AiProviderError
  */
 export async function embed(opts = {}) {
+  if (opts.apiFormat === "anthropic")
+    throw new AiProviderError(
+      AI_ERROR_CODES.API,
+      "当前供应商为 Anthropic Messages 格式，该协议不提供向量（embeddings）接口：请改用 OpenAI 兼容格式，或切换到其他供应商",
+    );
   const { baseURL, apiKey = "", model, texts, signal, timeout = 60000 } = opts;
   if (!model || !Array.isArray(texts) || !texts.length)
     throw new AiProviderError(
@@ -494,6 +977,11 @@ export async function embed(opts = {}) {
 }
 
 export async function listModels(opts = {}) {
+  if (opts.apiFormat === "anthropic")
+    throw new AiProviderError(
+      AI_ERROR_CODES.API,
+      "Anthropic Messages 格式不提供模型列表接口（/models）：请手动添加模型名",
+    );
   const {
     baseURL,
     apiKey = "",

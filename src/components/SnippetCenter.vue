@@ -1,4 +1,5 @@
 <script setup>
+import TaskLauncher from './ai/TaskLauncher.vue'
 import { computed, ref } from 'vue'
 import { NButton, NInput, NPopconfirm, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -41,6 +42,7 @@ function toLore() {
 </script>
 
 <template>
+  <TaskLauncher module="snippets" />
   <div v-if="s" style="flex: 1; display: flex; flex-direction: column; padding: 22px 34px; min-height: 0">
     <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center">
       <span style="font-size: 12px; color: var(--text-dim)">灵感记录 · 自动保存</span>

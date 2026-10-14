@@ -8,6 +8,8 @@ import {
   resolveEvidence,
   namesOf,
 } from "./contracts";
+import { taskProfile, assertTaskTool } from './task-profiles.js';
+import { TASK_OUTPUT_TOOLS, taskEvidence, workflowProposal } from './task-proposals.js';
 
 const functionTool = (name, description, properties, required = []) => ({
   type: "function",
@@ -29,7 +31,7 @@ const text = { type: "string" },
     limit: { ...number, maximum: 50 },
     cursor: number,
   };
-export function dialogueTools() {
+export function dialogueTools(task = null) {
   const schemas = {
     search_book:{...queryProps,sourceType:text},
     read_document:{docId:text,cursor:number},
@@ -51,27 +53,23 @@ export function dialogueTools() {
     },
     locate_evidence: { sourceType: text, sourceId: text, quote: text },
   };
-  return [
-    ...Object.entries(TOOL_REGISTRY).map(([name, t]) =>
+  const readonly = [
+    ...Object.entries(TOOL_REGISTRY).filter(([name]) => !task || !taskProfile(task.type).extraction || !['get_outline_subtree','search_kb','get_foreshadows','get_char_timeline','get_entity_state','list_recent_chapters'].includes(name)).map(([name, t]) =>
       functionTool(name, t.description, schemas[name]),
     ),
-    functionTool(
-      "submit_draft",
-      "提交完整正文草稿，不能写入作品。讨论和说明不要放入 text。",
-      { text, title: text, summary: text },
-      ["text"],
-    ),
-    functionTool(
-      "submit_proposal",
-      '提交折叠建议。type=outline时 data={name,idea,nodes:[{title,points,purpose,edge:"cause|foreshadow|conflict|"}]}；character时 data={fields,bio,aliases,relations:[{name,label,basis}]}；lore时 data={mode:"add|expand",tree:{text,children:[]},revised,note}。可带 evidence:[{sourceType,sourceId,quote}]，证据必须可定位。新增人物或设定单列 originalProposals，不随关系自动创建。',
-      {
-        type: { type: "string", enum: ["outline", "character", "lore"] },
-        targetId: text,
-        data: { type: "object", additionalProperties: true },
-      },
-      ["type", "targetId", "data"],
-    ),
   ];
+  if (!task) return readonly;
+  const output = taskProfile(task.type).outputTool;
+  const descriptions = {
+    submit_chapter:'提交目标章正文草稿：text正文、title标题、summary说明、evidence来源摘引、warnings冲突与缺口、review对大纲/设定/人物/因果的核查。仅生成待确认草稿。',
+    submit_outline_plan:'提交未来大纲：nodes:[{title,points,chapterId?,children:[],evidence:[]}], evidence:[],warnings:[],review。仅生成待确认计划。',
+    submit_written_outline:'从指定正文反推已写内容纲：nodes:[{title,points,chapterId,children:[],evidence:[{sourceType:"chapter",sourceId,quote,start?}]}], evidence:[],warnings:[],review。父节点可归并成卷纲，叶节点必须关联章节并附原文依据。',
+    submit_lore:'提交设定：entries:[{id?（仅修订选定条目）,text,evidence:[]}],evidence:[],warnings:[],review。原创可无证据；提取必须逐项提供原文证据。',
+    submit_characters:'人物与关系联合提案：characters:[{key:临时ID,id?（已有人物ID）,name,fields:{字段:字符串},aliases:[],bio,evidence:[]}],relations:[{id?（修改已有关系）,from:人物ID或临时ID,to:人物ID或临时ID,label,chapterId?,knownBy,evidence:[]}],states:[{character:人物ID或临时ID,chapterId,dimension:"伤势|能力|情感|立场|关系",change,evidence:[]}],evidence:[],warnings:[],review。状态须来自正文。设计人物不能提交状态；阶段状态任务仅提交 states。不得把共现视为关系。',
+    submit_inspiration:'灵感卡：items:[{title,content,knownFacts:已知事实,newIdea:新创意,evidence:[],links:[{type:"character|lore|outline",id}]}],evidence:[],warnings:[],review。作者可选是否保存关联。',
+    submit_memory:'章节记忆：summary摘要,facts:[{kind:"event|charstate|foreshadow",title,body:{...},characterId?（人物状态）,evidence:[]}],evidence:[],warnings:[],review。charstate body={dimension:"伤势|能力|情感|立场|关系",change}; foreshadow body={action:"set",content}。全部证据须来自目标章。',
+  };
+  return [...readonly, functionTool(output,descriptions[output],output==='submit_chapter'?{text,title:text,summary:text,evidence:{type:'array',items:{type:'object'}},warnings:{type:'array',items:text},review:text}:{data:{type:'object',additionalProperties:true}},output==='submit_chapter'?['text']:['data'])];
 }
 export function makeDraft(
   text,
@@ -84,6 +82,7 @@ export function makeDraft(
     id: crypto.randomUUID(),
     kind: "draft",
     task: "plot",
+    taskType: frozen.taskRequest?.type || null,
     text,
     opening: text,
     title,
@@ -244,7 +243,8 @@ export async function runDialogue({
   runId,
   messageId,
 }) {
-  const schemas = compiled.tools ? dialogueTools() : [],
+  const task = frozen.taskRequest;
+  const schemas = compiled.tools ? dialogueTools(task) : [],
     cache = new Map(),
     groups = [],
     cards = [],
@@ -272,9 +272,12 @@ export async function runDialogue({
     tools = [];
     onNotice?.("完整请求预算不足以包含工具，使用普通对话；可将回复转为草稿");
   }
-  for (let round = 0; round < 6; round++) {
+  if (task && !tools.length) throw new Error('专用任务需要工具调用，请提高上下文预算或换用支持工具的模型');
+  const readProgress = new Map();
+  const roundLimit = task ? 24 : 6;
+  for (let round = 0; round < roundLimit; round++) {
     checkAbort(opts.signal);
-    const finalRound = round === 5;
+    const finalRound = round === roundLimit - 1;
     const toolReserve = tools.length ? toolCost : 0;
     const fitted = fitBlocks([...base, ...groups.flat()], {
       ...compiled.opts,
@@ -327,6 +330,7 @@ export async function runDialogue({
         [400, 422].includes(e.status) &&
         /tool|function/i.test(String(e.message) + String(e.detail))
       ) {
+        if (task) throw new Error('当前模型拒绝专用任务工具，未生成可应用结果：' + e.message);
         tools = [];
         onNotice?.(
           "当前服务商不支持工具，使用普通对话；可选择回复转为正文草稿",
@@ -358,7 +362,7 @@ export async function runDialogue({
     );
     if (result.finishReason === "length") {
       for (const call of result.toolCalls || [])
-        if (call.function?.name === "submit_draft") {
+        if (task?.type.startsWith('chapter.') && call.function?.name === 'submit_chapter') {
           try {
             const args = JSON.parse(call.function.arguments);
             const card = makeDraft(args.text, frozen, {
@@ -392,13 +396,19 @@ export async function runDialogue({
       try {
         const args = JSON.parse(call.function.arguments || "{}"),
           name = call.function.name;
-        if (name === "submit_draft") {
+        if (!schemas.some(s => s.function.name === name)) throw new Error('工具未在本任务授权范围内');
+        assertTaskTool(task,name,TASK_OUTPUT_TOOLS);
+        if (task && name === taskProfile(task.type).outputTool && taskProfile(task.type).extraction && task.chapterIds.some(id=>readProgress.get(id)?.complete!==true)) throw new Error('尚未顺序读完全部任务章节，请继续分页读取');
+        if (name === "submit_chapter") {
           const draft = makeDraft(args.text, frozen, {
             runId,
             messageId,
             title: args.title,
             summary: args.summary,
           });
+          draft.evidence = taskEvidence(args.evidence,work,frozen);
+          draft.warnings = Array.isArray(args.warnings)?args.warnings.map(String):[];
+          draft.review = String(args.review || '未提供语义核查，请作者检查。');
           cards.push(draft);
           onCard?.(draft);
           response = {
@@ -406,9 +416,10 @@ export async function runDialogue({
             draftId: draft.id,
             status: "等待作者确认，尚未保存",
           };
-        } else if (name === "submit_proposal") {
-          const card = proposalFromTool(args, work, frozen, runId);
+        } else if (task && name === taskProfile(task.type).outputTool) {
+          const card = workflowProposal(args.data, work, frozen, runId, messageId);
           cards.push(card);
+          onCard?.(card);
           response = { ok: true, proposalId: card.id, status: "待作者确认" };
         } else {
           const key = JSON.stringify([name, args]);
@@ -418,9 +429,16 @@ export async function runDialogue({
               work,
               privacy: opts.privacy,
               asOfChapterId: frozen.asOfChapterId,
+              allowedIds: frozen.allowedIds,
+              authorProfiles: !!task?.type.startsWith('chapter.'),
+              planScope: task && taskProfile(task.type).extraction ? 'none' : 'all',
               sourceRevision: frozen.bookRevision,
               signal:opts.signal,
             });
+            if (['read_chapter','read_document'].includes(name) && response.sourceType==='chapter' && response.citation && !response.error && !response.withheld) {
+              const progress=readProgress.get(response.sourceId)||{end:0,complete:false};
+              if(response.citation.start===progress.end){progress.end=response.citation.end;progress.complete=response.nextCursor===null;readProgress.set(response.sourceId,progress);}
+            }
             cache.set(key, response);
             for (const version of [...(response.items || []), response].flatMap((item)=>item.sourceVersions || []))
               if (!frozen.sourceVersions.some((v)=>v.table===version.table&&v.id===version.id)) frozen.sourceVersions.push(version);
@@ -465,6 +483,7 @@ export async function runDialogue({
       });
     }
     groups.push(group);
+    if (task && cards.length) { result={...result,finishReason:'stop'}; break; }
     // Evict entire old tool turns, keeping call/result pairs intact.
     const cap =
       Math.min(
@@ -490,6 +509,7 @@ export async function runDialogue({
   }
   checkAbort(opts.signal);
   const complete = result?.finishReason === "stop";
+  if (task && !cards.length && complete) throw new Error('模型没有提交本任务的结构化提案；可重新生成，普通回复尚未写回');
   // Length-limited final answers must never produce applicable partial cards.
   if (!complete)
     cards.forEach((c) => {

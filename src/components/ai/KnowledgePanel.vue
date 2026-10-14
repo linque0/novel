@@ -121,11 +121,18 @@ onMounted(() => ai.refreshKnowledge())
       <summary>伏笔登记表</summary>
       <pre v-for="h in ai.kb.hooks" :key="h.id || h.hookId">{{ h }}</pre>
     </details>
+    <p>AI 提取的摘要与事实先待确认；确认且来源有效后才参与后续检索。旧缓存也需核对。</p>
+    <details v-for="s in ai.kb.summaries || []" :key="s.id">
+      <summary>章节摘要 · {{ work.chapters.find(c=>c.id===s.entityId)?.title || s.entityId }} · {{ s.assertionStatus==='confirmed'?'已确认':'待确认' }}</summary>
+      <pre>{{ s.summary }}</pre>
+      <NButton size="tiny" :disabled="s.assertionStatus==='confirmed'" @click="run(()=>ai.confirmMemory('aisum',s.id))">确认摘要</NButton>
+    </details>
     <details v-for="card in ai.kb.rows" :key="card.id">
-      <summary>{{ card.kind }} · {{ card.title || card.body?.name || card.chapterId }}</summary>
+      <summary>{{ card.kind }} · {{ card.title || card.body?.name || card.chapterId }} · {{ card.assertionStatus==='authorRecord'?'作者资料':card.assertionStatus==='confirmed'?'已确认':'待确认' }}</summary>
       <pre>{{ card.body }}</pre>
       <EvidenceList :evidence="card.evidence || []" />
       <div class="actions">
+        <NButton v-if="card.assertionStatus!=='authorRecord'" size="tiny" :disabled="card.assertionStatus==='confirmed'" @click="run(()=>ai.confirmMemory('aikb',card.id))">确认事实</NButton>
         <NButton size="tiny" @click="edit(card)">纠错</NButton
         ><NButton v-if="card.kind === 'entity'" size="tiny" @click="merge(card)">确认归并</NButton
         ><NButton size="tiny" @click="run(() => ai.decideKnowledge(card.decisionKey || 'card:' + card.id, 'ignore'))">忽略</NButton>

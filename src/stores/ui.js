@@ -29,6 +29,7 @@ export const useUiStore = defineStore('ui', {
     fontSize: 17,
     sideWidth: 252, // 侧栏宽度（180–480，右缘拖拽调节，appconfig 记忆）
     focusMode: false,
+    readMode: false, // 正文阅读模式（巨排章号 + 限宽只读列；session 级，开书复位）
     dbError: false,
     loreFocusId: null,
     mubuSelectedId: null,

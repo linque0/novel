@@ -1,0 +1,189 @@
+{
+  "page": "0:3",
+  "items": [
+    {
+      "name": "T:SETai:st-title",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-title.png"
+    },
+    {
+      "name": "T:SETai:st-sub",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-sub.png"
+    },
+    {
+      "name": "T:SETai:st-nav-ico-meng",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ico-meng.png"
+    },
+    {
+      "name": "T:SETai:st-nav-ico-wai",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ico-wai.png"
+    },
+    {
+      "name": "T:SETai:st-nav-ico-shu",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ico-shu.png"
+    },
+    {
+      "name": "T:SETai:st-nav-ico-guan",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ico-guan.png"
+    },
+    {
+      "name": "T:SETai:st-nav-app",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-app.png"
+    },
+    {
+      "name": "T:SETai:st-nav-ai",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ai.png"
+    },
+    {
+      "name": "T:SETai:st-nav-data",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-data.png"
+    },
+    {
+      "name": "T:SETai:st-nav-about",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-about.png"
+    },
+    {
+      "name": "T:SETai:st-nav-desc-app",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-desc-app.png"
+    },
+    {
+      "name": "T:SETai:st-nav-desc-ai",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-desc-ai.png"
+    },
+    {
+      "name": "T:SETai:st-nav-desc-data",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-desc-data.png"
+    },
+    {
+      "name": "T:SETai:st-nav-desc-about",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-desc-about.png"
+    },
+    {
+      "name": "T:SETai:st-h-ai",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-h-ai.png"
+    },
+    {
+      "name": "T:SETai:st-desc-ai",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-desc-ai.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-provider",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-provider.png"
+    },
+    {
+      "name": "T:SETai:st-ai-sel-provider",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-sel-provider.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-url",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-url.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-key",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-key.png"
+    },
+    {
+      "name": "T:SETai:st-ai-key-ph",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-key-ph.png"
+    },
+    {
+      "name": "T:SETai:st-ai-btn-savekey",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-btn-savekey.png"
+    },
+    {
+      "name": "T:SETai:st-ai-key-tag",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-key-tag.png"
+    },
+    {
+      "name": "T:SETai:st-ai-key-clear",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-key-clear.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-models",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-models.png"
+    },
+    {
+      "name": "T:SETai:st-ai-btn-fetch",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-btn-fetch.png"
+    },
+    {
+      "name": "T:SETai:st-ai-btn-add",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-btn-add.png"
+    },
+    {
+      "name": "T:SETai:st-ai-tag-using",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-tag-using.png"
+    },
+    {
+      "name": "T:SETai:st-ai-tag-only",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-tag-only.png"
+    },
+    {
+      "name": "T:SETai:st-ai-tip",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-tip.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-temp",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-temp.png"
+    },
+    {
+      "name": "T:SETai:st-ai-hint-temp",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-hint-temp.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-ctx",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-ctx.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-privacy",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-privacy.png"
+    },
+    {
+      "name": "T:SETai:st-ai-hint-privacy",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-hint-privacy.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-cap",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-cap.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-kb",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-kb.png"
+    },
+    {
+      "name": "T:SETai:st-ai-hint-kb",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-hint-kb.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-emb",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-emb.png"
+    },
+    {
+      "name": "T:SETai:st-ai-hint-emb",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-hint-emb.png"
+    },
+    {
+      "name": "T:SETai:st-ai-lb-vec",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-lb-vec.png"
+    },
+    {
+      "name": "T:SETai:st-ai-emb-ph",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-emb-ph.png"
+    },
+    {
+      "name": "T:SETai:st-ai-btn-save",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-btn-save.png"
+    },
+    {
+      "name": "T:SETai:st-ai-btn-test",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-btn-test.png"
+    },
+    {
+      "name": "T:SETai:st-ai-ready",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-ready.png"
+    },
+    {
+      "name": "T:SETai:st-ai-note",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-ai-note.png"
+    }
+  ]
+}

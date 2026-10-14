@@ -13,7 +13,7 @@ export async function buildBookMemory(workId,{signal,onProgress}={}) {
   for(const doc of docs) {
     checkAbort(signal)
     const chunks=projection.chunks.filter((c)=>c.docId===doc.id)
-    const cards=chunks.map((c)=>({id:'source:'+c.id,workId,docId:doc.id,kind:doc.semanticClass==='plan'?'planBeat':doc.semanticClass==='inspiration'?'inspiration':doc.semanticClass==='comment'?'comment':doc.sourceType==='character'?'characterProfile':doc.sourceType==='relation'?'relation':'authorSetting',
+    const cards=chunks.map((c)=>({id:'source:'+c.id,workId,docId:doc.id,kind:doc.semanticClass==='summary'?'writtenOutline':doc.semanticClass==='plan'?'planBeat':doc.semanticClass==='inspiration'?'inspiration':doc.semanticClass==='comment'?'comment':doc.sourceType==='character'?'characterProfile':doc.sourceType==='relation'?'relation':'authorSetting',
       schemaVersion:1,semanticClass:doc.semanticClass,assertionStatus:'authorRecord',title:doc.title,
       body:{text:c.text,sourceType:doc.sourceType,temporalStatus:doc.meta.temporalStatus||'author-record'},
       refType:doc.sourceType,refId:doc.sourceId,sourceHash:doc.sourceHash,contextHash:doc.contextHash,dependencies:doc.deps,

@@ -1,16 +1,16 @@
-import { projectBook, sourceManifest, orderedChapters } from '../project/normalize.js'
+import { projectBook, sourceManifest, orderedChapters, PROJECTION_VERSION } from '../project/normalize.js'
 import { projectGraph } from '../project/graph.js'
-import { tokens, checkAbort, sourceChanged } from '../project/text.js'
+import { tokens, checkAbort, sourceChanged, chapterHash } from '../project/text.js'
 import { getChapterSummary } from './summarize.js'
 import { readProjection } from '../../db/project-repo.js'
 
 const sessions = new WeakMap()
-export function createBookAccess(work, { asOfChapterId = null, allowedIds, privacy = false, planScope = 'all', sourceRevision, signal } = {}) {
+export function createBookAccess(work, { asOfChapterId = null, allowedIds, privacy = false, authorProfiles = false, planScope = 'all', sourceRevision, signal } = {}) {
   const chapters = orderedChapters(work), index = chapters.findIndex((c) => c.id === asOfChapterId)
   if (asOfChapterId && index < 0) throw new Error('截至章节不存在')
   const allowed = chapters.slice(0, asOfChapterId ? index + 1 : chapters.length).map((c) => c.id)
   return { workId: work.work.id, asOfChapterId, allowedIds: allowedIds ? allowed.filter((id) => allowedIds.includes(id)) : allowed,
-    privacy: !!privacy, planScope, sourceRevision: sourceRevision || sourceManifest(work).hash, signal }
+    privacy: !!privacy, authorProfiles:!!authorProfiles && !privacy, planScope, sourceRevision: sourceRevision || sourceManifest(work).hash, signal }
 }
 export function bookSession(work, access = {}, projection = null) {
   checkAbort(access.signal)
@@ -18,13 +18,18 @@ export function bookSession(work, access = {}, projection = null) {
   if (access.workId && access.workId !== work.work.id) throw new Error('不能读取其他作品')
   const policy = createBookAccess(work,access), manifest = sourceManifest(work)
   if (manifest.hash !== policy.sourceRevision) throw sourceChanged()
-  const key = JSON.stringify([manifest.hash,policy.asOfChapterId,policy.allowedIds,policy.privacy,policy.planScope])
+  const key = JSON.stringify([manifest.hash,policy.asOfChapterId,policy.allowedIds,policy.privacy,policy.authorProfiles,policy.planScope])
   let cache = sessions.get(work)
   if (!cache) { cache = new Map(); sessions.set(work,cache) }
   if (cache.has(key)) return cache.get(key)
-  const model = projection || projectBook(work), graph = projection || projectGraph(work,model.docs), allowed = new Set(policy.allowedIds)
+  const model = projection || projectBook(work), graph = projection || projectGraph(work,model.docs), allowed = new Set(policy.allowedIds), chapters = orderedChapters(work)
   const documents = model.docs.filter((d) => {
     if (d.sourceType === 'chapter' || d.sourceType === 'annotation') return allowed.has(d.meta.chapterId)
+    if (d.sourceType === 'relation' && policy.asOfChapterId) {
+      const relation=work.relations.find(r=>r.id===d.sourceId)
+      if(relation?.effectiveChapterId && !allowed.has(relation.effectiveChapterId))return false
+    }
+    if (d.semanticClass === 'summary') return (d.meta.sourceChapterVersions || []).length>0 && d.meta.sourceChapterVersions.every(v=>allowed.has(v.id)&&chapters.some(ch=>ch.id===v.id&&chapterHash(ch)===v.hash))
     if (d.semanticClass === 'plan' && policy.planScope === 'none') return false
     if (d.semanticClass === 'plan' && policy.planScope === 'current' && d.meta.chapterId) return allowed.has(d.meta.chapterId)
     return true
@@ -42,15 +47,16 @@ export function documentView(doc, session) {
   const base = { docId: doc.id, sourceType: doc.sourceType, sourceId: doc.sourceId, sourceHash: doc.sourceHash, textHash: doc.textHash,
     title: doc.title, headingPath: doc.headingPath, semanticClass: doc.semanticClass, temporalStatus: doc.meta.temporalStatus || (doc.semanticClass === 'fact' ? 'chapter' : 'author-record'), sourceVersions: doc.deps }
   if (session.access.privacy) return { ...base, text: session.summaries?.get(doc.sourceId) || '', withheld: !session.summaries?.has(doc.sourceId), summaryOnly:true }
-  if (session.access.asOfChapterId && ['character','relation'].includes(doc.sourceType)) {
+  if (session.access.asOfChapterId && !session.access.authorProfiles && ['character','relation'].includes(doc.sourceType)) {
     return { ...base, text: doc.sourceType === 'character' ? doc.title : '', withheld: true, temporalStatus: 'unknown', warning: '当前作者档案未标记历史生效范围；历史状态须查正文证据' }
   }
+  if(session.access.authorProfiles && ['character','relation'].includes(doc.sourceType))return {...base,text:doc.plainText,temporalStatus:'author-profile',warning:'作者人物设定是创作约束；未标明阶段的资料不能推断为当前已发生事实，阶段状态以正文证据为准'}
   return { ...base, text: doc.plainText }
 }
 export async function readBook(work, access = {}) {
   checkAbort(access.signal)
   const stored=await readProjection(work.work.id)
-  const session = bookSession(work,access,stored?.index.sourceRevision===sourceManifest(work).hash&&stored.index.status==='ready'?stored:null)
+  const session = bookSession(work,access,stored?.index.projectionVersion===PROJECTION_VERSION&&stored.index.sourceRevision===sourceManifest(work).hash&&stored.index.status==='ready'?stored:null)
   if (session.access.privacy && !session.summaries) {
     const summaries = new Map()
     for (const ch of orderedChapters(work).filter((c) => session.access.allowedIds.includes(c.id))) {

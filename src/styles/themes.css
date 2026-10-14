@@ -859,6 +859,93 @@ body,
 .rich-host .tiptap p {
   margin: 0 0 0.35em;
 }
+
+/* ============ 正文阅读模式（v1.0.26）：巨排章号 + 限宽只读列 + 目录边条 ============ */
+
+.editor-wrap {
+  position: relative;
+}
+/* 阅读限宽列：头部与正文共用一列（头部随正文滚动，书页感）；非阅读态该 div 不承担样式 */
+.read-mode .ed-read-col {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.read-mode .rich-host .rich-inner .tiptap {
+  padding: 4px 12px 38vh;
+}
+.ed-read-head {
+  padding: 34px 12px 6px;
+  user-select: none;
+}
+.ed-read-no {
+  font-family: var(--g-disp), var(--editor-font);
+  font-size: 88px;
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
+}
+.ed-read-title {
+  margin: 12px 0 10px;
+  font-family: var(--editor-font);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.45;
+  color: var(--text);
+}
+.ed-read-rule {
+  width: 80px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--accent);
+  margin-bottom: 26px;
+}
+/* 末尾装饰点（纯 CSS 伪元素，不进入文档） */
+.read-mode .rich-host .rich-inner .tiptap::after {
+  content: '· · ·';
+  display: block;
+  margin: 30px 0 0;
+  font-size: 0.8em;
+  letter-spacing: 0.5em;
+  color: var(--text-faint);
+  pointer-events: none;
+  user-select: none;
+}
+/* 目录细边条：点击滑出章节抽屉 */
+.ed-read-edge {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 28px;
+  padding: 0;
+  border: none;
+  border-right: 1px solid var(--border);
+  background: color-mix(in srgb, var(--bg-panel) 60%, transparent);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 3;
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.ed-read-edge:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+/* 底右字数 */
+.ed-read-count {
+  position: absolute;
+  right: 26px;
+  bottom: 14px;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  pointer-events: none;
+  user-select: none;
+  z-index: 2;
+}
 .rich-host .tiptap h1,
 .rich-host .tiptap h2,
 .rich-host .tiptap h3 {

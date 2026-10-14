@@ -7,7 +7,7 @@ import { stateAt } from './state.js'
 import { sourceManifest } from '../project/normalize.js'
 
 const paged = (items, args) => paginate(items, { cursor: args.cursor, limit: args.limit, maxTokens: 1600 })
-const book = (env) => readBook(env.bookWork || env.work, { asOfChapterId:env.asOfChapterId, privacy:env.privacy, signal:env.signal, sourceRevision:env.sourceRevision })
+const book = (env) => readBook(env.bookWork || env.work, { asOfChapterId:env.asOfChapterId, allowedIds:env.allowedIds, authorProfiles:env.authorProfiles, planScope:env.planScope, privacy:env.privacy, signal:env.signal, sourceRevision:env.sourceRevision })
 export const TOOL_REGISTRY = {
   search_book: {
     args:'{query,sourceType?,cursor?,limit?}', description:'检索正文、设定、大纲计划、人物、灵感与批注；返回语义性质与段落来源',
@@ -63,10 +63,11 @@ export const TOOL_REGISTRY = {
           id: c.id,
           name: c.name,
           aliases: c.aliases,
-          fields: env.asOfChapterId ? {} : c.fields,
-          ...(env.privacy || env.asOfChapterId ? {} : { bio: (c.content || '').slice(0, 800) }),
-          relations: env.asOfChapterId ? [] : env.work.relations.filter((r) => r.fromId === c.id || r.toId === c.id),
-          temporalStatus:'unknown',
+          fields: env.privacy || (env.asOfChapterId && !env.authorProfiles) ? {} : c.fields,
+          ...(env.privacy || (env.asOfChapterId && !env.authorProfiles) ? {} : { bio: (c.content || '').slice(0, 800) }),
+          relations: env.privacy || (env.asOfChapterId && !env.authorProfiles) ? [] : env.work.relations.filter((r) => !r.deletedAt && (r.fromId === c.id || r.toId === c.id) && (!r.effectiveChapterId || !env.allowedIds || env.allowedIds.includes(r.effectiveChapterId))),
+          temporalStatus:env.authorProfiles?'author-profile':'unknown',
+          note:'作者人物设定是约束，不等同章节事实；阶段状态须有正文证据。',
         })),
         args,
       )
@@ -76,7 +77,7 @@ export const TOOL_REGISTRY = {
     args: '{title?,nodeId?,cursor?}',
     description: '大纲计划子树，不代表已发生事实',
     async execute(args, env) {
-      return treeTool(env.work.olnodes, args, 'plan', env.privacy)
+      return treeTool(env.work.olnodes.filter(n=>n.outlineNature!=='written'), args, 'plan', env.privacy)
     },
   },
   get_lore_subtree: {
@@ -174,6 +175,7 @@ export async function executeTool(name, args, env) {
   if (!args || typeof args !== 'object' || Array.isArray(args)) return { error: '工具参数必须为对象' }
   let scoped = env
   let safeArgs = { ...args }
+  if (env.planScope === 'none' && name === 'get_outline_subtree') return {error:'当前正文提取任务不能读取未来计划'}
   if (env.asOfChapterId) {
     const chapters = ordered(env.work),
       cutoff = chapters.findIndex((ch) => ch.id === env.asOfChapterId)
@@ -182,6 +184,11 @@ export async function executeTool(name, args, env) {
     if (args.asOfChapterId && !allowed.has(args.asOfChapterId)) return { error: '不能读取截至位置之后的事实' }
     scoped = { ...env, bookWork: env.work, work: { ...env.work, chapters: env.work.chapters.filter((ch) => allowed.has(ch.id)) } }
     safeArgs.asOfChapterId = args.asOfChapterId || env.asOfChapterId
+  }
+  if (env.allowedIds) {
+    if (args.asOfChapterId && !env.allowedIds.includes(args.asOfChapterId)) return {error:'截至章节超出任务范围'}
+    scoped = {...scoped,bookWork:env.work,work:{...scoped.work,chapters:scoped.work.chapters.filter(ch=>env.allowedIds.includes(ch.id))}}
+    if (name==='locate_evidence' && args.sourceType==='chapter' && !env.allowedIds.includes(args.sourceId)) return {error:'证据越过任务范围'}
   }
   if (safeArgs.query && String(safeArgs.query).length > 500) return { error: '查询超长' }
   return {

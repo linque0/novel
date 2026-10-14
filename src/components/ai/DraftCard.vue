@@ -2,28 +2,45 @@
 import { computed, ref } from 'vue'
 import { NButton, NInput, NSelect } from 'naive-ui'
 import { useWorkStore } from '../../stores/work'
+import { useAiStore } from '../../stores/ai'
+import { taskApplyActions } from '../../services/ai/task-profiles.js'
+import EvidenceList from './EvidenceList.vue'
 const props = defineProps({ card: { type: Object, required: true } }),
   work = useWorkStore(),
+  ai = useAiStore(),
   error = ref(''),
   title = ref(props.card.title || '新章节'),
   volumeId = ref(work.chapters.find((c) => c.id === props.card.anchorId)?.volumeId || work.liveVolumes[0]?.id || 'orphans'),
   afterId = ref(props.card.anchorId || ''),
   mode = ref('append'),
-  confirm = ref(false)
+  confirm = ref(false),
+  busy = ref(false)
 const applied = computed(() => props.card.status === 'applied'),
-  canApply = computed(() => props.card.complete && !applied.value)
+  canApply = computed(() => props.card.complete && !applied.value && props.card.status!=='rejected' && !busy.value && !ai.busy)
+const allowed = action => !props.card.taskType || taskApplyActions(props.card.taskType,props.card.original).includes(action)
 const target = computed(() => work.chapters.find((c) => c.id === props.card.anchorId && !c.deletedAt))
 async function apply() {
   error.value = ''
+  busy.value = true
   try {
     await work.applyAiProposal(props.card, { action: mode.value, title: title.value, volumeId: volumeId.value, afterId: afterId.value })
     confirm.value = false
     window.$msg?.success('草稿已保存，可撤销')
+    if (props.card.taskType) await extractMemory()
   } catch (e) {
     error.value = e.message
+  } finally {
+    busy.value = false
   }
 }
+async function extractMemory() {
+  const id=props.card.anchorId
+  if(!id || ai.busy)return
+  const ok=await ai.send('从刚保存的章节提取摘要、事件、人物状态和伏笔，生成待确认记忆提案。',{taskRequest:{type:'memory.extract',workId:work.work.id,chapterId:id,chapterIds:[id]}})
+  if(!ok)error.value='正文已保存；记忆提取未完成，可重试。'+(ai.error?.message||'')
+}
 async function undo() {
+  busy.value = true
   try {
     await work.undoAiApplication(props.card.auditId)
     props.card.status = 'undone'
@@ -31,6 +48,8 @@ async function undo() {
     props.card.auditId = null
   } catch (e) {
     error.value = e.message
+  } finally {
+    busy.value = false
   }
 }
 async function copyText() {
@@ -58,12 +77,16 @@ function open(action) {
       <summary>展开正文</summary>
       <pre>{{ card.text }}</pre>
     </details>
+    <EvidenceList :evidence="card.evidence || []" />
+    <p v-for="(w,i) in card.warnings || []" :key="i">{{ w }}</p>
+    <details v-if="card.review"><summary>核查说明</summary><pre>{{ card.review }}</pre></details>
     <div class="actions">
-      <NButton size="tiny" :disabled="!canApply || !target" @click="open('append')">追加到章节</NButton
-      ><NButton size="tiny" :disabled="!canApply || !card.original" @click="open('replace')">替换选段</NButton
-      ><NButton size="tiny" :disabled="!canApply" @click="open('newchapter')">保存为新章节</NButton
+      <NButton v-if="allowed('append')" size="tiny" :disabled="!canApply || !target" @click="open('append')">追加到章节</NButton
+      ><NButton v-if="allowed('replace')" size="tiny" :disabled="!canApply || !card.original" @click="open('replace')">替换选段</NButton
+      ><NButton v-if="allowed('newchapter')" size="tiny" :disabled="!canApply" @click="open('newchapter')">保存为新章节</NButton
       ><NButton size="tiny" @click="copyText">复制</NButton
-      ><NButton v-if="card.auditId && applied" size="tiny" @click="undo">撤销应用</NButton>
+      ><NButton v-if="card.auditId && applied" size="tiny" :disabled="busy||ai.busy" @click="undo">撤销应用</NButton>
+      <NButton v-if="card.taskType && applied" size="tiny" :disabled="busy||ai.busy" @click="extractMemory">重新提取章节记忆</NButton>
     </div>
     <div v-if="confirm" class="confirm">
       <template v-if="mode === 'newchapter'"
@@ -81,9 +104,9 @@ function open(action) {
         ><p>{{ mode === 'append' ? '将追加到生成时关联章节末尾：' : '将替换生成时选段：' }}{{ card.anchorLabel }}</p>
         <pre v-if="mode === 'replace'">{{ card.original }}</pre>
         <p>保留原有其他内容。版本变化、其他窗口锁定或选段跨越双链／批注时停止应用。</p></template
-      >
+      ><p v-if="card.taskType">保存后会提取章节记忆，记忆仍需另行确认。</p>
       <div class="actions">
-        <NButton type="primary" size="small" @click="apply">确认保存</NButton><NButton size="small" @click="confirm = false">取消</NButton>
+        <NButton type="primary" size="small" :loading="busy" :disabled="!canApply" @click="apply">确认保存</NButton><NButton size="small" :disabled="busy" @click="confirm = false">取消</NButton>
       </div>
     </div>
     <p v-if="error" class="error" role="alert">{{ error }}</p>

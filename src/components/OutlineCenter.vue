@@ -1,5 +1,6 @@
 <!-- 大纲中心（8.8.2）：文本 / 画布双视图；文本视图为 Word 式富文本编辑（text+html 双字段），右键快捷栏含双链 -->
 <script setup>
+import TaskLauncher from './ai/TaskLauncher.vue'
 import OIcon from './OIcon.vue'
 import { computed, ref, watch, nextTick } from 'vue'
 import { NPopover } from 'naive-ui'
@@ -95,6 +96,7 @@ function onCtx(e) {
 </script>
 
 <template>
+  <TaskLauncher module="outline" />
   <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">大纲</span>
@@ -111,6 +113,7 @@ function onCtx(e) {
     <OutlineCanvas v-if="work.outlineView === 'canvas'" style="flex: 1; min-height: 0" />
 
     <template v-else>
+      <p v-if="cur" style="font-size:12px;color:var(--text-dim)">{{ cur.outlineNature==='written'?'已写内容纲 · 来源变化后需要重新总结':'未来大纲计划' }} · {{ cur.progress==='completed'?'已完成':cur.progress==='drafted'?'已写待确认':'尚未完成' }}</p>
       <div v-if="cur" class="ol-editor-head">
         <input
           v-if="canEditTitle(cur)"

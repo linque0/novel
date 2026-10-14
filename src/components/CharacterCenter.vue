@@ -1,4 +1,5 @@
 <script setup>
+import TaskLauncher from './ai/TaskLauncher.vue'
 import { computed, ref, watch, onMounted } from 'vue'
 import { NButton, NInput, NSelect, NTag } from 'naive-ui'
 import OIcon from './OIcon.vue'
@@ -112,6 +113,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <TaskLauncher module="characters" />
   <!-- 关系图视图：整幅画布（8.8.3）；列表视图：人物详情 -->
   <CharacterGraph v-if="work.charView === 'graph'" />
   <div v-else-if="c" style="flex: 1; overflow: auto; padding: 22px 34px">

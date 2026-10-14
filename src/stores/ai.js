@@ -8,7 +8,9 @@ import {
   AiProviderError,
 } from "../services/ai/provider";
 import { lookupModelMeta } from "../services/ai/modelmeta";
+import { guessProviderName } from "../services/ai/provider-templates";
 import { runDialogue, makeDraft } from "../services/ai/dialogue";
+import { confirmDerived } from '../services/ai/task-application.js';
 import {
   prepareDialogue,
   requestMainPreview,
@@ -57,9 +59,52 @@ const emptyUsage = () => ({
 
 const sessions = new Map();
 let kbAbort = null;
-const emitSettings = () =>
+
+/**
+ * 设置写入的广播时序保护：
+ * - 广播（ai-settings-changed）会回发给发送窗口自身（electron/panels.js app:broadcast），
+ *   接收端以 loadSettings 重读 appconfig；
+ * - 多步写入（如 saveSettings：先写预设再写密钥）若在中间态广播，接收端会读到「写了一半」的库
+ *   并以过期快照覆盖内存。故：写事务期间（withWrite 计数 > 0）抑制广播，事务结束补发一次。
+ */
+let settingsWriteDepth = 0;
+let settingsWriteSeq = 0; // 已完成写事务的序号：loadSettings 读取期间若有写事务结束，则丢弃该次过期快照
+let pendingBroadcast = false;
+const flushBroadcast = () => {
+  if (settingsWriteDepth === 0 && pendingBroadcast) {
+    pendingBroadcast = false;
+    window.native?.appBroadcast?.({ kind: "ai-settings-changed" });
+  }
+};
+const emitSettings = () => {
+  if (settingsWriteDepth > 0) {
+    pendingBroadcast = true;
+    return;
+  }
   window.native?.appBroadcast?.({ kind: "ai-settings-changed" });
+};
+/** 写事务包装（嵌套安全）：事务内所有 emitSettings 合并为结束时的一次广播 */
+const withWrite = async (fn) => {
+  settingsWriteDepth++;
+  try {
+    return await fn();
+  } finally {
+    settingsWriteDepth = Math.max(0, settingsWriteDepth - 1);
+    if (settingsWriteDepth === 0) settingsWriteSeq++;
+    flushBroadcast();
+  }
+};
+/** loadSettings 的本地防御：若本窗口正在写，等写完成后再读（避免读到中间态） */
+async function waitForLocalWrites(timeout = 3000) {
+  const end = Date.now() + timeout;
+  while (settingsWriteDepth > 0 && Date.now() < end)
+    await new Promise((r) => setTimeout(r, 25));
+}
 const APPCFG = {
+  providers: "ai.providers", // 供应商预设数组（多套配置并存；密钥单独存 ai.cred.<id>）
+  activeProviderId: "ai.activeProviderId", // 当前使用中的预设
+  usage: "ai.usage",
+  /* —— 旧单配置键：仅迁移时读取，迁移后删除，不再写入 —— */
   baseURL: "ai.baseURL",
   model: "ai.model",
   models: "ai.models",
@@ -68,9 +113,21 @@ const APPCFG = {
   maxContext: "ai.maxContext",
   privacy: "ai.privacy",
   credential: "ai.credential",
-  usage: "ai.usage",
   options: "ai.options",
 };
+/** 每预设一把 DPAPI 密文的键名（ai.cred.<providerId>；repo 备份按 ai.cred 前缀整体排除） */
+const credKey = (id) => "ai.cred." + id;
+const LEGACY_KEYS = [
+  APPCFG.baseURL,
+  APPCFG.model,
+  APPCFG.models,
+  APPCFG.modelCfg,
+  APPCFG.temperature,
+  APPCFG.maxContext,
+  APPCFG.privacy,
+  APPCFG.credential,
+  APPCFG.options,
+];
 
 const clampTemperature = (v) =>
   Math.min(2, Math.max(0, Number.isFinite(Number(v)) ? Number(v) : 0.7));
@@ -79,6 +136,54 @@ const clampMaxContext = (v) =>
     64000,
     Math.max(1000, Number.isFinite(Number(v)) ? Math.round(Number(v)) : 10000),
   );
+
+/** 预设默认生成/记忆参数（每预设各带一份，随预设切换） */
+const defaultParams = () => ({
+  temperature: 0.7,
+  maxContext: 10000,
+  privacy: false,
+  kb: { auto: false },
+  embeddings: { enabled: false, model: "" },
+});
+const newProviderId = () => "p_" + uid().replace(/-/g, "").slice(0, 12);
+
+/** 装载时补全/规整预设字段（防手编数据与旧版本残留） */
+function normalizeProvider(raw) {
+  if (!raw || typeof raw !== "object" || !raw.id) return null;
+  const params = raw.params || {};
+  return {
+    id: String(raw.id),
+    name: String(raw.name || "未命名供应商"),
+    apiFormat: raw.apiFormat === "anthropic" ? "anthropic" : "openai",
+    baseURL: String(raw.baseURL || ""),
+    enabled: raw.enabled !== false,
+    models: Array.isArray(raw.models)
+      ? raw.models
+          .map((m) =>
+            typeof m === "string"
+              ? { name: m.trim(), enabled: true }
+              : { name: String(m?.name || "").trim(), enabled: m?.enabled !== false },
+          )
+          .filter((m) => m.name)
+      : [],
+    activeModel: String(raw.activeModel || ""),
+    modelCfg:
+      raw.modelCfg && typeof raw.modelCfg === "object" ? raw.modelCfg : {},
+    params: {
+      temperature: clampTemperature(params.temperature),
+      maxContext: clampMaxContext(params.maxContext),
+      privacy: !!params.privacy,
+      kb: { auto: !!params.kb?.auto },
+      embeddings: {
+        enabled: !!params.embeddings?.enabled,
+        model: String(params.embeddings?.model || ""),
+      },
+    },
+  };
+}
+
+const activeOf = (s) =>
+  s.providers.find((p) => p.id === s.activeProviderId) || null;
 
 /** AbortController 为非序列化运行时对象，不进 Pinia state（模块级保存） */
 let chatAbort = null;
@@ -90,7 +195,7 @@ export const useAiStore = defineStore("ai", {
     workId: null,
     runId: null,
     options: {
-      kb: { auto: false, usageCap: 0 },
+      kb: { auto: false },
       embeddings: { enabled: false, model: "" },
     },
     kb: {
@@ -111,17 +216,11 @@ export const useAiStore = defineStore("ai", {
     selectedPresetId: "novel-default",
     pendingPrompt: "",
     pendingRefs: {},
-    /* ---------- 设置（appconfig ai.* 持久化） ---------- */
-    baseURL: "",
-    model: "",
-    models: [], // 已保存模型名列表（ai.models 持久化）；点选其一作为使用中的 model
+    /* ---------- 设置（appconfig ai.* 持久化；多供应商预设） ---------- */
+    providers: [], // 供应商预设数组：{ id, name, apiFormat, baseURL, enabled, models[{name,enabled}], activeModel, modelCfg, params }
+    activeProviderId: "", // 当前使用中的预设 id（点列表项切换；生成参数随之切换）
+    credentials: {}, // { [providerId]: safeStorage 密文(base64) }；明文只存在于调用瞬时内存
     fetchingModels: false, // 拉取服务商模型列表中（设置区按钮 loading）
-    modelCfg: {}, // 每模型专属参数 { [模型名]: { enabled, contextWindow, maxTokens, temperature, note } }（ai.modelcfg 持久化）
-    temperature: 0.7,
-    maxContext: 10000,
-    privacy: false,
-    credential: "", // safeStorage 密文（base64）；明文只存在于调用瞬时内存
-    hasCredential: false, // 设置面板「已配置」标识（不回显明文）
     /* ---------- 对话：idle | assembling | generating ---------- */
     phase: "idle",
     error: null, // { code, message }（能力任务与问答共用的统一提示条）
@@ -134,67 +233,108 @@ export const useAiStore = defineStore("ai", {
   }),
 
   getters: {
-    /** 未配置 baseURL / model / 密钥任一项时为 false——全部 AI 入口据此置灰（方案 §三） */
-    ready: (s) => !!(s.baseURL.trim() && s.model.trim() && s.hasCredential),
+    /** 当前使用中的供应商预设（无预设或 id 失效时 null） */
+    activeProvider: (s) => activeOf(s),
+    /* 以下为旧单配置字段名的投影 getter：组件与服务层按旧名读取，改造后其余代码零改动 */
+    baseURL: (s) => activeOf(s)?.baseURL || "",
+    model: (s) => activeOf(s)?.activeModel || "",
+    /** 使用中预设的模型名数组（旧消费方按名字读取） */
+    models: (s) => (activeOf(s)?.models || []).map((m) => m.name),
+    /** 使用中预设的模型行（含启停位；设置面板渲染用） */
+    modelRows: (s) => activeOf(s)?.models || [],
+    modelCfg: (s) => activeOf(s)?.modelCfg || {},
+    temperature: (s) => activeOf(s)?.params?.temperature ?? 0.7,
+    maxContext: (s) => activeOf(s)?.params?.maxContext ?? 10000,
+    privacy: (s) => !!activeOf(s)?.params?.privacy,
+    /** 使用中预设的生成/记忆参数（kb.auto / embeddings 读取路径与旧 options 一致） */
+    options: (s) => {
+      const p = activeOf(s)?.params;
+      return {
+        kb: p?.kb || { auto: false },
+        embeddings: p?.embeddings || { enabled: false, model: "" },
+      };
+    },
+    credential: (s) => s.credentials[s.activeProviderId] || "",
+    hasCredential: (s) => !!s.credentials[s.activeProviderId],
+    /** 无启用预设 / 地址 / 模型 / 密钥任一项时为 false——全部 AI 入口据此置灰（方案 §三） */
+    ready: (s) => {
+      const p = activeOf(s);
+      return !!(
+        p &&
+        p.enabled &&
+        p.baseURL.trim() &&
+        String(p.activeModel || "").trim() &&
+        s.credentials[p.id]
+      );
+    },
     busy: (s) =>
       s.phase === "assembling" ||
       s.phase === "generating" ||
       s.chatBusy ||
       s.evaluation.running,
-    /** 当前模型且「启用专属参数」打开时的配置；否则 null（完全跟随全局设置） */
+    /** 当前模型且「启用专属参数」打开时的配置；否则 null（完全跟随预设参数） */
     activeModelCfg: (s) => {
-      const cfg = s.modelCfg[s.model];
+      const p = activeOf(s);
+      const cfg = p?.modelCfg?.[p.activeModel];
       return cfg && cfg.enabled ? cfg : null;
     },
-    /** 生效的上下文预算：模型配置了上下文窗口（>0）时与全局预算取更小值 */
+    /** 生效的上下文预算：模型配置了上下文窗口（>0）时与预设预算取更小值 */
     effectiveBudget: (s) => {
-      const cfg = s.modelCfg[s.model];
+      const p = activeOf(s);
+      const budget = p?.params?.maxContext ?? 10000;
+      const cfg = p?.modelCfg?.[p.activeModel];
       const cw = cfg && cfg.enabled ? Number(cfg.contextWindow) : 0;
-      return cw > 0 ? Math.min(s.maxContext, Math.round(cw)) : s.maxContext;
+      return cw > 0 ? Math.min(budget, Math.round(cw)) : budget;
     },
   },
 
   actions: {
-    /* ---------- 设置装载 / 保存 ---------- */
+    /* ---------- 设置装载 / 保存（多供应商预设） ---------- */
+
+    /**
+     * 装载：供应商预设 ai.providers + 当前预设 ai.activeProviderId + 每预设密文 ai.cred.<id>。
+     * 旧单配置（ai.baseURL/model/models/modelcfg/...）在此一次性迁移为「默认供应商」预设并删除旧键；
+     * 导入旧备份后重载会再次触发同一迁移（幂等）。
+     */
     async loadSettings() {
+      /* 本地写事务进行中：等写完成再读（避免读到写了一半的库） */
+      await waitForLocalWrites();
+      const seqBefore = settingsWriteSeq;
       try {
         const rows = await db.appconfig
           .where("key")
           .startsWith("ai.")
           .toArray();
+        /* 读取期间有本地写事务结束：本次快照已过期（可能缺刚写入的密钥/预设），丢弃并交由写入方广播重载 */
+        if (seqBefore !== settingsWriteSeq) {
+          this.loaded = true;
+          return;
+        }
         const map = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-        if (map[APPCFG.options]) {
-          const { roles, ...liveOptions } = map[APPCFG.options];
-          this.options = { ...this.options, ...liveOptions };
+        let providers = Array.isArray(map[APPCFG.providers])
+          ? map[APPCFG.providers].map(normalizeProvider).filter(Boolean)
+          : [];
+        const credentials = {};
+        for (const [k, v] of Object.entries(map)) {
+          if (v && k.startsWith("ai.cred.")) credentials[k.slice(8)] = String(v);
         }
-        if (map[APPCFG.baseURL] != null)
-          this.baseURL = String(map[APPCFG.baseURL]);
-        if (map[APPCFG.model] != null) this.model = String(map[APPCFG.model]);
-        if (Array.isArray(map[APPCFG.models])) {
-          this.models = [
-            ...new Set(
-              map[APPCFG.models]
-                .filter((s) => typeof s === "string" && s.trim())
-                .map((s) => s.trim()),
-            ),
-          ];
+        if (!providers.length) {
+          const migrated = await this.migrateLegacySettings(map);
+          if (migrated) {
+            providers = [migrated.provider];
+            if (migrated.credential)
+              credentials[migrated.provider.id] = migrated.credential;
+          }
+        } else if (LEGACY_KEYS.some((k) => map[k] != null)) {
+          /* 预设已存在而旧键残留（迁移中断 / 旧备份混入）——清理，保持单一数据源 */
+          await db.appconfig.bulkDelete(LEGACY_KEYS).catch(() => {});
         }
-        if (map[APPCFG.modelCfg] && typeof map[APPCFG.modelCfg] === "object") {
-          this.modelCfg = map[APPCFG.modelCfg];
-        }
-        /* 旧用户迁移：列表为空但已有使用中模型 → 播种进列表（下次增删时落库） */
-        if (!this.models.length && this.model) this.models = [this.model];
-        if (map[APPCFG.temperature] != null)
-          this.temperature = clampTemperature(map[APPCFG.temperature]);
-        if (map[APPCFG.maxContext] != null)
-          this.maxContext = clampMaxContext(map[APPCFG.maxContext]);
-        if (map[APPCFG.privacy] != null) this.privacy = !!map[APPCFG.privacy];
-        this.credential = "";
-        this.hasCredential = false;
-        if (map[APPCFG.credential]) {
-          this.credential = String(map[APPCFG.credential]);
-          this.hasCredential = true;
-        }
+        this.providers = providers;
+        this.credentials = credentials;
+        const want = String(map[APPCFG.activeProviderId] || "");
+        this.activeProviderId = providers.some((p) => p.id === want)
+          ? want
+          : providers[0]?.id || "";
         if (map[APPCFG.usage] && typeof map[APPCFG.usage] === "object") {
           this.usage.total = { ...emptyUsage(), ...map[APPCFG.usage] };
         }
@@ -205,106 +345,324 @@ export const useAiStore = defineStore("ai", {
     },
 
     /**
-     * 保存设置（仅传入的键生效）。apiKey 为明文入参：经 safeStorage 加密后落 ai.credential，
-     * 传空串清除；本函数自身不持有明文状态、不把明文写进任何持久层。
+     * 旧单配置 → 多预设（幂等）：合成一个预设并写新键、删旧键。返回 { provider, credential } 或 null。
+     * 密钥密文原样搬运（DPAPI 密文绑定当前用户/机器，无需重加密）。
+     */
+    async migrateLegacySettings(map = {}) {
+      const oldModels = Array.isArray(map[APPCFG.models])
+        ? map[APPCFG.models]
+        : [];
+      const hasLegacy =
+        map[APPCFG.baseURL] != null ||
+        map[APPCFG.model] != null ||
+        oldModels.length > 0 ||
+        map[APPCFG.credential] != null;
+      if (!hasLegacy) return null;
+      const baseURL = String(map[APPCFG.baseURL] || "").trim();
+      const names = [];
+      for (const m of oldModels)
+        if (typeof m === "string" && m.trim() && !names.includes(m.trim()))
+          names.push(m.trim());
+      const activeModel =
+        String(map[APPCFG.model] || "").trim() || names[0] || "";
+      if (activeModel && !names.includes(activeModel)) names.push(activeModel);
+      const provider = normalizeProvider({
+        id: newProviderId(),
+        name: guessProviderName(baseURL) || "默认供应商",
+        apiFormat: "openai",
+        baseURL,
+        models: names.map((name) => ({ name, enabled: true })),
+        activeModel,
+        modelCfg: map[APPCFG.modelCfg],
+        params: {
+          temperature: map[APPCFG.temperature],
+          maxContext: map[APPCFG.maxContext],
+          privacy: map[APPCFG.privacy],
+          kb: { auto: !!map[APPCFG.options]?.kb?.auto },
+          embeddings: {
+            enabled: !!map[APPCFG.options]?.embeddings?.enabled,
+            model: map[APPCFG.options]?.embeddings?.model,
+          },
+        },
+      });
+      const credential = map[APPCFG.credential]
+        ? String(map[APPCFG.credential])
+        : "";
+      await db.appconfig.put({ key: APPCFG.providers, value: [provider] });
+      await db.appconfig.put({
+        key: APPCFG.activeProviderId,
+        value: provider.id,
+      });
+      if (credential)
+        await db.appconfig.put({
+          key: credKey(provider.id),
+          value: credential,
+        });
+      await db.appconfig.bulkDelete(LEGACY_KEYS).catch(() => {});
+      return { provider, credential };
+    },
+
+    /* ---------- 供应商预设 CRUD（即时保存：每次变更整体落库并广播） ---------- */
+
+    async persistProviders() {
+      return withWrite(async () => {
+        await db.appconfig.put({
+          key: APPCFG.providers,
+          value: JSON.parse(JSON.stringify(this.providers)),
+        });
+        await db.appconfig.put({
+          key: APPCFG.activeProviderId,
+          value: this.activeProviderId,
+        });
+        emitSettings();
+      });
+    },
+
+    /** 更新指定预设（浅合并补丁）并落库 */
+    async patchProvider(id, patch = {}) {
+      const idx = this.providers.findIndex((p) => p.id === id);
+      if (idx < 0) return;
+      const list = this.providers.slice();
+      list[idx] = { ...list[idx], ...patch };
+      this.providers = list;
+      await this.persistProviders();
+    },
+
+    /** 新建预设（模板来自 provider-templates 的「添加供应商」菜单）；新预设即设为当前使用 */
+    async addProvider(tpl = {}) {
+      const id = newProviderId();
+      const models = (Array.isArray(tpl.models) ? tpl.models : [])
+        .filter((m) => typeof m === "string" && m.trim())
+        .map((m) => ({ name: m.trim(), enabled: true }));
+      const provider = normalizeProvider({
+        id,
+        name: tpl.name || "新供应商",
+        apiFormat: tpl.apiFormat,
+        baseURL: tpl.baseURL,
+        models,
+        activeModel: models[0]?.name || "",
+        params: defaultParams(),
+      });
+      this.providers = [...this.providers, provider];
+      this.activeProviderId = id;
+      await this.persistProviders();
+      return id;
+    },
+
+    /** 复制预设（不复制密钥：副本通常对应另一把 key，由用户自行填写） */
+    async duplicateProvider(id) {
+      const src = this.providers.find((p) => p.id === id);
+      if (!src) return "";
+      const nid = newProviderId();
+      const row = {
+        ...JSON.parse(JSON.stringify(src)),
+        id: nid,
+        name: `${src.name} 副本`,
+      };
+      this.providers = [...this.providers, row];
+      await this.persistProviders();
+      return nid;
+    },
+
+    /** 删除预设：级联删除该预设密钥；删的是当前预设则切到其他启用预设（无则清空） */
+    async removeProvider(id) {
+      return withWrite(async () => {
+        if (!this.providers.some((p) => p.id === id)) return;
+        this.providers = this.providers.filter((p) => p.id !== id);
+        const next = { ...this.credentials };
+        delete next[id];
+        this.credentials = next;
+        await db.appconfig.delete(credKey(id));
+        if (this.activeProviderId === id) {
+          const alt =
+            this.providers.find((p) => p.enabled) || this.providers[0];
+          this.activeProviderId = alt?.id || "";
+        }
+        await this.persistProviders();
+      });
+    },
+
+    /** 切换当前使用中的预设（生成参数随之切换）；切到隐私模式预设时取消进行中的生成 */
+    async setActiveProvider(id) {
+      const target = this.providers.find((p) => p.id === id);
+      if (!target || id === this.activeProviderId) return;
+      if (target.params?.privacy && !this.privacy) this.cancel();
+      this.activeProviderId = id;
+      await this.persistProviders();
+    },
+
+    /** 供应商总开关（启动 / 停止该预设）：停用的是当前预设时自动切到其他启用预设 */
+    async setProviderEnabled(id, enabled) {
+      return withWrite(async () => {
+        const p = this.providers.find((x) => x.id === id);
+        if (!p || p.enabled === !!enabled) return;
+        await this.patchProvider(id, { enabled: !!enabled });
+        if (!enabled && this.activeProviderId === id) {
+          const alt = this.providers.find((x) => x.enabled && x.id !== id);
+          if (alt) await this.setActiveProvider(alt.id);
+        }
+      });
+    },
+
+    /** 更新当前预设的连接信息（名称 / 地址 / API 格式） */
+    async updateProvider(patch = {}) {
+      const p = this.activeProvider;
+      if (!p) return;
+      const next = {};
+      if ("name" in patch)
+        next.name = String(patch.name || "").trim() || "未命名供应商";
+      if ("baseURL" in patch) next.baseURL = String(patch.baseURL || "").trim();
+      if ("apiFormat" in patch)
+        next.apiFormat =
+          patch.apiFormat === "anthropic" ? "anthropic" : "openai";
+      if (Object.keys(next).length) await this.patchProvider(p.id, next);
+    },
+
+    /** 更新当前预设的生成/记忆参数（温度 / 隐私 / 自动记忆 / 语义检索 / 向量模型） */
+    async updateParams(patch = {}) {
+      const p = this.activeProvider;
+      if (!p) return;
+      if (patch.privacy === true && !this.privacy) this.cancel();
+      const params = { ...p.params };
+      if ("temperature" in patch)
+        params.temperature = clampTemperature(patch.temperature);
+      if ("maxContext" in patch)
+        params.maxContext = clampMaxContext(patch.maxContext);
+      if ("privacy" in patch) params.privacy = !!patch.privacy;
+      if ("kb" in patch) params.kb = { ...params.kb, ...patch.kb };
+      if ("embeddings" in patch)
+        params.embeddings = { ...params.embeddings, ...patch.embeddings };
+      await this.patchProvider(p.id, { params });
+    },
+
+    /** 保存当前预设密钥：明文经 safeStorage 加密落 ai.cred.<id>；本函数不持有明文、不写明文到任何持久层 */
+    async saveProviderKey(plain) {
+      return withWrite(async () => {
+        const p = this.activeProvider;
+        if (!p) throw new Error("请先在模型设置中添加供应商预设");
+        const text = String(plain || "");
+        if (!text) return this.clearProviderKey();
+        const cipher = await window.native?.credentialEncrypt?.(text);
+        if (!cipher)
+          throw new Error(
+            "本机凭据加密不可用（safeStorage），无法保存 API 密钥",
+          );
+        this.credentials = { ...this.credentials, [p.id]: cipher };
+        await db.appconfig.put({ key: credKey(p.id), value: cipher });
+        emitSettings();
+      });
+    },
+
+    async clearProviderKey() {
+      return withWrite(async () => {
+        const p = this.activeProvider;
+        if (!p) return;
+        const next = { ...this.credentials };
+        delete next[p.id];
+        this.credentials = next;
+        await db.appconfig.delete(credKey(p.id));
+        emitSettings();
+      });
+    },
+
+    /**
+     * 兼容入口（旧组件与验收脚本）：把单配置补丁映射到当前预设；无预设时先建「默认供应商」。
+     * apiKey 为明文入参：非空经 safeStorage 加密落 ai.cred.<id>，传空串清除；
+     * 本函数不持有明文状态、不把明文写进任何持久层。
+     * 整体为一次写事务：多键补丁（预设 + 密钥）只广播一次，避免中间态被并发重载覆盖。
      */
     async saveSettings(patch = {}) {
-      if ("options" in patch) {
-        const { roles, ...liveOptions } = patch.options;
-        const next = { ...this.options, ...liveOptions };
-        if (next.kb.auto && !(next.kb.usageCap > 0))
-          throw new Error("启用自动记忆前必须设置每日上限");
-        this.options = next;
-        await db.appconfig.put({
-          key: APPCFG.options,
-          value: JSON.parse(JSON.stringify(next)),
-        });
-      }
-      if (patch.privacy === true && !this.privacy) this.cancel();
-      if ("baseURL" in patch) {
-        this.baseURL = String(patch.baseURL || "").trim();
-        await db.appconfig.put({ key: APPCFG.baseURL, value: this.baseURL });
-      }
-      if ("model" in patch) {
-        this.model = String(patch.model || "").trim();
-        await db.appconfig.put({ key: APPCFG.model, value: this.model });
-      }
-      if ("temperature" in patch) {
-        this.temperature = clampTemperature(patch.temperature);
-        await db.appconfig.put({
-          key: APPCFG.temperature,
-          value: this.temperature,
-        });
-      }
-      if ("maxContext" in patch) {
-        this.maxContext = clampMaxContext(patch.maxContext);
-        await db.appconfig.put({
-          key: APPCFG.maxContext,
-          value: this.maxContext,
-        });
-      }
-      if ("privacy" in patch) {
-        this.privacy = !!patch.privacy;
-        await db.appconfig.put({ key: APPCFG.privacy, value: this.privacy });
-      }
-      if ("apiKey" in patch) {
-        const plain = String(patch.apiKey || "");
-        if (!plain) {
-          this.credential = "";
-          this.hasCredential = false;
-          await db.appconfig.delete(APPCFG.credential);
-        } else {
-          const cipher = await window.native?.credentialEncrypt?.(plain);
-          if (!cipher)
-            throw new Error(
-              "本机凭据加密不可用（safeStorage），无法保存 API 密钥",
-            );
-          this.credential = cipher;
-          this.hasCredential = true;
-          await db.appconfig.put({ key: APPCFG.credential, value: cipher });
+      return withWrite(async () => {
+        if (!this.providers.length)
+          await this.addProvider({ name: "默认供应商" });
+        const p = this.activeProvider;
+        if (!p) return;
+        const provPatch = {};
+        if ("options" in patch) {
+          const { roles, ...live } = patch.options || {};
+          const params = { ...p.params };
+          if (live.kb)
+            params.kb = { ...(p.params?.kb || { auto: false }), ...live.kb };
+          if (live.embeddings)
+            params.embeddings = {
+              ...(p.params?.embeddings || { enabled: false, model: "" }),
+              ...live.embeddings,
+            };
+          provPatch.params = params;
         }
-      }
-      emitSettings();
+        if (patch.privacy === true && !this.privacy) this.cancel();
+        if (
+          "privacy" in patch ||
+          "temperature" in patch ||
+          "maxContext" in patch
+        ) {
+          const params = { ...(provPatch.params || p.params) };
+          if ("privacy" in patch) params.privacy = !!patch.privacy;
+          if ("temperature" in patch)
+            params.temperature = clampTemperature(patch.temperature);
+          if ("maxContext" in patch)
+            params.maxContext = clampMaxContext(patch.maxContext);
+          provPatch.params = params;
+        }
+        if ("baseURL" in patch)
+          provPatch.baseURL = String(patch.baseURL || "").trim();
+        if ("model" in patch)
+          provPatch.activeModel = String(patch.model || "").trim();
+        if (Object.keys(provPatch).length)
+          await this.patchProvider(p.id, provPatch);
+        if ("apiKey" in patch) {
+          const plain = String(patch.apiKey || "");
+          if (plain) await this.saveProviderKey(plain);
+          else await this.clearProviderKey();
+        }
+      });
     },
 
-    /* ---------- 模型列表（拉取 / 手动添加 / 点选使用） ---------- */
+    /* ---------- 模型列表（拉取 / 手动添加 / 启停 / 点选使用；均作用于当前预设） ---------- */
 
-    async persistModels() {
-      await db.appconfig.put({ key: APPCFG.models, value: [...this.models] });
-      emitSettings();
-    },
-
-    /** 加入列表（手动输入或从拉取结果点加）；去重；使用中模型为空时自动选用它 */
+    /** 加入当前预设的模型列表（手动输入或从拉取结果点加）；去重；使用中模型为空时自动选用它 */
     async addModel(name) {
-      const m = String(name || "").trim();
-      if (!m) return;
-      if (!this.models.includes(m)) {
-        this.models.push(m);
-        await this.persistModels();
-        if (!this.model) {
-          this.model = m;
-          await db.appconfig.put({ key: APPCFG.model, value: this.model });
+      return withWrite(async () => {
+        const p = this.activeProvider;
+        const m = String(name || "").trim();
+        if (!p || !m) return;
+        if (!p.models.some((x) => x.name === m)) {
+          const models = [...p.models, { name: m, enabled: true }];
+          const patch = { models };
+          if (!String(p.activeModel || "").trim()) patch.activeModel = m;
+          await this.patchProvider(p.id, patch);
         }
-      }
-      await this.autoFillModelCfg(m);
+        await this.autoFillModelCfg(m);
+      });
     },
 
-    /** 从列表移除；删的是使用中模型则自动切到列表第一个（列表空则清空使用中）；专属参数级联清理 */
+    /** 从当前预设移除模型；删的是使用中模型则自动切到该预设第一个启用模型；专属参数级联清理 */
     async removeModel(name) {
+      const p = this.activeProvider;
       const m = String(name || "").trim();
-      if (!this.models.includes(m)) return;
-      this.models = this.models.filter((x) => x !== m);
-      await this.persistModels();
-      if (this.model === m) {
-        this.model = this.models[0] || "";
-        await db.appconfig.put({ key: APPCFG.model, value: this.model });
-      }
-      if (this.modelCfg[m]) {
-        const next = { ...this.modelCfg };
-        delete next[m];
-        this.modelCfg = next;
-        await db.appconfig.put({ key: APPCFG.modelCfg, value: next });
-      }
+      if (!p || !p.models.some((x) => x.name === m)) return;
+      const models = p.models.filter((x) => x.name !== m);
+      const nextCfg = { ...p.modelCfg };
+      delete nextCfg[m];
+      const patch = { models, modelCfg: nextCfg };
+      if (p.activeModel === m)
+        patch.activeModel =
+          (models.find((x) => x.enabled) || models[0] || {}).name || "";
+      await this.patchProvider(p.id, patch);
+    },
+
+    /** 模型启停（停止的模型不可选用；停用的是使用中模型则自动切到第一个启用模型） */
+    async setModelEnabled(name, enabled) {
+      const p = this.activeProvider;
+      const m = String(name || "").trim();
+      if (!p || !p.models.some((x) => x.name === m)) return;
+      const models = p.models.map((x) =>
+        x.name === m ? { ...x, enabled: !!enabled } : x,
+      );
+      const patch = { models };
+      if (!enabled && p.activeModel === m)
+        patch.activeModel = (models.find((x) => x.enabled) || {}).name || "";
+      await this.patchProvider(p.id, patch);
     },
 
     /**
@@ -313,63 +671,71 @@ export const useAiStore = defineStore("ai", {
      * 生效预算与 max_tokens 随之生效。已保存配置的模型不覆盖（用户手改值优先）。
      */
     async autoFillModelCfg(name) {
+      const p = this.activeProvider;
       const m = String(name || "").trim();
-      if (!m || this.modelCfg[m]) return;
+      if (!p || !m || p.modelCfg[m]) return;
       const meta = lookupModelMeta(m);
       if (!meta || (!meta.contextWindow && !meta.maxTokens)) return;
-      const next = { ...this.modelCfg };
-      next[m] = {
-        enabled: true,
-        contextWindow: meta.contextWindow ?? null,
-        maxTokens: meta.maxTokens ?? null,
-        temperature: null,
-        note: meta.note || "",
-      };
-      this.modelCfg = next;
-      await db.appconfig.put({ key: APPCFG.modelCfg, value: next });
-      emitSettings();
+      await this.patchProvider(p.id, {
+        modelCfg: {
+          ...p.modelCfg,
+          [m]: {
+            enabled: true,
+            contextWindow: meta.contextWindow ?? null,
+            maxTokens: meta.maxTokens ?? null,
+            temperature: null,
+            note: meta.note || "",
+          },
+        },
+      });
     },
 
-    /** 保存某模型的专属参数（编辑弹窗）；enabled=false 时运行时完全跟随全局设置 */
+    /** 保存某模型的专属参数（编辑弹窗）；enabled=false 时运行时完全跟随预设参数 */
     async saveModelCfg(name, patch = {}) {
+      const p = this.activeProvider;
       const m = String(name || "").trim();
-      if (!m) return;
-      const next = { ...this.modelCfg };
-      next[m] = {
-        enabled: patch.enabled !== false,
-        contextWindow:
-          Number(patch.contextWindow) > 0
-            ? Math.round(Number(patch.contextWindow))
-            : null,
-        maxTokens:
-          Number(patch.maxTokens) > 0
-            ? Math.round(Number(patch.maxTokens))
-            : null,
-        temperature:
-          patch.temperature != null && Number(patch.temperature) >= 0
-            ? clampTemperature(patch.temperature)
-            : null,
-        note: String(patch.note || "").slice(0, 100),
-      };
-      this.modelCfg = next;
-      await db.appconfig.put({ key: APPCFG.modelCfg, value: next });
-      emitSettings();
+      if (!p || !m) return;
+      await this.patchProvider(p.id, {
+        modelCfg: {
+          ...p.modelCfg,
+          [m]: {
+            enabled: patch.enabled !== false,
+            contextWindow:
+              Number(patch.contextWindow) > 0
+                ? Math.round(Number(patch.contextWindow))
+                : null,
+            maxTokens:
+              Number(patch.maxTokens) > 0
+                ? Math.round(Number(patch.maxTokens))
+                : null,
+            temperature:
+              patch.temperature != null && Number(patch.temperature) >= 0
+                ? clampTemperature(patch.temperature)
+                : null,
+            note: String(patch.note || "").slice(0, 100),
+          },
+        },
+      });
     },
 
-    /** 点选使用中模型（立即持久化，无需再点保存）；命中参数表时自动填入专属参数 */
+    /** 点选当前预设的使用中模型（立即持久化，无需再点保存）；停用模型不可选用；命中参数表时自动预填专属参数 */
     async selectModel(name) {
-      const m = String(name || "").trim();
-      if (!m) return;
-      await this.autoFillModelCfg(m);
-      if (m === this.model) return;
-      this.model = m;
-      await db.appconfig.put({ key: APPCFG.model, value: this.model });
-      emitSettings();
+      return withWrite(async () => {
+        const p = this.activeProvider;
+        const m = String(name || "").trim();
+        if (!p || !m) return;
+        const row = p.models.find((x) => x.name === m);
+        if (row && row.enabled === false) return;
+        await this.autoFillModelCfg(m);
+        if (p.activeModel === m) return;
+        await this.patchProvider(p.id, { activeModel: m });
+      });
     },
 
-    /** 拉取服务商模型列表：密钥可选（Ollama 本地无需）；错误经 errorFrom 归一为统一文案 */
+    /** 拉取当前预设的服务商模型列表：密钥可选（Ollama 本地无需）；Anthropic 格式不支持；错误经 errorFrom 归一为统一文案 */
     async fetchModelList() {
-      if (!this.baseURL.trim()) {
+      const p = this.activeProvider;
+      if (!p || !p.baseURL.trim()) {
         throw new AiProviderError(
           AI_ERROR_CODES.NOT_CONFIGURED,
           "恍然梦未配置：请先填写并保存 API 地址",
@@ -378,7 +744,11 @@ export const useAiStore = defineStore("ai", {
       this.fetchingModels = true;
       try {
         const apiKey = this.hasCredential ? await this.decryptCredential() : "";
-        return await listModels({ baseURL: this.baseURL.trim(), apiKey });
+        return await listModels({
+          baseURL: p.baseURL.trim(),
+          apiKey,
+          apiFormat: p.apiFormat,
+        });
       } catch (e) {
         throw this.errorFrom(e);
       } finally {
@@ -388,8 +758,9 @@ export const useAiStore = defineStore("ai", {
 
     /** 密钥即时解密（仅本次调用内存使用；密文无效/解密失败 → 提示重新配置） */
     async decryptCredential() {
-      if (!this.credential) return "";
-      const plain = await window.native?.credentialDecrypt?.(this.credential);
+      const cipher = this.credential;
+      if (!cipher) return "";
+      const plain = await window.native?.credentialDecrypt?.(cipher);
       if (typeof plain !== "string")
         throw new Error(
           "API 密钥解密失败（密文无效或系统凭据已变化），请到设置中重新保存密钥",
@@ -397,7 +768,7 @@ export const useAiStore = defineStore("ai", {
       return plain;
     },
 
-    /** 组装 provider 调用参数（agent.js/provider.js 消费形态）；未配置或网页版在此拦截 */
+    /** 组装 provider 调用参数（request/对话编排消费形态）：连接信息 + API 格式取自当前预设；未配置或网页版在此拦截 */
     async buildOpts() {
       if (!window.native?.credentialDecrypt) {
         throw new AiProviderError(
@@ -405,10 +776,17 @@ export const useAiStore = defineStore("ai", {
           "恍然梦仅桌面版可用（网页版无凭据加密通道）",
         );
       }
-      if (!this.baseURL.trim() || !this.model.trim()) {
+      const p = this.activeProvider;
+      if (!p || !p.baseURL.trim() || !String(p.activeModel || "").trim()) {
         throw new AiProviderError(
           AI_ERROR_CODES.NOT_CONFIGURED,
-          "恍然梦未配置：请先在设置中填写 API 地址与模型",
+          "恍然梦未配置：请先在设置中添加供应商并填写 API 地址与模型",
+        );
+      }
+      if (!p.enabled) {
+        throw new AiProviderError(
+          AI_ERROR_CODES.NOT_CONFIGURED,
+          "当前供应商已停用：请在模型设置中启用它，或切换到其他供应商",
         );
       }
       const apiKey = await this.decryptCredential();
@@ -418,11 +796,17 @@ export const useAiStore = defineStore("ai", {
           "恍然梦未配置：请先在设置中保存 API 密钥",
         );
       }
-      return { baseURL: this.baseURL.trim(), apiKey, ...this.generationOpts() };
+      return {
+        baseURL: p.baseURL.trim(),
+        apiKey,
+        apiFormat: p.apiFormat === "anthropic" ? "anthropic" : "openai",
+        ...this.generationOpts(),
+      };
     },
     generationOpts() {
-      const model = this.model.trim();
-      const cfg = this.modelCfg[model]?.enabled ? this.modelCfg[model] : null;
+      const p = this.activeProvider;
+      const model = String(p?.activeModel || "").trim();
+      const cfg = p?.modelCfg?.[model]?.enabled ? p.modelCfg[model] : null;
       const known = lookupModelMeta(model);
       const limit = (a, b) => {
         const n = Math.min(
@@ -433,13 +817,13 @@ export const useAiStore = defineStore("ai", {
       };
       return {
         model,
-        inputBudget: this.maxContext,
+        inputBudget: p?.params?.maxContext ?? this.maxContext,
         contextWindow: limit(cfg?.contextWindow, known?.contextWindow),
         maxOutputTokens: limit(cfg?.maxTokens, known?.maxTokens),
         temperature:
           cfg?.temperature != null
             ? clampTemperature(cfg.temperature)
-            : this.temperature,
+            : (p?.params?.temperature ?? this.temperature),
         maxTokens:
           Number(cfg?.maxTokens) > 0 ? Math.round(Number(cfg.maxTokens)) : 2048,
       };
@@ -492,6 +876,7 @@ export const useAiStore = defineStore("ai", {
       this.loadPresets().catch((e) => {
         this.error = this.errorFrom(e);
       });
+      this.restoreTaskHistory(workId).catch(e=>{this.error=this.errorFrom(e)});
       this.kb = {
         cards: [],
         rows: [],
@@ -505,6 +890,32 @@ export const useAiStore = defineStore("ai", {
         error: "",
         paused: false,
       };
+    },
+    async restoreTaskHistory(workId) {
+      const rows=await aiRepo.aiRows('airuns',workId);
+      if(this.workId!==workId||this.chatBusy)return;
+      const audits=rows.filter(r=>['application','workflow-application'].includes(r.type));
+      const latest=[...new Map(rows.filter(r=>r.type==='agent-task'&&r.result).sort((a,b)=>a.createdAt-b.createdAt).map(r=>[r.result.id,r])).values()];
+      for(const row of latest) {
+        if(this.chat.some(m=>m.id===row.result.id))continue;
+        const message=copy(row.result);
+        message.cards=message.cards.filter(c=>c.status!=='rejected');
+        for(const card of message.cards) {
+          const audit=audits.filter(a=>a.cardId===card.id).sort((a,b)=>b.createdAt-a.createdAt)[0];
+          if(audit){card.status=audit.status==='applied'?'applied':'undone';card.auditId=audit.status==='applied'?audit.id:null;card.appliedActions=audit.status==='applied'?[audit.action||'apply']:[]}
+        }
+        if(row.question)this.chat.push({id:message.id+':request',workId,role:'user',content:row.question,rawContent:row.question,source:message.source,ts:message.ts});
+        this.chat.push(message);
+      }
+    },
+    async dismissCard(message,id) {
+      const card=message.cards.find(c=>c.id===id);
+      if(card?.status==='applied')throw new Error('已应用的提案请先撤销');
+      if(card)card.status='rejected';
+      const record=await db.airuns.get(message.runId);
+      if(record?.type==='agent-task'&&record.result){const stored=record.result.cards.find(c=>c.id===id);if(stored)stored.status='rejected';await aiRepo.putAiRow('airuns',record)}
+      message.cards=message.cards.filter(c=>c.id!==id);
+      storeCandidate(message);
     },
     async loadPresets() {
       const workId = this.workId;
@@ -542,6 +953,10 @@ export const useAiStore = defineStore("ai", {
       this.pendingPrompt = text;
       this.pendingRefs = contextRefs;
       useUiStore().aiDrawerOpen = true;
+    },
+    prepareTask(type, taskInput = {}, question = '') {
+      const live = useWorkStore();
+      this.prepare(question, {taskRequest:{type,workId:live.work?.id,...taskInput}});
     },
     cancel() {
       evaluationAbort?.abort();
@@ -620,6 +1035,11 @@ export const useAiStore = defineStore("ai", {
       };
     },
     async send(question, request = {}) {
+      if (!request.taskRequest && request.contextRefs?.taskRequest) request = {...request,taskRequest:request.contextRefs.taskRequest};
+      if (request.taskRequest) {
+        const task=request.taskRequest;
+        request={...request,contextRefs:{...request.contextRefs,chapterId:task.chapterId,selection:task.selection,outlineId:task.module==='outline'||task.type.startsWith('outline.')?task.targetId:undefined,loreId:task.type.startsWith('lore.')?task.targetId:undefined,characterId:task.type.startsWith('character.')?task.targetId:undefined}};
+      }
       const privacy = this.privacy;
       const q = String(question || "").trim(),
         live = useWorkStore();
@@ -938,11 +1358,16 @@ export const useAiStore = defineStore("ai", {
         if (msg) {
           msg.streaming = false;
           storeCandidate(msg);
+          if (msg.source?.taskRequest) {
+            try {await aiRepo.putAiRow('airuns',{id:runId,workId,type:'agent-task',question:q,taskType:msg.source.taskRequest.type,status:ctl.signal.aborted?'cancelled':msg.complete?'completed':'incomplete',model:compiled?.opts?.model||this.model,preset:msg.preset,sourceVersions:msg.source.sourceVersions,createdAt:Date.now(),result:copy({id:msg.id,workId,runId,role:'assistant',content:msg.content,rawContent:msg.rawContent,cards:msg.cards,source:msg.source,complete:msg.complete,error:msg.error,finishReason:msg.finishReason,context:msg.context,ts:msg.ts})})}
+            catch(e){notice('任务记录保存失败：'+e.message)}
+          }
         }
         if (chatAbort === ctl) {
           chatAbort = null;
           this.chatBusy = false;
           this.phase = "idle";
+          if (this.workId === workId) this.restoreTaskHistory(workId).catch(e=>{this.error=this.errorFrom(e)});
         }
       }
     },
@@ -1069,6 +1494,7 @@ export const useAiStore = defineStore("ai", {
           selection: msg.source.selection,
         },
         continueMessageId: msg.id,
+        taskRequest: msg.source.taskRequest,
       });
     },
     regenerateMessage(msg) {
@@ -1088,10 +1514,12 @@ export const useAiStore = defineStore("ai", {
             selection: msg.source.selection,
           },
           regenerateMessageId: msg.id,
+          taskRequest: msg.source.taskRequest,
         },
       );
     },
     draftFromMessage(msg, text, { visibleSelection = false } = {}) {
+      if (msg.source?.taskRequest && !msg.source.taskRequest.type.startsWith('chapter.')) throw new Error('该专用任务不能转换为正文草稿');
       if (msg.streaming || msg.error || !msg.complete)
         throw new Error("回复尚未完整结束，请继续或复制文本人工整理");
       const selected = String(text || "");
@@ -1151,6 +1579,7 @@ export const useAiStore = defineStore("ai", {
       this.kb.total = snap.chapters.length;
       this.kb.stale = snap.stale.length;
       this.kb.missing = snap.missing.length;
+      this.kb.summaries = await db.aisum.where('workId').equals(workId).toArray();
       const job = await aiRepo.jobById("knowledge:" + workId);
       if (job && !kbAbort)
         this.kb.progress =
@@ -1186,7 +1615,8 @@ export const useAiStore = defineStore("ai", {
           onlyIds: request.onlyIds,
           force: request.rebuild,
           auto: request.auto,
-          usageCap: this.options.kb.usageCap,
+          /* 不设每日上限：限额无限（保留 reserveDaily 的当日用量记账） */
+          usageCap: Infinity,
           shouldPause: () => this.kb.paused,
           onUsage: (u) => this.addUsage(u),
           onProgress: (p) => {
@@ -1218,6 +1648,10 @@ export const useAiStore = defineStore("ai", {
     async clearKnowledge() {
       if (kbAbort) throw new Error("请先暂停构建");
       await aiRepo.clearKnowledge(this.workId);
+      await this.refreshKnowledge();
+    },
+    async confirmMemory(table, id) {
+      await confirmDerived(useWorkStore(), table, id);
       await this.refreshKnowledge();
     },
     async decideKnowledge(key, action, extra = {}) {

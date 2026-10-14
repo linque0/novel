@@ -1,0 +1,89 @@
+{
+  "page": "0:3",
+  "items": [
+    {
+      "name": "T:SETabout:st-title",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-title.png"
+    },
+    {
+      "name": "T:SETabout:st-sub",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-sub.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-ico-wai",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ico-wai.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-ico-meng",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ico-meng.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-ico-shu",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ico-shu.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-ico-guan",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ico-guan.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-app",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-app.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-ai",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-ai.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-data",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-data.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-about",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-about.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-desc-app",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-desc-app.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-desc-ai",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-desc-ai.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-desc-data",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-desc-data.png"
+    },
+    {
+      "name": "T:SETabout:st-nav-desc-about",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-nav-desc-about.png"
+    },
+    {
+      "name": "T:SETabout:st-h-about",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-h-about.png"
+    },
+    {
+      "name": "T:SETabout:st-desc-about",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-desc-about.png"
+    },
+    {
+      "name": "T:SETabout:st-a-stats",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-a-stats.png"
+    },
+    {
+      "name": "T:SETabout:st-a-stats-sub",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-a-stats-sub.png"
+    },
+    {
+      "name": "T:SETabout:st-a-help",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-a-help.png"
+    },
+    {
+      "name": "T:SETabout:st-a-help-sub",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-a-help-sub.png"
+    },
+    {
+      "name": "T:SETabout:st-a-foot",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\st-a-foot.png"
+    }
+  ]
+}

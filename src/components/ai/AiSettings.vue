@@ -1,43 +1,35 @@
 <script setup>
-/* AI 设置块（方案 §三 / §七「并入 SettingsPanel 的 AI 区」）：
- * - 服务商预设（DeepSeek 默认 / 智谱 GLM / OpenAI / Ollama 本地 / 自定义），选择即填 baseURL 与默认 model；
- * - baseURL / model / temperature / 上下文预算 / 隐私模式开关；
- * - API key：保存后经 window.native.credentialEncrypt（safeStorage/DPAPI）加密落 ai.credential
- *   （stores/ai.js saveSettings 完成），本组件不回显明文，只显示「已配置」+ 清除按钮（§六.4）；
- * - 「连接测试」：先把当前表单保存进 store（避免测的是旧配置），再发一条最小请求（provider.testConnection）。
- * 全部经 stores/ai.js 动作落库（db.appconfig ai.*），本组件不直接写 Dexie。
+/* 模型设置（多供应商预设，ZCode 式管理）：左侧预设列表 + 右侧详情，全部即时保存。
+ * - 每个预设 = 一套连接配置（名称 / Base URL / API 格式 / API Key）+ 模型列表（含启停）
+ *   + 生成与记忆参数（温度 / 隐私 / 自动记忆 / 语义检索 / 向量模型，随预设切换）；
+ * - 点列表项 = 切换当前使用中的预设（生成参数随之切换，立即生效）；
+ * - API Key：明文只经 safeStorage（Windows DPAPI）加密通道落 ai.cred.<id>（store.saveProviderKey），
+ *   本组件不持有明文状态、不回显明文；
+ * - 「连接测试」走当前预设（provider.testConnection，按 apiFormat 分发 OpenAI / Anthropic 协议）；
+ * - Anthropic Messages 格式不支持 /models 拉取与 embeddings，界面同步禁用并提示。
+ * 全部经 stores/ai.js 动作落库（db.appconfig），本组件不直接写 Dexie。
  */
-import { onMounted, reactive, ref } from 'vue'
-import { NButton, NInput, NInputNumber, NModal, NSelect, NSwitch, NTag } from 'naive-ui'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
+import { NButton, NInput, NInputNumber, NModal, NPopconfirm, NPopover, NSelect, NSwitch, NTag } from 'naive-ui'
 import OIcon from '../OIcon.vue'
 import { useAiStore } from '../../stores/ai'
 import { lookupModelMeta } from '../../services/ai/modelmeta'
+import { API_FORMAT_OPTIONS, PROVIDER_TEMPLATES } from '../../services/ai/provider-templates'
 
 const ai = useAiStore()
 
-const PRESETS = [
-  { value: 'deepseek', label: 'DeepSeek（默认）', baseURL: 'https://api.deepseek.com/v1', model: 'deepseek-chat' },
-  { value: 'glm', label: '智谱 GLM', baseURL: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash' },
-  { value: 'openai', label: 'OpenAI', baseURL: 'https://api.openai.com/v1', model: 'gpt-4o-mini' },
-  { value: 'ollama', label: 'Ollama 本地', baseURL: 'http://127.0.0.1:11434/v1', model: 'qwen2.5' },
-  { value: 'custom', label: '自定义', baseURL: '', model: '' }
-]
-const presetOptions = PRESETS.map((p) => ({ label: p.label, value: p.value }))
+const cur = computed(() => ai.activeProvider)
 
-const form = reactive({
-  baseURL: ai.baseURL,
-  temperature: ai.temperature,
-  maxContext: ai.maxContext,
-  privacy: ai.privacy,
-  options: JSON.parse(JSON.stringify(ai.options))
-})
-const preset = ref('custom')
-const apiKey = ref('')
+/* 连接信息本地编辑态（blur 即存；切换预设/外部更新时重同步） */
+const form = reactive({ name: '', baseURL: '' })
+const tempLocal = ref(0.7)
+const embLocal = ref('')
+const keyInput = ref('')
 const keyBusy = ref(false)
-const saving = ref(false)
 const testing = ref(false)
 const testResult = ref(null) // { ok, text }
-/* 模型列表：拉取结果 / 内联添加 / 提示条（列表本体在 ai.models，点行即选用） */
+const addOpen = ref(false)
+/* 模型列表：拉取结果 / 内联添加 / 提示条 */
 const adding = ref(false)
 const newModel = ref('')
 const fetchedIds = ref([])
@@ -47,6 +39,179 @@ const editOpen = ref(false)
 const editName = ref('')
 const editForm = reactive({ enabled: true, contextWindow: null, maxTokens: null, temperature: null, note: '' })
 const editPrefilled = ref(false) // 本次打开是否用官方参考参数补位过（弹窗内提示）
+
+/* Anthropic Messages 格式不支持拉取模型与向量模型 */
+const noModelsApi = computed(() => cur.value?.apiFormat === 'anthropic')
+
+function syncForm() {
+  form.name = cur.value?.name || ''
+  form.baseURL = cur.value?.baseURL || ''
+  tempLocal.value = cur.value?.params?.temperature ?? 0.7
+  embLocal.value = cur.value?.params?.embeddings?.model || ''
+  keyInput.value = ''
+  testResult.value = null
+  fetchMsg.value = null
+  fetchedIds.value = []
+  adding.value = false
+  newModel.value = ''
+}
+
+watch(() => ai.activeProviderId, syncForm)
+
+onMounted(async () => {
+  if (!ai.loaded) await ai.loadSettings()
+  syncForm()
+})
+
+/* ---------- 预设列表 / 增删改 ---------- */
+
+function selectProvider(id) {
+  ai.setActiveProvider(id)
+}
+
+async function addFromTemplate(tpl) {
+  addOpen.value = false
+  await ai.addProvider({ ...tpl })
+  window.$msg?.success(`已添加「${tpl.name}」预设，请填写 API 密钥`)
+}
+
+async function duplicateCur() {
+  const id = await ai.duplicateProvider(cur.value.id)
+  if (id) window.$msg?.success('已复制预设（密钥需重新填写）')
+}
+
+async function removeCur() {
+  const name = cur.value?.name
+  await ai.removeProvider(cur.value.id)
+  window.$msg?.success(`已删除「${name}」`)
+}
+
+/* ---------- 连接信息：即时保存（blur / change） ---------- */
+
+async function saveName() {
+  if (!cur.value) return
+  const v = form.name.trim()
+  if (!v || v === cur.value.name) {
+    form.name = cur.value?.name || ''
+    return
+  }
+  await ai.updateProvider({ name: v })
+}
+
+async function saveBaseURL() {
+  if (!cur.value) return
+  const v = form.baseURL.trim()
+  form.baseURL = v
+  if (v === cur.value.baseURL) return
+  await ai.updateProvider({ baseURL: v })
+}
+
+async function saveFormat(v) {
+  if (!cur.value || v === cur.value.apiFormat) return
+  await ai.updateProvider({ apiFormat: v })
+  fetchedIds.value = []
+  fetchMsg.value = null
+  if (v === 'anthropic')
+    window.$msg?.info?.('Anthropic Messages 不支持「拉取模型」与向量模型，请手动添加模型名')
+}
+
+async function toggleProvider(v) {
+  if (!cur.value) return
+  await ai.setProviderEnabled(cur.value.id, v)
+}
+
+/* 密钥：输入非空且失焦 → 自动加密保存（组件不持有明文状态） */
+async function saveKey() {
+  const text = keyInput.value.trim()
+  if (!text || !cur.value) return
+  keyBusy.value = true
+  try {
+    await ai.saveProviderKey(text)
+    keyInput.value = ''
+    window.$msg?.success('API 密钥已加密保存（当前预设）')
+  } catch (e) {
+    window.$msg?.error(String(e?.message || e))
+  } finally {
+    keyBusy.value = false
+  }
+}
+
+async function clearKey() {
+  keyBusy.value = true
+  try {
+    await ai.clearProviderKey()
+    keyInput.value = ''
+    window.$msg?.success('API 密钥已清除')
+  } catch (e) {
+    window.$msg?.error(String(e?.message || e))
+  } finally {
+    keyBusy.value = false
+  }
+}
+
+/* ---------- 预设参数：即时保存 ---------- */
+
+async function saveTemperature() {
+  if (!cur.value) return
+  if (Number(tempLocal.value) === Number(cur.value.params?.temperature)) return
+  await ai.updateParams({ temperature: tempLocal.value })
+}
+
+function setPrivacy(v) {
+  ai.updateParams({ privacy: v })
+}
+
+function setKbAuto(v) {
+  ai.updateParams({ kb: { auto: v } })
+}
+
+function setEmbEnabled(v) {
+  ai.updateParams({ embeddings: { enabled: v } })
+}
+
+async function saveEmbModel() {
+  if (!cur.value) return
+  const v = embLocal.value.trim()
+  if (v === (cur.value.params?.embeddings?.model || '')) return
+  await ai.updateParams({ embeddings: { model: v } })
+}
+
+/* ---------- 连接测试（走当前预设的 API 格式） ---------- */
+
+async function onTest() {
+  testing.value = true
+  testResult.value = null
+  try {
+    const r = await ai.testConnection()
+    testResult.value = r.ok
+      ? { ok: true, text: `连接成功（${r.model || ai.model}）${r.reply ? ` · 回复：${String(r.reply).trim().slice(0, 40)}` : ''}` }
+      : { ok: false, text: r.error?.message || '连接失败' }
+  } catch (e) {
+    testResult.value = { ok: false, text: String(e?.message || e) }
+  } finally {
+    testing.value = false
+  }
+}
+
+/* ---------- 模型列表：拉取 / 手动添加 / 启停 / 点选使用 ---------- */
+
+async function onFetch() {
+  fetchMsg.value = null
+  try {
+    const ids = await ai.fetchModelList()
+    fetchedIds.value = ids
+    fetchMsg.value = { ok: true, text: `已拉取 ${ids.length} 个模型，点「＋ 添加」加入下方列表` }
+  } catch (e) {
+    fetchMsg.value = { ok: false, text: String(e?.message || e) }
+  }
+}
+
+async function confirmAdd() {
+  const m = newModel.value.trim()
+  if (!m) return
+  await ai.addModel(m)
+  newModel.value = ''
+}
 
 function openEdit(m) {
   editName.value = m
@@ -68,120 +233,6 @@ async function saveEdit() {
   window.$msg?.success(`「${editName.value}」模型配置已保存`)
 }
 
-onMounted(async () => {
-  if (!ai.loaded) await ai.loadSettings()
-  syncForm()
-})
-
-function syncForm() {
-  form.baseURL = ai.baseURL
-  form.temperature = ai.temperature
-  form.maxContext = ai.maxContext
-  form.privacy = ai.privacy
-  form.options = JSON.parse(JSON.stringify(ai.options))
-  const hit = PRESETS.find((p) => p.baseURL && p.baseURL === ai.baseURL.trim())
-  preset.value = hit ? hit.value : 'custom'
-}
-
-/** 选择预设即填 baseURL，并把该预设的默认模型加入模型列表（点「保存设置」后地址生效） */
-function onPreset(v) {
-  preset.value = v
-  const p = PRESETS.find((x) => x.value === v)
-  if (!p) return
-  if (p.baseURL) {
-    form.baseURL = p.baseURL
-    if (p.model) ai.addModel(p.model)
-  }
-}
-
-async function persistForm() {
-  await ai.saveSettings({
-    baseURL: form.baseURL,
-    temperature: form.temperature,
-    maxContext: form.maxContext,
-    privacy: form.privacy,
-    options: form.options
-  })
-}
-
-async function saveAll() {
-  saving.value = true
-  try {
-    await persistForm()
-    window.$msg?.success('AI 设置已保存')
-  } catch (e) {
-    window.$msg?.error(String(e?.message || e))
-  } finally {
-    saving.value = false
-  }
-}
-
-/** 保存密钥：明文只经 safeStorage 加密通道落库（stores/ai.js saveSettings），组件不持有明文状态 */
-async function saveKey() {
-  keyBusy.value = true
-  try {
-    await ai.saveSettings({ apiKey: apiKey.value.trim() })
-    apiKey.value = ''
-    window.$msg?.success(ai.hasCredential ? 'API 密钥已加密保存' : 'API 密钥已清除')
-  } catch (e) {
-    window.$msg?.error(String(e?.message || e))
-  } finally {
-    keyBusy.value = false
-  }
-}
-
-async function clearKey() {
-  keyBusy.value = true
-  try {
-    await ai.saveSettings({ apiKey: '' })
-    apiKey.value = ''
-    window.$msg?.success('API 密钥已清除')
-  } catch (e) {
-    window.$msg?.error(String(e?.message || e))
-  } finally {
-    keyBusy.value = false
-  }
-}
-
-/** 连接测试：先保存当前表单（避免测旧配置），再发一条最小请求（provider.testConnection） */
-async function onTest() {
-  testing.value = true
-  testResult.value = null
-  try {
-    await persistForm()
-    const r = await ai.testConnection()
-    testResult.value = r.ok
-      ? { ok: true, text: `连接成功（${r.model || ai.model}）${r.reply ? ` · 回复：${String(r.reply).trim().slice(0, 40)}` : ''}` }
-      : { ok: false, text: r.error?.message || '连接失败' }
-  } catch (e) {
-    testResult.value = { ok: false, text: String(e?.message || e) }
-  } finally {
-    testing.value = false
-  }
-}
-
-/* ---------- 模型列表：拉取 / 手动添加 ---------- */
-
-/** 拉取服务商模型列表：先把当前 baseURL 表单落库（避免拉旧地址），结果逐行点「＋ 添加」入列 */
-async function onFetch() {
-  fetchMsg.value = null
-  try {
-    await persistForm()
-    const ids = await ai.fetchModelList()
-    fetchedIds.value = ids
-    fetchMsg.value = { ok: true, text: `已拉取 ${ids.length} 个模型，点「＋ 添加」加入下方列表` }
-  } catch (e) {
-    fetchMsg.value = { ok: false, text: String(e?.message || e) }
-  }
-}
-
-async function confirmAdd() {
-  const m = newModel.value.trim()
-  if (!m) return
-  await ai.addModel(m)
-  newModel.value = ''
-}
-
 /** 模型行上下文徽标（仿 ZCode 模型列表的「1M」标）：优先取已启用专属配置，否则取参数表匹配值 */
 function ctxTag(m) {
   const cfg = ai.modelCfg[m]
@@ -192,110 +243,217 @@ function ctxTag(m) {
 </script>
 
 <template>
-  <div class="ai-settings">
-    <div class="ai-set-row">
-      <span class="lb">服务商</span>
-      <NSelect size="small" :value="preset" :options="presetOptions" @update:value="onPreset" />
-    </div>
-    <div class="ai-set-row">
-      <span class="lb">API 地址</span>
-      <NInput v-model:value="form.baseURL" size="small" placeholder="https://api.deepseek.com/v1" />
-    </div>
+  <div class="ai-settings ai-prov">
+    <!-- 左：供应商预设列表（点项 = 切换当前使用中的预设） -->
+    <aside class="ai-prov-list">
+      <div class="ai-prov-list-head">供应商预设</div>
+      <div class="ai-prov-items">
+        <button
+          v-for="p in ai.providers"
+          :key="p.id"
+          type="button"
+          class="ai-prov-item"
+          :class="{ on: p.id === ai.activeProviderId, off: !p.enabled }"
+          :title="p.enabled ? p.name : `${p.name}（已停用）`"
+          @click="selectProvider(p.id)"
+        >
+          <span class="ai-prov-dot"></span>
+          <span class="ai-prov-nm">{{ p.name }}</span>
+        </button>
+        <div v-if="!ai.providers.length" class="ai-prov-none">还没有预设</div>
+      </div>
+      <NPopover v-model:show="addOpen" trigger="click" placement="right-start" :show-arrow="false" :delay="80">
+        <template #trigger>
+          <button type="button" class="ai-prov-add"><OIcon name="plus" :size="12" /> 添加供应商</button>
+        </template>
+        <div class="ai-tpl-menu">
+          <button
+            v-for="t in PROVIDER_TEMPLATES"
+            :key="t.key"
+            type="button"
+            class="ai-tpl-item"
+            @click="addFromTemplate(t)"
+          >
+            <span class="ai-tpl-name">{{ t.name }}</span>
+            <span class="ai-tpl-sub">{{ t.baseURL || '手动填写地址' }} · {{ t.apiFormat === 'anthropic' ? 'Anthropic Messages' : 'Chat Completions' }}</span>
+          </button>
+        </div>
+      </NPopover>
+    </aside>
 
-    <!-- 模型列表：拉取服务商 /models 或手动添加；点行即选用（立即持久化） -->
-    <div class="ai-models">
-      <div class="ai-models-head">
-        <span class="lb">模型列表</span>
-        <span class="ai-models-actions">
-          <NButton size="tiny" :loading="ai.fetchingModels" :disabled="!form.baseURL.trim()" @click="onFetch">拉取模型</NButton>
-          <NButton size="tiny" @click="adding = !adding">＋ 添加模型</NButton>
+    <!-- 右：当前预设详情 -->
+    <section v-if="cur" class="ai-prov-detail">
+      <div class="ai-detail-head">
+        <span class="ai-prov-ico"><OIcon name="container" :size="15" /></span>
+        <NInput
+          v-model:value="form.name"
+          size="small"
+          class="ai-name-input"
+          placeholder="供应商名称"
+          @blur="saveName"
+          @keydown.enter="saveName"
+        />
+        <NTag v-if="!cur.enabled" size="tiny" :bordered="false">已停用</NTag>
+        <NButton size="tiny" quaternary title="复制预设（不含密钥）" @click="duplicateCur"><OIcon name="plus" :size="12" /></NButton>
+        <NPopconfirm @positive-click="removeCur">
+          <template #trigger>
+            <NButton size="tiny" quaternary title="删除预设"><OIcon name="trash" :size="12" /></NButton>
+          </template>
+          删除「{{ cur.name }}」？该预设的密钥一并删除，其他预设不受影响。
+        </NPopconfirm>
+        <NSwitch size="small" :value="cur.enabled" title="启动 / 停止该供应商" @update:value="toggleProvider" />
+      </div>
+
+      <div class="ai-set-row">
+        <span class="lb">Base URL</span>
+        <NInput v-model:value="form.baseURL" size="small" placeholder="https://api.deepseek.com/v1" @blur="saveBaseURL" @keydown.enter="saveBaseURL" />
+      </div>
+      <div class="ai-set-row">
+        <span class="lb">API 格式</span>
+        <NSelect size="small" :value="cur.apiFormat" :options="API_FORMAT_OPTIONS" @update:value="saveFormat" />
+      </div>
+      <div class="ai-set-row">
+        <span class="lb">API Key</span>
+        <span class="ai-key-zone">
+          <NInput
+            v-model:value="keyInput"
+            size="small"
+            type="password"
+            show-password-on="click"
+            :placeholder="ai.hasCredential ? '已配置（输入新密钥可覆盖）' : '粘贴密钥，仅保存在本机（加密）'"
+            class="ai-key-input"
+            @blur="saveKey"
+            @keydown.enter="saveKey"
+          />
+          <NTag v-if="ai.hasCredential" size="tiny" type="success" :bordered="false">已配置</NTag>
+          <NButton v-if="ai.hasCredential" size="tiny" quaternary type="error" :disabled="keyBusy" @click="clearKey">清除</NButton>
         </span>
       </div>
-      <div v-if="adding" class="ai-model-add">
-        <NInput v-model:value="newModel" size="small" placeholder="手动输入模型名，如 deepseek-chat / glm-4-flash" @keydown.enter="confirmAdd" />
-        <NButton size="tiny" type="primary" :disabled="!newModel.trim()" @click="confirmAdd">添加</NButton>
-      </div>
-      <div v-if="fetchMsg" class="ai-fetch-msg" :class="fetchMsg.ok ? 'ok' : 'fail'">{{ fetchMsg.text }}</div>
-      <div v-if="fetchedIds.length" class="ai-fetch-list">
-        <div class="ai-fetch-title">
-          <span>服务商返回 {{ fetchedIds.length }} 个模型</span>
-          <NButton size="tiny" quaternary @click="fetchedIds = []">收起</NButton>
-        </div>
-        <div v-for="id in fetchedIds" :key="id" class="ai-fetch-row">
-          <span class="ai-fetch-id" :title="id">{{ id }}</span>
-          <NButton v-if="!ai.models.includes(id)" size="tiny" @click="ai.addModel(id)">＋ 添加</NButton>
-          <NTag v-else size="tiny" type="success" :bordered="false">已添加</NTag>
-        </div>
-      </div>
-      <div class="ai-model-list">
-        <div
-          v-for="m in ai.models"
-          :key="m"
-          class="ai-model-row"
-          :class="{ on: m === ai.model }"
-          :title="m === ai.model ? '当前使用的模型' : '点击选用该模型'"
-          @click="ai.selectModel(m)"
-        >
-          <span class="ai-model-name" :title="ai.modelCfg[m]?.note ? `${ai.modelCfg[m].note}\n${m}` : m">{{ m }}</span>
-          <NTag v-if="ctxTag(m)" size="tiny" :bordered="false" class="ai-model-ctx">{{ ctxTag(m) }}</NTag>
-          <NTag v-if="ai.modelCfg[m]?.enabled" size="tiny" :bordered="false">专属</NTag>
-          <NTag v-if="m === ai.model" size="tiny" type="success" :bordered="false">使用中</NTag>
-          <button class="ai-model-edit" title="编辑模型配置" @click.stop="openEdit(m)"><OIcon name="edit" :size="11" /></button>
-          <button class="ai-model-del" title="从列表移除" @click.stop="ai.removeModel(m)"><OIcon name="close" :size="11" /></button>
-        </div>
-        <div v-if="!ai.models.length" class="ai-model-empty">
-          列表为空——「拉取模型」获取服务商可用模型，或手动添加模型名{{ ai.model ? `（当前仍使用 ${ai.model}）` : '' }}
-        </div>
-      </div>
-      <div class="ai-models-tip">点行即选用，使用中的模型立即生效，无需再点保存设置。</div>
-    </div>
+      <div class="ai-set-note">密钥经系统凭据（Windows DPAPI）加密存放，每个预设一把；不进备份文件、不回显明文。输入后失焦即自动加密保存。</div>
 
-    <div class="ai-set-row">
-      <span class="lb">温度</span>
-      <NInputNumber v-model:value="form.temperature" size="small" :min="0" :max="2" :step="0.1" style="width: 110px" />
-      <span class="ai-set-hint">0 严谨 · 1.2+ 更放肆</span>
-    </div>
-    <div class="ai-set-row">
-      <span class="lb">上下文预算</span>
-      <NInputNumber v-model:value="form.maxContext" size="small" :min="1000" :max="64000" :step="500" style="width: 130px">
-        <template #suffix>tokens</template>
-      </NInputNumber>
-    </div>
-    <div class="ai-set-row">
-      <span class="lb">隐私模式</span>
-      <NSwitch v-model:value="form.privacy" size="small" />
-      <span class="ai-set-hint">仅发送摘要，不发送正文原文与检索片段</span>
-    </div>
+      <!-- 模型列表：拉取服务商 /models 或手动添加；点行即选用，开关启停 -->
+      <div class="ai-models">
+        <div class="ai-models-head">
+          <span class="lb">模型列表</span>
+          <span class="ai-models-actions">
+            <NButton
+              size="tiny"
+              :loading="ai.fetchingModels"
+              :disabled="!form.baseURL.trim() || noModelsApi"
+              :title="noModelsApi ? 'Anthropic Messages 格式不提供模型列表接口，请手动添加' : ''"
+              @click="onFetch"
+            >
+              拉取模型
+            </NButton>
+            <NButton size="tiny" @click="adding = !adding">＋ 添加模型</NButton>
+          </span>
+        </div>
+        <div v-if="adding" class="ai-model-add">
+          <NInput v-model:value="newModel" size="small" placeholder="手动输入模型名，如 deepseek-chat / claude-sonnet-5" @keydown.enter="confirmAdd" />
+          <NButton size="tiny" type="primary" :disabled="!newModel.trim()" @click="confirmAdd">添加</NButton>
+        </div>
+        <div v-if="fetchMsg" class="ai-fetch-msg" :class="fetchMsg.ok ? 'ok' : 'fail'">{{ fetchMsg.text }}</div>
+        <div v-if="fetchedIds.length" class="ai-fetch-list">
+          <div class="ai-fetch-title">
+            <span>服务商返回 {{ fetchedIds.length }} 个模型</span>
+            <NButton size="tiny" quaternary @click="fetchedIds = []">收起</NButton>
+          </div>
+          <div v-for="id in fetchedIds" :key="id" class="ai-fetch-row">
+            <span class="ai-fetch-id" :title="id">{{ id }}</span>
+            <NButton v-if="!ai.models.includes(id)" size="tiny" @click="ai.addModel(id)">＋ 添加</NButton>
+            <NTag v-else size="tiny" type="success" :bordered="false">已添加</NTag>
+          </div>
+        </div>
+        <div class="ai-model-list">
+          <div
+            v-for="row in ai.modelRows"
+            :key="row.name"
+            class="ai-model-row"
+            :class="{ on: row.name === ai.model, off: !row.enabled }"
+            :title="row.name === ai.model ? '当前使用的模型' : row.enabled ? '点击选用该模型' : '该模型已停止使用'"
+            @click="ai.selectModel(row.name)"
+          >
+            <span class="ai-model-name" :title="ai.modelCfg[row.name]?.note ? `${ai.modelCfg[row.name].note}\n${row.name}` : row.name">{{ row.name }}</span>
+            <NTag v-if="ctxTag(row.name)" size="tiny" :bordered="false" class="ai-model-ctx">{{ ctxTag(row.name) }}</NTag>
+            <NTag v-if="ai.modelCfg[row.name]?.enabled" size="tiny" :bordered="false">专属</NTag>
+            <NTag v-if="row.name === ai.model" size="tiny" type="success" :bordered="false">使用中</NTag>
+            <button class="ai-model-edit" title="编辑模型配置" @click.stop="openEdit(row.name)"><OIcon name="edit" :size="11" /></button>
+            <button class="ai-model-del" title="从列表移除" @click.stop="ai.removeModel(row.name)"><OIcon name="close" :size="11" /></button>
+            <span class="ai-model-toggle" title="启动 / 停止该模型" @click.stop>
+              <NSwitch size="small" :value="row.enabled" @update:value="(v) => ai.setModelEnabled(row.name, v)" />
+            </span>
+          </div>
+          <div v-if="!ai.modelRows.length" class="ai-model-empty">
+            列表为空——「拉取模型」获取服务商可用模型，或手动添加模型名{{ ai.model ? `（当前仍使用 ${ai.model}）` : '' }}
+          </div>
+        </div>
+        <div class="ai-models-tip">点行即选用，使用中的模型立即生效；右侧开关可启动 / 停止单个模型。</div>
+      </div>
 
-    <div class="ai-set-row"><span class="lb">自动记忆</span><NSwitch v-model:value="form.options.kb.auto" :disabled="form.privacy" size="small" /><span class="ai-set-hint">默认关闭，开启后只更新改动章节与依赖</span></div>
-    <div class="ai-set-row"><span class="lb">每日上限</span><NInputNumber v-model:value="form.options.kb.usageCap" :min="0" :step="1000" size="small" /><span class="ai-set-hint">tokens，启用自动记忆时必填；缺失 usage 用估算</span></div>
-    <div class="ai-set-row"><span class="lb">语义检索</span><NSwitch v-model:value="form.options.embeddings.enabled" size="small" /><span class="ai-set-hint">默认关闭，失败回落关键词</span></div>
-    <div class="ai-set-row"><span class="lb">向量模型</span><NInput v-model:value="form.options.embeddings.model" size="small" placeholder="独立 embeddings 模型名" /></div>
-    <div class="ai-set-row">
-      <span class="lb">API 密钥</span>
-      <span class="ai-key-zone">
+      <!-- 预设参数：每个预设各带一份，切换预设时整套切换 -->
+      <div class="ai-params-head">该预设参数</div>
+      <div class="ai-set-row">
+        <span class="lb">温度</span>
+        <NInputNumber v-model:value="tempLocal" size="small" :min="0" :max="2" :step="0.1" style="width: 110px" @blur="saveTemperature" />
+        <span class="ai-set-hint">0 严谨 · 1.2+ 更放肆</span>
+      </div>
+      <div class="ai-set-row">
+        <span class="lb">隐私模式</span>
+        <NSwitch :value="cur.params?.privacy" size="small" @update:value="setPrivacy" />
+        <span class="ai-set-hint">仅发送摘要，不发送正文原文与检索片段</span>
+      </div>
+      <div class="ai-set-row">
+        <span class="lb">自动记忆</span>
+        <NSwitch :value="cur.params?.kb?.auto" :disabled="cur.params?.privacy" size="small" @update:value="setKbAuto" />
+        <span class="ai-set-hint">默认关闭，开启后只更新改动章节与依赖</span>
+      </div>
+      <div class="ai-set-row">
+        <span class="lb">语义检索</span>
+        <NSwitch :value="cur.params?.embeddings?.enabled" :disabled="noModelsApi" size="small" @update:value="setEmbEnabled" />
+        <span class="ai-set-hint">{{ noModelsApi ? 'Anthropic Messages 不提供向量接口，不可用' : '默认关闭，失败回落关键词' }}</span>
+      </div>
+      <div class="ai-set-row">
+        <span class="lb">向量模型</span>
         <NInput
-          v-model:value="apiKey"
+          v-model:value="embLocal"
           size="small"
-          type="password"
-          show-password-on="click"
-          :placeholder="ai.hasCredential ? '已配置（输入新密钥可覆盖）' : '粘贴密钥，仅保存在本机（加密）'"
-          class="ai-key-input"
+          :disabled="noModelsApi"
+          placeholder="独立 embeddings 模型名（走当前预设连接）"
+          @blur="saveEmbModel"
+          @keydown.enter="saveEmbModel"
         />
-        <NButton size="tiny" :loading="keyBusy" :disabled="!apiKey.trim()" @click="saveKey">保存密钥</NButton>
-        <NTag v-if="ai.hasCredential" size="tiny" type="success" :bordered="false">已配置</NTag>
-        <NButton v-if="ai.hasCredential" size="tiny" quaternary type="error" :disabled="keyBusy" @click="clearKey">清除</NButton>
-      </span>
-    </div>
-    <div class="ai-set-note">密钥经系统凭据（Windows DPAPI）加密存放，不进备份文件、不回显明文。</div>
+      </div>
 
-    <div class="ai-set-actions">
-      <NButton size="small" type="primary" :loading="saving" @click="saveAll">保存设置</NButton>
-      <NButton size="small" :loading="testing" @click="onTest"><OIcon name="link" :size="12" /> 连接测试</NButton>
-      <NTag v-if="ai.ready" size="tiny" type="success" :bordered="false">已就绪</NTag>
-      <NTag v-else size="tiny" :bordered="false">未就绪</NTag>
-    </div>
-    <div v-if="testResult" class="ai-test-result" :class="testResult.ok ? 'ok' : 'fail'">{{ testResult.text }}</div>
+      <div class="ai-set-actions">
+        <NButton size="small" :loading="testing" @click="onTest"><OIcon name="link" :size="12" /> 连接测试</NButton>
+        <NTag v-if="ai.ready" size="tiny" type="success" :bordered="false">已就绪</NTag>
+        <NTag v-else size="tiny" :bordered="false">{{ cur.enabled ? '未就绪' : '供应商已停用' }}</NTag>
+        <span class="ai-set-hint">改动即时保存，无需再点保存设置</span>
+      </div>
+      <div v-if="testResult" class="ai-test-result" :class="testResult.ok ? 'ok' : 'fail'">{{ testResult.text }}</div>
+    </section>
+
+    <!-- 空态：没有任何预设 -->
+    <section v-else class="ai-prov-empty">
+      <p>还没有供应商预设。每个预设保存一套连接配置（地址 / API 格式 / 密钥 / 模型列表）与参数，可随时切换。</p>
+      <NPopover v-model:show="addOpen" trigger="click" placement="bottom-start" :show-arrow="false">
+        <template #trigger>
+          <NButton size="small" type="primary">＋ 添加供应商</NButton>
+        </template>
+        <div class="ai-tpl-menu">
+          <button
+            v-for="t in PROVIDER_TEMPLATES"
+            :key="t.key"
+            type="button"
+            class="ai-tpl-item"
+            @click="addFromTemplate(t)"
+          >
+            <span class="ai-tpl-name">{{ t.name }}</span>
+            <span class="ai-tpl-sub">{{ t.baseURL || '手动填写地址' }} · {{ t.apiFormat === 'anthropic' ? 'Anthropic Messages' : 'Chat Completions' }}</span>
+          </button>
+        </div>
+      </NPopover>
+    </section>
 
     <!-- 编辑模型配置（逐模型专属参数；生效规则见弹窗底部说明） -->
     <NModal v-model:show="editOpen" preset="card" style="width: 470px" title="编辑模型配置">
@@ -315,7 +473,7 @@ function ctxTag(m) {
             :max="2000000"
             :step="1000"
             :disabled="!editForm.enabled"
-            placeholder="留空跟随全局预算"
+            placeholder="留空跟随预设预算"
           >
             <template #suffix>tokens</template>
           </NInputNumber>
@@ -341,7 +499,7 @@ function ctxTag(m) {
             :max="2"
             :step="0.1"
             :disabled="!editForm.enabled"
-            placeholder="留空跟随全局温度"
+            placeholder="留空跟随预设温度"
           />
         </div>
         <div class="ai-mc-row">
@@ -349,7 +507,7 @@ function ctxTag(m) {
           <NInput v-model:value="editForm.note" size="small" :disabled="!editForm.enabled" placeholder="选填，如「长上下文主力」" />
         </div>
         <div class="ai-mc-hint">
-          启用后：上下文窗口与全局预算取更小值作为装配预算；最大输出随请求发送 max_tokens；温度覆盖优先于全局温度。关闭开关则该模型完全跟随全局设置。
+          启用后：上下文窗口与预设预算取更小值作为装配预算；最大输出随请求发送 max_tokens；温度覆盖优先于预设温度。关闭开关则该模型完全跟随预设设置。
         </div>
         <div class="ai-mc-foot">
           <NButton size="small" @click="editOpen = false">取消</NButton>
@@ -361,9 +519,166 @@ function ctxTag(m) {
 </template>
 
 <style scoped>
-.ai-settings {
+.ai-prov {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
   font-size: 12.5px;
   color: var(--text);
+  min-height: 460px;
+}
+
+/* ---- 左：预设列表 ---- */
+.ai-prov-list {
+  flex: none;
+  width: 168px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-right: 10px;
+  border-right: 1px solid var(--border);
+}
+.ai-prov-list-head {
+  flex: none;
+  font-size: 11px;
+  color: var(--text-dim);
+  padding: 0 2px;
+}
+.ai-prov-items {
+  flex: 1;
+  min-height: 120px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.ai-prov-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+}
+.ai-prov-item:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.ai-prov-item.on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.ai-prov-item.on .ai-prov-nm {
+  color: var(--accent);
+  font-weight: 600;
+}
+.ai-prov-item.off .ai-prov-nm {
+  color: var(--text-dim);
+}
+.ai-prov-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #27ae60;
+}
+.ai-prov-item.off .ai-prov-dot {
+  background: var(--text-faint, #999);
+}
+.ai-prov-nm {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ai-prov-none {
+  padding: 10px 8px;
+  font-size: 11.5px;
+  color: var(--text-faint, var(--text-dim));
+}
+.ai-prov-add {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 7px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  background: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+.ai-prov-add:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---- 添加供应商模板菜单 ---- */
+.ai-tpl-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 250px;
+  max-width: 320px;
+}
+.ai-tpl-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 7px 9px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+.ai-tpl-item:hover {
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+.ai-tpl-name {
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.ai-tpl-sub {
+  font-size: 11px;
+  color: var(--text-dim);
+  word-break: break-all;
+  font-family: var(--editor-font);
+}
+
+/* ---- 右：详情 ---- */
+.ai-prov-detail {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+.ai-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 6px;
+}
+.ai-prov-ico {
+  flex: none;
+  display: inline-flex;
+  color: var(--accent);
+}
+.ai-name-input {
+  flex: 1;
+  min-width: 0;
+  max-width: 260px;
 }
 .ai-set-row {
   display: flex;
@@ -381,6 +696,10 @@ function ctxTag(m) {
   flex: 1;
   min-width: 0;
 }
+.ai-set-row > .n-input-number,
+.ai-set-row > .n-switch {
+  flex: none;
+}
 .ai-set-hint {
   flex: none !important;
   color: var(--text-faint, var(--text-dim));
@@ -396,7 +715,14 @@ function ctxTag(m) {
   flex: 1 !important;
   min-width: 120px;
 }
-/* 模型列表区（拉取 / 内联添加 / 点选使用） */
+.ai-set-note {
+  padding: 2px 0 4px 72px;
+  color: var(--text-faint, var(--text-dim));
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* 模型列表区（拉取 / 内联添加 / 点选使用 / 启停） */
 .ai-models {
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -488,7 +814,7 @@ function ctxTag(m) {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 5px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
@@ -499,6 +825,9 @@ function ctxTag(m) {
 .ai-model-row.on {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 8%, transparent);
+}
+.ai-model-row.off .ai-model-name {
+  color: var(--text-dim);
 }
 .ai-model-name {
   flex: 1;
@@ -541,6 +870,84 @@ function ctxTag(m) {
 .ai-model-del:hover {
   color: #c0392b;
 }
+.ai-model-toggle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+}
+.ai-model-empty {
+  padding: 8px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--text-faint, var(--text-dim));
+}
+.ai-models-tip {
+  padding-top: 4px;
+  font-size: 11px;
+  color: var(--text-faint, var(--text-dim));
+}
+
+/* 预设参数区 */
+.ai-params-head {
+  margin: 8px 0 2px 62px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.ai-set-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 0 72px;
+  flex-wrap: wrap;
+}
+.ai-set-actions :deep(.n-button__content) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.ai-test-result {
+  margin: 6px 0 0 72px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.ai-test-result.ok {
+  border: 1px solid color-mix(in srgb, #27ae60 45%, transparent);
+  background: color-mix(in srgb, #27ae60 10%, transparent);
+  color: var(--text);
+}
+.ai-test-result.fail {
+  border: 1px solid color-mix(in srgb, #c0392b 45%, transparent);
+  background: color-mix(in srgb, #c0392b 8%, transparent);
+  color: var(--text);
+}
+
+/* 空态 */
+.ai-prov-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 30px 18px;
+  font-size: 12px;
+  color: var(--text-dim);
+  text-align: center;
+}
+.ai-prov-empty p {
+  margin: 0;
+  max-width: 380px;
+  line-height: 1.8;
+}
+
 /* 编辑模型配置弹窗 */
 .ai-mc {
   display: flex;
@@ -588,49 +995,5 @@ function ctxTag(m) {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
-}
-.ai-model-empty {
-  padding: 8px;
-  border: 1px dashed var(--border);
-  border-radius: 6px;
-  font-size: 11.5px;
-  line-height: 1.6;
-  color: var(--text-faint, var(--text-dim));
-}
-.ai-models-tip {
-  padding-top: 4px;
-  font-size: 11px;
-  color: var(--text-faint, var(--text-dim));
-}
-.ai-set-note {
-  padding: 2px 0 4px 72px;
-  color: var(--text-faint, var(--text-dim));
-  font-size: 11px;
-  line-height: 1.6;
-}
-.ai-set-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 0 0 72px;
-  flex-wrap: wrap;
-}
-.ai-test-result {
-  margin: 6px 0 0 72px;
-  padding: 6px 9px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  line-height: 1.6;
-  word-break: break-all;
-}
-.ai-test-result.ok {
-  border: 1px solid color-mix(in srgb, #27ae60 45%, transparent);
-  background: color-mix(in srgb, #27ae60 10%, transparent);
-  color: var(--text);
-}
-.ai-test-result.fail {
-  border: 1px solid color-mix(in srgb, #c0392b 45%, transparent);
-  background: color-mix(in srgb, #c0392b 8%, transparent);
-  color: var(--text);
 }
 </style>

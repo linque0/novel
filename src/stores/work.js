@@ -145,6 +145,14 @@ export const useWorkStore = defineStore('work', {
         nodes.push({ key: 'v:orphans', label: '未分卷', type: 'volume', isLeaf: false, children: orphans.map(chapterNode) })
       }
       return nodes
+    },
+    /** 某章在全书的序号（依 treeData 平坦序：卷序 + 卷内序 + 未分卷；找不到返回 null 供阅读模式巨排章号用） */
+    chapterOrdinal() {
+      return (id) => {
+        let n = 0
+        for (const v of this.treeData) for (const c of v.children || []) { n++; if (c.key === 'c:' + id) return n }
+        return null
+      }
     }
   },
 
@@ -182,6 +190,7 @@ export const useWorkStore = defineStore('work', {
       const ui = useUiStore()
       ui.view = 'work'
       ui.focusMode = false
+      ui.readMode = false
     },
 
     async closeWork() {

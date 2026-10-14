@@ -171,9 +171,9 @@ export async function exportBackupJson() {
   const dump = { version: 1, exportedAt: now(), assets: [], data: {} }
   for (const t of tables) {
     const rows = await db.table(t).toArray()
-    /* 密钥绝不进备份 JSON（方案 §三/§六.4）：appconfig 的 ai.credential（safeStorage 密文）导出时剔除，
-       恢复备份后需在设置面板重新配置 API 密钥 */
-    dump.data[t] = t === 'appconfig' ? rows.filter((r) => r?.key !== 'ai.credential') : t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: Array.from(new Float32Array(r.vec)) })) : t === 'airuns' ? rows.map((r) => ({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? 'paused' : r.status })) : rows
+    /* 密钥绝不进备份 JSON（方案 §三/§六.4）：appconfig 的 ai.credential / ai.cred.<供应商id>（safeStorage 密文）
+       导出时按 ai.cred 前缀整体剔除，恢复备份后需在模型设置重新配置 API 密钥 */
+    dump.data[t] = t === 'appconfig' ? rows.filter((r) => !String(r?.key || '').startsWith('ai.cred')) : t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: Array.from(new Float32Array(r.vec)) })) : t === 'airuns' ? rows.map((r) => ({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? 'paused' : r.status })) : rows
   }
   const assetRows = await db.assets.toArray()
   for (const a of assetRows) {
@@ -202,7 +202,7 @@ export async function importBackupJson(text) {
   try { await db.transaction('rw', db.tables, async () => {
     for (const table of db.tables) await table.clear()
     for (const [t, rows] of Object.entries(dump.data)) {
-      const restored = t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: new Float32Array(r.vec || []).buffer })) : t === 'airuns' ? rows.map((r) => ({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? 'paused' : r.status })) : t === 'appconfig' ? rows.filter((r) => r.key !== 'ai.credential') : rows
+      const restored = t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: new Float32Array(r.vec || []).buffer })) : t === 'airuns' ? rows.map((r) => ({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? 'paused' : r.status })) : t === 'appconfig' ? rows.filter((r) => !String(r?.key || '').startsWith('ai.cred')) : rows
       if (restored.length) await db.table(t).bulkPut(restored)
     }
     if (assets.length) await db.assets.bulkPut(assets)

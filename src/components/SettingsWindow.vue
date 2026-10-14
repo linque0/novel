@@ -25,7 +25,7 @@ const ui = useUiStore()
 
 const PAGES = [
   { key: 'appearance', icon: '外', label: '外观', desc: '主题 / 字体 / 字号' },
-  { key: 'ai', icon: '梦', label: '恍然梦', desc: 'AI 写作助手接入' },
+  { key: 'ai', icon: '模', label: '模型设置', desc: '供应商预设 / 模型 / 参数' },
   { key: 'data', icon: '数', label: '数据', desc: '导入导出 / 备份 / 存储' },
   { key: 'about', icon: '关', label: '关于', desc: '统计 / 手册 / 标语' }
 ]
@@ -243,10 +243,10 @@ async function clearStalePointer() {
           </div>
         </template>
 
-        <!-- 恍然梦 -->
+        <!-- 模型设置 -->
         <template v-else-if="page === 'ai'">
-          <h2 class="sw-h serif">恍然梦</h2>
-          <p class="sw-desc">AI 写作助手：正文剧情线路 / 大纲规划 / 设定扩展 / 人物丰富 / 自由问答</p>
+          <h2 class="sw-h serif">模型设置</h2>
+          <p class="sw-desc">多供应商预设：连接、模型与生成参数，改动即时生效</p>
           <div class="sw-card sw-card-ai">
             <AiSettings />
           </div>

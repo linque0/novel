@@ -144,70 +144,137 @@ const ids = await c.evalx(`(() => {
 })()`)
 check('四能力锚点齐备（章节×3 / 幕布根 / 人物×2 / 大纲父子）', !!ids.ch3 && !!ids.mubuRoot && !!ids.charA && !!ids.charB && !!ids.olChild, JSON.stringify(ids))
 
-/* ---------- 1) 设置区：预设切换 / 密钥 safeStorage / 备份过滤 / 连接测试（方案 §八.1） ---------- */
-/* 设置按钮是 NPopover 触发器：须完整 press 序列（裸 .click() 不触发） */
+/* ---------- 1) 设置区：多供应商预设（独立设置窗口）/ 启停 / 密钥 safeStorage / 备份过滤 / 连接测试（方案 §八.1） ---------- */
+/* 设置按钮打开独立设置窗口（SettingsWindow）；面板窗口内执行 DOM 断言与交互 */
 const openSettings = `(() => { const b = document.querySelector('button[title^="设置："]'); (${fireClick})(b); return 1 })()`
 await c.evalx(openSettings)
-await until(`(() => ({ ok: !!document.querySelector('.g-set .ai-settings') }))()`, 8000)
-check('设置面板含 AI 助手区', await c.evalx(`!!document.querySelector('.g-set .ai-settings')`))
-
-/* 预设切换的 NSelect 菜单内容随 Transition 挂载，依赖渲染帧——隐藏态（锁屏/遮挡）下降级为 store 层等价断言 */
-let presetForm = { baseURL: '', model: '' }
-if (VISIBLE) {
-  presetForm = await c.evalx(`(async () => {
-    const fire = ${fireClick}
-    const sel = document.querySelector('.ai-settings .n-base-selection')
-    if (!sel) return { err: 'no select' }
-    fire(sel)
-    let opt = null
-    for (let i = 0; i < 20 && !opt; i++) {
-      await new Promise((r) => setTimeout(r, 300))
-      opt = [...document.querySelectorAll('.n-base-select-option')].find((o) => o.textContent.includes('Ollama 本地'))
-    }
-    if (!opt) return { err: 'no option' }
-    fire(opt)
-    await new Promise((r) => setTimeout(r, 600))
-    return {
-      baseURL: document.querySelector('.ai-settings input[placeholder="https://api.deepseek.com/v1"]')?.value || '',
-      model: document.querySelector('.ai-settings input[placeholder^="deepseek-chat"]')?.value || ''
-    }
-  })()`)
-  check('预设切换（Ollama 本地）自动填 API 地址与模型', presetForm.baseURL === 'http://127.0.0.1:11434/v1' && presetForm.model === 'qwen2.5', JSON.stringify(presetForm))
-} else {
-  /* store 层等价：AiSettings 选择预设即以预设值调用 saveSettings（AiSettings.vue onPreset → persistForm 同路）；
-     表单输入同步填入，保证后续「保存设置」DOM 点击与 store 一致 */
-  await c.evalx(`(() => {
-    const setVal = (el, v) => { const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) }
-    setVal(document.querySelector('.ai-settings input[placeholder="https://api.deepseek.com/v1"]'), 'http://127.0.0.1:11434/v1')
-    setVal(document.querySelector('.ai-settings input[placeholder^="deepseek-chat"]'), 'qwen2.5')
-    ${STORE}.get('ai').saveSettings({ baseURL: 'http://127.0.0.1:11434/v1', model: 'qwen2.5' })
-    return 1
-  })()`)
-  await c.sleep(400)
-  const viaStore = await c.evalx(`(() => { const a = ${STORE}.get('ai'); return { baseURL: a.baseURL, model: a.model } })()`)
-  check('预设切换（store 层等价断言）：Ollama 预设值落库', viaStore.baseURL === 'http://127.0.0.1:11434/v1' && viaStore.model === 'qwen2.5', JSON.stringify(viaStore))
-  skip('预设切换（NSelect 下拉 DOM 交互）', '窗口隐藏态（锁屏/遮挡，开发流程 5.3 环境限制）——菜单内容随 Transition 挂载需要渲染帧，已用 store 层等价断言覆盖持久化路径')
+await c.sleep(1600)
+const s = await connect('panel=settings', CDP_PORT)
+/** 面板窗口版 until（设置窗口渲染帧同样需要轮询等待） */
+const untilS = async (expr, ms = 20000, step = 300) => {
+  const end = Date.now() + ms
+  let last = null
+  while (Date.now() < end) {
+    last = await s.evalx(expr)
+    if (last && last.ok) return last
+    await c.sleep(step)
+  }
+  return last || { ok: false, err: 'timeout' }
 }
-
-await c.evalx(`[...document.querySelectorAll('.ai-settings button')].find(b => b.textContent.trim() === '保存设置')?.click()`)
-await c.sleep(500)
-const saved = await c.evalx(`(() => { const a = ${STORE}.get('ai'); return { baseURL: a.baseURL, model: a.model } })()`)
-check('保存设置后预设落库（store.baseURL/model）', saved.baseURL === 'http://127.0.0.1:11434/v1' && saved.model === 'qwen2.5', JSON.stringify(saved))
-
-/* 改填 mock 服务商 + 保存密钥（走真实 safeStorage/DPAPI 通道） */
-await c.evalx(`(() => {
-  const setVal = (el, v) => { const s = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; s.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) }
-  setVal(document.querySelector('.ai-settings input[placeholder="https://api.deepseek.com/v1"]'), ${J(MOCK_URL)})
-  setVal(document.querySelector('.ai-settings input[placeholder^="deepseek-chat"]'), 'mock-model')
-  setVal(document.querySelector('.ai-settings input[placeholder*="粘贴密钥"]'), ${J(PLAIN_KEY)})
+const SA = `(await import('/src/stores/ai.js')).useAiStore()`
+/* 设置窗口默认停在外观页：切到「模型设置」页签再断言（面板左侧导航） */
+await s.evalx(`(() => {
+  const fire = ${fireClick}
+  const nav = [...document.querySelectorAll('.sw-nav-item')].find((x) => x.textContent.includes('模型设置'))
+  if (nav) fire(nav)
   return 1
 })()`)
-await c.evalx(`[...document.querySelectorAll('.ai-settings button')].find(b => b.textContent.trim() === '保存密钥')?.click()`)
-await c.sleep(700)
-const keyChk = await c.evalx(`(async () => {
-  const a = ${STORE}.get('ai')
-  const { db } = window.__ns
-  const cipher = (await db.appconfig.get('ai.credential'))?.value || ''
+await untilS(`(() => ({ ok: !!document.querySelector('.ai-settings.ai-prov') }))()`, 8000)
+check('设置窗口含 AI 模型设置区（多供应商预设）', (await s.evalx(`!!document.querySelector('.ai-settings.ai-prov')`)) === true)
+
+/* 预设新建：走「添加供应商」模板菜单（DOM：按钮 → 菜单项），断言即时生效（新预设即当前使用） */
+const addProbe = await s.evalx(`(async () => {
+  const a = ${SA}
+  if (!a.loaded) await a.loadSettings()
+  const before = a.providers.length
+  const fire = ${fireClick}
+  const btn = document.querySelector('.ai-settings .ai-prov-add')
+  if (!btn) return { err: 'no add button' }
+  fire(btn)
+  let item = null
+  for (let i = 0; i < 24 && !item; i++) {
+    await new Promise((r) => setTimeout(r, 250))
+    item = [...document.querySelectorAll('.ai-tpl-item')].find((x) => x.textContent.includes('Ollama 本地'))
+  }
+  if (!item) return { err: 'no template item' }
+  fire(item)
+  await new Promise((r) => setTimeout(r, 600))
+  return { before, count: a.providers.length, baseURL: a.baseURL, model: a.model, activeName: a.activeProvider?.name }
+})()`)
+check('「添加供应商」模板菜单新建预设：立即设为当前使用', addProbe.count === addProbe.before + 1 && addProbe.baseURL === 'http://127.0.0.1:11434/v1' && addProbe.model === 'qwen2.5' && addProbe.activeName === 'Ollama 本地', JSON.stringify(addProbe))
+
+const provDom = await s.evalx(`(() => ({
+  items: [...document.querySelectorAll('.ai-settings .ai-prov-item')].map((x) => x.textContent.trim()),
+  hasAdd: !!document.querySelector('.ai-settings .ai-prov-add'),
+  detailName: document.querySelector('.ai-settings .ai-name-input input')?.value || '',
+  hasKeyInput: !!document.querySelector('.ai-settings input[type="password"]'),
+  hasFormatSelect: !!document.querySelector('.ai-settings .ai-prov-detail .n-base-selection'),
+  modelRows: document.querySelectorAll('.ai-settings .ai-model-row').length
+}))()`)
+check('预设列表渲染（含新增项）+ 详情头部 / 密钥输入 / 格式下拉就位', provDom.items.includes('Ollama 本地') && provDom.hasAdd === true && provDom.detailName === 'Ollama 本地' && provDom.hasKeyInput === true && provDom.hasFormatSelect === true && provDom.modelRows >= 1, JSON.stringify(provDom))
+
+/* 供应商启停（总开关语义）：停用 → 自动切换到其他启用预设；重新启用恢复；无可切换时未就绪 */
+const toggleChk = await s.evalx(`(async () => {
+  const a = ${SA}
+  const target = a.providers.find((p) => p.name === 'Ollama 本地') || a.activeProvider
+  await a.setProviderEnabled(target.id, false)
+  const off = { self: a.providers.find((p) => p.id === target.id)?.enabled, switched: a.activeProviderId !== target.id, ready: a.ready }
+  await a.setProviderEnabled(target.id, true)
+  return { off, self: a.providers.find((p) => p.id === target.id)?.enabled }
+})()`)
+check('供应商启停：停用后自动切换（无可切换则未就绪），重新启用恢复', toggleChk.off.self === false && toggleChk.self === true && (toggleChk.off.switched === true || toggleChk.off.ready === false), JSON.stringify(toggleChk))
+
+/* 删除探针预设：数量回落、当前预设切换有效（级联删除该预设密钥） */
+const removeChk = await s.evalx(`(async () => {
+  const a = ${SA}
+  const target = a.providers.find((p) => p.name === 'Ollama 本地')
+  const before = a.providers.length
+  await a.removeProvider(target.id)
+  const after = a.providers.length
+  return { before, after, activeValid: after === 0 ? a.activeProviderId === '' : !!a.activeProvider }
+})()`)
+check('删除预设：数量回落且当前预设切换有效', removeChk.after === removeChk.before - 1 && removeChk.activeValid === true, JSON.stringify(removeChk))
+
+/* 确保存在当前预设（若上一步删空则新建），供后续密钥 / 连接测试步骤使用 */
+await s.evalx(`(async () => { const a = ${SA}; if (!a.providers.length) await a.addProvider({ name: 'Mock 供应商' }); return 1 })()`)
+await c.sleep(300)
+
+/* 改填 mock 服务商（失焦即存）+ 添加并选用 mock-model（面板 DOM 交互，走真实 safeStorage/DPAPI 通道） */
+await s.evalx(`(() => {
+  const setVal = (el, v) => { const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) }
+  const url = document.querySelector('.ai-settings input[placeholder="https://api.deepseek.com/v1"]')
+  setVal(url, ${J(MOCK_URL)})
+  url.dispatchEvent(new Event('blur', { bubbles: true }))
+  return 1
+})()`)
+await c.sleep(400)
+/* 「＋ 添加模型」内联输入 → 回车提交 */
+await s.evalx(`(() => { [...document.querySelectorAll('.ai-settings button')].find((b) => b.textContent.includes('添加模型'))?.click(); return 1 })()`)
+await c.sleep(400)
+await s.evalx(`(() => {
+  const setVal = (el, v) => { const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) }
+  const inp = document.querySelector('.ai-settings input[placeholder*="手动输入模型名"]')
+  if (!inp) return 0
+  setVal(inp, 'mock-model')
+  inp.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+  return 1
+})()`)
+await c.sleep(500)
+/* 点模型行选用（点行即选用，立即生效） */
+const pickModel = await s.evalx(`(() => {
+  const row = [...document.querySelectorAll('.ai-settings .ai-model-row')].find((x) => x.textContent.includes('mock-model'))
+  if (!row) return { err: 'row absent' }
+  row.click()
+  return { clicked: true }
+})()`)
+await c.sleep(400)
+const picked = await s.evalx(`(async () => { const a = ${SA}; return { model: a.model, models: a.models.join(','), baseURL: a.baseURL } })()`)
+check('即时保存：Base URL 失焦落库、mock-model 添加并点行选用', picked.models.includes('mock-model') && picked.model === 'mock-model' && picked.baseURL === MOCK_URL && pickModel.clicked === true, JSON.stringify({ pickModel, picked }))
+/* 密钥：输入后失焦自动加密保存（面板无「保存密钥」按钮；密码框是唯一 password 输入） */
+await s.evalx(`(() => {
+  const setVal = (el, v) => { const set = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set; set.call(el, v); el.dispatchEvent(new Event('input', { bubbles: true })) }
+  const el = document.querySelector('.ai-settings input[type="password"]')
+  if (!el) return 0
+  setVal(el, ${J(PLAIN_KEY)})
+  el.dispatchEvent(new Event('blur', { bubbles: true }))
+  return 1
+})()`)
+await c.sleep(900)
+const keyChk = await s.evalx(`(async () => {
+  const a = ${SA}
+  const { db } = await import('/src/db/database.js')
+  const rows = await db.appconfig.toArray()
+  const cipher = rows.find((r) => r.key === 'ai.cred.' + a.activeProviderId)?.value || ''
   const plain = ${J(PLAIN_KEY)}
   let roundtrip = ''
   try { roundtrip = await a.decryptCredential() } catch (e) { roundtrip = 'ERR:' + String(e).slice(0, 80) }
@@ -217,38 +284,55 @@ const keyChk = await c.evalx(`(async () => {
     isPlain: cipher === plain,
     containsPlain: cipher.includes(plain),
     roundtrip,
-    anyPlainInAppconfig: (await db.appconfig.toArray()).some((r) => JSON.stringify(r).includes(plain))
+    anyPlainInAppconfig: rows.some((r) => JSON.stringify(r).includes(plain))
   }
 })()`)
 check(
-  '密钥经 safeStorage 加密落 ai.credential（密文 ≠ 明文）且解密回读一致',
+  '密钥经 safeStorage 加密落 ai.cred.<预设id>（密文 ≠ 明文）且解密回读一致',
   keyChk.hasCredential === true && keyChk.cipherLen > 0 && keyChk.isPlain === false && keyChk.containsPlain === false && keyChk.roundtrip === PLAIN_KEY,
   JSON.stringify(keyChk)
 )
 check('appconfig 全表无明文密钥', keyChk.anyPlainInAppconfig === false, JSON.stringify(keyChk))
 
-const backup = await c.evalx(`(async () => {
+const backup = await s.evalx(`(async () => {
   const { exportBackupJson } = await import('/src/db/repo.js')
-  const { db } = window.__ns
-  const cipher = (await db.appconfig.get('ai.credential'))?.value || ''
-  const s = await exportBackupJson()
-  return { hasPlain: s.includes(${J(PLAIN_KEY)}), hasCipher: s.includes(cipher) }
+  const { db } = await import('/src/db/database.js')
+  const rows = await db.appconfig.toArray()
+  const cipher = rows.find((r) => r.key.startsWith('ai.cred.'))?.value || ''
+  const dump = await exportBackupJson()
+  return { hasPlain: dump.includes(${J(PLAIN_KEY)}), hasCipher: dump.includes(cipher), cipherLen: cipher.length }
 })()`)
-check('备份 JSON 不含密钥（明文与密文都过滤）', backup.hasPlain === false && backup.hasCipher === false, JSON.stringify(backup))
+check('备份 JSON 不含密钥（明文与密文都过滤）', backup.hasPlain === false && backup.hasCipher === false && backup.cipherLen > 0, JSON.stringify(backup))
 
-await c.evalx(`[...document.querySelectorAll('.ai-settings button')].find(b => b.textContent.trim() === '连接测试')?.click()`)
-const testRes = await until(`(() => {
+await s.evalx(`(() => { [...document.querySelectorAll('.ai-settings button')].find((b) => b.textContent.trim() === '连接测试')?.click(); return 1 })()`)
+const testRes = await untilS(`(() => {
   const el = document.querySelector('.ai-settings .ai-test-result')
   return el ? { ok: true, isOk: el.classList.contains('ok'), text: el.textContent.trim() } : { ok: false }
 })()`, 25000)
-const afterTest = await c.evalx(`(() => { const a = ${STORE}.get('ai'); return { baseURL: a.baseURL, ready: a.ready, usageCalls: a.usage.total.calls } })()`)
-check('连接测试通过（mock 回环，表单随测试持久化）', testRes.isOk === true && String(testRes.text).startsWith('连接成功') && afterTest.baseURL === MOCK_URL && afterTest.ready === true, JSON.stringify(testRes) + ' | ' + JSON.stringify(afterTest))
+const afterTest = await s.evalx(`(async () => { const a = ${SA}; return { baseURL: a.baseURL, ready: a.ready, usageCalls: a.usage.total.calls } })()`)
+check('连接测试通过（mock 回环，预设已就绪）', testRes.isOk === true && String(testRes.text).startsWith('连接成功') && afterTest.baseURL === MOCK_URL && afterTest.ready === true, JSON.stringify(testRes) + ' | ' + JSON.stringify(afterTest))
 
-await c.evalx(openSettings) // 关闭设置浮层
-await c.sleep(400)
-check('工具条 AI 入口已解禁（ai.ready 置灰解除）', (await c.evalx(`(() => { const b = [...document.querySelectorAll('.tb')].find(x => (x.title || '').startsWith('AI：剧情选项')); return b ? b.disabled === false : 'no-btn' })()`)) === true)
+/* 关闭设置窗口（独立窗口），主窗口工具条 AI 入口随广播解禁 */
+await s.evalx(`window.native.panelCloseSelf()`)
+await c.sleep(900)
+check('工具条 AI 入口已解禁（ai.ready 置灰解除）', (await c.evalx(`(() => { const b = [...document.querySelectorAll('.tb')].find(x => (x.title || '').includes('发送给恍然梦')); return b ? b.disabled === false : 'no-btn' })()`)) === true)
 
 /* ---------- 2) 装配器：四任务发送清单 + 预算裁剪 + 隐私模式（方案 §八.2） ---------- */
+/* 以下 2–5 段落依赖旧版四能力 API（assembleContext / startPlotBranch / startOutlinPlan / runTask / startWorkflow /
+   addStyle 等），这些 API 已在 v1.0.24「preset 驱动对话引擎」重构中退出运行；对应能力验收由
+   tools/preset-verify.mjs / tools/preset-unit-verify.mjs / tools/ai-v2-verify.mjs 覆盖。
+   缺失时显式跳过并结束，不再以中途崩溃的方式中断整个脚本（设置区等前置段落已独立完成）。 */
+const legacyApiMissing = (await c.evalx(`(async () => {
+  const a = document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s.get('ai')
+  const mod = await import('/src/services/ai/context.js').catch(() => ({}))
+  return !(typeof a.startPlotBranch === 'function' && typeof a.runTask === 'function' && typeof mod.assembleContext === 'function')
+})()`)) === true
+if (legacyApiMissing) {
+  skip('装配器 / 自由问答 / 四能力 / 拆窗锁门禁（旧版四能力 API）', '相关 API 已在 preset 驱动对话引擎重构中退出运行——专项验收见 preset-verify / preset-unit-verify / ai-v2-verify')
+  const passLegacy = results.filter(Boolean).length
+  console.log(`\n${passLegacy}/${results.length} 通过` + (skipped ? `，${skipped} 项跳过（含旧版四能力段落）` : ''))
+  process.exit(results.includes(false) ? 1 : 0)
+}
 const asm = await c.evalx(`(async () => {
   const { assembleContext, estimateTokens } = await import('/src/services/ai/context.js')
   const rep = (r) => r.report.join('｜')

@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 900" width="900" height="900" role="img" aria-label="小说工坊 logo 设计稿 01 古典徽章">
+
+  <rect width="900" height="900" fill="#F7F1E3"/>
+  
+  <defs>
+    <radialGradient id="v1-field" cx="50%" cy="40%" r="66%">
+      <stop offset="0" stop-color="#2C416F"/>
+      <stop offset="0.62" stop-color="#1B2A4A"/>
+      <stop offset="1" stop-color="#0F1A31"/>
+    </radialGradient>
+    <linearGradient id="v1-gold" x1="0" y1="1" x2="0.45" y2="0">
+      <stop offset="0" stop-color="#A8842A"/>
+      <stop offset="0.45" stop-color="#EBD68C"/>
+      <stop offset="1" stop-color="#C9A227"/>
+    </linearGradient>
+    <path id="v1-arc" d="M 262,400 A 188,188 0 0 1 638,400"/>
+  </defs>
+
+  <circle cx="450" cy="400" r="212" fill="none" stroke="url(#v1-gold)" stroke-width="7"/>
+  <circle cx="450" cy="400" r="168" fill="url(#v1-field)"/>
+  <circle cx="450" cy="400" r="172" fill="none" stroke="#C9A227" stroke-width="2.5"/>
+
+  <text font-family='Georgia,"Times New Roman",serif' font-size="25" font-weight="600" fill="#DCBC63" letter-spacing="7">
+    <textPath href="#v1-arc" xlink:href="#v1-arc" startOffset="50%" text-anchor="middle">NOVEL STUDIO</textPath>
+  </text>
+  <rect x="252" y="392" width="16" height="16" transform="rotate(45 260 400)" fill="#C9A227"/>
+  <rect x="632" y="392" width="16" height="16" transform="rotate(45 640 400)" fill="#C9A227"/>
+
+  <path d="M352,286 C354.8,303.2 354.8,303.2 372,306 C354.8,308.8 354.8,308.8 352,326 C349.2,308.8 349.2,308.8 332,306 C349.2,303.2 349.2,303.2 352,286 Z" fill="#F3EAD3" opacity="0.95"/>
+  <path d="M552,303 C553.82,314.18 553.82,314.18 565,316 C553.82,317.82 553.82,317.82 552,329 C550.18,317.82 550.18,317.82 539,316 C550.18,314.18 550.18,314.18 552,303 Z" fill="#EBD68C" opacity="0.9"/>
+
+  <path d="M536,268 C550,300 524,344 468,382 C452,360 492,298 536,268 Z" fill="url(#v1-gold)"/>
+
+  <path d="M450,372 C 416,354 374,348 344,352 L344,458 C 374,454 416,464 450,486 Z" fill="#F5EDD8"/>
+  <path d="M450,372 C 484,354 526,348 556,352 L556,458 C 526,454 484,464 450,486 Z" fill="#E7DBBE"/>
+  <path d="M450,372 L450,486" stroke="#C9A227" stroke-width="3" fill="none"/>
+
+  <text x="450" y="730" font-family='"Source Han Serif SC","Noto Serif SC","Songti SC",SimSun,Georgia,serif' font-size="78" font-weight="600"
+        letter-spacing="8" fill="#16233F" text-anchor="middle">小说工坊</text>
+  <text x="450" y="812" font-family='"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif' font-size="19" letter-spacing="4"
+        fill="#A08A5E" text-anchor="middle">01 · 古典徽章 · Classic Emblem</text>
+</svg>

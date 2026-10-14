@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 900" width="900" height="900" role="img" aria-label="小说工坊 logo 设计稿 03 幻想魔法">
+
+  <defs>
+    <radialGradient id="v3-bg" cx="50%" cy="46%" r="72%">
+      <stop offset="0" stop-color="#33205F"/>
+      <stop offset="0.55" stop-color="#22143F"/>
+      <stop offset="1" stop-color="#150C2B"/>
+    </radialGradient>
+  </defs>
+  <rect width="900" height="900" fill="url(#v3-bg)"/>
+  
+  <defs>
+    <radialGradient id="v3-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#9A6BFF" stop-opacity="0.80"/>
+      <stop offset="0.55" stop-color="#6A3FD0" stop-opacity="0.26"/>
+      <stop offset="1" stop-color="#6A3FD0" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="v3-beam" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#6FE3FF" stop-opacity="0.70"/>
+      <stop offset="0.55" stop-color="#A98BFF" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#F5CE6B" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="v3-cover" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4A2E8A"/>
+      <stop offset="1" stop-color="#2A1850"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(0,-20)">
+    <circle cx="450" cy="430" r="200" fill="url(#v3-glow)"/>
+    <circle cx="450" cy="430" r="200" fill="none" stroke="#B79BFF" stroke-width="1.5" opacity="0.20"/>
+    <circle cx="450" cy="430" r="232" fill="none" stroke="#B79BFF" stroke-width="1" stroke-dasharray="2 16" opacity="0.10"/>
+
+    <path d="M450,330 C426,266 430,196 450,140 C470,196 474,266 450,330 Z" fill="url(#v3-beam)"/>
+
+    <circle cx="450" cy="150" r="58" fill="#F5CE6B" opacity="0.16"/>
+    <path d="M450,112 C455.32,144.68 455.32,144.68 488,150 C455.32,155.32 455.32,155.32 450,188 C444.68,155.32 444.68,155.32 412,150 C444.68,144.68 444.68,144.68 450,112 Z" fill="#FBE7A8" opacity="1"/>
+
+    <g transform="rotate(-20 351 284)">
+      <rect x="322" y="272" width="58" height="24" rx="4" fill="#EDE4FF" opacity="0.92"/>
+      <path d="M331,284 L371,284" stroke="#9E82E8" stroke-width="3.5" stroke-linecap="round" opacity="0.55"/>
+    </g>
+    <g transform="rotate(12 554 247)">
+      <rect x="528" y="236" width="52" height="22" rx="4" fill="#DCCBFF" opacity="0.85"/>
+      <path d="M536,247 L572,247" stroke="#9E82E8" stroke-width="3.5" stroke-linecap="round" opacity="0.55"/>
+    </g>
+    <g transform="rotate(-30 394 200)">
+      <rect x="372" y="190" width="44" height="19" rx="3.5" fill="#EDE4FF" opacity="0.70"/>
+    </g>
+
+    <path d="M450,422 C 408,398 360,388 322,392 L322,528 C 360,524 408,534 450,556 Z" fill="url(#v3-cover)"/>
+    <path d="M450,422 C 492,398 540,388 578,392 L578,528 C 540,524 492,534 450,556 Z" fill="url(#v3-cover)"/>
+    <path d="M450,422 C 408,398 360,388 322,392 M450,422 C 492,398 540,388 578,392"
+          stroke="#E3C56B" stroke-width="2.5" opacity="0.85" fill="none"/>
+    <path d="M322,392 L322,528 M578,392 L578,528" stroke="#E3C56B" stroke-width="2" opacity="0.55" fill="none"/>
+
+    <path d="M450,422 C 414,404 372,396 340,400 L340,516 C 372,512 414,522 450,544 Z" fill="#F3ECFF"/>
+    <path d="M450,422 C 486,404 528,396 560,400 L560,516 C 528,512 486,522 450,544 Z" fill="#E7DDFF"/>
+
+    <path d="M348,447 L442,471 M348,480 L442,505" stroke="#9E82E8" stroke-width="5" stroke-linecap="round" opacity="0.5" fill="none"/>
+    <path d="M452,471 L552,447 M452,505 L552,480" stroke="#9E82E8" stroke-width="5" stroke-linecap="round" opacity="0.5" fill="none"/>
+
+    <path d="M620,306 C623.36,326.64 623.36,326.64 644,330 C623.36,333.36 623.36,333.36 620,354 C616.64,333.36 616.64,333.36 596,330 C616.64,326.64 616.64,326.64 620,306 Z" fill="#F5CE6B" opacity="1"/>
+    <path d="M286,350 C288.8,367.2 288.8,367.2 306,370 C288.8,372.8 288.8,372.8 286,390 C283.2,372.8 283.2,372.8 266,370 C283.2,367.2 283.2,367.2 286,350 Z" fill="#6FE3FF" opacity="0.9"/>
+    <path d="M520,281 C521.54,290.46 521.54,290.46 531,292 C521.54,293.54 521.54,293.54 520,303 C518.46,293.54 518.46,293.54 509,292 C518.46,290.46 518.46,290.46 520,281 Z" fill="#FFFFFF" opacity="0.85"/>
+    <path d="M392,322 C393.12,328.88 393.12,328.88 400,330 C393.12,331.12 393.12,331.12 392,338 C390.88,331.12 390.88,331.12 384,330 C390.88,328.88 390.88,328.88 392,322 Z" fill="#6FE3FF" opacity="0.8"/>
+  </g>
+
+  <text x="450" y="730" font-family='"Source Han Serif SC","Noto Serif SC","Songti SC",SimSun,Georgia,serif' font-size="78" font-weight="600"
+        letter-spacing="8" fill="#F5CE6B" text-anchor="middle">小说工坊</text>
+  <text x="450" y="812" font-family='"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif' font-size="19" letter-spacing="4"
+        fill="#9C8FC7" text-anchor="middle">03 · 幻想魔法 · Fantasy Grimoire</text>
+</svg>

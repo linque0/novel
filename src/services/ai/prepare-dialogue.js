@@ -2,6 +2,7 @@ import { assembleSlots, scopedHistory } from "./novel-context";
 import { compilePreset, copy, estimate } from "./presets";
 import { textViews } from "./regex";
 import { dialogueTools } from "./dialogue";
+import { taskPrompt } from './task-profiles.js';
 
 export async function prepareDialogue({
   work,
@@ -15,6 +16,7 @@ export async function prepareDialogue({
   continuationText = "",
   candidateIndex = 0,
 }) {
+  if (frozen.taskRequest && opts.privacy) throw new Error('专用创作任务需要发送作品材料，请关闭隐私模式后再启动');
   const material = await assembleSlots(
     work,
     frozen,
@@ -23,7 +25,7 @@ export async function prepareDialogue({
     question,
   );
   Object.assign(material.slots, {
-    requiredContext:material.constraints?.text || '',
+    requiredContext:[frozen.taskRequest ? taskPrompt(frozen.taskRequest) : '', material.constraints?.text || ''].filter(Boolean).join('\n'),
     charDescription:
       row.adaptation?.charDescription ?? material.slots.charDescription,
     charPersonality:
@@ -101,7 +103,7 @@ export async function prepareDialogue({
       : null;
   if (continuation) warnings.push(...continuation.warnings);
   const compiled = compilePreset({
-    row,
+    row: frozen.taskRequest ? {...row,payload:{...row.payload,function_calling:true}} : row,
     slots: material.slots,
     history,
     question: userViews.promptText,
@@ -111,14 +113,14 @@ export async function prepareDialogue({
     opts: {
       ...opts,
       toolReserve:
-        row.payload.function_calling === true
-          ? estimate(JSON.stringify(dialogueTools()))
+        frozen.taskRequest || row.payload.function_calling === true
+          ? estimate(JSON.stringify(dialogueTools(frozen.taskRequest)))
           : 0,
     },
   });
   compiled.warnings.push(...warnings);
   if (compiled.tools)
-    material.report.push("预设已显式开启只读工具与结构化提案");
+    material.report.push(frozen.taskRequest ? "专用任务已开启只读检索与本模块提案工具" : "预设已开启只读检索工具");
   return { compiled, material, userViews };
 }
 

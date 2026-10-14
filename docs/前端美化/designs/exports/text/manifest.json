@@ -1,0 +1,3011 @@
+{
+  "dpr": 2,
+  "blocks": [
+    {
+      "id": "ds-board-title",
+      "file": "ds-board-title.png",
+      "cssW": 520,
+      "cssH": 37,
+      "pxW": 1040,
+      "pxH": 74,
+      "text": "小说工坊 · 设计系统"
+    },
+    {
+      "id": "ds-board-sub",
+      "file": "ds-board-sub.png",
+      "cssW": 1000,
+      "cssH": 22,
+      "pxW": 2000,
+      "pxH": 44,
+      "text": "S0 · 令牌 / 字体角色 / 核心组件 —— 值逐一对位 themes.css；中文文本为图片填充（插件 v1 内置字体无 CJK，见评审记录「字体边界」）"
+    },
+    {
+      "id": "ds-sec-tokens",
+      "file": "ds-sec-tokens.png",
+      "cssW": 300,
+      "cssH": 24,
+      "pxW": 600,
+      "pxH": 48,
+      "text": "设计令牌 · 三主题"
+    },
+    {
+      "id": "ds-sec-fonts",
+      "file": "ds-sec-fonts.png",
+      "cssW": 300,
+      "cssH": 24,
+      "pxW": 600,
+      "pxH": 48,
+      "text": "字体角色"
+    },
+    {
+      "id": "ds-sec-invariants",
+      "file": "ds-sec-invariants.png",
+      "cssW": 460,
+      "cssH": 24,
+      "pxW": 920,
+      "pxH": 48,
+      "text": "不变量 · 圆角 / 间距 / 字号 / 动效"
+    },
+    {
+      "id": "ds-sec-components",
+      "file": "ds-sec-components.png",
+      "cssW": 300,
+      "cssH": 24,
+      "pxW": 600,
+      "pxH": 48,
+      "text": "核心组件与状态"
+    },
+    {
+      "id": "ds-cand-note",
+      "file": "ds-cand-note.png",
+      "cssW": 420,
+      "cssH": 40,
+      "pxW": 840,
+      "pxH": 80,
+      "text": "--text-dim-cand 为 v3 对比度候选值（宣纸 #766C5B / 羊皮纸 #77654D），待 S1 实机验证"
+    },
+    {
+      "id": "ds-theme-head-xuan",
+      "file": "ds-theme-head-xuan.png",
+      "cssW": 300,
+      "cssH": 21,
+      "pxW": 600,
+      "pxH": 42,
+      "text": "宣纸（默认 · light）"
+    },
+    {
+      "id": "ds-theme-head-parchment",
+      "file": "ds-theme-head-parchment.png",
+      "cssW": 300,
+      "cssH": 21,
+      "pxW": 600,
+      "pxH": 42,
+      "text": "羊皮纸（light）"
+    },
+    {
+      "id": "ds-theme-head-night",
+      "file": "ds-theme-head-night.png",
+      "cssW": 300,
+      "cssH": 21,
+      "pxW": 600,
+      "pxH": 42,
+      "text": "暗夜书房（dark）"
+    },
+    {
+      "id": "ds-fonts-note",
+      "file": "ds-fonts-note.png",
+      "cssW": 620,
+      "cssH": 20,
+      "pxW": 1240,
+      "pxH": 40,
+      "text": "标题与正文设置分离；切换正文偏好不应改变按钮与导航（v3 §3.2）。正文默认 17px / 行高 1.9 / 34–40 字每行。"
+    },
+    {
+      "id": "ds-font-ui-sample",
+      "file": "ds-font-ui-sample.png",
+      "cssW": 260,
+      "cssH": 23,
+      "pxW": 520,
+      "pxH": 46,
+      "text": "打开写作助手"
+    },
+    {
+      "id": "ds-font-ui-placeholder",
+      "file": "ds-font-ui-placeholder.png",
+      "cssW": 260,
+      "cssH": 21,
+      "pxW": 520,
+      "pxH": 42,
+      "text": "搜索作品、章节…"
+    },
+    {
+      "id": "ds-font-title-sample",
+      "file": "ds-font-title-sample.png",
+      "cssW": 260,
+      "cssH": 37,
+      "pxW": 520,
+      "pxH": 74,
+      "text": "长夜将明"
+    },
+    {
+      "id": "ds-font-cover-sample",
+      "file": "ds-font-cover-sample.png",
+      "cssW": 200,
+      "cssH": 39,
+      "pxW": 400,
+      "pxH": 78,
+      "text": "长夜将明"
+    },
+    {
+      "id": "ds-font-body-sample",
+      "file": "ds-font-body-sample.png",
+      "cssW": 320,
+      "cssH": 65,
+      "pxW": 640,
+      "pxH": 130,
+      "text": "钟楼上的雾还没有散。她沿着河堤往东走，路灯一盏一盏地灭下去。"
+    },
+    {
+      "id": "ds-radius-note",
+      "file": "ds-radius-note.png",
+      "cssW": 420,
+      "cssH": 20,
+      "pxW": 840,
+      "pxH": 40,
+      "text": "按钮 / 输入 6px · 内容卡 8px · 菜单浮窗 10px · 对话框 14px（v3 §3.4）"
+    },
+    {
+      "id": "ds-motion-note",
+      "file": "ds-motion-note.png",
+      "cssW": 700,
+      "cssH": 20,
+      "pxW": 1400,
+      "pxH": 40,
+      "text": "M0 状态反馈 120ms · M1 上下文变化 180ms · M2 作品展示 320ms；无常驻循环装饰，减少动态效果时静态退化"
+    },
+    {
+      "id": "ds-btn-primary",
+      "file": "ds-btn-primary.png",
+      "cssW": 96,
+      "cssH": 20,
+      "pxW": 192,
+      "pxH": 40,
+      "text": "新建作品"
+    },
+    {
+      "id": "ds-btn-secondary",
+      "file": "ds-btn-secondary.png",
+      "cssW": 96,
+      "cssH": 20,
+      "pxW": 192,
+      "pxH": 40,
+      "text": "继续写作"
+    },
+    {
+      "id": "ds-btn-ghost",
+      "file": "ds-btn-ghost.png",
+      "cssW": 96,
+      "cssH": 20,
+      "pxW": 192,
+      "pxH": 40,
+      "text": "导入作品"
+    },
+    {
+      "id": "ds-btn-disabled",
+      "file": "ds-btn-disabled.png",
+      "cssW": 96,
+      "cssH": 20,
+      "pxW": 192,
+      "pxH": 40,
+      "text": "保存中…"
+    },
+    {
+      "id": "ds-tags-note",
+      "file": "ds-tags-note.png",
+      "cssW": 620,
+      "cssH": 20,
+      "pxW": 1240,
+      "pxH": 40,
+      "text": "关系类型与写作状态分别编码：颜色 + 线型 / 标签，不只靠颜色传达（大纲关系四色取自 canvas-model.js REL_KINDS）"
+    },
+    {
+      "id": "ds-tag-cause",
+      "file": "ds-tag-cause.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "因果"
+    },
+    {
+      "id": "ds-tag-foreshadow",
+      "file": "ds-tag-foreshadow.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "伏笔"
+    },
+    {
+      "id": "ds-tag-conflict",
+      "file": "ds-tag-conflict.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "冲突"
+    },
+    {
+      "id": "ds-tag-rel",
+      "file": "ds-tag-rel.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "关联"
+    },
+    {
+      "id": "ds-tag-draft",
+      "file": "ds-tag-draft.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "草稿"
+    },
+    {
+      "id": "ds-tag-done",
+      "file": "ds-tag-done.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "完成"
+    },
+    {
+      "id": "ds-tag-revise",
+      "file": "ds-tag-revise.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "待修改"
+    },
+    {
+      "id": "ds-seal",
+      "file": "ds-seal.png",
+      "cssW": 40,
+      "cssH": 17,
+      "pxW": 80,
+      "pxH": 34,
+      "text": "林晚"
+    },
+    {
+      "id": "ds-cover-note",
+      "file": "ds-cover-note.png",
+      "cssW": 560,
+      "cssH": 20,
+      "pxW": 1120,
+      "pxH": 40,
+      "text": "色带书封（G）：平涂双色 + 衬线书名 + 作者名圆印；配色对位见 --g-duo-* 令牌（v7 已实现）"
+    },
+    {
+      "id": "ds-rail-wen-on",
+      "file": "ds-rail-wen-on.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "文"
+    },
+    {
+      "id": "ds-rail-gang",
+      "file": "ds-rail-gang.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "纲"
+    },
+    {
+      "id": "ds-rail-ren",
+      "file": "ds-rail-ren.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "人"
+    },
+    {
+      "id": "ds-rail-she",
+      "file": "ds-rail-she.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "设"
+    },
+    {
+      "id": "ds-rail-ling",
+      "file": "ds-rail-ling.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "灵"
+    },
+    {
+      "id": "ds-empty-title",
+      "file": "ds-empty-title.png",
+      "cssW": 260,
+      "cssH": 26,
+      "pxW": 520,
+      "pxH": 52,
+      "text": "还没有作品"
+    },
+    {
+      "id": "ds-empty-desc",
+      "file": "ds-empty-desc.png",
+      "cssW": 320,
+      "cssH": 24,
+      "pxW": 640,
+      "pxH": 48,
+      "text": "从一个故事开始。新建作品，或导入已有文稿。"
+    },
+    {
+      "id": "ds-saved",
+      "file": "ds-saved.png",
+      "cssW": 140,
+      "cssH": 19,
+      "pxW": 280,
+      "pxH": 38,
+      "text": "已保存"
+    },
+    {
+      "id": "ds-cover-title-1",
+      "file": "ds-cover-title-1.png",
+      "cssW": 150,
+      "cssH": 25,
+      "pxW": 300,
+      "pxH": 50,
+      "text": "长夜将明"
+    },
+    {
+      "id": "ds-cover-title-2",
+      "file": "ds-cover-title-2.png",
+      "cssW": 150,
+      "cssH": 25,
+      "pxW": 300,
+      "pxH": 50,
+      "text": "雾都钟楼"
+    },
+    {
+      "id": "ds-cover-title-3",
+      "file": "ds-cover-title-3.png",
+      "cssW": 150,
+      "cssH": 25,
+      "pxW": 300,
+      "pxH": 50,
+      "text": "无名者纪年"
+    },
+    {
+      "id": "ds-cover-sub",
+      "file": "ds-cover-sub.png",
+      "cssW": 150,
+      "cssH": 15,
+      "pxW": 300,
+      "pxH": 30,
+      "text": "都市 · 悬疑"
+    },
+    {
+      "id": "ds-fs-xs",
+      "file": "ds-fs-xs.png",
+      "cssW": 200,
+      "cssH": 17,
+      "pxW": 400,
+      "pxH": 34,
+      "text": "辅助小字 11px"
+    },
+    {
+      "id": "ds-fs-sm",
+      "file": "ds-fs-sm.png",
+      "cssW": 200,
+      "cssH": 19,
+      "pxW": 400,
+      "pxH": 38,
+      "text": "次要信息 12.5px"
+    },
+    {
+      "id": "ds-fs-md",
+      "file": "ds-fs-md.png",
+      "cssW": 200,
+      "cssH": 21,
+      "pxW": 400,
+      "pxH": 42,
+      "text": "界面默认 13.5px"
+    },
+    {
+      "id": "ds-fs-lg",
+      "file": "ds-fs-lg.png",
+      "cssW": 200,
+      "cssH": 23,
+      "pxW": 400,
+      "pxH": 46,
+      "text": "强调文字 15px"
+    },
+    {
+      "id": "ds-fs-title",
+      "file": "ds-fs-title.png",
+      "cssW": 200,
+      "cssH": 26,
+      "pxW": 400,
+      "pxH": 52,
+      "text": "标题文字 17px"
+    },
+    {
+      "id": "t-brand-seal",
+      "file": "t-brand-seal.png",
+      "cssW": 32,
+      "cssH": 23,
+      "pxW": 64,
+      "pxH": 46,
+      "text": "坊"
+    },
+    {
+      "id": "t-brand",
+      "file": "t-brand.png",
+      "cssW": 120,
+      "cssH": 24,
+      "pxW": 240,
+      "pxH": 48,
+      "text": "小说工坊"
+    },
+    {
+      "id": "t-myworks",
+      "file": "t-myworks.png",
+      "cssW": 160,
+      "cssH": 21,
+      "pxW": 320,
+      "pxH": 42,
+      "text": "我的作品"
+    },
+    {
+      "id": "t-count",
+      "file": "t-count.png",
+      "cssW": 240,
+      "cssH": 18,
+      "pxW": 480,
+      "pxH": 36,
+      "text": "共 6 部 · 按最近编辑排序"
+    },
+    {
+      "id": "t-continue-label",
+      "file": "t-continue-label.png",
+      "cssW": 160,
+      "cssH": 18,
+      "pxW": 320,
+      "pxH": 36,
+      "text": "继续写作"
+    },
+    {
+      "id": "t-continue-btn",
+      "file": "t-continue-btn.png",
+      "cssW": 96,
+      "cssH": 20,
+      "pxW": 192,
+      "pxH": 40,
+      "text": "继续写作"
+    },
+    {
+      "id": "t-continue-meta",
+      "file": "t-continue-meta.png",
+      "cssW": 320,
+      "cssH": 18,
+      "pxW": 640,
+      "pxH": 36,
+      "text": "上次写到 · 第三章 钟声 · 12.6 万字"
+    },
+    {
+      "id": "t-title-15-1",
+      "file": "t-title-15-1.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "长夜将明"
+    },
+    {
+      "id": "t-title-15-2",
+      "file": "t-title-15-2.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "雾都钟楼"
+    },
+    {
+      "id": "t-title-15-3",
+      "file": "t-title-15-3.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "河堤手记"
+    },
+    {
+      "id": "t-title-15-4",
+      "file": "t-title-15-4.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "无名者纪年"
+    },
+    {
+      "id": "t-title-15-5",
+      "file": "t-title-15-5.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "雪落无声"
+    },
+    {
+      "id": "t-title-15-6",
+      "file": "t-title-15-6.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "铜环巷旧事"
+    },
+    {
+      "id": "t-cv-1",
+      "file": "t-cv-1.png",
+      "cssW": 130,
+      "cssH": 27,
+      "pxW": 260,
+      "pxH": 54,
+      "text": "长夜将明"
+    },
+    {
+      "id": "t-cv-2",
+      "file": "t-cv-2.png",
+      "cssW": 130,
+      "cssH": 27,
+      "pxW": 260,
+      "pxH": 54,
+      "text": "雾都钟楼"
+    },
+    {
+      "id": "t-cv-3",
+      "file": "t-cv-3.png",
+      "cssW": 130,
+      "cssH": 27,
+      "pxW": 260,
+      "pxH": 54,
+      "text": "河堤手记"
+    },
+    {
+      "id": "t-cv-4",
+      "file": "t-cv-4.png",
+      "cssW": 130,
+      "cssH": 27,
+      "pxW": 260,
+      "pxH": 54,
+      "text": "无名者纪年"
+    },
+    {
+      "id": "t-cv-5",
+      "file": "t-cv-5.png",
+      "cssW": 130,
+      "cssH": 27,
+      "pxW": 260,
+      "pxH": 54,
+      "text": "雪落无声"
+    },
+    {
+      "id": "t-cv-6",
+      "file": "t-cv-6.png",
+      "cssW": 130,
+      "cssH": 27,
+      "pxW": 260,
+      "pxH": 54,
+      "text": "铜环巷旧事"
+    },
+    {
+      "id": "t-cv-big",
+      "file": "t-cv-big.png",
+      "cssW": 240,
+      "cssH": 42,
+      "pxW": 480,
+      "pxH": 84,
+      "text": "长夜将明"
+    },
+    {
+      "id": "t-cv-n-1",
+      "file": "t-cv-n-1.png",
+      "cssW": 160,
+      "cssH": 33,
+      "pxW": 320,
+      "pxH": 66,
+      "text": "长夜将明"
+    },
+    {
+      "id": "t-cv-n-2",
+      "file": "t-cv-n-2.png",
+      "cssW": 160,
+      "cssH": 33,
+      "pxW": 320,
+      "pxH": 66,
+      "text": "雾都钟楼"
+    },
+    {
+      "id": "t-cv-n-3",
+      "file": "t-cv-n-3.png",
+      "cssW": 160,
+      "cssH": 33,
+      "pxW": 320,
+      "pxH": 66,
+      "text": "河堤手记"
+    },
+    {
+      "id": "t-meta-1",
+      "file": "t-meta-1.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "12.6 万字 · 3 天前"
+    },
+    {
+      "id": "t-meta-2",
+      "file": "t-meta-2.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "8.2 万字 · 一周前"
+    },
+    {
+      "id": "t-meta-3",
+      "file": "t-meta-3.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "3.4 万字 · 两周前"
+    },
+    {
+      "id": "t-meta-4",
+      "file": "t-meta-4.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "21.8 万字 · 一月前"
+    },
+    {
+      "id": "t-meta-5",
+      "file": "t-meta-5.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "6.1 万字 · 昨天"
+    },
+    {
+      "id": "t-meta-6",
+      "file": "t-meta-6.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "2.3 万字 · 两月前"
+    },
+    {
+      "id": "t-b-head",
+      "file": "t-b-head.png",
+      "cssW": 200,
+      "cssH": 20,
+      "pxW": 400,
+      "pxH": 40,
+      "text": "书架 · 全部作品"
+    },
+    {
+      "id": "t-poster-label",
+      "file": "t-poster-label.png",
+      "cssW": 120,
+      "cssH": 18,
+      "pxW": 240,
+      "pxH": 36,
+      "text": "正在写作"
+    },
+    {
+      "id": "t-poster-title",
+      "file": "t-poster-title.png",
+      "cssW": 700,
+      "cssH": 90,
+      "pxW": 1400,
+      "pxH": 180,
+      "text": "长夜将明"
+    },
+    {
+      "id": "t-poster-meta",
+      "file": "t-poster-meta.png",
+      "cssW": 380,
+      "cssH": 20,
+      "pxW": 760,
+      "pxH": 40,
+      "text": "长篇 · 都市悬疑 · 12.6 万字 · 43 章"
+    },
+    {
+      "id": "t-c-ch-1",
+      "file": "t-c-ch-1.png",
+      "cssW": 56,
+      "cssH": 18,
+      "pxW": 112,
+      "pxH": 36,
+      "text": "43 章"
+    },
+    {
+      "id": "t-c-ch-2",
+      "file": "t-c-ch-2.png",
+      "cssW": 56,
+      "cssH": 18,
+      "pxW": 112,
+      "pxH": 36,
+      "text": "28 章"
+    },
+    {
+      "id": "t-c-ch-3",
+      "file": "t-c-ch-3.png",
+      "cssW": 56,
+      "cssH": 18,
+      "pxW": 112,
+      "pxH": 36,
+      "text": "12 章"
+    },
+    {
+      "id": "t-c-ch-4",
+      "file": "t-c-ch-4.png",
+      "cssW": 56,
+      "cssH": 18,
+      "pxW": 112,
+      "pxH": 36,
+      "text": "76 章"
+    },
+    {
+      "id": "t-c-ch-5",
+      "file": "t-c-ch-5.png",
+      "cssW": 56,
+      "cssH": 18,
+      "pxW": 112,
+      "pxH": 36,
+      "text": "19 章"
+    },
+    {
+      "id": "t-c-ch-6",
+      "file": "t-c-ch-6.png",
+      "cssW": 56,
+      "cssH": 18,
+      "pxW": 112,
+      "pxH": 36,
+      "text": "8 章"
+    },
+    {
+      "id": "t-c-words-1",
+      "file": "t-c-words-1.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "12.6 万"
+    },
+    {
+      "id": "t-c-words-2",
+      "file": "t-c-words-2.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "8.2 万"
+    },
+    {
+      "id": "t-c-words-3",
+      "file": "t-c-words-3.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "3.4 万"
+    },
+    {
+      "id": "t-c-words-4",
+      "file": "t-c-words-4.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "21.8 万"
+    },
+    {
+      "id": "t-c-words-5",
+      "file": "t-c-words-5.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "6.1 万"
+    },
+    {
+      "id": "t-c-words-6",
+      "file": "t-c-words-6.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "2.3 万"
+    },
+    {
+      "id": "t-c-time-1",
+      "file": "t-c-time-1.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "3 天前"
+    },
+    {
+      "id": "t-c-time-2",
+      "file": "t-c-time-2.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "一周前"
+    },
+    {
+      "id": "t-c-time-3",
+      "file": "t-c-time-3.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "两周前"
+    },
+    {
+      "id": "t-c-time-4",
+      "file": "t-c-time-4.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "一月前"
+    },
+    {
+      "id": "t-c-time-5",
+      "file": "t-c-time-5.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "昨天"
+    },
+    {
+      "id": "t-c-time-6",
+      "file": "t-c-time-6.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "两月前"
+    },
+    {
+      "id": "t-c-head-work",
+      "file": "t-c-head-work.png",
+      "cssW": 60,
+      "cssH": 18,
+      "pxW": 120,
+      "pxH": 36,
+      "text": "作品"
+    },
+    {
+      "id": "t-c-head-ch",
+      "file": "t-c-head-ch.png",
+      "cssW": 60,
+      "cssH": 18,
+      "pxW": 120,
+      "pxH": 36,
+      "text": "章节"
+    },
+    {
+      "id": "t-c-head-words",
+      "file": "t-c-head-words.png",
+      "cssW": 60,
+      "cssH": 18,
+      "pxW": 120,
+      "pxH": 36,
+      "text": "字数"
+    },
+    {
+      "id": "t-c-head-time",
+      "file": "t-c-head-time.png",
+      "cssW": 80,
+      "cssH": 18,
+      "pxW": 160,
+      "pxH": 36,
+      "text": "最近编辑"
+    },
+    {
+      "id": "t-c-head-op",
+      "file": "t-c-head-op.png",
+      "cssW": 60,
+      "cssH": 18,
+      "pxW": 120,
+      "pxH": 36,
+      "text": "操作"
+    },
+    {
+      "id": "t-c-filter-all",
+      "file": "t-c-filter-all.png",
+      "cssW": 48,
+      "cssH": 18,
+      "pxW": 96,
+      "pxH": 36,
+      "text": "全部"
+    },
+    {
+      "id": "t-c-filter-ing",
+      "file": "t-c-filter-ing.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "连载中"
+    },
+    {
+      "id": "t-c-filter-done",
+      "file": "t-c-filter-done.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "已完结"
+    },
+    {
+      "id": "t-c-count",
+      "file": "t-c-count.png",
+      "cssW": 160,
+      "cssH": 18,
+      "pxW": 320,
+      "pxH": 36,
+      "text": "共 6 部作品"
+    },
+    {
+      "id": "t-brand-n",
+      "file": "t-brand-n.png",
+      "cssW": 120,
+      "cssH": 24,
+      "pxW": 240,
+      "pxH": 48,
+      "text": "小说工坊"
+    },
+    {
+      "id": "t-myworks-n",
+      "file": "t-myworks-n.png",
+      "cssW": 160,
+      "cssH": 21,
+      "pxW": 320,
+      "pxH": 42,
+      "text": "我的作品"
+    },
+    {
+      "id": "t-count-n",
+      "file": "t-count-n.png",
+      "cssW": 200,
+      "cssH": 18,
+      "pxW": 400,
+      "pxH": 36,
+      "text": "共 3 部 · 夜读视图"
+    },
+    {
+      "id": "t-continue-label-n",
+      "file": "t-continue-label-n.png",
+      "cssW": 160,
+      "cssH": 18,
+      "pxW": 320,
+      "pxH": 36,
+      "text": "继续写作"
+    },
+    {
+      "id": "t-continue-btn-n",
+      "file": "t-continue-btn-n.png",
+      "cssW": 96,
+      "cssH": 20,
+      "pxW": 192,
+      "pxH": 40,
+      "text": "继续写作"
+    },
+    {
+      "id": "t-title-15n-1",
+      "file": "t-title-15n-1.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "长夜将明"
+    },
+    {
+      "id": "t-title-15n-2",
+      "file": "t-title-15n-2.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "雾都钟楼"
+    },
+    {
+      "id": "t-title-15n-3",
+      "file": "t-title-15n-3.png",
+      "cssW": 150,
+      "cssH": 23,
+      "pxW": 300,
+      "pxH": 46,
+      "text": "河堤手记"
+    },
+    {
+      "id": "t-meta-n-1",
+      "file": "t-meta-n-1.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "12.6 万字 · 43 章 · 3 天前"
+    },
+    {
+      "id": "t-meta-n-2",
+      "file": "t-meta-n-2.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "8.2 万字 · 28 章 · 一周前"
+    },
+    {
+      "id": "t-meta-n-3",
+      "file": "t-meta-n-3.png",
+      "cssW": 170,
+      "cssH": 18,
+      "pxW": 340,
+      "pxH": 36,
+      "text": "3.4 万字 · 12 章 · 两周前"
+    },
+    {
+      "id": "t-tree-head",
+      "file": "t-tree-head.png",
+      "cssW": 80,
+      "cssH": 20,
+      "pxW": 160,
+      "pxH": 40,
+      "text": "章节"
+    },
+    {
+      "id": "t-vol1",
+      "file": "t-vol1.png",
+      "cssW": 160,
+      "cssH": 20,
+      "pxW": 320,
+      "pxH": 40,
+      "text": "第一卷 · 雾夜"
+    },
+    {
+      "id": "t-vol2",
+      "file": "t-vol2.png",
+      "cssW": 160,
+      "cssH": 20,
+      "pxW": 320,
+      "pxH": 40,
+      "text": "第二卷 · 回声"
+    },
+    {
+      "id": "t-ch1",
+      "file": "t-ch1.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第一章 河堤"
+    },
+    {
+      "id": "t-ch2",
+      "file": "t-ch2.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第二章 来信"
+    },
+    {
+      "id": "t-ch3",
+      "file": "t-ch3.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第三章 钟声"
+    },
+    {
+      "id": "t-ch4",
+      "file": "t-ch4.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第四章 旧照片"
+    },
+    {
+      "id": "t-ch5",
+      "file": "t-ch5.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第五章 渡口"
+    },
+    {
+      "id": "t-ch6",
+      "file": "t-ch6.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第六章 雪线"
+    },
+    {
+      "id": "t-ch3-on",
+      "file": "t-ch3-on.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第三章 钟声"
+    },
+    {
+      "id": "t-top-work",
+      "file": "t-top-work.png",
+      "cssW": 120,
+      "cssH": 19,
+      "pxW": 240,
+      "pxH": 38,
+      "text": "长夜将明"
+    },
+    {
+      "id": "t-top-chap",
+      "file": "t-top-chap.png",
+      "cssW": 180,
+      "cssH": 23,
+      "pxW": 360,
+      "pxH": 46,
+      "text": "第三章 · 钟声"
+    },
+    {
+      "id": "t-ed-title",
+      "file": "t-ed-title.png",
+      "cssW": 260,
+      "cssH": 34,
+      "pxW": 520,
+      "pxH": 68,
+      "text": "第三章 · 钟声"
+    },
+    {
+      "id": "t-ed-title-b",
+      "file": "t-ed-title-b.png",
+      "cssW": 320,
+      "cssH": 40,
+      "pxW": 640,
+      "pxH": 80,
+      "text": "第三章 · 钟声"
+    },
+    {
+      "id": "t-para-style",
+      "file": "t-para-style.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "正文"
+    },
+    {
+      "id": "t-words",
+      "file": "t-words.png",
+      "cssW": 80,
+      "cssH": 18,
+      "pxW": 160,
+      "pxH": 36,
+      "text": "1,842 字"
+    },
+    {
+      "id": "t-p1",
+      "file": "t-p1.png",
+      "cssW": 612,
+      "cssH": 97,
+      "pxW": 1224,
+      "pxH": 194,
+      "text": "钟楼上的雾还没有散。林晚把围巾往上拉了拉，沿着河堤往东走。路灯一盏一盏地灭下去，像是有人在远处替她数着步子。她想起三年前的那个夜晚——同样的雾，同样的钟声，只是那时她还不认识沈述。"
+    },
+    {
+      "id": "t-p2",
+      "file": "t-p2.png",
+      "cssW": 612,
+      "cssH": 97,
+      "pxW": 1224,
+      "pxH": 194,
+      "text": "渡口的灯亮着。沈述站在灯下，手里捏着一封没有署名的信。他没有抬头，声音却先到了她耳边：“你来了。”林晚停下脚步。河面很静，只能听见水声，一下，又一下，像某种缓慢的敲钟方式。"
+    },
+    {
+      "id": "t-p3",
+      "file": "t-p3.png",
+      "cssW": 612,
+      "cssH": 97,
+      "pxW": 1224,
+      "pxH": 194,
+      "text": "她走近两步，看清了信封上的笔迹——那不是她的字，也确实不像沈述的。信纸很薄，边缘有一圈淡淡的焦痕。她忽然想起失踪的那本旧相册，想起母亲说过的那句话：有些事，知道得越晚越好。"
+    },
+    {
+      "id": "t-p1b",
+      "file": "t-p1b.png",
+      "cssW": 680,
+      "cssH": 106,
+      "pxW": 1360,
+      "pxH": 212,
+      "text": "钟楼上的雾还没有散。林晚把围巾往上拉了拉，沿着河堤往东走。路灯一盏一盏地灭下去，像是有人在远处替她数着步子。她想起三年前的那个夜晚——同样的雾，同样的钟声，只是那时她还不认识沈述。"
+    },
+    {
+      "id": "t-p2b",
+      "file": "t-p2b.png",
+      "cssW": 680,
+      "cssH": 106,
+      "pxW": 1360,
+      "pxH": 212,
+      "text": "渡口的灯亮着。沈述站在灯下，手里捏着一封没有署名的信。他没有抬头，声音却先到了她耳边：“你来了。”林晚停下脚步。河面很静，只能听见水声，一下，又一下，像某种缓慢的敲钟方式。"
+    },
+    {
+      "id": "t-tab-ann",
+      "file": "t-tab-ann.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "批注"
+    },
+    {
+      "id": "t-tab-out",
+      "file": "t-tab-out.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "大纲"
+    },
+    {
+      "id": "t-tab-chr",
+      "file": "t-tab-chr.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "人物"
+    },
+    {
+      "id": "t-tab-img",
+      "file": "t-tab-img.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "插图"
+    },
+    {
+      "id": "t-tab-info",
+      "file": "t-tab-info.png",
+      "cssW": 96,
+      "cssH": 19,
+      "pxW": 192,
+      "pxH": 38,
+      "text": "章节信息"
+    },
+    {
+      "id": "t-ann1",
+      "file": "t-ann1.png",
+      "cssW": 224,
+      "cssH": 45,
+      "pxW": 448,
+      "pxH": 90,
+      "text": "钟声出现得太早——第 2 章已经用过，建议挪到第四章。"
+    },
+    {
+      "id": "t-ann1-chip",
+      "file": "t-ann1-chip.png",
+      "cssW": 60,
+      "cssH": 17,
+      "pxW": 120,
+      "pxH": 34,
+      "text": "第 1 段"
+    },
+    {
+      "id": "t-ann2",
+      "file": "t-ann2.png",
+      "cssW": 224,
+      "cssH": 45,
+      "pxW": 448,
+      "pxH": 90,
+      "text": "沈述这句台词和第二章的信呼应了，好。"
+    },
+    {
+      "id": "t-info-c",
+      "file": "t-info-c.png",
+      "cssW": 260,
+      "cssH": 20,
+      "pxW": 520,
+      "pxH": 40,
+      "text": "字数 1,842 · 状态 待修改 · 出场 林晚、沈述"
+    },
+    {
+      "id": "t-statusbar",
+      "file": "t-statusbar.png",
+      "cssW": 300,
+      "cssH": 18,
+      "pxW": 600,
+      "pxH": 36,
+      "text": "第三章 · 1,842 字 · 自动保存 14:02"
+    },
+    {
+      "id": "t-tree-head-n",
+      "file": "t-tree-head-n.png",
+      "cssW": 80,
+      "cssH": 20,
+      "pxW": 160,
+      "pxH": 40,
+      "text": "章节"
+    },
+    {
+      "id": "t-vol1n",
+      "file": "t-vol1n.png",
+      "cssW": 160,
+      "cssH": 20,
+      "pxW": 320,
+      "pxH": 40,
+      "text": "第一卷 · 雾夜"
+    },
+    {
+      "id": "t-vol2n",
+      "file": "t-vol2n.png",
+      "cssW": 160,
+      "cssH": 20,
+      "pxW": 320,
+      "pxH": 40,
+      "text": "第二卷 · 回声"
+    },
+    {
+      "id": "t-ch1n",
+      "file": "t-ch1n.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第一章 河堤"
+    },
+    {
+      "id": "t-ch2n",
+      "file": "t-ch2n.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第二章 来信"
+    },
+    {
+      "id": "t-ch3n",
+      "file": "t-ch3n.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第三章 钟声"
+    },
+    {
+      "id": "t-ch4n",
+      "file": "t-ch4n.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第四章 旧照片"
+    },
+    {
+      "id": "t-ch5n",
+      "file": "t-ch5n.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第五章 渡口"
+    },
+    {
+      "id": "t-ch6n",
+      "file": "t-ch6n.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第六章 雪线"
+    },
+    {
+      "id": "t-ch3-on-n",
+      "file": "t-ch3-on-n.png",
+      "cssW": 150,
+      "cssH": 20,
+      "pxW": 300,
+      "pxH": 40,
+      "text": "第三章 钟声"
+    },
+    {
+      "id": "t-top-work-n",
+      "file": "t-top-work-n.png",
+      "cssW": 120,
+      "cssH": 19,
+      "pxW": 240,
+      "pxH": 38,
+      "text": "长夜将明"
+    },
+    {
+      "id": "t-top-chap-n",
+      "file": "t-top-chap-n.png",
+      "cssW": 180,
+      "cssH": 23,
+      "pxW": 360,
+      "pxH": 46,
+      "text": "第三章 · 钟声"
+    },
+    {
+      "id": "t-ed-title-n",
+      "file": "t-ed-title-n.png",
+      "cssW": 320,
+      "cssH": 40,
+      "pxW": 640,
+      "pxH": 80,
+      "text": "第三章 · 钟声"
+    },
+    {
+      "id": "t-p1n",
+      "file": "t-p1n.png",
+      "cssW": 612,
+      "cssH": 108,
+      "pxW": 1224,
+      "pxH": 216,
+      "text": "钟楼上的雾还没有散。林晚把围巾往上拉了拉，沿着河堤往东走。路灯一盏一盏地灭下去，像是有人在远处替她数着步子。她想起三年前的那个夜晚——同样的雾，同样的钟声，只是那时她还不认识沈述。"
+    },
+    {
+      "id": "t-p2n",
+      "file": "t-p2n.png",
+      "cssW": 612,
+      "cssH": 108,
+      "pxW": 1224,
+      "pxH": 216,
+      "text": "渡口的灯亮着。沈述站在灯下，手里捏着一封没有署名的信。他没有抬头，声音却先到了她耳边：“你来了。”林晚停下脚步。河面很静，只能听见水声，一下，又一下，像某种缓慢的敲钟方式。"
+    },
+    {
+      "id": "t-words-n",
+      "file": "t-words-n.png",
+      "cssW": 80,
+      "cssH": 18,
+      "pxW": 160,
+      "pxH": 36,
+      "text": "1,842 字"
+    },
+    {
+      "id": "t-saved-n",
+      "file": "t-saved-n.png",
+      "cssW": 140,
+      "cssH": 19,
+      "pxW": 280,
+      "pxH": 38,
+      "text": "已保存"
+    },
+    {
+      "id": "t-ai-title",
+      "file": "t-ai-title.png",
+      "cssW": 120,
+      "cssH": 23,
+      "pxW": 240,
+      "pxH": 46,
+      "text": "恍然梦"
+    },
+    {
+      "id": "t-ai-tab-task",
+      "file": "t-ai-tab-task.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "任务"
+    },
+    {
+      "id": "t-ai-tab-kb",
+      "file": "t-ai-tab-kb.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "知识库"
+    },
+    {
+      "id": "t-ai-tab-style",
+      "file": "t-ai-tab-style.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "文风"
+    },
+    {
+      "id": "t-ai-tab-flow",
+      "file": "t-ai-tab-flow.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "工作流"
+    },
+    {
+      "id": "t-ai-user",
+      "file": "t-ai-user.png",
+      "cssW": 300,
+      "cssH": 23,
+      "pxW": 600,
+      "pxH": 46,
+      "text": "第三章的语速有点慢，帮我看一下哪里可以压缩。"
+    },
+    {
+      "id": "t-ai-reply",
+      "file": "t-ai-reply.png",
+      "cssW": 320,
+      "cssH": 71,
+      "pxW": 640,
+      "pxH": 142,
+      "text": "我读了第三章。三处可以收紧：1 河堤行走的心理描写；2 渡口对话前的环境铺陈；3 旧照片出现的时机偏晚。要我出一版改写提案吗？"
+    },
+    {
+      "id": "t-ai-card-title",
+      "file": "t-ai-card-title.png",
+      "cssW": 240,
+      "cssH": 20,
+      "pxW": 480,
+      "pxH": 40,
+      "text": "第三章节奏建议 · 3 处"
+    },
+    {
+      "id": "t-ai-card-item",
+      "file": "t-ai-card-item.png",
+      "cssW": 300,
+      "cssH": 62,
+      "pxW": 600,
+      "pxH": 124,
+      "text": "1  压缩心理描写（第 3-5 段）\n2  收紧渡口环境铺陈\n3  旧照片提前一个场景"
+    },
+    {
+      "id": "t-ai-apply",
+      "file": "t-ai-apply.png",
+      "cssW": 110,
+      "cssH": 19,
+      "pxW": 220,
+      "pxH": 38,
+      "text": "应用所选修改"
+    },
+    {
+      "id": "t-ai-diff",
+      "file": "t-ai-diff.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "预览差异"
+    },
+    {
+      "id": "t-ai-scope",
+      "file": "t-ai-scope.png",
+      "cssW": 280,
+      "cssH": 17,
+      "pxW": 560,
+      "pxH": 34,
+      "text": "将发送：本章正文与 2 位相关人物卡"
+    },
+    {
+      "id": "t-ai-input",
+      "file": "t-ai-input.png",
+      "cssW": 240,
+      "cssH": 19,
+      "pxW": 480,
+      "pxH": 38,
+      "text": "输入写作要求…"
+    },
+    {
+      "id": "t-sheet-A",
+      "file": "t-sheet-A.png",
+      "cssW": 420,
+      "cssH": 23,
+      "pxW": 840,
+      "pxH": 46,
+      "text": "A · 出版编辑部（推荐起点）"
+    },
+    {
+      "id": "t-sheet-B",
+      "file": "t-sheet-B.png",
+      "cssW": 420,
+      "cssH": 23,
+      "pxW": 840,
+      "pxH": 46,
+      "text": "B · 海报画廊"
+    },
+    {
+      "id": "t-sheet-C",
+      "file": "t-sheet-C.png",
+      "cssW": 420,
+      "cssH": 23,
+      "pxW": 840,
+      "pxH": 46,
+      "text": "C · 档案工作室"
+    },
+    {
+      "id": "t-sheet-D",
+      "file": "t-sheet-D.png",
+      "cssW": 420,
+      "cssH": 23,
+      "pxW": 840,
+      "pxH": 46,
+      "text": "D · 文学夜读"
+    },
+    {
+      "id": "t-rail-wen-on-n",
+      "file": "t-rail-wen-on-n.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "文"
+    },
+    {
+      "id": "t-rail-gang-n",
+      "file": "t-rail-gang-n.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "纲"
+    },
+    {
+      "id": "t-rail-ren-n",
+      "file": "t-rail-ren-n.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "人"
+    },
+    {
+      "id": "t-rail-she-n",
+      "file": "t-rail-she-n.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "设"
+    },
+    {
+      "id": "t-rail-ling-n",
+      "file": "t-rail-ling-n.png",
+      "cssW": 32,
+      "cssH": 21,
+      "pxW": 64,
+      "pxH": 42,
+      "text": "灵"
+    },
+    {
+      "id": "t-para-style-n",
+      "file": "t-para-style-n.png",
+      "cssW": 80,
+      "cssH": 19,
+      "pxW": 160,
+      "pxH": 38,
+      "text": "正文"
+    },
+    {
+      "id": "t-brand-seal-n",
+      "file": "t-brand-seal-n.png",
+      "cssW": 32,
+      "cssH": 23,
+      "pxW": 64,
+      "pxH": 46,
+      "text": "坊"
+    },
+    {
+      "id": "st-title",
+      "file": "st-title.png",
+      "cssW": 60,
+      "cssH": 24,
+      "pxW": 120,
+      "pxH": 48,
+      "text": "设置"
+    },
+    {
+      "id": "st-sub",
+      "file": "st-sub.png",
+      "cssW": 220,
+      "cssH": 15,
+      "pxW": 440,
+      "pxH": 30,
+      "text": "SETTINGS · 小说工坊"
+    },
+    {
+      "id": "st-nav-ico-wai",
+      "file": "st-nav-ico-wai.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "外"
+    },
+    {
+      "id": "st-nav-ico-meng",
+      "file": "st-nav-ico-meng.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "梦"
+    },
+    {
+      "id": "st-nav-ico-shu",
+      "file": "st-nav-ico-shu.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "数"
+    },
+    {
+      "id": "st-nav-ico-guan",
+      "file": "st-nav-ico-guan.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "关"
+    },
+    {
+      "id": "st-nav-ico-wai-on",
+      "file": "st-nav-ico-wai-on.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "外"
+    },
+    {
+      "id": "st-nav-app",
+      "file": "st-nav-app.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "外观"
+    },
+    {
+      "id": "st-nav-app-on",
+      "file": "st-nav-app-on.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "外观"
+    },
+    {
+      "id": "st-nav-ai",
+      "file": "st-nav-ai.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "恍然梦"
+    },
+    {
+      "id": "st-nav-data",
+      "file": "st-nav-data.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "数据"
+    },
+    {
+      "id": "st-nav-about",
+      "file": "st-nav-about.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "关于"
+    },
+    {
+      "id": "st-nav-desc-app",
+      "file": "st-nav-desc-app.png",
+      "cssW": 150,
+      "cssH": 16,
+      "pxW": 300,
+      "pxH": 32,
+      "text": "主题 / 字体 / 字号"
+    },
+    {
+      "id": "st-nav-desc-ai",
+      "file": "st-nav-desc-ai.png",
+      "cssW": 150,
+      "cssH": 16,
+      "pxW": 300,
+      "pxH": 32,
+      "text": "AI 写作助手接入"
+    },
+    {
+      "id": "st-nav-desc-data",
+      "file": "st-nav-desc-data.png",
+      "cssW": 150,
+      "cssH": 16,
+      "pxW": 300,
+      "pxH": 32,
+      "text": "导入导出 / 备份 / 存储"
+    },
+    {
+      "id": "st-nav-desc-about",
+      "file": "st-nav-desc-about.png",
+      "cssW": 150,
+      "cssH": 16,
+      "pxW": 300,
+      "pxH": 32,
+      "text": "统计 / 手册 / 标语"
+    },
+    {
+      "id": "st-h-app",
+      "file": "st-h-app.png",
+      "cssW": 200,
+      "cssH": 29,
+      "pxW": 400,
+      "pxH": 58,
+      "text": "外观"
+    },
+    {
+      "id": "st-h-ai",
+      "file": "st-h-ai.png",
+      "cssW": 200,
+      "cssH": 29,
+      "pxW": 400,
+      "pxH": 58,
+      "text": "恍然梦"
+    },
+    {
+      "id": "st-h-data",
+      "file": "st-h-data.png",
+      "cssW": 200,
+      "cssH": 29,
+      "pxW": 400,
+      "pxH": 58,
+      "text": "数据"
+    },
+    {
+      "id": "st-h-about",
+      "file": "st-h-about.png",
+      "cssW": 200,
+      "cssH": 29,
+      "pxW": 400,
+      "pxH": 58,
+      "text": "关于"
+    },
+    {
+      "id": "st-desc-app",
+      "file": "st-desc-app.png",
+      "cssW": 460,
+      "cssH": 18,
+      "pxW": 920,
+      "pxH": 36,
+      "text": "主题、字体与字号，改动即时生效并同步到全部窗口"
+    },
+    {
+      "id": "st-desc-ai",
+      "file": "st-desc-ai.png",
+      "cssW": 560,
+      "cssH": 18,
+      "pxW": 1120,
+      "pxH": 36,
+      "text": "AI 写作助手：正文剧情线路 / 大纲规划 / 设定扩展 / 人物丰富 / 自由问答"
+    },
+    {
+      "id": "st-desc-data",
+      "file": "st-desc-data.png",
+      "cssW": 420,
+      "cssH": 18,
+      "pxW": 840,
+      "pxH": 36,
+      "text": "导入导出、备份与本地存储，全部数据保存在本机"
+    },
+    {
+      "id": "st-desc-about",
+      "file": "st-desc-about.png",
+      "cssW": 300,
+      "cssH": 18,
+      "pxW": 600,
+      "pxH": 36,
+      "text": "小说工坊 · 本地优先的写作工坊"
+    },
+    {
+      "id": "st-r-theme",
+      "file": "st-r-theme.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "主题"
+    },
+    {
+      "id": "st-r-theme-sub",
+      "file": "st-r-theme-sub.png",
+      "cssW": 180,
+      "cssH": 17,
+      "pxW": 360,
+      "pxH": 34,
+      "text": "宣纸 / 羊皮纸 / 暗夜书房"
+    },
+    {
+      "id": "st-r-cjk",
+      "file": "st-r-cjk.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "中文字体"
+    },
+    {
+      "id": "st-r-cjk-sub",
+      "file": "st-r-cjk-sub.png",
+      "cssW": 180,
+      "cssH": 17,
+      "pxW": 360,
+      "pxH": 34,
+      "text": "正文与界面的中文字形"
+    },
+    {
+      "id": "st-r-latin",
+      "file": "st-r-latin.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "西文字体"
+    },
+    {
+      "id": "st-r-latin-sub",
+      "file": "st-r-latin-sub.png",
+      "cssW": 180,
+      "cssH": 17,
+      "pxW": 360,
+      "pxH": 34,
+      "text": "拉丁字符使用的字形"
+    },
+    {
+      "id": "st-r-fs",
+      "file": "st-r-fs.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "正文字号"
+    },
+    {
+      "id": "st-r-fs-sub",
+      "file": "st-r-fs-sub.png",
+      "cssW": 200,
+      "cssH": 17,
+      "pxW": 400,
+      "pxH": 34,
+      "text": "正文编辑与阅读字号（13-24px）"
+    },
+    {
+      "id": "st-chip-xuan",
+      "file": "st-chip-xuan.png",
+      "cssW": 60,
+      "cssH": 18,
+      "pxW": 120,
+      "pxH": 36,
+      "text": "宣纸"
+    },
+    {
+      "id": "st-chip-par",
+      "file": "st-chip-par.png",
+      "cssW": 72,
+      "cssH": 18,
+      "pxW": 144,
+      "pxH": 36,
+      "text": "羊皮纸"
+    },
+    {
+      "id": "st-chip-night",
+      "file": "st-chip-night.png",
+      "cssW": 84,
+      "cssH": 18,
+      "pxW": 168,
+      "pxH": 36,
+      "text": "暗夜书房"
+    },
+    {
+      "id": "st-sel-cjk",
+      "file": "st-sel-cjk.png",
+      "cssW": 100,
+      "cssH": 20,
+      "pxW": 200,
+      "pxH": 40,
+      "text": "思源宋体"
+    },
+    {
+      "id": "st-sel-latin",
+      "file": "st-sel-latin.png",
+      "cssW": 130,
+      "cssH": 20,
+      "pxW": 260,
+      "pxH": 40,
+      "text": "Playfair Display"
+    },
+    {
+      "id": "st-fs-minus",
+      "file": "st-fs-minus.png",
+      "cssW": 44,
+      "cssH": 18,
+      "pxW": 88,
+      "pxH": 36,
+      "text": "A－"
+    },
+    {
+      "id": "st-fs-cur",
+      "file": "st-fs-cur.png",
+      "cssW": 56,
+      "cssH": 18,
+      "pxW": 112,
+      "pxH": 36,
+      "text": "17 px"
+    },
+    {
+      "id": "st-fs-plus",
+      "file": "st-fs-plus.png",
+      "cssW": 44,
+      "cssH": 18,
+      "pxW": 88,
+      "pxH": 36,
+      "text": "A＋"
+    },
+    {
+      "id": "st-prev-body",
+      "file": "st-prev-body.png",
+      "cssW": 100,
+      "cssH": 18,
+      "pxW": 200,
+      "pxH": 36,
+      "text": "正文预览"
+    },
+    {
+      "id": "st-prev-cover",
+      "file": "st-prev-cover.png",
+      "cssW": 100,
+      "cssH": 18,
+      "pxW": 200,
+      "pxH": 36,
+      "text": "封面预览"
+    },
+    {
+      "id": "st-prev-note",
+      "file": "st-prev-note.png",
+      "cssW": 320,
+      "cssH": 17,
+      "pxW": 640,
+      "pxH": 34,
+      "text": "改动即时生效，已同步到全部窗口"
+    },
+    {
+      "id": "st-cv-mini",
+      "file": "st-cv-mini.png",
+      "cssW": 80,
+      "cssH": 20,
+      "pxW": 160,
+      "pxH": 40,
+      "text": "长夜将明"
+    },
+    {
+      "id": "st-d-import",
+      "file": "st-d-import.png",
+      "cssW": 160,
+      "cssH": 19,
+      "pxW": 320,
+      "pxH": 38,
+      "text": "导入作品…"
+    },
+    {
+      "id": "st-d-export",
+      "file": "st-d-export.png",
+      "cssW": 160,
+      "cssH": 19,
+      "pxW": 320,
+      "pxH": 38,
+      "text": "导出正文…"
+    },
+    {
+      "id": "st-d-backup",
+      "file": "st-d-backup.png",
+      "cssW": 200,
+      "cssH": 19,
+      "pxW": 400,
+      "pxH": 38,
+      "text": "备份全部数据（JSON）"
+    },
+    {
+      "id": "st-d-restore",
+      "file": "st-d-restore.png",
+      "cssW": 200,
+      "cssH": 19,
+      "pxW": 400,
+      "pxH": 38,
+      "text": "恢复备份（JSON）…"
+    },
+    {
+      "id": "st-d-trash",
+      "file": "st-d-trash.png",
+      "cssW": 160,
+      "cssH": 19,
+      "pxW": 320,
+      "pxH": 38,
+      "text": "回收站"
+    },
+    {
+      "id": "st-d-import-sub",
+      "file": "st-d-import-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "支持 txt / md / docx / pdf / epub / 图片"
+    },
+    {
+      "id": "st-d-export-sub",
+      "file": "st-d-export-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "TXT / Markdown / Word，可按章节勾选"
+    },
+    {
+      "id": "st-d-backup-sub",
+      "file": "st-d-backup-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "作品、章节、人物、大纲、设定、批注等全量快照"
+    },
+    {
+      "id": "st-d-restore-sub",
+      "file": "st-d-restore-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "以备份覆盖当前全部数据，恢复前自动保存并全窗口重载"
+    },
+    {
+      "id": "st-d-trash-sub",
+      "file": "st-d-trash-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "软删除的作品与条目可还原或彻底清除"
+    },
+    {
+      "id": "st-d-loc-h",
+      "file": "st-d-loc-h.png",
+      "cssW": 140,
+      "cssH": 21,
+      "pxW": 280,
+      "pxH": 42,
+      "text": "存储位置"
+    },
+    {
+      "id": "st-d-cur",
+      "file": "st-d-cur.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "当前位置"
+    },
+    {
+      "id": "st-d-cur-path",
+      "file": "st-d-cur-path.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "C:\\Users\\linque\\Documents\\小说工坊"
+    },
+    {
+      "id": "st-d-tag",
+      "file": "st-d-tag.png",
+      "cssW": 40,
+      "cssH": 17,
+      "pxW": 80,
+      "pxH": 34,
+      "text": "默认"
+    },
+    {
+      "id": "st-d-move",
+      "file": "st-d-move.png",
+      "cssW": 160,
+      "cssH": 19,
+      "pxW": 320,
+      "pxH": 38,
+      "text": "更改存储位置…"
+    },
+    {
+      "id": "st-d-move-sub",
+      "file": "st-d-move-sub.png",
+      "cssW": 480,
+      "cssH": 17,
+      "pxW": 960,
+      "pxH": 34,
+      "text": "迁移前自动保存，应用关闭并自动重启后生效；原位置默认保留为副本"
+    },
+    {
+      "id": "st-d-old",
+      "file": "st-d-old.png",
+      "cssW": 120,
+      "cssH": 19,
+      "pxW": 240,
+      "pxH": 38,
+      "text": "旧默认快照"
+    },
+    {
+      "id": "st-d-old-sub",
+      "file": "st-d-old-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "C:\\Users\\linque\\AppData\\Roaming\\小说工坊（1.2 GB）"
+    },
+    {
+      "id": "st-d-open",
+      "file": "st-d-open.png",
+      "cssW": 160,
+      "cssH": 19,
+      "pxW": 320,
+      "pxH": 38,
+      "text": "打开数据文件夹"
+    },
+    {
+      "id": "st-d-open-sub",
+      "file": "st-d-open-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "在资源管理器中查看本地数据目录"
+    },
+    {
+      "id": "st-d-warn",
+      "file": "st-d-warn.png",
+      "cssW": 690,
+      "cssH": 37,
+      "pxW": 1380,
+      "pxH": 74,
+      "text": "旧位置里只剩指针与备份副本：缓存（体积大头）可安全清理；IndexedDB 是数据备份；指针文件不可删，否则下次启动会回到默认位置并新建空库。"
+    },
+    {
+      "id": "st-d-b-open",
+      "file": "st-d-b-open.png",
+      "cssW": 40,
+      "cssH": 18,
+      "pxW": 80,
+      "pxH": 36,
+      "text": "打开"
+    },
+    {
+      "id": "st-d-b-clean",
+      "file": "st-d-b-clean.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "清理缓存"
+    },
+    {
+      "id": "st-d-b-del",
+      "file": "st-d-b-del.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "删除数据"
+    },
+    {
+      "id": "st-a-stats",
+      "file": "st-a-stats.png",
+      "cssW": 140,
+      "cssH": 19,
+      "pxW": 280,
+      "pxH": 38,
+      "text": "写作统计"
+    },
+    {
+      "id": "st-a-stats-sub",
+      "file": "st-a-stats-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "每日码字曲线与累计字数"
+    },
+    {
+      "id": "st-a-help",
+      "file": "st-a-help.png",
+      "cssW": 160,
+      "cssH": 19,
+      "pxW": 320,
+      "pxH": 38,
+      "text": "帮助与键位手册"
+    },
+    {
+      "id": "st-a-help-sub",
+      "file": "st-a-help-sub.png",
+      "cssW": 420,
+      "cssH": 17,
+      "pxW": 840,
+      "pxH": 34,
+      "text": "全部功能与快捷键说明"
+    },
+    {
+      "id": "st-a-foot",
+      "file": "st-a-foot.png",
+      "cssW": 320,
+      "cssH": 16,
+      "pxW": 640,
+      "pxH": 32,
+      "text": "本地优先 · 自动保存 · 色带书封 G"
+    },
+    {
+      "id": "st-ai-lb-provider",
+      "file": "st-ai-lb-provider.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "服务商"
+    },
+    {
+      "id": "st-ai-lb-url",
+      "file": "st-ai-lb-url.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "API 地址"
+    },
+    {
+      "id": "st-ai-lb-models",
+      "file": "st-ai-lb-models.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "模型列表"
+    },
+    {
+      "id": "st-ai-lb-temp",
+      "file": "st-ai-lb-temp.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "温度"
+    },
+    {
+      "id": "st-ai-lb-ctx",
+      "file": "st-ai-lb-ctx.png",
+      "cssW": 110,
+      "cssH": 19,
+      "pxW": 220,
+      "pxH": 38,
+      "text": "上下文预算"
+    },
+    {
+      "id": "st-ai-lb-privacy",
+      "file": "st-ai-lb-privacy.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "隐私模式"
+    },
+    {
+      "id": "st-ai-lb-kb",
+      "file": "st-ai-lb-kb.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "自动记忆"
+    },
+    {
+      "id": "st-ai-lb-cap",
+      "file": "st-ai-lb-cap.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "每日上限"
+    },
+    {
+      "id": "st-ai-lb-emb",
+      "file": "st-ai-lb-emb.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "语义检索"
+    },
+    {
+      "id": "st-ai-lb-vec",
+      "file": "st-ai-lb-vec.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "向量模型"
+    },
+    {
+      "id": "st-ai-lb-key",
+      "file": "st-ai-lb-key.png",
+      "cssW": 90,
+      "cssH": 19,
+      "pxW": 180,
+      "pxH": 38,
+      "text": "API 密钥"
+    },
+    {
+      "id": "st-ai-sel-provider",
+      "file": "st-ai-sel-provider.png",
+      "cssW": 140,
+      "cssH": 20,
+      "pxW": 280,
+      "pxH": 40,
+      "text": "DeepSeek（默认）"
+    },
+    {
+      "id": "st-ai-key-ph",
+      "file": "st-ai-key-ph.png",
+      "cssW": 250,
+      "cssH": 19,
+      "pxW": 500,
+      "pxH": 38,
+      "text": "已配置（输入新密钥可覆盖）"
+    },
+    {
+      "id": "st-ai-key-tag",
+      "file": "st-ai-key-tag.png",
+      "cssW": 48,
+      "cssH": 17,
+      "pxW": 96,
+      "pxH": 34,
+      "text": "已配置"
+    },
+    {
+      "id": "st-ai-btn-savekey",
+      "file": "st-ai-btn-savekey.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "保存密钥"
+    },
+    {
+      "id": "st-ai-key-clear",
+      "file": "st-ai-key-clear.png",
+      "cssW": 40,
+      "cssH": 18,
+      "pxW": 80,
+      "pxH": 36,
+      "text": "清除"
+    },
+    {
+      "id": "st-ai-tag-only",
+      "file": "st-ai-tag-only.png",
+      "cssW": 40,
+      "cssH": 17,
+      "pxW": 80,
+      "pxH": 34,
+      "text": "专属"
+    },
+    {
+      "id": "st-ai-tag-using",
+      "file": "st-ai-tag-using.png",
+      "cssW": 52,
+      "cssH": 17,
+      "pxW": 104,
+      "pxH": 34,
+      "text": "使用中"
+    },
+    {
+      "id": "st-ai-tip",
+      "file": "st-ai-tip.png",
+      "cssW": 440,
+      "cssH": 17,
+      "pxW": 880,
+      "pxH": 34,
+      "text": "点行即选用，使用中的模型立即生效，无需再点保存设置。"
+    },
+    {
+      "id": "st-ai-hint-temp",
+      "file": "st-ai-hint-temp.png",
+      "cssW": 220,
+      "cssH": 17,
+      "pxW": 440,
+      "pxH": 34,
+      "text": "0 严谨 · 1.2+ 更放肆"
+    },
+    {
+      "id": "st-ai-hint-privacy",
+      "file": "st-ai-hint-privacy.png",
+      "cssW": 320,
+      "cssH": 17,
+      "pxW": 640,
+      "pxH": 34,
+      "text": "仅发送摘要，不发送正文原文与检索片段"
+    },
+    {
+      "id": "st-ai-hint-kb",
+      "file": "st-ai-hint-kb.png",
+      "cssW": 320,
+      "cssH": 17,
+      "pxW": 640,
+      "pxH": 34,
+      "text": "默认关闭，开启后只更新改动章节与依赖"
+    },
+    {
+      "id": "st-ai-hint-cap",
+      "file": "st-ai-hint-cap.png",
+      "cssW": 340,
+      "cssH": 17,
+      "pxW": 680,
+      "pxH": 34,
+      "text": "tokens，启用自动记忆时必填；缺失 usage 用估算"
+    },
+    {
+      "id": "st-ai-hint-emb",
+      "file": "st-ai-hint-emb.png",
+      "cssW": 220,
+      "cssH": 17,
+      "pxW": 440,
+      "pxH": 34,
+      "text": "默认关闭，失败回落关键词"
+    },
+    {
+      "id": "st-ai-emb-ph",
+      "file": "st-ai-emb-ph.png",
+      "cssW": 200,
+      "cssH": 19,
+      "pxW": 400,
+      "pxH": 38,
+      "text": "独立 embeddings 模型名"
+    },
+    {
+      "id": "st-ai-note",
+      "file": "st-ai-note.png",
+      "cssW": 540,
+      "cssH": 17,
+      "pxW": 1080,
+      "pxH": 34,
+      "text": "密钥经系统凭据（Windows DPAPI）加密存放，不进备份文件、不回显明文。"
+    },
+    {
+      "id": "st-ai-btn-fetch",
+      "file": "st-ai-btn-fetch.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "拉取模型"
+    },
+    {
+      "id": "st-ai-btn-add",
+      "file": "st-ai-btn-add.png",
+      "cssW": 84,
+      "cssH": 18,
+      "pxW": 168,
+      "pxH": 36,
+      "text": "＋ 添加模型"
+    },
+    {
+      "id": "st-ai-btn-save",
+      "file": "st-ai-btn-save.png",
+      "cssW": 86,
+      "cssH": 20,
+      "pxW": 172,
+      "pxH": 40,
+      "text": "保存设置"
+    },
+    {
+      "id": "st-ai-btn-test",
+      "file": "st-ai-btn-test.png",
+      "cssW": 64,
+      "cssH": 18,
+      "pxW": 128,
+      "pxH": 36,
+      "text": "连接测试"
+    },
+    {
+      "id": "st-ai-ready",
+      "file": "st-ai-ready.png",
+      "cssW": 48,
+      "cssH": 17,
+      "pxW": 96,
+      "pxH": 34,
+      "text": "已就绪"
+    },
+    {
+      "id": "st-n-title",
+      "file": "st-n-title.png",
+      "cssW": 60,
+      "cssH": 24,
+      "pxW": 120,
+      "pxH": 48,
+      "text": "设置"
+    },
+    {
+      "id": "st-n-sub",
+      "file": "st-n-sub.png",
+      "cssW": 220,
+      "cssH": 15,
+      "pxW": 440,
+      "pxH": 30,
+      "text": "SETTINGS · 小说工坊"
+    },
+    {
+      "id": "st-n-ico-wai",
+      "file": "st-n-ico-wai.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "外"
+    },
+    {
+      "id": "st-n-ico-meng",
+      "file": "st-n-ico-meng.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "梦"
+    },
+    {
+      "id": "st-n-ico-shu",
+      "file": "st-n-ico-shu.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "数"
+    },
+    {
+      "id": "st-n-ico-guan",
+      "file": "st-n-ico-guan.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "关"
+    },
+    {
+      "id": "st-n-ico-wai-on",
+      "file": "st-n-ico-wai-on.png",
+      "cssW": 26,
+      "cssH": 21,
+      "pxW": 52,
+      "pxH": 42,
+      "text": "外"
+    },
+    {
+      "id": "st-n-nav-app",
+      "file": "st-n-nav-app.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "外观"
+    },
+    {
+      "id": "st-n-nav-app-on",
+      "file": "st-n-nav-app-on.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "外观"
+    },
+    {
+      "id": "st-n-nav-ai",
+      "file": "st-n-nav-ai.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "恍然梦"
+    },
+    {
+      "id": "st-n-nav-data",
+      "file": "st-n-nav-data.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "数据"
+    },
+    {
+      "id": "st-n-nav-about",
+      "file": "st-n-nav-about.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "关于"
+    },
+    {
+      "id": "st-n-nav-desc-app",
+      "file": "st-n-nav-desc-app.png",
+      "cssW": 150,
+      "cssH": 16,
+      "pxW": 300,
+      "pxH": 32,
+      "text": "主题 / 字体 / 字号"
+    },
+    {
+      "id": "st-n-nav-desc-ai",
+      "file": "st-n-nav-desc-ai.png",
+      "cssW": 150,
+      "cssH": 16,
+      "pxW": 300,
+      "pxH": 32,
+      "text": "AI 写作助手接入"
+    },
+    {
+      "id": "st-n-nav-desc-data",
+      "file": "st-n-nav-desc-data.png",
+      "cssW": 150,
+      "cssH": 16,
+      "pxW": 300,
+      "pxH": 32,
+      "text": "导入导出 / 备份 / 存储"
+    },
+    {
+      "id": "st-n-nav-desc-about",
+      "file": "st-n-nav-desc-about.png",
+      "cssW": 150,
+      "cssH": 16,
+      "pxW": 300,
+      "pxH": 32,
+      "text": "统计 / 手册 / 标语"
+    },
+    {
+      "id": "st-n-h-app",
+      "file": "st-n-h-app.png",
+      "cssW": 200,
+      "cssH": 29,
+      "pxW": 400,
+      "pxH": 58,
+      "text": "外观"
+    },
+    {
+      "id": "st-n-desc-app",
+      "file": "st-n-desc-app.png",
+      "cssW": 460,
+      "cssH": 18,
+      "pxW": 920,
+      "pxH": 36,
+      "text": "主题、字体与字号，改动即时生效并同步到全部窗口"
+    },
+    {
+      "id": "st-n-r-theme",
+      "file": "st-n-r-theme.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "主题"
+    },
+    {
+      "id": "st-n-r-cjk",
+      "file": "st-n-r-cjk.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "中文字体"
+    },
+    {
+      "id": "st-n-r-latin",
+      "file": "st-n-r-latin.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "西文字体"
+    },
+    {
+      "id": "st-n-r-fs",
+      "file": "st-n-r-fs.png",
+      "cssW": 100,
+      "cssH": 19,
+      "pxW": 200,
+      "pxH": 38,
+      "text": "正文字号"
+    },
+    {
+      "id": "st-n-r-theme-sub",
+      "file": "st-n-r-theme-sub.png",
+      "cssW": 180,
+      "cssH": 17,
+      "pxW": 360,
+      "pxH": 34,
+      "text": "宣纸 / 羊皮纸 / 暗夜书房"
+    },
+    {
+      "id": "st-n-r-cjk-sub",
+      "file": "st-n-r-cjk-sub.png",
+      "cssW": 180,
+      "cssH": 17,
+      "pxW": 360,
+      "pxH": 34,
+      "text": "正文与界面的中文字形"
+    },
+    {
+      "id": "st-n-r-latin-sub",
+      "file": "st-n-r-latin-sub.png",
+      "cssW": 180,
+      "cssH": 17,
+      "pxW": 360,
+      "pxH": 34,
+      "text": "拉丁字符使用的字形"
+    },
+    {
+      "id": "st-n-r-fs-sub",
+      "file": "st-n-r-fs-sub.png",
+      "cssW": 200,
+      "cssH": 17,
+      "pxW": 400,
+      "pxH": 34,
+      "text": "正文编辑与阅读字号（13-24px）"
+    },
+    {
+      "id": "st-n-chip-xuan",
+      "file": "st-n-chip-xuan.png",
+      "cssW": 60,
+      "cssH": 18,
+      "pxW": 120,
+      "pxH": 36,
+      "text": "宣纸"
+    },
+    {
+      "id": "st-n-chip-par",
+      "file": "st-n-chip-par.png",
+      "cssW": 72,
+      "cssH": 18,
+      "pxW": 144,
+      "pxH": 36,
+      "text": "羊皮纸"
+    },
+    {
+      "id": "st-n-chip-night",
+      "file": "st-n-chip-night.png",
+      "cssW": 84,
+      "cssH": 18,
+      "pxW": 168,
+      "pxH": 36,
+      "text": "暗夜书房"
+    },
+    {
+      "id": "st-n-sel-cjk",
+      "file": "st-n-sel-cjk.png",
+      "cssW": 100,
+      "cssH": 20,
+      "pxW": 200,
+      "pxH": 40,
+      "text": "思源宋体"
+    },
+    {
+      "id": "st-n-sel-latin",
+      "file": "st-n-sel-latin.png",
+      "cssW": 130,
+      "cssH": 20,
+      "pxW": 260,
+      "pxH": 40,
+      "text": "Playfair Display"
+    },
+    {
+      "id": "st-n-fs-minus",
+      "file": "st-n-fs-minus.png",
+      "cssW": 44,
+      "cssH": 18,
+      "pxW": 88,
+      "pxH": 36,
+      "text": "A－"
+    },
+    {
+      "id": "st-n-fs-cur",
+      "file": "st-n-fs-cur.png",
+      "cssW": 56,
+      "cssH": 18,
+      "pxW": 112,
+      "pxH": 36,
+      "text": "17 px"
+    },
+    {
+      "id": "st-n-fs-plus",
+      "file": "st-n-fs-plus.png",
+      "cssW": 44,
+      "cssH": 18,
+      "pxW": 88,
+      "pxH": 36,
+      "text": "A＋"
+    },
+    {
+      "id": "st-n-prev-body",
+      "file": "st-n-prev-body.png",
+      "cssW": 100,
+      "cssH": 18,
+      "pxW": 200,
+      "pxH": 36,
+      "text": "正文预览"
+    },
+    {
+      "id": "st-n-prev-cover",
+      "file": "st-n-prev-cover.png",
+      "cssW": 100,
+      "cssH": 18,
+      "pxW": 200,
+      "pxH": 36,
+      "text": "封面预览"
+    },
+    {
+      "id": "st-n-prev-note",
+      "file": "st-n-prev-note.png",
+      "cssW": 320,
+      "cssH": 17,
+      "pxW": 640,
+      "pxH": 34,
+      "text": "改动即时生效，已同步到全部窗口"
+    },
+    {
+      "id": "st-n-font-body-sample",
+      "file": "st-n-font-body-sample.png",
+      "cssW": 320,
+      "cssH": 65,
+      "pxW": 640,
+      "pxH": 130,
+      "text": "钟楼上的雾还没有散。她沿着河堤往东走，路灯一盏一盏地灭下去。"
+    }
+  ]
+}

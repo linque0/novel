@@ -1,4 +1,5 @@
 <script setup>
+import TaskLauncher from './ai/TaskLauncher.vue'
 import { ref, reactive, computed, watch, nextTick, onMounted, onUpdated, onBeforeUnmount } from 'vue'
 import { NButton, NPopover } from 'naive-ui'
 import OIcon from './OIcon.vue'
@@ -727,6 +728,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <TaskLauncher module="lore" />
   <div ref="rootEl" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">设定</span>

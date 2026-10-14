@@ -1,0 +1,695 @@
+<!doctype html><html><head><meta charset="utf-8">
+<link rel="stylesheet" href="file:///F:/deepseek%20workplace/novel-studio/src/assets/fonts/fonts.css">
+<link rel="stylesheet" href="file:///F:/deepseek%20workplace/novel-studio/src/assets/fonts/fonts-user.css">
+<style>
+  html,body{margin:0;padding:0;background:transparent}
+  .root{position:absolute;left:0;top:0;display:flex;flex-direction:column}
+  .blk{white-space:pre-wrap;word-break:break-word;padding:0;margin:0}
+  .gap{height:24px;flex:0 0 auto}
+</style></head><body>
+<div class="root">
+<div class="blk" id="b0" data-id="ds-board-title" style="width:520px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:28px;font-weight:700;color:#3C3427;line-height:1.3;text-align:left;letter-spacing:0px">小说工坊 · 设计系统</div>
+<div class="gap"></div>
+<div class="blk" id="b1" data-id="ds-board-sub" style="width:1000px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#8D8271;line-height:1.7;text-align:left;letter-spacing:0px">S0 · 令牌 / 字体角色 / 核心组件 —— 值逐一对位 themes.css；中文文本为图片填充（插件 v1 内置字体无 CJK，见评审记录「字体边界」）</div>
+<div class="gap"></div>
+<div class="blk" id="b2" data-id="ds-sec-tokens" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">设计令牌 · 三主题</div>
+<div class="gap"></div>
+<div class="blk" id="b3" data-id="ds-sec-fonts" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">字体角色</div>
+<div class="gap"></div>
+<div class="blk" id="b4" data-id="ds-sec-invariants" style="width:460px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">不变量 · 圆角 / 间距 / 字号 / 动效</div>
+<div class="gap"></div>
+<div class="blk" id="b5" data-id="ds-sec-components" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">核心组件与状态</div>
+<div class="gap"></div>
+<div class="blk" id="b6" data-id="ds-cand-note" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.7;text-align:left;letter-spacing:0px">--text-dim-cand 为 v3 对比度候选值（宣纸 #766C5B / 羊皮纸 #77654D），待 S1 实机验证</div>
+<div class="gap"></div>
+<div class="blk" id="b7" data-id="ds-theme-head-xuan" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">宣纸（默认 · light）</div>
+<div class="gap"></div>
+<div class="blk" id="b8" data-id="ds-theme-head-parchment" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:600;color:#46372A;line-height:1.5;text-align:left;letter-spacing:0px">羊皮纸（light）</div>
+<div class="gap"></div>
+<div class="blk" id="b9" data-id="ds-theme-head-night" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">暗夜书房（dark）</div>
+<div class="gap"></div>
+<div class="blk" id="b10" data-id="ds-fonts-note" style="width:620px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.7;text-align:left;letter-spacing:0px">标题与正文设置分离；切换正文偏好不应改变按钮与导航（v3 §3.2）。正文默认 17px / 行高 1.9 / 34–40 字每行。</div>
+<div class="gap"></div>
+<div class="blk" id="b11" data-id="ds-font-ui-sample" style="width:260px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#3C3427;line-height:1.6;text-align:left;letter-spacing:0px">打开写作助手</div>
+<div class="gap"></div>
+<div class="blk" id="b12" data-id="ds-font-ui-placeholder" style="width:260px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#8D8271;line-height:1.6;text-align:left;letter-spacing:0px">搜索作品、章节…</div>
+<div class="gap"></div>
+<div class="blk" id="b13" data-id="ds-font-title-sample" style="width:260px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:26px;font-weight:600;color:#3C3427;line-height:1.4;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b14" data-id="ds-font-cover-sample" style="width:200px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:30px;font-weight:700;color:#FBF9F3;line-height:1.3;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b15" data-id="ds-font-body-sample" style="width:320px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:17px;font-weight:400;color:#3C3427;line-height:1.9;text-align:left;letter-spacing:0px">钟楼上的雾还没有散。她沿着河堤往东走，路灯一盏一盏地灭下去。</div>
+<div class="gap"></div>
+<div class="blk" id="b16" data-id="ds-radius-note" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.7;text-align:left;letter-spacing:0px">按钮 / 输入 6px · 内容卡 8px · 菜单浮窗 10px · 对话框 14px（v3 §3.4）</div>
+<div class="gap"></div>
+<div class="blk" id="b17" data-id="ds-motion-note" style="width:700px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.7;text-align:left;letter-spacing:0px">M0 状态反馈 120ms · M1 上下文变化 180ms · M2 作品展示 320ms；无常驻循环装饰，减少动态效果时静态退化</div>
+<div class="gap"></div>
+<div class="blk" id="b18" data-id="ds-btn-primary" style="width:96px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:500;color:#FBF9F3;line-height:1.5;text-align:center;letter-spacing:0px">新建作品</div>
+<div class="gap"></div>
+<div class="blk" id="b19" data-id="ds-btn-secondary" style="width:96px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:500;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">继续写作</div>
+<div class="gap"></div>
+<div class="blk" id="b20" data-id="ds-btn-ghost" style="width:96px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#8D8271;line-height:1.5;text-align:center;letter-spacing:0px">导入作品</div>
+<div class="gap"></div>
+<div class="blk" id="b21" data-id="ds-btn-disabled" style="width:96px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#B3A892;line-height:1.5;text-align:center;letter-spacing:0px">保存中…</div>
+<div class="gap"></div>
+<div class="blk" id="b22" data-id="ds-tags-note" style="width:620px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.7;text-align:left;letter-spacing:0px">关系类型与写作状态分别编码：颜色 + 线型 / 标签，不只靠颜色传达（大纲关系四色取自 canvas-model.js REL_KINDS）</div>
+<div class="gap"></div>
+<div class="blk" id="b23" data-id="ds-tag-cause" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#FFFFFF;line-height:1.5;text-align:center;letter-spacing:0px">因果</div>
+<div class="gap"></div>
+<div class="blk" id="b24" data-id="ds-tag-foreshadow" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#FFFFFF;line-height:1.5;text-align:center;letter-spacing:0px">伏笔</div>
+<div class="gap"></div>
+<div class="blk" id="b25" data-id="ds-tag-conflict" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#FFFFFF;line-height:1.5;text-align:center;letter-spacing:0px">冲突</div>
+<div class="gap"></div>
+<div class="blk" id="b26" data-id="ds-tag-rel" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#FFFFFF;line-height:1.5;text-align:center;letter-spacing:0px">关联</div>
+<div class="gap"></div>
+<div class="blk" id="b27" data-id="ds-tag-draft" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#7F8C8D;line-height:1.5;text-align:center;letter-spacing:0px">草稿</div>
+<div class="gap"></div>
+<div class="blk" id="b28" data-id="ds-tag-done" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#1E8449;line-height:1.5;text-align:center;letter-spacing:0px">完成</div>
+<div class="gap"></div>
+<div class="blk" id="b29" data-id="ds-tag-revise" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#D35400;line-height:1.5;text-align:center;letter-spacing:0px">待修改</div>
+<div class="gap"></div>
+<div class="blk" id="b30" data-id="ds-seal" style="width:40px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:600;color:#FBF9F3;line-height:1.4;text-align:center;letter-spacing:0px">林晚</div>
+<div class="gap"></div>
+<div class="blk" id="b31" data-id="ds-cover-note" style="width:560px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.7;text-align:left;letter-spacing:0px">色带书封（G）：平涂双色 + 衬线书名 + 作者名圆印；配色对位见 --g-duo-* 令牌（v7 已实现）</div>
+<div class="gap"></div>
+<div class="blk" id="b32" data-id="ds-rail-wen-on" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8C6F4E;line-height:1.5;text-align:center;letter-spacing:0px">文</div>
+<div class="gap"></div>
+<div class="blk" id="b33" data-id="ds-rail-gang" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8D8271;line-height:1.5;text-align:center;letter-spacing:0px">纲</div>
+<div class="gap"></div>
+<div class="blk" id="b34" data-id="ds-rail-ren" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8D8271;line-height:1.5;text-align:center;letter-spacing:0px">人</div>
+<div class="gap"></div>
+<div class="blk" id="b35" data-id="ds-rail-she" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8D8271;line-height:1.5;text-align:center;letter-spacing:0px">设</div>
+<div class="gap"></div>
+<div class="blk" id="b36" data-id="ds-rail-ling" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8D8271;line-height:1.5;text-align:center;letter-spacing:0px">灵</div>
+<div class="gap"></div>
+<div class="blk" id="b37" data-id="ds-empty-title" style="width:260px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:17px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">还没有作品</div>
+<div class="gap"></div>
+<div class="blk" id="b38" data-id="ds-empty-desc" style="width:320px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#8D8271;line-height:1.8;text-align:left;letter-spacing:0px">从一个故事开始。新建作品，或导入已有文稿。</div>
+<div class="gap"></div>
+<div class="blk" id="b39" data-id="ds-saved" style="width:140px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">已保存</div>
+<div class="gap"></div>
+<div class="blk" id="b40" data-id="ds-cover-title-1" style="width:150px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:18px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b41" data-id="ds-cover-title-2" style="width:150px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:18px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">雾都钟楼</div>
+<div class="gap"></div>
+<div class="blk" id="b42" data-id="ds-cover-title-3" style="width:150px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:18px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">无名者纪年</div>
+<div class="gap"></div>
+<div class="blk" id="b43" data-id="ds-cover-sub" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10px;font-weight:400;color:#D8D2C4;line-height:1.5;text-align:left;letter-spacing:0px">都市 · 悬疑</div>
+<div class="gap"></div>
+<div class="blk" id="b44" data-id="ds-fs-xs" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">辅助小字 11px</div>
+<div class="gap"></div>
+<div class="blk" id="b45" data-id="ds-fs-sm" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">次要信息 12.5px</div>
+<div class="gap"></div>
+<div class="blk" id="b46" data-id="ds-fs-md" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13.5px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">界面默认 13.5px</div>
+<div class="gap"></div>
+<div class="blk" id="b47" data-id="ds-fs-lg" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">强调文字 15px</div>
+<div class="gap"></div>
+<div class="blk" id="b48" data-id="ds-fs-title" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:17px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">标题文字 17px</div>
+<div class="gap"></div>
+<div class="blk" id="b49" data-id="t-brand-seal" style="width:32px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:600;color:#FBF9F3;line-height:1.4;text-align:center;letter-spacing:0px">坊</div>
+<div class="gap"></div>
+<div class="blk" id="b50" data-id="t-brand" style="width:120px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">小说工坊</div>
+<div class="gap"></div>
+<div class="blk" id="b51" data-id="t-myworks" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">我的作品</div>
+<div class="gap"></div>
+<div class="blk" id="b52" data-id="t-count" style="width:240px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">共 6 部 · 按最近编辑排序</div>
+<div class="gap"></div>
+<div class="blk" id="b53" data-id="t-continue-label" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#8C6F4E;line-height:1.5;text-align:left;letter-spacing:0px">继续写作</div>
+<div class="gap"></div>
+<div class="blk" id="b54" data-id="t-continue-btn" style="width:96px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:500;color:#FBF9F3;line-height:1.5;text-align:center;letter-spacing:0px">继续写作</div>
+<div class="gap"></div>
+<div class="blk" id="b55" data-id="t-continue-meta" style="width:320px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">上次写到 · 第三章 钟声 · 12.6 万字</div>
+<div class="gap"></div>
+<div class="blk" id="b56" data-id="t-title-15-1" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b57" data-id="t-title-15-2" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">雾都钟楼</div>
+<div class="gap"></div>
+<div class="blk" id="b58" data-id="t-title-15-3" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">河堤手记</div>
+<div class="gap"></div>
+<div class="blk" id="b59" data-id="t-title-15-4" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">无名者纪年</div>
+<div class="gap"></div>
+<div class="blk" id="b60" data-id="t-title-15-5" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">雪落无声</div>
+<div class="gap"></div>
+<div class="blk" id="b61" data-id="t-title-15-6" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">铜环巷旧事</div>
+<div class="gap"></div>
+<div class="blk" id="b62" data-id="t-cv-1" style="width:130px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:20px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b63" data-id="t-cv-2" style="width:130px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:20px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">雾都钟楼</div>
+<div class="gap"></div>
+<div class="blk" id="b64" data-id="t-cv-3" style="width:130px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:20px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">河堤手记</div>
+<div class="gap"></div>
+<div class="blk" id="b65" data-id="t-cv-4" style="width:130px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:20px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">无名者纪年</div>
+<div class="gap"></div>
+<div class="blk" id="b66" data-id="t-cv-5" style="width:130px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:20px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">雪落无声</div>
+<div class="gap"></div>
+<div class="blk" id="b67" data-id="t-cv-6" style="width:130px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:20px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">铜环巷旧事</div>
+<div class="gap"></div>
+<div class="blk" id="b68" data-id="t-cv-big" style="width:240px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:32px;font-weight:600;color:#FBF9F3;line-height:1.3;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b69" data-id="t-cv-n-1" style="width:160px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:24px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b70" data-id="t-cv-n-2" style="width:160px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:24px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">雾都钟楼</div>
+<div class="gap"></div>
+<div class="blk" id="b71" data-id="t-cv-n-3" style="width:160px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:24px;font-weight:600;color:#FBF9F3;line-height:1.35;text-align:left;letter-spacing:0px">河堤手记</div>
+<div class="gap"></div>
+<div class="blk" id="b72" data-id="t-meta-1" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">12.6 万字 · 3 天前</div>
+<div class="gap"></div>
+<div class="blk" id="b73" data-id="t-meta-2" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">8.2 万字 · 一周前</div>
+<div class="gap"></div>
+<div class="blk" id="b74" data-id="t-meta-3" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">3.4 万字 · 两周前</div>
+<div class="gap"></div>
+<div class="blk" id="b75" data-id="t-meta-4" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">21.8 万字 · 一月前</div>
+<div class="gap"></div>
+<div class="blk" id="b76" data-id="t-meta-5" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">6.1 万字 · 昨天</div>
+<div class="gap"></div>
+<div class="blk" id="b77" data-id="t-meta-6" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">2.3 万字 · 两月前</div>
+<div class="gap"></div>
+<div class="blk" id="b78" data-id="t-b-head" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">书架 · 全部作品</div>
+<div class="gap"></div>
+<div class="blk" id="b79" data-id="t-poster-label" style="width:120px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#8C6F4E;line-height:1.5;text-align:left;letter-spacing:0px">正在写作</div>
+<div class="gap"></div>
+<div class="blk" id="b80" data-id="t-poster-title" style="width:700px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:78px;font-weight:700;color:#2A2520;line-height:1.15;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b81" data-id="t-poster-meta" style="width:380px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">长篇 · 都市悬疑 · 12.6 万字 · 43 章</div>
+<div class="gap"></div>
+<div class="blk" id="b82" data-id="t-c-ch-1" style="width:56px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">43 章</div>
+<div class="gap"></div>
+<div class="blk" id="b83" data-id="t-c-ch-2" style="width:56px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">28 章</div>
+<div class="gap"></div>
+<div class="blk" id="b84" data-id="t-c-ch-3" style="width:56px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">12 章</div>
+<div class="gap"></div>
+<div class="blk" id="b85" data-id="t-c-ch-4" style="width:56px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">76 章</div>
+<div class="gap"></div>
+<div class="blk" id="b86" data-id="t-c-ch-5" style="width:56px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">19 章</div>
+<div class="gap"></div>
+<div class="blk" id="b87" data-id="t-c-ch-6" style="width:56px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">8 章</div>
+<div class="gap"></div>
+<div class="blk" id="b88" data-id="t-c-words-1" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">12.6 万</div>
+<div class="gap"></div>
+<div class="blk" id="b89" data-id="t-c-words-2" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">8.2 万</div>
+<div class="gap"></div>
+<div class="blk" id="b90" data-id="t-c-words-3" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">3.4 万</div>
+<div class="gap"></div>
+<div class="blk" id="b91" data-id="t-c-words-4" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">21.8 万</div>
+<div class="gap"></div>
+<div class="blk" id="b92" data-id="t-c-words-5" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">6.1 万</div>
+<div class="gap"></div>
+<div class="blk" id="b93" data-id="t-c-words-6" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">2.3 万</div>
+<div class="gap"></div>
+<div class="blk" id="b94" data-id="t-c-time-1" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">3 天前</div>
+<div class="gap"></div>
+<div class="blk" id="b95" data-id="t-c-time-2" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">一周前</div>
+<div class="gap"></div>
+<div class="blk" id="b96" data-id="t-c-time-3" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">两周前</div>
+<div class="gap"></div>
+<div class="blk" id="b97" data-id="t-c-time-4" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">一月前</div>
+<div class="gap"></div>
+<div class="blk" id="b98" data-id="t-c-time-5" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">昨天</div>
+<div class="gap"></div>
+<div class="blk" id="b99" data-id="t-c-time-6" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">两月前</div>
+<div class="gap"></div>
+<div class="blk" id="b100" data-id="t-c-head-work" style="width:60px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">作品</div>
+<div class="gap"></div>
+<div class="blk" id="b101" data-id="t-c-head-ch" style="width:60px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">章节</div>
+<div class="gap"></div>
+<div class="blk" id="b102" data-id="t-c-head-words" style="width:60px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">字数</div>
+<div class="gap"></div>
+<div class="blk" id="b103" data-id="t-c-head-time" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">最近编辑</div>
+<div class="gap"></div>
+<div class="blk" id="b104" data-id="t-c-head-op" style="width:60px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">操作</div>
+<div class="gap"></div>
+<div class="blk" id="b105" data-id="t-c-filter-all" style="width:48px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#FBF9F3;line-height:1.5;text-align:center;letter-spacing:0px">全部</div>
+<div class="gap"></div>
+<div class="blk" id="b106" data-id="t-c-filter-ing" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">连载中</div>
+<div class="gap"></div>
+<div class="blk" id="b107" data-id="t-c-filter-done" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">已完结</div>
+<div class="gap"></div>
+<div class="blk" id="b108" data-id="t-c-count" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">共 6 部作品</div>
+<div class="gap"></div>
+<div class="blk" id="b109" data-id="t-brand-n" style="width:120px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">小说工坊</div>
+<div class="gap"></div>
+<div class="blk" id="b110" data-id="t-myworks-n" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">我的作品</div>
+<div class="gap"></div>
+<div class="blk" id="b111" data-id="t-count-n" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">共 3 部 · 夜读视图</div>
+<div class="gap"></div>
+<div class="blk" id="b112" data-id="t-continue-label-n" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#D4A95C;line-height:1.5;text-align:left;letter-spacing:0px">继续写作</div>
+<div class="gap"></div>
+<div class="blk" id="b113" data-id="t-continue-btn-n" style="width:96px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:500;color:#191816;line-height:1.5;text-align:center;letter-spacing:0px">继续写作</div>
+<div class="gap"></div>
+<div class="blk" id="b114" data-id="t-title-15n-1" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b115" data-id="t-title-15n-2" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">雾都钟楼</div>
+<div class="gap"></div>
+<div class="blk" id="b116" data-id="t-title-15n-3" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">河堤手记</div>
+<div class="gap"></div>
+<div class="blk" id="b117" data-id="t-meta-n-1" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">12.6 万字 · 43 章 · 3 天前</div>
+<div class="gap"></div>
+<div class="blk" id="b118" data-id="t-meta-n-2" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">8.2 万字 · 28 章 · 一周前</div>
+<div class="gap"></div>
+<div class="blk" id="b119" data-id="t-meta-n-3" style="width:170px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">3.4 万字 · 12 章 · 两周前</div>
+<div class="gap"></div>
+<div class="blk" id="b120" data-id="t-tree-head" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">章节</div>
+<div class="gap"></div>
+<div class="blk" id="b121" data-id="t-vol1" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第一卷 · 雾夜</div>
+<div class="gap"></div>
+<div class="blk" id="b122" data-id="t-vol2" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第二卷 · 回声</div>
+<div class="gap"></div>
+<div class="blk" id="b123" data-id="t-ch1" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第一章 河堤</div>
+<div class="gap"></div>
+<div class="blk" id="b124" data-id="t-ch2" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第二章 来信</div>
+<div class="gap"></div>
+<div class="blk" id="b125" data-id="t-ch3" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第三章 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b126" data-id="t-ch4" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第四章 旧照片</div>
+<div class="gap"></div>
+<div class="blk" id="b127" data-id="t-ch5" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第五章 渡口</div>
+<div class="gap"></div>
+<div class="blk" id="b128" data-id="t-ch6" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第六章 雪线</div>
+<div class="gap"></div>
+<div class="blk" id="b129" data-id="t-ch3-on" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#8C6F4E;line-height:1.5;text-align:left;letter-spacing:0px">第三章 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b130" data-id="t-top-work" style="width:120px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b131" data-id="t-top-chap" style="width:180px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">第三章 · 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b132" data-id="t-ed-title" style="width:260px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:24px;font-weight:600;color:#3C3427;line-height:1.4;text-align:left;letter-spacing:0px">第三章 · 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b133" data-id="t-ed-title-b" style="width:320px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:28px;font-weight:600;color:#3C3427;line-height:1.4;text-align:left;letter-spacing:0px">第三章 · 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b134" data-id="t-para-style" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">正文</div>
+<div class="gap"></div>
+<div class="blk" id="b135" data-id="t-words" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">1,842 字</div>
+<div class="gap"></div>
+<div class="blk" id="b136" data-id="t-p1" style="width:612px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:17px;font-weight:400;color:#3C3427;line-height:1.9;text-align:left;letter-spacing:0px">钟楼上的雾还没有散。林晚把围巾往上拉了拉，沿着河堤往东走。路灯一盏一盏地灭下去，像是有人在远处替她数着步子。她想起三年前的那个夜晚——同样的雾，同样的钟声，只是那时她还不认识沈述。</div>
+<div class="gap"></div>
+<div class="blk" id="b137" data-id="t-p2" style="width:612px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:17px;font-weight:400;color:#3C3427;line-height:1.9;text-align:left;letter-spacing:0px">渡口的灯亮着。沈述站在灯下，手里捏着一封没有署名的信。他没有抬头，声音却先到了她耳边：“你来了。”林晚停下脚步。河面很静，只能听见水声，一下，又一下，像某种缓慢的敲钟方式。</div>
+<div class="gap"></div>
+<div class="blk" id="b138" data-id="t-p3" style="width:612px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:17px;font-weight:400;color:#3C3427;line-height:1.9;text-align:left;letter-spacing:0px">她走近两步，看清了信封上的笔迹——那不是她的字，也确实不像沈述的。信纸很薄，边缘有一圈淡淡的焦痕。她忽然想起失踪的那本旧相册，想起母亲说过的那句话：有些事，知道得越晚越好。</div>
+<div class="gap"></div>
+<div class="blk" id="b139" data-id="t-p1b" style="width:680px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:18px;font-weight:400;color:#3C3427;line-height:1.95;text-align:left;letter-spacing:0px">钟楼上的雾还没有散。林晚把围巾往上拉了拉，沿着河堤往东走。路灯一盏一盏地灭下去，像是有人在远处替她数着步子。她想起三年前的那个夜晚——同样的雾，同样的钟声，只是那时她还不认识沈述。</div>
+<div class="gap"></div>
+<div class="blk" id="b140" data-id="t-p2b" style="width:680px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:18px;font-weight:400;color:#3C3427;line-height:1.95;text-align:left;letter-spacing:0px">渡口的灯亮着。沈述站在灯下，手里捏着一封没有署名的信。他没有抬头，声音却先到了她耳边：“你来了。”林晚停下脚步。河面很静，只能听见水声，一下，又一下，像某种缓慢的敲钟方式。</div>
+<div class="gap"></div>
+<div class="blk" id="b141" data-id="t-tab-ann" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#8C6F4E;line-height:1.5;text-align:left;letter-spacing:0px">批注</div>
+<div class="gap"></div>
+<div class="blk" id="b142" data-id="t-tab-out" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">大纲</div>
+<div class="gap"></div>
+<div class="blk" id="b143" data-id="t-tab-chr" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">人物</div>
+<div class="gap"></div>
+<div class="blk" id="b144" data-id="t-tab-img" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">插图</div>
+<div class="gap"></div>
+<div class="blk" id="b145" data-id="t-tab-info" style="width:96px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">章节信息</div>
+<div class="gap"></div>
+<div class="blk" id="b146" data-id="t-ann1" style="width:224px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.7;text-align:left;letter-spacing:0px">钟声出现得太早——第 2 章已经用过，建议挪到第四章。</div>
+<div class="gap"></div>
+<div class="blk" id="b147" data-id="t-ann1-chip" style="width:60px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:500;color:#C0392B;line-height:1.5;text-align:left;letter-spacing:0px">第 1 段</div>
+<div class="gap"></div>
+<div class="blk" id="b148" data-id="t-ann2" style="width:224px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.7;text-align:left;letter-spacing:0px">沈述这句台词和第二章的信呼应了，好。</div>
+<div class="gap"></div>
+<div class="blk" id="b149" data-id="t-info-c" style="width:260px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.6;text-align:left;letter-spacing:0px">字数 1,842 · 状态 待修改 · 出场 林晚、沈述</div>
+<div class="gap"></div>
+<div class="blk" id="b150" data-id="t-statusbar" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">第三章 · 1,842 字 · 自动保存 14:02</div>
+<div class="gap"></div>
+<div class="blk" id="b151" data-id="t-tree-head-n" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">章节</div>
+<div class="gap"></div>
+<div class="blk" id="b152" data-id="t-vol1n" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第一卷 · 雾夜</div>
+<div class="gap"></div>
+<div class="blk" id="b153" data-id="t-vol2n" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第二卷 · 回声</div>
+<div class="gap"></div>
+<div class="blk" id="b154" data-id="t-ch1n" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第一章 河堤</div>
+<div class="gap"></div>
+<div class="blk" id="b155" data-id="t-ch2n" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第二章 来信</div>
+<div class="gap"></div>
+<div class="blk" id="b156" data-id="t-ch3n" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第三章 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b157" data-id="t-ch4n" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第四章 旧照片</div>
+<div class="gap"></div>
+<div class="blk" id="b158" data-id="t-ch5n" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第五章 渡口</div>
+<div class="gap"></div>
+<div class="blk" id="b159" data-id="t-ch6n" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第六章 雪线</div>
+<div class="gap"></div>
+<div class="blk" id="b160" data-id="t-ch3-on-n" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#D4A95C;line-height:1.5;text-align:left;letter-spacing:0px">第三章 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b161" data-id="t-top-work-n" style="width:120px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b162" data-id="t-top-chap-n" style="width:180px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第三章 · 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b163" data-id="t-ed-title-n" style="width:320px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:28px;font-weight:600;color:#D9D2C0;line-height:1.4;text-align:left;letter-spacing:0px">第三章 · 钟声</div>
+<div class="gap"></div>
+<div class="blk" id="b164" data-id="t-p1n" style="width:612px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:18px;font-weight:400;color:#D9D2C0;line-height:2;text-align:left;letter-spacing:0px">钟楼上的雾还没有散。林晚把围巾往上拉了拉，沿着河堤往东走。路灯一盏一盏地灭下去，像是有人在远处替她数着步子。她想起三年前的那个夜晚——同样的雾，同样的钟声，只是那时她还不认识沈述。</div>
+<div class="gap"></div>
+<div class="blk" id="b165" data-id="t-p2n" style="width:612px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:18px;font-weight:400;color:#D9D2C0;line-height:2;text-align:left;letter-spacing:0px">渡口的灯亮着。沈述站在灯下，手里捏着一封没有署名的信。他没有抬头，声音却先到了她耳边：“你来了。”林晚停下脚步。河面很静，只能听见水声，一下，又一下，像某种缓慢的敲钟方式。</div>
+<div class="gap"></div>
+<div class="blk" id="b166" data-id="t-words-n" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">1,842 字</div>
+<div class="gap"></div>
+<div class="blk" id="b167" data-id="t-saved-n" style="width:140px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">已保存</div>
+<div class="gap"></div>
+<div class="blk" id="b168" data-id="t-ai-title" style="width:120px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">恍然梦</div>
+<div class="gap"></div>
+<div class="blk" id="b169" data-id="t-ai-tab-task" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#D4A95C;line-height:1.5;text-align:left;letter-spacing:0px">任务</div>
+<div class="gap"></div>
+<div class="blk" id="b170" data-id="t-ai-tab-kb" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">知识库</div>
+<div class="gap"></div>
+<div class="blk" id="b171" data-id="t-ai-tab-style" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">文风</div>
+<div class="gap"></div>
+<div class="blk" id="b172" data-id="t-ai-tab-flow" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">工作流</div>
+<div class="gap"></div>
+<div class="blk" id="b173" data-id="t-ai-user" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.7;text-align:left;letter-spacing:0px">第三章的语速有点慢，帮我看一下哪里可以压缩。</div>
+<div class="gap"></div>
+<div class="blk" id="b174" data-id="t-ai-reply" style="width:320px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.8;text-align:left;letter-spacing:0px">我读了第三章。三处可以收紧：1 河堤行走的心理描写；2 渡口对话前的环境铺陈；3 旧照片出现的时机偏晚。要我出一版改写提案吗？</div>
+<div class="gap"></div>
+<div class="blk" id="b175" data-id="t-ai-card-title" style="width:240px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">第三章节奏建议 · 3 处</div>
+<div class="gap"></div>
+<div class="blk" id="b176" data-id="t-ai-card-item" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8F8878;line-height:1.7;text-align:left;letter-spacing:0px">1  压缩心理描写（第 3-5 段）
+2  收紧渡口环境铺陈
+3  旧照片提前一个场景</div>
+<div class="gap"></div>
+<div class="blk" id="b177" data-id="t-ai-apply" style="width:110px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#191816;line-height:1.5;text-align:center;letter-spacing:0px">应用所选修改</div>
+<div class="gap"></div>
+<div class="blk" id="b178" data-id="t-ai-diff" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#D9D2C0;line-height:1.5;text-align:center;letter-spacing:0px">预览差异</div>
+<div class="gap"></div>
+<div class="blk" id="b179" data-id="t-ai-scope" style="width:280px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">将发送：本章正文与 2 位相关人物卡</div>
+<div class="gap"></div>
+<div class="blk" id="b180" data-id="t-ai-input" style="width:240px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#5C564A;line-height:1.5;text-align:left;letter-spacing:0px">输入写作要求…</div>
+<div class="gap"></div>
+<div class="blk" id="b181" data-id="t-sheet-A" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#5B5142;line-height:1.5;text-align:left;letter-spacing:0px">A · 出版编辑部（推荐起点）</div>
+<div class="gap"></div>
+<div class="blk" id="b182" data-id="t-sheet-B" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#5B5142;line-height:1.5;text-align:left;letter-spacing:0px">B · 海报画廊</div>
+<div class="gap"></div>
+<div class="blk" id="b183" data-id="t-sheet-C" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#5B5142;line-height:1.5;text-align:left;letter-spacing:0px">C · 档案工作室</div>
+<div class="gap"></div>
+<div class="blk" id="b184" data-id="t-sheet-D" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:15px;font-weight:600;color:#5B5142;line-height:1.5;text-align:left;letter-spacing:0px">D · 文学夜读</div>
+<div class="gap"></div>
+<div class="blk" id="b185" data-id="t-rail-wen-on-n" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#D4A95C;line-height:1.5;text-align:center;letter-spacing:0px">文</div>
+<div class="gap"></div>
+<div class="blk" id="b186" data-id="t-rail-gang-n" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8F8878;line-height:1.5;text-align:center;letter-spacing:0px">纲</div>
+<div class="gap"></div>
+<div class="blk" id="b187" data-id="t-rail-ren-n" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8F8878;line-height:1.5;text-align:center;letter-spacing:0px">人</div>
+<div class="gap"></div>
+<div class="blk" id="b188" data-id="t-rail-she-n" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8F8878;line-height:1.5;text-align:center;letter-spacing:0px">设</div>
+<div class="gap"></div>
+<div class="blk" id="b189" data-id="t-rail-ling-n" style="width:32px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:500;color:#8F8878;line-height:1.5;text-align:center;letter-spacing:0px">灵</div>
+<div class="gap"></div>
+<div class="blk" id="b190" data-id="t-para-style-n" style="width:80px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:500;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">正文</div>
+<div class="gap"></div>
+<div class="blk" id="b191" data-id="t-brand-seal-n" style="width:32px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:600;color:#191816;line-height:1.4;text-align:center;letter-spacing:0px">坊</div>
+<div class="gap"></div>
+<div class="blk" id="b192" data-id="st-title" style="width:60px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:700;color:#002FA7;line-height:1.5;text-align:left;letter-spacing:0px">设置</div>
+<div class="gap"></div>
+<div class="blk" id="b193" data-id="st-sub" style="width:220px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:9.5px;font-weight:600;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:2px">SETTINGS · 小说工坊</div>
+<div class="gap"></div>
+<div class="blk" id="b194" data-id="st-nav-ico-wai" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#002FA7;line-height:1.6;text-align:center;letter-spacing:0px">外</div>
+<div class="gap"></div>
+<div class="blk" id="b195" data-id="st-nav-ico-meng" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#002FA7;line-height:1.6;text-align:center;letter-spacing:0px">梦</div>
+<div class="gap"></div>
+<div class="blk" id="b196" data-id="st-nav-ico-shu" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#002FA7;line-height:1.6;text-align:center;letter-spacing:0px">数</div>
+<div class="gap"></div>
+<div class="blk" id="b197" data-id="st-nav-ico-guan" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#002FA7;line-height:1.6;text-align:center;letter-spacing:0px">关</div>
+<div class="gap"></div>
+<div class="blk" id="b198" data-id="st-nav-ico-wai-on" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#FAF7EC;line-height:1.6;text-align:center;letter-spacing:0px">外</div>
+<div class="gap"></div>
+<div class="blk" id="b199" data-id="st-nav-app" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">外观</div>
+<div class="gap"></div>
+<div class="blk" id="b200" data-id="st-nav-app-on" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#8C6F4E;line-height:1.5;text-align:left;letter-spacing:0px">外观</div>
+<div class="gap"></div>
+<div class="blk" id="b201" data-id="st-nav-ai" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">恍然梦</div>
+<div class="gap"></div>
+<div class="blk" id="b202" data-id="st-nav-data" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">数据</div>
+<div class="gap"></div>
+<div class="blk" id="b203" data-id="st-nav-about" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">关于</div>
+<div class="gap"></div>
+<div class="blk" id="b204" data-id="st-nav-desc-app" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">主题 / 字体 / 字号</div>
+<div class="gap"></div>
+<div class="blk" id="b205" data-id="st-nav-desc-ai" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">AI 写作助手接入</div>
+<div class="gap"></div>
+<div class="blk" id="b206" data-id="st-nav-desc-data" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">导入导出 / 备份 / 存储</div>
+<div class="gap"></div>
+<div class="blk" id="b207" data-id="st-nav-desc-about" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">统计 / 手册 / 标语</div>
+<div class="gap"></div>
+<div class="blk" id="b208" data-id="st-h-app" style="width:200px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:19px;font-weight:700;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">外观</div>
+<div class="gap"></div>
+<div class="blk" id="b209" data-id="st-h-ai" style="width:200px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:19px;font-weight:700;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">恍然梦</div>
+<div class="gap"></div>
+<div class="blk" id="b210" data-id="st-h-data" style="width:200px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:19px;font-weight:700;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">数据</div>
+<div class="gap"></div>
+<div class="blk" id="b211" data-id="st-h-about" style="width:200px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:19px;font-weight:700;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">关于</div>
+<div class="gap"></div>
+<div class="blk" id="b212" data-id="st-desc-app" style="width:460px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">主题、字体与字号，改动即时生效并同步到全部窗口</div>
+<div class="gap"></div>
+<div class="blk" id="b213" data-id="st-desc-ai" style="width:560px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">AI 写作助手：正文剧情线路 / 大纲规划 / 设定扩展 / 人物丰富 / 自由问答</div>
+<div class="gap"></div>
+<div class="blk" id="b214" data-id="st-desc-data" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">导入导出、备份与本地存储，全部数据保存在本机</div>
+<div class="gap"></div>
+<div class="blk" id="b215" data-id="st-desc-about" style="width:300px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">小说工坊 · 本地优先的写作工坊</div>
+<div class="gap"></div>
+<div class="blk" id="b216" data-id="st-r-theme" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">主题</div>
+<div class="gap"></div>
+<div class="blk" id="b217" data-id="st-r-theme-sub" style="width:180px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">宣纸 / 羊皮纸 / 暗夜书房</div>
+<div class="gap"></div>
+<div class="blk" id="b218" data-id="st-r-cjk" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">中文字体</div>
+<div class="gap"></div>
+<div class="blk" id="b219" data-id="st-r-cjk-sub" style="width:180px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">正文与界面的中文字形</div>
+<div class="gap"></div>
+<div class="blk" id="b220" data-id="st-r-latin" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">西文字体</div>
+<div class="gap"></div>
+<div class="blk" id="b221" data-id="st-r-latin-sub" style="width:180px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">拉丁字符使用的字形</div>
+<div class="gap"></div>
+<div class="blk" id="b222" data-id="st-r-fs" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">正文字号</div>
+<div class="gap"></div>
+<div class="blk" id="b223" data-id="st-r-fs-sub" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">正文编辑与阅读字号（13-24px）</div>
+<div class="gap"></div>
+<div class="blk" id="b224" data-id="st-chip-xuan" style="width:60px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#FAF7EC;line-height:1.5;text-align:center;letter-spacing:0px">宣纸</div>
+<div class="gap"></div>
+<div class="blk" id="b225" data-id="st-chip-par" style="width:72px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">羊皮纸</div>
+<div class="gap"></div>
+<div class="blk" id="b226" data-id="st-chip-night" style="width:84px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">暗夜书房</div>
+<div class="gap"></div>
+<div class="blk" id="b227" data-id="st-sel-cjk" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">思源宋体</div>
+<div class="gap"></div>
+<div class="blk" id="b228" data-id="st-sel-latin" style="width:130px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">Playfair Display</div>
+<div class="gap"></div>
+<div class="blk" id="b229" data-id="st-fs-minus" style="width:44px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">A－</div>
+<div class="gap"></div>
+<div class="blk" id="b230" data-id="st-fs-cur" style="width:56px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:600;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">17 px</div>
+<div class="gap"></div>
+<div class="blk" id="b231" data-id="st-fs-plus" style="width:44px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">A＋</div>
+<div class="gap"></div>
+<div class="blk" id="b232" data-id="st-prev-body" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:500;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">正文预览</div>
+<div class="gap"></div>
+<div class="blk" id="b233" data-id="st-prev-cover" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:500;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">封面预览</div>
+<div class="gap"></div>
+<div class="blk" id="b234" data-id="st-prev-note" style="width:320px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">改动即时生效，已同步到全部窗口</div>
+<div class="gap"></div>
+<div class="blk" id="b235" data-id="st-cv-mini" style="width:80px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:600;color:#FBF9F3;line-height:1.4;text-align:left;letter-spacing:0px">长夜将明</div>
+<div class="gap"></div>
+<div class="blk" id="b236" data-id="st-d-import" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">导入作品…</div>
+<div class="gap"></div>
+<div class="blk" id="b237" data-id="st-d-export" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">导出正文…</div>
+<div class="gap"></div>
+<div class="blk" id="b238" data-id="st-d-backup" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">备份全部数据（JSON）</div>
+<div class="gap"></div>
+<div class="blk" id="b239" data-id="st-d-restore" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">恢复备份（JSON）…</div>
+<div class="gap"></div>
+<div class="blk" id="b240" data-id="st-d-trash" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">回收站</div>
+<div class="gap"></div>
+<div class="blk" id="b241" data-id="st-d-import-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">支持 txt / md / docx / pdf / epub / 图片</div>
+<div class="gap"></div>
+<div class="blk" id="b242" data-id="st-d-export-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">TXT / Markdown / Word，可按章节勾选</div>
+<div class="gap"></div>
+<div class="blk" id="b243" data-id="st-d-backup-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">作品、章节、人物、大纲、设定、批注等全量快照</div>
+<div class="gap"></div>
+<div class="blk" id="b244" data-id="st-d-restore-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">以备份覆盖当前全部数据，恢复前自动保存并全窗口重载</div>
+<div class="gap"></div>
+<div class="blk" id="b245" data-id="st-d-trash-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">软删除的作品与条目可还原或彻底清除</div>
+<div class="gap"></div>
+<div class="blk" id="b246" data-id="st-d-loc-h" style="width:140px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:14px;font-weight:700;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">存储位置</div>
+<div class="gap"></div>
+<div class="blk" id="b247" data-id="st-d-cur" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">当前位置</div>
+<div class="gap"></div>
+<div class="blk" id="b248" data-id="st-d-cur-path" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">C:\Users\linque\Documents\小说工坊</div>
+<div class="gap"></div>
+<div class="blk" id="b249" data-id="st-d-tag" style="width:40px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:center;letter-spacing:0px">默认</div>
+<div class="gap"></div>
+<div class="blk" id="b250" data-id="st-d-move" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">更改存储位置…</div>
+<div class="gap"></div>
+<div class="blk" id="b251" data-id="st-d-move-sub" style="width:480px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">迁移前自动保存，应用关闭并自动重启后生效；原位置默认保留为副本</div>
+<div class="gap"></div>
+<div class="blk" id="b252" data-id="st-d-old" style="width:120px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">旧默认快照</div>
+<div class="gap"></div>
+<div class="blk" id="b253" data-id="st-d-old-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">C:\Users\linque\AppData\Roaming\小说工坊（1.2 GB）</div>
+<div class="gap"></div>
+<div class="blk" id="b254" data-id="st-d-open" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">打开数据文件夹</div>
+<div class="gap"></div>
+<div class="blk" id="b255" data-id="st-d-open-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">在资源管理器中查看本地数据目录</div>
+<div class="gap"></div>
+<div class="blk" id="b256" data-id="st-d-warn" style="width:690px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:400;color:#9A6B00;line-height:1.6;text-align:left;letter-spacing:0px">旧位置里只剩指针与备份副本：缓存（体积大头）可安全清理；IndexedDB 是数据备份；指针文件不可删，否则下次启动会回到默认位置并新建空库。</div>
+<div class="gap"></div>
+<div class="blk" id="b257" data-id="st-d-b-open" style="width:40px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">打开</div>
+<div class="gap"></div>
+<div class="blk" id="b258" data-id="st-d-b-clean" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">清理缓存</div>
+<div class="gap"></div>
+<div class="blk" id="b259" data-id="st-d-b-del" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#B03A2E;line-height:1.5;text-align:center;letter-spacing:0px">删除数据</div>
+<div class="gap"></div>
+<div class="blk" id="b260" data-id="st-a-stats" style="width:140px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">写作统计</div>
+<div class="gap"></div>
+<div class="blk" id="b261" data-id="st-a-stats-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">每日码字曲线与累计字数</div>
+<div class="gap"></div>
+<div class="blk" id="b262" data-id="st-a-help" style="width:160px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">帮助与键位手册</div>
+<div class="gap"></div>
+<div class="blk" id="b263" data-id="st-a-help-sub" style="width:420px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">全部功能与快捷键说明</div>
+<div class="gap"></div>
+<div class="blk" id="b264" data-id="st-a-foot" style="width:320px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#B3A892;line-height:1.5;text-align:left;letter-spacing:1px">本地优先 · 自动保存 · 色带书封 G</div>
+<div class="gap"></div>
+<div class="blk" id="b265" data-id="st-ai-lb-provider" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">服务商</div>
+<div class="gap"></div>
+<div class="blk" id="b266" data-id="st-ai-lb-url" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">API 地址</div>
+<div class="gap"></div>
+<div class="blk" id="b267" data-id="st-ai-lb-models" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">模型列表</div>
+<div class="gap"></div>
+<div class="blk" id="b268" data-id="st-ai-lb-temp" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">温度</div>
+<div class="gap"></div>
+<div class="blk" id="b269" data-id="st-ai-lb-ctx" style="width:110px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">上下文预算</div>
+<div class="gap"></div>
+<div class="blk" id="b270" data-id="st-ai-lb-privacy" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">隐私模式</div>
+<div class="gap"></div>
+<div class="blk" id="b271" data-id="st-ai-lb-kb" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">自动记忆</div>
+<div class="gap"></div>
+<div class="blk" id="b272" data-id="st-ai-lb-cap" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">每日上限</div>
+<div class="gap"></div>
+<div class="blk" id="b273" data-id="st-ai-lb-emb" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">语义检索</div>
+<div class="gap"></div>
+<div class="blk" id="b274" data-id="st-ai-lb-vec" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">向量模型</div>
+<div class="gap"></div>
+<div class="blk" id="b275" data-id="st-ai-lb-key" style="width:90px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">API 密钥</div>
+<div class="gap"></div>
+<div class="blk" id="b276" data-id="st-ai-sel-provider" style="width:140px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#3C3427;line-height:1.5;text-align:left;letter-spacing:0px">DeepSeek（默认）</div>
+<div class="gap"></div>
+<div class="blk" id="b277" data-id="st-ai-key-ph" style="width:250px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">已配置（输入新密钥可覆盖）</div>
+<div class="gap"></div>
+<div class="blk" id="b278" data-id="st-ai-key-tag" style="width:48px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#1E8449;line-height:1.5;text-align:center;letter-spacing:0px">已配置</div>
+<div class="gap"></div>
+<div class="blk" id="b279" data-id="st-ai-btn-savekey" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">保存密钥</div>
+<div class="gap"></div>
+<div class="blk" id="b280" data-id="st-ai-key-clear" style="width:40px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#B03A2E;line-height:1.5;text-align:center;letter-spacing:0px">清除</div>
+<div class="gap"></div>
+<div class="blk" id="b281" data-id="st-ai-tag-only" style="width:40px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8C6F4E;line-height:1.5;text-align:center;letter-spacing:0px">专属</div>
+<div class="gap"></div>
+<div class="blk" id="b282" data-id="st-ai-tag-using" style="width:52px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#1E8449;line-height:1.5;text-align:center;letter-spacing:0px">使用中</div>
+<div class="gap"></div>
+<div class="blk" id="b283" data-id="st-ai-tip" style="width:440px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">点行即选用，使用中的模型立即生效，无需再点保存设置。</div>
+<div class="gap"></div>
+<div class="blk" id="b284" data-id="st-ai-hint-temp" style="width:220px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">0 严谨 · 1.2+ 更放肆</div>
+<div class="gap"></div>
+<div class="blk" id="b285" data-id="st-ai-hint-privacy" style="width:320px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">仅发送摘要，不发送正文原文与检索片段</div>
+<div class="gap"></div>
+<div class="blk" id="b286" data-id="st-ai-hint-kb" style="width:320px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">默认关闭，开启后只更新改动章节与依赖</div>
+<div class="gap"></div>
+<div class="blk" id="b287" data-id="st-ai-hint-cap" style="width:340px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">tokens，启用自动记忆时必填；缺失 usage 用估算</div>
+<div class="gap"></div>
+<div class="blk" id="b288" data-id="st-ai-hint-emb" style="width:220px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">默认关闭，失败回落关键词</div>
+<div class="gap"></div>
+<div class="blk" id="b289" data-id="st-ai-emb-ph" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">独立 embeddings 模型名</div>
+<div class="gap"></div>
+<div class="blk" id="b290" data-id="st-ai-note" style="width:540px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8D8271;line-height:1.5;text-align:left;letter-spacing:0px">密钥经系统凭据（Windows DPAPI）加密存放，不进备份文件、不回显明文。</div>
+<div class="gap"></div>
+<div class="blk" id="b291" data-id="st-ai-btn-fetch" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">拉取模型</div>
+<div class="gap"></div>
+<div class="blk" id="b292" data-id="st-ai-btn-add" style="width:84px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">＋ 添加模型</div>
+<div class="gap"></div>
+<div class="blk" id="b293" data-id="st-ai-btn-save" style="width:86px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:500;color:#FAF7EC;line-height:1.5;text-align:center;letter-spacing:0px">保存设置</div>
+<div class="gap"></div>
+<div class="blk" id="b294" data-id="st-ai-btn-test" style="width:64px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#3C3427;line-height:1.5;text-align:center;letter-spacing:0px">连接测试</div>
+<div class="gap"></div>
+<div class="blk" id="b295" data-id="st-ai-ready" style="width:48px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#1E8449;line-height:1.5;text-align:center;letter-spacing:0px">已就绪</div>
+<div class="gap"></div>
+<div class="blk" id="b296" data-id="st-n-title" style="width:60px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:16px;font-weight:700;color:#D4A95C;line-height:1.5;text-align:left;letter-spacing:0px">设置</div>
+<div class="gap"></div>
+<div class="blk" id="b297" data-id="st-n-sub" style="width:220px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:9.5px;font-weight:600;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:2px">SETTINGS · 小说工坊</div>
+<div class="gap"></div>
+<div class="blk" id="b298" data-id="st-n-ico-wai" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D4A95C;line-height:1.6;text-align:center;letter-spacing:0px">外</div>
+<div class="gap"></div>
+<div class="blk" id="b299" data-id="st-n-ico-meng" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D4A95C;line-height:1.6;text-align:center;letter-spacing:0px">梦</div>
+<div class="gap"></div>
+<div class="blk" id="b300" data-id="st-n-ico-shu" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D4A95C;line-height:1.6;text-align:center;letter-spacing:0px">数</div>
+<div class="gap"></div>
+<div class="blk" id="b301" data-id="st-n-ico-guan" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D4A95C;line-height:1.6;text-align:center;letter-spacing:0px">关</div>
+<div class="gap"></div>
+<div class="blk" id="b302" data-id="st-n-ico-wai-on" style="width:26px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#232019;line-height:1.6;text-align:center;letter-spacing:0px">外</div>
+<div class="gap"></div>
+<div class="blk" id="b303" data-id="st-n-nav-app" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">外观</div>
+<div class="gap"></div>
+<div class="blk" id="b304" data-id="st-n-nav-app-on" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D4A95C;line-height:1.5;text-align:left;letter-spacing:0px">外观</div>
+<div class="gap"></div>
+<div class="blk" id="b305" data-id="st-n-nav-ai" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">恍然梦</div>
+<div class="gap"></div>
+<div class="blk" id="b306" data-id="st-n-nav-data" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">数据</div>
+<div class="gap"></div>
+<div class="blk" id="b307" data-id="st-n-nav-about" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">关于</div>
+<div class="gap"></div>
+<div class="blk" id="b308" data-id="st-n-nav-desc-app" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">主题 / 字体 / 字号</div>
+<div class="gap"></div>
+<div class="blk" id="b309" data-id="st-n-nav-desc-ai" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">AI 写作助手接入</div>
+<div class="gap"></div>
+<div class="blk" id="b310" data-id="st-n-nav-desc-data" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">导入导出 / 备份 / 存储</div>
+<div class="gap"></div>
+<div class="blk" id="b311" data-id="st-n-nav-desc-about" style="width:150px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:10.5px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">统计 / 手册 / 标语</div>
+<div class="gap"></div>
+<div class="blk" id="b312" data-id="st-n-h-app" style="width:200px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:19px;font-weight:700;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">外观</div>
+<div class="gap"></div>
+<div class="blk" id="b313" data-id="st-n-desc-app" style="width:460px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">主题、字体与字号，改动即时生效并同步到全部窗口</div>
+<div class="gap"></div>
+<div class="blk" id="b314" data-id="st-n-r-theme" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">主题</div>
+<div class="gap"></div>
+<div class="blk" id="b315" data-id="st-n-r-cjk" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">中文字体</div>
+<div class="gap"></div>
+<div class="blk" id="b316" data-id="st-n-r-latin" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">西文字体</div>
+<div class="gap"></div>
+<div class="blk" id="b317" data-id="st-n-r-fs" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12.5px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">正文字号</div>
+<div class="gap"></div>
+<div class="blk" id="b318" data-id="st-n-r-theme-sub" style="width:180px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">宣纸 / 羊皮纸 / 暗夜书房</div>
+<div class="gap"></div>
+<div class="blk" id="b319" data-id="st-n-r-cjk-sub" style="width:180px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">正文与界面的中文字形</div>
+<div class="gap"></div>
+<div class="blk" id="b320" data-id="st-n-r-latin-sub" style="width:180px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">拉丁字符使用的字形</div>
+<div class="gap"></div>
+<div class="blk" id="b321" data-id="st-n-r-fs-sub" style="width:200px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">正文编辑与阅读字号（13-24px）</div>
+<div class="gap"></div>
+<div class="blk" id="b322" data-id="st-n-chip-xuan" style="width:60px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#191816;line-height:1.5;text-align:center;letter-spacing:0px">宣纸</div>
+<div class="gap"></div>
+<div class="blk" id="b323" data-id="st-n-chip-par" style="width:72px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#D9D2C0;line-height:1.5;text-align:center;letter-spacing:0px">羊皮纸</div>
+<div class="gap"></div>
+<div class="blk" id="b324" data-id="st-n-chip-night" style="width:84px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:500;color:#D9D2C0;line-height:1.5;text-align:center;letter-spacing:0px">暗夜书房</div>
+<div class="gap"></div>
+<div class="blk" id="b325" data-id="st-n-sel-cjk" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">思源宋体</div>
+<div class="gap"></div>
+<div class="blk" id="b326" data-id="st-n-sel-latin" style="width:130px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:13px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:left;letter-spacing:0px">Playfair Display</div>
+<div class="gap"></div>
+<div class="blk" id="b327" data-id="st-n-fs-minus" style="width:44px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:center;letter-spacing:0px">A－</div>
+<div class="gap"></div>
+<div class="blk" id="b328" data-id="st-n-fs-cur" style="width:56px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:600;color:#D9D2C0;line-height:1.5;text-align:center;letter-spacing:0px">17 px</div>
+<div class="gap"></div>
+<div class="blk" id="b329" data-id="st-n-fs-plus" style="width:44px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:12px;font-weight:400;color:#D9D2C0;line-height:1.5;text-align:center;letter-spacing:0px">A＋</div>
+<div class="gap"></div>
+<div class="blk" id="b330" data-id="st-n-prev-body" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:500;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">正文预览</div>
+<div class="gap"></div>
+<div class="blk" id="b331" data-id="st-n-prev-cover" style="width:100px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11.5px;font-weight:500;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">封面预览</div>
+<div class="gap"></div>
+<div class="blk" id="b332" data-id="st-n-prev-note" style="width:320px;font-family:'Microsoft YaHei', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:11px;font-weight:400;color:#8F8878;line-height:1.5;text-align:left;letter-spacing:0px">改动即时生效，已同步到全部窗口</div>
+<div class="gap"></div>
+<div class="blk" id="b333" data-id="st-n-font-body-sample" style="width:320px;font-family:'Noto Serif SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;font-size:17px;font-weight:400;color:#D9D2C0;line-height:1.9;text-align:left;letter-spacing:0px">钟楼上的雾还没有散。她沿着河堤往东走，路灯一盏一盏地灭下去。</div>
+</div>
+<script>
+  window.__ready = (async () => {
+    const blocks = Array.from(document.querySelectorAll('.blk'))
+    const fonts = new Set()
+    for (const b of blocks) {
+      const cs = getComputedStyle(b)
+      fonts.add(JSON.stringify([cs.fontWeight, cs.fontSize, cs.fontStyle, cs.fontFamily.split(',')[0].trim().replace(/^["']|["']$/g, '')]))
+    }
+    await Promise.all(Array.from(fonts, (f) => { const [w, s, st, fam] = JSON.parse(f); return document.fonts.load(st + ' ' + w + ' ' + s + ' "' + fam + '"') }))
+    await document.fonts.ready
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    return document.fonts.status
+  })()
+</script>
+</body></html>

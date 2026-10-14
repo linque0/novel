@@ -1,0 +1,224 @@
+{
+  "items": [
+    {
+      "name": "T:ds-board-title",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-board-title.png"
+    },
+    {
+      "name": "T:ds-board-sub",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-board-sub.png"
+    },
+    {
+      "name": "T:ds-sec-tokens",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-sec-tokens.png"
+    },
+    {
+      "name": "T:ds-theme-head-xuan",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-theme-head-xuan.png"
+    },
+    {
+      "name": "T:ds-theme-head-parchment",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-theme-head-parchment.png"
+    },
+    {
+      "name": "T:ds-theme-head-night",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-theme-head-night.png"
+    },
+    {
+      "name": "T:ds-cand-note",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-cand-note.png"
+    },
+    {
+      "name": "T:ds-sec-fonts",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-sec-fonts.png"
+    },
+    {
+      "name": "T:ds-font-ui-sample",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-font-ui-sample.png"
+    },
+    {
+      "name": "T:ds-font-ui-placeholder",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-font-ui-placeholder.png"
+    },
+    {
+      "name": "T:ds-font-title-sample",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-font-title-sample.png"
+    },
+    {
+      "name": "T:ds-font-cover-sample",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-font-cover-sample.png"
+    },
+    {
+      "name": "T:ds-font-body-sample",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-font-body-sample.png"
+    },
+    {
+      "name": "T:ds-fonts-note",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-fonts-note.png"
+    },
+    {
+      "name": "T:ds-sec-invariants",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-sec-invariants.png"
+    },
+    {
+      "name": "T:ds-radius-note",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-radius-note.png"
+    },
+    {
+      "name": "T:ds-fs-xs",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-fs-xs.png"
+    },
+    {
+      "name": "T:ds-fs-sm",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-fs-sm.png"
+    },
+    {
+      "name": "T:ds-fs-md",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-fs-md.png"
+    },
+    {
+      "name": "T:ds-fs-lg",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-fs-lg.png"
+    },
+    {
+      "name": "T:ds-fs-title",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-fs-title.png"
+    },
+    {
+      "name": "T:ds-motion-note",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-motion-note.png"
+    },
+    {
+      "name": "T:ds-sec-components",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-sec-components.png"
+    },
+    {
+      "name": "T:ds-btn-primary",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-btn-primary.png"
+    },
+    {
+      "name": "T:ds-btn-primary",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-btn-primary.png"
+    },
+    {
+      "name": "T:ds-btn-secondary",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-btn-secondary.png"
+    },
+    {
+      "name": "T:ds-btn-secondary",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-btn-secondary.png"
+    },
+    {
+      "name": "T:ds-btn-ghost",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-btn-ghost.png"
+    },
+    {
+      "name": "T:ds-btn-disabled",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-btn-disabled.png"
+    },
+    {
+      "name": "T:ds-tag-cause",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-tag-cause.png"
+    },
+    {
+      "name": "T:ds-tag-foreshadow",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-tag-foreshadow.png"
+    },
+    {
+      "name": "T:ds-tag-conflict",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-tag-conflict.png"
+    },
+    {
+      "name": "T:ds-tag-rel",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-tag-rel.png"
+    },
+    {
+      "name": "T:ds-tag-draft",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-tag-draft.png"
+    },
+    {
+      "name": "T:ds-tag-done",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-tag-done.png"
+    },
+    {
+      "name": "T:ds-tag-revise",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-tag-revise.png"
+    },
+    {
+      "name": "T:ds-tags-note",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-tags-note.png"
+    },
+    {
+      "name": "T:ds-rail-wen-on",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-rail-wen-on.png"
+    },
+    {
+      "name": "T:ds-rail-gang",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-rail-gang.png"
+    },
+    {
+      "name": "T:ds-rail-ren",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-rail-ren.png"
+    },
+    {
+      "name": "T:ds-rail-she",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-rail-she.png"
+    },
+    {
+      "name": "T:ds-rail-ling",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-rail-ling.png"
+    },
+    {
+      "name": "T:ds-empty-title",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-empty-title.png"
+    },
+    {
+      "name": "T:ds-empty-desc",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-empty-desc.png"
+    },
+    {
+      "name": "T:ds-btn-primary",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-btn-primary.png"
+    },
+    {
+      "name": "T:ds-cover-title-1",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-cover-title-1.png"
+    },
+    {
+      "name": "T:ds-cover-sub",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-cover-sub.png"
+    },
+    {
+      "name": "T:ds-seal",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-seal.png"
+    },
+    {
+      "name": "T:ds-cover-title-2",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-cover-title-2.png"
+    },
+    {
+      "name": "T:ds-cover-sub",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-cover-sub.png"
+    },
+    {
+      "name": "T:ds-seal",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-seal.png"
+    },
+    {
+      "name": "T:ds-cover-title-3",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-cover-title-3.png"
+    },
+    {
+      "name": "T:ds-cover-sub",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-cover-sub.png"
+    },
+    {
+      "name": "T:ds-seal",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-seal.png"
+    },
+    {
+      "name": "T:ds-cover-note",
+      "file": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\designs\\exports\\text\\ds-cover-note.png"
+    }
+  ]
+}

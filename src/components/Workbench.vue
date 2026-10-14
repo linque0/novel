@@ -172,7 +172,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
-    <div class="topbar">
+    <div v-if="!(ui.readMode && work.tab === 'chapters')" class="topbar">
       <NButton size="small" quaternary @click="work.closeWork()"><OIcon name="back" :size="14" /> 书架</NButton>
       <span class="brand" style="font-size: 15px">{{ work.work?.title }}</span>
       <span class="save-badge">
@@ -187,12 +187,26 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <NDropdown trigger="click" :options="bookmarkOptions" @select="onBookmarkSelect">
         <NButton size="small" title="章节书签快捷跳转（编辑器工具栏或章节右键添加）"><OIcon name="bookmark" :size="14" /> 书签 <OIcon name="caret-down" :size="11" /></NButton>
       </NDropdown>
-      <NButton size="small" title="设置：外观 / 恍然梦 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
+      <NButton size="small" title="设置：外观 / 模型设置 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
       <NButton size="small" :type="ui.focusMode ? 'primary' : 'default'" @click="ui.focusMode = !ui.focusMode">沉浸</NButton>
+      <NButton v-if="work.tab === 'chapters'" size="small" title="阅读模式：巨排章号 + 宽栏只读排版（Esc 退出）" @click="ui.readMode = !ui.readMode">阅读</NButton>
+    </div>
+
+    <!-- 阅读模式顶栏（正文页）：章节标题 + 状态 + 搜索/设置，其余控件收入阅读态外 -->
+    <div v-else class="topbar">
+      <NButton size="small" quaternary title="退出阅读模式（Esc）" @click="ui.readMode = false"><OIcon name="back" :size="14" /> 退出阅读</NButton>
+      <span class="brand" style="font-size: 15px">{{ work.activeChapter?.title || work.work?.title }}</span>
+      <span class="save-badge">
+        <span class="save-dot" :class="badgeClass"></span>
+        {{ badgeText }}
+      </span>
+      <div style="flex: 1"></div>
+      <NButton size="small" @click="ui.searchOpen = true"><OIcon name="search" :size="14" /> 搜索</NButton>
+      <NButton size="small" title="设置：外观 / 模型设置 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
     </div>
 
     <div class="wb-body">
-      <div v-if="!ui.focusMode" class="nav-rail">
+      <div v-if="!ui.focusMode && !ui.readMode" class="nav-rail">
         <div
           v-for="t in tabs"
           :key="t.key"
@@ -225,7 +239,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </div>
       </div>
 
-      <div v-if="!ui.focusMode && !modulePopped" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
+      <div v-if="!ui.focusMode && !ui.readMode && !modulePopped" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
         <ChapterTree v-if="work.tab === 'chapters'" />
         <OutlineSidebar v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
@@ -233,7 +247,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <SnippetList v-else-if="work.tab === 'snippets'" />
       </div>
       <div
-        v-if="!ui.focusMode && !modulePopped"
+        v-if="!ui.focusMode && !ui.readMode && !modulePopped"
         class="side-resizer"
         title="拖拽调整侧栏宽度（双击恢复默认）"
         @mousedown="startSideResize"
@@ -260,7 +274,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <!-- 批注栏收起后的右缘细轨：点击重新展开（仅正文页显示，与批注栏同条件） -->
       <button
-        v-if="!ui.focusMode && !modulePopped && work.tab === 'chapters' && !ui.rightPanelOpen"
+        v-if="!ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && !ui.rightPanelOpen"
         class="rp-rail"
         title="展开批注栏"
         @click="ui.setPref('rightPanelOpen', true)"
@@ -269,11 +283,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <span class="rp-rail-text">批注栏</span>
       </button>
 
-      <RightPanel v-if="!ui.focusMode && !modulePopped && work.tab === 'chapters' && ui.rightPanelOpen" />
+      <RightPanel v-if="!ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && ui.rightPanelOpen" />
 
       <!-- 恍然梦停靠列：参与 flex 布局，与原界面并排显示（不遮挡）；左缘可拖宽，拆出独立窗口后此列隐藏 -->
       <div
-        v-if="ui.aiDrawerOpen && !ui.focusMode && !aiPopped"
+        v-if="ui.aiDrawerOpen && !ui.focusMode && !ui.readMode && !aiPopped"
         class="ai-dock-resizer"
         title="拖拽调整恍然梦宽度（双击恢复默认）"
         @mousedown="startAiResize"

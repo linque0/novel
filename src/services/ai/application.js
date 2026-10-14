@@ -8,6 +8,8 @@ import { ordered } from './knowledge'
 import { fingerprint } from './presets'
 import { sourceManifest } from '../project/normalize.js'
 import { readSourceSnapshot } from '../../db/project-repo.js'
+import { applyWorkflow, undoWorkflow } from './task-application.js'
+import { taskApplyActions } from './task-profiles.js'
 
 const TABLES = ['chapters', 'outlines', 'olnodes', 'mubu', 'characters', 'relations']
 const applying = new Set()
@@ -23,6 +25,7 @@ function targetOf(work, card) {
   return { type, row: rows.find((r) => r.id === card.anchorId && !r.deletedAt) }
 }
 export function proposalGuard(work, card, action) {
+  if (card.source?.taskRequest && !taskApplyActions(card.source.taskRequest.type, card.original).includes(action)) throw new Error('当前专用任务不允许此写回操作')
   if (!work.work || card.workId !== work.work.id) throw new Error('提案属于其他作品，请重新生成')
   if (card.source?.layoutHash && fingerprint(ordered(work).map((ch) => [ch.id, ch.volumeId])) !== card.source.layoutHash)
     throw new Error('章节顺序或所属卷已变化，请重新生成')
@@ -81,6 +84,7 @@ function createOriginal(work, original) {
   return work.mubuAddTree(null, null, [{ text: original.name + (original.description ? '\n' + original.description : ''), children: [] }])
 }
 export async function applyProposal(work, card, options = {}) {
+  if (card.kind === 'workflow') return applyWorkflow(work, card, options)
   const action = options.action || 'apply'
   const operation = card.id + ':' + action
   if (applying.has(operation)) throw new Error('此提案正在应用，请稍候')
@@ -283,6 +287,8 @@ export async function applyProposal(work, card, options = {}) {
   }
 }
 export async function undoApplication(work, auditId) {
+  const workflowAudit = await db.airuns.get(auditId)
+  if (workflowAudit?.type === 'workflow-application') return undoWorkflow(work, workflowAudit)
   const workId = work.work?.id,
     owner = uid(),
     leaseId = 'apply:' + workId

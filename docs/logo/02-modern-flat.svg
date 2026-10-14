@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 900" width="900" height="900" role="img" aria-label="小说工坊 logo 设计稿 02 现代扁平">
+
+  <rect width="900" height="900" fill="#F6F7FE"/>
+  
+  <defs>
+    <clipPath id="v2-tile"><rect x="260" y="250" width="380" height="380" rx="88"/></clipPath>
+  </defs>
+
+  <rect x="260" y="250" width="380" height="380" rx="88" fill="#4C56D6"/>
+
+  <g clip-path="url(#v2-tile)">
+    <path d="M446,400 L330,366 L330,452 L446,486 Z" fill="#FFFFFF"/>
+    <path d="M454,400 L570,366 L570,452 L454,486 Z" fill="#F2F4FF"/>
+    <path d="M336,404 L440,434" stroke="#4C56D6" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="M336,425 L440,455" stroke="#4C56D6" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="M460,434 L564,404" stroke="#4C56D6" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="M460,455 L564,425" stroke="#4C56D6" stroke-width="7" stroke-linecap="round" fill="none"/>
+    <path d="M439,486 L461,486 L461,552 L450,538 L439,552 Z" fill="#F2B33D"/>
+    <path d="M588,290 C591.92,314.08 591.92,314.08 616,318 C591.92,321.92 591.92,321.92 588,346 C584.08,321.92 584.08,321.92 560,318 C584.08,314.08 584.08,314.08 588,290 Z" fill="#F2B33D" opacity="1"/>
+  </g>
+
+  <text x="450" y="730" font-family='"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif' font-size="76" font-weight="700"
+        letter-spacing="6" fill="#1E2130" text-anchor="middle">小说工坊</text>
+  <text x="450" y="812" font-family='"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif' font-size="19" letter-spacing="4"
+        fill="#7C83A8" text-anchor="middle">02 · 现代扁平 · Modern Flat</text>
+</svg>

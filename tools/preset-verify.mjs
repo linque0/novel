@@ -104,7 +104,7 @@ await test(
 await test(
   'backup includes presets and isolated macro state, excludes credential',
   `
- const {exportBackupJson}=await import('/src/db/repo.js');const b=JSON.parse(await exportBackupJson());return Array.isArray(b.data.aipresets) && Array.isArray(b.data.aipresetstate) && !b.data.appconfig.some(r=>r.key==='ai.credential');
+ const {exportBackupJson}=await import('/src/db/repo.js');const b=JSON.parse(await exportBackupJson());return Array.isArray(b.data.aipresets) && Array.isArray(b.data.aipresetstate) && !b.data.appconfig.some(r=>String(r.key||'').startsWith('ai.cred'));
 `,
 )
 await test(
