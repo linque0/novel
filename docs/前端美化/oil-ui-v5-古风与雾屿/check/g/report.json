@@ -1,0 +1,78 @@
+[
+  {
+    "file": "shelf.png",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 299,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "small「林间 · 创作札记」"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 21,
+        "examples": [
+          "small「溪山书院」（4.12:1）",
+          "div.breadcrumb「林间的创作空间 / 书架」（4.12:1）",
+          "span.saved「已保存」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 53,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 11,
+        "examples": [
+          "small「溪山书院」（4.12:1）",
+          "div.breadcrumb「林间的创作空间 / 人物」（4.12:1）",
+          "span.saved「已保存」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "editor.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 106,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 1,
+        "examples": [
+          "button.chapter.active「01 初雪 1253 字」（2px）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 11,
+        "examples": [
+          "small「溪山书院」（4.12:1）",
+          "div.breadcrumb「林间的创作空间 / 正文」（4.12:1）",
+          "span.saved「已保存」（4.12:1）"
+        ]
+      }
+    ]
+  }
+]

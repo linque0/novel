@@ -1,0 +1,145 @@
+{
+  "styles": [
+    {
+      "id": "01-world-tree",
+      "name": "万象根庭",
+      "en": "THE WORLDROOT",
+      "element": "树",
+      "form": "舒展树冠 / 有机曲线",
+      "colors": [
+        "#D9BB79",
+        "#70D4A7",
+        "#F3EBD5"
+      ],
+      "font": "song"
+    },
+    {
+      "id": "02-sealed-codex",
+      "name": "缄页禁典",
+      "en": "THE SEALED CODEX",
+      "element": "书",
+      "form": "斜立古籍 / 封印门洞",
+      "colors": [
+        "#F4E9D5",
+        "#BB3556",
+        "#D8B67C"
+      ],
+      "font": "song"
+    },
+    {
+      "id": "03-steel-nib",
+      "name": "零界书令",
+      "en": "THE NULL QUILL",
+      "element": "笔",
+      "form": "垂直笔尖 / 断环校准",
+      "colors": [
+        "#E2ECF3",
+        "#59DFEA",
+        "#6485F2"
+      ],
+      "font": "sans"
+    },
+    {
+      "id": "04-floating-pages",
+      "name": "悬页星仪",
+      "en": "THE PAGE OBSERVATORY",
+      "element": "书",
+      "form": "悬浮书页 / 环形仪轨",
+      "colors": [
+        "#EEEAFB",
+        "#A48AF2",
+        "#EBA5C8"
+      ],
+      "font": "song"
+    },
+    {
+      "id": "05-ember-quill",
+      "name": "赤翎裁序",
+      "en": "THE EMBER SCRIPT",
+      "element": "笔",
+      "form": "斜向羽笔 / 流动墨迹",
+      "colors": [
+        "#FFF0D8",
+        "#F4B75A",
+        "#D64F65"
+      ],
+      "font": "song"
+    },
+    {
+      "id": "06-crystal-tree",
+      "name": "悬根之树",
+      "en": "THE CRYSTAL ARBOR",
+      "element": "树",
+      "form": "晶体树冠 / 几何悬根",
+      "colors": [
+        "#D6E3FF",
+        "#657FE1",
+        "#A997F2"
+      ],
+      "font": "sans"
+    }
+  ],
+  "assets": [
+    "01-world-tree\\emblem-color.svg",
+    "01-world-tree\\emblem-white.svg",
+    "01-world-tree\\emblem-black.svg",
+    "01-world-tree\\emblem-simple.svg",
+    "01-world-tree\\logo.svg",
+    "01-world-tree\\logo-on-light.svg",
+    "01-world-tree\\app-icon.svg",
+    "01-world-tree\\app-icon-rounded.svg",
+    "01-world-tree\\app-icon-small.svg",
+    "01-world-tree\\app-icon-mono.svg",
+    "02-sealed-codex\\emblem-color.svg",
+    "02-sealed-codex\\emblem-white.svg",
+    "02-sealed-codex\\emblem-black.svg",
+    "02-sealed-codex\\emblem-simple.svg",
+    "02-sealed-codex\\logo.svg",
+    "02-sealed-codex\\logo-on-light.svg",
+    "02-sealed-codex\\app-icon.svg",
+    "02-sealed-codex\\app-icon-rounded.svg",
+    "02-sealed-codex\\app-icon-small.svg",
+    "02-sealed-codex\\app-icon-mono.svg",
+    "03-steel-nib\\emblem-color.svg",
+    "03-steel-nib\\emblem-white.svg",
+    "03-steel-nib\\emblem-black.svg",
+    "03-steel-nib\\emblem-simple.svg",
+    "03-steel-nib\\logo.svg",
+    "03-steel-nib\\logo-on-light.svg",
+    "03-steel-nib\\app-icon.svg",
+    "03-steel-nib\\app-icon-rounded.svg",
+    "03-steel-nib\\app-icon-small.svg",
+    "03-steel-nib\\app-icon-mono.svg",
+    "04-floating-pages\\emblem-color.svg",
+    "04-floating-pages\\emblem-white.svg",
+    "04-floating-pages\\emblem-black.svg",
+    "04-floating-pages\\emblem-simple.svg",
+    "04-floating-pages\\logo.svg",
+    "04-floating-pages\\logo-on-light.svg",
+    "04-floating-pages\\app-icon.svg",
+    "04-floating-pages\\app-icon-rounded.svg",
+    "04-floating-pages\\app-icon-small.svg",
+    "04-floating-pages\\app-icon-mono.svg",
+    "05-ember-quill\\emblem-color.svg",
+    "05-ember-quill\\emblem-white.svg",
+    "05-ember-quill\\emblem-black.svg",
+    "05-ember-quill\\emblem-simple.svg",
+    "05-ember-quill\\logo.svg",
+    "05-ember-quill\\logo-on-light.svg",
+    "05-ember-quill\\app-icon.svg",
+    "05-ember-quill\\app-icon-rounded.svg",
+    "05-ember-quill\\app-icon-small.svg",
+    "05-ember-quill\\app-icon-mono.svg",
+    "06-crystal-tree\\emblem-color.svg",
+    "06-crystal-tree\\emblem-white.svg",
+    "06-crystal-tree\\emblem-black.svg",
+    "06-crystal-tree\\emblem-simple.svg",
+    "06-crystal-tree\\logo.svg",
+    "06-crystal-tree\\logo-on-light.svg",
+    "06-crystal-tree\\app-icon.svg",
+    "06-crystal-tree\\app-icon-rounded.svg",
+    "06-crystal-tree\\app-icon-small.svg",
+    "06-crystal-tree\\app-icon-mono.svg"
+  ],
+  "method": "Original SVG paths; outlined lettering; flat color; no embedded rasters."
+}

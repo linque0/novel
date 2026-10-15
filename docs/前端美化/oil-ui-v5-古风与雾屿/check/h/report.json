@@ -1,0 +1,47 @@
+[
+  {
+    "file": "shelf.png",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 360,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 52,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "editor.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 46,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "inspiration.png",
+    "state": "inspiration",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "settings.png",
+    "state": "settings",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  }
+]

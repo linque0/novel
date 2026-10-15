@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "project": "小说工坊 · 两种新美术方向",
+  "brief": "沿用原版功能结构：两种美术语言，七个主界面及三个补充视图；不生成或使用书封与人物图片。",
+  "round": "oil-ui-04",
+  "lang": "zh",
+  "nativeViewport": "1440x900",
+  "serve": {
+    "command": "python -m http.server 8881 --bind 127.0.0.1",
+    "cwd": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\oil-ui-v4-双风格探索",
+    "url": "http://127.0.0.1:8881"
+  },
+  "candidates": [
+    {
+      "id": "e",
+      "name": "铬蓝索引",
+      "concept": "把长篇创作变成一套精密而清晰的出版索引：每部作品都有自己的位置。",
+      "palette": [
+        "#E9E9E6",
+        "#1E40D1",
+        "#202526"
+      ],
+      "typography": "无衬线工具标题；老宋体作品名与正文；等宽编号",
+      "traits": [
+        "出版索引式书架",
+        "银灰台面与钴蓝选中页",
+        "硬边表单与网格画布"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8881/e.html"
+    },
+    {
+      "id": "f",
+      "name": "紫幕折页",
+      "concept": "让故事像一叠被展开的手稿，纸页有层次，编辑有秩序。",
+      "palette": [
+        "#211B2A",
+        "#D8B1F2",
+        "#EADFF1"
+      ],
+      "typography": "老宋体大题名与正文；文楷姓名标记；无衬线工具",
+      "traits": [
+        "层叠折页与作品目录",
+        "李紫底色与淡紫纸面",
+        "侧边导航与安静正文"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8881/f.html"
+    }
+  ]
+}

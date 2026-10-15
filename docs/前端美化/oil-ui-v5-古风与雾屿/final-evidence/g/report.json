@@ -1,0 +1,262 @@
+[
+  {
+    "file": "shelf.png",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 242,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "small「林间 · 创作札记」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "editor.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 97,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 51,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 53,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 49,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "inspiration.png",
+    "state": "inspiration",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "settings.png",
+    "state": "settings",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "outline-text.png",
+    "state": "outline-text",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 54,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "world-detail.png",
+    "state": "world-detail",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters-graph.png",
+    "state": "characters-graph",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 51,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "shelf-@2x.png",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 266,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "small「林间 · 创作札记」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "motion-probe",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "motion": {
+      "load": {
+        "elements": 7,
+        "loops": 0,
+        "maxMove": 16,
+        "maxSize": 0.022,
+        "maxOpacity": 1,
+        "top": [
+          {
+            "el": "aside.ink-reading",
+            "move": 16,
+            "size": 0.022,
+            "opacity": 0.96,
+            "loop": false,
+            "sources": [
+              "css:ink-unfold"
+            ]
+          },
+          {
+            "el": "button.bound-volume.selected",
+            "move": 16,
+            "size": 0,
+            "opacity": 1,
+            "loop": false,
+            "sources": [
+              "css:ink-volume"
+            ]
+          },
+          {
+            "el": "button.bound-volume",
+            "move": 16,
+            "size": 0,
+            "opacity": 1,
+            "loop": false,
+            "sources": [
+              "css:ink-volume"
+            ]
+          },
+          {
+            "el": "button.bound-volume",
+            "move": 16,
+            "size": 0,
+            "opacity": 1,
+            "loop": false,
+            "sources": [
+              "css:ink-volume"
+            ]
+          },
+          {
+            "el": "button.bound-volume",
+            "move": 16,
+            "size": 0,
+            "opacity": 1,
+            "loop": false,
+            "sources": [
+              "css:ink-volume"
+            ]
+          },
+          {
+            "el": "button.bound-volume",
+            "move": 16,
+            "size": 0,
+            "opacity": 1,
+            "loop": false,
+            "sources": [
+              "css:ink-volume"
+            ]
+          },
+          {
+            "el": "button.bound-volume",
+            "move": 16,
+            "size": 0,
+            "opacity": 1,
+            "loop": false,
+            "sources": [
+              "css:ink-volume"
+            ]
+          }
+        ]
+      },
+      "hero": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "layers": 0
+      },
+      "scroll": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "scrollable": false
+      }
+    },
+    "issues": []
+  },
+  {
+    "file": "motion-entry-end.jpg",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "entry",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-entry-start.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 168
+      },
+      "mid": {
+        "file": "motion-entry-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 492
+      },
+      "end": {
+        "file": "motion-entry-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 2016
+      }
+    },
+    "sampling": {
+      "mode": "entry"
+    },
+    "durationMs": 2016,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-entry-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  }
+]

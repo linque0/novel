@@ -6,16 +6,7 @@
     "zoom": 1,
     "animationWaitMs": 0,
     "issues": [],
-    "lint": [
-      {
-        "rule": "longMeasure",
-        "label": "正文行太长",
-        "count": 1,
-        "examples": [
-          "footer「设计评审原型 · 原生视口 1440 × 900」（每行约 48 字）"
-        ]
-      }
-    ]
+    "lint": []
   },
   {
     "file": "world.png",
@@ -24,16 +15,7 @@
     "zoom": 1,
     "animationWaitMs": 0,
     "issues": [],
-    "lint": [
-      {
-        "rule": "longMeasure",
-        "label": "正文行太长",
-        "count": 1,
-        "examples": [
-          "footer「设计评审原型 · 原生视口 1440 × 900」（每行约 48 字）"
-        ]
-      }
-    ]
+    "lint": []
   },
   {
     "file": "characters.png",
@@ -42,16 +24,7 @@
     "zoom": 1,
     "animationWaitMs": 0,
     "issues": [],
-    "lint": [
-      {
-        "rule": "longMeasure",
-        "label": "正文行太长",
-        "count": 1,
-        "examples": [
-          "footer「设计评审原型 · 原生视口 1440 × 900」（每行约 48 字）"
-        ]
-      }
-    ]
+    "lint": []
   },
   {
     "file": "world-detail.png",
@@ -60,15 +33,6 @@
     "zoom": 1,
     "animationWaitMs": 0,
     "issues": [],
-    "lint": [
-      {
-        "rule": "longMeasure",
-        "label": "正文行太长",
-        "count": 1,
-        "examples": [
-          "footer「设计评审原型 · 原生视口 1440 × 900」（每行约 48 字）"
-        ]
-      }
-    ]
+    "lint": []
   }
 ]

@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue'
 import { NButton, NModal, NInput, NSelect, NDropdown, NEmpty, NSpin, NCheckbox, useMessage } from 'naive-ui'
 import OIcon from './OIcon.vue'
+import SkinPicker from './SkinPicker.vue'
+import GravityShelf from './GravityShelf.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
@@ -27,6 +29,7 @@ const showCreate = ref(false)
 const form = ref({ title: '', author: '', genre: '其他', status: '构思', intro: '', withVolume: true, kind: 'novel' })
 const editing = ref(null)
 const q = ref('')
+const opening = ref(false)
 
 /* 书架本地检索：书名 / 作者 / 类型 */
 const filtered = computed(() => {
@@ -71,7 +74,17 @@ async function submitCreate() {
 }
 
 async function onWorkClick(w) {
-  await work.open(w.id)
+  await openWorkAt(w)
+}
+async function openWorkAt(w, tab = 'chapters') {
+  if (opening.value) return
+  opening.value = true
+  try {
+    await work.open(w.id)
+    if (['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(tab)) work.tab = tab
+  } catch {
+    msg.error('作品未能打开，请重试')
+  } finally { opening.value = false }
 }
 
 /* ---------- 设置窗口（面板窗口 settings 类型）：外观 / 恍然梦 / 数据 / 关于 ---------- */
@@ -107,7 +120,7 @@ function fmtWords(n) {
 const cardMenu = (w) => [
   { label: '打开', key: 'open' },
   { label: '编辑信息', key: 'edit' },
-  { label: '删除（可回收站恢复，一期先软删除）', key: 'del', props: { style: { color: '#c2564a' } } }
+  { label: '删除（可回收站恢复，一期先软删除）', key: 'del', props: { style: { color: ui.skin === 'gravity' ? '#f18f86' : '#c2564a' } } }
 ]
 async function onCardMenu(key, w) {
   if (key === 'open') await onWorkClick(w)
@@ -121,6 +134,8 @@ async function onCardMenu(key, w) {
 
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
+    <GravityShelf v-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <template v-else>
     <div class="topbar">
       <div class="shelf-brand">
         <span class="logo">坊</span>
@@ -132,6 +147,7 @@ async function onCardMenu(key, w) {
           <template #prefix><OIcon name="search" :size="13" /></template>
         </NInput>
       </div>
+      <SkinPicker />
       <NButton size="small" title="设置：外观 / 恍然梦 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
       <NButton size="small" type="primary" @click="openCreate">＋ 新建作品</NButton>
     </div>
@@ -152,7 +168,7 @@ async function onCardMenu(key, w) {
               <span class="cover-tt">{{ w.title }}</span>
               <span class="cover-sub">{{ w.status || '连载中' }}</span>
               <span v-if="sealLines(w.author).length" class="cover-seal"><template v-for="(ln, i) in sealLines(w.author)" :key="i">{{ ln }}<br v-if="i < sealLines(w.author).length - 1" /></template></span>
-              <div class="cover-menu" @click.stop>
+              <div class="cover-menu" @click.stop @keydown.stop>
                 <NDropdown :options="cardMenu(w)" @select="(k) => onCardMenu(k, w)" trigger="click">
                   <NButton size="tiny" quaternary>⋯</NButton>
                 </NDropdown>
@@ -172,6 +188,7 @@ async function onCardMenu(key, w) {
       </NSpin>
     </div>
 
+    </template>
     <NModal v-model:show="showCreate" preset="card" :title="editing ? '编辑作品信息' : '新建作品'" style="width: 460px">
       <div style="display: flex; flex-direction: column; gap: 12px">
         <NInput v-model:value="form.title" placeholder="书名 *" />

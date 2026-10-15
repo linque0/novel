@@ -1,0 +1,31 @@
+from pathlib import Path
+import json, shutil, hashlib
+R=Path(__file__).resolve().parent
+states=[['shelf','书架'],['editor','正文'],['outline','大纲'],['world','设定'],['characters','人物'],['inspiration','灵感'],['settings','设置'],['outline-text','大纲·文本'],['world-detail','设定·详情'],['characters-graph','人物·关系图']]
+designs=[['g','溪山书院','宣纸与山水 / 右侧竖排导航 / 案头线装藏书'],['h','雾屿','雾化绸面 / 居中胶囊导航 / 纵深悬浮作品']]
+for d,_,_ in designs:
+    (R/'gallery'/d).mkdir(parents=True,exist_ok=True)
+    for s,_ in states: shutil.copy2(R/'final-evidence'/d/(s+'.png'),R/'gallery'/d/(s+'.png'))
+html='''<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>小说工坊 · 古风与雾屿 · 双版设计总览</title><style>
+*{box-sizing:border-box}body{margin:0;background:#181c1b;color:#eff2ed;font:14px/1.5 'Microsoft YaHei',sans-serif}header{padding:24px 32px 19px;border-bottom:1px solid #3a4540}h1{font-size:25px;font-weight:500;letter-spacing:2px;margin:0 0 8px}p{color:#bdc8c1;margin:0}header>a{float:right;color:#eff2ed;padding:10px 16px;border:1px solid #63756a;text-decoration:none;border-radius:25px;font-size:13px}nav{display:flex;gap:7px;margin-top:22px;flex-wrap:wrap}nav button{border:1px solid #55645b;color:#c7d0ca;background:transparent;padding:8px 20px;border-radius:25px;cursor:pointer;font:inherit;font-size:13px}nav button[aria-pressed=true]{color:#1c3026;background:#ecf1e5;border-color:#ecf1e5}main{padding:23px 32px 26px;display:grid;grid-template-columns:1fr 1fr;gap:25px}article{min-width:0}article>a{display:block;text-decoration:none;color:inherit}article img{display:block;width:100%;aspect-ratio:1.6;border:1px solid #526258;object-fit:contain;background:#28362f}h2{font-size:19px;font-weight:400;margin:13px 0 4px;letter-spacing:2px}article p{font-size:13px}.card-head{display:flex;justify-content:space-between;align-items:center}.card-head span{color:#c4d1c7;font-size:12px}footer{padding:0 32px 24px;color:#b3c0b7;font-size:13px;max-width:510px}a:focus-visible,button:focus-visible{outline:2px solid #c8e3ca;outline-offset:4px}@media(max-width:900px){main{grid-template-columns:1fr}header>a{float:none;display:inline-block;margin-bottom:16px}nav button{padding:8px 15px}}
+</style></head><body><header><a href="style-explorer.html">进入 Oil UI 可操作对比 ↗</a><h1>小说工坊 · 古风与雾屿</h1><p>两种构图与美术语言 · 每版七个功能页及三个补充视图 · 点击画面打开原型</p><nav aria-label="功能界面"></nav></header><main></main><footer>仅设计评审原型 · 原生视口 1440 × 900<br>未接入软件服务；无书封与人物图片。</footer><script>
+const pages=__PAGES__,designs=__DESIGNS__;let state=new URLSearchParams(location.search).get('state')||'shelf';if(!pages.some(p=>p[0]===state))state='shelf';function show(s){state=s;history.replaceState(null,'','?state='+s);document.querySelector('nav').innerHTML=pages.map(([id,name])=>`<button data-state="${id}" aria-pressed="${id===s}">${name}</button>`).join('');document.querySelector('main').innerHTML=designs.map(([id,name,desc])=>`<article><a href="${id}.html?state=${s}"><img src="gallery/${id}/${s}.png" alt="${name} · ${pages.find(p=>p[0]===s)[1]}"><div class="card-head"><h2>${id.toUpperCase()} / ${name}</h2><span>打开原型 ↗</span></div><p>${desc}</p></a></article>`).join('')}document.querySelector('nav').addEventListener('click',e=>{if(e.target.dataset.state)show(e.target.dataset.state)});show(state);
+</script></body></html>'''
+(R/'index.html').write_text(html.replace('__PAGES__',json.dumps(states,ensure_ascii=False)).replace('__DESIGNS__',json.dumps(designs,ensure_ascii=False)),encoding='utf-8')
+baseline=json.loads((R/'software-readonly-baseline.json').read_text(encoding='utf-8-sig'))
+checks=[]
+for row in baseline:
+    sha=hashlib.sha256((R.parents[2]/row['path']).read_bytes()).hexdigest()
+    checks.append(dict(path=row['path'],unchanged=sha.lower()==row['sha256'].lower(),sha256=sha))
+assert all(q['unchanged'] for q in checks),'Software source differs from read-only baseline'
+(R/'software-readonly-verification.json').write_text(json.dumps(checks,ensure_ascii=False,indent=2),encoding='utf-8')
+report=[]
+for d,_,_ in designs:
+    rows=json.loads((R/'final-evidence'/d/'report.json').read_text(encoding='utf-8'))
+    issues=[(r.get('file'),r.get('issues')) for r in rows if r.get('issues')]
+    readability=[(r.get('file'),l) for r in rows for l in r.get('lint',[]) if l.get('rule') in ['contrastLow','bodySmall','lineHeightTight','stuckTransparent']]
+    assert not issues,(d,issues)
+    assert not readability,(d,readability)
+    report.append(dict(direction=d,issues=issues,readability=readability,files=len(rows)))
+(R/'交付校验.json').write_text(json.dumps(dict(galleryScreens=20,softwareComponents=checks,evidence=report),ensure_ascii=False,indent=2),encoding='utf-8')
+print(json.dumps(dict(gallery=20,softwareHashesUnchanged=len(checks),evidence=report),ensure_ascii=False))

@@ -1,0 +1,38 @@
+[
+  {
+    "path": "src/components/OutlineCenter.vue",
+    "sha256": "febcb508222875a9a5b80b3ba73d1729d03aa733c79d114b4204b18b3b9f52bf"
+  },
+  {
+    "path": "src/components/OutlineSidebar.vue",
+    "sha256": "59c2abf150f44a4429dde25a0d1de59f491bc748e5bbe9b5ba7e916d14eafbf5"
+  },
+  {
+    "path": "src/components/OutlineCanvas.vue",
+    "sha256": "ae9b5f87688d6a00a01045a4f170f02fea5282cf582d97c1eaa283c4d547edb8"
+  },
+  {
+    "path": "src/components/MubuView.vue",
+    "sha256": "d7aee34db2569cdfa45220968dfaf96742fe4720ff3a40b28723fff2f090172f"
+  },
+  {
+    "path": "src/components/MubuTree.vue",
+    "sha256": "fa6dd99d008ace8e960616737e7427483df4d64c67f0642ddf483c0628c9011b"
+  },
+  {
+    "path": "src/components/LoreDetail.vue",
+    "sha256": "c1d75f0cf747e899af3153db456dfcd121562cdcc0760cbea158d726de46cced"
+  },
+  {
+    "path": "src/components/CharacterCenter.vue",
+    "sha256": "67e275c611f8c20902bf7cb7f0414cc86d0a4d5db69c7b40b591d4c95395c91b"
+  },
+  {
+    "path": "src/components/CharacterList.vue",
+    "sha256": "5135488c35f5d7c340419229e498d2c003962bac610054bbc47f73114db9da2a"
+  },
+  {
+    "path": "src/components/CharacterGraph.vue",
+    "sha256": "0e8da191f4a885c3c750c3c84ed6992e0e06627b2134038c448bf29f906dca0e"
+  }
+]

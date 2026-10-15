@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "project": "小说工坊 · 古风与雾屿",
+  "brief": "沿用原版功能结构：两种美术语言，七个主界面及三个补充视图；不生成或使用书封与人物图片。",
+  "round": "oil-ui-05",
+  "lang": "zh",
+  "nativeViewport": "1440x900",
+  "serve": {
+    "command": "python -m http.server 8882 --bind 127.0.0.1",
+    "cwd": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\oil-ui-v5-古风与雾屿",
+    "url": "http://127.0.0.1:8882"
+  },
+  "candidates": [
+    {
+      "id": "g",
+      "name": "溪山书院",
+      "concept": "以线装册页、山水留白与朱印题签，让创作像展开一部自己的藏书。",
+      "palette": [
+        "#EDE8DA",
+        "#354C43",
+        "#9C4436"
+      ],
+      "typography": "宋体作品题名与正文；文楷导航；直排册签",
+      "traits": [
+        "右侧直排导航",
+        "线装书册与山水留白",
+        "双页式编辑工作区"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8882/g.html"
+    },
+    {
+      "id": "h",
+      "name": "雾屿",
+      "concept": "把故事放在雾化的空间中，正在创作的那一部成为唯一清晰的焦点。",
+      "palette": [
+        "#283C38",
+        "#8FBFBA",
+        "#F3F4EF"
+      ],
+      "typography": "无衬线界面；宋体正文；大尺度作品标题",
+      "traits": [
+        "雾化绸面背景",
+        "纵深悬浮作品选择",
+        "胶囊导航与半透明工作面"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8882/h.html"
+    }
+  ]
+}

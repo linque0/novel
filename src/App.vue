@@ -22,6 +22,8 @@ import { installAppBus } from './services/appbus'
 import { useShelfStore } from './stores/shelf'
 import { installAiRuntime } from './services/ai/runtime'
 import { useAiStore } from './stores/ai'
+import { resolveSkin } from './skins/registry'
+import './styles/skins/gravity.css'
 
 const ui = useUiStore()
 const shelf = useShelfStore()
@@ -32,11 +34,21 @@ installAppBus()
 /* 功能面板窗口（9.2-W5）：URL 带 ?panel=<type>:<workId>:<entityId> 时渲染精简面板布局 */
 const panelMode = new URLSearchParams(location.search).has('panel')
 
-const naiveTheme = computed(() => (ui.theme === 'night' ? darkTheme : null))
+const activeSkin = computed(() => resolveSkin(ui.skin, panelMode ? 'panel' : ui.view))
+const naiveTheme = computed(() => (activeSkin.value.id === 'gravity' || ui.theme === 'night' ? darkTheme : null))
 const overrides = computed(() => {
+  if (activeSkin.value.id === 'gravity') {
+    return { common: {
+      primaryColor: '#f29c62', primaryColorHover: '#ffb784', primaryColorPressed: '#dc874f', primaryColorSuppl: '#f29c62',
+      textColor1: '#e3eceb', textColor2: '#d7e0e5', textColor3: '#9aadb9',
+      bodyColor: '#0b131d', cardColor: '#14212c', modalColor: '#14212c', popoverColor: '#1a2b37',
+      borderColor: '#344654', inputColor: '#101c27'
+    } }
+  }
   const accent = { xuan: '#8c6f4e', parchment: '#a0642f', night: '#d4a95c' }[ui.theme] || '#8c6f4e'
   return { common: { primaryColor: accent, primaryColorHover: accent, primaryColorPressed: accent, primaryColorSuppl: accent } }
 })
+watch(activeSkin, skin => { document.body.dataset.skin = skin.id }, { immediate: true })
 
 /* 主题类镜像到 body：naive 的 popover/modal 等浮层 teleport 到 body 下，
    继承不到 .app-root 上的主题变量——var(--bg-panel) 等会整条声明失效
@@ -88,7 +100,7 @@ async function seedDevVerifyBooks() {
       <NDialogProvider>
         <PrefBridge />
         <PanelHost v-if="panelMode" />
-        <div v-else class="app-root" :class="'theme-' + ui.theme" :style="ui.rootStyle">
+        <div v-else class="app-root" :class="'theme-' + ui.theme" :data-skin="activeSkin.id" :style="ui.rootStyle">
           <div v-if="ui.dbError" class="empty-shelf" style="padding-top: 16vh">
             <div class="big">数据的另一扇门被占用了</div>
             <p>

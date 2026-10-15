@@ -10,6 +10,7 @@
 import { h, ref, onMounted, watch } from 'vue'
 import { NButton, NSelect, NTag, NCheckbox } from 'naive-ui'
 import OIcon from './OIcon.vue'
+import SkinPicker from './SkinPicker.vue'
 import AiSettings from './ai/AiSettings.vue'
 import ImportDialog from './ImportDialog.vue'
 import ExportDialog from './ExportDialog.vue'
@@ -216,8 +217,12 @@ async function clearStalePointer() {
         <!-- 外观 -->
         <template v-if="page === 'appearance'">
           <h2 class="sw-h serif">外观</h2>
-          <p class="sw-desc">主题、字体与字号，改动即时生效并同步到全部窗口</p>
+          <p class="sw-desc">皮肤、主题、字体与字号，改动即时生效并同步到全部窗口</p>
           <div class="sw-card">
+            <div class="sw-row">
+              <div class="sw-row-main"><b>工坊皮肤</b><i>引力书舱首批仅应用于书架，其他页面沿用原版</i></div>
+              <SkinPicker />
+            </div>
             <div class="sw-row">
               <div class="sw-row-main"><b>主题</b><i>宣纸 / 羊皮纸 / 暗夜书房</i></div>
               <span class="chips">

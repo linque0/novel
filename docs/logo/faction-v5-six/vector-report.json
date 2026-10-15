@@ -1,0 +1,242 @@
+[
+  {
+    "file": "01-world-tree\\emblem-color.svg",
+    "paths": 24
+  },
+  {
+    "file": "01-world-tree\\emblem-white.svg",
+    "paths": 24
+  },
+  {
+    "file": "01-world-tree\\emblem-black.svg",
+    "paths": 24
+  },
+  {
+    "file": "01-world-tree\\emblem-simple.svg",
+    "paths": 13
+  },
+  {
+    "file": "01-world-tree\\logo.svg",
+    "paths": 35
+  },
+  {
+    "file": "01-world-tree\\logo-on-light.svg",
+    "paths": 35
+  },
+  {
+    "file": "01-world-tree\\app-icon.svg",
+    "paths": 24
+  },
+  {
+    "file": "01-world-tree\\app-icon-rounded.svg",
+    "paths": 24
+  },
+  {
+    "file": "01-world-tree\\app-icon-small.svg",
+    "paths": 13
+  },
+  {
+    "file": "01-world-tree\\app-icon-mono.svg",
+    "paths": 24
+  },
+  {
+    "file": "02-sealed-codex\\emblem-color.svg",
+    "paths": 18
+  },
+  {
+    "file": "02-sealed-codex\\emblem-white.svg",
+    "paths": 18
+  },
+  {
+    "file": "02-sealed-codex\\emblem-black.svg",
+    "paths": 18
+  },
+  {
+    "file": "02-sealed-codex\\emblem-simple.svg",
+    "paths": 9
+  },
+  {
+    "file": "02-sealed-codex\\logo.svg",
+    "paths": 29
+  },
+  {
+    "file": "02-sealed-codex\\logo-on-light.svg",
+    "paths": 29
+  },
+  {
+    "file": "02-sealed-codex\\app-icon.svg",
+    "paths": 18
+  },
+  {
+    "file": "02-sealed-codex\\app-icon-rounded.svg",
+    "paths": 18
+  },
+  {
+    "file": "02-sealed-codex\\app-icon-small.svg",
+    "paths": 9
+  },
+  {
+    "file": "02-sealed-codex\\app-icon-mono.svg",
+    "paths": 18
+  },
+  {
+    "file": "03-steel-nib\\emblem-color.svg",
+    "paths": 31
+  },
+  {
+    "file": "03-steel-nib\\emblem-white.svg",
+    "paths": 31
+  },
+  {
+    "file": "03-steel-nib\\emblem-black.svg",
+    "paths": 31
+  },
+  {
+    "file": "03-steel-nib\\emblem-simple.svg",
+    "paths": 7
+  },
+  {
+    "file": "03-steel-nib\\logo.svg",
+    "paths": 42
+  },
+  {
+    "file": "03-steel-nib\\logo-on-light.svg",
+    "paths": 42
+  },
+  {
+    "file": "03-steel-nib\\app-icon.svg",
+    "paths": 31
+  },
+  {
+    "file": "03-steel-nib\\app-icon-rounded.svg",
+    "paths": 31
+  },
+  {
+    "file": "03-steel-nib\\app-icon-small.svg",
+    "paths": 7
+  },
+  {
+    "file": "03-steel-nib\\app-icon-mono.svg",
+    "paths": 31
+  },
+  {
+    "file": "04-floating-pages\\emblem-color.svg",
+    "paths": 18
+  },
+  {
+    "file": "04-floating-pages\\emblem-white.svg",
+    "paths": 18
+  },
+  {
+    "file": "04-floating-pages\\emblem-black.svg",
+    "paths": 18
+  },
+  {
+    "file": "04-floating-pages\\emblem-simple.svg",
+    "paths": 10
+  },
+  {
+    "file": "04-floating-pages\\logo.svg",
+    "paths": 29
+  },
+  {
+    "file": "04-floating-pages\\logo-on-light.svg",
+    "paths": 29
+  },
+  {
+    "file": "04-floating-pages\\app-icon.svg",
+    "paths": 18
+  },
+  {
+    "file": "04-floating-pages\\app-icon-rounded.svg",
+    "paths": 18
+  },
+  {
+    "file": "04-floating-pages\\app-icon-small.svg",
+    "paths": 10
+  },
+  {
+    "file": "04-floating-pages\\app-icon-mono.svg",
+    "paths": 18
+  },
+  {
+    "file": "05-ember-quill\\emblem-color.svg",
+    "paths": 10
+  },
+  {
+    "file": "05-ember-quill\\emblem-white.svg",
+    "paths": 10
+  },
+  {
+    "file": "05-ember-quill\\emblem-black.svg",
+    "paths": 10
+  },
+  {
+    "file": "05-ember-quill\\emblem-simple.svg",
+    "paths": 5
+  },
+  {
+    "file": "05-ember-quill\\logo.svg",
+    "paths": 21
+  },
+  {
+    "file": "05-ember-quill\\logo-on-light.svg",
+    "paths": 21
+  },
+  {
+    "file": "05-ember-quill\\app-icon.svg",
+    "paths": 10
+  },
+  {
+    "file": "05-ember-quill\\app-icon-rounded.svg",
+    "paths": 10
+  },
+  {
+    "file": "05-ember-quill\\app-icon-small.svg",
+    "paths": 5
+  },
+  {
+    "file": "05-ember-quill\\app-icon-mono.svg",
+    "paths": 10
+  },
+  {
+    "file": "06-crystal-tree\\emblem-color.svg",
+    "paths": 21
+  },
+  {
+    "file": "06-crystal-tree\\emblem-white.svg",
+    "paths": 21
+  },
+  {
+    "file": "06-crystal-tree\\emblem-black.svg",
+    "paths": 21
+  },
+  {
+    "file": "06-crystal-tree\\emblem-simple.svg",
+    "paths": 11
+  },
+  {
+    "file": "06-crystal-tree\\logo.svg",
+    "paths": 32
+  },
+  {
+    "file": "06-crystal-tree\\logo-on-light.svg",
+    "paths": 32
+  },
+  {
+    "file": "06-crystal-tree\\app-icon.svg",
+    "paths": 21
+  },
+  {
+    "file": "06-crystal-tree\\app-icon-rounded.svg",
+    "paths": 21
+  },
+  {
+    "file": "06-crystal-tree\\app-icon-small.svg",
+    "paths": 11
+  },
+  {
+    "file": "06-crystal-tree\\app-icon-mono.svg",
+    "paths": 21
+  }
+]

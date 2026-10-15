@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { db } from '../db/database'
 import { broadcastAppEvent } from '../services/appbus'
+import { normalizeSkin } from '../skins/registry'
 
 /* 正文字体：中西文分离。--editor-font = 西文栈 + 中文栈（拉丁字符落西文，汉字落中文）。
    素材：思源宋体/霞鹜文楷/京华老宋体/朝华标题/云游手书/Gothic One 均已本地化（src/assets/fonts） */
@@ -24,6 +25,7 @@ export const useUiStore = defineStore('ui', {
   state: () => ({
     view: 'shelf', // shelf | work
     theme: 'xuan', // xuan 宣纸 | parchment 羊皮纸 | night 暗夜书房
+    skin: 'original',
     editorFont: 'song', // 中文正文（CJK_FONTS key）
     editorLatin: 'none', // 西文正文（LATIN_FONTS key）
     fontSize: 17,
@@ -65,6 +67,7 @@ export const useUiStore = defineStore('ui', {
       try {
         const rows = await db.appconfig.toArray()
         const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
+        this.skin = normalizeSkin(map.skin)
         if (map.theme) this.theme = map.theme
         if (map.editorFont) this.editorFont = map.editorFont
         if (map.editorLatin) this.editorLatin = map.editorLatin
@@ -76,7 +79,15 @@ export const useUiStore = defineStore('ui', {
         /* 首次启动无配置 */
       }
     },
+    async setSkin(value) {
+      const skin = normalizeSkin(value)
+      // Commit before displaying: a failed write leaves the current skin and theme intact.
+      await db.appconfig.put({ key: 'skin', value: skin })
+      this.skin = skin
+      broadcastAppEvent('prefs-changed')
+    },
     async setPref(key, value) {
+      if (key === 'skin') return this.setSkin(value)
       this[key] = value
       await db.appconfig.put({ key, value })
       /* 跨窗口同步：其余窗口重载偏好（主题/字体等即时生效；处理端幂等，自身收到无副作用） */

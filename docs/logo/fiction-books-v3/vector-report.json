@@ -1,0 +1,242 @@
+[
+  {
+    "file": "01-tianshu\\mark.svg",
+    "paths": 7,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\mark-on-light.svg",
+    "paths": 7,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\mark-black.svg",
+    "paths": 7,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\mark-white.svg",
+    "paths": 7,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\logo.svg",
+    "paths": 18,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\logo-inverse.svg",
+    "paths": 18,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\fiction-lockup.svg",
+    "paths": 18,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\logo-editable-text.svg",
+    "paths": 7,
+    "editable_text": 2
+  },
+  {
+    "file": "01-tianshu\\app-icon.svg",
+    "paths": 7,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\app-icon-rounded.svg",
+    "paths": 7,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\mark-16px.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "01-tianshu\\mark-24px.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\mark.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\mark-on-light.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\mark-black.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\mark-white.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\logo.svg",
+    "paths": 16,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\logo-inverse.svg",
+    "paths": 16,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\fiction-lockup.svg",
+    "paths": 16,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\logo-editable-text.svg",
+    "paths": 5,
+    "editable_text": 2
+  },
+  {
+    "file": "02-codex\\app-icon.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\app-icon-rounded.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\mark-16px.svg",
+    "paths": 3,
+    "editable_text": 0
+  },
+  {
+    "file": "02-codex\\mark-24px.svg",
+    "paths": 3,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\mark.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\mark-on-light.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\mark-black.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\mark-white.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\logo.svg",
+    "paths": 17,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\logo-inverse.svg",
+    "paths": 17,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\fiction-lockup.svg",
+    "paths": 17,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\logo-editable-text.svg",
+    "paths": 6,
+    "editable_text": 2
+  },
+  {
+    "file": "03-rift\\app-icon.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\app-icon-rounded.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\mark-16px.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "03-rift\\mark-24px.svg",
+    "paths": 5,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\mark.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\mark-on-light.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\mark-black.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\mark-white.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\logo.svg",
+    "paths": 17,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\logo-inverse.svg",
+    "paths": 17,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\fiction-lockup.svg",
+    "paths": 17,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\logo-editable-text.svg",
+    "paths": 6,
+    "editable_text": 2
+  },
+  {
+    "file": "04-paradox\\app-icon.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\app-icon-rounded.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\mark-16px.svg",
+    "paths": 6,
+    "editable_text": 0
+  },
+  {
+    "file": "04-paradox\\mark-24px.svg",
+    "paths": 6,
+    "editable_text": 0
+  }
+]

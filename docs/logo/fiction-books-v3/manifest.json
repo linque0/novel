@@ -1,0 +1,95 @@
+{
+  "styles": [
+    {
+      "id": "01-tianshu",
+      "name": "天书裂卷",
+      "direction": "中式古风",
+      "colors": [
+        "#202725",
+        "#EFE7D5",
+        "#B63D32"
+      ]
+    },
+    {
+      "id": "02-codex",
+      "name": "秘典之门",
+      "direction": "西方古典",
+      "colors": [
+        "#142438",
+        "#F2EBDD",
+        "#B79A60"
+      ]
+    },
+    {
+      "id": "03-rift",
+      "name": "裂界书 F",
+      "direction": "未来主义",
+      "colors": [
+        "#090D10",
+        "#EDF2F1",
+        "#BAFF42"
+      ]
+    },
+    {
+      "id": "04-paradox",
+      "name": "悖论之书",
+      "direction": "超现实几何",
+      "colors": [
+        "#111318",
+        "#F2F5F8",
+        "#ABB4C2"
+      ]
+    }
+  ],
+  "svg_assets": [
+    "01-tianshu\\mark.svg",
+    "01-tianshu\\mark-on-light.svg",
+    "01-tianshu\\mark-black.svg",
+    "01-tianshu\\mark-white.svg",
+    "01-tianshu\\logo.svg",
+    "01-tianshu\\logo-inverse.svg",
+    "01-tianshu\\fiction-lockup.svg",
+    "01-tianshu\\logo-editable-text.svg",
+    "01-tianshu\\app-icon.svg",
+    "01-tianshu\\app-icon-rounded.svg",
+    "01-tianshu\\mark-16px.svg",
+    "01-tianshu\\mark-24px.svg",
+    "02-codex\\mark.svg",
+    "02-codex\\mark-on-light.svg",
+    "02-codex\\mark-black.svg",
+    "02-codex\\mark-white.svg",
+    "02-codex\\logo.svg",
+    "02-codex\\logo-inverse.svg",
+    "02-codex\\fiction-lockup.svg",
+    "02-codex\\logo-editable-text.svg",
+    "02-codex\\app-icon.svg",
+    "02-codex\\app-icon-rounded.svg",
+    "02-codex\\mark-16px.svg",
+    "02-codex\\mark-24px.svg",
+    "03-rift\\mark.svg",
+    "03-rift\\mark-on-light.svg",
+    "03-rift\\mark-black.svg",
+    "03-rift\\mark-white.svg",
+    "03-rift\\logo.svg",
+    "03-rift\\logo-inverse.svg",
+    "03-rift\\fiction-lockup.svg",
+    "03-rift\\logo-editable-text.svg",
+    "03-rift\\app-icon.svg",
+    "03-rift\\app-icon-rounded.svg",
+    "03-rift\\mark-16px.svg",
+    "03-rift\\mark-24px.svg",
+    "04-paradox\\mark.svg",
+    "04-paradox\\mark-on-light.svg",
+    "04-paradox\\mark-black.svg",
+    "04-paradox\\mark-white.svg",
+    "04-paradox\\logo.svg",
+    "04-paradox\\logo-inverse.svg",
+    "04-paradox\\fiction-lockup.svg",
+    "04-paradox\\logo-editable-text.svg",
+    "04-paradox\\app-icon.svg",
+    "04-paradox\\app-icon-rounded.svg",
+    "04-paradox\\mark-16px.svg",
+    "04-paradox\\mark-24px.svg"
+  ],
+  "note": "所有正式字标已转路径；editable-text 版本保留可编辑系统字体文字。京華老宋体字体不随资产包分发。"
+}

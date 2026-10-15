@@ -1,0 +1,67 @@
+{
+  "styles": [
+    {
+      "id": "01-dream",
+      "name": "烬卷司",
+      "en": "THE DREAM SCRIPTORIUM",
+      "tag": "东方异兽 · 纸焰书契",
+      "font": "song"
+    },
+    {
+      "id": "02-codex",
+      "name": "缄默圣典",
+      "en": "ORDER OF THE VEILED CODEX",
+      "tag": "哥特羽翼 · 秘典纹章",
+      "font": "song"
+    },
+    {
+      "id": "03-archive",
+      "name": "零界编纂局",
+      "en": "THE NULL ARCHIVE",
+      "tag": "未来断环 · 切页连字",
+      "font": "sans"
+    },
+    {
+      "id": "04-observatory",
+      "name": "虚构星仪",
+      "en": "THE FICTION OBSERVATORY",
+      "tag": "宇宙秘学 · 观测之眼",
+      "font": "song"
+    }
+  ],
+  "assets": [
+    "01-dream\\emblem.svg",
+    "01-dream\\emblem-black.svg",
+    "01-dream\\emblem-simple.svg",
+    "01-dream\\logo.svg",
+    "01-dream\\logo-on-light.svg",
+    "01-dream\\app-icon.svg",
+    "01-dream\\app-icon-rounded.svg",
+    "01-dream\\app-icon-small.svg",
+    "02-codex\\emblem.svg",
+    "02-codex\\emblem-black.svg",
+    "02-codex\\emblem-simple.svg",
+    "02-codex\\logo.svg",
+    "02-codex\\logo-on-light.svg",
+    "02-codex\\app-icon.svg",
+    "02-codex\\app-icon-rounded.svg",
+    "02-codex\\app-icon-small.svg",
+    "03-archive\\emblem.svg",
+    "03-archive\\emblem-black.svg",
+    "03-archive\\emblem-simple.svg",
+    "03-archive\\logo.svg",
+    "03-archive\\logo-on-light.svg",
+    "03-archive\\app-icon.svg",
+    "03-archive\\app-icon-rounded.svg",
+    "03-archive\\app-icon-small.svg",
+    "04-observatory\\emblem.svg",
+    "04-observatory\\emblem-black.svg",
+    "04-observatory\\emblem-simple.svg",
+    "04-observatory\\logo.svg",
+    "04-observatory\\logo-on-light.svg",
+    "04-observatory\\app-icon.svg",
+    "04-observatory\\app-icon-rounded.svg",
+    "04-observatory\\app-icon-small.svg"
+  ],
+  "method": "Original SVG Bezier paths; all lettering outlined; no raster tracing or embedded bitmaps."
+}

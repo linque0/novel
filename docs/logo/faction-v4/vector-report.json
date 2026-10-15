@@ -1,0 +1,130 @@
+[
+  {
+    "file": "01-dream\\emblem.svg",
+    "paths": 19
+  },
+  {
+    "file": "01-dream\\emblem-black.svg",
+    "paths": 19
+  },
+  {
+    "file": "01-dream\\emblem-simple.svg",
+    "paths": 10
+  },
+  {
+    "file": "01-dream\\logo.svg",
+    "paths": 30
+  },
+  {
+    "file": "01-dream\\logo-on-light.svg",
+    "paths": 30
+  },
+  {
+    "file": "01-dream\\app-icon.svg",
+    "paths": 19
+  },
+  {
+    "file": "01-dream\\app-icon-rounded.svg",
+    "paths": 19
+  },
+  {
+    "file": "01-dream\\app-icon-small.svg",
+    "paths": 10
+  },
+  {
+    "file": "02-codex\\emblem.svg",
+    "paths": 28
+  },
+  {
+    "file": "02-codex\\emblem-black.svg",
+    "paths": 28
+  },
+  {
+    "file": "02-codex\\emblem-simple.svg",
+    "paths": 15
+  },
+  {
+    "file": "02-codex\\logo.svg",
+    "paths": 39
+  },
+  {
+    "file": "02-codex\\logo-on-light.svg",
+    "paths": 39
+  },
+  {
+    "file": "02-codex\\app-icon.svg",
+    "paths": 28
+  },
+  {
+    "file": "02-codex\\app-icon-rounded.svg",
+    "paths": 28
+  },
+  {
+    "file": "02-codex\\app-icon-small.svg",
+    "paths": 15
+  },
+  {
+    "file": "03-archive\\emblem.svg",
+    "paths": 35
+  },
+  {
+    "file": "03-archive\\emblem-black.svg",
+    "paths": 35
+  },
+  {
+    "file": "03-archive\\emblem-simple.svg",
+    "paths": 7
+  },
+  {
+    "file": "03-archive\\logo.svg",
+    "paths": 46
+  },
+  {
+    "file": "03-archive\\logo-on-light.svg",
+    "paths": 46
+  },
+  {
+    "file": "03-archive\\app-icon.svg",
+    "paths": 35
+  },
+  {
+    "file": "03-archive\\app-icon-rounded.svg",
+    "paths": 35
+  },
+  {
+    "file": "03-archive\\app-icon-small.svg",
+    "paths": 7
+  },
+  {
+    "file": "04-observatory\\emblem.svg",
+    "paths": 39
+  },
+  {
+    "file": "04-observatory\\emblem-black.svg",
+    "paths": 39
+  },
+  {
+    "file": "04-observatory\\emblem-simple.svg",
+    "paths": 10
+  },
+  {
+    "file": "04-observatory\\logo.svg",
+    "paths": 50
+  },
+  {
+    "file": "04-observatory\\logo-on-light.svg",
+    "paths": 50
+  },
+  {
+    "file": "04-observatory\\app-icon.svg",
+    "paths": 39
+  },
+  {
+    "file": "04-observatory\\app-icon-rounded.svg",
+    "paths": 39
+  },
+  {
+    "file": "04-observatory\\app-icon-small.svg",
+    "paths": 10
+  }
+]
