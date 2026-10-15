@@ -1,4 +1,4 @@
-<!-- 双链选择面板：关键词全局搜索（标题或正文命中，附选段）/ 反向链接（正文、幕布、纯文本右键菜单共用） -->
+<!-- 关系链接选择面板：关键词全局搜索（标题或正文命中，附选段）/ 反向链接（正文、幕布、纯文本右键菜单共用） -->
 <script setup>
 import { ref, computed } from 'vue'
 import { searchTargets, findBacklinks, jumpTo, highlightExcerpt, KIND_LABEL } from '../services/doublelinks'

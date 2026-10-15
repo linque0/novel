@@ -10,7 +10,7 @@ import { suspendProjection, resumeProjection } from './project-repo.js'
 export async function loadWorkBundle(workId) {
   const [
     works, volumes, chapters, outlines, characters, relations,
-    lorecats, lore, snippets, assetRows, links, mubu, annotations
+    lorecats, lore, snippets, assetRows, links, mubu, annotations, lorelinks
   ] = await Promise.all([
     db.works.get(workId),
     db.volumes.where('workId').equals(workId).toArray(),
@@ -24,12 +24,13 @@ export async function loadWorkBundle(workId) {
     db.assets.where('workId').equals(workId).toArray(),
     db.links.toArray(),
     db.mubu.where('workId').equals(workId).toArray(),
-    db.annotations.where('workId').equals(workId).toArray()
+    db.annotations.where('workId').equals(workId).toArray(),
+    db.lorelinks.where('workId').equals(workId).toArray()
   ])
   // 资产只保留元信息，blob 按需读取，避免大图全部驻留内存
   const assets = assetRows.map(({ blob, ...meta }) => meta)
   const olnodes = await db.olnodes.where('workId').equals(workId).toArray()
-  return { work: works, volumes, chapters, outlines, characters, relations, lorecats, lore, snippets, assets, links, mubu, annotations, olnodes }
+  return { work: works, volumes, chapters, outlines, characters, relations, lorecats, lore, snippets, assets, links, mubu, annotations, lorelinks, olnodes }
 }
 
 export async function listWorks() {
@@ -167,7 +168,7 @@ export async function removeLink(linkId) {
 /* ---- 备份 / 恢复 ---- */
 
 export async function exportBackupJson() {
-  const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'snippets', 'links', 'wordlog', 'appconfig', 'bookmarks', 'olnodes', 'annotations', 'aisum', 'aikb', 'aikbmeta', 'airuns', 'aidecisions', 'aistyle', 'aikbvec', 'aipresets', 'aipresetstate']
+  const tables = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'lorelinks', 'snippets', 'links', 'wordlog', 'appconfig', 'bookmarks', 'olnodes', 'annotations', 'aisum', 'aikb', 'aikbmeta', 'airuns', 'aidecisions', 'aistyle', 'aikbvec', 'aipresets', 'aipresetstate']
   const dump = { version: 1, exportedAt: now(), assets: [], data: {} }
   for (const t of tables) {
     const rows = await db.table(t).toArray()

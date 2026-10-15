@@ -128,7 +128,7 @@ await test(
 await test(
   'protected double-link and annotation spans block replacement',
   `
- const {a,w}=window.__preset;w.selChapterId='p-ch0';const ed=window.__ns.editor;ed.commands.setContent('<p>林昭<span data-note-id="p-note">握住铜符</span>。<span data-dl="mubu:p-lore">铜符标记</span></p>',true);await window.__flushNow();await a.send('生成草稿',{contextRefs:{chapterId:'p-ch0',selection:'握住铜符'}});const card=a.chat.at(-1).cards[0];let blocked=false;try{await w.applyAiProposal(card,{action:'replace'})}catch(e){blocked=/批注|双链/.test(e.message)}return blocked && ed.getText().includes('握住铜符');
+ const {a,w}=window.__preset;w.selChapterId='p-ch0';const ed=window.__ns.editor;ed.commands.setContent('<p>林昭<span data-note-id="p-note">握住铜符</span>。<span data-dl="mubu:p-lore">铜符标记</span></p>',true);await window.__flushNow();await a.send('生成草稿',{contextRefs:{chapterId:'p-ch0',selection:'握住铜符'}});const card=a.chat.at(-1).cards[0];let blocked=false;try{await w.applyAiProposal(card,{action:'replace'})}catch(e){blocked=/批注|关系链接/.test(e.message)}return blocked && ed.getText().includes('握住铜符');
 `,
 )
 await test(

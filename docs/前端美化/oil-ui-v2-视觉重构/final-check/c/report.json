@@ -1,0 +1,29 @@
+[
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 34,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "inspiration.png",
+    "state": "inspiration",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  }
+]

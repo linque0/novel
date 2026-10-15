@@ -1,0 +1,30 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 1,
+        "examples": [
+          "div.newsletter__set（外层 ul.newsletaire）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 5,
+        "examples": [
+          "a.w-action「GET」（2.65:1）",
+          "span.markdown-section__kicker「EDITING TOOLS」（2.22:1）",
+          "span.markdown-section__kicker「100% PLAIN TEXT」（2.22:1）"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,213 @@
+[
+  {
+    "file": "shelf.png",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 101,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.overline「最近编辑 · 今天 14:32」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "settings.png",
+    "state": "settings",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.section-label「偏好设置」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "editor.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 81,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 23,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.overline「世界观 / 星图系统」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "inspiration.png",
+    "state": "inspiration",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "shelf-@2x.png",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 142,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.overline「最近编辑 · 今天 14:32」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "motion-probe",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "motion": {
+      "load": {
+        "elements": 3,
+        "loops": 0,
+        "maxMove": 23,
+        "maxSize": 0,
+        "maxOpacity": 0.8,
+        "top": [
+          {
+            "el": "div.feature-copy",
+            "move": 23,
+            "size": 0,
+            "opacity": 0.77,
+            "loop": false,
+            "sources": [
+              "css:enter"
+            ]
+          },
+          {
+            "el": "div.mini-collection",
+            "move": 12,
+            "size": 0,
+            "opacity": 0.8,
+            "loop": false,
+            "sources": [
+              "css:enter"
+            ]
+          },
+          {
+            "el": "div.theatre-stage",
+            "move": 12,
+            "size": 0,
+            "opacity": 0.77,
+            "loop": false,
+            "sources": [
+              "css:enter"
+            ]
+          }
+        ]
+      },
+      "hero": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "layers": 0
+      },
+      "scroll": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "scrollable": false
+      }
+    },
+    "issues": []
+  },
+  {
+    "file": "motion-entry-end.jpg",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "entry",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-entry-start.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 207
+      },
+      "mid": {
+        "file": "motion-entry-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 468
+      },
+      "end": {
+        "file": "motion-entry-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1948
+      }
+    },
+    "sampling": {
+      "mode": "entry"
+    },
+    "durationMs": 1948,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-entry-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  }
+]

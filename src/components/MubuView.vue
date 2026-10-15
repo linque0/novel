@@ -8,7 +8,11 @@ import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import { pickFiles } from '../services/fileio'
 import { decodeText, parseMubuMd } from '../services/importers'
+import { tagColor } from '../services/tagcolors'
+import { relIconFor, relColor } from '../services/relation-kinds'
+import { jumpTo } from '../services/doublelinks'
 import DLinkPicker from './DLinkPicker.vue'
+import LoreRelRows from './LoreRelRows.vue'
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -44,6 +48,7 @@ function build() {
     id: n.id,
     text: n.text || '',
     html: n.html ?? null,
+    tags: n.tags || [],
     fold: !!n.fold,
     hasChildren: (byParent.get(n.id) || []).length > 0,
     parentId: n.parentId || null,
@@ -58,6 +63,11 @@ function build() {
 watch(ver, build)
 watch(
   () => work.mubu.length,
+  () => ver.value++
+)
+/* 标签变化（含外部 mubuSetTags / 检索联动触发的改动）也要重建行：rows 快照不追踪行内 tags */
+watch(
+  () => work.liveMubu().map((n) => (n.tags || []).join('\u0001')).join('\u0002'),
   () => ver.value++
 )
 watch(
@@ -608,6 +618,19 @@ async function doPastePlain() {
 function closeCtx() {
   ctx.open = false
 }
+
+/* ---------- 节点标签（标签卡片；右键「设置标签…」打开全局标签面板；点击卡片按标签筛选） ---------- */
+/** 打开标签面板（可拖动的全局单例，ui.mubuTagPanel）：定位到右键坐标，选择/创建由面板负责 */
+function openTagPanel() {
+  const id = ctx.rowId
+  const x = ctx.x
+  const y = ctx.y
+  closeCtx()
+  if (id) ui.mubuTagPanel = { nodeId: id, x, y }
+}
+function filterByTag(t) {
+  ui.mubuQuery = t
+}
 function runCtx(fn) {
   fn()
   closeCtx()
@@ -629,7 +652,7 @@ function toggleCtxFold() {
   if (ctx.hasChildren) work.mubuToggleFold(ctx.rowId)
 }
 
-/* ---------- 双链（多模块内容互联）：节点内选中文字标记为指向全书任意内容的双链 ---------- */
+/* ---------- 关系链接（多模块内容互联）：节点内选中文字标记为指向全书任意内容的行内链接 ---------- */
 let savedRange = null
 const dlKeyword = ref('')
 function rowTextEl(id = ctx.rowId) {
@@ -648,7 +671,7 @@ function openLinkSearch() {
     r.collapse(false)
     savedRange = r
   }
-  // 光标折叠落在已有双链内：移到双链之后，避免产生嵌套双链
+  // 光标折叠落在已有关系链接内：移到链接之后，避免产生嵌套链接
   const span = savedRange?.startContainer?.parentElement?.closest?.('.dl-link')
   if (span && savedRange.collapsed) savedRange.setStartAfter(span)
   // 选中内容作为全局搜索关键词
@@ -692,6 +715,72 @@ function removeCtxLink() {
   ver.value++
 }
 
+/* ---------- 关联关系（条目级关系链接）：行尾彩色卡片 + 悬停浮层 + 详情页入口 ---------- */
+/** 行尾卡片摘要（store 单次派生：'kind:id' → { count, label, color }） */
+const relSummary = computed(() => work.loreLinkSummary)
+/** 关系摘要键 = '<kind>:<id>'（store 口径），行键 'm:<id>' 只用于 DOM */
+const relKeyOf = (id) => 'mubu:' + id
+function relChipStyle(id) {
+  const s = relSummary.value.get(relKeyOf(id))
+  const c = (s && (s.color || relColor(s.label))) || 'var(--accent)'
+  return {
+    color: c,
+    borderColor: `color-mix(in srgb, ${c} 42%, transparent)`,
+    background: `color-mix(in srgb, ${c} 9%, transparent)`
+  }
+}
+function relChipText(id) {
+  const s = relSummary.value.get(relKeyOf(id))
+  if (!s) return ''
+  return s.count > 1 ? `${s.label} +${s.count - 1}` : s.label
+}
+const relPop = ref(null) // { nodeId, x, y, flip }
+const relPopEntries = computed(() => (relPop.value ? work.loreLinksOf('mubu', relPop.value.nodeId) : []))
+let relPopTimer = null
+function showRelPop(id, e) {
+  clearTimeout(relPopTimer)
+  const r = e.currentTarget.getBoundingClientRect()
+  const flip = r.bottom > window.innerHeight - 220 && r.top > 220
+  relPop.value = { nodeId: id, x: Math.max(8, Math.min(r.left, window.innerWidth - 380)), y: flip ? r.top - 6 : r.bottom + 6, flip }
+}
+function hideRelPopSoon() {
+  clearTimeout(relPopTimer)
+  relPopTimer = setTimeout(() => { relPop.value = null }, 220)
+}
+function keepRelPop() {
+  clearTimeout(relPopTimer)
+}
+function jumpRel(e) {
+  relPop.value = null
+  jumpTo({ kind: e.otherKind, id: e.otherId })
+}
+/** 打开关联关系设置面板（定位到触发坐标，视口内钳制） */
+function openRelPanel(id, x, y) {
+  if (!id) return
+  ui.loreRelationPanel = {
+    kind: 'mubu',
+    id,
+    x: Math.max(8, Math.min(x, window.innerWidth - 380)),
+    y: Math.max(8, Math.min(y, window.innerHeight - 340))
+  }
+}
+function openRelPanelFromCtx() {
+  const id = ctx.rowId
+  const x = ctx.x
+  const y = ctx.y
+  closeCtx()
+  openRelPanel(id, x, y)
+}
+function openDetailRow(id) {
+  if (id) ui.loreDetailId = id
+}
+/** 双击行 = 打开设定详情页（按钮/标签卡/关系卡/行尾操作/行内链接上让位，不抢交互） */
+function onRowDblClick(row, e) {
+  const t = e.target
+  if (t?.closest?.('button, .ob-tag, .ob-relchip, .ob-ops, .dl-link, a')) return
+  openDetailRow(row.node.id)
+}
+
 /* ---------- 全局事件 ---------- */
 function onWinMouseDown(e) {
   // 点击菜单本身不关闭；点击其他任何区域（含编辑器内）都关闭
@@ -701,8 +790,9 @@ function onWinKeyDown(e) {
   if (e.key === 'Escape' && ctx.open) closeCtx()
 }
 function onWinWheel(e) {
-  // 菜单内部滚动（双链选择列表等）不关闭；编辑区滚动时关闭
+  // 菜单内部滚动（关系链接选择列表等）不关闭；编辑区滚动时关闭
   if (ctx.open && ctxEl.value && !ctxEl.value.contains(e.target)) closeCtx()
+  if (relPop.value && !e.target?.closest?.('.ob-relpop')) relPop.value = null
 }
 
 /* 侧栏折叠/展开与编辑器双向同步 */
@@ -724,6 +814,7 @@ onBeforeUnmount(() => {
   window.removeEventListener('wheel', onWinWheel)
   window.removeEventListener('resize', closeCtx)
   clearTimeout(expandTimer)
+  clearTimeout(relPopTimer)
 })
 </script>
 
@@ -785,6 +876,7 @@ onBeforeUnmount(() => {
         @dragover.prevent="onDragOver(row, $event)"
         @drop.prevent.stop="onDrop(row)"
         @dragend="clearDrag"
+        @dblclick="onRowDblClick(row, $event)"
         @contextmenu="onRowCtx(row, $event)"
       >
         <span v-for="d in row.depth" :key="d" class="ob-guide" />
@@ -806,6 +898,34 @@ onBeforeUnmount(() => {
           @paste="onPaste"
           @focus="onTextFocus"
         />
+        <span v-if="row.node.tags.length" class="ob-tags">
+          <button
+            v-for="t in row.node.tags"
+            :key="t"
+            class="ob-tag"
+            type="button"
+            :style="{
+              color: tagColor(t),
+              borderColor: 'color-mix(in srgb, ' + tagColor(t) + ' 42%, transparent)',
+              background: 'color-mix(in srgb, ' + tagColor(t) + ' 9%, transparent)'
+            }"
+            :title="`筛选标签「${t}」`"
+            @mousedown.prevent
+            @click.stop="filterByTag(t)"
+          >{{ t }}</button>
+        </span>
+        <span v-if="relSummary.get(relKeyOf(row.node.id))" class="ob-links">
+          <button
+            class="ob-relchip"
+            type="button"
+            :style="relChipStyle(row.node.id)"
+            :title="`关联关系 ${relSummary.get(relKeyOf(row.node.id)).count} 条 · 悬停查看 · 点击设置`"
+            @mousedown.prevent
+            @click.stop="openRelPanel(row.node.id, $event.clientX, $event.clientY)"
+            @mouseenter="showRelPop(row.node.id, $event)"
+            @mouseleave="hideRelPopSoon"
+          ><OIcon :name="relIconFor(relSummary.get(relKeyOf(row.node.id)).label)" :size="11" />{{ relChipText(row.node.id) }}</button>
+        </span>
         <span class="ob-ops">
           <button class="ob-op" title="添加子节点" @click.stop="addChild(row)"><OIcon name="plus" :size="11" /></button>
           <button class="ob-op" title="删除节点" @click.stop="deleteRow(row)"><OIcon name="close" :size="11" /></button>
@@ -816,7 +936,21 @@ onBeforeUnmount(() => {
         <p>设定库还是空的——写下第一个节点，开始构建你的世界。</p>
         <button class="btn-primary" @click="createFirst">新建第一个节点</button>
       </div>
-      <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到顶层） · 选中文字后可用工具栏或右键设置格式</div>
+      <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到顶层） · 选中文字后可用工具栏或右键设置格式 · 双击条目 打开详情页</div>
+
+      <!-- 关联关系悬停浮层（行尾卡片 hover；移入浮层保持，点击行跳转） -->
+      <div
+        v-if="relPop && relPopEntries.length"
+        class="ob-relpop"
+        :class="{ flip: relPop.flip }"
+        :style="{ left: relPop.x + 'px', top: relPop.y + 'px' }"
+        @mouseenter="keepRelPop"
+        @mouseleave="hideRelPopSoon"
+        @contextmenu.prevent
+      >
+        <div class="ob-relpop-head">关联关系</div>
+        <LoreRelRows :entries="relPopEntries" compact @pick="jumpRel" />
+      </div>
 
       <div v-if="ctx.open" ref="ctxEl" class="ob-ctx" :style="{ left: ctx.x + 'px', top: ctx.y + 'px' }" @contextmenu.prevent>
         <template v-if="!ctx.linkSearch">
@@ -848,8 +982,11 @@ onBeforeUnmount(() => {
         <div class="ctx-item" :class="{ disabled: !clip }" @mousedown.prevent @click="!clip && runCtx(() => pasteClip(false))"><span>粘贴为同级</span></div>
         <div class="ctx-item" :class="{ disabled: !clip }" @mousedown.prevent @click="!clip && runCtx(() => pasteClip(true))"><span>粘贴为子节点</span></div>
         <div class="ctx-sep" />
-        <div class="ctx-item" @mousedown.prevent @click="openLinkSearch()"><span>插入双链…</span><span class="hint">互联</span></div>
-        <div v-if="ctx.linkSpan" class="ctx-item" @mousedown.prevent @click="removeCtxLink()"><span>移除该双链</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="openLinkSearch()"><span>插入关系链接…</span><span class="hint">互联</span></div>
+        <div v-if="ctx.linkSpan" class="ctx-item" @mousedown.prevent @click="removeCtxLink()"><span>移除该关系链接</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="openTagPanel()"><span>设置标签…</span><span class="hint">标签</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="openRelPanelFromCtx()"><span>设置关系…</span><span class="hint">关联</span></div>
+        <div class="ctx-item" @mousedown.prevent @click="runCtx(() => openDetailRow(ctx.rowId))"><span>打开详情页</span><span class="hint">双击</span></div>
         <div class="ctx-sep" />
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => addSibling(visible.find((r) => r.node.id === ctx.rowId)))"><span>新建同级节点</span></div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => addChild(visible.find((r) => r.node.id === ctx.rowId)))"><span>新建子节点</span></div>

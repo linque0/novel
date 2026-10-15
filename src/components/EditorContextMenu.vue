@@ -47,7 +47,7 @@ function refresh() {
   act.noteColor = ed.getAttributes('annotation')?.color || ''
 }
 
-/* ---------- 双链（多模块内容互联）：选中文字标记为指向全书任意内容的双链 ---------- */
+/* ---------- 关系链接（多模块内容互联）：选中文字标记为指向全书任意内容的关系链接 ---------- */
 const dlDisabled = () => selEmpty() && !act.dl && st.savedFrom == null
 
 function openDlPicker() {
@@ -57,7 +57,7 @@ function openDlPicker() {
     st.dlFrom = st.savedFrom
     st.dlTo = st.savedTo
   } else if (act.dl) {
-    // 光标落在已有双链内：把作用范围扩展到整个双链再编辑
+    // 光标落在已有关系链接内：把作用范围扩展到整个关系链接再编辑
     chain().extendMarkRange('dlLink').run()
     const sel2 = props.editor.state.selection
     st.dlFrom = sel2.from
@@ -67,7 +67,7 @@ function openDlPicker() {
     st.dlFrom = props.editor.state.selection.from
     st.dlTo = props.editor.state.selection.to
   }
-  // 选中内容作为全局搜索关键词（无选区时用当前双链标题）
+  // 选中内容作为全局搜索关键词（无选区时用当前关系链接标题）
   let kw = ''
   try {
     kw = hasSaved || !selEmpty() ? props.editor.state.doc.textBetween(st.dlFrom, st.dlTo, ' ') : act.dlTitle
@@ -264,7 +264,7 @@ function refocus() {
 /* ---------- 发送给恍然梦（方案 §五.1）：锚点 = 当前章，右键时有选中文本则一并作为补充指令透传 ---------- */
 const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配置'
 function aiSelText() {
-  /* 右键落在选区上时编辑器选区可能已塌缩，用右键时刻的快照（与双链/批注同口径） */
+  /* 右键落在选区上时编辑器选区可能已塌缩，用右键时刻的快照（与关系链接/批注同口径） */
   if (st.savedFrom != null) {
     try {
       return props.editor.state.doc.textBetween(st.savedFrom, st.savedTo, '\n')
@@ -516,10 +516,10 @@ defineExpose({ open, close })
 
       <div class="ctx-sep" />
       <div class="ctx-item" :class="{ disabled: dlDisabled() }" @click="openDlPicker">
-        <span>{{ act.dl && !dlDisabled() ? '编辑双链…' : '添加双链…' }}</span><span class="hint">互联</span>
+        <span>{{ act.dl && !dlDisabled() ? '编辑关系链接…' : '添加关系链接…' }}</span><span class="hint">互联</span>
       </div>
-      <div v-if="act.dl" class="ctx-item" @click="jumpDl"><span>跳转到双链目标</span></div>
-      <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除双链</span></div>
+      <div v-if="act.dl" class="ctx-item" @click="jumpDl"><span>跳转到关系链接目标</span></div>
+      <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除关系链接</span></div>
 
       <div class="ctx-sep" />
       <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? '发送给恍然梦（锚点为当前章节）' : AI_UNSET_HINT" @click="ai.ready && aiPlotBranch()">

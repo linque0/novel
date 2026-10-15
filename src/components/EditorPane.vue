@@ -11,10 +11,11 @@ import TextAlign from '@tiptap/extension-text-align'
 import Highlight from '@tiptap/extension-highlight'
 import Placeholder from '@tiptap/extension-placeholder'
 import { marked } from 'marked'
-import { NButton, NDrawer, NDrawerContent, NSelect, NTag } from 'naive-ui'
+import { NButton, NDrawer, NDrawerContent, NInputNumber, NPopover, NSelect, NTag } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { autosave } from '../services/autosave'
+import { fmtNum } from '../services/wordcount'
 import { FontSize } from '../services/richtext'
 import { isImageExt } from '../services/fileio'
 import { DlLinkMark } from '../services/doublelinks'
@@ -211,6 +212,29 @@ function openHistory() {
   if (!work.activeChapter) return
   ui.revisionsCtx = { id: work.activeChapter.id, title: work.activeChapter.title }
 }
+
+/* ---------- 正文字数目标底栏（每章目标；appconfig wordgoal:<workId> 持久化，即时保存） ---------- */
+const goalShow = ref(false)
+const goalInput = ref(null)
+/** 进度条填充宽度（显示层钳制 0–100；百分比文字不钳制，可显示 108% 超额） */
+const goalFill = computed(() => Math.min(100, Math.max(0, work.goalProgress.percent)) + '%')
+const goalPctText = computed(() => {
+  const p = work.goalProgress
+  if (!p.goal) return ''
+  return p.done ? '已达标' : `${Math.floor(p.percent)}%`
+})
+function toggleGoal(v) {
+  if (v && !goalShow.value) goalInput.value = work.wordGoal > 0 ? work.wordGoal : null
+  goalShow.value = v
+}
+async function saveGoal() {
+  await work.setWordGoal(Number(goalInput.value) || 0)
+  goalShow.value = false
+}
+async function clearGoal() {
+  await work.setWordGoal(0)
+  goalShow.value = false
+}
 </script>
 
 <template>
@@ -258,6 +282,41 @@ function openHistory() {
           </header>
           <EditorContent :key="work.selChapterId" :editor="editor" class="rich-inner" />
         </div>
+      </div>
+      <!-- 正文字数目标底栏（v1.0.27）：本章字数 / 进度条 / 目标对照；点击右侧设定每章目标，即时持久化 -->
+      <div v-if="work.activeChapter && !ui.readMode" class="editor-foot">
+        <span class="wg-num">本章 <b>{{ fmtNum(work.activeChapter.wordCount || 0) }}</b> 字</span>
+        <div class="wg-track" :class="{ done: work.goalProgress.done }" aria-hidden="true">
+          <div class="wg-fill" :style="{ width: goalFill }"></div>
+        </div>
+        <NPopover :show="goalShow" trigger="click" :show-arrow="false" placement="top" @update:show="toggleGoal">
+          <template #trigger>
+            <button class="wg-set" type="button" :title="work.wordGoal > 0 ? '修改每章字数目标' : '设定每章字数目标'">
+              <template v-if="work.wordGoal > 0">
+                <b class="wg-pct" :class="{ done: work.goalProgress.done }">{{ goalPctText }}</b>
+                <span class="wg-goal">目标 {{ fmtNum(work.wordGoal) }} 字</span>
+              </template>
+              <template v-else>设定每章目标</template>
+            </button>
+          </template>
+          <div class="wg-goal-pop">
+            <div class="wg-goal-title">每章字数目标</div>
+            <NInputNumber
+              v-model:value="goalInput"
+              size="small"
+              :min="0"
+              :max="2000000"
+              :step="500"
+              placeholder="如 3000；0 或留空 = 取消"
+              style="width: 200px"
+              @keydown.enter="saveGoal"
+            />
+            <div class="wg-goal-actions">
+              <NButton v-if="work.wordGoal > 0" size="tiny" quaternary type="error" @click="clearGoal">取消目标</NButton>
+              <NButton size="tiny" type="primary" :disabled="!(Number(goalInput) > 0)" @click="saveGoal">保存</NButton>
+            </div>
+          </div>
+        </NPopover>
       </div>
       <EditorContextMenu v-if="!chapterPopped && !ui.readMode" ref="ctxMenu" :editor="editor" />
 

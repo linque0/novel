@@ -1,5 +1,5 @@
-<!-- 双链悬浮预览窗：全局委托监听——悬停双链标签（富文本 span）或纯文本令牌时，在旁展示目标内容并可跳转。
-     v1.0.21：出现 / 消失过渡动画；标题栏为拖拽把手——拖离即「钉住」为常驻预览（悬停其他双链原位换内容，
+<!-- 关系链接悬浮预览窗：全局委托监听——悬停关系链接标签（富文本 span）或纯文本令牌时，在旁展示目标内容并可跳转。
+     v1.0.21：出现 / 消失过渡动画；标题栏为拖拽把手——拖离即「钉住」为常驻预览（悬停其他关系链接原位换内容，
      不随鼠标移开消失，× / Esc 关闭）；会话内记忆停靠偏移（后续浮窗停在上次位置），双击标题恢复跟随鼠标。 -->
 <script setup>
 import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
@@ -10,7 +10,7 @@ const st = reactive({ show: false, x: 0, y: 0, view: null, target: null, pinned:
 let curEl = null // 当前悬停的 .dl-link 元素
 let curHost = null // 当前悬停的 textarea
 let tokenCache = { host: null, token: null }
-let hideTimer = null // 离开双链的宽限期：给鼠标移入浮窗的时间
+let hideTimer = null // 离开关系链接的宽限期：给鼠标移入浮窗的时间
 let cursor = { x: 0, y: 0 } // 触发悬停时的鼠标位置（place 基准，与浮窗坐标分开存）
 let dragOff = { dx: 0, dy: 0 } // 拖拽停靠记忆（会话内）：后续浮窗按此偏移出现
 let dragCtx = null // 进行中的拖拽
@@ -43,7 +43,7 @@ function showFor(view, target, x, y) {
 }
 
 function missingView(title, kind) {
-  return { kindLabel: KIND_LABEL[kind] || '双链', title: title || '（未知目标）', meta: '目标不存在', body: '未找到双链指向的内容——目标可能已被删除或重命名。' }
+  return { kindLabel: KIND_LABEL[kind] || '关系链接', title: title || '（未知目标）', meta: '目标不存在', body: '未找到关系链接指向的内容——目标可能已被删除或重命名。' }
 }
 
 function resolveByEl(el) {
@@ -72,7 +72,7 @@ function hide() {
   tokenCache = { host: null, token: null }
 }
 
-/** 离开双链：延迟消失，鼠标在此期间移入浮窗则保持显示；钉住 / 拖动中不自动消失 */
+/** 离开关系链接：延迟消失，鼠标在此期间移入浮窗则保持显示；钉住 / 拖动中不自动消失 */
 function delayHide() {
   if (st.pinned || dragCtx) return
   cancelHide()
@@ -221,7 +221,7 @@ onBeforeUnmount(() => {
   <Transition name="dl-pop" :css="false" @enter="onEnter" @leave="onLeave">
     <div v-if="st.show" ref="pop" class="dl-pop" :class="{ pinned: st.pinned, dragging: st.dragging }" :style="{ left: st.x + 'px', top: st.y + 'px' }" @contextmenu.prevent>
       <div class="dl-pop-head" title="按住拖动 · 双击恢复跟随鼠标" @pointerdown="onDragStart" @dblclick="resetFollow">
-        <span class="dl-kind">{{ st.view.kindLabel || '双链' }}</span>
+        <span class="dl-kind">{{ st.view.kindLabel || '关系链接' }}</span>
         <span class="dl-pop-title">{{ st.view.title }}</span>
         <button v-if="st.target" class="dl-pop-jump" type="button" @click="onJump">跳转 ↗</button>
         <button v-if="st.pinned" class="dl-pop-close" type="button" title="关闭浮窗" @click="hide">×</button>

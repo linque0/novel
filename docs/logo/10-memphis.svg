@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 900 900" width="900" height="900" role="img" aria-label="小说工坊 logo 设计稿 10 孟菲斯">
+  <rect width="900" height="900" fill="#F4F1EA"/>
+  
+  <rect x="220" y="190" width="460" height="460" rx="80" fill="#141414"/>
+
+  <path d="M244,238 C284,198 324,198 364,238 C404,278 444,278 484,238 C524,198 564,198 604,238 C624,256 642,260 654,256"
+        stroke="#FF4D8D" stroke-width="16" fill="none" stroke-linecap="round"/>
+
+  <circle cx="352" cy="330" r="90" fill="#FFC93C"/>
+  <path d="M470,300 C440,356 384,384 384,428 A86,86 0 0 0 556,428 C556,384 500,356 470,300 Z" fill="#00B3B0"/>
+  <circle cx="470" cy="428" r="20" fill="#FF4D8D"/>
+
+  <circle cx="598" cy="524" r="52" fill="#2D5BFF"/>
+  <circle cx="300" cy="512" r="22" fill="#FF4D8D"/>
+
+  <path d="M244,614 L284,588 L324,614 L364,588 L404,614 L444,588 L484,614 L524,588 L564,614 L604,588 L644,614" stroke="#FFFFFF" stroke-width="9" fill="none" stroke-linejoin="miter"/>
+
+  <circle cx="262" cy="232" r="7" fill="#FFFFFF"/><circle cx="330" cy="296" r="5" fill="#FF4D8D"/><circle cx="636" cy="232" r="8" fill="#FFFFFF"/><circle cx="604" cy="288" r="5" fill="#00B3B0"/><circle cx="248" cy="386" r="6" fill="#FF4D8D"/><circle cx="652" cy="396" r="5" fill="#FFC93C"/><circle cx="286" cy="452" r="5" fill="#FFFFFF"/><circle cx="530" cy="214" r="4" fill="#FFFFFF"/><circle cx="422" cy="206" r="5" fill="#00B3B0"/><circle cx="662" cy="330" r="4" fill="#FFFFFF"/><circle cx="238" cy="316" r="4" fill="#FFFFFF"/><circle cx="500" cy="620" r="5" fill="#FFC93C"/>
+
+  <text x="450" y="752" font-family='"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif' font-size="76" font-weight="900"
+        letter-spacing="4" fill="#141414" text-anchor="middle">小说工坊</text>
+  <text x="450" y="826" font-family='"Source Han Sans SC","Noto Sans SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif' font-size="19" letter-spacing="4"
+        fill="#8A8A8A" text-anchor="middle">10 · 孟菲斯 · Memphis</text>
+</svg>

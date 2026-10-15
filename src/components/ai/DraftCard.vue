@@ -103,7 +103,7 @@ function open(action) {
       ><template v-else
         ><p>{{ mode === 'append' ? '将追加到生成时关联章节末尾：' : '将替换生成时选段：' }}{{ card.anchorLabel }}</p>
         <pre v-if="mode === 'replace'">{{ card.original }}</pre>
-        <p>保留原有其他内容。版本变化、其他窗口锁定或选段跨越双链／批注时停止应用。</p></template
+        <p>保留原有其他内容。版本变化、其他窗口锁定或选段跨越关系链接／批注时停止应用。</p></template
       ><p v-if="card.taskType">保存后会提取章节记忆，记忆仍需另行确认。</p>
       <div class="actions">
         <NButton type="primary" size="small" :loading="busy" :disabled="!canApply" @click="apply">确认保存</NButton><NButton size="small" :disabled="busy" @click="confirm = false">取消</NButton>

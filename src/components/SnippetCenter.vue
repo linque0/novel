@@ -12,7 +12,7 @@ const msg = useMessage()
 const s = computed(() => work.activeSnippet)
 const dlMenu = ref(null)
 
-/* 灵感内容右键快捷栏：剪切/复制/粘贴 + 添加双链 */
+/* 灵感内容右键快捷栏：剪切/复制/粘贴 + 添加关系链接 */
 function onCtx(e) {
   if (!s.value) return
   const sn = s.value

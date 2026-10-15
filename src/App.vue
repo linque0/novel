@@ -13,6 +13,9 @@ import HelpManual from './components/HelpManual.vue'
 import RevisionsModal from './components/RevisionsModal.vue'
 import TrashModal from './components/TrashModal.vue'
 import StatsModal from './components/StatsModal.vue'
+import MubuTagPanel from './components/MubuTagPanel.vue'
+import LoreRelationPanel from './components/LoreRelationPanel.vue'
+import LoreDetail from './components/LoreDetail.vue'
 import PrefBridge from './components/PrefBridge.vue'
 import PanelHost from './components/PanelHost.vue'
 import { installAppBus } from './services/appbus'
@@ -104,6 +107,9 @@ async function seedDevVerifyBooks() {
             <RevisionsModal />
             <TrashModal />
             <StatsModal />
+            <MubuTagPanel />
+            <LoreRelationPanel />
+            <LoreDetail />
           </template>
         </div>
       </NDialogProvider>

@@ -3,6 +3,7 @@ import { db, uid, now } from '../db/database'
 import * as repo from '../db/repo'
 import { autosave, installWordLogHook } from '../services/autosave'
 import { countWords, stripTags } from '../services/wordcount'
+import { tagColor } from '../services/tagcolors'
 import { scanNoteMarks, removeNoteMark, normalizeNoteColor, noteKindOf, DEFAULT_NOTE_COLOR } from '../services/annotations'
 import { useUiStore } from './ui'
 import { queueProjection } from '../services/project/pipeline.js'
@@ -52,6 +53,10 @@ export const useWorkStore = defineStore('work', {
     selOlnodeId: null,
     canvasFocusTick: 0, // 侧边栏请求画布居中定位的信号
     canvasPrefs: { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8, arrowSize: 1 }, // 画布偏好（appconfig 按作品隔离）
+    wordGoal: 0, // 每章字数目标（0 = 未设；appconfig wordgoal:<workId> 按作品隔离）
+    mubuTagMeta: {}, // 设定标签创建时间 { [name]: createdAt }（appconfig mubutagmeta:<workId>；标签面板选择栏排序依据）
+    lorelinks: [], // 条目级关联关系（关系链接）：设定↔设定 / 设定↔人物（Dexie v12 lorelinks 表，随作品全量载入）
+    loreGraph: {}, // 关联关系图谱布局 { '<kind:id>'(中心): { '<kind:id>'(邻居): { x, y } } }（appconfig loreGraph:<workId>）
     olTypes: [], // 自定义模块类型（8.8.2-G2）：[{ name, color }]，节点以 mtype 引用
     olUndo: [],
     olRedo: [],
@@ -124,6 +129,55 @@ export const useWorkStore = defineStore('work', {
     totalWords() {
       return this.liveChapters.reduce((sum, c) => sum + (c.wordCount || 0), 0)
     },
+    /** 当前章字数目标进度（正文字数目标底栏）：goal=0 未设目标；percent 不钳制，done 用于达标样式 */
+    goalProgress() {
+      const goal = this.wordGoal || 0
+      const current = this.activeChapter?.wordCount || 0
+      return {
+        current,
+        goal,
+        percent: goal > 0 ? (current / goal) * 100 : 0,
+        done: goal > 0 && current >= goal
+      }
+    },
+    /** 设定标签池（由节点派生）：[{ name, color, count, createdAt }]，同名恒同色；
+     *  按创建时间升序（历史标签无记录视为最早），某标签从所有节点移除后自动消失 */
+    mubuTags() {
+      const map = new Map()
+      for (const n of this.liveMubu()) {
+        for (const t of n.tags || []) {
+          if (!t) continue
+          const hit = map.get(t)
+          if (hit) hit.count++
+          else map.set(t, { name: t, color: tagColor(t), count: 1, createdAt: this.mubuTagMeta[t] || 0 })
+        }
+      }
+      return [...map.values()].sort((a, b) => a.createdAt - b.createdAt || a.name.localeCompare(b.name))
+    },
+    /** 关联关系（关系链接）可见边：两端条目仍存活（软删端点随回收站隐藏，还原即恢复） */
+    liveLoreLinks: (s) => {
+      const mb = new Set(s.mubu.filter((n) => !n.deletedAt).map((n) => n.id))
+      const ch = new Set(s.characters.filter((c) => !c.deletedAt).map((c) => c.id))
+      const alive = (kind, id) => (kind === 'mubu' ? mb.has(id) : kind === 'character' ? ch.has(id) : false)
+      return s.lorelinks
+        .filter((l) => alive(l.fromKind, l.fromId) && alive(l.toKind, l.toId))
+        .sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))
+    },
+    /** 行尾关系卡片摘要：'kind:id' → { count, label, color }（label 取该侧首个关系的展示口径：
+     *  出向用本体类型名，入向用反向名；color 空 = 调用侧按类型 hash 取色） */
+    loreLinkSummary() {
+      const m = new Map()
+      const bump = (key, label, color) => {
+        const hit = m.get(key)
+        if (hit) hit.count++
+        else m.set(key, { count: 1, label, color })
+      }
+      for (const l of this.liveLoreLinks) {
+        bump(l.fromKind + ':' + l.fromId, l.label || '关联', l.color || '')
+        bump(l.toKind + ':' + l.toId, l.reverseLabel || l.label || '关联', l.color || '')
+      }
+      return m
+    },
     treeData() {
       const chapterNode = (c) => ({
         key: 'c:' + c.id,
@@ -167,6 +221,7 @@ export const useWorkStore = defineStore('work', {
       this.outlines = b.outlines
       this.characters = b.characters
       this.relations = b.relations
+      this.lorelinks = b.lorelinks
       this.lorecats = b.lorecats
       this.lore = b.lore
       this.snippets = b.snippets
@@ -180,6 +235,8 @@ export const useWorkStore = defineStore('work', {
       this.olnodes = await db.olnodes.where('workId').equals(workId).toArray()
       await this.loadCanvasPrefs()
       await this.loadOlTypes()
+      await this.loadWordGoal()
+      await this.loadMubuTagMeta()
       this.prevCounts = new Map(this.liveChapters.map((c) => [c.id, c.wordCount || 0]))
       installWordLogHook(this.prevCounts)
       this.tab = 'chapters'
@@ -832,6 +889,8 @@ export const useWorkStore = defineStore('work', {
       await repo.purgeRow(table, row)
       this[table] = this[table].filter((x) => x.id !== row.id)
       if (table === 'chapters') await this.purgeAnnotationsForChapter(row.id)
+      /* 条目彻底删除 → 连带清理其关联关系（软删走回收站语义，关系保留待还原） */
+      if (table === 'mubu' || table === 'characters') await this.purgeLoreLinksFor(table, [row.id])
     },
 
     /* ---------- 幕布节点体系（设定库） ---------- */
@@ -975,6 +1034,18 @@ export const useWorkStore = defineStore('work', {
       autosave.mark('mubu', n)
     },
 
+    /** 设置节点标签（即时落库）：清洗 trim / 去空 / 去重 / 单个 ≤20 字 / 每节点 ≤12 个 */
+    mubuSetTags(id, tags) {
+      const n = this.mubu.find((x) => x.id === id)
+      if (!n) return
+      n.tags = [...new Set(
+        (Array.isArray(tags) ? tags : [])
+          .map((t) => String(t ?? '').trim().slice(0, 20))
+          .filter(Boolean)
+      )].slice(0, 12)
+      autosave.mark('mubu', n)
+    },
+
     mubuToggleFold(id) {
       const n = this.mubu.find((x) => x.id === id)
       if (!n) return
@@ -1065,6 +1136,7 @@ export const useWorkStore = defineStore('work', {
       const all = [id, ...this.mubuDescendants(id).map((n) => n.id)]
       await db.mubu.bulkDelete(all)
       this.mubu = this.mubu.filter((n) => !all.includes(n.id))
+      await this.purgeLoreLinksFor('mubu', all)
     },
 
     /** 撤销/重做：用快照同步整棵树（增/删/改差异落库） */
@@ -1396,6 +1468,129 @@ export const useWorkStore = defineStore('work', {
       await db.appconfig.put({ key: 'olcanvas:' + this.work.id, value: JSON.parse(JSON.stringify(this.canvasPrefs)) })
     },
 
+    /** 每章字数目标读写（appconfig 按作品隔离；0 = 未设目标） */
+    async loadWordGoal() {
+      try {
+        const row = await db.appconfig.get('wordgoal:' + this.work?.id)
+        this.wordGoal = Math.max(0, Math.round(Number(row?.value) || 0))
+      } catch {
+        this.wordGoal = 0
+      }
+    },
+    async setWordGoal(n) {
+      this.wordGoal = Math.max(0, Math.round(Number(n) || 0))
+      if (!this.work) return
+      await db.appconfig.put({ key: 'wordgoal:' + this.work.id, value: this.wordGoal })
+    },
+
+    /** 设定标签创建时间表读写（appconfig 按作品隔离；创建栏新建标签时记时，标签面板选择栏按其排序） */
+    async loadMubuTagMeta() {
+      try {
+        const row = await db.appconfig.get('mubutagmeta:' + this.work?.id)
+        this.mubuTagMeta = row?.value && typeof row.value === 'object' ? row.value : {}
+      } catch {
+        this.mubuTagMeta = {}
+      }
+    },
+    async saveMubuTagMeta() {
+      if (!this.work) return
+      await db.appconfig.put({ key: 'mubutagmeta:' + this.work.id, value: JSON.parse(JSON.stringify(this.mubuTagMeta)) })
+    },
+    /** 新建标签（标签面板创建栏入口）：同名不重复计时；返回清洗后的标签名（空串 = 无效输入） */
+    async mubuCreateTag(name) {
+      const t = String(name ?? '').trim().slice(0, 20)
+      if (!t) return ''
+      if (!this.mubuTagMeta[t]) {
+        this.mubuTagMeta = { ...this.mubuTagMeta, [t]: now() }
+        await this.saveMubuTagMeta()
+      }
+      return t
+    },
+
+    /* ---------- 关联关系（关系链接）：条目级「设定↔设定 / 设定↔人物」关系 ---------- */
+
+    /** 某条目的全部关系（出向在前）：dir / 本侧展示标签（入向取反向名）/ 对端 / 描述 / 颜色 */
+    loreLinksOf(kind, id) {
+      const titleOf = (k, oid) => {
+        if (k === 'mubu') return ((this.mubu.find((n) => n.id === oid && !n.deletedAt) || {}).text || '（空节点）').slice(0, 40)
+        return (this.characters.find((c) => c.id === oid && !c.deletedAt) || {}).name || '未命名'
+      }
+      const out = []
+      for (const l of this.liveLoreLinks) {
+        if (l.fromKind === kind && l.fromId === id) {
+          out.push({ linkId: l.id, dir: 'out', label: l.label || '关联', reverseLabel: l.reverseLabel || '', otherKind: l.toKind, otherId: l.toId, otherTitle: titleOf(l.toKind, l.toId), description: l.description || '', color: l.color || '' })
+        } else if (l.toKind === kind && l.toId === id) {
+          out.push({ linkId: l.id, dir: 'in', label: l.reverseLabel || l.label || '关联', reverseLabel: l.label || '', otherKind: l.fromKind, otherId: l.fromId, otherTitle: titleOf(l.fromKind, l.fromId), description: l.description || '', color: l.color || '' })
+        }
+      }
+      out.sort((a, b) => (a.dir === b.dir ? 0 : a.dir === 'out' ? -1 : 1))
+      return out
+    },
+
+    /** 新建关联关系（清洗 + 去重 + 禁止自连）；无效输入返回 null，重复（同向同类型）返回既有行并顺带更新描述 */
+    addLoreLink({ fromKind, fromId, toKind, toId, label, reverseLabel = '', description = '', color = '' }) {
+      if (!this.work) return null
+      const okKind = (k) => k === 'mubu' || k === 'character'
+      if (!okKind(fromKind) || !okKind(toKind) || !fromId || !toId) return null
+      if (fromKind === toKind && fromId === toId) return null
+      const cleanLabel = String(label ?? '').trim().slice(0, 12)
+      if (!cleanLabel) return null
+      const cleanReverse = String(reverseLabel ?? '').trim().slice(0, 12)
+      const cleanDesc = String(description ?? '').trim().slice(0, 120)
+      const dup = this.lorelinks.find((l) => l.fromKind === fromKind && l.fromId === fromId && l.toKind === toKind && l.toId === toId && (l.label || '') === cleanLabel)
+      if (dup) {
+        if (dup.description !== cleanDesc || dup.reverseLabel !== cleanReverse) this.updateLoreLink(dup.id, { description: cleanDesc, reverseLabel: cleanReverse })
+        return dup
+      }
+      const row = { id: uid(), workId: this.work.id, fromKind, fromId, toKind, toId, label: cleanLabel, reverseLabel: cleanReverse, description: cleanDesc, color: String(color || ''), createdAt: now(), updatedAt: now() }
+      this.lorelinks.push(row)
+      autosave.mark('lorelinks', row)
+      return row
+    },
+
+    updateLoreLink(id, patch) {
+      const l = this.lorelinks.find((x) => x.id === id)
+      if (!l) return
+      if (patch.label !== undefined) {
+        const v = String(patch.label).trim().slice(0, 12)
+        if (v) l.label = v
+      }
+      if (patch.reverseLabel !== undefined) l.reverseLabel = String(patch.reverseLabel).trim().slice(0, 12)
+      if (patch.description !== undefined) l.description = String(patch.description).trim().slice(0, 120)
+      if (patch.color !== undefined) l.color = String(patch.color || '')
+      autosave.mark('lorelinks', l)
+    },
+
+    async removeLoreLink(id) {
+      await db.lorelinks.delete(id)
+      this.lorelinks = this.lorelinks.filter((x) => x.id !== id)
+    },
+
+    /** 端点条目被彻底删除时清理其关系（软删不清理：回收站还原后关系保留） */
+    async purgeLoreLinksFor(kind, ids) {
+      const set = new Set(ids)
+      const dead = this.lorelinks.filter((l) => (l.fromKind === kind && set.has(l.fromId)) || (l.toKind === kind && set.has(l.toId)))
+      if (!dead.length) return
+      await db.lorelinks.bulkDelete(dead.map((l) => l.id))
+      const deadIds = new Set(dead.map((l) => l.id))
+      this.lorelinks = this.lorelinks.filter((l) => !deadIds.has(l.id))
+    },
+
+    /** 关联关系图谱布局读写（appconfig 按作品隔离；结构 { '<kind:id>'(中心): { '<kind:id>': { x, y } } }） */
+    async loadLoreGraph() {
+      const row = await db.appconfig.get('loreGraph:' + this.work?.id)
+      this.loreGraph = row?.value && typeof row.value === 'object' ? row.value : {}
+      return this.loreGraph
+    },
+    async saveLoreGraph(map) {
+      if (!this.work) return
+      /* 落库必须用纯快照：IndexedDB 无法克隆 Vue 响应式代理（直接传 store 态会抛 DataCloneError，
+         布局静默丢失）——与 saveMubuTagMeta / saveOlTypes 同口径 */
+      const plain = JSON.parse(JSON.stringify(map || {}))
+      this.loreGraph = plain
+      await db.appconfig.put({ key: 'loreGraph:' + this.work.id, value: plain })
+    },
+
     /** 自定义模块类型注册表（8.8.2-G2）：appconfig 按作品隔离，节点以 mtype 名称引用 */
     async loadOlTypes() {
       try {
@@ -1453,7 +1648,7 @@ export const useWorkStore = defineStore('work', {
       await db.appconfig.put({ key: 'charGraph:' + this.work.id, value: JSON.parse(JSON.stringify(layout)) })
     },
 
-    /** 双链引用卡点选人物 → 跳人物模块并定位关系图 */
+    /** 关系链接引用卡点选人物 → 跳人物模块并定位关系图 */
     jumpToCharGraph(charId) {
       const c = this.characters.find((x) => x.id === charId && !x.deletedAt)
       if (!c) return false
@@ -1868,8 +2063,14 @@ export const useWorkStore = defineStore('work', {
       }
       if (scopes.lore) {
         for (const n of this.liveMubu()) {
-          if ((n.text || '').toLowerCase().includes(ql)) {
-            push({ type: 'lore', id: n.id, title: (n.text || '（空）').slice(0, 24), hits: grab(n.text) })
+          const tagHit = (n.tags || []).find((t) => t.toLowerCase().includes(ql))
+          if ((n.text || '').toLowerCase().includes(ql) || tagHit) {
+            push({
+              type: 'lore',
+              id: n.id,
+              title: (n.text || '（空）').slice(0, 24),
+              hits: tagHit ? [`标签：${tagHit}`].concat(grab(n.text)) : grab(n.text)
+            })
           }
         }
       }

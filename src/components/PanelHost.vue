@@ -24,6 +24,9 @@ import RightPanel from './RightPanel.vue'
 import DLinkPopover from './DLinkPopover.vue'
 import RevisionsModal from './RevisionsModal.vue'
 import SettingsWindow from './SettingsWindow.vue'
+import MubuTagPanel from './MubuTagPanel.vue'
+import LoreRelationPanel from './LoreRelationPanel.vue'
+import LoreDetail from './LoreDetail.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
 import PresetWindow from './ai/PresetWindow.vue'
 
@@ -194,6 +197,9 @@ onBeforeUnmount(() => autosave.flushAll())
         </div>
         <DLinkPopover />
         <RevisionsModal />
+        <MubuTagPanel />
+        <LoreRelationPanel />
+        <LoreDetail />
       </template>
     </template>
     <div v-else class="empty-shelf" style="padding-top: 20vh">

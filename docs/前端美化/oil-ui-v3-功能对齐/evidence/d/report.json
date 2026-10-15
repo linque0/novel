@@ -1,0 +1,200 @@
+[
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 2,
+        "examples": [
+          "button.af-chip.active「全部」（4.12:1）",
+          "button.af-tool.active「吸附」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 6,
+        "examples": [
+          "button.af-tag「核心设定」（4.12:1）",
+          "button.af-tag「导航基准」（4.12:1）",
+          "button.af-tag「规则」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 3,
+        "examples": [
+          "button.af-chip.active「主角」（4.12:1）",
+          "button.af-tag「雾港」（4.12:1）",
+          "button.af-tag「观测者」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "outline-text.png",
+    "state": "outline-text",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 1,
+        "examples": [
+          "button.af-chip.active「全部」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world-detail.png",
+    "state": "world-detail",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters-graph.png",
+    "state": "characters-graph",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 2,
+        "examples": [
+          "button.af-chip.active「全部」（4.12:1）",
+          "button.af-tool.active「圆形」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "outline-@2x.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 2,
+        "examples": [
+          "button.af-chip.active「全部」（4.12:1）",
+          "button.af-tool.active「吸附」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "motion-probe",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "motion": {
+      "load": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": []
+      },
+      "hero": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "layers": 0
+      },
+      "scroll": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "scrollable": false
+      }
+    },
+    "issues": [
+      "首次进入：没有检测到动画"
+    ]
+  },
+  {
+    "file": "motion-entry-end.jpg",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "entry",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-entry-start.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 193
+      },
+      "mid": {
+        "file": "motion-entry-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 334
+      },
+      "end": {
+        "file": "motion-entry-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1763
+      }
+    },
+    "sampling": {
+      "mode": "entry"
+    },
+    "durationMs": 1763,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-entry-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  }
+]

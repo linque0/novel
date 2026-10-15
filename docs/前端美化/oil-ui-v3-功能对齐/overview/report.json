@@ -1,0 +1,74 @@
+[
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1600x1370",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "longMeasure",
+        "label": "正文行太长",
+        "count": 1,
+        "examples": [
+          "footer「设计评审原型 · 原生视口 1440 × 900」（每行约 69 字）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1600x1370",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "longMeasure",
+        "label": "正文行太长",
+        "count": 1,
+        "examples": [
+          "footer「设计评审原型 · 原生视口 1440 × 900」（每行约 69 字）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1600x1370",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "longMeasure",
+        "label": "正文行太长",
+        "count": 1,
+        "examples": [
+          "footer「设计评审原型 · 原生视口 1440 × 900」（每行约 69 字）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world-detail.png",
+    "state": "world-detail",
+    "size": "1600x1370",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "longMeasure",
+        "label": "正文行太长",
+        "count": 1,
+        "examples": [
+          "footer「设计评审原型 · 原生视口 1440 × 900」（每行约 69 字）"
+        ]
+      }
+    ]
+  }
+]

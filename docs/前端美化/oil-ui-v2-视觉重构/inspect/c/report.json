@@ -1,0 +1,102 @@
+[
+  {
+    "file": "editor.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 131,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 36,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "headingSpacing",
+        "label": "标题离上文比离下文还近",
+        "count": 1,
+        "examples": [
+          "h2「铜星熄灭」（上 15px，下 25px）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.overline「世界观 / 星图系统」"
+        ]
+      },
+      {
+        "rule": "numbered",
+        "label": "标题上方的编号标签",
+        "count": 3,
+        "examples": [
+          "span「01」",
+          "span「02」",
+          "span「03」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "inspiration.png",
+    "state": "inspiration",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 1,
+        "examples": [
+          "aside.dream-assistant「✦ 恍然梦 从一个念头开始。 创作指令 展开灵感」（外层 aside.glass-idea-sheet）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "settings.png",
+    "state": "settings",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.section-label「偏好设置」"
+        ]
+      }
+    ]
+  }
+]

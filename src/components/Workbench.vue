@@ -307,7 +307,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </aside>
     </div>
 
-    <!-- 双链悬浮预览窗（全局唯一，悬停双链标签 / 纯文本令牌时展示目标内容） -->
+    <!-- 关系链接悬浮预览窗（全局唯一，悬停关系链接标签 / 纯文本令牌时展示目标内容） -->
     <DLinkPopover />
   </div>
 </template>

@@ -1,0 +1,32 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 25,
+        "examples": [
+          "span「Sign up」（3.13:1）",
+          "span.font_bkqswlrx5.ts6「MYMIND IS MADE FOR」（3.13:1）",
+          "div.inner「FOR DESIGNERS」（3.01:1）"
+        ]
+      },
+      {
+        "rule": "tightLeading",
+        "label": "多行正文行高过紧",
+        "count": 4,
+        "examples": [
+          "span「There’s a lot of magic a」（1.08）",
+          "span「Yes! No need to waste ti」（1.08）",
+          "span.font_okqqa60vq.ts8「Designers, writers, mark」（1.10）"
+        ]
+      }
+    ]
+  }
+]

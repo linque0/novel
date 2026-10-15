@@ -94,7 +94,7 @@ export async function applyProposal(work, card, options = {}) {
     if (!editor || editor.isDestroyed || work.selChapterId !== card.anchorId) throw new Error('请先打开提案对应章节')
     if (!editor.isEditable) throw new Error('当前编辑器只读')
     if ((card.kind === 'rewrite' || action === 'replace') && locateEditorPatch(editor, card.original).protectedMark)
-      throw new Error('修改范围跨越双链或批注，已禁用一键应用，请人工处理草案')
+      throw new Error('修改范围跨越关系链接或批注，已禁用一键应用，请人工处理草案')
   }
   await autosave.flushAll()
   const owner = uid(),
@@ -192,7 +192,7 @@ export async function applyProposal(work, card, options = {}) {
       if (!paragraphs.length) throw new Error('没有可应用的正文')
       if (card.kind === 'rewrite' || action === 'replace') {
         const range = locateEditorPatch(editor, card.original)
-        if (range.protectedMark) throw new Error('修改范围含双链或批注')
+        if (range.protectedMark) throw new Error('修改范围含关系链接或批注')
         const inline =
           !replacement.includes('\n') && editor.state.doc.resolve(range.from).parent === editor.state.doc.resolve(range.to).parent
         // At a mark boundary, $from.marks() inherits the left text. Use the

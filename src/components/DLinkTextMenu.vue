@@ -1,6 +1,6 @@
-<!-- 纯文本/富文本编辑区共用右键快捷栏：剪切复制粘贴 + 添加双链。
-     textarea 模式（大纲旧文本/人物小传/灵感）：双链以 [[标题]] 令牌写入，支持令牌命中与移除；
-     contenteditable 模式（大纲节点编辑器）：双链以令牌文本插入光标处，由宿主 onInput 落库 -->
+<!-- 纯文本/富文本编辑区共用右键快捷栏：剪切复制粘贴 + 添加关系链接。
+     textarea 模式（大纲旧文本/人物小传/灵感）：关系链接以 [[标题]] 令牌写入，支持令牌命中与移除；
+     contenteditable 模式（大纲节点编辑器）：关系链接以令牌文本插入光标处，由宿主 onInput 落库 -->
 <script setup>
 import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import DLinkPicker from './DLinkPicker.vue'
@@ -132,7 +132,7 @@ function openPicker() {
   st.picker = true
 }
 
-/** 选中内容 → 双链：textarea 写令牌文本；contenteditable 在光标处插入令牌文本 */
+/** 选中内容 → 关系链接：textarea 写令牌文本；contenteditable 在光标处插入令牌文本 */
 function applyPick(t) {
   const token = buildToken(t.title, selectedText())
   if (st.mode === 'ce') {
@@ -191,8 +191,8 @@ defineExpose({ open, close })
       <div class="ctx-item" :class="{ disabled: selEmpty() }" @mousedown.prevent @click="!selEmpty() && doCopy()"><span>复制</span></div>
       <div class="ctx-item" @mousedown.prevent @click="doPaste()"><span>粘贴为纯文本</span><span class="hint">Ctrl+V</span></div>
       <div class="ctx-sep" />
-      <div class="ctx-item" @mousedown.prevent @click="openPicker()"><span>添加双链…</span><span class="hint">[[ ]]</span></div>
-      <div v-if="st.onToken" class="ctx-item" @mousedown.prevent @click="removeToken()"><span>移除该双链</span></div>
+      <div class="ctx-item" @mousedown.prevent @click="openPicker()"><span>添加关系链接…</span><span class="hint">[[ ]]</span></div>
+      <div v-if="st.onToken" class="ctx-item" @mousedown.prevent @click="removeToken()"><span>移除该关系链接</span></div>
     </template>
   </div>
 </template>

@@ -1,0 +1,180 @@
+[
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 6,
+        "examples": [
+          "div.af-container-box「▾ 第一卷 · 星图初醒 3 个模块」（外层 div.af-free-canvas）",
+          "div.af-node.af-event「事件 ⋯ 铜星熄灭 一枚铜星在雾中熄灭，旧航线失」（外层 div.af-free-canvas）",
+          "div.af-node.af-event「事件 ⋯ 领航员测试 林远接受测试，第一次听见星」（外层 div.af-free-canvas）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 18,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 36,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "outline-text.png",
+    "state": "outline-text",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 15,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "world-detail.png",
+    "state": "world-detail",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters-graph.png",
+    "state": "characters-graph",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 35,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "outline-@2x.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 6,
+        "examples": [
+          "div.af-container-box「▾ 第一卷 · 星图初醒 3 个模块」（外层 div.af-free-canvas）",
+          "div.af-node.af-event「事件 ⋯ 铜星熄灭 一枚铜星在雾中熄灭，旧航线失」（外层 div.af-free-canvas）",
+          "div.af-node.af-event「事件 ⋯ 领航员测试 林远接受测试，第一次听见星」（外层 div.af-free-canvas）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "motion-probe",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "motion": {
+      "load": {
+        "elements": 2,
+        "loops": 0,
+        "maxMove": 12,
+        "maxSize": 0,
+        "maxOpacity": 0.77,
+        "top": [
+          {
+            "el": "aside.af-side",
+            "move": 12,
+            "size": 0,
+            "opacity": 0.77,
+            "loop": false,
+            "sources": [
+              "css:enter"
+            ]
+          },
+          {
+            "el": "div.af-main",
+            "move": 11,
+            "size": 0,
+            "opacity": 0.76,
+            "loop": false,
+            "sources": [
+              "css:enter"
+            ]
+          }
+        ]
+      },
+      "hero": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "layers": 0
+      },
+      "scroll": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "scrollable": false
+      }
+    },
+    "issues": []
+  },
+  {
+    "file": "motion-entry-end.jpg",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "entry",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-entry-start.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 259
+      },
+      "mid": {
+        "file": "motion-entry-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 456
+      },
+      "end": {
+        "file": "motion-entry-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1849
+      }
+    },
+    "sampling": {
+      "mode": "entry"
+    },
+    "durationMs": 1849,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-entry-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  }
+]

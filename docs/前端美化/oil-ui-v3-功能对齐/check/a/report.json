@@ -1,0 +1,67 @@
+[
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 6,
+        "examples": [
+          "div.af-container-box「▾ 第一卷 · 星图初醒 3 个模块」（外层 div.af-free-canvas）",
+          "div.af-node.af-event「事件 ⋯ 铜星熄灭 一枚铜星在雾中熄灭，旧航线失」（外层 div.af-free-canvas）",
+          "div.af-node.af-event「事件 ⋯ 领航员测试 林远接受测试，第一次听见星」（外层 div.af-free-canvas）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "world-detail.png",
+    "state": "world-detail",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "outline-text.png",
+    "state": "outline-text",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters-graph.png",
+    "state": "characters-graph",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  }
+]

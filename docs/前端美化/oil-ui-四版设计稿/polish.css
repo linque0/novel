@@ -1,0 +1,20 @@
+.b{--muted:#68545f}
+.b .rail .glyph{display:none}
+.b .shelf-feature h2{margin-top:20px;margin-bottom:16px}
+.d .night-feature h2{margin-top:22px;margin-bottom:16px}
+.a .shelf-foot>span:last-child{display:none}
+.a .cover .title{font-size:38px}
+.a .cover .edition{right:10px}
+.a .book:nth-child(3) .cover .title{font-size:32px}
+.d .night-feature .cover .title{font-size:35px}
+.d .books .cover .title{font-size:25px}
+.board svg.links{width:780px;height:720px}
+.b .board .sticky{left:auto;right:20px;bottom:24px;width:220px;padding:12px;font-size:14px}
+.c .settings-preview .cover{float:none;margin:22px 0}
+.rel-line span{background:var(--paper);padding:0 4px}
+.manuscript h1{margin-top:34px;margin-bottom:28px}
+.idea-main h1{margin-top:26px;margin-bottom:20px}
+.relation{margin-top:24px}
+.c .cover .title{font-size:26px;max-width:75%}
+.c .settings-preview .cover .title{font-size:22px}
+.reduced *, .reduced *:before, .reduced *:after{animation:none!important;transition:none!important}

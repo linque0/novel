@@ -4,19 +4,23 @@ import { computed, ref, watch, onMounted } from 'vue'
 import { NButton, NInput, NSelect, NTag } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
+import { jumpTo } from '../services/doublelinks'
 import DLinkTextMenu from './DLinkTextMenu.vue'
+import LoreRelRows from './LoreRelRows.vue'
 import CharacterGraph from './CharacterGraph.vue'
 
 const work = useWorkStore()
+const ui = useUiStore()
 const ai = useAiStore()
 const c = computed(() => work.activeCharacter)
 const dlMenu = ref(null)
 /* 角色定位：自定义输入为主 + 常见故事定位快捷项（再点取消） */
 const ROLE_PRESETS = ['主角', '配角', '反派', '导师', '红颜', '盟友', '旁观者', '龙套']
 
-/* 人物小传右键快捷栏：剪切/复制/粘贴 + 添加双链 */
+/* 人物小传右键快捷栏：剪切/复制/粘贴 + 添加关系链接 */
 function onCtx(e) {
   if (!c.value) return
   const ch = c.value
@@ -99,6 +103,16 @@ function addRelation() {
   relLabel.value = ''
 }
 
+/* 关联关系（关系链接）：跨模块条目级关系（人物 ↔ 设定 / 人物），与人物关系（relations）并存 */
+const relEntries = computed(() => (c.value ? work.loreLinksOf('character', c.value.id) : []))
+function pickRel(e) {
+  jumpTo({ kind: e.otherKind, id: e.otherId })
+}
+function openRelPanel() {
+  if (!c.value) return
+  ui.loreRelationPanel = { kind: 'character', id: c.value.id, x: Math.max(8, Math.min(420, window.innerWidth - 380)), y: 140 }
+}
+
 /* 恍然梦：丰富（方案 §五.4）：字段补全 / 小传扩写 / 别名建议 / 关系建议（diff 确认后写入） */
 const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配置'
 function aiEnrich() {
@@ -175,6 +189,12 @@ onMounted(() => {
       <NInput v-model:value="relLabel" size="small" placeholder="关系（如：师徒 / 宿敌）" style="flex: 1" @keyup.enter="addRelation" />
       <NButton size="tiny" @click="addRelation">添加</NButton>
     </div>
+
+    <hr class="divider" />
+    <div class="rp-title">关联关系（设定 / 人物）</div>
+    <LoreRelRows v-if="relEntries.length" :entries="relEntries" @pick="pickRel" />
+    <div v-else style="font-size: 12px; color: var(--text-dim); padding: 2px 0 6px">暂无关联关系（如：人物「属于」某地点）</div>
+    <NButton size="tiny" @click="openRelPanel"><OIcon name="plus" :size="11" /> 添加关联</NButton>
 
     <hr class="divider" />
     <div class="rp-title">人物小传（外貌 / 性格 / 背景 / 动机……）</div>

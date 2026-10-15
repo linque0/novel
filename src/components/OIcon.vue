@@ -48,7 +48,11 @@ const ICONS = {
   'star-filled': '<path fill="currentColor" stroke="none" d="M12 3l2.7 5.4 6 .9-4.3 4.2 1 6-5.4-2.8-5.4 2.8 1-6L3.3 9.3l6-.9z"/>',
   fit: '<path d="M4 9V4h5"/><path d="M15 4h5v5"/><path d="M20 15v5h-5"/><path d="M9 20H4v-5"/>',
   folder: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
-  external: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6"/>'
+  external: '<path d="M14 4h6v6"/><path d="M20 4l-9 9"/><path d="M20 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h6"/>',
+  'map-pin': '<path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
+  landmark: '<path d="M3 21h18"/><path d="M5 21V11"/><path d="M9.6 21V11"/><path d="M14.4 21V11"/><path d="M19 21V11"/><path d="M12 3l9 5H3z"/>',
+  megaphone: '<path d="M3 11v2a1 1 0 0 0 1 1h2l9 5V5L6 10H4a1 1 0 0 0-1 1z"/><path d="M18 9.5a4 4 0 0 1 0 5"/>',
+  user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-4 3.6-5.8 7-5.8s5.8 1.8 7 5.8"/>'
 }
 const body = computed(() => ICONS[props.name] || '')
 </script>

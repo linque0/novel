@@ -1,0 +1,87 @@
+{
+  "schemaVersion": 1,
+  "project": "小说工坊 · 视觉与功能对齐第三轮",
+  "brief": "沿用四种美术方向；大纲、设定、人物回归原版功能结构；新增文本大纲、设定详情和人物关系图。",
+  "round": "oil-ui-03",
+  "lang": "zh",
+  "nativeViewport": "1440x900",
+  "serve": {
+    "command": "python -m http.server 8880 --bind 127.0.0.1",
+    "cwd": "F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\oil-ui-v3-功能对齐",
+    "url": "http://127.0.0.1:8880"
+  },
+  "candidates": [
+    {
+      "id": "a",
+      "name": "引力书舱",
+      "concept": "让故事成为一件悬浮在轨道上的作品；进入正文后，视觉退回安静。",
+      "palette": [
+        "#0B131D",
+        "#F29C62",
+        "#BDE6EA"
+      ],
+      "typography": "宋体大题名；无衬线工具；18px正文",
+      "traits": [
+        "悬浮底部导航",
+        "透视书封与轨道舞台",
+        "星图式人物与事件画布"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8880/a.html?state=world-detail"
+    },
+    {
+      "id": "b",
+      "name": "电光剪辑室",
+      "concept": "像剪辑一部电影一样推进长篇；荧光只标记正在发生的事。",
+      "palette": [
+        "#171A18",
+        "#D4F75B",
+        "#E7EBDF"
+      ],
+      "typography": "粗黑体标题；等宽编号；宋体正文",
+      "traits": [
+        "侧边工具轨",
+        "斜切海报与场景切片",
+        "可编辑人物档案与自由画布"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8880/b.html?state=world-detail"
+    },
+    {
+      "id": "c",
+      "name": "琉光画境",
+      "concept": "让作品、资料和灵感像玻璃纸一样在同一片光里叠合。",
+      "palette": [
+        "#E7EFF1",
+        "#146878",
+        "#F39572"
+      ],
+      "typography": "文楷题名；无衬线工具；宋体正文",
+      "traits": [
+        "顶栏模块导航",
+        "玻璃叠册与折射美术",
+        "人物关系图与灵感拼贴"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8880/c.html?state=world-detail"
+    },
+    {
+      "id": "d",
+      "name": "赤月剧场",
+      "concept": "用一张主海报给故事开场，用严格排版承接所有创作细节。",
+      "palette": [
+        "#F0EFEA",
+        "#C73522",
+        "#161713"
+      ],
+      "typography": "超大宋体展示字；黑体工具；18px正文",
+      "traits": [
+        "黑色窄轨与红色焦点",
+        "半幅海报与巨字",
+        "编辑档案与分组模块画布"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8880/d.html?state=world-detail"
+    }
+  ]
+}

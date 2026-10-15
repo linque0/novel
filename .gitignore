@@ -13,3 +13,6 @@ app
 # 验收脚本截图产物（不入库）
 tools/_*.png
 tools/shot-*.png
+
+# 逆向工作区原始产物（第三方压缩代码，不入库）
+.rev-ashes

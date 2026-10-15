@@ -1,6 +1,6 @@
 <!-- 大纲自由模块画布（8.8.2 v0.4.1）：流程图式白板——事件/便签/引用卡/容器/章节锚点自由摆位，
      四向锚点拖线（因果/伏笔/冲突/关联 + 箭头 + 标签）、贝塞尔/正交折线、网格吸附、双密度、断线检测、
-     双链卫星与悬停预览（复用全局 DLinkPopover）、骨架模板快速开始；布局数学在 outline/canvas-model.js -->
+     关系链接卫星与悬停预览（复用全局 DLinkPopover）、骨架模板快速开始；布局数学在 outline/canvas-model.js -->
 <script setup>
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useWorkStore } from '../stores/work'
@@ -84,7 +84,7 @@ const containerBoxes = computed(() => {
 })
 const rectOf = (n) => (n.kind === 'container' ? containerBoxes.value.get(n.id) : { ...posOf(n), ...sizeOf(n) })
 
-/* ---------- 连线集合与双链卫星 ---------- */
+/* ---------- 连线集合与关系链接卫星 ---------- */
 const edges = computed(() => {
   const out = []
   for (const n of visNodes.value) {
@@ -1384,7 +1384,7 @@ onBeforeUnmount(() => {
           </template>
         </div>
 
-        <!-- 双链令牌卫星 -->
+        <!-- 关系链接令牌卫星 -->
         <a
           v-for="st in sats"
           :key="st.key"

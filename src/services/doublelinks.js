@@ -1,4 +1,4 @@
-/* 多模块内容互联（双链）：目标检索 / 预览内容 / 跳转 / 令牌解析（共享服务，无副作用）
+/* 多模块内容互联（关系链接）：目标检索 / 预览内容 / 跳转 / 令牌解析（共享服务，无副作用）
  * 标签形态：
  *  - 富文本（正文 TipTap、设定幕布）：<span class="dl-link" data-dl-target="kind:id" data-dl-title="标题">选中文字</span>
  *  - 纯文本（大纲 / 人物小传 / 灵感）：[[标题]] 或 [[标题|显示文字]] 令牌
@@ -11,7 +11,7 @@ import { stripTags } from './wordcount'
 
 export const KIND_LABEL = { chapter: '正文', mubu: '设定', character: '人物', outline: '大纲', snippet: '灵感' }
 
-/* ---------- TipTap 双链标记：正文中的双链以标签样式渲染并携带目标 ---------- */
+/* ---------- TipTap 关系链接标记：正文中的关系链接以标签样式渲染并携带目标 ---------- */
 export const DlLinkMark = Mark.create({
   name: 'dlLink',
   inclusive: false, // 光标贴边续写不连带成链接
@@ -240,7 +240,7 @@ export function jumpTo(target) {
   } else if (target.kind === 'character') {
     work.tab = 'characters'
     work.selCharacterId = target.id
-    // 8.8.3：关系图视图打开时，双链跳转人物附带画布定位
+    // 8.8.3：关系图视图打开时，关系链接跳转人物附带画布定位
     if (work.charView === 'graph') {
       work.charFocusId = target.id
       work.charFocusTick++

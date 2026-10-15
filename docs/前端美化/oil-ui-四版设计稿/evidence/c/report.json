@@ -1,0 +1,184 @@
+[
+  {
+    "file": "shelf.png",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "settings.png",
+    "state": "settings",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "editor.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "headingSpacing",
+        "label": "标题离上文比离下文还近",
+        "count": 1,
+        "examples": [
+          "h1「第一章 初雪」（上 20px，下 34px）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "headingSpacing",
+        "label": "标题离上文比离下文还近",
+        "count": 1,
+        "examples": [
+          "h3「人物关系」（上 26px，下 36px）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 2,
+        "examples": [
+          "span「导师」（3.79:1）",
+          "span「对立」（3.79:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "inspiration.png",
+    "state": "inspiration",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "headingSpacing",
+        "label": "标题离上文比离下文还近",
+        "count": 1,
+        "examples": [
+          "h1「第十二声钟响」（上 18px，下 25px）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "shelf-@2x.png",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "motion-probe",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "motion": {
+      "load": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": []
+      },
+      "hero": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "layers": 0
+      },
+      "scroll": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "scrollable": false
+      }
+    },
+    "issues": [
+      "首次进入：没有检测到动画"
+    ]
+  },
+  {
+    "file": "motion-entry-end.jpg",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "entry",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-entry-start.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 125
+      },
+      "mid": {
+        "file": "motion-entry-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 125
+      },
+      "end": {
+        "file": "motion-entry-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1722
+      }
+    },
+    "sampling": {
+      "mode": "entry"
+    },
+    "durationMs": 1722,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-entry-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  }
+]

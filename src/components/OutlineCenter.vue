@@ -1,4 +1,4 @@
-<!-- 大纲中心（8.8.2）：文本 / 画布双视图；文本视图为 Word 式富文本编辑（text+html 双字段），右键快捷栏含双链 -->
+<!-- 大纲中心（8.8.2）：文本 / 画布双视图；文本视图为 Word 式富文本编辑（text+html 双字段），右键快捷栏含关系链接 -->
 <script setup>
 import TaskLauncher from './ai/TaskLauncher.vue'
 import OIcon from './OIcon.vue'
@@ -77,7 +77,7 @@ function fmt(cmd, val = null) {
   if (el && cur.value) work.olnodeSetRich(cur.value.id, el.textContent || '', el.innerHTML)
 }
 
-/* 右键快捷栏：剪切/复制/粘贴 + 添加双链（选中内容变 [[标题]] 令牌） */
+/* 右键快捷栏：剪切/复制/粘贴 + 添加关系链接（选中内容变 [[标题]] 令牌） */
 const dlMenu = ref(null)
 function onCtx(e) {
   if (!cur.value) return
@@ -100,7 +100,7 @@ function onCtx(e) {
   <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">大纲</span>
-      <span style="font-size: 12px; color: var(--text-dim)">自由模块画布 · 双链联动 · 文本与画布双视图</span>
+      <span style="font-size: 12px; color: var(--text-dim)">自由模块画布 · 关系链接联动 · 文本与画布双视图</span>
       <button class="om-btn" title="撤销" :disabled="!work.olUndo.length" @click="work.olnodeUndo()">↶</button>
       <button class="om-btn" title="重做" :disabled="!work.olRedo.length" @click="work.olnodeRedo()">↷</button>
       <div style="flex: 1"></div>
@@ -148,7 +148,7 @@ function onCtx(e) {
         </NPopover>
         <button class="ol-tb" title="清除格式" @mousedown.prevent @click="fmt('removeFormat')">清除</button>
         <span class="tb-sep" />
-        <span style="font-size: 11px; color: var(--text-dim)">选中文字后右键可「添加双链」；[[标题]] 令牌会在导图中显示为联动节点</span>
+        <span style="font-size: 11px; color: var(--text-dim)">选中文字后右键可「添加关系链接」；[[标题]] 令牌会在导图中显示为联动节点</span>
       </div>
 
       <div

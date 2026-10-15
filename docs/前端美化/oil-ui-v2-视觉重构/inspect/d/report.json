@@ -1,0 +1,129 @@
+[
+  {
+    "file": "editor.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 167,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 3,
+        "examples": [
+          "span.annotation-num「01」（1.45:1）",
+          "span.tag「伏笔」（4.12:1）",
+          "span.annotation-num「02」（1.45:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "outline.png",
+    "state": "outline",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 38,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "headingSpacing",
+        "label": "标题离上文比离下文还近",
+        "count": 1,
+        "examples": [
+          "h2「铜星熄灭」（上 15px，下 25px）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 1,
+        "examples": [
+          "div.event-number「01」（1.17:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world.png",
+    "state": "world",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.overline「世界观 / 星图系统」"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 1,
+        "examples": [
+          "span.tag「导航基准」（4.12:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": []
+  },
+  {
+    "file": "inspiration.png",
+    "state": "inspiration",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 5,
+        "examples": [
+          "span.tag「伏笔 · 时间」（4.12:1）",
+          "span「01」（3.88:1）",
+          "span「02」（3.88:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "settings.png",
+    "state": "settings",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span.section-label「偏好设置」"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 1,
+        "examples": [
+          "span.tag「即时预览」（4.12:1）"
+        ]
+      }
+    ]
+  }
+]

@@ -34,6 +34,10 @@ export const useUiStore = defineStore('ui', {
     loreFocusId: null,
     mubuSelectedId: null,
     mubuSyncTick: 0,
+    mubuQuery: '', // 设定检索词（侧栏搜索框 ↔ 标签卡片点击联动；session 级）
+    mubuTagPanel: null, // 设定标签面板 { nodeId, x, y } | null（全局单例；App 主窗口与 PanelHost 各挂一份）
+    loreRelationPanel: null, // 关联关系设置面板 { kind:'mubu'|'character', id, x, y } | null（全局单例，同上）
+    loreDetailId: null, // 设定详情页当前节点 id（全屏页；null = 未打开）
     autosave: { pending: 0, saving: false, lastSavedAt: 0 },
     searchOpen: false,
     statsOpen: false,

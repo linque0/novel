@@ -3,11 +3,11 @@
  * 标签形态（富文本正文 TipTap）：
  *   <span class="note-mark" data-note-id="…" data-note-color="#rrggbb" style="--note-color:#rrggbb">选中文字</span>
  *
- * 与双链（DlLinkMark）严格分离，二者可同时落在一段文字上而互不覆盖：
- *  - 解析规则互斥：批注认 span[data-note-id]，双链认 span[data-dl-target]；渲染属性各写各的；
- *  - 视觉错位：双链=点状下划线（主题色，贴字 3px）；批注=实线下划线（批注色，离字 5px、2px 粗）+ 同色淡底；
- *  - 批注 span 不带 .dl-link，故不触发双链悬浮预览；反之双链 span 不带 .note-mark；
- *  - 批注色只承载「批注用途」语义，不参与双链的主题色体系。
+ * 与关系链接（DlLinkMark）严格分离，二者可同时落在一段文字上而互不覆盖：
+ *  - 解析规则互斥：批注认 span[data-note-id]，关系链接认 span[data-dl-target]；渲染属性各写各的；
+ *  - 视觉错位：关系链接=点状下划线（主题色，贴字 3px）；批注=实线下划线（批注色，离字 5px、2px 粗）+ 同色淡底；
+ *  - 批注 span 不带 .dl-link，故不触发关系链接悬浮预览；反之关系链接 span 不带 .note-mark；
+ *  - 批注色只承载「批注用途」语义，不参与关系链接的主题色体系。
  *
  * 正文 HTML 只存锚点 id 与颜色；批注正文（评论内容）存 annotations 表——改字不丢批注，
  * 文字被整段删除时批注转为「已失效」，由侧栏提示清理。
@@ -59,7 +59,7 @@ export const AnnotationMark = Mark.create({
   // 首个匹配规则——批注 span 内联 --note-color 时会被它抢走、批注标记在解析阶段被静默丢弃
   // （表现为刷新后下划线消失）。提高优先级让本标记的精确规则先于通配规则被采纳。
   priority: 1000,
-  inclusive: false, // 光标贴边续写不连带成批注（与双链一致）
+  inclusive: false, // 光标贴边续写不连带成批注（与关系链接一致）
   addAttributes() {
     return {
       noteId: {
