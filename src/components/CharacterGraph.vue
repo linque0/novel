@@ -4,12 +4,19 @@
      圆形/网格一键排布；角色·标签筛选；孤岛人物提示；拖摆位置存 appconfig charGraph:<workId> -->
 <script setup>
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { NSelect } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
+import { characterGeometry, projectCharacterPoint } from '../skins/graph-presentation'
 import { usePanZoom, anchorsOf } from '../services/graphview'
 import OIcon from './OIcon.vue'
 import { freeSpotFor, dashOf, EDGE_STYLES, sideBetween, routeEdge } from './outline/canvas-model'
 
 const work = useWorkStore()
+const ui = useUiStore()
+const geometry = computed(() => characterGeometry(ui.skin))
+const nodeW = computed(() => geometry.value.width)
+const nodeH = computed(() => geometry.value.height)
 const canvasEl = ref(null)
 const { zoom, tx, ty, innerStyle, onWheel, onPanStart, fit: fitTo, centerOn } = usePanZoom(canvasEl)
 
@@ -36,17 +43,18 @@ const chars = computed(() => {
   return list
 })
 const allTags = computed(() => [...new Set(work.liveCharacters.flatMap((c) => c.tags || []))])
-const posOf = (c) => dragPos.get(c.id) || layout.value[c.id] || null
+const posOf = (c) => c ? projectCharacterPoint(dragPos.get(c.id) || layout.value[c.id], geometry.value) : null
 const avatarOf = (c) => (c.avatarAssetId ? work.assetUrl(c.avatarAssetId) : '')
 
 /* ---------- 排布与布局持久化 ---------- */
 function circleAll() {
   const list = chars.value
-  const R = Math.max(170, list.length * 32)
+  const R = ui.skin === 'glaze' ? Math.max(220, list.length * 55) : Math.max(170, list.length * 32)
   const next = {}
   list.forEach((c, i) => {
     const a = (i / list.length) * Math.PI * 2 - Math.PI / 2
-    next[c.id] = { x: Math.round(460 + R * Math.cos(a)), y: Math.round(340 + R * Math.sin(a)) }
+    const point = { x: Math.round(460 + R * Math.cos(a)), y: Math.round(340 + R * Math.sin(a)) }
+    next[c.id] = ui.skin === 'glaze' ? projectCharacterPoint(point, geometry.value, true) : point
   })
   layout.value = next
   scheduleSave()
@@ -101,15 +109,15 @@ const edges = computed(() => {
   const obstacles = []
   for (const c of chars.value) {
     const p = posOf(c)
-    if (p) obstacles.push({ x: p.x, y: p.y, w: NODE_W, h: NODE_H })
+    if (p) obstacles.push({ x: p.x, y: p.y, w: nodeW.value, h: nodeH.value })
   }
   for (const r of work.relations) {
     if (!ids.has(r.fromId) || !ids.has(r.toId)) continue
     const a = chars.value.find((c) => c.id === r.fromId)
     const b = chars.value.find((c) => c.id === r.toId)
     if (!posOf(a) || !posOf(b)) continue
-    const A = { ...posOf(a), w: NODE_W, h: NODE_H }
-    const B = { ...posOf(b), w: NODE_W, h: NODE_H }
+    const A = { ...posOf(a), w: nodeW.value, h: nodeH.value }
+    const B = { ...posOf(b), w: nodeW.value, h: nodeH.value }
     const sb = sideBetween(A, B)
     const fromSide = r.fromSide || sb.from
     const toSide = r.toSide || sb.to
@@ -122,7 +130,7 @@ const edges = computed(() => {
     if (!fa || !ta) continue
     /* 两端节点本体也是障碍：端口严格后，连线中段不得从节点身上穿过 */
     const obs = obstacles.filter((o) => !(o.x === A.x && o.y === A.y) && !(o.x === B.x && o.y === B.y))
-    obs.unshift({ x: A.x, y: A.y, w: NODE_W, h: NODE_H }, { x: B.x, y: B.y, w: NODE_W, h: NODE_H })
+    obs.unshift({ x: A.x, y: A.y, w: nodeW.value, h: nodeH.value }, { x: B.x, y: B.y, w: nodeW.value, h: nodeH.value })
     const g = routeEdge(fa, fromSide, ta, toSide, obs, 'bezier')
     out.push({ rel: r, ...g, dash: dashOf(r.style, ''), stroke: r.color || 'var(--accent)' })
   }
@@ -159,8 +167,8 @@ const bounds = computed(() => {
     if (!p) continue
     x0 = Math.min(x0, p.x)
     y0 = Math.min(y0, p.y)
-    x1 = Math.max(x1, p.x + NODE_W)
-    y1 = Math.max(y1, p.y + NODE_H)
+    x1 = Math.max(x1, p.x + nodeW.value)
+    y1 = Math.max(y1, p.y + nodeH.value)
   }
   if (x0 === Infinity) return { x: 0, y: 0, w: 600, h: 400 }
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
@@ -188,7 +196,7 @@ function hitCharAt(pt, excludeId) {
   for (const c of [...chars.value].reverse()) {
     if (c.id === excludeId) continue
     const p = posOf(c)
-    if (p && pt.x >= p.x && pt.x <= p.x + NODE_W && pt.y >= p.y && pt.y <= p.y + NODE_H) return c
+    if (p && pt.x >= p.x && pt.x <= p.x + nodeW.value && pt.y >= p.y && pt.y <= p.y + nodeH.value) return c
   }
   return null
 }
@@ -202,7 +210,7 @@ function onNodeDown(e, c) {
   const mx = e.clientX
   const my = e.clientY
   const move = (ev) => {
-    dragPos.set(c.id, { x: Math.round(orig.x + (ev.clientX - mx) / zoom.value), y: Math.round(orig.y + (ev.clientY - my) / zoom.value) })
+    dragPos.set(c.id, { x: Math.round(orig.x + (ev.clientX - mx) / zoom.value / geometry.value.scaleX), y: Math.round(orig.y + (ev.clientY - my) / zoom.value / geometry.value.scaleY) })
   }
   const up = () => {
     window.removeEventListener('mousemove', move)
@@ -255,7 +263,7 @@ const connPath = computed(() => {
   if (!c) return ''
   const from = work.liveCharacters.find((x) => x.id === c.fromId)
   const p = from && posOf(from)
-  const start = p ? anchorsOf({ ...p, w: NODE_W, h: NODE_H })[c.side] : c
+  const start = p ? anchorsOf({ ...p, w: nodeW.value, h: nodeH.value })[c.side] : c
   return `M ${start.x} ${start.y} L ${c.x} ${c.y}`
 })
 /* 关系几何（严格端口 + 绕行）：拖线编辑定位/已有关系复用 */
@@ -263,8 +271,8 @@ function relGeom(rel) {
   const a = chars.value.find((x) => x.id === rel.fromId)
   const b = chars.value.find((x) => x.id === rel.toId)
   if (!posOf(a) || !posOf(b)) return null
-  const A = { ...posOf(a), w: NODE_W, h: NODE_H }
-  const B = { ...posOf(b), w: NODE_W, h: NODE_H }
+  const A = { ...posOf(a), w: nodeW.value, h: nodeH.value }
+  const B = { ...posOf(b), w: nodeW.value, h: nodeH.value }
   const sb = sideBetween(A, B)
   const fromSide = rel.fromSide || sb.from
   const toSide = rel.toSide || sb.to
@@ -276,9 +284,9 @@ function relGeom(rel) {
   const obs = chars.value
     .map((c) => posOf(c))
     .filter(Boolean)
-    .map((p) => ({ x: p.x, y: p.y, w: NODE_W, h: NODE_H }))
+    .map((p) => ({ x: p.x, y: p.y, w: nodeW.value, h: nodeH.value }))
     .filter((o) => !(o.x === A.x && o.y === A.y) && !(o.x === B.x && o.y === B.y))
-  obs.unshift({ x: A.x, y: A.y, w: NODE_W, h: NODE_H }, { x: B.x, y: B.y, w: NODE_W, h: NODE_H })
+  obs.unshift({ x: A.x, y: A.y, w: nodeW.value, h: nodeH.value }, { x: B.x, y: B.y, w: nodeW.value, h: nodeH.value })
   return routeEdge(fa, fromSide, ta, toSide, obs, 'bezier')
 }
 function saveRelInput() {
@@ -288,7 +296,7 @@ function saveRelInput() {
   const from = chars.value.find((x) => x.id === st.fromId)
   const to = chars.value.find((x) => x.id === st.toId)
   if (!posOf(from) || !posOf(to)) return
-  const toSide = sideBetween({ ...posOf(from), w: NODE_W, h: NODE_H }, { ...posOf(to), w: NODE_W, h: NODE_H }).to
+  const toSide = sideBetween({ ...posOf(from), w: nodeW.value, h: nodeH.value }, { ...posOf(to), w: nodeW.value, h: nodeH.value }).to
   const label = st.value.trim()
   work.addRelation(st.fromId, st.toId, label || '关联', { fromSide: st.side, toSide })
 }
@@ -360,7 +368,7 @@ function createCharAt() {
   blankCtx.value = null
   if (!st) return
   const row = work.addCharacter()
-  layout.value = { ...layout.value, [row.id]: { x: Math.round(st.px), y: Math.round(st.py) } }
+  layout.value = { ...layout.value, [row.id]: projectCharacterPoint({ x: st.px, y: st.py }, geometry.value, true) }
   scheduleSave()
   work.selCharacterId = row.id
 }
@@ -394,11 +402,17 @@ function nodeStyle(c) {
   return {
     left: p.x + 'px',
     top: p.y + 'px',
-    width: NODE_W + 'px',
-    height: NODE_H + 'px',
+    width: nodeW.value + 'px',
+    height: nodeH.value + 'px',
     opacity: dimIds.value.has(c.id) ? 0.15 : 1,
     zIndex: work.selCharacterId === c.id ? 6 : 3
   }
+}
+/* 「编辑选中人物」（设计稿右下角那颗）：只在图上已选中节点时出现 */
+const selectedChar = computed(() => chars.value.find((c) => c.id === work.selCharacterId) || null)
+/* 页头右侧「发送为大纲引用卡」：复用列表页同一动作（设计稿 data-send-cite 的等价物） */
+function sendCite() {
+  if (selectedChar.value) work.sendCharToOutline(selectedChar.value.id)
 }
 function openDetail(c) {
   work.selCharacterId = c.id
@@ -417,7 +431,7 @@ function focusCharById(id) {
   tagFilter.value = []
   nextTick(() => {
     const p = posOf(c)
-    if (p) centerOn(p.x + NODE_W / 2, p.y + NODE_H / 2)
+    if (p) centerOn(p.x + nodeW.value / 2, p.y + nodeH.value / 2)
     flashIds.add(c.id)
     setTimeout(() => flashIds.delete(c.id), 1600)
   })
@@ -429,6 +443,7 @@ function maybeFocus() {
   }
 }
 watch(() => work.charFocusTick, maybeFocus)
+watch(() => ui.skin, () => nextTick(fitView))
 
 /* 关系图打开期间新增的人物：补布局坐标并持久化——否则 posOf 为 null → display:none，
  * 新人物在画布上隐身，须切视图才出现（v1.0.22 修复） */
@@ -457,16 +472,42 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="om-wrap">
+    <!-- 页头：设计稿 C 版在图上有一行标题、副题与右侧动作（琉光专属） -->
+    <header v-if="ui.skin === 'glaze'" class="gravity-dossier-heading rg-heading">
+      <h1>人物关系图</h1><span>人物与人物的关系 · 双击节点打开档案</span>
+      <button
+        type="button"
+        class="rg-head-action"
+        :disabled="!selectedChar"
+        :title="selectedChar ? '把选中人物发送为大纲画布上的引用卡' : '先在图上选中一个人物'"
+        @click="sendCite"
+      >发送为大纲引用卡</button>
+    </header>
     <div class="om-toolbar rg-toolbar">
       <span v-for="r in ['全部', '主角', '配角', '反派', '龙套']" :key="r" class="oc-chip" :class="{ on: roleFilter === r }" @click="roleFilter = r">{{ r }}</span>
-      <select v-model="tagFilter" class="rg-tagselect" multiple title="按标签筛选（Ctrl+点击多选）">
+      <!-- 琉光：按设计稿 C 版用干净的下拉（原生 multiple 会被渲染成 22px 高的列表框，挤成一团）；
+           其它皮肤继续用原生多选。v-model 仍绑 tagFilter 数组（focusCharById 会直接置空） -->
+      <NSelect
+        v-if="ui.skin === 'glaze'"
+        v-model:value="tagFilter"
+        class="rg-tagpick"
+        multiple
+        clearable
+        size="small"
+        :options="allTags.map((t) => ({ label: t, value: t }))"
+        placeholder="全部标签"
+        :max-tag-count="1"
+        title="按标签筛选"
+      />
+      <select v-else v-model="tagFilter" class="rg-tagselect" multiple title="按标签筛选（Ctrl+点击多选）">
         <option v-for="t in allTags" :key="t" :value="t">{{ t }}</option>
       </select>
       <span style="flex: 1"></span>
       <span v-if="isolated.length" class="oc-chip oc-warn" :title="'暂无任何关系：' + isolated.map((c) => c.name).join('、')" @click="locateIsolated(isolated[0])">孤岛 {{ isolated.length }}</span>
       <span class="oc-count">{{ chars.length }} 人 · {{ edges.length }} 条关系</span>
-      <button class="om-btn" title="圆形排布" @click="circleAll"><OIcon name="circle-layout" :size="14" /></button>
-      <button class="om-btn" title="网格排布" @click="gridAll"><OIcon name="grid" :size="14" /></button>
+      <!-- 布局切换：琉光按设计稿用文字按钮（title 与 om-btn 类必须保留，多个脚本按 title 点击） -->
+      <button class="om-btn" :class="{ 'om-btn-label': ui.skin === 'glaze' }" title="圆形排布" @click="circleAll"><OIcon class="om-btn-icon" name="circle-layout" :size="14" /><span v-if="ui.skin === 'glaze'">圆形</span></button>
+      <button class="om-btn" :class="{ 'om-btn-label': ui.skin === 'glaze' }" title="网格排布" @click="gridAll"><OIcon class="om-btn-icon" name="grid" :size="14" /><span v-if="ui.skin === 'glaze'">网格</span></button>
       <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)"><OIcon name="minus" :size="14" /></button>
       <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)"><OIcon name="plus" :size="14" /></button>
       <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
@@ -530,7 +571,7 @@ onBeforeUnmount(() => {
           @dblclick.stop="openDetail(c)"
         >
           <img v-if="avatarOf(c)" :src="avatarOf(c)" class="rg-avatar" />
-          <div v-else class="rg-avatar rg-avatar-empty">人</div>
+          <div v-else class="rg-avatar rg-avatar-empty">{{ ui.skin === 'glaze' ? (c.name || '人').slice(0, 1) : '人' }}</div>
           <div class="rg-meta">
             <div class="rg-name">{{ c.name || '未命名' }}</div>
             <span class="rg-role" :style="{ color: ROLE_COLOR[c.role] || 'var(--text-dim)', borderColor: ROLE_COLOR[c.role] || 'var(--border)' }">{{ c.role || '未定' }}</span>
@@ -604,6 +645,12 @@ onBeforeUnmount(() => {
       <div class="oc-quick-btns">
         <button @click="work.charView = 'list'">去创建人物</button>
       </div>
+    </div>
+
+    <!-- 图谱内的操作提示与「编辑选中人物」（设计稿右下角那颗；琉光专属） -->
+    <div v-if="ui.skin === 'glaze'" class="rg-overlay">
+      <span class="rg-hint">拖动人物排列 · 从节点边缘连线 · 双击打开详情 · 右键操作</span>
+      <button v-if="selectedChar" type="button" class="rg-open-person" @click="openDetail(selectedChar)">编辑选中人物 ↗</button>
     </div>
   </div>
 </template>

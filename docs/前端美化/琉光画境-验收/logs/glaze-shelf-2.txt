@@ -1,0 +1,33 @@
+PASS isolated verification profile
+PASS verification profile does not redirect to another data directory
+PASS shelf uses glaze effective skin
+PASS glaze tokens override original theme on root and teleported surfaces
+PASS all remaining works are accessible
+PASS six cover choices and default-volume choice are preserved
+PASS minimum desktop width has no horizontal overflow
+PASS navigation never overlays the scrollable book area
+PASS empty search disables only work navigation
+PASS search changes the featured work
+PASS single click opens the correct work
+PASS workbench shares the selected glaze skin
+PASS keyboard Enter opens exactly once
+PASS dock opens glaze outline
+PASS dock opens glaze lore
+PASS dock opens glaze characters
+PASS dock opens glaze snippets
+PASS dock opens glaze chapters
+PASS book menu does not trigger opening
+PASS shared edit form persists title/author/introduction and refreshes shelf
+PASS shared create form creates a work with its default volume
+PASS delete remains recoverable soft deletion
+PASS visible picker switches back and persists original skin
+PASS failed skin save retains current skin and theme
+PASS settings window shares glaze skin with skin picker
+PASS settings preference synchronizes to main
+PASS skin survives reload from IndexedDB
+PASS original theme xuan retained
+PASS original theme parchment retained
+PASS original theme night retained
+PASS empty library retains create/settings/skin controls
+PASS reduced motion disables floating animation
+ALL SKIN INTEGRATION CHECKS PASSED

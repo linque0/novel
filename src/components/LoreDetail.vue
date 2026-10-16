@@ -20,6 +20,12 @@ const ui = useUiStore()
 const node = computed(() => (ui.loreDetailId ? work.mubu.find((n) => n.id === ui.loreDetailId && !n.deletedAt) || null : null))
 const entries = computed(() => (node.value ? work.loreLinksOf('mubu', node.value.id) : []))
 const hoverLink = ref(null)
+const directChildren = computed(() => node.value ? work.mubuChildren(node.value.id) : [])
+function descendantContent(parentId, depth = 0) {
+  return work.mubuChildren(parentId).flatMap(child => [
+    { ...child, depth }, ...descendantContent(child.id, depth + 1)
+  ])
+}
 
 /** 面包屑：根 → …… → 当前（祖先可点，就地切换详情页） */
 const crumbs = computed(() => {
@@ -119,12 +125,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </div>
 
     <div class="ldt-body">
+      <div v-if="ui.isStudioSkin" class="gravity-detail-orbit" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
       <h1 class="ldt-title">{{ (node.text || '').trim() || '（空节点）' }}</h1>
       <div v-if="(node.tags || []).length" class="ldt-tags">
         <button v-for="t in node.tags" :key="t" class="ob-tag" type="button" :style="tagStyle(t)" :title="`筛选标签「${t}」`" @click="filterTag(t)">{{ t }}</button>
       </div>
 
-      <div class="ldt-sec">
+      <section v-if="ui.isStudioSkin && directChildren.length" class="ldt-sec gravity-detail-content">
+        <article v-for="child in directChildren" :key="child.id" class="gravity-detail-article">
+          <div class="ldt-sec-head"><h2>{{ child.text || '（空节点）' }}</h2><NButton size="tiny" @click="goTo(child.id)">查看条目 ↗</NButton></div>
+          <p v-for="descendant in descendantContent(child.id)" :key="descendant.id" :style="{ paddingLeft: descendant.depth * 16 + 'px' }">{{ descendant.text }}</p>
+        </article>
+      </section>
+
+      <div class="ldt-sec ldt-relations">
         <div class="ldt-sec-head">
           <span class="ldt-sec-title">关联关系</span>
           <span class="ldt-sec-sub">{{ entries.length }} 条</span>
@@ -141,7 +155,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <div v-else class="ldt-empty">暂无关联关系——点右上「添加关系」，或在幕布条目上右键「设置关系…」</div>
       </div>
 
-      <div class="ldt-sec">
+      <div class="ldt-sec ldt-graph-section">
         <div class="ldt-sec-head">
           <span class="ldt-sec-title">关系图谱</span>
           <span class="ldt-sec-sub">拖动邻居调整布局（自动记忆）</span>
@@ -151,21 +165,25 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </div>
 
-      <div class="ldt-sec">
+      <div class="ldt-sec ldt-children">
         <div class="ldt-sec-head">
           <span class="ldt-sec-title">子条目</span>
           <span class="ldt-sec-sub">{{ kids.length }} 项</span>
         </div>
         <div v-if="kids.length" class="ldt-kids">
           <div
-            v-for="k in kids"
+            v-for="(k, index) in kids"
             :key="k.id"
             class="ldt-kid"
             :style="{ paddingLeft: 6 + k.depth * 20 + 'px' }"
             :title="k.text"
+            role="button"
+            tabindex="0"
             @click="goTo(k.id)"
+            @keydown.enter="goTo(k.id)"
           >
             <span class="ldt-kid-dot" :class="{ 'has-children': k.hasChildren }" />
+            <span v-if="ui.isStudioSkin" class="gravity-child-number">{{ String(index + 1).padStart(2, '0') }}</span>
             <span class="ldt-kid-text">{{ k.text }}</span>
           </div>
         </div>

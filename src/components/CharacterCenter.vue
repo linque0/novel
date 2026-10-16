@@ -130,14 +130,15 @@ onMounted(() => {
   <TaskLauncher module="characters" />
   <!-- 关系图视图：整幅画布（8.8.3）；列表视图：人物详情 -->
   <CharacterGraph v-if="work.charView === 'graph'" />
-  <div v-else-if="c" style="flex: 1; overflow: auto; padding: 22px 34px">
-    <div style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px">
-      <img v-if="avatarUrl" :src="avatarUrl" class="avatar-lg" />
-      <div v-else class="avatar-lg" style="display: flex; align-items: center; justify-content: center; font-size: 30px; color: var(--text-dim)">人</div>
+  <div v-else-if="c" class="character-surface" style="flex: 1; overflow: auto; padding: 22px 34px">
+    <header v-if="ui.isStudioSkin" class="gravity-dossier-heading"><h1>人物档案</h1><span>人物塑造 · 资料与关系</span><NButton size="small" @click="work.sendCharToOutline(c.id)">发送为大纲引用卡</NButton></header>
+    <div class="character-identity" style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px">
+      <div class="character-portrait"><img v-if="avatarUrl" :src="avatarUrl" class="avatar-lg" :alt="c.name || '人物头像'" /><div v-else class="avatar-lg character-initial">{{ (c.name || '人').slice(0, 1) }}</div></div>
       <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
-        <div style="display: flex; gap: 8px">
+        <div class="character-name-row" style="display: flex; gap: 8px">
+          <label v-if="ui.isStudioSkin" class="gravity-field-label">姓名</label>
           <NInput class="rp-input" :value="c.name" placeholder="姓名" style="flex: 1; font-size: 16px; font-weight: 700" @update:value="(v) => work.updateCharacter(c.id, { name: v })" />
-          <NInput class="rp-input" :value="c.role" placeholder="角色定位（可自定义）" style="width: 170px" @update:value="(v) => work.updateCharacter(c.id, { role: v })" />
+          <label v-if="ui.isStudioSkin" class="gravity-field-label">角色定位</label><NInput class="rp-input character-role" :value="c.role" placeholder="角色定位（可自定义）" style="width: 170px" @update:value="(v) => work.updateCharacter(c.id, { role: v })" />
         </div>
         <div class="role-chips">
           <span
@@ -148,7 +149,8 @@ onMounted(() => {
             @click="work.updateCharacter(c.id, { role: c.role === r ? '' : r })"
           >{{ r }}</span>
         </div>
-        <div style="display: flex; gap: 8px">
+        <div class="character-alias-row" style="display: flex; gap: 8px">
+          <label v-if="ui.isStudioSkin" class="gravity-field-label">别名</label>
           <NInput class="rp-input" :value="c.aliases" placeholder="别名（用 / 分隔）" style="flex: 1" @update:value="(v) => work.updateCharacter(c.id, { aliases: v })" />
           <NButton size="small" @click="changeAvatar">{{ avatarUrl ? '换头像' : '设头像' }}</NButton>
           <NButton size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">恍然梦：丰富</NButton>
@@ -168,6 +170,8 @@ onMounted(() => {
       </div>
     </div>
 
+    <div class="character-sections">
+    <section class="character-fields">
     <hr class="divider" />
     <div class="rp-title">自定义字段</div>
     <div v-for="[k, v] in fieldsRows" :key="k" class="field-row">
@@ -176,7 +180,9 @@ onMounted(() => {
       <NButton size="tiny" quaternary @click="removeField(k)"><OIcon name="close" :size="11" /></NButton>
     </div>
     <NButton size="tiny" @click="addField"><OIcon name="plus" :size="11" /> 字段</NButton>
+    </section>
 
+    <section class="character-relations">
     <hr class="divider" />
     <div class="rp-title">人物关系</div>
     <div v-for="r in myRelations" :key="r.id" class="field-row" style="align-items: center">
@@ -189,15 +195,19 @@ onMounted(() => {
       <NInput v-model:value="relLabel" size="small" placeholder="关系（如：师徒 / 宿敌）" style="flex: 1" @keyup.enter="addRelation" />
       <NButton size="tiny" @click="addRelation">添加</NButton>
     </div>
+    </section>
 
+    <section class="character-crosslinks">
     <hr class="divider" />
     <div class="rp-title">关联关系（设定 / 人物）</div>
     <LoreRelRows v-if="relEntries.length" :entries="relEntries" @pick="pickRel" />
     <div v-else style="font-size: 12px; color: var(--text-dim); padding: 2px 0 6px">暂无关联关系（如：人物「属于」某地点）</div>
     <NButton size="tiny" @click="openRelPanel"><OIcon name="plus" :size="11" /> 添加关联</NButton>
+    </section>
 
+    <section class="character-biography">
     <hr class="divider" />
-    <div class="rp-title">人物小传（外貌 / 性格 / 背景 / 动机……）</div>
+    <div class="rp-title"><template v-if="ui.isStudioSkin">人物小传 <small class="gravity-section-caption">外貌 / 性格 / 背景 / 动机</small></template><template v-else>人物小传（外貌 / 性格 / 背景 / 动机……）</template></div>
     <textarea
       class="rp-textarea"
       style="min-height: 220px; font-size: 14px; line-height: 1.9"
@@ -206,6 +216,8 @@ onMounted(() => {
       @input="(e) => work.updateCharacter(c.id, { content: e.target.value })"
       @contextmenu="onCtx"
     ></textarea>
+    </section>
+    </div>
   </div>
   <div v-else class="empty-shelf" style="padding-top: 140px">
     <div class="big">众生有相</div>

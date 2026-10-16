@@ -82,7 +82,7 @@ try {
   await evaluate('document.querySelector(".gravity-main-book .gravity-book-open").click()')
   await wait('__skinCheck.ui.view==="work" && !!document.querySelector(".wb-body")')
   check(await evaluate('__skinCheck.work.work.id') === expected, 'single click opens the correct work')
-  check(await evaluate('document.body.dataset.skin==="original" && __skinCheck.ui.skin==="gravity"'), 'workbench retains original appearance and selected preference')
+  check(await evaluate('document.body.dataset.skin==="gravity" && __skinCheck.ui.skin==="gravity"'), 'workbench shares the selected gravity skin')
   await evaluate('__skinCheck.work.closeWork().then(()=>true)')
   await wait('!!document.querySelector(".gravity-shelf")')
   await evaluate(`(()=>{window.__skinOpenCount=0;__skinCheck.work.$onAction(({name})=>{if(name==='open')__skinOpenCount++});document.querySelector('.gravity-main-book .gravity-book-open').focus();return true})()`)
@@ -94,7 +94,7 @@ try {
   for (const key of ['outline','lore','characters','snippets','chapters']) {
     await evaluate(`(()=>{const labels={outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感',chapters:'正文'};[...document.querySelectorAll('.gravity-dock button')].find(b=>b.textContent.includes(labels[${JSON.stringify(key)}])).click();return true})()`)
     await wait(`__skinCheck.ui.view==='work' && __skinCheck.work.tab===${JSON.stringify(key)}`)
-    check(await evaluate('document.body.dataset.skin==="original"'), 'dock opens original ' + key)
+    check(await evaluate('document.body.dataset.skin==="gravity"'), 'dock opens gravity ' + key)
     await evaluate('__skinCheck.work.closeWork().then(()=>true)');await wait('!!document.querySelector(".gravity-shelf")')
   }
 
@@ -139,7 +139,9 @@ try {
     await c.sleep(80)
   }
   panel = await connect('panel=', '9223');await init(panel)
-  check(await evaluate('document.body.dataset.skin==="original" && !!document.querySelector(".skin-picker")', panel), 'settings window keeps original appearance with skin picker')
+  await wait('!!document.querySelector(".sw-root")', panel)
+  await wait('document.body.dataset.skin==="gravity" && document.querySelector(".app-root").dataset.skin==="gravity"', panel)
+  check(await evaluate('document.body.dataset.skin==="gravity" && document.querySelector(".app-root").dataset.skin==="gravity" && !!document.querySelector(".skin-picker")', panel), 'settings window shares gravity skin with skin picker')
   await evaluate('__skinCheck.ui.setSkin("original").then(()=>true)', panel)
   await wait('__skinCheck.ui.skin==="original" && !document.querySelector(".gravity-shelf")')
   check(true, 'settings preference synchronizes to main')

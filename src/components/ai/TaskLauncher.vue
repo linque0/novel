@@ -3,8 +3,10 @@ import { computed, ref } from 'vue'
 import { NButton, NSelect, NInput, NModal } from 'naive-ui'
 import { useWorkStore } from '../../stores/work'
 import { useAiStore } from '../../stores/ai'
+import { useUiStore } from '../../stores/ui'
 import { TASK_PROFILES } from '../../services/ai/task-profiles.js'
 const props = defineProps({ module: {type:String,required:true} })
+const ui = useUiStore()
 const work=useWorkStore(),ai=useAiStore(),show=ref(false),type=ref(''),requirement=ref(''),chapterId=ref(null),chapterIds=ref([]),targetId=ref(null),selection=ref(''),error=ref('')
 const options=computed(()=>Object.entries(TASK_PROFILES).filter(([,p])=>p.module===props.module).map(([value,p])=>({value,label:p.label})))
 const selected=computed(()=>TASK_PROFILES[type.value])
@@ -33,7 +35,9 @@ async function start(){
 }
 </script>
 <template>
-  <div class="module-agent"><NButton size="tiny" :disabled="!work.work||ai.busy" @click="open">恍然梦 · {{ {chapters:'正文',outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感'}[module] }}助手</NButton><span>生成草稿与提案，确认后保存</span></div>
+  <Teleport defer to="#studio-task-actions" :disabled="!ui.isStudioSkin">
+    <div class="module-agent"><NButton size="tiny" :disabled="!work.work||ai.busy" @click="open">恍然梦 · {{ {chapters:'正文',outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感'}[module] }}助手</NButton><span v-if="!ui.isStudioSkin">生成草稿与提案，确认后保存</span></div>
+  </Teleport>
   <NModal v-model:show="show" preset="card" title="恍然梦专用任务" style="width:580px;max-width:95vw" :mask-closable="!ai.busy">
     <div class="task-form">
       <label>本模块操作<NSelect v-model:value="type" :options="options" :disabled="ai.busy" /></label>

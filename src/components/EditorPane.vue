@@ -240,7 +240,7 @@ async function clearGoal() {
 <template>
   <TaskLauncher v-if="!ui.readMode" module="chapters" />
   <div class="editor-wrap" :class="{ 'read-mode': ui.readMode }">
-    <div class="editor-head" v-if="work.activeChapter && !ui.readMode">
+    <div class="editor-head" v-if="work.activeChapter && !ui.readMode && !ui.isStudioSkin">
       <input
         class="title-input"
         :value="work.activeChapter.title"
@@ -274,6 +274,17 @@ async function clearGoal() {
       </div>
       <div v-show="!chapterPopped" class="rich-host paper-texture" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
         <div class="ed-read-col">
+          <header v-if="ui.isStudioSkin && !ui.readMode" class="gravity-manuscript-head">
+            <div class="gravity-manuscript-location"><span>{{ work.liveVolumes.find(v => v.id === work.activeChapter.volumeId)?.title || '未分卷' }}</span><b>{{ chapterNo }}</b></div>
+            <div class="editor-head">
+              <input class="title-input" :value="work.activeChapter.title" placeholder="章节标题" :readonly="chapterPopped" @change="onTitle" @keyup.enter="$event.target.blur()" />
+              <div class="gravity-manuscript-status">
+                <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
+                <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter?.status]">{{ work.activeChapter?.wordCount || 0 }} 字</NTag>
+                <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
+              </div>
+            </div>
+          </header>
           <!-- 阅读模式专用头（v1.0.26）：巨排章号 + 章题下划短线；随正文滚动，不进入文档模型 -->
           <header v-show="ui.readMode" class="ed-read-head">
             <div class="ed-read-no" aria-hidden="true">{{ chapterNo }}</div>

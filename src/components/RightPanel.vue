@@ -11,6 +11,7 @@ import { ANNOTATION_KINDS, normalizeNoteColor, noteKindLabel, focusNoteMark, rec
 const work = useWorkStore()
 const ui = useUiStore()
 const ch = computed(() => work.activeChapter)
+const rightTab = ref('notes')
 
 /* ---------- 正文批注（右侧批注栏）：逐条对应正文中被批注的文字 ---------- */
 const notes = computed(() => (ch.value ? work.annotationsForChapter(ch.value.id) : []))
@@ -136,12 +137,13 @@ watch(
   <div v-if="ch" class="right-panel">
     <!-- 吸附顶条：内容滚动时始终可见，保证任意滚动位置都能收起 -->
     <div class="rp-head">
-      <span class="rp-cap">批注栏</span>
+      <span class="rp-cap">{{ ui.isStudioSkin ? '批注与资料' : '批注栏' }}</span>
       <button class="rp-fold" title="收起批注栏，留出正文空间（从右缘细轨可再展开）" @click="ui.setPref('rightPanelOpen', false)">
         <OIcon name="caret-right" :size="13" />
       </button>
     </div>
-    <div class="rp-section">
+    <div v-if="ui.isStudioSkin" class="gravity-right-tabs"><button :class="{on:rightTab==='notes'}" @click="rightTab='notes'">批注</button><button :class="{on:rightTab==='materials'}" @click="rightTab='materials'">资料</button></div>
+    <div v-show="!ui.isStudioSkin || rightTab === 'notes'" class="rp-section rp-notes">
       <div class="rp-title">
         本章批注
         <span class="rp-title-tools">
@@ -212,6 +214,7 @@ watch(
       </div>
     </div>
 
+    <div v-show="!ui.isStudioSkin || rightTab === 'materials'" class="rp-materials">
     <div class="rp-section">
       <div class="rp-title">
         本章大纲
@@ -265,6 +268,7 @@ watch(
         状态：{{ { draft: '草稿', done: '完成', revise: '待修改' }[ch.status] }}<br />
         更新：{{ new Date(ch.updatedAt || Date.now()).toLocaleString('zh-CN') }}
       </div>
+    </div>
     </div>
   </div>
 </template>

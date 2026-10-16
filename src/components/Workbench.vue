@@ -1,8 +1,9 @@
 <script setup>
-import { computed, ref, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, provide, onMounted, onBeforeUnmount } from 'vue'
 import { NButton, NSelect, NDropdown, NModal, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
+import { useAiStore } from '../stores/ai'
 import OIcon from './OIcon.vue'
 import ChapterTree from './ChapterTree.vue'
 import OutlineSidebar from './OutlineSidebar.vue'
@@ -17,11 +18,17 @@ import SnippetCenter from './SnippetCenter.vue'
 import RightPanel from './RightPanel.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
 import DLinkPopover from './DLinkPopover.vue'
+import InspirationPrompt from './InspirationPrompt.vue'
 import { popOut, isPopped, focusPopped } from '../services/panelwindows'
 
 const work = useWorkStore()
 const ui = useUiStore()
+const ai = useAiStore()
+const inspirationPrompt = ref('把这条灵感扩展成一个场景，保留悬念。')
+provide('inspirationPrompt', inspirationPrompt)
 const msg = useMessage()
+const studio = computed(() => ui.isStudioSkin)
+const tabIcons = { chapters: 'manuscript', outline: 'network', characters: 'user', lore: 'layers', snippets: 'sparkle' }
 
 /* ---------- 书签（章节快捷收藏） ---------- */
 const bookmarkOptions = computed(() => {
@@ -33,7 +40,7 @@ const bookmarkOptions = computed(() => {
 function onBookmarkSelect(key) {
   const b = work.bookmarks.find((x) => x.id === key)
   if (!b) return
-  work.tab = 'chapters'
+  selectTab('chapters')
   work.selChapterId = b.targetId
   const c = work.chapters.find((x) => x.id === b.targetId)
   if (c) work.selVolumeId = c.volumeId
@@ -46,6 +53,27 @@ const tabs = [
   { key: 'lore', icon: '设', label: '设定' },
   { key: 'snippets', icon: '灵', label: '灵感' }
 ]
+const navTabs = computed(() => studio.value ? ['chapters', 'outline', 'lore', 'characters', 'snippets'].map(key => tabs.find(t => t.key === key)) : tabs)
+function selectTab(key) {
+  ui.loreDetailId = null
+  work.tab = key
+}
+const moreOptions = computed(() => [
+  { label: '拆出独立窗口', key: 'split', children: splitOptions.value.map(o => ({ ...o, key: 'split:' + o.key })) },
+  { label: '章节书签', key: 'bookmarks', children: bookmarkOptions.value.map(o => ({ ...o, key: 'bookmark:' + o.key })) },
+  { label: ui.focusMode ? '退出沉浸' : '沉浸写作', key: 'focus' },
+  ...(work.tab === 'chapters' ? [{ label: ui.readMode ? '退出阅读' : '阅读模式', key: 'read' }] : []),
+  { label: '切回原版皮肤', key: 'original' },
+  { label: '外观与设置', key: 'settings' }
+])
+function onMore(key) {
+  if (key.startsWith('split:')) return onSplit(key.slice(6))
+  if (key.startsWith('bookmark:')) return onBookmarkSelect(key.slice(9))
+  if (key === 'focus') ui.focusMode = !ui.focusMode
+  if (key === 'read') ui.readMode = !ui.readMode
+  if (key === 'original') ui.setSkin('original')
+  if (key === 'settings') openSettings()
+}
 
 const fmtTime = (t) => {
   const d = new Date(t)
@@ -171,8 +199,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <div style="display: flex; flex-direction: column; height: 100%">
-    <div v-if="!(ui.readMode && work.tab === 'chapters')" class="topbar">
+  <div class="workbench-shell" :class="{ 'is-focus': ui.focusMode, 'is-reading': ui.readMode }" :data-module="work.tab" style="display: flex; flex-direction: column; height: 100%">
+    <header v-show="studio" class="gravity-masthead studio-masthead">
+      <button class="gravity-work-brand" title="返回书架" @click="work.closeWork()"><span class="gravity-brand-mark">坊</span><span>小说工坊</span></button>
+      <div class="gravity-breadcrumb"><span :title="work.work?.title">{{ work.work?.title }}</span><i>/</i>{{ curTabLabel }}</div>
+      <span class="save-badge"><span class="save-dot" :class="badgeClass"></span>{{ badgeText }}</span>
+      <NButton size="small" quaternary @click="ui.searchOpen = true"><OIcon name="search" :size="18" /> 搜索</NButton>
+      <div id="studio-task-actions"></div>
+      <NButton size="small" :type="ui.aiDrawerOpen ? 'primary' : 'default'" :aria-pressed="ui.aiDrawerOpen" title="展开或收起恍然梦对话" @click="ui.aiDrawerOpen = !ui.aiDrawerOpen"><OIcon name="star" :size="14" /> 恍然梦</NButton>
+      <NDropdown trigger="click" :options="moreOptions" @select="onMore"><NButton size="small" quaternary title="拆窗、书签、沉浸、阅读与皮肤">更多 <OIcon name="caret-down" :size="11" /></NButton></NDropdown>
+    </header>
+    <div v-if="!studio && !(ui.readMode && work.tab === 'chapters')" class="topbar">
       <NButton size="small" quaternary @click="work.closeWork()"><OIcon name="back" :size="14" /> 书架</NButton>
       <span class="brand" style="font-size: 15px">{{ work.work?.title }}</span>
       <span class="save-badge">
@@ -193,7 +230,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     </div>
 
     <!-- 阅读模式顶栏（正文页）：章节标题 + 状态 + 搜索/设置，其余控件收入阅读态外 -->
-    <div v-else class="topbar">
+    <div v-else-if="!studio" class="topbar">
       <NButton size="small" quaternary title="退出阅读模式（Esc）" @click="ui.readMode = false"><OIcon name="back" :size="14" /> 退出阅读</NButton>
       <span class="brand" style="font-size: 15px">{{ work.activeChapter?.title || work.work?.title }}</span>
       <span class="save-badge">
@@ -207,36 +244,43 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
     <div class="wb-body">
       <div v-if="!ui.focusMode && !ui.readMode" class="nav-rail">
+        <button v-if="studio" class="rail-item gravity-rail-home" title="返回书架" @click="work.closeWork()"><OIcon name="books" :size="18" /><span class="rail-label">书架</span></button>
         <div
-          v-for="t in tabs"
+          v-for="t in navTabs"
           :key="t.key"
           class="rail-item"
           :class="{ active: work.tab === t.key }"
+          :aria-current="work.tab === t.key ? 'page' : undefined"
           role="button"
           tabindex="0"
-          @click="work.tab = t.key"
-          @keydown.enter="work.tab = t.key"
+          @click="selectTab(t.key)"
+          @keydown.enter="selectTab(t.key)"
+          @keydown.space.prevent="selectTab(t.key)"
         >
           <div style="text-align: center">
-            <div class="ico">{{ t.icon }}</div>
+            <div class="ico"><OIcon v-if="studio" :name="tabIcons[t.key]" :size="18" /><template v-else>{{ t.icon }}</template></div>
             <div class="rail-label">{{ t.label }}</div>
           </div>
         </div>
         <!-- 恍然梦：独立功能入口，点击开合右侧 AI 界面（不切换中央模块） -->
         <div
+          v-if="!studio"
           class="rail-item rail-item-ai"
           :class="{ active: ui.aiDrawerOpen }"
+          :aria-pressed="ui.aiDrawerOpen"
           role="button"
           tabindex="0"
           title="恍然梦：AI 写作助手（在右侧弹出，不挤压原界面）"
           @click="ui.aiDrawerOpen = !ui.aiDrawerOpen"
           @keydown.enter="ui.aiDrawerOpen = !ui.aiDrawerOpen"
+          @keydown.space.prevent="ui.aiDrawerOpen = !ui.aiDrawerOpen"
         >
           <div style="text-align: center">
-            <div class="ico">梦</div>
+            <div class="ico"><OIcon v-if="studio" name="star" :size="18" /><template v-else>梦</template></div>
             <div class="rail-label">恍然梦</div>
           </div>
         </div>
+        <button v-if="studio" class="rail-item" title="设置" @click="openSettings"><OIcon name="gear" :size="18" /><span class="rail-label">设置</span></button>
       </div>
 
       <div v-if="!ui.focusMode && !ui.readMode && !modulePopped" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
@@ -284,6 +328,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </button>
 
       <RightPanel v-if="!ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && ui.rightPanelOpen" />
+
+      <InspirationPrompt v-if="ui.skin === 'gravity' && work.tab === 'snippets' && !ui.aiDrawerOpen && !aiPopped && !modulePopped && !ui.focusMode && !ui.readMode" />
 
       <!-- 恍然梦停靠列：参与 flex 布局，与原界面并排显示（不遮挡）；左缘可拖宽，拆出独立窗口后此列隐藏 -->
       <div

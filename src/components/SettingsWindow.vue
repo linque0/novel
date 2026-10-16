@@ -21,6 +21,8 @@ import { useUiStore, FONT_MAP, LATIN_MAP } from '../stores/ui'
 import { backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles, getDataLocation, pickDataDir, openDataFolder, moveDataDir, cleanOldLocation, openOldFolder, clearDataPointer } from '../services/fileio'
 import { broadcastAppEvent } from '../services/appbus'
+import gravityPlanet from '../assets/skins/gravity-planet.png'
+import glazeRibbon from '../assets/skins/glaze-ribbon.png'
 
 const ui = useUiStore()
 
@@ -197,6 +199,7 @@ async function clearStalePointer() {
 
     <div class="sw-body">
       <nav class="sw-nav">
+        <div v-if="ui.isStudioSkin" class="gravity-settings-intro"><span>偏好设置</span><h2>你的<br />创作手感。</h2></div>
         <button
           v-for="p in PAGES"
           :key="p.key"
@@ -213,20 +216,21 @@ async function clearStalePointer() {
         </button>
       </nav>
 
-      <section class="sw-content">
+      <section class="sw-content" :class="{ 'sw-appearance': page === 'appearance' }">
         <!-- 外观 -->
         <template v-if="page === 'appearance'">
+          <div class="sw-appearance-controls">
           <h2 class="sw-h serif">外观</h2>
           <p class="sw-desc">皮肤、主题、字体与字号，改动即时生效并同步到全部窗口</p>
           <div class="sw-card">
             <div class="sw-row">
-              <div class="sw-row-main"><b>工坊皮肤</b><i>引力书舱首批仅应用于书架，其他页面沿用原版</i></div>
+              <div class="sw-row-main"><b>工坊皮肤</b><i>书架、创作工作台与独立窗口统一切换</i></div>
               <SkinPicker />
             </div>
-            <div class="sw-row">
-              <div class="sw-row-main"><b>主题</b><i>宣纸 / 羊皮纸 / 暗夜书房</i></div>
+            <div class="sw-row sw-theme-row">
+              <div class="sw-row-main"><b>原版配色主题</b><i>宣纸 / 羊皮纸 / 暗夜书房，切回原版时使用</i></div>
               <span class="chips">
-                <span v-for="t in THEMES" :key="t.key" class="chip" :class="{ on: ui.theme === t.key }" @click="ui.setPref('theme', t.key)">{{ t.label }}</span>
+                <button v-for="t in THEMES" :key="t.key" class="chip" :class="[{ on: ui.theme === t.key }, 'theme-' + t.key]" :aria-pressed="ui.theme === t.key" @click="ui.setPref('theme', t.key)"><span v-if="ui.isStudioSkin" class="gravity-theme-sample" aria-hidden="true"><i></i></span><span>{{ t.label }}</span></button>
               </span>
             </div>
             <div class="sw-row">
@@ -246,6 +250,11 @@ async function clearStalePointer() {
               </span>
             </div>
           </div>
+          </div>
+          <aside v-if="ui.isStudioSkin" class="gravity-type-preview" aria-label="正文字体预览">
+            <div class="gravity-preview-art"><img :src="ui.skin === 'glaze' ? glazeRibbon : gravityPlanet" alt="" /><span>阅读预览</span></div>
+            <div class="gravity-preview-copy" :style="{ fontFamily: 'var(--editor-font)', fontSize: ui.fontSize + 'px' }"><small>小说工坊 · 创作片刻</small><h3>第一章　初雪</h3><p>穹顶大厅的钟声在雾中回荡了十二下。</p><p>夜色漫过舷窗，远处的星辰缓缓亮起。她翻开手边的书，故事便有了新的引力。</p><small>跟随当前中文字体、西文字体与字号 · {{ ui.fontSize }} px</small></div>
+          </aside>
         </template>
 
         <!-- 模型设置 -->

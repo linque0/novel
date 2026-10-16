@@ -97,8 +97,8 @@ function onCtx(e) {
 
 <template>
   <TaskLauncher module="outline" />
-  <div style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+  <div class="outline-surface" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
+    <div class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">大纲</span>
       <span style="font-size: 12px; color: var(--text-dim)">自由模块画布 · 关系链接联动 · 文本与画布双视图</span>
       <button class="om-btn" title="撤销" :disabled="!work.olUndo.length" @click="work.olnodeUndo()">↶</button>
@@ -113,7 +113,7 @@ function onCtx(e) {
     <OutlineCanvas v-if="work.outlineView === 'canvas'" style="flex: 1; min-height: 0" />
 
     <template v-else>
-      <p v-if="cur" style="font-size:12px;color:var(--text-dim)">{{ cur.outlineNature==='written'?'已写内容纲 · 来源变化后需要重新总结':'未来大纲计划' }} · {{ cur.progress==='completed'?'已完成':cur.progress==='drafted'?'已写待确认':'尚未完成' }}</p>
+      <p v-if="cur" class="ol-meta" style="font-size:12px;color:var(--text-dim)"><span class="ol-meta-tag">{{ cur.outlineNature==='written'?'已写内容纲 · 来源变化后需要重新总结':'未来大纲计划' }}</span><span class="ol-meta-state">{{ cur.progress==='completed'?'已完成':cur.progress==='drafted'?'已写待确认':'尚未完成' }}</span></p>
       <div v-if="cur" class="ol-editor-head">
         <input
           v-if="canEditTitle(cur)"
@@ -148,7 +148,7 @@ function onCtx(e) {
         </NPopover>
         <button class="ol-tb" title="清除格式" @mousedown.prevent @click="fmt('removeFormat')">清除</button>
         <span class="tb-sep" />
-        <span style="font-size: 11px; color: var(--text-dim)">选中文字后右键可「添加关系链接」；[[标题]] 令牌会在导图中显示为联动节点</span>
+        <span class="ol-tb-hint" style="font-size: 11px; color: var(--text-dim)">选中文字后右键可「添加关系链接」；[[标题]] 令牌会在导图中显示为联动节点</span>
       </div>
 
       <div

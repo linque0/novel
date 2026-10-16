@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { db } from '../db/database'
 import { broadcastAppEvent } from '../services/appbus'
-import { normalizeSkin } from '../skins/registry'
+import { normalizeSkin, isStudioSkin } from '../skins/registry'
 
 /* 正文字体：中西文分离。--editor-font = 西文栈 + 中文栈（拉丁字符落西文，汉字落中文）。
    素材：思源宋体/霞鹜文楷/京华老宋体/朝华标题/云游手书/Gothic One 均已本地化（src/assets/fonts） */
@@ -53,6 +53,7 @@ export const useUiStore = defineStore('ui', {
     revisionsCtx: null
   }),
   getters: {
+    isStudioSkin: (state) => isStudioSkin(state.skin),
     rootStyle(state) {
       const latin = (LATIN_FONTS[state.editorLatin] || LATIN_FONTS.none).stack
       const cjk = (CJK_FONTS[state.editorFont] || CJK_FONTS.song).stack

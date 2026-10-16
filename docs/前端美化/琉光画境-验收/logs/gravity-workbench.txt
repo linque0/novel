@@ -1,0 +1,59 @@
+PASS isolated data profile
+PASS workbench gravity tokens
+PASS seven module/shelf/settings entries and independent AI masthead control
+PASS chapter selection uses blue slate rather than the component accent tint
+PASS hot switch preserves editor instance, text and selection
+PASS outline original controls and editor fields match
+PASS outline relocated assistant opens original task form
+PASS outline usable minimum-size layout and unobscured navigation
+PASS outline editable scroll viewport stays above navigation
+PASS characters original controls and editor fields match
+PASS characters relocated assistant opens original task form
+PASS characters usable minimum-size layout and unobscured navigation
+PASS lore original controls and editor fields match
+PASS lore relocated assistant opens original task form
+PASS lore usable minimum-size layout and unobscured navigation
+PASS snippets original controls and editor fields match
+PASS snippets relocated assistant opens original task form
+PASS snippets usable minimum-size layout and unobscured navigation
+PASS inspiration CTA and final copy fit safely above dock and receive pointer events
+PASS chapters original controls and editor fields match
+PASS chapters relocated assistant opens original task form
+PASS chapters usable minimum-size layout and unobscured navigation
+PASS original reading mode remains read-only
+PASS focus mode retains original behavior
+PASS free canvas nodes, containers and arrangement controls preserved
+PASS character graph preserves all real characters
+PASS real character form still updates its store
+PASS lore detail retains breadcrumbs, graph and recursive child navigation with orbital artwork
+PASS detail background fully covers underlying module at both edges
+PASS global search remains above lore detail
+PASS bookmark navigation from lore detail closes the overlay and opens the real chapter
+PASS dock navigation from lore detail closes the overlay
+PASS inspiration assistant carries real prompt into existing AI conversation without sending
+PASS snippet converts through original lore action
+PASS chapter, notes, AI and catalog remain usable together at minimum size
+PASS large saved widths adapt without overwriting preferences
+PASS independent settings uses matching root tokens
+PASS settings retains 模型设置
+PASS settings retains 数据
+PASS settings retains 关于
+PASS settings skin switch synchronizes main window
+PASS chapter independent panel retains full module and skin
+PASS chapter native minimum-size panel remains usable
+PASS chapter panel closing restores main editor
+PASS outline independent panel retains full module and skin
+PASS outline native minimum-size panel remains usable
+PASS outline panel closing restores main editor
+PASS characters independent panel retains full module and skin
+PASS characters native minimum-size panel remains usable
+PASS characters panel closing restores main editor
+PASS lore independent panel retains full module and skin
+PASS lore native minimum-size panel remains usable
+PASS lore panel closing restores main editor
+PASS snippets independent panel retains full module and skin
+PASS snippets native minimum-size panel remains usable
+PASS minimum native inspiration panel uses readable single-column cards and one-line timestamps
+PASS snippets panel closing restores main editor
+PASS edits survive autosave and reopening
+PASS gravity workbench integration suite

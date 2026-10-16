@@ -4,6 +4,7 @@ import { NButton, NModal, NInput, NSelect, NDropdown, NEmpty, NSpin, NCheckbox, 
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
 import GravityShelf from './GravityShelf.vue'
+import GlazeShelf from './GlazeShelf.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
@@ -135,6 +136,7 @@ async function onCardMenu(key, w) {
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
     <GravityShelf v-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <GlazeShelf v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <template v-else>
     <div class="topbar">
       <div class="shelf-brand">

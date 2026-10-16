@@ -2,11 +2,13 @@
 import { computed } from 'vue'
 import { NButton, NTag } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
 
 const work = useWorkStore()
+const ui = useUiStore()
 const ROLE_COLOR = { 主角: 'error', 反派: 'warning', 配角: 'info', 龙套: 'default' }
 const list = computed(() =>
-  work.liveCharacters.map((c) => ({ id: c.id, name: c.name || '未命名', role: c.role || '未定' }))
+  work.liveCharacters.map((c) => ({ id: c.id, name: c.name || '未命名', role: c.role || '未定', avatar: (work.urlTick, c.avatarAssetId ? work.assetUrl(c.avatarAssetId) : '') }))
 )
 function pick(c) {
   work.selCharacterId = c.id
@@ -19,7 +21,8 @@ function pick(c) {
 
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
-    <div class="side-head">
+    <div class="side-head character-list-head">
+      <h2 v-if="ui.isStudioSkin" class="gravity-sidebar-title">人物</h2>
       <NButton size="tiny" type="primary" @click="work.addCharacter()">＋人物</NButton>
       <span style="font-size: 12px; color: var(--text-dim)">{{ list.length }} 人</span>
       <span style="flex: 1"></span>
@@ -39,7 +42,8 @@ function pick(c) {
         @click="pick(c)"
         @keydown.enter="pick(c)"
       >
-        <NTag size="tiny" :type="ROLE_COLOR[c.role] || 'default'" :bordered="false">{{ c.role }}</NTag>        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ c.name }}</span>
+        <template v-if="ui.isStudioSkin"><img v-if="c.avatar" :src="c.avatar" alt="" class="gravity-list-avatar" /><span v-else class="gravity-list-avatar gravity-initial">{{ c.name.slice(0,1) }}</span><span class="gravity-character-copy"><b>{{ c.name }}</b><small>{{ c.role }}</small></span><span class="gravity-character-arrow">↗</span></template>
+        <template v-else><NTag size="tiny" :type="ROLE_COLOR[c.role] || 'default'" :bordered="false">{{ c.role }}</NTag><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ c.name }}</span></template>
       </div>
       <p v-if="!list.length" style="font-size: 12px; color: var(--text-dim); padding: 10px">
         还没有人物。点击「＋人物」创建角色卡：外貌、性格、背景、动机与自定义字段。

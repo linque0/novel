@@ -85,7 +85,7 @@ function foldAll(v) {
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
     <div class="side-head">
-      <span style="font-size: 12px; color: var(--text-dim)">节点层级 · 点击定位 · 双击详情 · 右键设标签</span>
+      <h2 v-if="ui.isStudioSkin" class="gravity-sidebar-title">节点层级</h2><span v-else style="font-size: 12px; color: var(--text-dim)">节点层级 · 点击定位 · 双击详情 · 右键设标签</span>
       <div style="flex: 1"></div>
       <button class="btn-ghost" style="font-size: 11px; padding: 1px 6px" title="全部折叠" @click="foldAll(true)">▾</button>
       <button class="btn-ghost" style="font-size: 11px; padding: 1px 6px" title="全部展开" @click="foldAll(false)">▸</button>

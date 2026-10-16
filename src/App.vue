@@ -24,6 +24,8 @@ import { installAiRuntime } from './services/ai/runtime'
 import { useAiStore } from './stores/ai'
 import { resolveSkin } from './skins/registry'
 import './styles/skins/gravity.css'
+import './styles/skins/gravity-workbench.css'
+import './styles/skins/glaze.css'
 
 const ui = useUiStore()
 const shelf = useShelfStore()
@@ -35,15 +37,19 @@ installAppBus()
 const panelMode = new URLSearchParams(location.search).has('panel')
 
 const activeSkin = computed(() => resolveSkin(ui.skin, panelMode ? 'panel' : ui.view))
-const naiveTheme = computed(() => (activeSkin.value.id === 'gravity' || ui.theme === 'night' ? darkTheme : null))
+const naiveTheme = computed(() => activeSkin.value.id === 'glaze' ? null : (activeSkin.value.id === 'gravity' || ui.theme === 'night' ? darkTheme : null))
 const overrides = computed(() => {
+  if (activeSkin.value.id === 'glaze') return {
+    common: { primaryColor:'#146878', primaryColorHover:'#247b89', primaryColorPressed:'#0e5361', primaryColorSuppl:'#146878', textColor1:'#234752', textColor2:'#315763', textColor3:'#4f7079', bodyColor:'#e7eff1', cardColor:'#f8fcfc', modalColor:'#f8fcfc', popoverColor:'#f4fafb', inputColor:'#f5fafb', borderColor:'#adcbd0', borderRadius:'8px' },
+    Tree: { nodeColorActive:'#cde3e6',nodeColorHover:'#e3eff1',nodeColorPressed:'#d2e6e9' }
+  }
   if (activeSkin.value.id === 'gravity') {
     return { common: {
       primaryColor: '#f29c62', primaryColorHover: '#ffb784', primaryColorPressed: '#dc874f', primaryColorSuppl: '#f29c62',
       textColor1: '#e3eceb', textColor2: '#d7e0e5', textColor3: '#9aadb9',
       bodyColor: '#0b131d', cardColor: '#14212c', modalColor: '#14212c', popoverColor: '#1a2b37',
       borderColor: '#344654', inputColor: '#101c27'
-    } }
+    }, Tree: { nodeColorActive: '#243340', nodeColorHover: '#1b2b37', nodeColorPressed: '#243340' } }
   }
   const accent = { xuan: '#8c6f4e', parchment: '#a0642f', night: '#d4a95c' }[ui.theme] || '#8c6f4e'
   return { common: { primaryColor: accent, primaryColorHover: accent, primaryColorPressed: accent, primaryColorSuppl: accent } }

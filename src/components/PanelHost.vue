@@ -8,6 +8,7 @@ import { NButton } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
+import { resolveSkin } from '../skins/registry'
 import { autosave, startAutosave } from '../services/autosave'
 import { panelSetEntity } from '../services/panelwindows'
 import ChapterTree from './ChapterTree.vue'
@@ -152,7 +153,7 @@ onBeforeUnmount(() => autosave.flushAll())
 </script>
 
 <template>
-  <div class="app-root" :class="'theme-' + ui.theme" :style="ui.rootStyle" style="height: 100vh; display: flex; flex-direction: column">
+  <div class="app-root panel-host" :class="'theme-' + ui.theme" :data-skin="resolveSkin(ui.skin, 'panel').id" :data-module="work.tab" :style="ui.rootStyle" style="height: 100vh; display: flex; flex-direction: column">
     <div v-if="status === 'error'" class="empty-shelf" style="padding-top: 18vh">
       <div class="big">面板无法打开</div>
       <p>{{ errMsg }}</p>
@@ -164,6 +165,7 @@ onBeforeUnmount(() => autosave.flushAll())
       <SettingsWindow v-else-if="spec.type === 'settings'" style="flex: 1; min-height: 0" />
       <template v-else>
         <div class="panel-topbar">
+          <div v-show="ui.isStudioSkin" id="studio-task-actions"></div>
           <span class="serif" style="font-weight: 700">{{ work.work?.title }} · {{ panelTitle }}</span>
           <span class="save-badge">
             <span class="save-dot" :class="badgeClass"></span>

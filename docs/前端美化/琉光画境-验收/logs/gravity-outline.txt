@@ -1,0 +1,27 @@
+PASS isolated data profile
+PASS outline sidebar title carries a count badge and the type-manager gear
+PASS count badge equals the live module total
+PASS gravity drops the type-filter chip row and lists every module
+PASS sidebar foot keeps the broken-link toggle as a rectangular tool and moves the count into the title
+PASS type manager opens as an overlay instead of taking catalog space
+PASS custom types can still be created from the title row
+PASS custom types can still be removed from the title row
+PASS add grid keeps two columns of rectangular 6px buttons with the design labels
+PASS catalog rows use the 49px hairline row with the copper dot marker
+PASS container rows use the outlined square marker
+PASS row actions are borderless secondary and the row text follows the catalog scale
+PASS row actions overlay the row instead of squeezing the module name
+PASS every catalog row shows its module type in the design wording
+PASS canvas toolbar uses rectangular chips and buttons at 13px
+PASS module counter and zoom readout follow the design text style
+PASS every canvas card except the text box carries the design type row with its ⋯ entry
+PASS card titles use the serif display face at the design size
+PASS sticky notes keep the asymmetric radius and the tilt
+PASS text boxes render as bare copper serif text without the dashed frame
+PASS chapter and citation cards drop the dashed pill and the accent bar
+PASS edge labels read as plain 13px text on the line
+PASS cards use the enlarged design tier
+PASS container box grows with the enlarged grid cell and still covers its children
+PASS original skin keeps its chip row, pill chips, tight labels and previous card tier
+PASS gravity skin restores the design cards after the control switch
+PASS gravity outline design alignment suite

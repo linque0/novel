@@ -1,5 +1,6 @@
 <script setup>
 import TaskLauncher from './ai/TaskLauncher.vue'
+import InspirationPrompt from './InspirationPrompt.vue'
 import { computed, ref } from 'vue'
 import { NButton, NInput, NPopconfirm, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -43,8 +44,9 @@ function toLore() {
 
 <template>
   <TaskLauncher module="snippets" />
-  <div v-if="s" style="flex: 1; display: flex; flex-direction: column; padding: 22px 34px; min-height: 0">
-    <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center">
+  <div v-if="s" class="snippet-surface" style="flex: 1; display: flex; flex-direction: column; padding: 22px 34px; min-height: 0">
+    <header v-if="ui.isStudioSkin" class="gravity-snippet-heading"><span>{{ new Date(s.createdAt).toLocaleString('zh-CN', { month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }) }} / 灵感记录</span><h1>{{ (s.content || '未命名灵感').split('\n')[0] }}</h1></header>
+    <div class="snippet-actions" style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center">
       <span style="font-size: 12px; color: var(--text-dim)">灵感记录 · 自动保存</span>
       <div style="flex: 1"></div>
       <NButton size="small" @click="toChapter">转为章节</NButton>
@@ -60,12 +62,13 @@ function toLore() {
       :value="s.content"
       type="textarea"
       style="flex: 1"
-      :autosize="{ minRows: 18, maxRows: 40 }"
+      :autosize="ui.isStudioSkin ? false : { minRows: 18, maxRows: 40 }"
       placeholder="记录灵感、桥段、对话片段……"
       data-dl-token
       @update:value="(v) => work.updateSnippet(s.id, { content: v })"
       @contextmenu="onCtx"
     />
+    <div v-if="ui.skin === 'glaze'" id="glaze-inspiration-tools"><InspirationPrompt /></div>
   </div>
   <div v-else class="empty-shelf" style="padding-top: 140px">
     <div class="big">灵光一现</div>

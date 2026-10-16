@@ -3,13 +3,16 @@
 <script setup>
 import OIcon from './OIcon.vue'
 import { computed, ref, onMounted } from 'vue'
-import { NButton, NPopover, NModal, NInput } from 'naive-ui'
+import { NButton, NPopover, NModal, NInput, NDropdown } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import { targetById } from '../services/doublelinks'
+import { KIND_LABEL_DESIGN } from './outline/canvas-model'
 import DLinkPicker from './DLinkPicker.vue'
 
 const work = useWorkStore()
+const ui = useUiStore()
 const ai = useAiStore()
 const q = ref('')
 const typeFilter = ref('全部')
@@ -19,6 +22,9 @@ const typeManage = ref(false)
 const newTypeName = ref('')
 
 const customTypes = computed(() => work.olTypes)
+const totalCount = computed(() => work.liveOlnodes().length)
+/* 引力书舱按设计稿在「＋」与类型名之间留一个空格，原版保持原紧排文案 */
+const addLabel = (t) => (ui.skin === 'gravity' ? '＋ ' + t : '＋' + t)
 function addType() {
   const t = work.olTypeAdd(newTypeName.value)
   if (t) newTypeName.value = ''
@@ -134,6 +140,10 @@ function addModule(kind, fields = {}) {
   work.selOlnodeId = row.id
   work.canvasFocusTick++
 }
+/* 文本框默认尺寸随皮肤：引力用设计稿的大文本框，原版保持原有 180×64 */
+function addTextbox() {
+  addModule('textbox', { opacity: 1, ...(ui.skin === 'gravity' ? {} : { w: 180, h: 64 }) })
+}
 function onCitePick(t) {
   citePicker.value = false
   const n = work.liveOlnodes().length
@@ -173,29 +183,34 @@ onMounted(() => {
 </script>
 
 <template>
-  <div style="display: flex; flex-direction: column; height: 100%">
+  <div class="ol-side-root" style="display: flex; flex-direction: column; height: 100%">
     <div class="side-head">
-      <span style="font-size: 12px; color: var(--text-dim)">模块条目 · 点击定位画布</span>
+      <template v-if="ui.isStudioSkin">
+        <h2 class="gravity-sidebar-title">模块条目</h2>
+        <span class="gravity-side-count">{{ totalCount }} 项</span>
+        <button class="gravity-side-gear" :class="{ on: typeManage }" title="自定义类型管理（新建 / 删除）" @click="typeManage = !typeManage"><OIcon name="gear" :size="13" /></button>
+      </template>
+      <span v-else style="font-size: 12px; color: var(--text-dim)">模块条目 · 点击定位画布</span>
     </div>
     <div class="ol-side-add">
-      <button class="btn-ghost" title="添加事件模块" @click="addModule('event')">＋事件</button>
-      <button class="btn-ghost" title="添加便签" @click="addModule('note')">＋便签</button>
+      <button class="btn-ghost" title="添加事件模块" @click="addModule('event')">{{ addLabel('事件') }}</button>
+      <button class="btn-ghost" title="添加便签" @click="addModule('note')">{{ addLabel('便签') }}</button>
       <NPopover trigger="click" :show-arrow="false" style="padding: 6px">
         <template #trigger>
-          <button class="btn-ghost" title="添加引用卡（人物/设定/章节/灵感）">＋引用卡</button>
+          <button class="btn-ghost" title="添加引用卡（人物/设定/章节/灵感）">{{ addLabel('引用卡') }}</button>
         </template>
         <DLinkPicker @pick="onCitePick" />
       </NPopover>
-      <button class="btn-ghost" title="添加文本框（PPT 式自由文本）" @click="addModule('textbox', { w: 180, h: 64, opacity: 1 })">＋文本框</button>
-      <button class="btn-ghost" title="添加容器（拖入模块即归组）" @click="addModule('container')">＋容器</button>
+      <button class="btn-ghost" title="添加文本框（PPT 式自由文本）" @click="addTextbox()">{{ addLabel('文本框') }}</button>
+      <button class="btn-ghost" title="添加容器（拖入模块即归组）" @click="addModule('container')">{{ addLabel('容器') }}</button>
     </div>
-    <div style="padding: 0 10px 6px">
+    <div class="ol-side-search" style="padding: 0 10px 6px">
       <input v-model="q" class="rp-input" placeholder="搜索模块…" style="width: 100%; font-size: 12px" />
-      <div class="ol-typefilter">
+      <div v-if="ui.skin !== 'gravity'" class="ol-typefilter">
         <span v-for="t in TYPES" :key="t" class="om-chip" :class="{ on: typeFilter === t }" @click="typeFilter = t">{{ t }}</span>
         <span class="om-chip" :class="{ on: typeManage }" title="管理自定义类型" @click="typeManage = !typeManage"><OIcon name="gear" :size="12" /></span>
       </div>
-      <div v-if="typeManage" class="ol-type-manage">
+      <div v-if="typeManage" class="ol-type-manage" :class="{ 'gravity-type-manage': ui.isStudioSkin }">
         <div v-for="t in customTypes" :key="t.name" class="ol-type-row">
           <span class="om-mtype" :style="{ color: t.color, borderColor: t.color }">{{ t.name }}</span>
           <span style="flex: 1"></span>
@@ -213,6 +228,7 @@ onMounted(() => {
         :key="m.n.id"
         class="side-item"
         :class="{ active: work.selOlnodeId === m.n.id, 'ol-broken-item': m.broken }"
+        :data-kind="m.n.kind"
         :style="{ paddingLeft: 6 + m.depth * 14 + 'px' }"
         :title="m.brokenTip || (m.parentLabel && !m.hasKids ? m.parentLabel + ' · ' + m.label : m.label)"
         role="button"
@@ -232,9 +248,13 @@ onMounted(() => {
         <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1">
           <span v-if="m.parentLabel" class="ol-side-parent">{{ m.parentLabel }} / </span>{{ m.label }}
         </span>
+        <span v-if="ui.isStudioSkin" class="gv-row-kind">{{ KIND_LABEL_DESIGN[m.n.kind] || m.type }}</span>
         <span v-if="m.mtype" class="om-mtype" :style="{ color: m.mcolor, borderColor: m.mcolor }">{{ m.mtype }}</span>
         <span v-if="m.badge" class="dim">{{ m.badge }}</span>
-        <span class="ol-ops">
+        <NDropdown v-if="ui.skin === 'glaze'" trigger="click" :options="[{key:'rename',label:'重命名'},{key:'ai',label:'发送给恍然梦',disabled:!ai.ready},{key:'remove',label:'删除'}]" @select="key => key === 'rename' ? rename(m) : key === 'ai' ? aiPlan(m) : remove(m)">
+          <button class="gv-more glaze-module-menu" title="模块操作：重命名、恍然梦、删除" aria-label="模块操作" @click.stop @keydown.stop>⋯</button>
+        </NDropdown>
+        <span v-show="ui.skin !== 'glaze'" class="ol-ops">
           <button class="ol-op" title="重命名" @click.stop="rename(m)"><OIcon name="edit" :size="11" /></button>
           <button class="ol-op" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（为该节点生成分支线路方案）' : AI_UNSET_HINT" @click.stop="aiPlan(m)"><OIcon name="star" :size="11" /></button>
           <button class="ol-op ol-op-danger" title="删除" @click.stop="remove(m)"><OIcon name="close" :size="11" /></button>
@@ -247,7 +267,8 @@ onMounted(() => {
     <div class="ol-side-foot">
       <span class="om-chip" :class="{ on: showBroken }" title="断线检测：烂尾 / 缺铺垫" @click="showBroken = !showBroken">断线 {{ brokenCount }}</span>
       <span style="flex: 1"></span>
-      <span style="font-size: 11px; color: var(--text-dim)">共 {{ modules.length }} 模块</span>
+      <span v-if="ui.isStudioSkin" class="gravity-side-hint">点击条目定位画布</span>
+      <span v-else style="font-size: 11px; color: var(--text-dim)">共 {{ modules.length }} 模块</span>
     </div>
 
     <NModal v-model:show="renameState.show" preset="dialog" title="重命名模块">

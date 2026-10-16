@@ -1,0 +1,105 @@
+{
+  "generatedAt": "2026-10-16T11:03:43.266Z",
+  "states": [
+    {
+      "label": "书架",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/shelf.png",
+      "actual": "screenshots/_glaze-shelf-glaze-1440.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "正文",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/editor.png",
+      "actual": "screenshots/_glaze-work-chapters.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "大纲画布",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/outline.png",
+      "actual": "screenshots/_glaze-work-outline-canvas.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "文本大纲",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/outline-text.png",
+      "actual": "screenshots/_glaze-work-outline.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "设定节点",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/world.png",
+      "actual": "screenshots/_glaze-work-lore.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "设定详情",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/world-detail.png",
+      "actual": "screenshots/_glaze-work-lore-detail.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "人物档案",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/characters.png",
+      "actual": "screenshots/_glaze-work-characters.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "人物关系图",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/characters-graph.png",
+      "actual": "screenshots/_glaze-work-character-graph.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "灵感",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/inspiration.png",
+      "actual": "screenshots/_glaze-work-snippets.png",
+      "size": "1440×900"
+    },
+    {
+      "label": "设置",
+      "reference": "../oil-ui-v3-功能对齐/gallery/c/settings.png",
+      "actual": "screenshots/_glaze-work-settings-reference.png",
+      "size": "1440×900"
+    }
+  ],
+  "screenshots": [
+    "_glaze-shelf-edit.png",
+    "_glaze-shelf-empty.png",
+    "_glaze-shelf-glaze-1080.png",
+    "_glaze-shelf-glaze-1400.png",
+    "_glaze-shelf-glaze-1440.png",
+    "_glaze-shelf-no-results.png",
+    "_glaze-shelf-original.png",
+    "_glaze-shelf-single.png",
+    "_glaze-work-ai-1080.png",
+    "_glaze-work-chapter-ai-1080.png",
+    "_glaze-work-chapter-ai-wide.png",
+    "_glaze-work-chapters-1080.png",
+    "_glaze-work-chapters.png",
+    "_glaze-work-character-graph.png",
+    "_glaze-work-characters-1080.png",
+    "_glaze-work-characters.png",
+    "_glaze-work-lore-1080.png",
+    "_glaze-work-lore-detail.png",
+    "_glaze-work-lore.png",
+    "_glaze-work-original.png",
+    "_glaze-work-outline-1080.png",
+    "_glaze-work-outline-canvas.png",
+    "_glaze-work-outline.png",
+    "_glaze-work-panel-chapter-800.png",
+    "_glaze-work-panel-chapter.png",
+    "_glaze-work-panel-characters-800.png",
+    "_glaze-work-panel-characters.png",
+    "_glaze-work-panel-lore-800.png",
+    "_glaze-work-panel-lore.png",
+    "_glaze-work-panel-outline-800.png",
+    "_glaze-work-panel-outline.png",
+    "_glaze-work-panel-snippets-800.png",
+    "_glaze-work-panel-snippets.png",
+    "_glaze-work-reading.png",
+    "_glaze-work-settings-reference.png",
+    "_glaze-work-settings.png",
+    "_glaze-work-snippets-1080.png",
+    "_glaze-work-snippets.png"
+  ]
+}

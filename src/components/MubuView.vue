@@ -820,8 +820,8 @@ onBeforeUnmount(() => {
 
 <template>
   <TaskLauncher module="lore" />
-  <div ref="rootEl" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+  <div ref="rootEl" class="lore-surface" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
+    <div class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">设定</span>
       <span style="font-size: 12px; color: var(--text-dim)">幕布式自由大纲 · 所有内容皆节点</span>
       <div style="flex: 1"></div>
@@ -862,11 +862,13 @@ onBeforeUnmount(() => {
       <span class="ob-count">{{ nodeCount }} 节点</span>
     </div>
 
+    <div v-if="ui.isStudioSkin" class="gravity-lore-title"><h2>{{ work.work?.title }}的世界</h2><span>{{ nodeCount }} 个节点</span></div>
     <div class="ob-editor" @dragover.prevent @drop.prevent="onDropRoot">
       <div
         v-for="row in visible"
         :key="row.node.key"
         class="ob-row"
+        :data-depth="row.depth"
         :data-node="row.node.key"
         :class="{
           'drop-before': drag.hintKey === row.node.key && drag.zone === 'before',

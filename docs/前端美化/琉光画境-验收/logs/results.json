@@ -1,0 +1,82 @@
+{
+  "generatedAt": "2026-10-16T11:03:43.121Z",
+  "results": [
+    {
+      "name": "skin-unit",
+      "ok": true,
+      "status": 0,
+      "checks": 2,
+      "elapsedMs": 91
+    },
+    {
+      "name": "component-compile",
+      "ok": true,
+      "status": 0,
+      "checks": 26,
+      "elapsedMs": 428
+    },
+    {
+      "name": "canvas-model",
+      "ok": true,
+      "status": 0,
+      "checks": 48,
+      "elapsedMs": 89
+    },
+    {
+      "name": "gravity-outline",
+      "ok": true,
+      "status": 0,
+      "checks": 27,
+      "elapsedMs": 2032
+    },
+    {
+      "name": "gravity-workbench",
+      "ok": true,
+      "status": 0,
+      "checks": 59,
+      "elapsedMs": 15262
+    },
+    {
+      "name": "glaze-workbench-1",
+      "ok": true,
+      "status": 0,
+      "checks": 68,
+      "elapsedMs": 19679
+    },
+    {
+      "name": "glaze-shelf-1",
+      "ok": true,
+      "status": 0,
+      "checks": 32,
+      "elapsedMs": 8563
+    },
+    {
+      "name": "glaze-workbench-2",
+      "ok": true,
+      "status": 0,
+      "checks": 68,
+      "elapsedMs": 20834
+    },
+    {
+      "name": "glaze-shelf-2",
+      "ok": true,
+      "status": 0,
+      "checks": 32,
+      "elapsedMs": 8668
+    },
+    {
+      "name": "glaze-workbench-3",
+      "ok": true,
+      "status": 0,
+      "checks": 68,
+      "elapsedMs": 19216
+    },
+    {
+      "name": "glaze-shelf-3",
+      "ok": true,
+      "status": 0,
+      "checks": 32,
+      "elapsedMs": 7734
+    }
+  ]
+}

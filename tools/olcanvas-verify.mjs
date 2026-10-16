@@ -450,8 +450,10 @@ const m20 = await c.evalx(`(() => {
   const r = rs.getBoundingClientRect()
   const inner = document.querySelector('.om-inner')
   const sc = parseFloat((inner.style.transform.match(/scale\\(([\\d.]+)\\)/) || [])[1] || '1')
-  const w0 = n.w != null ? n.w : 178
-  const h0 = n.h != null ? n.h : 54
+  /* 卡片档位随皮肤：引力书舱用放大档（canvas-model ROOMY_SIZE），原版保持 178×54 */
+  const tier = document.body.dataset.skin === 'gravity' ? { w: 210, h: 130 } : { w: 178, h: 54 }
+  const w0 = n.w != null ? n.w : tier.w
+  const h0 = n.h != null ? n.h : tier.h
   rs.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, clientX: r.left + 4, clientY: r.top + 4 }))
   window.dispatchEvent(new MouseEvent('mousemove', { clientX: r.left + 48, clientY: r.top + 32 }))
   window.dispatchEvent(new MouseEvent('mouseup', { clientX: r.left + 48, clientY: r.top + 32 }))

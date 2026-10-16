@@ -3,9 +3,12 @@ import { computed, h, ref } from 'vue'
 import { NTree, NButton, NModal, NInput, NPopconfirm, NDropdown } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
 import { autosave } from '../services/autosave'
 
 const work = useWorkStore()
+const ui = useUiStore()
+const totalWords = computed(() => work.liveChapters.reduce((sum, c) => sum + (c.wordCount || 0), 0))
 
 /* 树数据：书签章节加 ★ 前缀 */
 const treeData = computed(() => {
@@ -82,7 +85,15 @@ function onDrop({ node, dragNode, dropPosition }) {
 }
 
 const renderSuffix = ({ option }) =>
-  option.suffix ? h('span', { style: 'color:var(--text-dim);font-size:11px;margin-left:6px' }, option.suffix) : null
+  h('span', { class: 'chapter-count', style: { color:'var(--text-dim)', fontSize:'11px', marginLeft:'6px', display:ui.isStudioSkin ? 'none' : undefined } }, option.suffix || '')
+function renderLabel({ option }) {
+  if (!ui.isStudioSkin || option.type !== 'chapter') return h('span', option.label)
+  const index = work.chapterOrdinal(option.key.slice(2)) || 0
+  return h('span', { class: 'gravity-chapter-row' }, [
+    h('span', { class: 'gravity-chapter-number' }, String(index).padStart(2, '0')),
+    h('span', { class: 'gravity-chapter-copy' }, [h('span', { title: option.label }, option.label), h('small', option.suffix || '0 字')])
+  ])
+}
 
 function addVol() {
   work.addVolume(`第${work.liveVolumes.length + 1}卷`)
@@ -176,6 +187,7 @@ const rename = ref({ show: false, kind: 'chapter', id: null, value: '' })
 
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
+    <h2 v-if="ui.isStudioSkin" class="gravity-sidebar-title">章节</h2>
     <div class="side-head">
       <NButton size="tiny" @click="addVol">＋卷</NButton>
       <NButton size="tiny" type="primary" @click="addCh">＋章</NButton>
@@ -198,11 +210,14 @@ const rename = ref({ show: false, kind: 'chapter', id: null, value: '' })
         :selected-keys="selectedKeys"
         :allow-drop="allowDrop"
         :render-suffix="renderSuffix"
+        :render-label="renderLabel"
         :node-props="nodeProps"
         @update:selected-keys="onSelect"
         @drop="onDrop"
       />
     </div>
+
+    <div v-if="ui.isStudioSkin" class="gravity-catalog-footer"><b>{{ work.liveChapters.length }}</b> 章 / {{ totalWords.toLocaleString() }} 字</div>
 
     <NDropdown
       trigger="manual"

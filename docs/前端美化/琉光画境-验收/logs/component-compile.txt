@@ -1,0 +1,26 @@
+PASS compile src/App.vue
+PASS compile src/components/Workbench.vue
+PASS compile src/components/PanelHost.vue
+PASS compile src/components/SettingsWindow.vue
+PASS compile src/components/ChapterTree.vue
+PASS compile src/components/CharacterCenter.vue
+PASS compile src/components/CharacterList.vue
+PASS compile src/components/EditorPane.vue
+PASS compile src/components/RightPanel.vue
+PASS compile src/components/OutlineCenter.vue
+PASS compile src/components/OutlineSidebar.vue
+PASS compile src/components/MubuView.vue
+PASS compile src/components/MubuTree.vue
+PASS compile src/components/SnippetCenter.vue
+PASS compile src/components/SnippetList.vue
+PASS compile src/components/LoreDetail.vue
+PASS compile src/components/InspirationPrompt.vue
+PASS compile src/components/OutlineCanvas.vue
+PASS compile src/components/GlazeShelf.vue
+PASS compile src/components/GlazeCover.vue
+PASS compile src/components/Bookshelf.vue
+PASS compile src/components/CharacterGraph.vue
+PASS compile src/components/OIcon.vue
+PASS compile src/components/ai/TaskLauncher.vue
+PASS gravity CSS parse
+PASS glaze CSS parse

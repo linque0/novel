@@ -3,8 +3,20 @@
 
 /* ---------- 节点尺寸与落点 ---------- */
 
+/* 引力书舱档位：按设计稿放大卡片，容纳顶部类型行与宋体大标题（仅新增档位，原版与紧凑口径不变） */
+const ROOMY_SIZE = {
+  event: { w: 210, h: 130 },
+  note: { w: 196, h: 130 },
+  cite: { w: 190, h: 130 },
+  anchor: { w: 190, h: 130 },
+  volume: { w: 190, h: 130 },
+  textbox: { w: 240, h: 110 },
+  container: { w: 300, h: 180 }
+}
+
 /** 画布节点尺寸（kind × 密度），container 为空态基准尺寸 */
 export function canvasNodeSize(n, density = 'detail') {
+  if (density === 'roomy') return ROOMY_SIZE[n.kind] || ROOMY_SIZE.container
   const c = density === 'compact'
   switch (n.kind) {
     case 'event':
@@ -724,6 +736,9 @@ export const C_PADB = 16
 
 export const gridCols = (cnt) => Math.max(1, Math.min(3, Math.ceil(Math.sqrt(Math.max(1, cnt)))))
 
+/** 容器子项网格步长：随卡片档位放大，否则放大的子项会互相压住 */
+export const gridCell = (density = 'detail') => (density === 'roomy' ? { w: 226, h: 150 } : { w: CELL_W, h: CELL_H })
+
 /**
  * 容器派生盒：由子模块包围盒撑开（锚点 canvasX/Y 为标题栏左上）；
  * 无可见子项（空 / 折叠）时用基准尺寸。
@@ -790,13 +805,24 @@ export const KIND_META = {
   volume: { icon: 'rows', label: '卷' }
 }
 
+/** 引力书舱沿用设计稿的类型称谓（侧栏行与卡片共用）；与筛选口径 KIND_META.label 分开，避免影响原版筛选匹配 */
+export const KIND_LABEL_DESIGN = {
+  event: '事件',
+  note: '便签',
+  cite: '引用卡',
+  textbox: '文本框',
+  container: '容器',
+  anchor: '章节锚点',
+  volume: '卷'
+}
+
 /* ---------- 布局算法 ---------- */
 
 /**
  * 画布重排：返回 Map(id → {x,y})，只含需要落位的节点。
  * - force=false（进入画布补位）：仅处理无坐标节点；已定位节点为锚。
  * - force=true（「整理」）：全部重排，pin 节点豁免；根节点水平带 3000px 换行，
- *   容器子项按网格（CELL 216×100，最多 3 列）排布。
+ *   容器子项按网格（步长随 density 档位，最多 3 列）排布。
  */
 export function relayoutAll({ nodes, density = 'detail', force = false }) {
   const kidsOf = new Map()
@@ -809,6 +835,7 @@ export function relayoutAll({ nodes, density = 'detail', force = false }) {
 
   const out = new Map()
   const SIZE = (n) => effSize(n, density)
+  const CELL = gridCell(density)
   const willPlace = (n) => (force ? !(n.pin && n.canvasX != null) : n.canvasX == null)
 
   function placeTree(n, defX, defY) {
@@ -822,7 +849,7 @@ export function relayoutAll({ nodes, density = 'detail', force = false }) {
       if (movable.length) {
         const cols = gridCols(movable.length)
         movable.forEach((k, i) => {
-          placeTree(k, px + C_PAD + (i % cols) * CELL_W, py + C_TITLE + 10 + Math.floor(i / cols) * CELL_H)
+          placeTree(k, px + C_PAD + (i % cols) * CELL.w, py + C_TITLE + 10 + Math.floor(i / cols) * CELL.h)
         })
       }
       for (const k of kids) if (!willPlace(k) && (kidsOf.get(k.id) || []).length) placeTree(k, k.canvasX, k.canvasY)
@@ -846,7 +873,7 @@ export function relayoutAll({ nodes, density = 'detail', force = false }) {
       if (!kids.length) return base
       const cols = gridCols(kids.length)
       const rows = Math.ceil(kids.length / cols)
-      return { w: Math.max(base.w, C_PAD * 2 + cols * CELL_W - 14), h: C_TITLE + 10 + rows * CELL_H + C_PADB }
+      return { w: Math.max(base.w, C_PAD * 2 + cols * CELL.w - 14), h: C_TITLE + 10 + rows * CELL.h + C_PADB }
     }
     if (kids.length) {
       const sub = kids.map(measureTree)
@@ -904,12 +931,13 @@ export function relayoutAll({ nodes, density = 'detail', force = false }) {
  * 返回 { rows, edges }：rows 直接喂 olnodeBulkAdd（顺序敏感），
  * edges 为 [fromIndex, toIndex] 引用 + kind/label，落库后按 created 序转真实 id。
  */
-export function tplThreeAct() {
+export function tplThreeAct(density = 'detail') {
   const rows = []
+  const CELL = gridCell(density)
   const mkContainer = (title, x, y) => rows.push({ kind: 'container', title, text: '', canvasX: x, canvasY: y }) - 1
   const mkEvent = (parent, title, text, x, y) => rows.push({ kind: 'event', title, text, canvasX: x, canvasY: y, _parent: parent }) - 1
-  const ex = (base, col) => base + C_PAD + col * CELL_W
-  const ey = (base, row) => base + C_TITLE + 10 + row * CELL_H
+  const ex = (base, col) => base + C_PAD + col * CELL.w
+  const ey = (base, row) => base + C_TITLE + 10 + row * CELL.h
   const a1 = mkContainer('第一幕 · 建置', 40, 40)
   mkEvent(a1, '日常与世界', '', ex(40, 0), ey(40, 0))
   const b = mkEvent(a1, '激励事件', '打破平静的事件', ex(40, 1), ey(40, 0))
@@ -920,7 +948,7 @@ export function tplThreeAct() {
   const a3 = mkContainer('第三幕 · 解决', 1080, 40)
   const f = mkEvent(a3, '终局对决', '', ex(1080, 0), ey(40, 0))
   mkEvent(a3, '新的平衡', '', ex(1080, 1), ey(40, 0))
-  rows.push({ kind: 'note', title: '用法', text: '拖节点四向锚点拉连线；拖入容器即归组；双击节点行内编辑内容。', canvasX: 40, canvasY: 320 })
+  rows.push({ kind: 'note', title: '用法', text: '拖节点四向锚点拉连线；拖入容器即归组；双击节点行内编辑内容。', canvasX: 40, canvasY: C_TITLE + 10 + 2 * CELL.h + C_PADB + 60 })
   return {
     rows,
     edges: [
@@ -931,9 +959,10 @@ export function tplThreeAct() {
   }
 }
 
-export function tplChapterList(chapters) {
+export function tplChapterList(chapters, density = 'detail') {
   const rows = []
   const edges = []
+  const CELL = gridCell(density)
   const bx = 40
   const by = 40
   rows.push({ kind: 'container', title: '章节清单', text: '', canvasX: bx, canvasY: by })
@@ -947,8 +976,8 @@ export function tplChapterList(chapters) {
         refId: ch.id,
         title: ch.title || '',
         text: '',
-        canvasX: bx + C_PAD + (i % cols) * CELL_W,
-        canvasY: by + C_TITLE + 10 + Math.floor(i / cols) * CELL_H,
+        canvasX: bx + C_PAD + (i % cols) * CELL.w,
+        canvasY: by + C_TITLE + 10 + Math.floor(i / cols) * CELL.h,
         _parent: head
       })
     })
@@ -959,8 +988,8 @@ export function tplChapterList(chapters) {
         kind: 'event',
         title: '第' + '一二三四五六'[i] + '章',
         text: '',
-        canvasX: bx + C_PAD + (i % cols) * CELL_W,
-        canvasY: by + C_TITLE + 10 + Math.floor(i / cols) * CELL_H,
+        canvasX: bx + C_PAD + (i % cols) * CELL.w,
+        canvasY: by + C_TITLE + 10 + Math.floor(i / cols) * CELL.h,
         _parent: head
       })
     }

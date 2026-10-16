@@ -9,18 +9,22 @@ import { parseTokens, findByTitle, targetById, parseTarget, jumpTo, KIND_LABEL }
 import {
   relayoutAll, containerRect, effSize, freeSpotFor,
   relColor, relDashed, cycleArrow, nextShape, SHAPE_LABEL,
-  REL_KINDS, KIND_META, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES, EDGE_COLORS, edgeColor,
+  REL_KINDS, KIND_META, KIND_LABEL_DESIGN, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES, EDGE_COLORS, edgeColor,
   sideBetween, routeEdge, pointAtT, trimEdgeD, customEdgeGeom
 } from './outline/canvas-model'
 import { uid } from '../db/database'
 import { autosave } from '../services/autosave'
 import { useAiStore } from '../stores/ai'
+import { useUiStore } from '../stores/ui'
 import { NPopover, NSlider } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import DLinkPicker from './DLinkPicker.vue'
 
 const work = useWorkStore()
 const ai = useAiStore()
+const ui = useUiStore()
+/* 引力书舱用设计稿的放大卡片档位；原版沿用「详细 / 紧凑」原口径 */
+const cardDensity = computed(() => (ui.isStudioSkin ? (work.canvasPrefs.density === 'compact' ? 'compact' : 'roomy') : work.canvasPrefs.density))
 const canvasEl = ref(null)
 const { zoom, tx, ty, innerStyle, onWheel, onPanStart, fit: fitTo, centerOn } = usePanZoom(canvasEl)
 
@@ -41,7 +45,7 @@ const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配
 const live = computed(() => work.liveOlnodes())
 const nodeById = (id) => live.value.find((n) => n.id === id)
 const posOf = (n) => dragPos.get(n.id) || (n.canvasX != null ? { x: n.canvasX, y: n.canvasY } : null)
-const sizeOf = (n) => dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)
+const sizeOf = (n) => dragSize.get(n.id) || effSize(n, cardDensity.value)
 const kidsOf = (n) => live.value.filter((k) => k.parentId === n.id)
 
 /* 被折叠容器隐藏的后代（渲染与连线一律跳过） */
@@ -343,10 +347,10 @@ function applyPositions(map) {
   for (const [id, p] of map) work.olnodeSetCanvas(id, p.x, p.y)
 }
 function ensurePlaced() {
-  applyPositions(relayoutAll({ nodes: live.value, density: work.canvasPrefs.density, force: false }))
+  applyPositions(relayoutAll({ nodes: live.value, density: cardDensity.value, force: false }))
 }
 function tidyAll() {
-  applyPositions(relayoutAll({ nodes: live.value, density: work.canvasPrefs.density, force: true }))
+  applyPositions(relayoutAll({ nodes: live.value, density: cardDensity.value, force: true }))
   dragPos.clear()
   nextTick(fitView)
 }
@@ -474,7 +478,7 @@ function startResize(e, n, dir) {
   e.preventDefault()
   resizing.value = n.id
   resizeSmooth.value = n.kind === 'container'
-  const base = { ...(dragSize.get(n.id) || effSize(n, work.canvasPrefs.density)) }
+  const base = { ...(dragSize.get(n.id) || effSize(n, cardDensity.value)) }
   const p0 = { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
   const mx = e.clientX
   const my = e.clientY
@@ -1072,7 +1076,7 @@ function citeJump(n) {
 function showFullText(n) {
   if (n.kind === 'textbox') return true
   if (n.h == null) return false
-  const base = effSize({ kind: n.kind, shape: n.shape }, work.canvasPrefs.density).h
+  const base = effSize({ kind: n.kind, shape: n.shape }, cardDensity.value).h
   return n.h >= base + 30 && (n.text || '').trim().length > 0
 }
 function plainText(n) {
@@ -1132,7 +1136,7 @@ function shapePoly(n) {
 
 /* ---------- 新建与骨架模板 ---------- */
 function addNodeAt(kind, pt, fields = {}) {
-  const s = effSize({ kind }, work.canvasPrefs.density)
+  const s = effSize({ kind }, cardDensity.value)
   const spot = freeSpotFor(
     visNodes.value.map((n) => rectOf(n)).filter(Boolean),
     s,
@@ -1364,10 +1368,14 @@ onBeforeUnmount(() => {
             ></textarea>
             <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }"><OIcon name="plus" :size="12" /> 选择目标</button>
               <div v-else class="oc-body" :class="{ 'oc-textbody': n.kind === 'textbox' }">
+              <div v-if="ui.isStudioSkin && n.kind !== 'textbox'" class="gv-kindrow">
+                <span class="gv-kind">{{ KIND_LABEL_DESIGN[n.kind] || '模块' }}</span>
+                <button class="gv-more" title="模块操作（与右键菜单相同）" @mousedown.stop.prevent @click.stop="onNodeCtx($event, n)">⋯</button>
+              </div>
               <div class="oc-label">{{ labelOf(n) }}</div>
               <div v-if="showFullText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
               <div v-else class="om-sub">{{ plainText(n).split('\n')[0].slice(0, 40) || subOf(n) || '&nbsp;' }}</div>
-              <span v-if="!showFullText(n) && n.mtype && work.canvasPrefs.density === 'detail'" class="om-mtype" :style="{ color: mtypeColorOf(n.mtype), borderColor: mtypeColorOf(n.mtype) }">{{ n.mtype }}</span>
+              <span v-if="!showFullText(n) && n.mtype && cardDensity !== 'compact'" class="om-mtype" :style="{ color: mtypeColorOf(n.mtype), borderColor: mtypeColorOf(n.mtype) }">{{ n.mtype }}</span>
             </div>
           </template>
 
@@ -1544,8 +1552,8 @@ onBeforeUnmount(() => {
       <div class="big">谋篇布局 · 自由画布</div>
       <p>事件、便签、引用卡、容器是积木，连线是脉络——结构由你自由生长，没有固定框架。</p>
       <div class="oc-quick-btns">
-        <button @click="applyTemplate(tplThreeAct())">三幕式模板</button>
-        <button @click="applyTemplate(tplChapterList(work.liveChapters))">章级清单模板</button>
+        <button @click="applyTemplate(tplThreeAct(cardDensity))">三幕式模板</button>
+        <button @click="applyTemplate(tplChapterList(work.liveChapters, cardDensity))">章级清单模板</button>
         <button class="ghost" @click="addNode('event')">空白开始</button>
       </div>
       <p class="oc-quick-tip">拖节点四向锚点拉出连线 · 拖入容器即归组 · 双击模块行内编辑内容 · 拖边缘调整大小 · 空白处双击新建事件</p>

@@ -2,8 +2,11 @@
 import { computed, ref } from 'vue'
 import { NButton, NInput } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
+import OIcon from './OIcon.vue'
 
 const work = useWorkStore()
+const ui = useUiStore()
 const quick = ref('')
 const list = computed(() => work.liveSnippets)
 
@@ -21,7 +24,8 @@ const fmt = (t) => {
 </script>
 
 <template>
-  <div style="display: flex; flex-direction: column; height: 100%">
+  <div class="snippet-catalog" style="display: flex; flex-direction: column; height: 100%">
+    <header v-if="ui.isStudioSkin" class="gravity-inspiration-heading"><h1>灵感画布</h1><p>{{ list.length }} 条灵感</p></header>
     <div class="side-head" style="flex-direction: column; align-items: stretch">
       <NInput
         v-model:value="quick"
@@ -47,8 +51,8 @@ const fmt = (t) => {
         @click="work.selSnippetId = s.id"
         @keydown.enter="work.selSnippetId = s.id"
       >
-        <span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ (s.content || '（空白）').slice(0, 24) }}</span>
-        <span class="dim">{{ fmt(s.createdAt) }}</span>
+        <template v-if="ui.isStudioSkin"><span class="gravity-snippet-date">{{ fmt(s.createdAt) }}</span><h3>{{ (s.content || '（空白）').split('\n')[0] }}</h3><p>{{ (s.content || '').split('\n').slice(1).join('\n') }}</p><span class="gravity-snippet-open">打开记录 ↗</span></template>
+        <template v-else><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ (s.content || '（空白）').slice(0, 24) }}</span><span class="dim">{{ fmt(s.createdAt) }}</span></template>
       </div>
       <p v-if="!list.length" style="font-size: 12px; color: var(--text-dim); padding: 10px">灵感库为空。想到什么记什么，之后可一键转为章节或设定。</p>
     </div>
