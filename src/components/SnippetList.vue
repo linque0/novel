@@ -1,6 +1,6 @@
 <script setup>
-import { computed, ref } from 'vue'
-import { NButton, NInput } from 'naive-ui'
+import { computed, ref, nextTick } from 'vue'
+import { NButton, NInput, NPopover } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import OIcon from './OIcon.vue'
@@ -8,6 +8,21 @@ import OIcon from './OIcon.vue'
 const work = useWorkStore()
 const ui = useUiStore()
 const quick = ref('')
+const quickOpen = ref(false)
+const quickInput = ref(null)
+const quickTrigger = ref(null)
+function showQuick(show) {
+  quickOpen.value = show
+  if (show) nextTick(() => quickInput.value?.focus())
+}
+function closeQuick() {
+  quickOpen.value = false
+  nextTick(() => quickTrigger.value?.$el?.focus())
+}
+function onQuickKey(e) {
+  if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeQuick() }
+  else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addQuick() }
+}
 const list = computed(() => work.liveSnippets)
 
 function addQuick() {
@@ -15,6 +30,7 @@ function addQuick() {
   if (!v) return
   work.addSnippet(v)
   quick.value = ''
+  closeQuick()
 }
 const fmt = (t) => {
   const d = new Date(t)
@@ -27,6 +43,12 @@ const fmt = (t) => {
   <div class="snippet-catalog" style="display: flex; flex-direction: column; height: 100%">
     <header v-if="ui.isStudioSkin" class="gravity-inspiration-heading"><h1>灵感画布</h1><p>{{ list.length }} 条灵感</p></header>
     <div class="side-head" style="flex-direction: column; align-items: stretch">
+      <NPopover v-if="ui.skin === 'gravity'" :show="quickOpen" trigger="click" placement="bottom-start" :show-arrow="false" class="gravity-quick-popover" style="width:350px;max-width:calc(100vw - 64px)" @update:show="showQuick">
+        <template #trigger><NButton ref="quickTrigger" class="gravity-quick-trigger" type="primary"><OIcon name="plus" :size="14" /> 记录灵感</NButton></template>
+        <NInput ref="quickInput" v-model:value="quick" type="textarea" :rows="4" placeholder="随手记一条灵感…（Ctrl+Enter 添加）" @keydown="onQuickKey" />
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px"><NButton @click="closeQuick">收起</NButton><NButton type="primary" :disabled="!quick.trim()" @click="addQuick">记录</NButton></div>
+      </NPopover>
+      <template v-else>
       <NInput
         v-model:value="quick"
         type="textarea"
@@ -39,6 +61,7 @@ const fmt = (t) => {
         <NButton size="tiny" type="primary" @click="addQuick"><OIcon name="plus" :size="11" /> 记录</NButton>
         <span style="font-size: 12px; color: var(--text-dim)">{{ list.length }} 条</span>
       </div>
+      </template>
     </div>
     <div class="side-list">
       <div

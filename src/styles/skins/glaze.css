@@ -63,7 +63,6 @@ body[data-skin='glaze'] .gravity-manuscript-location{display:flex;align-items:ce
 body[data-skin='glaze'] .gravity-manuscript-location b{font:400 24px var(--glaze-title)}
 body[data-skin='glaze'] .editor-head{padding:20px 0 10px;border:0;gap:12px;flex-wrap:wrap;background:transparent}
 body[data-skin='glaze'] .editor-head .title-input{flex:1 1 100%;width:100%;min-width:0;font:500 31px/1.5 var(--glaze-title);color:#234752}
-body[data-skin='glaze'] .gravity-manuscript-status{display:flex;gap:10px;align-items:center;flex-wrap:wrap;opacity:.8}
 body[data-skin='glaze'] .rich-host .rich-inner .tiptap{padding-top:12px;line-height:1.95}
 body[data-skin='glaze'] .editor-foot{background:transparent;border-color:#b6cdd1;padding-inline:24px}
 body[data-skin='glaze'] .right-panel{background:transparent;border:0;width:288px;padding-left:26px}
@@ -581,8 +580,9 @@ body[data-skin='glaze'] .glaze-shelf-tools h1{margin:0;font:500 29px var(--glaze
 body[data-skin='glaze'] .glaze-shelf-tools h1 small{font:13px ui-monospace,monospace;color:#63828a;vertical-align:top;margin-left:12px}
 body[data-skin='glaze'] .glaze-shelf-tools>div{display:flex;gap:14px}
 body[data-skin='glaze'] .glaze-shelf-tools .n-input{width:260px}
-body[data-skin='glaze'] .glaze-shelf-hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(440px,1.12fr);gap:28px;align-items:center;min-height:475px;padding:28px 0 10px}
+body[data-skin='glaze'] .glaze-shelf-hero{display:grid;grid-template-columns:minmax(0,46fr) minmax(520px,54fr);gap:0;align-items:center;height:410px;min-height:410px;padding:0;margin-top:6px}
 body[data-skin='glaze'] .glaze-eyebrow{font-size:12px;color:#4f7079;margin:0 0 16px}
+body[data-skin='glaze'] .glaze-feature-copy{min-width:0;align-self:start;padding:12px 0 0 30px}
 body[data-skin='glaze'] .glaze-feature-copy h2{font:500 clamp(45px,5.3vw,76px)/1.2 var(--glaze-title);letter-spacing:-.025em;margin:0;max-width:600px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 body[data-skin='glaze'] .glaze-feature-intro{font:17px/1.9 var(--glaze-title);color:#4f7079;max-width:430px;white-space:pre-line;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:23px 0}
 body[data-skin='glaze'] .glaze-feature-actions{display:flex;gap:14px}
@@ -646,8 +646,8 @@ body[data-skin='glaze'] .glaze-empty p{font-size:14px;color:#4f7079;margin-botto
  body[data-skin='glaze'] .character-sections{column-gap:22px}
  body[data-skin='glaze'] .sw-content.sw-appearance{gap:24px;grid-template-columns:minmax(280px,1fr) 240px}
  body[data-skin='glaze'] .glaze-shelf-scroll{padding-inline:36px}
- body[data-skin='glaze'] .glaze-shelf-hero{grid-template-columns:minmax(0,1fr) 440px;gap:18px;min-height:425px}
- body[data-skin='glaze'] .glaze-glass-deck{height:370px}
+ body[data-skin='glaze'] .glaze-shelf-hero{grid-template-columns:minmax(0,1fr) 440px;gap:0;height:410px;min-height:410px;padding:0}
+ body[data-skin='glaze'] .glaze-glass-deck{height:410px}
  body[data-skin='glaze'] .glaze-stage-book{width:180px;height:265px}
  body[data-skin='glaze'] .glaze-stage-book.pose-2{left:56%;top:66px}
  body[data-skin='glaze'] .glaze-cover strong{font-size:30px}
@@ -709,6 +709,8 @@ body[data-skin='glaze'] .gravity-settings-intro h2{font-size:30px;margin:16px 0 
 body[data-skin='glaze'] .editor-toolbar{gap:3px;flex-wrap:wrap;overflow-x:visible}
 body[data-skin='glaze'] .editor-toolbar .tb{min-width:26px;padding:4px 6px;font-size:13px}
 body[data-skin='glaze'] .editor-toolbar .tb-sep{margin-inline:2px}
+/* 章节状态 / 字数 / 历史：原在章题下一行，现归顶栏右端（margin-left:auto 推到本行末尾；窄窗随工具条换行/滚动） */
+body[data-skin='glaze'] .editor-bar-status{display:flex;align-items:center;gap:9px;margin-left:auto;padding-left:10px;opacity:.85}
 body[data-skin='glaze'] .glaze-stage-book .glaze-cover strong{font-size:clamp(23px,2.2vw,32px);-webkit-line-clamp:3;writing-mode:horizontal-tb;max-height:none}
 body[data-skin='glaze'] .glaze-library-open>.glaze-cover{padding:6px}
 body[data-skin='glaze'] .glaze-library-open .glaze-cover strong{font-size:12px;line-height:1.45;-webkit-line-clamp:3;border:0;padding:0}
@@ -824,3 +826,84 @@ body[data-skin='glaze'] .ol-meta-state{color:#4f7079}
 /* 工具条右端的关系链接说明：包成工具形态，文案不变（它解释的是真实功能）；
    行内样式留给其它皮肤，故此处 !important */
 body[data-skin='glaze'] .ol-toolbar .ol-tb-hint{font-size:12px!important;color:#4f7079!important;background:#ffffff55;border:1px solid #afc8cc;border-radius:6px;padding:5px 10px}
+
+/* ─────────────────────────────────────────────────────────────────────
+   书架屏：左栏排版 + 右侧封面舞台对齐 C 版（设计稿 .feature-copy / .glass-book）
+   数值取自 style.css 的 .c 覆盖块；左栏排版与舞台几何全在这个文件里，
+   不动 DOM 契约（glaze-shelf-verify 的红线：1080×680 无横向溢出、DOM 选择器、降动效）。
+   ───────────────────────────────────────────────────────────────────── */
+/* 左栏：「我的作品」26px；数量做成独立药丸（原来是 h1 内的上标小字） */
+body[data-skin='glaze'] .glaze-shelf-tools h1{display:flex;align-items:center;gap:20px;font:400 26px var(--glaze-title);letter-spacing:0}
+body[data-skin='glaze'] .glaze-shelf-tools h1 small{margin:0;padding:2px 10px;border:1px solid #afc8cc;border-radius:50px;font:14px ui-monospace,Consolas,monospace;letter-spacing:0;color:#55707a;vertical-align:baseline}
+/* 元信息行 13px / 字距 1px（分隔符与相对时间在组件里） */
+body[data-skin='glaze'] .glaze-eyebrow{font-size:13px;letter-spacing:1px;color:#55707a;margin:0 0 12px}
+/* 标题按实际长度分级：短题保留设计稿气势，中长题不再压垮 410px 舞台。 */
+body[data-skin='glaze'] .glaze-feature-copy h2{font:400 clamp(45px,5.3vw,76px)/1.08 var(--glaze-title);letter-spacing:2px;max-width:600px}
+body[data-skin='glaze'] .glaze-feature-copy.title-medium h2{font-size:clamp(46px,4.35vw,62px)}
+body[data-skin='glaze'] .glaze-feature-copy.title-long h2{font-size:clamp(36px,3.4vw,49px);line-height:1.15;letter-spacing:1px}
+body[data-skin='glaze'] .glaze-title-line+.glaze-title-line{padding-left:58px}
+/* 简介、操作和统计合并成一组，避免内容沉到首屏底部。 */
+body[data-skin='glaze'] .glaze-feature-intro{line-height:1.72;color:#4c6a72;max-width:500px;margin:15px 0 0}
+body[data-skin='glaze'] .glaze-feature-actions{gap:22px;margin-top:17px}
+body[data-skin='glaze'] .glaze-feature-meta{gap:22px;margin-top:16px;font-size:13px;color:#55707a}
+body[data-skin='glaze'] .glaze-feature-meta strong{font-size:17px;font-weight:400;color:#203f49}
+body[data-skin='glaze'] .glaze-feature-meta small{font-size:13px;color:#55707a}
+/* 搜索框 210px（设计稿 .shelf-actions input） */
+body[data-skin='glaze'] .glaze-shelf-tools .n-input{width:210px}
+/* 舞台：410px 双栏比例 + 明确的前中后三层景深。 */
+body[data-skin='glaze'] .glaze-glass-deck{height:410px;min-width:0;perspective:1050px;perspective-origin:47% 45%;transform-style:preserve-3d;overflow:visible}
+body[data-skin='glaze'] .glaze-glass-deck::after{background:none}
+body[data-skin='glaze'] .glaze-feature-stack{position:absolute;left:100px;top:30px;width:228px;z-index:4;transform-style:preserve-3d;overflow:visible}
+body[data-skin='glaze'] .glaze-stage-book{--glaze-book-pose:translateZ(0) rotateY(0) rotateZ(0);padding:10px;border-radius:16px;background:#ffffff75;border:1px solid #ffffffb0;box-shadow:inset 0 1px 0 #fff,0 20px 35px #3b6c7a28;transform:var(--glaze-book-pose);transform-style:preserve-3d;transition:transform .22s ease,background-color .22s ease,box-shadow .22s ease,filter .22s ease,opacity .22s ease}
+body[data-skin='glaze'] .glaze-feature-stack>.glaze-stage-book.pose-0{position:relative;inset:auto;width:100%;z-index:3;--glaze-book-pose:translateZ(52px) rotateY(-10deg) rotateZ(-8deg);transform:var(--glaze-book-pose);box-shadow:inset 0 1px 0 #fff,10px 26px 38px #315e7035}
+body[data-skin='glaze'] .glaze-stage-book.pose-1{left:250px;top:66px;width:190px;z-index:2;--glaze-book-pose:translateZ(-38px) rotateY(-18deg) rotateZ(7deg);transform:var(--glaze-book-pose);opacity:.92;filter:saturate(.93) brightness(.99);box-shadow:inset 0 1px 0 #fff,8px 20px 30px #315e7029}
+body[data-skin='glaze'] .glaze-stage-book.pose-2{left:370px;top:105px;width:158px;z-index:1;--glaze-book-pose:translateZ(-92px) rotateY(-25deg) rotateZ(16deg);transform:var(--glaze-book-pose);opacity:.78;filter:saturate(.82) brightness(.96);box-shadow:inset 0 1px 0 #fff,5px 14px 22px #315e701f}
+body[data-skin='glaze'] .glaze-stage-book:hover{z-index:6;background:#ffffffb0;box-shadow:inset 0 1px 0 #fff,0 30px 40px #3b6c7a30;transform:translateY(-5px) var(--glaze-book-pose)}
+body[data-skin='glaze'] .glaze-stage-book .glaze-cover{border-width:0;border-radius:8px}
+body[data-skin='glaze'] .glaze-stage-open{border-radius:10px;box-shadow:none}
+/* 首章白卡是主书簇的组成部分；顶部小纸舌给出可见的从属连接。 */
+body[data-skin='glaze'] .glaze-chapter-note{position:absolute;left:136px;top:calc(100% - 36px);z-index:6;min-width:166px;padding:13px 20px;background:#ffffffb5;backdrop-filter:blur(20px);border:1px solid #fffd;border-radius:12px;box-shadow:0 9px 20px #3d6b761c;transform:translateZ(70px) rotate(-3deg);font:19px var(--glaze-title);color:#203f49;white-space:nowrap}
+body[data-skin='glaze'] .glaze-chapter-note::before{content:'';position:absolute;left:25px;top:-9px;width:34px;height:15px;background:linear-gradient(150deg,#fffffff0 0 50%,transparent 52%);border-left:1px solid #fffd;transform:skewX(-24deg);filter:drop-shadow(0 -1px 0 #9bbdc42b)}
+body[data-skin='glaze'] .glaze-chapter-note small{display:block;margin-top:7px;font:13px 'Microsoft YaHei',sans-serif;color:#55707a}
+/* 底部：区题 23px / 右侧 13px / 网格 gap 18 / 卡题 17px / 副信息 13px / 缩略封面 58px */
+body[data-skin='glaze'] .glaze-collection h2{font-size:23px}
+body[data-skin='glaze'] .glaze-collection>header>span{font-size:13px}
+body[data-skin='glaze'] .glaze-collection-grid{gap:18px}
+body[data-skin='glaze'] .glaze-library-open>.glaze-cover{width:58px;height:87px}
+body[data-skin='glaze'] .glaze-library-open>span>strong{font:500 17px/1.5 var(--glaze-title)}
+body[data-skin='glaze'] .glaze-library-open small{font-size:13px}
+body[data-skin='glaze'] .glaze-glass-deck.book-count-1 .glaze-feature-stack{left:180px}
+body[data-skin='glaze'] .glaze-glass-deck.book-count-2 .glaze-feature-stack{left:130px}
+body[data-skin='glaze'] .glaze-orb{width:82px;height:82px;left:35px;bottom:12px}
+/* 1080 档维持同一透视关系，整体收小并降低旋转角度。 */
+@media(max-width:1200px){
+  body[data-skin='glaze'] .glaze-feature-copy{padding-left:18px}
+  body[data-skin='glaze'] .glaze-feature-copy.title-medium h2{font-size:54px}
+  body[data-skin='glaze'] .glaze-feature-copy.title-long h2{font-size:42px}
+  body[data-skin='glaze'] .glaze-title-line+.glaze-title-line{padding-left:46px}
+  body[data-skin='glaze'] .glaze-glass-deck{perspective:950px}
+  body[data-skin='glaze'] .glaze-feature-stack{left:50px;top:45px;width:190px}
+  body[data-skin='glaze'] .glaze-feature-stack>.glaze-stage-book.pose-0{--glaze-book-pose:translateZ(30px) rotateY(-7deg) rotateZ(-6deg)}
+  body[data-skin='glaze'] .glaze-stage-book.pose-1{left:175px;top:68px;width:165px;--glaze-book-pose:translateZ(-20px) rotateY(-12deg) rotateZ(6deg)}
+  body[data-skin='glaze'] .glaze-stage-book.pose-2{left:280px;top:110px;width:135px;--glaze-book-pose:translateZ(-55px) rotateY(-17deg) rotateZ(12deg)}
+  body[data-skin='glaze'] .glaze-chapter-note{left:105px;top:calc(100% - 28px);min-width:145px;padding:10px 14px;font-size:16px}
+  body[data-skin='glaze'] .glaze-glass-deck.book-count-1 .glaze-feature-stack{left:120px}
+  body[data-skin='glaze'] .glaze-glass-deck.book-count-2 .glaze-feature-stack{left:75px}
+  body[data-skin='glaze'] .glaze-orb{width:64px;height:64px;left:0;bottom:6px}
+}
+/* 三张卡的书名分级（设计稿 gb1/2/3 = 34 / 28 / 22px），背卡不再被挤到换行截断 */
+body[data-skin='glaze'] .glaze-stage-book.pose-0 .glaze-cover strong{font-size:34px}
+body[data-skin='glaze'] .glaze-stage-book.pose-1 .glaze-cover strong{font-size:28px}
+body[data-skin='glaze'] .glaze-stage-book.pose-2 .glaze-cover strong{font-size:22px}
+/* 背卡收窄留白并隐去副标（设计稿 gb2/gb3 如此） */
+body[data-skin='glaze'] .glaze-stage-book:not(.pose-0) .glaze-cover{padding:15px}
+body[data-skin='glaze'] .glaze-stage-book:not(.pose-0) .glaze-cover-kicker{display:none}
+
+/* 封面排版对齐设计稿（.cover-type / .glass-book）：封面竖幅 2:3、书名两行贴顶、顶行与作者的字号字距 */
+body[data-skin='glaze'] .glaze-stage-book{height:auto}
+body[data-skin='glaze'] .glaze-stage-book .glaze-cover{aspect-ratio:2/3;height:auto}
+body[data-skin='glaze'] .glaze-cover-line{display:block}
+/* 书名贴顶（原来是 margin:auto 0 垂直居中）；不写 font 简写，免得压掉下面各卡的字号分级 */
+body[data-skin='glaze'] .glaze-stage-book .glaze-cover strong{margin:22px 0 0;font-family:var(--glaze-title);font-weight:500;line-height:1.25;letter-spacing:3px;color:#173f49;max-height:none}
+body[data-skin='glaze'] .glaze-stage-book .glaze-cover-kicker{font-size:13px;letter-spacing:2px;color:#315862;padding-bottom:0;border-bottom:0}
+body[data-skin='glaze'] .glaze-stage-book .glaze-cover-author{margin-top:auto;font-size:13px;letter-spacing:3px;color:#315862}

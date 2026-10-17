@@ -49,12 +49,12 @@ const avatarOf = (c) => (c.avatarAssetId ? work.assetUrl(c.avatarAssetId) : '')
 /* ---------- 排布与布局持久化 ---------- */
 function circleAll() {
   const list = chars.value
-  const R = ui.skin === 'glaze' ? Math.max(220, list.length * 55) : Math.max(170, list.length * 32)
+  const R = ui.isStudioSkin ? Math.max(220, list.length * 55) : Math.max(170, list.length * 32)
   const next = {}
   list.forEach((c, i) => {
     const a = (i / list.length) * Math.PI * 2 - Math.PI / 2
     const point = { x: Math.round(460 + R * Math.cos(a)), y: Math.round(340 + R * Math.sin(a)) }
-    next[c.id] = ui.skin === 'glaze' ? projectCharacterPoint(point, geometry.value, true) : point
+    next[c.id] = ui.isStudioSkin ? projectCharacterPoint(point, geometry.value, true) : point
   })
   layout.value = next
   scheduleSave()
@@ -472,8 +472,8 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="om-wrap">
-    <!-- 页头：设计稿 C 版在图上有一行标题、副题与右侧动作（琉光专属） -->
-    <header v-if="ui.skin === 'glaze'" class="gravity-dossier-heading rg-heading">
+    <!-- 页头：两种设计稿共用人物标题与真实操作 -->
+    <header v-if="ui.isStudioSkin" class="gravity-dossier-heading rg-heading">
       <h1>人物关系图</h1><span>人物与人物的关系 · 双击节点打开档案</span>
       <button
         type="button"
@@ -486,9 +486,9 @@ onBeforeUnmount(() => {
     <div class="om-toolbar rg-toolbar">
       <span v-for="r in ['全部', '主角', '配角', '反派', '龙套']" :key="r" class="oc-chip" :class="{ on: roleFilter === r }" @click="roleFilter = r">{{ r }}</span>
       <!-- 琉光：按设计稿 C 版用干净的下拉（原生 multiple 会被渲染成 22px 高的列表框，挤成一团）；
-           其它皮肤继续用原生多选。v-model 仍绑 tagFilter 数组（focusCharById 会直接置空） -->
+           原版继续用原生多选。v-model 仍绑 tagFilter 数组（focusCharById 会直接置空） -->
       <NSelect
-        v-if="ui.skin === 'glaze'"
+        v-if="ui.isStudioSkin"
         v-model:value="tagFilter"
         class="rg-tagpick"
         multiple
@@ -506,8 +506,8 @@ onBeforeUnmount(() => {
       <span v-if="isolated.length" class="oc-chip oc-warn" :title="'暂无任何关系：' + isolated.map((c) => c.name).join('、')" @click="locateIsolated(isolated[0])">孤岛 {{ isolated.length }}</span>
       <span class="oc-count">{{ chars.length }} 人 · {{ edges.length }} 条关系</span>
       <!-- 布局切换：琉光按设计稿用文字按钮（title 与 om-btn 类必须保留，多个脚本按 title 点击） -->
-      <button class="om-btn" :class="{ 'om-btn-label': ui.skin === 'glaze' }" title="圆形排布" @click="circleAll"><OIcon class="om-btn-icon" name="circle-layout" :size="14" /><span v-if="ui.skin === 'glaze'">圆形</span></button>
-      <button class="om-btn" :class="{ 'om-btn-label': ui.skin === 'glaze' }" title="网格排布" @click="gridAll"><OIcon class="om-btn-icon" name="grid" :size="14" /><span v-if="ui.skin === 'glaze'">网格</span></button>
+      <button class="om-btn" :class="{ 'om-btn-label': ui.isStudioSkin }" title="圆形排布" @click="circleAll"><OIcon class="om-btn-icon" name="circle-layout" :size="14" /><span v-if="ui.isStudioSkin">圆形</span></button>
+      <button class="om-btn" :class="{ 'om-btn-label': ui.isStudioSkin }" title="网格排布" @click="gridAll"><OIcon class="om-btn-icon" name="grid" :size="14" /><span v-if="ui.isStudioSkin">网格</span></button>
       <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)"><OIcon name="minus" :size="14" /></button>
       <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)"><OIcon name="plus" :size="14" /></button>
       <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
@@ -571,7 +571,7 @@ onBeforeUnmount(() => {
           @dblclick.stop="openDetail(c)"
         >
           <img v-if="avatarOf(c)" :src="avatarOf(c)" class="rg-avatar" />
-          <div v-else class="rg-avatar rg-avatar-empty">{{ ui.skin === 'glaze' ? (c.name || '人').slice(0, 1) : '人' }}</div>
+          <div v-else class="rg-avatar rg-avatar-empty">{{ ui.isStudioSkin ? (c.name || '人').slice(0, 1) : '人' }}</div>
           <div class="rg-meta">
             <div class="rg-name">{{ c.name || '未命名' }}</div>
             <span class="rg-role" :style="{ color: ROLE_COLOR[c.role] || 'var(--text-dim)', borderColor: ROLE_COLOR[c.role] || 'var(--border)' }">{{ c.role || '未定' }}</span>
@@ -647,8 +647,8 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <!-- 图谱内的操作提示与「编辑选中人物」（设计稿右下角那颗；琉光专属） -->
-    <div v-if="ui.skin === 'glaze'" class="rg-overlay">
+    <!-- 图谱内的操作提示与「编辑选中人物」（设计稿右下角那颗；创作皮肤共用） -->
+    <div v-if="ui.isStudioSkin" class="rg-overlay">
       <span class="rg-hint">拖动人物排列 · 从节点边缘连线 · 双击打开详情 · 右键操作</span>
       <button v-if="selectedChar" type="button" class="rg-open-person" @click="openDetail(selectedChar)">编辑选中人物 ↗</button>
     </div>

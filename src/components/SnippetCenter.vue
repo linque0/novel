@@ -12,6 +12,7 @@ const ui = useUiStore()
 const msg = useMessage()
 const s = computed(() => work.activeSnippet)
 const dlMenu = ref(null)
+const isNativePanel = new URLSearchParams(location.search).has('panel')
 
 /* 灵感内容右键快捷栏：剪切/复制/粘贴 + 添加关系链接 */
 function onCtx(e) {
@@ -69,6 +70,7 @@ function toLore() {
       @contextmenu="onCtx"
     />
     <div v-if="ui.skin === 'glaze'" id="glaze-inspiration-tools"><InspirationPrompt /></div>
+    <div v-if="ui.skin === 'gravity' && isNativePanel" class="gravity-panel-inspiration-tools"><InspirationPrompt /></div>
   </div>
   <div v-else class="empty-shelf" style="padding-top: 140px">
     <div class="big">灵光一现</div>

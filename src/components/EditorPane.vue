@@ -267,7 +267,16 @@ async function clearGoal() {
       <p>从左侧「＋章」新建一章开始写作，章节内容会即时自动保存。</p>
     </div>
     <template v-if="work.activeChapter && editor">
-      <EditorToolbar v-show="!chapterPopped && !ui.readMode" :key="work.selChapterId" :editor="editor" />
+      <EditorToolbar v-show="!chapterPopped && !ui.readMode" :key="work.selChapterId" :editor="editor">
+        <!-- 编辑皮肤：状态 / 字数 / 历史 归到顶栏右端（原版仍是自己的 .editor-head 一行） -->
+        <template v-if="ui.isStudioSkin" #bar-end>
+          <div class="editor-bar-status">
+            <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
+            <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter.status]">{{ work.activeChapter.wordCount || 0 }} 字</NTag>
+            <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
+          </div>
+        </template>
+      </EditorToolbar>
       <div v-show="chapterPopped" class="panel-lock-note">
         <span>「{{ work.activeChapter.title }}」已在独立窗口编辑，本窗口此章暂为只读</span>
         <NButton size="small" type="primary" @click="focusPopped(work, 'chapter', work.activeChapter.id)">前往窗口</NButton>
@@ -278,11 +287,6 @@ async function clearGoal() {
             <div class="gravity-manuscript-location"><span>{{ work.liveVolumes.find(v => v.id === work.activeChapter.volumeId)?.title || '未分卷' }}</span><b>{{ chapterNo }}</b></div>
             <div class="editor-head">
               <input class="title-input" :value="work.activeChapter.title" placeholder="章节标题" :readonly="chapterPopped" @change="onTitle" @keyup.enter="$event.target.blur()" />
-              <div class="gravity-manuscript-status">
-                <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
-                <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter?.status]">{{ work.activeChapter?.wordCount || 0 }} 字</NTag>
-                <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
-              </div>
             </div>
           </header>
           <!-- 阅读模式专用头（v1.0.26）：巨排章号 + 章题下划短线；随正文滚动，不进入文档模型 -->

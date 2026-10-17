@@ -52,6 +52,8 @@ try {
       const row=await __skinCheck.shelf.createWork({title:i===5?'星尘旅人':i===4?'一部名字很长很长的中文与 English 混排小说':'引力验收·'+kind,author:i===3?'':'林间',genre:'科幻',status:i===2?'构思':'连载',intro:i===5?'一枚铜星的熄灭，\\n唤醒了一张被遗忘的星图。':'',kind,withVolume:i!==0});
       __skinFixtures.push(row.id);
     }
+    /* 给首展作品补一章：书架的「首章白卡」只在有真实章节时出现（设计稿里有这张卡） */
+    {const w=__ns.getWork();await w.open(__skinFixtures[5]);await w.addChapter(w.volumes[0]&&w.volumes[0].id,'第一章 初雪');await w.closeWork();}
     await __skinCheck.ui.setSkin('glaze');return __skinFixtures;
   })()`)
   await wait('!!document.querySelector(".glaze-shelf")')
@@ -63,6 +65,12 @@ try {
   await shot('glaze-1400')
   await shot('glaze-1080', 1080, 680)
   check(await evaluate('document.documentElement.scrollWidth<=innerWidth && document.querySelector(".glaze-shelf-scroll").scrollWidth<=document.querySelector(".glaze-shelf-scroll").clientWidth'), 'minimum desktop width has no horizontal overflow')
+  check(await evaluate(`(()=>{
+    const note=document.querySelector('.glaze-chapter-note'),book=document.querySelector('.glaze-stage-book.pose-0')
+    if(!note||!book||!note.closest('.glaze-feature-stack'))return false
+    const n=note.getBoundingClientRect(),b=book.getBoundingClientRect()
+    return Math.min(n.right,b.right)-Math.max(n.left,b.left)>=40 && Math.min(n.bottom,b.bottom)-Math.max(n.top,b.top)>=8
+  })()`), '1080px chapter card remains attached to and overlapping the featured book')
   check(await evaluate(`document.querySelector('.glaze-shelf-scroll').getBoundingClientRect().top>=document.querySelector('.glaze-top-nav').getBoundingClientRect().bottom`), 'navigation never overlays the scrollable book area')
   await c.send('Emulation.setDeviceMetricsOverride', { width: 1400, height: 880, deviceScaleFactor: 1, mobile: false })
 
@@ -116,6 +124,7 @@ try {
   await wait('!document.querySelector(".n-modal") && document.querySelector(".glaze-feature-copy h2").textContent==="引力验收·表单新建"')
   const createdId = await evaluate('__skinCheck.shelf.works[0].id');fixtureIds.push(createdId)
   check(await evaluate(`__ns.db.volumes.where('workId').equals(${JSON.stringify(createdId)}).count().then(n=>n===1)`), 'shared create form creates a work with its default volume')
+  check(await evaluate('!document.querySelector(".glaze-chapter-note")'), 'a featured work without chapters leaves no chapter-card placeholder')
   await evaluate('document.querySelector(".glaze-stage-book.pose-0 .glaze-work-menu button").click()');await wait('!!document.querySelector(".n-dropdown-menu")')
   await evaluate(`[...document.querySelectorAll('.n-dropdown-option-body')].find(n=>n.textContent.includes('删除')).click()`)
   await wait(`!__skinCheck.shelf.works.some(w=>w.id===${JSON.stringify(createdId)})`)

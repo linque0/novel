@@ -1,6 +1,6 @@
 <script setup>
 import TaskLauncher from './ai/TaskLauncher.vue'
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted, nextTick } from 'vue'
 import { NButton, NInput, NSelect, NTag } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
@@ -33,6 +33,32 @@ const avatarUrl = computed(() => {
 })
 
 const fieldsRows = computed(() => Object.entries(c.value?.fields || {}))
+const tagAdding = ref(false)
+const newTag = ref('')
+const newTagInput = ref(null)
+
+async function beginTagAdd() {
+  tagAdding.value = true
+  await nextTick()
+  newTagInput.value?.focus()
+}
+function commitTag() {
+  if (!tagAdding.value || !c.value) return
+  const value = newTag.value.trim()
+  if (value && !(c.value.tags || []).includes(value)) {
+    work.updateCharacter(c.value.id, { tags: [...(c.value.tags || []), value] })
+  }
+  newTag.value = ''
+  tagAdding.value = false
+}
+function cancelTag() {
+  newTag.value = ''
+  tagAdding.value = false
+}
+function removeTag(tag) {
+  if (!c.value) return
+  work.updateCharacter(c.value.id, { tags: (c.value.tags || []).filter((item) => item !== tag) })
+}
 
 async function changeAvatar() {
   if (!c.value) return
@@ -131,9 +157,25 @@ onMounted(() => {
   <!-- 关系图视图：整幅画布（8.8.3）；列表视图：人物详情 -->
   <CharacterGraph v-if="work.charView === 'graph'" />
   <div v-else-if="c" class="character-surface" style="flex: 1; overflow: auto; padding: 22px 34px">
-    <header v-if="ui.isStudioSkin" class="gravity-dossier-heading"><h1>人物档案</h1><span>人物塑造 · 资料与关系</span><NButton size="small" @click="work.sendCharToOutline(c.id)">发送为大纲引用卡</NButton></header>
+    <header v-if="ui.isStudioSkin" class="gravity-dossier-heading">
+      <template v-if="ui.skin === 'gravity'">
+        <h1>人物档案</h1><span>人物塑造 · 资料与关系</span>
+        <div class="gravity-dossier-actions">
+          <NButton size="small" @click="work.sendCharToOutline(c.id)">发送为大纲引用卡</NButton>
+          <NButton size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">✦ 丰富</NButton>
+          <NButton size="small" quaternary type="error" @click="work.deleteCharacter(c.id)">删除</NButton>
+        </div>
+      </template>
+      <template v-else>
+        <h1>人物档案</h1><span>人物塑造 · 资料与关系</span>
+        <NButton size="small" @click="work.sendCharToOutline(c.id)">发送为大纲引用卡</NButton>
+      </template>
+    </header>
     <div class="character-identity" style="display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px">
-      <div class="character-portrait"><img v-if="avatarUrl" :src="avatarUrl" class="avatar-lg" :alt="c.name || '人物头像'" /><div v-else class="avatar-lg character-initial">{{ (c.name || '人').slice(0, 1) }}</div></div>
+      <div class="character-portrait">
+        <img v-if="avatarUrl" :src="avatarUrl" class="avatar-lg" :alt="c.name || '人物头像'" /><div v-else class="avatar-lg character-initial">{{ (c.name || '人').slice(0, 1) }}</div>
+        <button v-if="ui.skin === 'gravity'" type="button" class="gravity-avatar-action" @click="changeAvatar">{{ avatarUrl ? '换头像' : '设头像' }}</button>
+      </div>
       <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
         <div class="character-name-row" style="display: flex; gap: 8px">
           <label v-if="ui.isStudioSkin" class="gravity-field-label">姓名</label>
@@ -145,11 +187,38 @@ onMounted(() => {
             v-for="r in ROLE_PRESETS"
             :key="r"
             class="role-chip"
+            :role="ui.skin === 'gravity' ? 'button' : undefined"
+            :tabindex="ui.skin === 'gravity' ? 0 : undefined"
+            :aria-pressed="ui.skin === 'gravity' ? c.role === r : undefined"
+            @keydown="e => { if (ui.skin === 'gravity' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); work.updateCharacter(c.id, { role: c.role === r ? '' : r }) } }"
             :class="{ on: c.role === r }"
             @click="work.updateCharacter(c.id, { role: c.role === r ? '' : r })"
           >{{ r }}</span>
         </div>
-        <div class="character-alias-row" style="display: flex; gap: 8px">
+        <div v-if="ui.skin === 'gravity'" class="character-alias-row gravity-character-meta-row">
+          <label v-if="ui.isStudioSkin" class="gravity-field-label">别名</label>
+          <NInput class="rp-input" :value="c.aliases" placeholder="别名（用 / 分隔）" style="flex: 1" @update:value="(v) => work.updateCharacter(c.id, { aliases: v })" />
+          <label class="gravity-field-label">标签</label>
+          <div class="gravity-character-tags" aria-label="人物标签">
+            <span v-for="tag in c.tags || []" :key="tag" class="gravity-character-tag">
+              <span>{{ tag }}</span>
+              <button class="gravity-tag-remove" type="button" :aria-label="`删除标签 ${tag}`" :title="`删除标签 ${tag}`" @click="removeTag(tag)">×</button>
+            </span>
+            <input
+              v-if="tagAdding"
+              ref="newTagInput"
+              v-model="newTag"
+              class="gravity-tag-input"
+              aria-label="新标签"
+              placeholder="输入标签"
+              @keydown.enter.prevent="commitTag"
+              @keydown.esc.prevent="cancelTag"
+              @blur="commitTag"
+            />
+            <button v-else class="gravity-tag-add" type="button" aria-label="添加标签" title="添加标签" @click="beginTagAdd">+</button>
+          </div>
+        </div>
+        <div v-else class="character-alias-row" style="display: flex; gap: 8px">
           <label v-if="ui.isStudioSkin" class="gravity-field-label">别名</label>
           <NInput class="rp-input" :value="c.aliases" placeholder="别名（用 / 分隔）" style="flex: 1" @update:value="(v) => work.updateCharacter(c.id, { aliases: v })" />
           <NButton size="small" @click="changeAvatar">{{ avatarUrl ? '换头像' : '设头像' }}</NButton>
@@ -157,6 +226,8 @@ onMounted(() => {
           <NButton size="small" quaternary type="error" @click="work.deleteCharacter(c.id)">删除</NButton>
         </div>
         <NSelect
+          v-if="ui.skin !== 'gravity'"
+          class="character-tag-select"
           :value="c.tags"
           multiple
           tag
@@ -173,18 +244,20 @@ onMounted(() => {
     <div class="character-sections">
     <section class="character-fields">
     <hr class="divider" />
-    <div class="rp-title">自定义字段</div>
+    <div v-if="ui.skin === 'gravity'" class="gravity-section-head"><div class="rp-title">自定义字段</div><NButton size="tiny" @click="addField"><OIcon name="plus" :size="11" /> 字段</NButton></div>
+    <div v-else class="rp-title">自定义字段</div>
     <div v-for="[k, v] in fieldsRows" :key="k" class="field-row">
       <input class="rp-input" :value="k" style="width: 120px" title="点击修改字段名（失焦或回车提交）" @change="setFieldKey(k, $event.target.value.trim())" @keyup.enter="$event.target.blur()" />
       <NInput class="rp-input" :value="v" style="flex: 1" @update:value="(v2) => setFieldValue(k, v2)" />
       <NButton size="tiny" quaternary @click="removeField(k)"><OIcon name="close" :size="11" /></NButton>
     </div>
-    <NButton size="tiny" @click="addField"><OIcon name="plus" :size="11" /> 字段</NButton>
+    <NButton v-if="ui.skin !== 'gravity'" size="tiny" @click="addField"><OIcon name="plus" :size="11" /> 字段</NButton>
     </section>
 
     <section class="character-relations">
     <hr class="divider" />
-    <div class="rp-title">人物关系</div>
+    <div v-if="ui.skin === 'gravity'" class="gravity-section-head"><div class="rp-title">人物关系</div><NButton size="tiny" :disabled="!relOther" @click="addRelation"><OIcon name="plus" :size="11" /> 添加</NButton></div>
+    <div v-else class="rp-title">人物关系</div>
     <div v-for="r in myRelations" :key="r.id" class="field-row" style="align-items: center">
       <NTag size="small" :bordered="false">{{ r.other?.name || '?' }}</NTag>
       <NInput class="rp-input" :value="r.label" style="flex: 1" @update:value="(v) => work.updateRelation(r.id, { label: v })" />
@@ -193,21 +266,23 @@ onMounted(() => {
     <div class="field-row" style="align-items: center">
       <NSelect v-model:value="relOther" :options="otherOpts" size="small" placeholder="选择人物" style="width: 140px" />
       <NInput v-model:value="relLabel" size="small" placeholder="关系（如：师徒 / 宿敌）" style="flex: 1" @keyup.enter="addRelation" />
-      <NButton size="tiny" @click="addRelation">添加</NButton>
+      <NButton v-if="ui.skin !== 'gravity'" size="tiny" @click="addRelation">添加</NButton>
     </div>
     </section>
 
     <section class="character-crosslinks">
     <hr class="divider" />
-    <div class="rp-title">关联关系（设定 / 人物）</div>
-    <LoreRelRows v-if="relEntries.length" :entries="relEntries" @pick="pickRel" />
+    <div v-if="ui.skin === 'gravity'" class="gravity-section-head"><div class="rp-title">关联关系 <small class="gravity-section-caption">设定 / 人物</small></div><NButton size="tiny" @click="openRelPanel"><OIcon name="plus" :size="11" /> 添加关联</NButton></div>
+    <div v-else class="rp-title">关联关系（设定 / 人物）</div>
+    <LoreRelRows v-if="relEntries.length" :entries="relEntries" :dossier="ui.skin === 'gravity'" @pick="pickRel" />
     <div v-else style="font-size: 12px; color: var(--text-dim); padding: 2px 0 6px">暂无关联关系（如：人物「属于」某地点）</div>
-    <NButton size="tiny" @click="openRelPanel"><OIcon name="plus" :size="11" /> 添加关联</NButton>
+    <NButton v-if="ui.skin !== 'gravity'" size="tiny" @click="openRelPanel"><OIcon name="plus" :size="11" /> 添加关联</NButton>
     </section>
 
     <section class="character-biography">
     <hr class="divider" />
-    <div class="rp-title"><template v-if="ui.isStudioSkin">人物小传 <small class="gravity-section-caption">外貌 / 性格 / 背景 / 动机</small></template><template v-else>人物小传（外貌 / 性格 / 背景 / 动机……）</template></div>
+    <div v-if="ui.skin === 'gravity'" class="gravity-section-head"><div class="rp-title">人物小传</div><small class="gravity-section-caption">外貌 / 性格 / 背景 / 动机</small></div>
+    <div v-else class="rp-title"><template v-if="ui.isStudioSkin">人物小传 <small class="gravity-section-caption">外貌 / 性格 / 背景 / 动机</small></template><template v-else>人物小传（外貌 / 性格 / 背景 / 动机……）</template></div>
     <textarea
       class="rp-textarea"
       style="min-height: 220px; font-size: 14px; line-height: 1.9"

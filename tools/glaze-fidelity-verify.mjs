@@ -79,6 +79,7 @@ try {
     const coords = w.mubuAdd(root.id,null,'失落坐标')
     w.addLoreLink({fromKind:'character',fromId:b.id,toKind:'mubu',toId:root.id,label:'研究者'})
     w.addLoreLink({fromKind:'mubu',fromId:root.id,toKind:'mubu',toId:coords.id,label:'管理'})
+    w.addChapter(w.volumes[0] && w.volumes[0].id, '第一章 星海来信')
     const n = w.olnodeAdd(null,{kind:'event',title:'启航',text:'在黎明到来之前离开星港。',canvasX:200,canvasY:200,w:230,h:100})
     w.selOlnodeId = n.id
     return row.id
@@ -197,6 +198,116 @@ try {
   check(parseFloat(o.hintBorder) > 0 && o.hintRadius === '6px', '工具条右端提示包成工具形态（不再是裸灰字）', `${o.hintBorder} / ${o.hintRadius}`)
   check(((await textOf('.ol-toolbar .ol-tb-hint')) || '').includes('添加关系链接'), '提示文案保留（它解释的是真实功能）', '')
   await shot('outline-text')
+
+  /* ── 书架：左栏排版 + 封面舞台（v1.1.1 第三轮） ── */
+  await ev(`(async()=>{await __g.work.closeWork();return true})()`).catch(() => {})
+  /* 用 1440×900 视口：设计稿按这个尺寸标注（标题 clamp 5.3vw 在此正好到 76px） */
+  await c.send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false })
+  /* 指针挪开：停在卡片上会命中 :hover，量到的变换就不是静止姿态 */
+  await c.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 8, y: 8 })
+  await c.sleep(1200)
+  const shelfReady = await wait('!!document.querySelector(".glaze-shelf-hero")')
+  check(shelfReady, '书架渲染（含 hero 区）', '')
+  if (shelfReady) {
+  const sb = await ev(`(() => {
+    const g = (s, p) => { const el = document.querySelector(s); return el ? getComputedStyle(el)[p] : null }
+    const box = (s) => { const el = document.querySelector(s); if (!el) return null; const b = el.getBoundingClientRect(); return { w: Math.round(b.width), h: Math.round(b.height), l: Math.round(b.left), t: Math.round(b.top) } }
+    const card = (n) => {
+      const el = document.querySelector('.glaze-stage-book.pose-' + n)
+      if (!el) return null
+      const cs = getComputedStyle(el)
+      const cover = el.querySelector('.glaze-cover')
+      const strong = el.querySelector('.glaze-cover strong')
+      const cr = cover ? cover.getBoundingClientRect() : null
+      const ar = strong ? strong.getBoundingClientRect() : null
+      const kicker = el.querySelector('.glaze-cover-kicker')
+      const author = el.querySelector('.glaze-cover-author')
+      const kcs = kicker ? getComputedStyle(kicker) : null
+      const acs = author ? getComputedStyle(author) : null
+      return {
+        box: box('.glaze-stage-book.pose-' + n), width: cs.width, height: cs.height, transform: cs.transform.slice(0, 9), z: cs.zIndex,
+        padding: cs.paddingTop, radius: cs.borderTopLeftRadius, bg: cs.backgroundColor, border: cs.borderTopColor, shadow: cs.boxShadow.slice(0, 40),
+        /* 用计算样式的布局尺寸：getBoundingClientRect 会被卡的旋转/透视投影放大，量不准比例 */
+        cover: cover ? (() => {
+          const ccs = getComputedStyle(cover)
+          const w = parseFloat(ccs.width)
+          const h = parseFloat(ccs.height)
+          return { w: Math.round(w), h: Math.round(h), ratio: Number((h / w).toFixed(3)) }
+        })() : null,
+        coverBorder: cover ? getComputedStyle(cover).borderTopWidth : null,
+        title: strong ? { size: getComputedStyle(strong).fontSize, lh: getComputedStyle(strong).lineHeight, ls: getComputedStyle(strong).letterSpacing, color: getComputedStyle(strong).color, mt: getComputedStyle(strong).marginTop, lines: strong.querySelectorAll('.glaze-cover-line').length, text: strong.textContent } : null,
+        kicker: kcs ? { size: kcs.fontSize, ls: kcs.letterSpacing, border: kcs.borderBottomWidth, color: kcs.color } : null,
+        author: author ? { size: acs.fontSize, gap: cr ? Math.round(cr.bottom - author.getBoundingClientRect().bottom) : null } : null
+      }
+    }
+    const note = document.querySelector('.glaze-chapter-note')
+    return JSON.stringify({
+      hero: box('.glaze-shelf-hero'), copy: box('.glaze-feature-copy'), eyebrowBox: box('.glaze-eyebrow'), stack: box('.glaze-feature-stack'),
+      h1: g('.glaze-shelf-tools h1', 'fontSize') + '/' + g('.glaze-shelf-tools h1', 'fontWeight') + '/' + g('.glaze-shelf-tools h1', 'display') + '/gap ' + g('.glaze-shelf-tools h1', 'gap'),
+      pill: g('.glaze-shelf-tools h1 small', 'borderTopColor') + '/r' + g('.glaze-shelf-tools h1 small', 'borderRadius') + '/' + g('.glaze-shelf-tools h1 small', 'fontSize') + '/' + g('.glaze-shelf-tools h1 small', 'fontFamily').slice(0, 18),
+      eyebrow: g('.glaze-eyebrow', 'fontSize') + '/ls ' + g('.glaze-eyebrow', 'letterSpacing') + '/' + ((document.querySelector('.glaze-eyebrow') || {}).textContent || '').trim(),
+      title: g('.glaze-feature-copy h2', 'fontSize') + '/' + g('.glaze-feature-copy h2', 'fontWeight') + '/lh ' + g('.glaze-feature-copy h2', 'lineHeight') + '/ls ' + g('.glaze-feature-copy h2', 'letterSpacing'),
+      line2: g('.glaze-title-line + .glaze-title-line', 'paddingLeft'),
+      intro: g('.glaze-feature-intro', 'fontSize') + '/lh ' + g('.glaze-feature-intro', 'lineHeight'),
+      actions: g('.glaze-feature-actions', 'gap') + '/mt ' + g('.glaze-feature-actions', 'marginTop'),
+      meta: g('.glaze-feature-meta', 'gap') + '/strong ' + g('.glaze-feature-meta strong', 'fontSize') + '/small ' + g('.glaze-feature-meta small', 'fontSize'),
+      search: box('.glaze-shelf-tools .n-input'),
+      placeholder: (document.querySelector('.glaze-shelf-tools input') || {}).placeholder || null,
+      deck: box('.glaze-glass-deck'), perspective: g('.glaze-glass-deck', 'perspective'),
+      pose: [card(0), card(1), card(2)],
+      note: note ? { text: note.textContent.trim(), box: box('.glaze-chapter-note'), radius: getComputedStyle(note).borderRadius, font: getComputedStyle(note).fontSize, inStack: !!note.closest('.glaze-feature-stack') } : null,
+      orb: box('.glaze-orb'),
+      sectionH2: g('.glaze-collection h2', 'fontSize') + '/' + g('.glaze-collection > header > span', 'fontSize'),
+      bottom: g('.glaze-library-open > span:not(.glaze-cover) > strong', 'fontSize') + '/small ' + g('.glaze-library-open small', 'fontSize'),
+      thumb: box('.glaze-library-open > .glaze-cover'),
+      scroll: (() => { const el = document.querySelector('.glaze-shelf-scroll'); return el.scrollWidth <= el.clientWidth ? 'ok' : 'OVERFLOW' })()
+    })
+  })()`)
+  const s = JSON.parse(sb)
+  check(s.h1 === '26px/400/flex/gap 20px', '「我的作品」26px 且与数量成一行两元素', s.h1)
+  check(s.pill === 'rgb(175, 200, 204)/r50px/14px/ui-monospace,Conso'.slice(0, s.pill.length) || /rgb\(175, 200, 204\)\/r50px\/14px/.test(s.pill), '数量是独立药丸（描边 #afc8cc / 圆角 50px / 14px 等宽）', s.pill)
+  check(s.eyebrow.startsWith('13px/ls 1px/') && /今天|昨天|\d+月\d+日/.test(s.eyebrow), '元信息 13px / 字距 1px，且日期是相对时间', s.eyebrow)
+  check(s.hero?.h === 410, '首屏主体固定为设计稿 410px 双栏舞台', JSON.stringify(s.hero))
+  const copyTop = s.eyebrowBox && s.hero ? s.eyebrowBox.t - s.hero.t : null
+  check(copyTop != null && copyTop >= 10 && copyTop <= 16, '左侧信息组整体上移，最近编辑紧随标题区', JSON.stringify({ copyTop, hero:s.hero, copy:s.copy, eyebrow:s.eyebrowBox }))
+  check(s.title === '62px/400/lh 66.96px/ls 2px', '六字标题降级为 62px，保持两行但不压垮舞台', s.title)
+  check(s.line2 === '58px', '标题第二行缩进 58px', s.line2)
+  check(s.intro === '17px/lh 29.24px', '简介 17px / 行高 1.72', s.intro)
+  check(s.actions === '22px/mt 17px', '按钮行 gap 22 / 上距 17', s.actions)
+  check(s.meta === '22px/strong 17px/small 13px', '统计行 gap 22、数字 17px、单位 13px', s.meta)
+  check(s.search?.w === 210 && s.placeholder === '搜索作品', '搜索框 210px 且占位「搜索作品」', `${JSON.stringify(s.search)} / ${s.placeholder}`)
+  check(s.deck?.h === 410 && s.perspective === '1050px', '舞台 410px 高、透视 1050px', `${JSON.stringify(s.deck)} / ${s.perspective}`)
+  const poses = s.pose
+  check(poses.every((p) => p && p.transform === 'matrix3d(' && p.coverBorder === '0px'), '三张卡都带 3D 变换（rotateY 生效）且封面不再吃 8px 白边', JSON.stringify(poses.map((p) => p && [p.transform, p.coverBorder])))
+  check(poses[0]?.padding === '10px' && poses[0]?.radius === '16px' && /rgba\(255, 255, 255/.test(poses[0]?.bg || '') && /rgba\(124, 164, 174|rgba\(59, 108, 122/.test(poses[0]?.shadow || '') + '', '卡片是白纸垫材质（10px 内边距 / 圆角 16 / 半透明白底 / 深投影）', JSON.stringify([poses[0]?.padding, poses[0]?.radius, poses[0]?.bg, poses[0]?.shadow]))
+  /* 比的是「声明宽度」（228/190/158，设计稿值）；旋转+透视后的外框不单调，不能用来判大小 */
+  check(poses[0]?.width === '228px' && poses[1]?.width === '190px' && poses[2]?.width === '158px', '三张卡按设计稿声明宽度 228 / 190 / 158px', JSON.stringify(poses.map((p) => p?.width)))
+  check(poses[0]?.z === '3' && poses[1]?.z === '2' && poses[2]?.z === '1', '层叠顺序 3 / 2 / 1', JSON.stringify(poses.map((p) => p?.z)))
+  const overlap = (a,b) => a && b ? Math.min(a.l+a.w,b.l+b.w)-Math.max(a.l,b.l) : -1
+  check(overlap(poses[0]?.box,poses[1]?.box) >= 45 && overlap(poses[1]?.box,poses[2]?.box) >= 35, '三本书有连续的实际遮挡，不再并排散开', JSON.stringify(poses.map((p) => p?.box)))
+  check((poses[0]?.box?.w||0) > (poses[1]?.box?.w||0) && (poses[1]?.box?.w||0) > (poses[2]?.box?.w||0), '投影后的封面仍保持前大后小', JSON.stringify(poses.map((p) => p?.box?.w)))
+  check(poses[0]?.title?.size === '34px' && poses[1]?.title?.size === '28px' && poses[2]?.title?.size === '22px', '封面书名按设计稿分级 34 / 28 / 22px', JSON.stringify(poses.map((p) => p?.title?.size)))
+  /* 封面排版（设计稿 .cover-type / .glass-book）：竖幅 2:3、书名两行贴顶、内部三层字号 */
+  check(poses.every((p) => p?.cover?.ratio === 1.5), '封面是竖幅 2:3（卡高由比例驱动，不再是写死的 300px）', JSON.stringify(poses.map((p) => p?.cover)))
+  const near = (v, want) => Math.abs(v - want) <= 1
+  check(poses[0]?.cover?.w === 206 && near(poses[0]?.cover?.h, 309) && near(poses[1]?.cover?.h, 252) && near(poses[2]?.cover?.h, 204), '封面内径与设计稿一致（206×309 / 168×252 / 136×204，容差 1px）', JSON.stringify(poses.map((p) => p?.cover)))
+  check(poses.every((p) => p?.title?.lines === 2 && p?.title?.mt === '22px'), '书名拆两行且 margin-top 22px（贴顶，不再垂直居中）', JSON.stringify(poses.map((p) => p?.title && [p.title.lines, p.title.mt])))
+  check(poses[0]?.title?.lh === '42.5px' && poses[0]?.title?.ls === '3px' && poses[0]?.title?.color === 'rgb(23, 63, 73)', '书名行高 1.25 / 字距 3px / 字色 #173f49', JSON.stringify(poses[0]?.title))
+  check(poses.every((p) => !p?.title?.text || p.title.text === p.title.text.trim()), '书名两个行元素拼回的文本无多余空白', JSON.stringify(poses.map((p) => p?.title?.text)))
+  check(poses[0]?.kicker?.size === '13px' && poses[0]?.kicker?.border === '0px', '顶行小字 13px 且去掉下划线', JSON.stringify(poses[0]?.kicker))
+  check(poses[0]?.author?.size === '13px' && poses[0]?.author?.gap >= 12 && poses[0]?.author?.gap <= 30, '作者行 13px 且贴底（margin-top:auto）', JSON.stringify(poses[0]?.author))
+  check(!!s.note && s.note.text.includes('第一章') && s.note.radius === '12px' && s.note.inStack, '首章白卡：真实章节名、12px 圆角，并归入主书簇 DOM', JSON.stringify(s.note))
+  const noteOverlap = s.note?.box && poses[0]?.box ? {
+    x: overlap(s.note.box,poses[0].box),
+    y: Math.min(s.note.box.t+s.note.box.h,poses[0].box.t+poses[0].box.h)-Math.max(s.note.box.t,poses[0].box.t)
+  } : null
+  check(!!noteOverlap && noteOverlap.x >= 55 && noteOverlap.y >= 12, '首章白卡压住主书右下边界，归属关系可见', JSON.stringify(noteOverlap))
+  check(s.orb?.w === 82 && s.orb?.h === 82, '玻璃球 82px', JSON.stringify(s.orb))
+  check(s.sectionH2 === '23px/13px', '底部区题 23px、右侧行 13px', s.sectionH2)
+  check(s.bottom === '17px/small 13px' && s.thumb?.w === 58, '底部卡题 17px / 副信息 13px / 缩略封面 58px', `${s.bottom} / ${JSON.stringify(s.thumb)}`)
+  check(s.scroll === 'ok', '书架滚动区无横向溢出（1440）', s.scroll)
+  await shot('shelf-1440')
+  }
 
   /* ── 隔离性：引力皮肤不应吃到这些规则 ────────────────────────── */
   await ev(`__g.ui.setSkin('gravity').then(()=>true)`).catch(() => {})

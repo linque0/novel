@@ -49,6 +49,23 @@ export async function listWorks() {
   return result
 }
 
+/** 书架「首章白卡」用：该书首卷的首章（按卷序 → 章序，无卷章排在最后兜底）；没有则返回 null */
+export async function firstChapterOf(workId) {
+  const [vols, chs] = await Promise.all([
+    db.volumes.where('workId').equals(workId).toArray(),
+    db.chapters.where('[workId+deletedAt]').equals([workId, null]).toArray()
+      .catch(() => db.chapters.where('workId').equals(workId).filter((c) => !c.deletedAt).toArray())
+  ])
+  const live = chs.filter((c) => !c.deletedAt)
+  const bySort = (a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+  const ofVol = (vid) => live.filter((c) => c.volumeId === vid).sort(bySort)
+  for (const v of vols.filter((x) => !x.deletedAt).sort(bySort)) {
+    const hit = ofVol(v.id)[0]
+    if (hit) return hit
+  }
+  return ofVol(null)[0] || live.sort(bySort)[0] || null
+}
+
 export async function createWorkRow(payload) {
   const workId = uid()
   const t = now()

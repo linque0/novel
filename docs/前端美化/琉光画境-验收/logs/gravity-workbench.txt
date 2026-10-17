@@ -7,13 +7,17 @@ PASS outline original controls and editor fields match
 PASS outline relocated assistant opens original task form
 PASS outline usable minimum-size layout and unobscured navigation
 PASS outline editable scroll viewport stays above navigation
+PASS gravity keeps enrich / delete in the dossier header, the avatar action under the portrait and tags as chips
 PASS characters original controls and editor fields match
+PASS original keeps the character row actions inline and tags in the multi-select
 PASS characters relocated assistant opens original task form
 PASS characters usable minimum-size layout and unobscured navigation
 PASS lore original controls and editor fields match
 PASS lore relocated assistant opens original task form
 PASS lore usable minimum-size layout and unobscured navigation
+PASS gravity reaches quick capture through the 记录灵感 popover trigger
 PASS snippets original controls and editor fields match
+PASS original keeps the inline quick-capture button
 PASS snippets relocated assistant opens original task form
 PASS snippets usable minimum-size layout and unobscured navigation
 PASS inspiration CTA and final copy fit safely above dock and receive pointer events

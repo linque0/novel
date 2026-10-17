@@ -1,82 +1,82 @@
 {
-  "generatedAt": "2026-10-16T11:03:43.121Z",
+  "generatedAt": "2026-10-16T18:55:13.834Z",
   "results": [
     {
       "name": "skin-unit",
       "ok": true,
       "status": 0,
       "checks": 2,
-      "elapsedMs": 91
+      "elapsedMs": 92
     },
     {
       "name": "component-compile",
       "ok": true,
       "status": 0,
       "checks": 26,
-      "elapsedMs": 428
+      "elapsedMs": 390
     },
     {
       "name": "canvas-model",
       "ok": true,
       "status": 0,
       "checks": 48,
-      "elapsedMs": 89
+      "elapsedMs": 88
     },
     {
       "name": "gravity-outline",
       "ok": true,
       "status": 0,
       "checks": 27,
-      "elapsedMs": 2032
+      "elapsedMs": 1894
     },
     {
       "name": "gravity-workbench",
       "ok": true,
       "status": 0,
-      "checks": 59,
-      "elapsedMs": 15262
+      "checks": 63,
+      "elapsedMs": 14741
     },
     {
       "name": "glaze-workbench-1",
       "ok": true,
       "status": 0,
-      "checks": 68,
-      "elapsedMs": 19679
+      "checks": 72,
+      "elapsedMs": 19959
     },
     {
       "name": "glaze-shelf-1",
       "ok": true,
       "status": 0,
-      "checks": 32,
-      "elapsedMs": 8563
+      "checks": 34,
+      "elapsedMs": 8926
     },
     {
       "name": "glaze-workbench-2",
       "ok": true,
       "status": 0,
-      "checks": 68,
-      "elapsedMs": 20834
+      "checks": 72,
+      "elapsedMs": 19937
     },
     {
       "name": "glaze-shelf-2",
       "ok": true,
       "status": 0,
-      "checks": 32,
-      "elapsedMs": 8668
+      "checks": 34,
+      "elapsedMs": 8773
     },
     {
       "name": "glaze-workbench-3",
       "ok": true,
       "status": 0,
-      "checks": 68,
-      "elapsedMs": 19216
+      "checks": 72,
+      "elapsedMs": 19811
     },
     {
       "name": "glaze-shelf-3",
       "ok": true,
       "status": 0,
-      "checks": 32,
-      "elapsedMs": 7734
+      "checks": 34,
+      "elapsedMs": 8978
     }
   ]
 }

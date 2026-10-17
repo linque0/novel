@@ -1,0 +1,72 @@
+PASS 只跑在隔离验收 profile 上
+PASS 关系图补出页头标题（C 版 h1）
+PASS 页头副题与设计稿逐字一致
+PASS 图谱底部提示条与设计稿逐字一致
+PASS 标签筛选改成下拉且占位「全部标签」（不再有原生 select）
+PASS 下拉宽度 110 / 圆角 8 / 描边 #afc8cc（.af-canvas-tools select）
+PASS 页头右侧「发送为大纲引用卡」：选中人物时可用、未选中时禁用
+PASS 布局按钮按设计稿显示文字「圆形」「网格」
+PASS 文字按钮不换行、高度不溢出（曾出现竖排两行）
+PASS 布局按钮仍是 om-btn 且 title 原样保留（脚本按 title 点击）
+PASS 节点卡：2px 白描边（C 版 .af-graph-person）
+PASS 选中节点用强调色描边（设计稿 .af-graph-person.selected）
+PASS 节点卡圆角 13px
+PASS 节点卡底色 #fbffffde
+PASS 节点卡投影改用 #7ca4ae 系
+PASS 姓名 25px 且居中
+PASS 角色标签改为淡填充 chip（不再是描边）
+PASS 角色色仍作为字色保留（主角红）
+PASS 边标签：纯文字、无底无边、14px
+PASS 筛选芯片：静默无框、选中淡填充
+PASS 画布：22px 点阵 + #b8ced2 描边
+PASS 拖线端口在节点悬停时可见（原先因 .oc-node 选择器一直隐形）
+PASS 关系图谱有真实邻居（夹具含 2 条关联关系）
+PASS 图谱节点改为白卡片（原先走基座窄药丸）
+PASS 中心节点用强调色描边（#146878）
+PASS 中心节点标题 23px 文楷（C 版 .af-map-center）
+PASS 图谱关系标签改为纯文字 13px
+PASS 图谱画布改为径向光晕（非点阵）
+PASS 元信息行状态做成 chip（C 版 .af-text-top）
+PASS 元信息行状态文字保留
+PASS 元信息 13px + 淡青 chip（#cde3e5 / accent）
+PASS 条目标题 34px、留白 22px（C 版 .af-outline-title）
+PASS 标题下划线 #afc8cc
+PASS 正文 20px/2、限宽 970、留白 30（C 版 .af-rich）
+PASS 工具条右端提示包成工具形态（不再是裸灰字）
+PASS 提示文案保留（它解释的是真实功能）
+PASS 书架渲染（含 hero 区）
+PASS 「我的作品」26px 且与数量成一行两元素
+PASS 数量是独立药丸（描边 #afc8cc / 圆角 50px / 14px 等宽）
+PASS 元信息 13px / 字距 1px，且日期是相对时间
+PASS 首屏主体固定为设计稿 410px 双栏舞台
+PASS 左侧信息组整体上移，最近编辑紧随标题区
+PASS 六字标题降级为 62px，保持两行但不压垮舞台
+PASS 标题第二行缩进 58px
+PASS 简介 17px / 行高 1.72
+PASS 按钮行 gap 22 / 上距 17
+PASS 统计行 gap 22、数字 17px、单位 13px
+PASS 搜索框 210px 且占位「搜索作品」
+PASS 舞台 410px 高、透视 1050px
+PASS 三张卡都带 3D 变换（rotateY 生效）且封面不再吃 8px 白边
+PASS 卡片是白纸垫材质（10px 内边距 / 圆角 16 / 半透明白底 / 深投影）
+PASS 三张卡按设计稿声明宽度 228 / 190 / 158px
+PASS 层叠顺序 3 / 2 / 1
+PASS 三本书有连续的实际遮挡，不再并排散开
+PASS 投影后的封面仍保持前大后小
+PASS 封面书名按设计稿分级 34 / 28 / 22px
+PASS 封面是竖幅 2:3（卡高由比例驱动，不再是写死的 300px）
+PASS 封面内径与设计稿一致（206×309 / 168×252 / 136×204，容差 1px）
+PASS 书名拆两行且 margin-top 22px（贴顶，不再垂直居中）
+PASS 书名行高 1.25 / 字距 3px / 字色 #173f49
+PASS 书名两个行元素拼回的文本无多余空白
+PASS 顶行小字 13px 且去掉下划线
+PASS 作者行 13px 且贴底（margin-top:auto）
+PASS 首章白卡：真实章节名、12px 圆角，并归入主书簇 DOM
+PASS 首章白卡压住主书右下边界，归属关系可见
+PASS 玻璃球 82px
+PASS 底部区题 23px、右侧行 13px
+PASS 底部卡题 17px / 副信息 13px / 缩略封面 58px
+PASS 书架滚动区无横向溢出（1440）
+PASS 对齐规则只在琉光生效（引力无页头/提示条、节点描边未被改）
+
+琉光视觉保真：70/70 通过

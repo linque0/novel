@@ -5,6 +5,7 @@ PASS glaze tokens override original theme on root and teleported surfaces
 PASS all remaining works are accessible
 PASS six cover choices and default-volume choice are preserved
 PASS minimum desktop width has no horizontal overflow
+PASS 1080px chapter card remains attached to and overlapping the featured book
 PASS navigation never overlays the scrollable book area
 PASS empty search disables only work navigation
 PASS search changes the featured work
@@ -19,6 +20,7 @@ PASS dock opens glaze chapters
 PASS book menu does not trigger opening
 PASS shared edit form persists title/author/introduction and refreshes shelf
 PASS shared create form creates a work with its default volume
+PASS a featured work without chapters leaves no chapter-card placeholder
 PASS delete remains recoverable soft deletion
 PASS visible picker switches back and persists original skin
 PASS failed skin save retains current skin and theme

@@ -1,0 +1,151 @@
+{
+  "generatedAt": "2026-10-16T12:47:34.572Z",
+  "scope": "gravity only",
+  "states": [
+    {
+      "label": "书架",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/shelf.png",
+      "before": "before/_skin-gravity-1400.png",
+      "actual": "screenshots/_gravity-shelf-shelf.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "正文",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/editor.png",
+      "before": "before/_gravity-work-chapters.png",
+      "actual": "screenshots/_gravity-work-chapters.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "大纲画布",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/outline.png",
+      "before": "before/_gravity-work-outline-canvas.png",
+      "actual": "screenshots/_gravity-work-outline-canvas.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "文本大纲",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/outline-text.png",
+      "before": "before/_gravity-work-outline.png",
+      "actual": "screenshots/_gravity-work-outline.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "设定节点",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/world.png",
+      "before": "before/_gravity-work-lore.png",
+      "actual": "screenshots/_gravity-work-lore.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "设定详情",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/world-detail.png",
+      "before": "before/_gravity-work-lore-detail.png",
+      "actual": "screenshots/_gravity-work-lore-detail.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "人物档案",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/characters.png",
+      "before": "before/_gravity-work-characters.png",
+      "actual": "screenshots/_gravity-work-characters.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "人物关系图",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/characters-graph.png",
+      "before": "before/_gravity-work-character-graph.png",
+      "actual": "screenshots/_gravity-work-character-graph.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "灵感",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/inspiration.png",
+      "before": "before/_gravity-work-snippets.png",
+      "actual": "screenshots/_gravity-work-snippets.png",
+      "actualSize": "1440×900"
+    },
+    {
+      "label": "独立设置",
+      "reference": "../oil-ui-v3-功能对齐/gallery/a/settings.png",
+      "before": "before/_gravity-work-settings.png",
+      "actual": "screenshots/_gravity-work-settings.png",
+      "actualSize": "1440×900"
+    }
+  ],
+  "characterAlignment": [
+    "character-alignment/reference-meta.png",
+    "character-alignment/before-meta.png",
+    "closeups/character-meta-final-200.png",
+    "character-alignment/reference-sections.png",
+    "character-alignment/before-sections.png",
+    "closeups/character-sections-final-200.png",
+    "character-alignment/reference-tags.png",
+    "character-alignment/before-tags.png",
+    "closeups/character-tags-final-200.png",
+    "character-alignment/reference-crosslinks.png",
+    "character-alignment/before-crosslinks.png",
+    "closeups/character-crosslinks-final-200.png"
+  ],
+  "screenshots": [
+    "_gravity-shelf-edit.png",
+    "_gravity-shelf-empty.png",
+    "_gravity-shelf-no-results.png",
+    "_gravity-shelf-shelf-1080.png",
+    "_gravity-shelf-shelf.png",
+    "_gravity-shelf-single.png",
+    "_gravity-work-ai-1080.png",
+    "_gravity-work-chapter-ai-1080.png",
+    "_gravity-work-chapter-ai-wide.png",
+    "_gravity-work-chapters-1080.png",
+    "_gravity-work-chapters.png",
+    "_gravity-work-character-graph.png",
+    "_gravity-work-characters-1080.png",
+    "_gravity-work-characters.png",
+    "_gravity-work-lore-1080.png",
+    "_gravity-work-lore-detail.png",
+    "_gravity-work-lore.png",
+    "_gravity-work-outline-1080.png",
+    "_gravity-work-outline-canvas.png",
+    "_gravity-work-outline.png",
+    "_gravity-work-panel-chapter-800.png",
+    "_gravity-work-panel-chapter.png",
+    "_gravity-work-panel-characters-800.png",
+    "_gravity-work-panel-characters.png",
+    "_gravity-work-panel-lore-800.png",
+    "_gravity-work-panel-lore.png",
+    "_gravity-work-panel-outline-800.png",
+    "_gravity-work-panel-outline.png",
+    "_gravity-work-panel-snippets-800.png",
+    "_gravity-work-panel-snippets.png",
+    "_gravity-work-reading.png",
+    "_gravity-work-settings-1000.png",
+    "_gravity-work-settings-800.png",
+    "_gravity-work-settings.png",
+    "_gravity-work-snippets-1080.png",
+    "_gravity-work-snippets.png"
+  ],
+  "closeups": [
+    "chapters-1080-200.png",
+    "character-crosslinks-final-200.png",
+    "character-graph-200.png",
+    "character-meta-final-200.png",
+    "character-sections-final-200.png",
+    "character-tags-final-200.png",
+    "characters-200.png",
+    "outline-200.png"
+  ],
+  "logs": [
+    "_gravity-character-align-1.log",
+    "_gravity-character-align-2.log",
+    "_gravity-character-align-3.log",
+    "_gravity-character-align-compile.log",
+    "_gravity-final-compile.log",
+    "_gravity-final-shelf-1.log",
+    "_gravity-final-shelf-2.log",
+    "_gravity-final-shelf-3.log",
+    "_gravity-final-work-1.log",
+    "_gravity-final-work-2.log",
+    "_gravity-final-work-3.log"
+  ]
+}

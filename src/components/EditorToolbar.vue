@@ -205,5 +205,8 @@ const isActive = (name, attrs) => {
     ><OIcon :name="bmOn ? 'star-filled' : 'star'" :size="14" /></button>
     <span class="tb-sep" />
     <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
+
+    <!-- 顶栏右端：章节状态 / 字数 / 历史（编辑皮肤由 EditorPane 注入；原版留在自己的 .editor-head） -->
+    <slot name="bar-end" />
   </div>
 </template>

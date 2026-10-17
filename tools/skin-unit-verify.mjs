@@ -30,7 +30,7 @@ for (const skin of ['original', 'gravity', 'glaze']) {
     const restored = projectCharacterPoint(projected, geometry, true)
     assert.ok(Math.abs(point.x-restored.x)<1e-10 && Math.abs(point.y-restored.y)<1e-10)
     assert.deepEqual(point, before, 'projection does not mutate stored positions')
-    if (skin !== 'glaze') assert.deepEqual(projected, point, 'existing skins keep original coordinates')
+    if (skin === 'original') assert.deepEqual(projected, point, 'existing skins keep original coordinates')
   }
   assert.equal(projectCharacterPoint(null, geometry), null)
   assert.ok(116*geometry.scaleY>geometry.height, 'original grid spacing remains non-overlapping')

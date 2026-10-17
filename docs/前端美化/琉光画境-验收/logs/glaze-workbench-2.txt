@@ -1,9 +1,13 @@
 PASS isolated data profile
 PASS workbench glaze tokens
 PASS seven module/shelf/settings entries and independent AI masthead control
+PASS chapter status, word count and history render inside the editor top bar
+PASS the bar follows the chapter status and word count it is bound to
+PASS the status group is pinned to the right edge of the bar and no longer sits under the chapter title
 PASS CJK, Latin and body size preferences survive all skin switches and remain effective
 PASS chapter selection uses the light teal component theme
 PASS hot switch preserves editor instance, text and selection
+PASS original keeps its own status / word count / history row above the toolbar
 PASS outline original controls and editor fields match
 PASS outline relocated assistant opens original task form
 PASS outline usable minimum-size layout and unobscured navigation

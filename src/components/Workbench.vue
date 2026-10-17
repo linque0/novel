@@ -329,7 +329,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <RightPanel v-if="!ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && ui.rightPanelOpen" />
 
-      <InspirationPrompt v-if="ui.skin === 'gravity' && work.tab === 'snippets' && !ui.aiDrawerOpen && !aiPopped && !modulePopped && !ui.focusMode && !ui.readMode" />
+      <InspirationPrompt v-if="ui.skin === 'gravity' && work.tab === 'snippets' && (!ui.aiDrawerOpen || aiPopped) && !modulePopped && !ui.focusMode && !ui.readMode" />
 
       <!-- 恍然梦停靠列：参与 flex 布局，与原界面并排显示（不遮挡）；左缘可拖宽，拆出独立窗口后此列隐藏 -->
       <div

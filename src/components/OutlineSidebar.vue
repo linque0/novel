@@ -3,7 +3,7 @@
 <script setup>
 import OIcon from './OIcon.vue'
 import { computed, ref, onMounted } from 'vue'
-import { NButton, NPopover, NModal, NInput, NDropdown } from 'naive-ui'
+import { NButton, NPopover, NModal, NInput, NDropdown, NSelect } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
@@ -206,10 +206,11 @@ onMounted(() => {
     </div>
     <div class="ol-side-search" style="padding: 0 10px 6px">
       <input v-model="q" class="rp-input" placeholder="搜索模块…" style="width: 100%; font-size: 12px" />
-      <div v-if="ui.skin !== 'gravity'" class="ol-typefilter">
-        <span v-for="t in TYPES" :key="t" class="om-chip" :class="{ on: typeFilter === t }" @click="typeFilter = t">{{ t }}</span>
+      <div class="ol-typefilter">
+        <component :is="ui.skin === 'gravity' ? 'button' : 'span'" v-for="t in TYPES" :key="t" class="om-chip" :class="{ on: typeFilter === t }" :aria-pressed="ui.skin === 'gravity' ? typeFilter === t : undefined" @click="typeFilter = t">{{ t }}</component>
         <span class="om-chip" :class="{ on: typeManage }" title="管理自定义类型" @click="typeManage = !typeManage"><OIcon name="gear" :size="12" /></span>
       </div>
+      <NSelect v-if="ui.skin === 'gravity'" v-model:value="typeFilter" class="gravity-compact-typefilter" aria-label="筛选模块类型" :options="TYPES.map(t => ({ label: t, value: t }))" />
       <div v-if="typeManage" class="ol-type-manage" :class="{ 'gravity-type-manage': ui.isStudioSkin }">
         <div v-for="t in customTypes" :key="t.name" class="ol-type-row">
           <span class="om-mtype" :style="{ color: t.color, borderColor: t.color }">{{ t.name }}</span>
@@ -230,7 +231,7 @@ onMounted(() => {
         :class="{ active: work.selOlnodeId === m.n.id, 'ol-broken-item': m.broken }"
         :data-kind="m.n.kind"
         :style="{ paddingLeft: 6 + m.depth * 14 + 'px' }"
-        :title="m.brokenTip || (m.parentLabel && !m.hasKids ? m.parentLabel + ' · ' + m.label : m.label)"
+        :title="(m.brokenTip || (m.parentLabel && !m.hasKids ? m.parentLabel + ' · ' + m.label : m.label)) + (ui.skin === 'gravity' && m.badge ? ' · ' + m.badge : '')"
         role="button"
         tabindex="0"
         @click="pick(m)"
@@ -251,10 +252,10 @@ onMounted(() => {
         <span v-if="ui.isStudioSkin" class="gv-row-kind">{{ KIND_LABEL_DESIGN[m.n.kind] || m.type }}</span>
         <span v-if="m.mtype" class="om-mtype" :style="{ color: m.mcolor, borderColor: m.mcolor }">{{ m.mtype }}</span>
         <span v-if="m.badge" class="dim">{{ m.badge }}</span>
-        <NDropdown v-if="ui.skin === 'glaze'" trigger="click" :options="[{key:'rename',label:'重命名'},{key:'ai',label:'发送给恍然梦',disabled:!ai.ready},{key:'remove',label:'删除'}]" @select="key => key === 'rename' ? rename(m) : key === 'ai' ? aiPlan(m) : remove(m)">
+        <NDropdown v-if="ui.isStudioSkin" trigger="click" :options="[{key:'rename',label:'重命名'},{key:'ai',label:'发送给恍然梦',disabled:!ai.ready},{key:'remove',label:'删除'}]" @select="key => key === 'rename' ? rename(m) : key === 'ai' ? aiPlan(m) : remove(m)">
           <button class="gv-more glaze-module-menu" title="模块操作：重命名、恍然梦、删除" aria-label="模块操作" @click.stop @keydown.stop>⋯</button>
         </NDropdown>
-        <span v-show="ui.skin !== 'glaze'" class="ol-ops">
+        <span v-show="!ui.isStudioSkin" class="ol-ops">
           <button class="ol-op" title="重命名" @click.stop="rename(m)"><OIcon name="edit" :size="11" /></button>
           <button class="ol-op" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（为该节点生成分支线路方案）' : AI_UNSET_HINT" @click.stop="aiPlan(m)"><OIcon name="star" :size="11" /></button>
           <button class="ol-op ol-op-danger" title="删除" @click.stop="remove(m)"><OIcon name="close" :size="11" /></button>

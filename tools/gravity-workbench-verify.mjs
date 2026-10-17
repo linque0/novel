@@ -80,10 +80,25 @@ try {
     // Sanctioned skin-only swap on the outline page: gravity replaces the type-filter chip row with
     // the title-row count badge + gear and adds a per-card ⋯. Those are excluded from the parity
     // multiset here and asserted from both sides in tools/gravity-outline-verify.mjs.
-    const signature = `JSON.stringify([...new Set([...document.querySelectorAll('.side-panel button,.side-panel [role="button"],.side-panel input,.center-pane button,.center-pane input,.center-pane textarea,.center-pane [contenteditable="true"],.right-panel button,.right-panel textarea,.module-agent button')])].filter(n=>!n.closest('.gravity-right-tabs,.gravity-dossier-heading,.ol-typefilter,.gravity-side-gear,.gv-more')).map(n=>JSON.stringify([n.tagName,n.title,n.getAttribute('placeholder'),n.tagName==='BUTTON'?n.textContent.replace(/\\s+/g,'').trim():''])).sort())`
+    // gravity additionally appends the row's badge to the row tooltip (`第一卷 · 1项`); that is the
+    // same sanctioned decoration, so the comparison strips a badge-shaped tail before comparing.
+    // Two more sanctioned swaps, each excluded only on its own tab and pinned by an assertion below:
+    //   characters — gravity moves 恍然梦：丰富 / 删除 into the dossier header (already excluded) and puts
+    //                设头像/换头像 under the portrait as `.gravity-avatar-action`, then swaps the tag
+    //                multi-select for the chip editor (+ / × / 输入标签) inside `.character-alias-row`;
+    //                those two controls are asserted directly instead of through the multiset
+    //                (the alias input exists on both sides);
+    //   snippets   — gravity turns the inline quick-capture (textarea + 记录) into a popover whose
+    //                trigger is 「记录灵感」, so `.side-head` is compared by the assertions below.
+    const swap = tab === 'characters' ? ',.character-alias-row,.character-tag-select,.gravity-avatar-action' : tab === 'snippets' ? ',.side-head' : ''
+    const signature = `(()=>{const badge=/[ \\t]*·[ \\t]*(?:(?:\\d+字|\\d+项|↔\\d+)[ \\t]*)+$/;const strip=t=>t?t.replace(badge,'').trim():t;return JSON.stringify([...new Set([...document.querySelectorAll('.side-panel button,.side-panel [role="button"],.side-panel input,.center-pane button,.center-pane input,.center-pane textarea,.center-pane [contenteditable="true"],.right-panel button,.right-panel textarea,.module-agent button')])].filter(n=>!n.closest('.gravity-right-tabs,.gravity-dossier-heading,.ol-typefilter,.gravity-side-gear,.gv-more${swap}')).map(n=>JSON.stringify([n.tagName,strip(n.title),n.getAttribute('placeholder'),n.tagName==='BUTTON'?n.textContent.replace(/\\s+/g,'').trim():''])).sort())})()`
     const gravityControls = await ev(signature)
+    if (tab === 'characters') check(await ev(`(()=>{const h=document.querySelector('.gravity-dossier-heading'),r=document.querySelector('.gravity-character-meta-row'),a=document.querySelector('.gravity-avatar-action');return !!h&&/丰富/.test(h.textContent)&&/删除/.test(h.textContent)&&!!a&&/头像/.test(a.textContent)&&!!document.querySelector('.gravity-tag-add')&&!!r&&!!r.querySelector('input[placeholder="别名（用 / 分隔）"]')})()`), 'gravity keeps enrich / delete in the dossier header, the avatar action under the portrait and tags as chips')
+    if (tab === 'snippets') check(await ev(`document.querySelector('.gravity-quick-trigger')?.textContent.trim()==='记录灵感'`), 'gravity reaches quick capture through the 记录灵感 popover trigger')
     await ev(`__g.ui.setSkin('original').then(()=>true)`)
     check(await ev(signature)===gravityControls, tab+' original controls and editor fields match')
+    if (tab === 'characters') check(await ev(`(()=>{const r=document.querySelector('.character-alias-row'),h=document.querySelector('.gravity-dossier-heading');return !!r&&r.textContent.includes('删除')&&r.textContent.includes('恍然梦：丰富')&&!h&&!!document.querySelector('.character-tag-select')})()`), 'original keeps the character row actions inline and tags in the multi-select')
+    if (tab === 'snippets') check(await ev(`[...document.querySelectorAll('.side-head button')].some(b=>b.textContent.trim()==='记录')`), 'original keeps the inline quick-capture button')
     await ev(`__g.ui.setSkin('gravity').then(()=>true)`)
     await wait(`!!document.querySelector('#studio-task-actions button')`)
     await ev(`document.querySelector('#studio-task-actions button').click()`)
@@ -144,7 +159,7 @@ try {
   await shot('ai-1080',1080,680)
   await ev(`__g.work.tab='chapters'`);await wait('!!document.querySelector(".editor-head")')
   await shot('chapter-ai-1080',1080,680)
-  check(await ev(`(()=>{const p=document.querySelector('.center-pane').getBoundingClientRect(),a=document.querySelector('.ai-dock').getBoundingClientRect();return p.width>=300&&a.right<=innerWidth&&[...document.querySelectorAll('.editor-head button')].every(b=>{const r=b.getBoundingClientRect();return r.left>=p.left&&r.right<=p.right})})()`), 'chapter, notes, AI and catalog remain usable together at minimum size')
+  check(await ev(`(()=>{const p=document.querySelector('.center-pane').getBoundingClientRect(),a=document.querySelector('.ai-dock').getBoundingClientRect(),t=document.querySelector('.editor-toolbar').getBoundingClientRect();return p.width>=300&&a.right<=innerWidth&&!!document.querySelector('.editor-toolbar .editor-bar-status')&&t.left>=p.left&&t.right<=p.right+1})()`), 'chapter, notes, AI and catalog remain usable together at minimum size')
   await ev(`__g.ui.setPref('sideWidth',480).then(()=>__g.ui.setPref('aiDrawerWidth',640)).then(()=>true)`)
   await shot('chapter-ai-wide',1400,880)
   check(await ev(`document.querySelector('.center-pane').getBoundingClientRect().width>=300&&__g.ui.sideWidth===480&&__g.ui.aiDrawerWidth===640`), 'large saved widths adapt without overwriting preferences')

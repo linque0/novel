@@ -10,7 +10,8 @@ defineProps({
   compact: { type: Boolean, default: false }, // 紧凑：不出「跳转」图标（悬停浮层用）
   removable: { type: Boolean, default: false }, // 可删除：行尾 ×
   clickable: { type: Boolean, default: true }, // 行可点（跳转/切换）；设置面板等管理场景传 false
-  hoverLink: { type: String, default: '' } // 外部高亮的关系 id（图谱悬停联动）
+  hoverLink: { type: String, default: '' }, // 外部高亮的关系 id（图谱悬停联动）
+  dossier: { type: Boolean, default: false } // 人物档案：按「类型 / 对象 / 关系」顺序呈现
 })
 defineEmits(['pick', 'remove', 'hover'])
 
@@ -22,10 +23,13 @@ function kindStyle(e) {
     background: `color-mix(in srgb, ${c} 9%, transparent)`
   }
 }
+function kindShort(kind) {
+  return ({ mubu: '设', character: '人', chapter: '章', snippet: '灵', olnode: '纲', outline: '纲' })[kind] || '链'
+}
 </script>
 
 <template>
-  <div class="rel-rows" :class="{ compact }">
+  <div class="rel-rows" :class="{ compact, dossier }">
     <div
       v-for="e in entries"
       :key="e.linkId + ':' + e.dir"
@@ -33,10 +37,15 @@ function kindStyle(e) {
       :class="{ on: hoverLink === e.linkId, static: !clickable }"
       :data-link="e.linkId"
       :title="e.description || ''"
+      :role="dossier && clickable ? 'button' : undefined"
+      :tabindex="dossier && clickable ? 0 : undefined"
       @click="clickable && $emit('pick', e)"
+      @keydown.enter="dossier && clickable && $emit('pick', e)"
+      @keydown.space.prevent="dossier && clickable && $emit('pick', e)"
       @mouseenter="$emit('hover', e)"
       @mouseleave="$emit('hover', null)"
     >
+      <span v-if="dossier" class="rel-object-kind" aria-hidden="true">{{ kindShort(e.otherKind) }}</span>
       <span class="rel-kind" :style="kindStyle(e)"><OIcon :name="relIconFor(e.label)" :size="11" />{{ e.label }}</span>
       <span class="rel-dir" aria-hidden="true">{{ e.dir === 'out' ? '→' : '←' }}</span>
       <span class="rel-other">{{ e.otherTitle }}</span>

@@ -85,6 +85,16 @@ try {
   check(await ev(`document.body.dataset.skin==='glaze'&&getComputedStyle(document.querySelector('.app-root')).getPropertyValue('--bg-panel').trim()==='#f3f8f9'`), 'workbench glaze tokens')
   check(await ev(`document.querySelectorAll('.nav-rail .rail-item').length===7 && [...document.querySelectorAll('.nav-rail .oicon')].every(s=>s.children.length)&&!!document.querySelector('.gravity-masthead button[aria-pressed]')`), 'seven module/shelf/settings entries and independent AI masthead control')
   await shot('chapters')
+  /* 顶栏右端：章节状态 / 字数 / 历史（原先在章题下方那一行，现归 .editor-toolbar 末尾、右对齐）
+     注意：章节状态存的是键（draft/done/revise），顶栏显示的是中文标签，所以这里比标签不比键。 */
+  check(await ev(`(()=>{const b=document.querySelector('.editor-toolbar'),s=b&&b.querySelector('.editor-bar-status');return !!s&&s===b.lastElementChild&&!!s.querySelector('.n-base-selection')&&!!s.querySelector('.n-tag')&&[...s.querySelectorAll('button')].some(x=>x.textContent.trim()==='历史')&&/^\\d+ 字$/.test(s.querySelector('.n-tag').textContent.trim())&&['草稿','完成','待修改'].includes(s.querySelector('.n-base-selection').textContent.trim())})()`), 'chapter status, word count and history render inside the editor top bar')
+  await ev(`(()=>{__g.work.setChapterStatus(__g.work.activeChapter.id,'done');return true})()`)
+  await c.sleep(400)
+  check(await ev(`(()=>{const s=document.querySelector('.editor-bar-status');return s.querySelector('.n-base-selection').textContent.trim()==='完成'&&s.querySelector('.n-tag').textContent.trim()===(__g.work.activeChapter.wordCount||0)+' 字'})()`), 'the bar follows the chapter status and word count it is bound to')
+  await ev(`(()=>{__g.work.setChapterStatus(__g.work.activeChapter.id,'draft');return true})()`)
+  /* 右对齐量的是结果而不是 `margin-left:auto` 的字面值：Chromium 对弹性项的 auto 外边距
+     在 getComputedStyle 里给出的是已解析的像素值（实测 503.8px），不是 'auto'。 */
+  check(await ev(`(()=>{const bar=document.querySelector('.editor-toolbar').getBoundingClientRect(),s=document.querySelector('.editor-bar-status'),r=s.getBoundingClientRect();return r.right>=bar.right-22&&r.right<=bar.right+1&&r.left>bar.left&&!document.querySelector('.gravity-manuscript-head .editor-bar-status,.gravity-manuscript-head .gravity-manuscript-status')})()`), 'the status group is pinned to the right edge of the bar and no longer sits under the chapter title')
   await ev(`window.__gBodyPrefs={editorFont:__g.ui.editorFont,editorLatin:__g.ui.editorLatin,fontSize:__g.ui.fontSize};__g.ui.setPref('editorFont','jinghua').then(()=>__g.ui.setPref('editorLatin','playfair')).then(()=>__g.ui.setPref('fontSize',19)).then(()=>__g.ui.setSkin('original')).then(()=>__g.ui.setSkin('gravity')).then(()=>__g.ui.setSkin('glaze')).then(()=>true)`)
   check(await ev(`(()=>{const s=getComputedStyle(document.querySelector('.tiptap'));return s.fontFamily.includes('KingHwa OldSong')&&s.fontFamily.includes('Playfair Display')&&parseFloat(s.fontSize)===19&&__g.ui.editorFont==='jinghua'&&__g.ui.editorLatin==='playfair'&&__g.ui.fontSize===19})()`),'CJK, Latin and body size preferences survive all skin switches and remain effective')
   await ev(`__g.ui.setPref('editorFont',__gBodyPrefs.editorFont).then(()=>__g.ui.setPref('editorLatin',__gBodyPrefs.editorLatin)).then(()=>__g.ui.setPref('fontSize',__gBodyPrefs.fontSize)).then(()=>true)`)
@@ -92,6 +102,7 @@ try {
   // A skin change must not remount the editor or lose unsaved content/selection.
   await ev(`window.__gEditor=__ns.editor;__gEditor.commands.insertContent('验收文本');window.__gText=__gEditor.getText();window.__gSelection=__gEditor.state.selection.from;__g.ui.setSkin('original').then(()=>true)`)
   check(await ev(`__ns.editor===__gEditor&&__ns.editor.getText()===__gText&&__ns.editor.state.selection.from===__gSelection&&document.body.dataset.skin==='original'`), 'hot switch preserves editor instance, text and selection')
+  check(await ev(`(()=>{const h=document.querySelector('.editor-head');return !document.querySelector('.editor-bar-status')&&!!h&&!!h.querySelector('.n-base-selection')&&!!h.querySelector('.n-tag')&&[...h.querySelectorAll('button')].some(b=>b.textContent.trim()==='历史')})()`), 'original keeps its own status / word count / history row above the toolbar')
   await shot('original')
   await ev('__g.ui.setSkin("glaze").then(()=>true)')
   for (const [tab, selector] of [['outline','.outline-surface'],['characters','.character-surface'],['lore','.lore-surface'],['snippets','.snippet-surface'],['chapters','.editor-wrap']]) {
@@ -194,7 +205,7 @@ try {
   await shot('ai-1080',1080,680)
   await ev(`__g.work.tab='chapters'`);await wait('!!document.querySelector(".editor-head")')
   await shot('chapter-ai-1080',1080,680)
-  check(await ev(`(()=>{const p=document.querySelector('.center-pane').getBoundingClientRect(),a=document.querySelector('.ai-dock').getBoundingClientRect();return p.width>=300&&a.right<=innerWidth&&[...document.querySelectorAll('.editor-head button')].every(b=>{const r=b.getBoundingClientRect();return r.left>=p.left&&r.right<=p.right})})()`), 'chapter, notes, AI and catalog remain usable together at minimum size')
+  check(await ev(`(()=>{const p=document.querySelector('.center-pane').getBoundingClientRect(),a=document.querySelector('.ai-dock').getBoundingClientRect(),t=document.querySelector('.editor-toolbar').getBoundingClientRect();return p.width>=300&&a.right<=innerWidth&&!!document.querySelector('.editor-toolbar .editor-bar-status')&&t.left>=p.left&&t.right<=p.right+1})()`), 'chapter, notes, AI and catalog remain usable together at minimum size')
   await ev(`__g.ui.setPref('sideWidth',480).then(()=>__g.ui.setPref('aiDrawerWidth',640)).then(()=>true)`)
   await shot('chapter-ai-wide',1400,880)
   check(await ev(`document.querySelector('.center-pane').getBoundingClientRect().width>=300&&__g.ui.sideWidth===480&&__g.ui.aiDrawerWidth===640`), 'large saved widths adapt without overwriting preferences')

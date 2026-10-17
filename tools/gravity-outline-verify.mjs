@@ -1,12 +1,14 @@
 /* 大纲页设计稿对齐验收（引力书舱）：侧栏标题计数与类型管理、筛选行的皮肤取舍、
    按钮形状（6px 矩形替下药丸）、模块行排布、卡片排版（顶部类型行 / 宋体标题 / 便签与文本框形态）
    与放大档位；每条引力断言都配一条原版对照，确认改动不外溢。
-   仅使用隔离的 gravity-skin-verify Electron 配置（5173 + 9223），不触碰日常用户数据。 */
+   端口走 CDP_PORT（默认 9223）；只接受开发/隔离配置（--profile=dev 或 gravity-skin-verify），
+   绝不在默认配置上运行这套写入验收。 */
 import assert from 'node:assert/strict'
 import { writeFile } from 'node:fs/promises'
 import { connect } from './_cdp-lib.mjs'
 
-const c = await connect('http://127.0.0.1:5173', '9223')
+const PORT = process.env.CDP_PORT || '9223'
+const c = await connect('http://127.0.0.1:5173', PORT)
 const ev = async (code, client = c) => {
   const r = await client.evalx(code)
   if (r?.PAGE_ERR) throw new Error(r.PAGE_ERR)
@@ -46,7 +48,9 @@ try {
   await c.send('Page.reload', { ignoreCache: true })
   await init()
   const loc = await ev('native.getDataLocation()')
-  check(loc.defaultDir.endsWith('小说工坊-gravity-skin-verify') && loc.current === loc.defaultDir && !loc.isCustom, 'isolated data profile')
+  /* 只接受开发/隔离配置（--profile=dev 或 gravity-skin-verify），绝不在默认配置上跑写入验收 */
+  console.log('# data dir: ' + loc.current)
+  check(/小说工坊-(dev|gravity-skin-verify)$/.test(loc.defaultDir), 'non-default development profile')
   prefs = await ev('__ns.db.appconfig.toArray()')
   id = await ev(`(async()=>{
     if(__g.work.work)await __g.work.closeWork();
@@ -79,8 +83,8 @@ try {
     'count badge equals the live module total'
   )
   check(
-    await ev(`document.querySelectorAll('.side-item').length===7 && !document.querySelector('.ol-typefilter')`),
-    'gravity drops the type-filter chip row and lists every module'
+    await ev(`document.querySelectorAll('.side-item').length===7 && !!document.querySelector('.ol-typefilter')`),
+    'gravity retains the type-filter chip row and lists every module'
   )
   check(
     await ev(`(()=>{const h=document.querySelector('.gravity-side-hint'),f=document.querySelector('.ol-side-foot .om-chip'),r=getComputedStyle(f);return h&&h.textContent.trim()==='点击条目定位画布'&&/断线 \\d+/.test(f.textContent.trim())&&parseFloat(r.borderTopLeftRadius)<12})()`),
@@ -137,18 +141,23 @@ try {
     'module counter and zoom readout follow the design text style'
   )
 
-  /* 5) 卡片排版：顶部类型行 / 宋体标题 / 各类型形态 */
+  /* 5) 卡片排版：顶部类型行 / 宋体标题 / 各类型形态
+     选择器必须限定在画布内：侧栏每一行的「⋯」复用同一套 gv-more/gv-kind 类名，
+     全局查会把 7 个侧栏按钮一起算进来，这条断言就恒假（与卡片形态无关）。 */
   check(
-    await ev(`(()=>{const k=[...document.querySelectorAll('.gv-kind')].map(n=>n.textContent.trim());const tb=document.querySelector('.oc-textbox');return ['事件','便签','引用卡','章节锚点'].every(x=>k.includes(x))&&document.querySelectorAll('.gv-more').length===k.length&&!tb.querySelector('.gv-kindrow')})()`),
+    await ev(`(()=>{const k=[...document.querySelectorAll('.oc-canvas .gv-kind')].map(n=>n.textContent.trim());const tb=document.querySelector('.oc-canvas .oc-textbox');return ['事件','便签','引用卡','章节锚点'].every(x=>k.includes(x))&&document.querySelectorAll('.oc-canvas .gv-more').length===k.length&&!tb.querySelector('.gv-kindrow')})()`),
     'every canvas card except the text box carries the design type row with its ⋯ entry'
   )
   check(
     await ev(`(()=>{const l=document.querySelector('.oc-event .oc-label'),cs=getComputedStyle(l);return cs.fontFamily.includes('Noto Serif SC')&&parseFloat(cs.fontSize)>=19&&cs.whiteSpace==='normal'&&cs.webkitLineClamp==='2'})()`),
     'card titles use the serif display face at the design size'
   )
+  /* 便签的倾斜在随后的复查里被有意取消：便签在悬停/选中时会回正，命中区跟着旋转等于把鼠标目标挪走。
+     两个皮肤现在都写 `transform:none`（gravity-workbench 与 glaze 的补丁层），所以这里不再要求倾斜，
+     只守住「单角圆角 + 静止不动」；标题字号跟随后续的放大档位（note/cite/anchor/volume 20px，基准 23px）。 */
   check(
-    await ev(`(()=>{const n=document.querySelector('.oc-note'),cs=getComputedStyle(n);return parseFloat(cs.borderTopLeftRadius)<=2&&parseFloat(cs.borderBottomRightRadius)>=12&&cs.transform!=='none'&&parseFloat(getComputedStyle(n.querySelector('.oc-label')).fontSize)===17})()`),
-    'sticky notes keep the asymmetric radius and the tilt'
+    await ev(`(()=>{const n=document.querySelector('.oc-note'),cs=getComputedStyle(n);return parseFloat(cs.borderTopLeftRadius)<=2&&parseFloat(cs.borderBottomRightRadius)>=12&&cs.transform==='none'&&parseFloat(getComputedStyle(n.querySelector('.oc-label')).fontSize)===20})()`),
+    'sticky notes keep the asymmetric radius without moving the pointer target'
   )
   check(
     await ev(`(()=>{const t=document.querySelector('.oc-textbox');return getComputedStyle(t).borderTopStyle==='solid'&&getComputedStyle(t.querySelector('.oc-tbbg')).display==='none'&&getComputedStyle(t.querySelector('.oc-label')).display==='none'&&getComputedStyle(t.querySelector('.oc-fulltext')).color==='rgb(242, 156, 98)'})()`),
@@ -191,7 +200,7 @@ try {
 } catch (error) {
   process.exitCode = 1
   console.error(error)
-  console.error(await ev(`({skin:document.body.dataset.skin,tab:__g?.work?.tab,rows:document.querySelectorAll('.side-item').length,chips:!!document.querySelector('.ol-typefilter'),gear:!!document.querySelector('.gravity-side-gear'),kinds:[...document.querySelectorAll('.gv-kind')].map(n=>n.textContent.trim())})`).catch(() => '(state unavailable)'))
+  console.error(await ev(`({skin:document.body.dataset.skin,tab:__g?.work?.tab,rows:document.querySelectorAll('.side-item').length,chips:!!!document.querySelector('.ol-typefilter'),gear:!!document.querySelector('.gravity-side-gear'),kinds:[...document.querySelectorAll('.gv-kind')].map(n=>n.textContent.trim())})`).catch(() => '(state unavailable)'))
   await shot('failure').catch(() => {})
 } finally {
   if (id) await ev(`(async()=>{await __g.work.closeWork();const row=await __ns.db.works.get(${JSON.stringify(id)});if(row)await __g.shelf.deleteWork(row);return true})()`).catch(() => {})

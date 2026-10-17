@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { NButton, NModal, NInput, NSelect, NDropdown, NEmpty, NSpin, NCheckbox, useMessage } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
@@ -8,6 +8,7 @@ import GlazeShelf from './GlazeShelf.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
+import { firstChapterOf } from '../db/repo'
 
 const shelf = useShelfStore()
 const work = useWorkStore()
@@ -41,6 +42,18 @@ const filtered = computed(() => {
     (w.author || '').toLowerCase().includes(k) ||
     (w.genre || '').toLowerCase().includes(k))
 })
+
+/* 琉光书架的「首章白卡」用：随当前展示的作品取它的首章（只读查询，失败/无章节就不显示） */
+const firstChapter = ref(null)
+watch([() => filtered.value[0]?.id, () => ui.skin], async ([id, skin]) => {
+  firstChapter.value = null
+  if (!id || skin !== 'glaze') return
+  try {
+    firstChapter.value = await firstChapterOf(id)
+  } catch {
+    firstChapter.value = null
+  }
+}, { immediate: true })
 
 function openCreate() {
   editing.value = null
@@ -136,7 +149,7 @@ async function onCardMenu(key, w) {
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
     <GravityShelf v-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
-    <GlazeShelf v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <GlazeShelf v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <template v-else>
     <div class="topbar">
       <div class="shelf-brand">
