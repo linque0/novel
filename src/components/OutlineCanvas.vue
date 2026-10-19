@@ -7,28 +7,54 @@ import { useWorkStore } from '../stores/work'
 import { usePanZoom, arrowHeadDir, anchorsOf } from '../services/graphview'
 import { parseTokens, findByTitle, targetById, parseTarget, jumpTo, KIND_LABEL } from '../services/doublelinks'
 import {
-  relayoutAll, containerRect, effSize, freeSpotFor,
+  relayoutAll, effSize, freeSpotFor,
   relColor, relDashed, cycleArrow, nextShape, SHAPE_LABEL,
   REL_KINDS, KIND_META, KIND_LABEL_DESIGN, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES, EDGE_COLORS, edgeColor,
   sideBetween, routeEdge, pointAtT, trimEdgeD, projectOnRoute, shapePorts, labelPoint
 } from './outline/canvas-model'
 import { CanvasRouteCache } from './outline/canvas-route-cache.js'
 import { flattenRelations } from './outline/canvas-relations.js'
+import {
+  SCOPE_METRICS,
+  buildLayerLayout,
+  containerCardSize,
+  descendantsOf,
+  layerNodes,
+  nodeStats,
+  packLayer,
+  projectRelations,
+  scopeConnections,
+  scopeCrumbs,
+  scopePathIds,
+  scopeStats
+} from './outline/outline-scope.js'
+import {
+  CONTAINER_COLORS,
+  EVENT_SHAPES,
+  PAPER_KINDS,
+  STATUS,
+  STATUS_COLORS,
+  kindPaperStyle,
+  paperStyle
+} from './outline/outline-paper.js'
 import { uid } from '../db/database'
 import { autosave } from '../services/autosave'
 import { useAiStore } from '../stores/ai'
 import { useUiStore } from '../stores/ui'
-import { NPopover, NSlider } from 'naive-ui'
+import { NPopover, NSlider, NDropdown } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import DLinkPicker from './DLinkPicker.vue'
+import TaskLauncher from './ai/TaskLauncher.vue'
+import OutlineNodeDrawer from './outline/OutlineNodeDrawer.vue'
+import OutlineMaterials from './outline/OutlineMaterials.vue'
 
 const work = useWorkStore()
 const ai = useAiStore()
 const ui = useUiStore()
 /* 引力书舱用设计稿的放大卡片档位；原版沿用「详细 / 紧凑」原口径 */
-const cardDensity = computed(() => (ui.isStudioSkin ? (work.canvasPrefs.density === 'compact' ? 'compact' : 'roomy') : work.canvasPrefs.density))
+const cardDensity = computed(() => work.canvasPrefs.density === 'compact' ? 'compact' : 'paper')
 const canvasEl = ref(null)
-const { zoom, tx, ty, innerStyle, onWheel, onPanStart, fit: fitTo, centerOn } = usePanZoom(canvasEl)
+const { zoom, tx, ty, innerStyle, onWheel, onPanStart, centerOn } = usePanZoom(canvasEl)
 
 const dragPos = reactive(new Map()) // 拖动中的临时坐标（mouseup 统一落库）
 const dragSize = reactive(new Map()) // 拖拽调整大小时的临时尺寸
@@ -38,12 +64,20 @@ const connecting = ref(null) // { fromId, x, y } 锚点拖线临时态
 const edgeEdit = ref(null) // { ownerId, relId, mx, my } 边编辑浮层
 const citePick = ref(null) // { nodeId } 引用卡目标选择浮层
 const editTitle = ref(null) // { id, value } 容器标题原位编辑
+const drawerId = ref(null)
+const viewMulti = ref(false)
+const picked = reactive(new Set())
+const searchQuery = ref('')
+const searchOpen = ref(false)
+const searchEl = ref(null)
+const materialsOpen = ref(false)
+const groupDetailsOpen = ref(false)
 const flashIds = reactive(new Set())
 const STATUS_LABEL = { draft: '草稿', done: '完成', revise: '待修改' }
-const PALETTE = ['#c0392b', '#2980b9', '#27ae60', '#8e44ad', '#d35400', '#16a085', '#b8860b']
+const PALETTE = CONTAINER_COLORS.map(([color]) => color)
 const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配置'
 
-/* ---------- 基础几何 ---------- */
+/* ---------- 基础几何 / 分层 ---------- */
 const live = computed(() => work.liveOlnodes())
 const nodeIndex = computed(() => new Map(live.value.map(n=>[n.id,n])))
 const nodeById = (id) => nodeIndex.value.get(id)
@@ -51,45 +85,32 @@ const posOf = (n) => dragPos.get(n.id) || (n.canvasX != null ? { x: n.canvasX, y
 const sizeOf = (n) => dragSize.get(n.id) || effSize(n, cardDensity.value)
 const kidsOf = (n) => live.value.filter((k) => k.parentId === n.id)
 
-/* 被折叠容器隐藏的后代（渲染与连线一律跳过） */
-const hiddenIds = computed(() => {
-  const hide = new Set()
-  for (const n of live.value) {
-    let p = n.parentId
-    const seen = new Set()
-    while (p && !seen.has(p)) {
-      const pn = nodeById(p)
-      if (!pn) break
-      if (pn.fold) {
-        hide.add(n.id)
-        break
-      }
-      seen.add(p)
-      p = pn.parentId
-    }
-  }
-  return hide
+const scopeId = computed(() => {
+  const id = work.canvasPrefs.scopeId
+  if (!id) return null
+  return live.value.some((n) => n.id === id && n.kind === 'container') ? id : null
 })
+const expandedSet = computed(() => new Set((work.canvasPrefs.expanded || []).filter((id) => live.value.some((n) => n.id === id && n.kind === 'container'))))
+const layerLayout = computed(() => buildLayerLayout(live.value, scopeId.value, expandedSet.value))
+const visNodes = computed(() => layerLayout.value.layer)
+const miniItems = computed(() => layerLayout.value.mini.items)
+const miniById = computed(() => layerLayout.value.mini.byId)
+const visibleIdSet = computed(() => layerLayout.value.visibleIds)
+const containerSizes = computed(() => layerLayout.value.sizes)
+const isExpanded = (id) => expandedSet.value.has(id)
 
-const visNodes = computed(() => live.value.filter((n) => n.canvasX != null && !hiddenIds.value.has(n.id)))
-/* 拖拽中的子树：容器的派生盒计算将其排除，否则盒子跟着子模块扩张，永远拖不出容器；
- * 拖的是容器本身时不排除（否则容器拖动时会被自己的子孙撑空塌陷） */
 const draggingId = ref(null)
-const draggingSubtree = computed(() => {
-  const n = draggingId.value ? nodeById(draggingId.value) : null
-  if (!n || n.kind === 'container') return new Set()
-  return new Set([n.id, ...work.olnodeDescendants(n.id).map((d) => d.id)])
-})
-const containerBoxes = computed(() => {
-  const m = new Map()
-  const sub = draggingSubtree.value
-  for (const n of visNodes.value) {
-    if (n.kind !== 'container') continue
-    m.set(n.id, containerRect(n, visNodes.value.filter((k) => k.parentId === n.id && !sub.has(k.id)), posOf, sizeOf))
-  }
-  return m
-})
-const rectOf = (n) => (n.kind === 'container' ? containerBoxes.value.get(n.id) : { ...posOf(n), ...sizeOf(n) })
+function rectOf(n) {
+  if (!n) return null
+  const mini = miniById.value.get(n.id)
+  if (mini) return mini.rect
+  const p = posOf(n)
+  if (!p) return null
+  const size = n.kind === 'container'
+    ? (containerSizes.value.get(n.id) || containerCardSize(live.value, n, expandedSet.value))
+    : sizeOf(n)
+  return { ...p, ...size }
+}
 
 /* ---------- 连线集合与关系链接卫星 ---------- */
 const routeCache = new CanvasRouteCache()
@@ -97,8 +118,21 @@ const selectedEdgeKey = ref(null)
 const flowMode = ref('idle') // idle / selected / create / adjust / reconnect
 const routeDraft = ref(null)
 const relationEntries = computed(() => flattenRelations(live.value))
-const obstacleRects = computed(() => visNodes.value.map(n => ({ ...rectOf(n), id: n.id, shape: n.kind === 'event' ? n.shape : null })))
-const containerIds = computed(() => new Set(visNodes.value.filter(n=>n.kind==='container').map(n=>n.id)))
+const obstacleRects = computed(() => {
+  const out = []
+  for (const n of visNodes.value) {
+    const r = rectOf(n)
+    if (r) out.push({ ...r, id: n.id, shape: n.kind === 'event' ? n.shape : null })
+  }
+  for (const item of miniItems.value) {
+    out.push({ ...item.rect, id: item.node.id, shape: item.node.kind === 'event' ? item.node.shape : null, mini: true })
+  }
+  return out
+})
+const containerIds = computed(() => new Set([
+  ...visNodes.value.filter(n => n.kind === 'container').map(n => n.id),
+  ...miniItems.value.filter(i => i.node.kind === 'container').map(i => i.node.id)
+]))
 const portsOf = n => shapePorts(rectOf(n), n.kind === 'event' ? n.shape : null)
 function insideContainer(nodeId, cid) {
   let cur = nodeById(nodeId)
@@ -138,7 +172,7 @@ function hostJunctionGeom(ref, visiting = new Set()) {
 function endpointGeom(endpoint, other, visiting = new Set()) {
   if (endpoint.nodeId) {
     const n=nodeById(endpoint.nodeId)
-    if (!n || !posOf(n) || hiddenIds.value.has(n.id)) return null
+    if (!n || !posOf(n) || !visibleIdSet.value.has(n.id)) return null
     const r=rectOf(n),side=endpoint.side || sideBetween(r,{x:other?.x||0,y:other?.y||0,w:0,h:0}).from
     return {point:portsOf(n)[side],side,nodeId:n.id}
   }
@@ -160,16 +194,27 @@ function occupiedChannels(key,a,b) {
   }
   return out
 }
+function shiftPort(point, side, offset) {
+  if (!offset) return point
+  return side === 'left' || side === 'right'
+    ? { x: point.x, y: point.y + offset }
+    : { x: point.x + offset, y: point.y }
+}
 function geometryBetween(source,target,rel={},key='',visiting=new Set(),preview=false) {
   let dst=endpointGeom(target,null,visiting)
   if(!dst) return null
-  const src=endpointGeom(source,dst.point,visiting)
+  let src=endpointGeom(source,dst.point,visiting)
   if(!src) return null
   if(target.nodeId && !target.side) dst=endpointGeom({...target,side:sideBetween({x:src.point.x,y:src.point.y,w:0,h:0},rectOf(nodeById(target.nodeId))).to},src.point,visiting)
+  /* 同一对模块之间的多条关系平行错开，避免完全重叠。 */
+  if (rel._parallel) {
+    src = { ...src, point: shiftPort(src.point, src.side, rel._parallel) }
+    dst = { ...dst, point: shiftPort(dst.point, dst.side, rel._parallel) }
+  }
   const obs=edgeObstacles(src.nodeId,dst.nodeId)
   const routing=routeDraft.value?.key===key?routeDraft.value.routing:rel.routing
   const context={waypoints:routing?.waypoints,custom:routing?null:rel.custom}
-  const signature=JSON.stringify([src.point,src.side,dst.point,dst.side,work.canvasPrefs.edgeStyle,context,source.nodeId,target.nodeId,rel.label])
+  const signature=JSON.stringify([src.point,src.side,dst.point,dst.side,work.canvasPrefs.edgeStyle,context,source.nodeId,target.nodeId,rel.label,rel._parallel||0])
   const build=previous=>{
     const g=routeEdge(src.point,src.side,dst.point,dst.side,obs,work.canvasPrefs.edgeStyle,18,16,{...context,previous,occupiedSegments:occupiedChannels(key,src.point,dst.point)})
     // Legacy module -> junction paths stored t in the reverse direction.
@@ -186,18 +231,62 @@ function edgeGeomFor(n,r,visiting=new Set()) {
   return geometryBetween(r.fromJunction||{nodeId:n.id,side:r.fromSide},r.toJunction||{nodeId:r.toId,side:r.toSide},r,r.id,next)
 }
 function edgeGeomFromJunction(n,host,r) {return edgeGeomFor(n,r)}
+const scopedRelations = computed(() => projectRelations(relationEntries.value, live.value, scopeId.value, layerLayout.value))
 const edges = computed(() => {
   const out=[],keys=new Set(),labels=[]
-  for(const {owner:n,rel:r} of relationEntries.value) {
-    if(hiddenIds.value.has(n.id)) continue
-    const g=edgeGeomFor(n,r)
-    if(!g) continue
-    keys.add(r.id)
-    const arrows=r.arrows||'->',trim=7*relArrowScale(r)*Math.cos(.42)+relEdgeWidth(r)*.4
-    const width=Math.max(52,Math.min(160,(r.label||'').length*12+20))
-    const mid=labelPoint(g,[...edgeObstacles(g.source.nodeId,g.target.nodeId),...labels],width,22)
-    if(r.label) labels.push({x:mid.x-width/2,y:mid.y-28,w:width,h:22})
-    out.push({key:r.id,ownerId:n.id,rel:r,...g,mid,dTrim:trimEdgeD(g,arrows!=='--'?trim:0,arrows==='<->'?trim:0),color:edgeColor(r),dashed:relDashed(r.kind)})
+  const groups = scopedRelations.value.groups
+  /* 同一对端点之间的多条关系（含不同关系类型）统一错开。 */
+  const pairCounts = new Map(), pairUsed = new Map()
+  for (const g of groups) {
+    const k = `${g.from}>${g.to}`
+    pairCounts.set(k, (pairCounts.get(k) || 0) + 1)
+  }
+  for (const group of groups) {
+    const a = nodeById(group.from), b = nodeById(group.to)
+    if (!a || !b) continue
+    const pairKey = `${group.from}>${group.to}`
+    const index = pairUsed.get(pairKey) || 0
+    pairUsed.set(pairKey, index + 1)
+    const parallel = (index - ((pairCounts.get(pairKey) || 1) - 1) / 2) * 18
+    const only = group.relations.length === 1 ? group.relations[0] : null
+    const rel = only ? only.rel : {
+      id: group.key, toId: group.to, kind: group.kind, arrows: group.arrow,
+      label: group.label, style: '', color: '', junctions: []
+    }
+    const sides = sideBetween(rectOf(a), rectOf(b))
+    const fromSide = only && !group.projectedFrom && only.rel.fromSide ? only.rel.fromSide : sides.from
+    const toSide = only && !group.projectedTo && only.rel.toSide ? only.rel.toSide : sides.to
+    const source = { nodeId: group.from, side: fromSide }
+    const target = { nodeId: group.to, side: toSide }
+    const g = geometryBetween(source, target, { ...rel, _parallel: parallel }, group.key)
+    if (!g) continue
+    keys.add(group.key)
+    const arrows = only ? (only.rel.arrows || '->') : group.arrow
+    const trim = 7 * relArrowScale(rel) * Math.cos(.42) + relEdgeWidth(rel) * .4
+    const displayLabel = group.relations.length > 1 ? `${group.kind} · ${group.relations.length}` : group.label
+    const width = Math.max(52, Math.min(160, (displayLabel || '').length * 12 + 20))
+    const mid = labelPoint(g, [...edgeObstacles(group.from, group.to), ...labels], width, 22)
+    if (displayLabel) labels.push({ x: mid.x - width / 2, y: mid.y - 28, w: width, h: 22 })
+    const dashed = only ? dashOf(only.rel.style, only.rel.kind) : (relDashed(group.kind) ? '5 4' : null)
+    out.push({
+      key: group.key,
+      ownerId: only ? only.owner.id : null,
+      rel,
+      group: !only,
+      relations: group.relations,
+      fromId: group.from,
+      toId: group.to,
+      projected: group.projected,
+      projectedFrom: group.projectedFrom,
+      projectedTo: group.projectedTo,
+      arrow: arrows,
+      label: displayLabel,
+      ...g,
+      mid,
+      dTrim: trimEdgeD(g, arrows !== '--' ? trim : 0, arrows === '<->' ? trim : 0),
+      color: only ? edgeColor(only.rel) : relColor(group.kind),
+      dashed
+    })
   }
   routeCache.prune(keys)
   return out
@@ -210,7 +299,7 @@ const edgeDecor = computed(() => {
   const heads = []
   const fills = []
   for (const e of edges.value) {
-    const a = e.rel.arrows || '->'
+    const a = e.arrow || '->'
     const tip=e.b,dir=e.endDir,tail=e.a,tdir={x:-e.startDir.x,y:-e.startDir.y}
     if (a === '->' || a === '<->') {
       heads.push(arrowHeadDir(tip.x, tip.y, dir, 7 * relArrowScale(e.rel)))
@@ -223,6 +312,249 @@ const edgeDecor = computed(() => {
   }
   return { heads, fills }
 })
+
+/* ---------- 层级条 / 抽屉 / 搜索 / 多选 / 关系组 ---------- */
+const scopeMetaText = computed(() => {
+  const s = scopeStatsData.value
+  return `${s.total} 个事件${s.blocks ? ` · ${s.blocks} 个容器` : ''}${s.total ? ` · 已完成 ${s.done}/${s.total}` : ' · 尚无事件'}`
+})
+const drawerNode = computed(() => (drawerId.value ? nodeById(drawerId.value) : null))
+const drawerPath = computed(() => (drawerNode.value ? scopeCrumbs(live.value, drawerNode.value.parentId || null) : []))
+const drawerStats = computed(() => (drawerNode.value ? nodeStats(live.value, drawerNode.value.id) : { total: 0, done: 0, blocks: 0, depth: 0, complete: false }))
+const drawerParent = computed(() => {
+  const p = drawerNode.value?.parentId
+  return p ? nodeById(p) : null
+})
+const drawerConnections = computed(() => {
+  const n = drawerNode.value
+  if (!n) return []
+  if (n.kind === 'container') {
+    return scopeConnections(relationEntries.value, live.value, n.id).map((c) => ({
+      id: c.id,
+      direction: c.direction,
+      kind: c.rel.kind || '关联',
+      label: c.rel.label || '',
+      otherId: c.otherId,
+      otherTitle: c.other ? labelOf(c.other) : '（未命名）',
+      otherPath: scopeCrumbs(live.value, c.other?.parentId || null).map((x) => x.title).join(' / ')
+    }))
+  }
+  const out = []
+  const seen = new Set()
+  for (const { owner, rel } of relationEntries.value) {
+    const from = rel.fromJunction?.ownerId || owner?.id
+    const to = rel.toJunction?.ownerId || rel.toId
+    if (from !== n.id && to !== n.id) continue
+    const otherId = from === n.id ? to : from
+    const key = `${rel.id}:${otherId}`
+    if (!otherId || seen.has(key)) continue
+    seen.add(key)
+    const other = nodeById(otherId)
+    if (!other) continue
+    out.push({
+      id: rel.id,
+      direction: from === n.id ? 'out' : 'in',
+      kind: rel.kind || '关联',
+      label: rel.label || '',
+      otherId,
+      otherTitle: labelOf(other),
+      otherPath: scopeCrumbs(live.value, other.parentId || null).map((x) => x.title).join(' / ')
+    })
+  }
+  return out
+})
+const searchResults = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return live.value
+    .filter((n) => n.id !== scopeId.value)
+    .map((n) => ({ n, text: `${n.title || ''}\n${n.text || ''}`.toLowerCase() }))
+    .filter((x) => x.text.includes(q))
+    .sort((a, b) => (a.n.title || '').toLowerCase().indexOf(q) - (b.n.title || '').toLowerCase().indexOf(q))
+    .slice(0, 8)
+    .map(({ n }) => ({
+      node: n,
+      path: scopeCrumbs(live.value, n.parentId || null).map((x) => x.title).join(' / '),
+      kind: KIND_LABEL_DESIGN[n.kind] || '模块'
+    }))
+})
+const multiCount = computed(() => picked.size)
+function toggleMulti() {
+  viewMulti.value = !viewMulti.value
+  if (viewMulti.value) {
+    drawerId.value = null
+    selectedEdgeKey.value = null
+    closeFloaters()
+  } else picked.clear()
+}
+function togglePick(id) {
+  if (!visNodes.value.some((n) => n.id === id)) return
+  if (picked.has(id)) picked.delete(id)
+  else picked.add(id)
+}
+const wrapOpen = ref(false)
+const wrapTitle = ref('')
+const wrapSummary = ref('')
+function openWrap() {
+  if (picked.size < 2) return
+  wrapTitle.value = ''
+  wrapSummary.value = ''
+  wrapOpen.value = true
+}
+function confirmWrap() {
+  const title = wrapTitle.value.trim()
+  if (!title) return
+  const row = work.olnodeWrap([...picked], {
+    title,
+    summary: wrapSummary.value,
+    color: CONTAINER_COLORS[0][0]
+  })
+  if (!row) {
+    window.$msg?.warning('请选择同一层的至少两个模块，并填写容器名称')
+    return
+  }
+  picked.clear()
+  viewMulti.value = false
+  wrapOpen.value = false
+  work.selOlnodeId = row.id
+  drawerId.value = row.id
+  nextTick(() => {
+    const r = rectOf(row)
+    if (r) centerOn(r.x + r.w / 2, r.y + r.h / 2)
+    flashIds.add(row.id)
+    setTimeout(() => flashIds.delete(row.id), 1600)
+  })
+  window.$msg?.success('已用容器封装，全部关系保留')
+}
+const addOptions = computed(() => {
+  const out = [
+    { label: '事件', key: 'event' },
+    { label: '便签', key: 'note' },
+    { label: '引用卡', key: 'cite' },
+    { label: '文本框', key: 'textbox' },
+    { label: '容器', key: 'container' }
+  ]
+  if (work.liveChapters?.length) out.push({ label: '章节锚点', key: 'anchor', children: work.liveChapters.slice(0, 40).map((c) => ({ label: c.title || '未命名章节', key: `chapter:${c.id}` })) })
+  if (work.liveVolumes?.length) out.push({ label: '卷', key: 'volume', children: work.liveVolumes.map((v) => ({ label: v.title || '未命名卷', key: `volume:${v.id}` })) })
+  return out
+})
+function onAddSelect(key) {
+  if (String(key).startsWith('chapter:')) return addAnchorFromChapter(String(key).slice(8))
+  if (String(key).startsWith('volume:')) return addVolumeFromVolume(String(key).slice(7))
+  addNode(String(key))
+}
+function toggleTextures() {
+  setPref('textures', work.canvasPrefs.textures === false)
+}
+function statusLabel(n) {
+  return n?.status ? STATUS[n.status] || '未标记' : '未标记'
+}
+function statusColor(n) {
+  return STATUS_COLORS[n?.status] || '#b8bfa9'
+}
+function nodeIndexLabel(n) {
+  const i = Math.floor((n?.sortOrder || 0) / 1000) + 1
+  return String(Math.max(1, i)).padStart(2, '0')
+}
+function paperFor(n) {
+  if (!n) return null
+  if (n.kind === 'event') return paperStyle(n.shape)
+  if (PAPER_KINDS[n.kind]) return kindPaperStyle(n.kind)
+  return null
+}
+function paperClass(n) {
+  if (n?.kind === 'event') return `oc-paper-event sh-${n.shape || 'process'}`
+  return n ? `oc-paper-${n.kind}` : ''
+}
+/* 紧凑卡片（原版 54–76px）容不下类型行与状态脚注，只保留原来的标题/摘要；
+ * 工作室的 roomy 卡与用户主动拉高的卡才显示完整纸面排版。 */
+function showCardChrome(n) {
+  if (!n) return false
+  if (cardDensity.value === 'roomy' || cardDensity.value === 'paper') return (rectOf(n)?.h || 0) >= 92
+  return (rectOf(n)?.h || 0) >= 92
+}
+function containerSummary(n) {
+  const first = String(n.text || '').split('\n').find((x) => x.trim())
+  if (first) return first.trim()
+  const s = nodeStats(live.value, n.id)
+  return s.total ? `${s.total} 个事件 · 已完成 ${s.done}/${s.total}` : '还没有内容，进入后继续添加'
+}
+function containerProgress(n) {
+  const s = nodeStats(live.value, n.id)
+  return { ...s, pct: s.total ? Math.round((s.done / s.total) * 100) : 0 }
+}
+function miniStyle(item) {
+  return {
+    left: item.rect.x + 'px',
+    top: item.rect.y + 'px',
+    width: item.rect.w + 'px',
+    height: item.rect.h + 'px',
+    zIndex: 2 + item.depth,
+    ...(item.node.kind === 'container' ? { '--bc': item.node.color || CONTAINER_COLORS[0][0] } : {})
+  }
+}
+function selectMini(n) {
+  work.selOlnodeId = n.id
+  selectedEdgeKey.value = null
+  drawerId.value = null
+}
+function onMiniDbl(item) {
+  if (item.node.kind === 'container') drawerId.value = item.node.id
+  else startInlineEdit(item.node)
+}
+function patchGroup(field, value) {
+  const edge = selectedEdge.value
+  if (!edge?.group) return
+  work.olnodePushUndo(true)
+  for (const { owner, rel } of edge.relations) work.olnodeRelPatchAny(owner.id, rel.id, { [field]: value })
+  nextTick(() => {
+    const first = edge.relations[0]?.rel.id
+    const group = edges.value.find((e) => e.relations?.some((r) => r.rel.id === first))
+    selectedEdgeKey.value = group?.key || null
+  })
+}
+function revealRelationEndpoint(id) {
+  groupDetailsOpen.value = false
+  revealNode(id)
+}
+function editDrawerNode(patch) {
+  const n = drawerNode.value
+  if (!n) return
+  work.olnodePushUndo()
+  if (patch.title != null) work.olnodeSetTitle(n.id, patch.title)
+  if (patch.body != null) work.olnodeSetRich(n.id, patch.body, null)
+  if (patch.chapter != null) work.olnodeSetChapter(n.id, patch.chapter)
+  if (patch.shape != null) work.olnodeSetShape(n.id, patch.shape)
+  if (patch.status != null) work.olnodeSetStatus(n.id, patch.status)
+  if (patch.color != null) work.olnodeSetColor(n.id, patch.color)
+}
+const onDrawerTitle = (v) => editDrawerNode({ title: v })
+const onDrawerBody = (v) => editDrawerNode({ body: v })
+const onDrawerChapter = (v) => editDrawerNode({ chapter: v })
+const onDrawerShape = (v) => editDrawerNode({ shape: v })
+const onDrawerStatus = (v) => editDrawerNode({ status: v })
+const onDrawerColor = (v) => editDrawerNode({ color: v })
+function onDrawerEnter() {
+  const n = drawerNode.value
+  if (n?.kind === 'container') focusScope(n.id, { animate: true })
+}
+function onDrawerToggle() {
+  if (drawerNode.value?.kind === 'container') toggleInline(drawerNode.value.id)
+}
+function onDrawerMoveOut() {
+  const n = drawerNode.value
+  if (!n || !n.parentId) return
+  const parent = nodeById(n.parentId)
+  work.olnodeMoveTo(n.id, null)
+  revealNode(n.id, { openDrawer: true })
+  window.$msg?.success(`已移出「${parent?.title || '容器'}」`)
+}
+function onDrawerRemove() {
+  if (drawerNode.value) onRemove(drawerNode.value)
+}
+function onDrawerInlineEdit() {
+  if (drawerNode.value) startInlineEdit(drawerNode.value)
+}
 const sats = computed(() => {
   const out = []
   for (const n of visNodes.value) {
@@ -255,6 +587,7 @@ const bounds = computed(() => {
     y1 = Math.max(y1, r.y + r.h)
   }
   for (const n of visNodes.value) eat(rectOf(n))
+  for (const item of miniItems.value) eat(item.rect)
   for (const s of sats.value) eat({ x: s.x, y: s.y, w: 150, h: 22 })
   if (x0 === Infinity) return { x: 0, y: 0, w: 600, h: 400 }
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
@@ -277,15 +610,42 @@ function applyPositions(map) {
 function ensurePlaced() {
   applyPositions(relayoutAll({ nodes: live.value, density: cardDensity.value, force: false }))
 }
+/* 分层相机：按当前层包围盒适配；首屏给 74% 可读下限，过宽时靠左展示开头。 */
+function fitLayer(readable = false) {
+  const el = canvasEl.value
+  if (!el) return
+  const b = bounds.value
+  const vw = el.clientWidth
+  const vh = el.clientHeight
+  if (!vw || !vh) return
+  const cap = readable && vw < 760 ? 1.0 : 1.06
+  const padX = 48
+  const padTop = 44
+  const padBottom = 58
+  const fit = Math.min(cap, (vw - padX * 2) / Math.max(b.w, 1), (vh - padTop - padBottom) / Math.max(b.h, 1))
+  let z = Math.min(cap, Math.max(readable ? 0.74 : 0.3, fit))
+  z = Math.max(0.3, Math.min(2.2, z))
+  zoom.value = z
+  const contentW = b.w * z
+  const contentH = b.h * z
+  tx.value = contentW <= vw - padX * 2 ? (vw - contentW) / 2 - b.x * z : padX - b.x * z
+  ty.value = contentH <= vh - padTop - padBottom ? (vh - contentH) / 2 - b.y * z : padTop - b.y * z
+}
+function fitView() {
+  fitLayer(false)
+}
 function tidyAll() {
-  applyPositions(relayoutAll({ nodes: live.value, density: cardDensity.value, force: true }))
+  const width = Math.max(900, (canvasEl.value?.clientWidth || 1200) / Math.max(0.6, zoom.value) - 80)
+  const packed = packLayer(live.value, scopeId.value, (n) => (
+    n.kind === 'container' ? containerCardSize(live.value, n, expandedSet.value) : effSize(n, cardDensity.value)
+  ), { maxWidth: width })
+  if (!packed.positions.size) return
+  work.olnodePushUndo(true)
+  applyPositions(packed.positions)
   dragPos.clear()
-  nextTick(fitView)
+  nextTick(() => fitView())
 }
 defineExpose({ tidyAll })
-function fitView() {
-  fitTo(bounds.value)
-}
 function setPref(k, v) {
   work.canvasPrefs[k] = v
   work.saveCanvasPrefs()
@@ -315,8 +675,8 @@ function hitNodeAt(pt, exclude = new Set()) {
   return null
 }
 function hitConnTarget(pt, exclude = new Set()) {
-  // 拖线目标优先命中子模块（事件/便签/引用卡/锚点/卷），其次无子模块的容器
-  const nodes = [...visNodes.value].reverse()
+  // 拖线目标优先命中子模块（事件/便签/引用卡/锚点/卷），其次无子模块的容器；迷你卡也是可连接目标。
+  const nodes = [...visNodes.value, ...miniItems.value.map((i) => i.node)].reverse()
   for (const n of nodes) {
     if (exclude.has(n.id) || n.kind === 'container') continue
     const r = rectOf(n)
@@ -330,10 +690,207 @@ function hitConnTarget(pt, exclude = new Set()) {
   return null
 }
 
+/* ---------- 层级导航 / 相机 / 就地展开 ---------- */
+const scopeCrumbsList = computed(() => scopeCrumbs(live.value, scopeId.value))
+const scopeStatsData = computed(() => scopeStats(live.value, scopeId.value))
+const scopeTitle = computed(() => (scopeId.value ? (nodeById(scopeId.value)?.title || '容器') : '全书情节'))
+const scopeParent = computed(() => (scopeId.value ? (nodeById(scopeId.value)?.parentId || null) : null))
+const scopeColor = computed(() => {
+  const n = scopeId.value ? nodeById(scopeId.value) : null
+  return n?.color || '#6e8c79'
+})
+const scopeKey = (id) => id || 'root'
+
+function saveCamera(id = scopeId.value) {
+  if (!work.canvasPrefs.cameras) work.canvasPrefs.cameras = {}
+  work.canvasPrefs.cameras[scopeKey(id)] = { zoom: zoom.value, tx: tx.value, ty: ty.value }
+  work.saveCanvasPrefs()
+}
+function restoreCamera(id) {
+  const c = work.canvasPrefs.cameras?.[scopeKey(id)]
+  if (!c || !Number.isFinite(c.zoom)) return false
+  zoom.value = Math.max(0.3, Math.min(2.2, c.zoom))
+  tx.value = Number(c.tx) || 0
+  ty.value = Number(c.ty) || 0
+  return true
+}
+
+function animateScope(direction, fromRect, color) {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const stage = canvasEl.value
+  if (!stage) return
+  const b = stage.getBoundingClientRect()
+  const r = fromRect || { x: b.x + b.width * .3, y: b.y + b.height * .28, width: b.width * .4, height: b.height * .4 }
+  const portal = document.createElement('div')
+  portal.className = 'oc-scope-portal'
+  portal.setAttribute('aria-hidden', 'true')
+  portal.style.cssText = `left:${r.x}px;top:${r.y}px;width:${r.width}px;height:${r.height}px;--portal-color:${color || '#6e8c79'}`
+  document.body.append(portal)
+  const target = { x: b.x + 6, y: b.y + 6, width: b.width - 12, height: b.height - 12 }
+  const transform = `translate(${target.x - r.x}px,${target.y - r.y}px) scale(${target.width / Math.max(r.width, 1)},${target.height / Math.max(r.height, 1)})`
+  const frames = direction === 'return'
+    ? [{ transform, opacity: .55 }, { transform: 'none', opacity: 0 }]
+    : [{ transform: 'none', opacity: .82 }, { transform, opacity: .42, offset: .72 }, { transform, opacity: 0 }]
+  const anim = portal.animate(frames, { duration: direction === 'return' ? 300 : 420, easing: 'cubic-bezier(.2,.75,.2,1)', fill: 'both' })
+  anim.finished.finally(() => portal.remove())
+}
+
+function focusScope(id, { animate = true, restore = true } = {}) {
+  const target = id || null
+  if (target && !live.value.some((n) => n.id === target && n.kind === 'container')) return
+  if (target === scopeId.value) return
+  const sourceEl = target ? canvasEl.value?.querySelector(`[data-node-id="${target}"]`) : null
+  const sourceRect = sourceEl?.getBoundingClientRect()
+  const direction = target && scopePathIds(live.value, target).length > scopePathIds(live.value, scopeId.value).length ? 'enter' : 'return'
+  saveCamera(scopeId.value)
+  work.canvasPrefs.scopeId = target
+  work.saveCanvasPrefs()
+  work.selOlnodeId = null
+  selectedEdgeKey.value = null
+  flowMode.value = 'idle'
+  viewMulti.value = false
+  picked.clear()
+  drawerId.value = null
+  closeFloaters()
+  nextTick(() => {
+    const restored = restore ? restoreCamera(target) : false
+    if (!restored) fitLayer(true)
+    if (animate) animateScope(direction, sourceRect, scopeColor.value)
+  })
+}
+
+function goBack() {
+  focusScope(scopeParent.value, { animate: true })
+}
+
+function revealNode(id, { openDrawer = false } = {}) {
+  const n = nodeById(id)
+  if (!n) return
+  const parent = n.parentId || null
+  if (parent !== scopeId.value) {
+    focusScope(parent, { animate: false })
+  }
+  nextTick(() => requestAnimationFrame(() => {
+    if (!nodeById(id)) return
+    work.selOlnodeId = id
+    if (openDrawer) drawerId.value = id
+    const r = rectOf(n)
+    if (r) centerOn(r.x + r.w / 2, r.y + r.h / 2)
+    flashIds.add(id)
+    setTimeout(() => flashIds.delete(id), 1600)
+  }))
+}
+
+function setExpanded(id, open) {
+  const list = Array.isArray(work.canvasPrefs.expanded) ? work.canvasPrefs.expanded : []
+  const set = new Set(list.filter((x) => x !== id))
+  if (open) set.add(id)
+  work.canvasPrefs.expanded = [...set]
+  work.saveCanvasPrefs()
+}
+
+function topLevelAncestor(id) {
+  let cur = nodeById(id)
+  const seen = new Set()
+  while (cur && !seen.has(cur.id)) {
+    seen.add(cur.id)
+    if ((cur.parentId || null) === scopeId.value) return cur.id
+    cur = cur.parentId ? nodeById(cur.parentId) : null
+  }
+  return null
+}
+
+function collisionShift(anchorId, before, after) {
+  const delta = after.h - before.h
+  if (delta <= 0) return []
+  const moved = []
+  const left = Math.min(before.x, after.x)
+  const right = Math.max(before.x + before.w, after.x + after.w)
+  for (const sib of visNodes.value) {
+    if (sib.id === anchorId) continue
+    const r = rectOf(sib)
+    if (!r) continue
+    const overlapsX = r.x < right + 10 && left < r.x + r.w + 10
+    if (!overlapsX) continue
+    if (r.y < before.y + before.h - 8) continue
+    moved.push(sib.id)
+  }
+  if (!moved.length) return []
+  work.olnodePushUndo(true)
+  for (const id of moved) {
+    const n = nodeById(id)
+    if (n) work.olnodeSetCanvas(id, n.canvasX ?? 0, (n.canvasY ?? 0) + delta)
+  }
+  nextTick(() => {
+    for (const id of moved) {
+      canvasEl.value?.querySelector(`[data-node-id="${id}"]`)?.animate(
+        [{ transform: `translateY(${-delta}px)` }, { transform: 'none' }],
+        { duration: 220, easing: 'cubic-bezier(.2,.7,.2,1)' }
+      )
+    }
+  })
+  return moved
+}
+
+function toggleInline(id) {
+  const n = nodeById(id)
+  if (!n || n.kind !== 'container') return
+  const anchorId = topLevelAncestor(id) || id
+  const anchor = nodeById(anchorId)
+  const before = anchor ? { ...posOf(anchor), ...containerCardSize(live.value, anchor, expandedSet.value) } : null
+  setExpanded(id, !isExpanded(id))
+  nextTick(() => {
+    const after = anchor ? { ...posOf(anchor), ...containerCardSize(live.value, anchor, expandedSet.value) } : null
+    if (before && after) collisionShift(anchorId, before, after)
+    nextTick(() => fitIfTinyDelta(after, before))
+  })
+}
+function fitIfTinyDelta(after, before) {
+  if (!after || !before) return
+  /* 展开不主动改变相机；只有内容已超出视口下沿时才轻微下移，保持上下文。 */
+  const el = canvasEl.value
+  if (!el) return
+  const bottom = ty.value + (after.y + after.h) * zoom.value
+  if (bottom > el.clientHeight - 24 && before.h < after.h) {
+    ty.value -= Math.min(160, (bottom - el.clientHeight + 40)) * .42
+  }
+}
+
+function expandAll(open) {
+  const ids = visNodes.value.filter((n) => n.kind === 'container' && (open ? kidsOf(n).length : isExpanded(n.id))).map((n) => n.id)
+  if (!ids.length) return
+  const list = new Set(work.canvasPrefs.expanded || [])
+  for (const id of ids) open ? list.add(id) : list.delete(id)
+  work.canvasPrefs.expanded = [...list]
+  work.saveCanvasPrefs()
+  nextTick(() => fitLayer(false))
+}
+function collapseCompleted() {
+  const ids = visNodes.value.filter((n) => n.kind === 'container' && isExpanded(n.id) && nodeStats(live.value, n.id).complete).map((n) => n.id)
+  if (!ids.length) return window.$msg?.info('当前层没有已完成的展开容器')
+  const list = new Set(work.canvasPrefs.expanded || [])
+  for (const id of ids) list.delete(id)
+  work.canvasPrefs.expanded = [...list]
+  work.saveCanvasPrefs()
+  window.$msg?.success(`已收起 ${ids.length} 个已完成容器`)
+}
+function overview() {
+  const list = new Set(work.canvasPrefs.expanded || [])
+  for (const n of visNodes.value) if (n.kind === 'container') list.delete(n.id)
+  work.canvasPrefs.expanded = [...list]
+  work.saveCanvasPrefs()
+  nextTick(() => fitLayer(false))
+}
+
 /* ---------- 节点拖动（容器连带后代；落点几何归组） ---------- */
 function onNodeDown(e, n) {
   if (e.button !== 0) return
   if (e.target.closest('button, input, textarea, a, .oc-apt, .oc-mini, .oc-rs')) return
+  if (viewMulti.value) {
+    e.stopPropagation()
+    if ((n.parentId || null) === scopeId.value) togglePick(n.id)
+    return
+  }
   e.stopPropagation()
   selectedEdgeKey.value=null;flowMode.value='idle'
   work.selOlnodeId = n.id
@@ -357,8 +914,8 @@ function onNodeDown(e, n) {
     finish()
   },finish)
 }
-/* 拖入即归组：落点中心命中容器 → 改父；拖出容器外 → 回到根。
- * 判定用「排除被拖子树」的容器盒：否则盒子随节点一起扩张，永远判定在容器内 */
+/* 拖入即归组：落点中心命中当前层的容器卡 → 改父。
+ * 分层视图里“拖出容器”不再自动回根——子节点只在容器内部可见，移出请走抽屉/右键「移出上一层」。 */
 function reparentAfterDrop(n, pt) {
   const p = posOf(n)
   if (!p) return
@@ -366,30 +923,20 @@ function reparentAfterDrop(n, pt) {
   const cy = p.y + sizeOf(n).h / 2
   const desc = new Set(work.olnodeDescendants(n.id).map((d) => d.id))
   const curParent = n.parentId || null
-  const boxOf = (c) =>
-    containerRect(
-      c,
-      visNodes.value.filter((k) => k.parentId === c.id && k.id !== n.id && !desc.has(k.id)),
-      posOf,
-      sizeOf
-    )
   const inBox = (box) => box && cx >= box.x && cx <= box.x + box.w && cy >= box.y && cy <= box.y + box.h
   let landed = null
   for (const c of [...visNodes.value].reverse()) {
     if (c.kind !== 'container' || c.id === n.id || desc.has(c.id)) continue
-    if (inBox(boxOf(c))) {
+    if (inBox(rectOf(c))) {
       landed = c
       break
     }
   }
   if (landed && landed.id !== curParent) {
     work.olnodeMoveTo(n.id, landed.id)
-    return
-  }
-  if (!landed && curParent) {
-    const own = nodeById(curParent)
-    const box = own && own.kind === 'container' ? boxOf(own) : null
-    if (!inBox(box)) work.olnodeMoveTo(n.id, null)
+    flashIds.add(landed.id)
+    setTimeout(() => flashIds.delete(landed.id), 1600)
+    window.$msg?.success(`已归入「${landed.title || '容器'}」，可就地展开或进入编辑`)
   }
 }
 
@@ -448,6 +995,11 @@ const blankCtx = ref(null) // { x, y, px, py }  px/py = 画布坐标落点
 /* 连线右键（v1.0.17）：直接打开编辑浮层（含「在此处创建连接点」）——右键落点记录用于连接点定位 */
 const edgeCtx = ref(null) // { x, y, ownerId, relId, px, py }  屏幕坐标 + 画布落点
 function openEdgeCtxFromEvent(e, edge) {
+  if (edge.group) {
+    selectEdge(edge)
+    groupDetailsOpen.value = true
+    return
+  }
   const pt = canvasPt(e)
   /* 浮层锚定连线中点，但保留右键落点供「创建连接点」精确定位 */
   edgeCtx.value = { x: e.clientX, y: e.clientY, ownerId: edge.ownerId, relId: edge.rel.id, px: pt.x, py: pt.y }
@@ -459,8 +1011,10 @@ function onCanvasCtx(e) {
      （mousedown 命中路径，contextmenu 却派发给画布）——用 elementFromPoint 反查真实落点 */
   const t = document.elementFromPoint(e.clientX, e.clientY)
   const hitEl = t && (t.classList?.contains('oc-edge-hit') ? t : t.closest?.('.oc-edge-hit'))
-  if (hitEl && hitEl.dataset.owner && hitEl.dataset.rel) {
-    const edge = edges.value.find((x) => x.ownerId === hitEl.dataset.owner && x.rel.id === hitEl.dataset.rel)
+  if (hitEl && (hitEl.dataset.edgeKey || (hitEl.dataset.owner && hitEl.dataset.rel))) {
+    const edge = hitEl.dataset.edgeKey
+      ? edges.value.find((x) => x.key === hitEl.dataset.edgeKey)
+      : edges.value.find((x) => x.ownerId === hitEl.dataset.owner && x.rel?.id === hitEl.dataset.rel)
     if (edge) openEdgeCtxFromEvent(e, edge)
     return
   }
@@ -488,18 +1042,39 @@ function onKey(e) {
     edgeCtx.value = null
     juncCtx.value = null
     edgeEdit.value = null
+    drawerId.value = null
+    searchOpen.value = false
+    groupDetailsOpen.value = false
     return
   }
   const t = e.target
   if (t && (t.matches?.('input, textarea, [contenteditable="true"]') || t.isContentEditable)) return
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault()
+    searchEl.value?.focus()
+    searchOpen.value = true
+    return
+  }
   if (e.key === 'Delete' || e.key === 'Backspace') {
     if (editTitle.value || editText.value || edgeEdit.value || connecting.value || citePick.value) return
     if (selectedEdge.value) {e.preventDefault();deleteSelectedEdge();return}
-    if (work.selOlnodeId && visNodes.value.some((n) => n.id === work.selOlnodeId)) {
+    if (work.selOlnodeId && visibleIdSet.value.has(work.selOlnodeId)) {
       e.preventDefault()
       work.olnodeRemove(work.selOlnodeId)
       work.selOlnodeId = null
+      drawerId.value = null
     }
+    return
+  }
+  if (!(e.ctrlKey || e.metaKey) && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && work.selOlnodeId && visibleIdSet.value.has(work.selOlnodeId)) {
+    const n = nodeById(work.selOlnodeId)
+    if (!n) return
+    e.preventDefault()
+    const step = e.shiftKey ? 24 : 8
+    const dx = e.key === 'ArrowLeft' ? -step : e.key === 'ArrowRight' ? step : 0
+    const dy = e.key === 'ArrowUp' ? -step : e.key === 'ArrowDown' ? step : 0
+    work.olnodePushUndo()
+    work.olnodeSetCanvas(n.id, (n.canvasX ?? 0) + dx, (n.canvasY ?? 0) + dy)
     return
   }
   if (!(e.ctrlKey || e.metaKey)) return
@@ -520,14 +1095,28 @@ function onKey(e) {
 function applyColor(c) {
   if (ctxMenu.value) work.olnodeSetColor(ctxMenu.value.nodeId, c)
 }
-const ctxNode = computed(() => (ctxMenu.value ? visNodes.value.find((n) => n.id === ctxMenu.value.nodeId) : null))
+const ctxNode = computed(() => (ctxMenu.value ? nodeById(ctxMenu.value.nodeId) : null))
 function ctxAct(kind) {
   const n = ctxNode.value
   if (!n) return
   if (kind === 'shape') work.olnodeSetShape(n.id, nextShape(n.shape))
   else if (kind === 'mtype') cycleMtype(n)
   else if (kind === 'pin') work.olnodeSetPin(n.id, !n.pin)
-  else if (kind === 'edit') {
+  else if (kind === 'fold') work.olnodeToggleFold(n.id)
+  else if (kind === 'settings') {
+    ctxMenu.value = null
+    drawerId.value = n.id
+    return
+  } else if (kind === 'moveout') {
+    ctxMenu.value = null
+    if (n.parentId) {
+      const parent = nodeById(n.parentId)
+      work.olnodeMoveTo(n.id, null)
+      revealNode(n.id, { openDrawer: true })
+      window.$msg?.success(`已移出「${parent?.title || '容器'}」`)
+    }
+    return
+  } else if (kind === 'edit') {
     ctxMenu.value = null
     startInlineEdit(n)
     return
@@ -547,7 +1136,8 @@ function ctxAct(kind) {
 function startInlineEdit(n) {
   editText.value = { id: n.id, value: n.text || '' }
   nextTick(() => {
-    const el = inlineEl.value
+    const raw = inlineEl.value
+    const el = Array.isArray(raw) ? raw[0] : raw
     if (el) {
       el.focus()
       el.setSelectionRange(el.value.length, el.value.length)
@@ -570,7 +1160,7 @@ function edgeCtxCreate() {
   const st = edgeCtx.value
   if (!st) return
   const e = edges.value.find((x) => x.ownerId === st.ownerId && x.rel.id === st.relId)
-  if (!e || e.status === 'blocked') return
+  if (!e || e.status === 'blocked' || e.projected) return
   const { t } = projectOnEdge({ x: st.px, y: st.py }, e)
   work.olnodeJunctionAdd(st.ownerId, st.relId, t)
 }
@@ -592,10 +1182,25 @@ const junctionItems = computed(() => {
   void juncFlashTick.value
   const now = Date.now()
   const out = []
-  for (const e of edges.value) {
-    for (const j of e.rel.junctions || []) {
-      const p = pointAtT(e, j.t)
-      if (p) out.push({ key: j.id, ownerId: e.ownerId, relId: e.rel.id, junctionId: j.id, x: p.x, y: p.y, flash: now - (j.bornAt || 0) < 1600 })
+  /* 连接点挂在真实宿主连线上；即使宿主边被投影分组，也要保留可见的连接点。 */
+  for (const { owner, rel } of relationEntries.value) {
+    if (!rel.junctions?.length) continue
+    const fromId = rel.fromJunction?.ownerId || owner.id
+    const toId = rel.toJunction?.ownerId || rel.toId
+    if (!visibleIdSet.value.has(fromId) || !visibleIdSet.value.has(toId)) continue
+    const a = nodeById(fromId), b = nodeById(toId)
+    if (!a || !b) continue
+    const sides = sideBetween(rectOf(a), rectOf(b))
+    const geom = geometryBetween(
+      { nodeId: fromId, side: rel.fromSide || sides.from },
+      { nodeId: toId, side: rel.toSide || sides.to },
+      rel,
+      rel.id
+    )
+    if (!geom) continue
+    for (const j of rel.junctions) {
+      const p = pointAtT(geom, j.t)
+      if (p) out.push({ key: j.id, ownerId: owner.id, relId: rel.id, junctionId: j.id, x: p.x, y: p.y, flash: now - (j.bornAt || 0) < 1600 })
     }
   }
   return out
@@ -623,14 +1228,18 @@ function pointerGesture(event,onMove,onEnd,onCancel=()=>{}) {
   window.addEventListener('mousemove',move);window.addEventListener('mouseup',up)
 }
 function selectEdge(edge) {
-  selectedEdgeKey.value=edge.key;work.selOlnodeId=null;flowMode.value='selected';closeFloaters()
+  selectedEdgeKey.value=edge.key;work.selOlnodeId=null;drawerId.value=null;flowMode.value='selected';closeFloaters()
 }
 function startEdgeShape(e,edge) {
   if(e.button!==0) return
   e.preventDefault();selectEdge(edge)
   if(e.detail>=2) onEdgeDbl(edge)
 }
-function onEdgeDbl(edge) {selectEdge(edge);openEdgeEdit(edge.ownerId,edge.rel.id,edge)}
+function onEdgeDbl(edge) {
+  selectEdge(edge)
+  if (edge.group) { groupDetailsOpen.value = true; return }
+  openEdgeEdit(edge.ownerId,edge.rel.id,edge)
+}
 function hostAllowed(endpoint,exclude) {
   if(!exclude||endpoint.nodeId) return true
   const seen=new Set()
@@ -645,7 +1254,7 @@ function hostAllowed(endpoint,exclude) {
 }
 function snapEndpoint(pt,exclude) {
   const radius=12/zoom.value
-  const nodes=[...visNodes.value].reverse().sort((a,b)=>(a.kind==='container')-(b.kind==='container'))
+  const nodes=[...visNodes.value, ...miniItems.value.map(i=>i.node)].reverse().sort((a,b)=>(a.kind==='container')-(b.kind==='container'))
   let best=null
   for(const n of nodes) for(const [side,p] of Object.entries(portsOf(n))) {
     const d=Math.hypot(p.x-pt.x,p.y-pt.y)
@@ -665,6 +1274,7 @@ function snapEndpoint(pt,exclude) {
     return {nodeId:n.id,side,point:p}
   }
   for(const edge of edges.value) {
+    if(edge.group) continue
     if(edge.status==='blocked'||!hostAllowed({relId:edge.key},exclude)) continue
     const proj=projectOnRoute(pt,edge)
     if(proj.dist<=10/zoom.value&&(!best||proj.dist<best.dist)) best={ownerId:edge.ownerId,relId:edge.key,t:proj.t,point:proj.point,dist:proj.dist}
@@ -693,8 +1303,13 @@ function beginConnection(e,source,edge=null,end='target') {
       const endpoint=endpointData(st.candidate)
       const command=edge?{type:'reconnect',ownerId:edge.ownerId,relId:edge.key,end,endpoint}:{type:'connect',source:st.source,target:endpoint}
       const result=work.olnodeRelGesture(command)
-      if(result.ok) {selectedEdgeKey.value=result.rel.id;work.selOlnodeId=null}
-      else window.$msg?.warning(result.error)
+      if(result.ok) {
+        work.selOlnodeId=null
+        nextTick(() => {
+          const group = edges.value.find((e) => e.relations?.some((r) => r.rel.id === result.rel.id))
+          selectedEdgeKey.value = group?.key || null
+        })
+      } else window.$msg?.warning(result.error)
     }
     finish()
   },finish)
@@ -712,7 +1327,7 @@ const connGeometry=computed(()=>{
 const connPath=computed(()=>connGeometry.value?.d||'')
 const routeHandles=computed(()=>{
   const e=selectedEdge.value
-  if(!e||connecting.value) return []
+  if(!e||connecting.value||e.group||e.projected) return []
   if(work.canvasPrefs.edgeStyle!=='ortho') {
     const wp=e.resolvedWaypoints?.[0]
     return [{key:'curve',point:wp||pointAtT(e,.5),curve:true,index:0}]
@@ -724,7 +1339,7 @@ const routeHandles=computed(()=>{
 })
 function startRouteAdjust(event,handle) {
   const edge=selectedEdge.value
-  if(!edge||event.button!==0) return
+  if(!edge||edge.group||edge.projected||event.button!==0) return
   event.preventDefault();event.stopPropagation();closeFloaters();flowMode.value='adjust'
   const start=canvasPt(event),original=edge.rel.routing?.waypoints|| (edge.rel.custom?[edge.rel.custom]:[])
   const finish=()=>{routeDraft.value=null;flowMode.value='selected'}
@@ -747,13 +1362,20 @@ function startRouteAdjust(event,handle) {
   },finish)
 }
 function resetRoute(edge=selectedEdge.value) {
-  if(!edge) return
+  if(!edge||edge.group||edge.projected) return
   routeCache.entries.delete(edge.key)
   work.olnodeRelGesture({type:'patch',ownerId:edge.ownerId,relId:edge.key,patch:{routing:null,custom:null}})
 }
 function deleteSelectedEdge() {
   const edge=selectedEdge.value
-  if(edge) work.olnodeRelRemove(edge.ownerId,edge.key)
+  if(!edge) return
+  if(edge.group) {
+    const start=work.olUndo.length
+    for(const {owner,rel} of edge.relations) work.olnodeRelRemove(owner.id,rel.id)
+    if(work.olUndo.length>start+1) work.olUndo.splice(start+1)
+  } else {
+    work.olnodeRelRemove(edge.ownerId,edge.key)
+  }
   selectedEdgeKey.value=null;flowMode.value='idle';closeFloaters()
 }
 const edgeToolsStyle=computed(()=>{
@@ -850,6 +1472,9 @@ function onWinDown(e) {
   }
   if (citePick.value && !e.target.closest?.('.oc-pick')) citePick.value = null
   if (editTitle.value && !e.target.closest?.('.oc-title-edit')) commitTitle()
+  if (searchOpen.value && !e.target.closest?.('.oc-search-wrap')) searchOpen.value = false
+  if (groupDetailsOpen.value && !e.target.closest?.('.oc-relations-panel, .oc-group-inspector, .oc-edge-hit, .oc-elabel')) groupDetailsOpen.value = false
+  if (drawerId.value && !e.target.closest?.('.oc-drawer, .oc-node, .oc-mini, .oc-ctx')) drawerId.value = null
   if (ctxMenu.value && !e.target.closest?.('.oc-ctx')) ctxMenu.value = null
   if (blankCtx.value && !e.target.closest?.('.oc-ctx')) blankCtx.value = null
   if (juncCtx.value && !e.target.closest?.('.oc-ctx, .oc-junc-hit')) juncCtx.value = null
@@ -860,8 +1485,11 @@ function onRemove(n) {
   const kids = work.olnodeChildren(n.id).length
   const label = n.title || KIND_META[n.kind]?.label || '模块'
   if (kids && !window.confirm(`删除「${label}」及其全部 ${kids} 个子模块？`)) return
+  const removedScope = scopeId.value && (scopeId.value === n.id || work.olnodeDescendants(n.id).some((d) => d.id === scopeId.value))
   if (work.selOlnodeId === n.id || work.olnodeDescendants(n.id).some((d) => d.id === work.selOlnodeId)) work.selOlnodeId = null
+  drawerId.value = null
   work.olnodeRemove(n.id)
+  if (removedScope) nextTick(() => focusScope(n.parentId || null, { animate: false, restore: false }))
 }
 function onDblNode(n) {
   if (n.kind === 'anchor' && n.refId) {
@@ -873,11 +1501,7 @@ function onDblNode(n) {
     if (first) work.navTo('chapters', first.id)
     return
   }
-  if (n.kind === 'container') {
-    editTitle.value = { id: n.id, value: n.title || '' }
-    return
-  }
-  startInlineEdit(n)
+  drawerId.value = n.id
 }
 const chapterOf = (n) => (n.kind === 'anchor' ? work.chapters.find((c) => c.id === n.refId && !c.deletedAt) : null)
 function labelOf(n) {
@@ -886,7 +1510,7 @@ function labelOf(n) {
   if (n.kind === 'cite') {
     const parsed = parseTarget(n.refId)
     const t = parsed ? targetById(parsed.kind, parsed.id) : null
-    return t?.title || n.title || '引用卡'
+    return n.title || t?.title || '引用卡'
   }
   const first = (n.text || '').split('\n').find((x) => x.trim())
   return n.title || (first || '').trim().slice(0, 40) || '（空模块）'
@@ -918,6 +1542,7 @@ function showFullText(n) {
   if (n.kind === 'textbox') return true
   if (n.h == null) return false
   const base = effSize({ kind: n.kind, shape: n.shape }, cardDensity.value).h
+  if (cardDensity.value === 'paper') return (n.text || '').trim().length > 0 && (rectOf(n)?.h || 0) >= 110
   return n.h >= base + 30 && (n.text || '').trim().length > 0
 }
 function plainText(n) {
@@ -977,25 +1602,42 @@ function shapePoly(n) {
 
 /* ---------- 新建与骨架模板 ---------- */
 function addNodeAt(kind, pt, fields = {}) {
-  const s = effSize({ kind }, cardDensity.value)
+  const s = kind === 'container' ? { w: SCOPE_METRICS.cardW, h: SCOPE_METRICS.collapsedH } : effSize({ kind }, cardDensity.value)
   const spot = freeSpotFor(
-    visNodes.value.map((n) => rectOf(n)).filter(Boolean),
+    [...visNodes.value.map((n) => rectOf(n)).filter(Boolean), ...miniItems.value.map((i) => i.rect)],
     s,
     pt.x - s.w / 2,
     pt.y - s.h / 2
   )
-  const row = work.olnodeAdd(null, { kind, canvasX: spot.x, canvasY: spot.y, ...fields })
+  const row = work.olnodeAdd(scopeId.value, {
+    kind,
+    title: kind === 'event' ? '新事件' : kind === 'container' ? '新容器' : '',
+    canvasX: spot.x,
+    canvasY: spot.y,
+    ...fields
+  })
   work.selOlnodeId = row.id
   return row
 }
-function addNode(kind) {
+function addNode(kind, fields = {}) {
   const el = canvasEl.value
   const pt = el ? { x: (el.clientWidth / 2 - tx.value) / zoom.value, y: (el.clientHeight / 2 - ty.value) / zoom.value } : { x: 120, y: 120 }
-  const row = addNodeAt(kind, pt, kind === 'note' ? { title: '新便签' } : kind === 'cite' ? { title: '' } : {})
+  const row = addNodeAt(kind, pt, kind === 'note' ? { title: '新便签' } : kind === 'cite' ? { title: '' } : { ...fields })
   if (kind === 'cite') {
     const p = posOf(row)
     if (p) citePick.value = { nodeId: row.id, x: p.x, y: p.y }
   }
+  return row
+}
+function addAnchorFromChapter(chapterId) {
+  const c = work.liveChapters.find((x) => x.id === chapterId)
+  if (!c) return window.$msg?.warning('还没有章节可作锚点')
+  addNode('anchor', { refId: c.id, title: c.title || '' })
+}
+function addVolumeFromVolume(volumeId) {
+  const v = work.liveVolumes.find((x) => x.id === volumeId)
+  if (!v) return window.$msg?.warning('还没有分卷可添加')
+  addNode('volume', { refId: v.id, title: v.title || '' })
 }
 function onCitePick(t) {
   const st = citePick.value
@@ -1033,7 +1675,7 @@ function locateBroken(list) {
   const n = list[brokenCycle.value % list.length]
   brokenCycle.value++
   work.selOlnodeId = n.id
-  focusNode(n.id)
+  revealNode(n.id)
 }
 function focusNode(id) {
   const n = nodeById(id)
@@ -1045,9 +1687,17 @@ function focusNode(id) {
 watch(
   () => work.canvasFocusTick,
   () => {
-    if (work.selOlnodeId) focusNode(work.selOlnodeId)
+    if (work.selOlnodeId) revealNode(work.selOlnodeId)
+    else focusScope(null)
   }
 )
+/* 撤销/删除导致当前层容器失效时，回到根层，避免停在一个不存在的画布。 */
+watch(scopeId, (id) => {
+  if ((work.canvasPrefs.scopeId || null) !== id) {
+    work.canvasPrefs.scopeId = id
+    work.saveCanvasPrefs()
+  }
+})
 
 /* ---------- 键盘 / 生命周期 ---------- */
 onMounted(() => {
@@ -1078,10 +1728,20 @@ onMounted(() => {
   window.addEventListener('keydown', onKey)
   window.addEventListener('mousedown', onWinDown, true)
   juncFlashTimer = setInterval(() => juncFlashTick.value++, 400)
-  if (live.value.length) nextTick(fitView)
+  if (live.value.length) nextTick(() => { if (!restoreCamera(scopeId.value)) fitLayer(true) })
 })
-watch(() => work.work?.id, () => {cancelGesture?.();routeCache.clear();selectedEdgeKey.value=null;routeDraft.value=null;connecting.value=null;flowMode.value='idle'})
+watch(() => work.work?.id, () => {
+  cancelGesture?.()
+  routeCache.clear()
+  selectedEdgeKey.value=null
+  routeDraft.value=null
+  connecting.value=null
+  flowMode.value='idle'
+  drawerId.value=null
+  nextTick(() => { if (!restoreCamera(scopeId.value)) fitLayer(true) })
+})
 onBeforeUnmount(() => {
+  saveCamera()
   cancelGesture?.()
   routeCache.clear()
   window.removeEventListener('keydown', onKey)
@@ -1091,22 +1751,50 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="om-wrap">
+  <div class="om-wrap" :class="{ 'oc-no-textures': work.canvasPrefs.textures === false, 'oc-compact': work.canvasPrefs.density === 'compact', 'oc-root-scope': !scopeId }">
+    <div class="oc-workspace-head"><div><div class="oc-eyebrow">OUTLINE · 故事大纲</div><h1>{{ scopeTitle }}<small v-if="scopeId">容器内部</small></h1><p>{{ scopeMetaText }}</p></div><div class="oc-head-actions"><button type="button" @click="overview">总览</button><button type="button" @click="expandAll(true)">展开一层</button><button type="button" @click="collapseCompleted">收起已完成</button><button type="button" @click="tidyAll">整理布局</button><button type="button" @click="work.outlineView='text'">文本视图</button><TaskLauncher v-if="!ui.isStudioSkin" module="outline" /></div></div>
+    <div class="oc-scopebar">
+      <button v-if="scopeId" class="oc-back" type="button" title="返回上一级" @click="goBack"><OIcon name="back" :size="12" /> 上一级</button>
+      <nav class="oc-crumbs" aria-label="大纲层级">
+        <template v-for="(c, i) in scopeCrumbsList" :key="c.id || 'root'">
+          <i v-if="i">›</i>
+          <button type="button" :aria-current="c.id === scopeId ? 'page' : undefined" @click="focusScope(c.id)">{{ c.title }}</button>
+        </template>
+      </nav>
+      <span class="oc-scope-meta">{{ scopeMetaText }}</span>
+      <div class="oc-scope-tools">
+        <div class="oc-search-wrap">
+          <label class="oc-search">
+            <OIcon name="search" :size="12" />
+            <input ref="searchEl" v-model="searchQuery" placeholder="搜索全部层级…" aria-label="搜索全部层级" @focus="searchOpen = true" @input="searchOpen = true" @keydown.esc="searchOpen = false" />
+            <kbd>Ctrl K</kbd>
+          </label>
+          <div v-if="searchOpen && searchQuery.trim()" class="oc-search-results">
+            <button v-for="r in searchResults" :key="r.node.id" type="button" class="oc-search-item" @click="revealNode(r.node.id)">
+              <span class="oc-kind-tag">{{ r.kind }}</span>
+              <span style="min-width:0"><b>{{ r.node.title || '（未命名）' }}</b><small>{{ r.path }}</small></span>
+            </button>
+            <p v-if="!searchResults.length" style="padding:8px;font-size:10px;color:var(--text-dim);margin:0">没有匹配的模块。</p>
+          </div>
+        </div>
+        <button class="om-btn oc-materials-btn" type="button" title="查看纸面素材" @click="materialsOpen = true"><OIcon name="image" :size="12" /> 素材</button>
+        <button class="oc-chip oc-textures-toggle" :class="{ on: work.canvasPrefs.textures !== false }" type="button" title="显示/隐藏纸面纹理" @click="toggleTextures">纹理</button>
+      </div>
+    </div>
     <div class="om-toolbar oc-toolbar">
-      <span v-if="work.olBroken.tails.length" class="oc-chip oc-warn" title="无出边的事件节点——情节烂尾" @click="locateBroken(work.olBroken.tails)">烂尾 {{ work.olBroken.tails.length }}</span>
-      <span v-if="work.olBroken.missing.length" class="oc-chip oc-warn2" title="无入边的事件节点——缺少铺垫" @click="locateBroken(work.olBroken.missing)">缺铺垫 {{ work.olBroken.missing.length }}</span>
-      <span class="oc-chip" :class="{ on: work.canvasPrefs.snap }" title="拖动时吸附 16px 网格" @click="setPref('snap', !work.canvasPrefs.snap)">吸附</span>
-      <span class="oc-chip" :class="{ on: work.canvasPrefs.density === 'compact' }" title="卡片密度" @click="setPref('density', work.canvasPrefs.density === 'compact' ? 'detail' : 'compact')">{{ work.canvasPrefs.density === 'compact' ? '紧凑' : '详细' }}</span>
-      <span class="oc-chip" :class="{ on: work.canvasPrefs.edgeStyle === 'ortho' }" title="连线样式" @click="setPref('edgeStyle', work.canvasPrefs.edgeStyle === 'ortho' ? 'bezier' : 'ortho')">{{ edgeStyleLabel }}</span>
+      <div class="oc-module-tools"><button v-for="kind in ['event','note','cite','textbox','container']" :key="kind" type="button" :title="'添加'+CREATE_KINDS[kind].label" @click="addNode(kind)"><OIcon :name="CREATE_KINDS[kind].icon" :size="14" />{{ CREATE_KINDS[kind].label }}</button></div>
+      <button class="oc-chip" type="button" :class="{on:viewMulti}" :aria-pressed="viewMulti" @click="toggleMulti">多选</button>
+      <span class="oc-count">{{ visNodes.length }} 模块 · {{ edges.length }} 连线</span>
+      <div class="oc-line-modes" aria-label="连线样式"><button type="button" :aria-pressed="work.canvasPrefs.edgeStyle !== 'ortho'" @click="setPref('edgeStyle','bezier')">流畅曲线</button><button type="button" :aria-pressed="work.canvasPrefs.edgeStyle === 'ortho'" @click="setPref('edgeStyle','ortho')">圆角折线</button></div>
       <NPopover trigger="click" :show-arrow="false">
         <template #trigger>
           <span class="oc-chip" title="画布设置：连线粗细等"><OIcon name="gear" :size="12" /> 设置</span>
         </template>
-        <div class="oc-settings">
+        <div class="oc-settings"><div class="oc-settings-options"><button type="button" class="oc-chip" :class="{on:work.canvasPrefs.snap}" @click="setPref('snap',!work.canvasPrefs.snap)">网格吸附</button><button class="oc-chip" type="button" @click="setPref('density',work.canvasPrefs.density==='compact'?'detail':'compact')">{{ work.canvasPrefs.density==='compact'?'切换详细卡片':'切换紧凑卡片' }}</button><button v-if="work.olBroken.tails.length" class="oc-chip" type="button" @click="locateBroken(work.olBroken.tails)">烂尾 {{ work.olBroken.tails.length }}</button><button v-if="work.olBroken.missing.length" class="oc-chip" type="button" @click="locateBroken(work.olBroken.missing)">缺铺垫 {{ work.olBroken.missing.length }}</button></div>
           <div class="oc-settings-row">
             <span class="oc-settings-label">连线粗细</span>
             <NSlider v-model:value="edgeWidthModel" :min="0.8" :max="5" :step="0.2" style="width: 150px" />
-            <span class="oc-settings-val">{{ (work.canvasPrefs.edgeWidth || 1.8).toFixed(1) }}px</span>
+            <span class="oc-settings-val">{{ (work.canvasPrefs.edgeWidth || 1.6).toFixed(1) }}px</span>
           </div>
           <div class="oc-settings-row">
             <span class="oc-settings-label">箭头大小</span>
@@ -1116,15 +1804,15 @@ onBeforeUnmount(() => {
           <div class="oc-settings-tip">调整画布全部连线与箭头的显示大小；线型（实线/虚线/点线）与箭头方向在连线编辑浮层中按条设置。</div>
         </div>
       </NPopover>
-      <span style="flex: 1"></span>
-      <span class="oc-count">{{ visNodes.length }} 模块 · {{ edges.length }} 连线</span>
+      <NDropdown trigger="click" :options="addOptions" @select="onAddSelect">
+        <button class="om-btn text" type="button" title="在当前层添加模块"><OIcon name="plus" :size="12" /> 模块</button>
+      </NDropdown>
       <button class="om-btn" title="撤销 (Ctrl+Z)" @click="work.olnodeUndo()">↶</button>
       <button class="om-btn" title="重做 (Ctrl+Y)" @click="work.olnodeRedo()">↷</button>
-      <button class="om-btn text oc-tidy" title="整理布局（固定模块除外）" @click="tidyAll">整理</button>
-      <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)"><OIcon name="minus" :size="13" /></button>
+      <div class="oc-zoom-controls"><button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)"><OIcon name="minus" :size="13" /></button>
       <button class="oc-zoom" title="恢复 100% 缩放" @click="zoom = 1">{{ Math.round(zoom * 100) }}%</button>
       <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)"><OIcon name="plus" :size="13" /></button>
-      <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
+      <button class="om-btn text" title="适应当前层" @click="fitView">适应</button></div>
     </div>
 
     <div ref="canvasEl" class="om-canvas oc-canvas" :data-flow-state="flowMode" @mousedown="onPanStart" @wheel.prevent="onWheelC" @dblclick.self="addNode('event')" @contextmenu.prevent="onCanvasCtx">
@@ -1136,11 +1824,13 @@ onBeforeUnmount(() => {
           :height="svgBox.h"
           :viewBox="svgBox.x + ' ' + svgBox.y + ' ' + svgBox.w + ' ' + svgBox.h"
         >
-          <g v-for="e in edges" :key="e.key" class="oc-edge" :class="{ selected: selectedEdgeKey === e.key, blocked: e.status === 'blocked' }" :data-rel="e.key" :data-status="e.status">
+          <g v-for="e in edges" :key="e.key" class="oc-edge" :class="{ selected: selectedEdgeKey === e.key, blocked: e.status === 'blocked', projected: e.projected, grouped: e.group }" :data-rel="e.rel?.id || e.key" :data-edge-key="e.key" :data-status="e.status">
             <path class="oc-edge-highlight" :d="e.d" fill="none" stroke="var(--accent)" :stroke-width="relEdgeWidth(e.rel) + 3 / zoom" />
-            <path class="oc-edge-visible" :d="e.dTrim || e.d" fill="none" :stroke="e.color" :stroke-width="relEdgeWidth(e.rel)" :stroke-dasharray="e.status === 'blocked' ? '4 6' : dashOf(e.rel.style, e.rel.kind)" />
-            <path class="oc-edge-hit" :d="e.d" vector-effect="non-scaling-stroke" :data-owner="e.ownerId" :data-rel="e.rel.id" @mousedown.stop="startEdgeShape($event, e)" @dblclick.stop="onEdgeDbl(e)" @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)">
-              <title>{{ e.status === 'blocked' ? '路径受阻 · 请移动模块或调整路径' : '单击选中 · 拖动手柄调整路径或端点 · 双击编辑' }}</title>
+            <path class="oc-edge-visible" :d="e.dTrim || e.d" fill="none" :stroke="e.color" :stroke-width="relEdgeWidth(e.rel)" :stroke-dasharray="e.status === 'blocked' ? '4 6' : e.dashed" />
+            <circle v-if="e.projectedTo" :cx="e.b.x" :cy="e.b.y" r="2.8" fill="var(--bg-panel, #fffef9)" :stroke="e.color" stroke-width="1.2" />
+            <circle v-if="e.projectedFrom" :cx="e.a.x" :cy="e.a.y" r="2.4" fill="var(--bg-panel, #fffef9)" :stroke="e.color" stroke-width="1.1" />
+            <path class="oc-edge-hit" :d="e.d" vector-effect="non-scaling-stroke" :data-edge-key="e.key" :data-owner="e.ownerId || ''" :data-rel="e.rel?.id || ''" @mousedown.stop="startEdgeShape($event, e)" @dblclick.stop="onEdgeDbl(e)" @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)">
+              <title>{{ e.group ? `合并关系 · ${e.relations.length} 条真实连线` : e.status === 'blocked' ? '路径受阻 · 请移动模块或调整路径' : '单击选中 · 拖动手柄调整路径或端点 · 双击编辑' }}</title>
             </path>
           </g>
           <polygon v-for="(h, i) in edgeDecor.heads" :key="'a' + i" :points="h" :fill="edgeDecor.fills[i]" />
@@ -1154,7 +1844,7 @@ onBeforeUnmount(() => {
           </g>
           <path v-if="connecting" class="oc-connection-preview" :class="{ blocked: connGeometry?.status === 'blocked' }" :d="connPath" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-dasharray="6 4" />
           <circle v-if="connecting?.candidate" class="oc-snap-indicator" :cx="connecting.candidate.point.x" :cy="connecting.candidate.point.y" :r="8 / zoom" vector-effect="non-scaling-stroke" />
-          <g v-if="selectedEdge && !connecting" class="oc-selection-handles">
+          <g v-if="selectedEdge && !connecting && !selectedEdge.group && !selectedEdge.projected" class="oc-selection-handles">
             <circle v-for="end in ['source', 'target']" :key="end" class="oc-endpoint" :data-end="end" :cx="end === 'source' ? selectedEdge.a.x : selectedEdge.b.x" :cy="end === 'source' ? selectedEdge.a.y : selectedEdge.b.y" :r="5 / zoom" vector-effect="non-scaling-stroke" @mousedown.stop="startReconnect($event, selectedEdge, end)"><title>拖动以重连{{ end === 'source' ? '起点' : '终点' }}</title></circle>
             <circle v-for="h in routeHandles" :key="h.key" class="oc-route-handle" :class="{ horizontal: h.horizontal, curve: h.curve }" :cx="h.point.x" :cy="h.point.y" :r="4 / zoom" vector-effect="non-scaling-stroke" @mousedown.stop="startRouteAdjust($event, h)"><title>{{ h.curve ? '拖动调整曲线路径' : '沿垂直方向拖动线段' }}</title></circle>
           </g>
@@ -1166,7 +1856,7 @@ onBeforeUnmount(() => {
           :key="n.id"
           class="oc-node"
           :data-node-id="n.id"
-          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'resize-smooth': resizeSmooth && resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
+          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'oc-small-card': n.kind !== 'container' && rectOf(n).h < 92, 'resize-smooth': resizeSmooth && resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
           :style="nodeStyle(n)"
           :data-dl-target="n.kind === 'cite' && n.refId ? n.refId : null"
           :data-dl-title="n.kind === 'cite' ? labelOf(n) : null"
@@ -1176,26 +1866,33 @@ onBeforeUnmount(() => {
           @contextmenu.prevent="onNodeCtx($event, n)"
         >
           <template v-if="n.kind === 'container'">
-            <div class="oc-chead" @dblclick.stop="editTitle = { id: n.id, value: n.title || '' }">
-              <button class="oc-caret" :title="n.fold ? '展开子模块' : '折叠子模块'" @click.stop="work.olnodeToggleFold(n.id)"><OIcon :name="n.fold ? 'caret-right' : 'caret-down'" :size="11" /></button>
-              <input
-                v-if="editTitle && editTitle.id === n.id"
-                class="oc-title-edit"
-                v-model="editTitle.value"
-                @mousedown.stop
-                @keydown.enter="commitTitle"
-                @keydown.esc="editTitle = null"
-              />
-              <span v-else class="oc-ctitle">{{ n.title || '容器' }}</span>
-              <span class="oc-ccount">{{ kidsOf(n).length }}</span>
+            <div class="oc-cmeta"><span class="oc-container-kind">容器</span>
+              <span class="oc-cchapter">{{ n.chapter || '故事片段' }}</span>
+              <span v-if="containerProgress(n).blocks">{{ containerProgress(n).blocks }} 个子容器</span>
+            </div>
+            <div class="oc-chead">
+              <button class="oc-caret" :title="isExpanded(n.id) ? '收起内容' : '就地展开'" @click.stop="toggleInline(n.id)"><OIcon :name="isExpanded(n.id) ? 'caret-down' : 'caret-right'" :size="11" /></button>
+              <span class="oc-ctitle">{{ n.title || '容器' }}</span>
+              <button class="oc-inline-toggle" type="button" @click.stop="toggleInline(n.id)">{{ isExpanded(n.id) ? '收起内容 −' : '就地展开 ＋' }}</button>
+            </div>
+            <p class="oc-csummary">{{ containerSummary(n) }}</p>
+            <div class="oc-cprogress">
+              <span class="oc-state-dot" :style="{ '--state-color': containerProgress(n).complete ? '#78977b' : containerProgress(n).done ? '#b29a65' : '#b8bfa9' }" />
+              <span>{{ containerProgress(n).complete ? '已完成' : containerProgress(n).done ? '进行中' : '待展开' }}</span>
+              <div class="bar"><i :style="{ width: containerProgress(n).pct + '%' }" /></div>
+              <span class="done">{{ containerProgress(n).total ? containerProgress(n).done + ' / ' + containerProgress(n).total : '待添加事件' }}</span>
+            </div>
+            <div class="oc-cfoot">
+              <button class="enter" type="button" @click.stop="focusScope(n.id)">进入容器 ↗</button>
+              <button class="inspect" type="button" @click.stop="drawerId = n.id">设置</button>
             </div>
           </template>
           <template v-else>
+            <span v-if="paperFor(n)" class="oc-paper" :class="paperClass(n)" :style="paperFor(n)" aria-hidden="true" />
             <!-- 菱形/平行四边形：SVG 描边代替 clip-path（clip 会裁掉边框、锚点与手柄） -->
             <svg v-if="n.kind === 'event' && (n.shape === 'diamond' || n.shape === 'para')" class="oc-shape" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
               <polygon :points="shapePoly(n)" />
             </svg>
-            <div v-if="n.kind === 'textbox'" class="oc-tbbg" :style="{ opacity: n.opacity != null ? n.opacity : 1 }"></div>
             <span v-if="n.kind === 'anchor' && chapterOf(n)" class="ol-dot" :data-s="chapterOf(n).status" :title="STATUS_LABEL[chapterOf(n).status]" />
             <textarea
               v-if="editText && editText.id === n.id"
@@ -1211,17 +1908,23 @@ onBeforeUnmount(() => {
               @keydown.ctrl.enter.prevent="commitInline"
             ></textarea>
             <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }"><OIcon name="plus" :size="12" /> 选择目标</button>
-              <div v-else class="oc-body" :class="{ 'oc-textbody': n.kind === 'textbox' }">
-              <div v-if="ui.isStudioSkin && n.kind !== 'textbox'" class="gv-kindrow">
-                <span class="gv-kind">{{ KIND_LABEL_DESIGN[n.kind] || '模块' }}</span>
+            <div v-else class="oc-body" :class="{ 'oc-textbody': n.kind === 'textbox' }">
+              <div v-if="n.kind !== 'textbox' && showCardChrome(n)" class="oc-kicker">
+                <span>{{ KIND_LABEL_DESIGN[n.kind] || '模块' }}</span>
+                <span v-if="n.kind === 'event'" class="oc-index">{{ nodeIndexLabel(n) }}</span>
                 <button class="gv-more" title="模块操作（与右键菜单相同）" @mousedown.stop.prevent @click.stop="onNodeCtx($event, n)">⋯</button>
               </div>
               <div class="oc-label">{{ labelOf(n) }}</div>
               <div v-if="showFullText(n)" class="oc-fulltext">{{ plainText(n) }}</div>
               <div v-else class="om-sub">{{ plainText(n).split('\n')[0].slice(0, 40) || subOf(n) || '&nbsp;' }}</div>
               <span v-if="!showFullText(n) && n.mtype && cardDensity !== 'compact'" class="om-mtype" :style="{ color: mtypeColorOf(n.mtype), borderColor: mtypeColorOf(n.mtype) }">{{ n.mtype }}</span>
+              <div v-if="n.kind === 'event' && showCardChrome(n)" class="oc-status-text oc-foot-status">
+                <i class="oc-state-dot" :style="{ '--state-color': statusColor(n) }" />
+                {{ statusLabel(n) }}
+              </div>
             </div>
           </template>
+          <button v-if="viewMulti && n.parentId === scopeId" class="oc-pick-toggle" :class="{ on: picked.has(n.id) }" type="button" title="选择此模块" @mousedown.stop @click.stop="togglePick(n.id)">{{ picked.has(n.id) ? '✓' : '+' }}</button>
 
           <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :class="{ 'snap-target': connecting?.candidate?.nodeId === n.id && connecting?.candidate?.side === sd }" :style="n.shape === 'para' && (sd === 'left' || sd === 'right') ? { [sd]: 'calc(6.8% - 4.5px)' } : null" :data-side="sd" :title="'拖到目标模块或连接点建立连线'" @mousedown="startConnect($event, n)" />
           <template v-if="n.kind !== 'container'">
@@ -1236,7 +1939,77 @@ onBeforeUnmount(() => {
           </template>
         </div>
 
-        <template v-if="selectedEdge && !connecting">
+        <!-- 就地展开的迷你卡：与容器卡分离渲染，保证连线矩形与 DOM 完全一致 -->
+        <div
+          v-for="item in miniItems"
+          :key="'mini-' + item.node.id"
+          class="oc-mini"
+          :class="[
+            'oc-mini-' + item.node.kind,
+            'sh-' + (item.node.shape || 'process'),
+            {
+              sel: work.selOlnodeId === item.node.id,
+              flash: flashIds.has(item.node.id),
+              editing: editText && editText.id === item.node.id,
+              'oc-mini-event': item.node.kind === 'event',
+              'oc-mini-container': item.node.kind === 'container'
+            }
+          ]"
+          :style="miniStyle(item)"
+          :data-node-id="item.node.id"
+          :data-mini-id="item.node.id"
+          :data-dl-target="item.node.kind === 'cite' && item.node.refId ? item.node.refId : null"
+          :data-dl-title="item.node.kind === 'cite' ? labelOf(item.node) : null"
+          @mousedown.stop
+          @click.stop="selectMini(item.node)"
+          @dblclick.stop="onMiniDbl(item)"
+          @contextmenu.prevent="onNodeCtx($event, item.node)"
+        >
+          <span v-if="paperFor(item.node)" class="oc-paper" :class="paperClass(item.node)" :style="paperFor(item.node)" aria-hidden="true" />
+          <div class="oc-mini-content">
+            <div class="oc-mini-top">
+              <span class="oc-mini-kind">{{ KIND_LABEL_DESIGN[item.node.kind] || '模块' }}</span>
+              <span class="oc-mini-state">
+                <i v-if="item.node.kind === 'event'" class="oc-state-dot" :style="{ '--state-color': statusColor(item.node) }" />
+                {{ item.node.kind === 'event' ? statusLabel(item.node) : (item.node.kind === 'container' ? `${containerProgress(item.node).done}/${containerProgress(item.node).total}` : '') }}
+              </span>
+            </div>
+            <template v-if="item.node.kind === 'container'">
+              <h3 class="oc-mini-title">{{ item.node.title || '容器' }}</h3>
+              <p class="oc-mini-body">{{ containerSummary(item.node) }}</p>
+              <div class="oc-mini-actions">
+                <button class="enter" type="button" @click.stop="focusScope(item.node.id)">进入 ↗</button>
+                <button type="button" @click.stop="toggleInline(item.node.id)">{{ isExpanded(item.node.id) ? '收起' : '展开' }}</button>
+                <button class="more" type="button" @click.stop="drawerId = item.node.id">设置</button>
+              </div>
+            </template>
+            <template v-else>
+              <textarea
+                v-if="editText && editText.id === item.node.id"
+                ref="inlineEl"
+                v-model="editText.value"
+                class="oc-mini-inline"
+                spellcheck="false"
+                @mousedown.stop
+                @dblclick.stop
+                @blur="commitInline"
+                @keydown.esc.prevent="editText = null"
+                @keydown.ctrl.enter.prevent="commitInline"
+              ></textarea>
+              <template v-else>
+                <h3 class="oc-mini-title">{{ labelOf(item.node) }}</h3>
+                <p v-if="item.node.kind !== 'textbox'" class="oc-mini-body">{{ plainText(item.node).split('\n')[0].slice(0, 70) || subOf(item.node) }}</p>
+              </template>
+              <div class="oc-mini-actions">
+                <button type="button" @click.stop="drawerId = item.node.id">编辑</button>
+                <button class="more" type="button" @click.stop="onNodeCtx($event, item.node)">⋯</button>
+              </div>
+            </template>
+          </div>
+          <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" title="拖到目标模块或连接点建立连线" @mousedown.stop="startConnect($event, item.node)" />
+        </div>
+
+        <template v-if="selectedEdge && !connecting && !selectedEdge.group && !selectedEdge.projected">
           <button v-for="end in ['source','target']" :key="'endpoint-'+end" class="oc-endpoint-control" :data-end="end" :aria-label="end === 'source' ? '重连起点' : '重连终点'" :style="{left:(end === 'source' ? selectedEdge.a.x : selectedEdge.b.x)+'px',top:(end === 'source' ? selectedEdge.a.y : selectedEdge.b.y)+'px',width:14/zoom+'px',height:14/zoom+'px'}" @mousedown.stop="startReconnect($event,selectedEdge,end)" />
         </template>
 
@@ -1258,20 +2031,20 @@ onBeforeUnmount(() => {
 
         <!-- 连线标签（纯展示 + 双击拉直；左键编辑入口已随塑形改版取消） -->
         <div
-          v-for="e in edges.filter((x) => x.rel.label || x.status === 'blocked')"
+          v-for="e in edges.filter((x) => x.label || x.status === 'blocked')"
           :key="'l' + e.key"
-          class="oc-elabel" :class="{ selected: selectedEdgeKey === e.key, blocked: e.status === 'blocked' }"
+          class="oc-elabel" :class="{ selected: selectedEdgeKey === e.key, blocked: e.status === 'blocked', projected: e.projected, grouped: e.group }"
           @mousedown.stop="startEdgeShape($event, e)"
           :style="{ left: e.mid.x + 'px', top: e.mid.y + 'px', borderColor: e.color, color: e.color }"
           @dblclick.stop="onEdgeDbl(e)"
           @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)"
-        >{{ e.status === 'blocked' ? '路径受阻' : e.rel.label }}</div>
+        >{{ e.status === 'blocked' ? '路径受阻' : e.label }}</div>
 
         <Teleport to=".app-root" v-if="selectedEdge && !connecting && flowMode !== 'adjust' && !edgeEdit">
           <div class="oc-edge-tools" :style="edgeToolsStyle" @mousedown.stop>
-            <span class="oc-edge-tools-status">{{ selectedEdge.status === 'blocked' ? '路径受阻' : selectedEdge.rel.routing || selectedEdge.rel.custom ? '手动路径' : '自动路径' }}</span>
-            <button title="编辑连线属性与标签" @click="onEdgeDbl(selectedEdge)">编辑</button>
-            <button title="清除手动路径偏好并重新布线" @click="resetRoute()">恢复自动路径</button>
+            <span class="oc-edge-tools-status">{{ selectedEdge.group ? `合并关系 · ${selectedEdge.relations.length} 条` : selectedEdge.projected ? '投影连线' : selectedEdge.status === 'blocked' ? '路径受阻' : selectedEdge.rel.routing || selectedEdge.rel.custom ? '手动路径' : '自动路径' }}</span>
+            <button :title="selectedEdge.group ? '查看真实关系' : '编辑连线属性与标签'" @click="onEdgeDbl(selectedEdge)">{{ selectedEdge.group ? '详情' : '编辑' }}</button>
+            <button v-if="!selectedEdge.group && !selectedEdge.projected" title="清除手动路径偏好并重新布线" @click="resetRoute()">恢复自动路径</button>
             <button class="danger" title="删除连线（Delete）" @click="deleteSelectedEdge">删除</button>
           </div>
         </Teleport>
@@ -1287,7 +2060,7 @@ onBeforeUnmount(() => {
             <button class="om-btn oc-mini-x" title="删除连线" @click="removeRel"><OIcon name="close" :size="12" /></button>
           </div>
           <!-- 右键打开时提供「在此处创建连接点」（落点 = 右键位置，投影到真实路径） -->
-          <button v-if="edgeCtx" class="oc-ctx-item oc-eedit-juncbtn" title="在右键位置的连线上创建连接点（模块锚点拖线到连接点、或按住连接点拖出连线互连）" @click="edgeCtxCreate">
+          <button v-if="edgeCtx && !selectedEdge?.projected" class="oc-ctx-item oc-eedit-juncbtn" title="在右键位置的连线上创建连接点（模块锚点拖线到连接点、或按住连接点拖出连线互连）" @click="edgeCtxCreate">
             <OIcon name="link" :size="13" /> 在此处创建连接点
           </button>
           <div class="oc-eedit-row oc-kindrow oc-eedit-sec">
@@ -1363,6 +2136,90 @@ onBeforeUnmount(() => {
           <DLinkPicker @pick="onCitePick" />
         </div>
       </div>
+
+      <!-- 跨层接续卡 -->
+      <div v-if="scopedRelations.external.in.size" class="oc-external-lane in">
+        <div v-for="id in [...scopedRelations.external.in]" :key="'in-' + id" class="oc-external-card">
+          <OIcon name="arrow-right" :size="12" />
+          <div><small>前接</small><button type="button" @click="revealNode(id)">{{ nodeById(id) ? labelOf(nodeById(id)) : '外部情节' }} →</button></div>
+        </div>
+      </div>
+      <div v-if="scopedRelations.external.out.size" class="oc-external-lane out">
+        <div v-for="id in [...scopedRelations.external.out]" :key="'out-' + id" class="oc-external-card">
+          <OIcon name="external" :size="12" />
+          <div><small>后续</small><button type="button" @click="revealNode(id)">{{ nodeById(id) ? labelOf(nodeById(id)) : '外部情节' }} →</button></div>
+        </div>
+      </div>
+
+      <!-- 多选封装 -->
+      <div v-if="viewMulti" class="oc-selection-bar">
+        <span>已选择 <b>{{ multiCount }}</b> 个模块</span>
+        <span style="color: var(--text-dim)">选择当前层至少 2 个模块</span>
+        <button class="oc-quiet primary" type="button" :disabled="picked.size < 2" @click="openWrap">用容器封装</button>
+        <button class="oc-quiet" type="button" @click="toggleMulti">取消</button>
+      </div>
+
+      <!-- 合并关系浮层 -->
+      <div v-if="selectedEdge?.group && !connecting" class="oc-group-inspector" @mousedown.stop>
+        <span style="color: var(--text-dim)">合并关系</span>
+        <span v-for="k in REL_KINDS" :key="k.key" class="oc-kind" :class="{ on: selectedEdge.rel.kind === k.key }" :style="{ '--kc': k.color }" @click="patchGroup('kind', k.key)">{{ k.key }}</span>
+        <select :value="selectedEdge.arrow" @change="patchGroup('arrows', $event.target.value)">
+          <option value="->">单向 →</option>
+          <option value="<->">双向 ↔</option>
+          <option value="--">无向 —</option>
+        </select>
+        <input :value="selectedEdge.relations.find((r) => r.rel.label)?.rel.label || ''" placeholder="关系标签…" maxlength="12" @input="patchGroup('label', $event.target.value)" />
+        <button class="oc-quiet" type="button" @click="groupDetailsOpen = true">详情</button>
+        <button class="oc-quiet" type="button" title="取消选择" @click="selectedEdgeKey = null">×</button>
+      </div>
+      <div v-if="groupDetailsOpen && selectedEdge?.group" class="oc-relations-panel" @mousedown.stop>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <h3>这条线连接的真实事件 · {{ selectedEdge.relations.length }}</h3>
+          <button class="oc-quiet" type="button" @click="groupDetailsOpen = false">关闭</button>
+        </div>
+        <div v-for="{ owner, rel } in selectedEdge.relations" :key="rel.id" class="oc-relation-row">
+          <button type="button" @click="revealRelationEndpoint(rel.fromJunction?.ownerId || owner.id)">
+            {{ labelOf(nodeById(rel.fromJunction?.ownerId || owner.id) || owner) }}
+            <small>{{ scopeCrumbs(live, (nodeById(rel.fromJunction?.ownerId || owner.id) || owner).parentId || null).map(x => x.title).join(' / ') }}</small>
+          </button>
+          <span class="kind" :style="{ '--kd': relColor(rel.kind) }">{{ rel.kind || '关联' }} · {{ ({ '->': '→', '<->': '↔', '--': '—' })[rel.arrows || '->'] }}</span>
+          <button type="button" @click="revealRelationEndpoint(rel.toJunction?.ownerId || rel.toId)">
+            {{ labelOf(nodeById(rel.toJunction?.ownerId || rel.toId) || { title: rel.toId }) }}
+            <small>{{ scopeCrumbs(live, (nodeById(rel.toJunction?.ownerId || rel.toId) || {}).parentId || null).map(x => x.title).join(' / ') }}</small>
+          </button>
+        </div>
+      </div>
+
+      <!-- 当前层空态 -->
+      <div v-if="!visNodes.length && !miniItems.length" class="oc-scope-empty">
+        <p>当前层还没有模块。</p>
+        <button class="oc-quiet primary" type="button" @click="addNode('event')">＋ 新建事件</button>
+        <span v-if="scopeId">也可以从上方面包屑返回上一层。</span>
+      </div>
+
+      <!-- 右侧设置抽屉 -->
+      <OutlineNodeDrawer
+        v-if="drawerNode"
+        :node="drawerNode"
+        :path="drawerPath"
+        :stats="drawerStats"
+        :connections="drawerConnections"
+        :parent="drawerParent"
+        :is-mini="!!miniById.get(drawerNode.id)"
+        @close="drawerId = null"
+        @title="onDrawerTitle"
+        @body="onDrawerBody"
+        @chapter="onDrawerChapter"
+        @shape="onDrawerShape"
+        @status="onDrawerStatus"
+        @color="onDrawerColor"
+        @enter="onDrawerEnter"
+        @toggle-inline="onDrawerToggle"
+        @move-out="onDrawerMoveOut"
+        @remove="onDrawerRemove"
+        @reveal="revealNode"
+        @inline-edit="onDrawerInlineEdit"
+      />
     </div>
 
     <!-- 模块右键操作栏（v0.4.19：mini 工具栏改右键触发，可 Esc / 点空白关闭；fixed 定位须在 transform 层外） -->
@@ -1377,14 +2234,13 @@ onBeforeUnmount(() => {
         </div>
       </template>
       <div class="oc-ctx-actions oc-ctx-ops">
+        <button v-if="ctxNode" class="oc-ctx-item" title="打开右侧设置" @click="ctxAct('settings')"><OIcon name="gear" :size="13" /> 设置 / 详情</button>
         <button v-if="ctxNode && ctxNode.kind === 'event'" class="oc-ctx-item" :title="'形状：' + SHAPE_LABEL[ctxNode.shape || 'process'] + '（点击切换）'" @click="ctxAct('shape')"><OIcon name="shape" :size="13" /> {{ SHAPE_LABEL[ctxNode.shape || 'process'] }} ▸</button>
-        <button v-if="ctxNode && ctxNode.kind !== 'container'" class="oc-ctx-item" title="编辑内容（也可双击模块）" @click="ctxAct('edit')"><OIcon name="edit" :size="13" /> 编辑内容</button>
-        <button v-if="ctxNode && ctxNode.kind === 'textbox'" class="oc-ctx-item oc-ctx-oprow" title="文本框透明度" @click.stop>
-          <OIcon name="textbox" :size="13" /> 透明度
-          <input type="range" min="0.15" max="1" step="0.05" :value="ctxNode.opacity != null ? ctxNode.opacity : 1" @input="work.olnodeSetOpacity(ctxNode.id, $event.target.value)" />
-        </button>
+        <button v-if="ctxNode && ctxNode.kind !== 'container'" class="oc-ctx-item" title="在画布内编辑文字" @click="ctxAct('edit')"><OIcon name="edit" :size="13" /> 画布内编辑</button>
         <button v-if="ctxNode && work.olTypes.length" class="oc-ctx-item" :title="'自定义类型：' + (ctxNode.mtype || '无') + '（点击切换）'" @click="ctxAct('mtype')"><OIcon name="tag" :size="13" /> {{ ctxNode.mtype || '自定义类型' }} ▸</button>
         <button v-if="ctxNode" class="oc-ctx-item" :title="ctxNode.pin ? '取消固定（「整理」时将参与重排）' : '固定位置（「整理」时不动）'" @click="ctxAct('pin')"><OIcon name="pin" :size="13" /> {{ ctxNode.pin ? '取消固定' : '固定位置' }}</button>
+        <button v-if="ctxNode?.kind === 'container' && ctxNode.parentId" class="oc-ctx-item" title="把容器移到上一层" @click="ctxAct('moveout')"><OIcon name="arrow-up" :size="13" /> 移出上一层</button>
+        <button v-if="ctxNode?.kind === 'container'" class="oc-ctx-item" title="折叠/展开侧栏与文本视图中的子模块" @click="ctxAct('fold')"><OIcon name="caret-right" :size="13" /> {{ ctxNode.fold ? '展开侧栏子项' : '折叠侧栏子项' }}</button>
         <button v-if="ctxNode" class="oc-ctx-item" :disabled="!ai.ready" :title="ai.ready ? '附带此节点，在对话中描述需求后发送' : AI_UNSET_HINT" @click="ctxAct('ai')"><OIcon name="star" :size="13" /> 发送给恍然梦</button>
         <button v-if="ctxNode" class="oc-ctx-item oc-ctx-danger" title="删除模块（容器会连同子模块）" @click="ctxAct('remove')"><OIcon name="close" :size="13" /> 删除</button>
       </div>
@@ -1404,6 +2260,22 @@ onBeforeUnmount(() => {
         <OIcon name="close" :size="13" /> 删除连接点
       </button>
     </div>
+
+    <!-- 多选封装 -->
+    <div v-if="wrapOpen" class="oc-modal-backdrop" @mousedown.self="wrapOpen = false">
+      <div class="oc-modal" role="dialog" aria-modal="true" aria-label="用容器封装">
+        <h2>用容器封装</h2>
+        <p>把选中的 <b>{{ multiCount }}</b> 个模块归入同一个容器，内容与全部连线保留；容器会收起为一段故事摘要。</p>
+        <label class="oc-field">容器名称<input v-model="wrapTitle" maxlength="40" placeholder="如：灯塔疑云" @keydown.enter="confirmWrap" /></label>
+        <label class="oc-field">摘要<textarea v-model="wrapSummary" rows="3" maxlength="160" placeholder="这一段情节的一句话摘要" /></label>
+        <div class="oc-dialog-actions">
+          <button class="oc-quiet" type="button" @click="wrapOpen = false">取消</button>
+          <button class="oc-quiet primary" type="button" :disabled="!wrapTitle.trim()" @click="confirmWrap">封装并收起</button>
+        </div>
+      </div>
+    </div>
+
+    <OutlineMaterials v-model:show="materialsOpen" />
 
     <!-- 空画布快速开始 -->
     <div v-if="!live.length" class="oc-quick">

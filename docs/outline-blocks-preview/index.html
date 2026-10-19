@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>山海来信 · 情节积木</title>
+  <link rel="stylesheet" href="../../src/assets/fonts/fonts-user.css">
+  <link rel="stylesheet" href="blocks.css">
+</head>
+<body>
+  <header class="app-header">
+    <a class="brand" href="../outline-canvas-preview/"><span class="seal">叙</span><span>小说工坊</span></a>
+    <span class="header-location">山海来信 <span>/</span> 大纲</span>
+    <a class="flat-link" href="../outline-canvas-preview/">平面画布 <span>↗</span></a>
+  </header>
+  <div class="workspace">
+    <aside id="structure" class="structure">
+      <div class="structure-heading"><span>故事结构</span><button data-action="sidebar" class="icon-button mobile-close" aria-label="关闭结构">×</button></div>
+      <button class="book-root" data-action="scope" data-id="book"><span class="book-mark">山<br>海</span><span><strong>山海来信</strong><small>第一卷 · 潮声</small></span></button>
+      <div id="tree" class="tree"></div>
+      <div class="structure-bottom"><span class="legend-dot done"></span><span id="book-progress"></span></div>
+    </aside>
+    <main>
+      <div class="main-heading">
+        <div><span class="eyebrow">故事的骨架</span><div class="heading-title"><h1 id="scope-title">全书情节</h1><span id="scope-tag" class="scope-tag">全书画布</span></div><p id="scope-meta"></p></div>
+        <div class="search-wrap"><label class="search"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="查找情节、事件或线索" autocomplete="off" aria-label="搜索全部大纲"><kbd>Ctrl K</kbd></label><div id="search-results" class="search-results" hidden></div></div>
+      </div>
+      <div class="scope-toolbar">
+        <button class="quiet structure-toggle" data-action="sidebar">☷ 结构</button>
+        <nav id="breadcrumbs" aria-label="大纲层级"></nav>
+        <div class="view-actions"><button class="quiet" data-action="overview">总览</button><button class="quiet" data-action="expand-level">展开一层</button><button class="quiet" data-action="collapse-done">收起已完成</button></div>
+      </div>
+      <div class="canvas-topline"><div class="module-tools" aria-label="添加画布模块"><button data-action="add-module" data-kind="event"><span>◇</span>事件</button><button data-action="add-module" data-kind="note"><span>▤</span>便签</button><button data-action="add-module" data-kind="textbox"><span>T</span>文本</button><button class="container-tool" data-action="container-tool" title="新建容器，或用容器封装选中的模块"><span>▢</span>容器</button></div><span id="current-hint"></span><button id="multi-toggle" class="quiet" data-action="multi" aria-pressed="false">▧ 多选</button></div>
+      <section id="canvas" class="canvas" aria-label="可嵌套情节画布" tabindex="0">
+        <div id="graph-stage" class="graph-stage"><svg id="wires" class="wires" aria-label="情节之间的关系"></svg><div id="external-in" class="external-lane"></div><div id="flow" class="flow"></div><div id="external-out" class="external-lane"></div></div>
+      </section>
+      <div id="selection-bar" class="selection-bar" hidden><span id="selection-count">选择同层模块</span><button class="quiet" data-action="cancel-multi">取消</button><button id="wrap-open" class="primary" data-action="wrap-open" disabled>用容器封装</button></div>
+      <footer class="canvas-footer"><span><i class="wire-legend"></i>因果接续 <i class="wire-legend foreshadow"></i>伏笔关联</span><div><button id="undo" class="quiet" data-action="undo" disabled title="撤销最近一次封装或摘要修改">↶ 撤销</button><button class="quiet" data-action="fit">定位当前层</button></div></footer>
+    </main>
+  </div>
+  <button id="structure-scrim" class="structure-scrim" data-action="sidebar" aria-label="关闭故事结构" hidden></button>
+  <aside id="detail" class="detail" hidden aria-label="模块设置"></aside>
+  <dialog id="wrap-dialog" class="form-dialog">
+    <form id="wrap-form"><div class="dialog-heading"><div><h2 id="wrap-heading">新建容器</h2></div><button type="button" class="icon-button" data-action="wrap-close" aria-label="取消封装">×</button></div>
+      <p id="wrap-description"></p><label>容器名称<input id="wrap-title" maxlength="40" required placeholder="例如：归乡与追问"></label><label>一句话摘要<textarea id="wrap-summary" rows="3" maxlength="160" placeholder="这段故事发生了什么，又把人物带向哪里？"></textarea></label><p id="wrap-error" class="error" role="alert"></p><div class="dialog-actions"><button type="button" class="quiet" data-action="wrap-close">取消</button><button class="primary" type="submit"><span id="wrap-submit-label">封装并收起</span></button></div>
+    </form>
+  </dialog>
+  <dialog id="relations-dialog" class="form-dialog relations-dialog"><div class="dialog-heading"><div><span class="eyebrow">故事如何相连</span><h2>外部联系</h2></div><button class="icon-button" data-action="relations-close" aria-label="关闭外部联系">×</button></div><div id="relations-list"></div></dialog>
+  <dialog id="module-dialog" class="form-dialog"><form id="module-form"><div class="dialog-heading"><h2 id="module-heading">添加事件</h2><button type="button" class="icon-button" data-action="module-close" aria-label="取消添加模块">×</button></div><label>标题<input id="module-title" maxlength="40" required></label><label>内容<textarea id="module-body" rows="3" maxlength="200"></textarea></label><div class="dialog-actions"><button type="button" class="quiet" data-action="module-close">取消</button><button class="primary" type="submit">添加到当前层</button></div></form></dialog>
+  <div id="scope-live" class="sr-only" aria-live="polite"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="blocks.js"></script>
+</body>
+</html>

@@ -249,6 +249,7 @@ export const useWorkStore = defineStore('work', {
       this.selChapterId = this.liveChapters[0]?.id || null
       this.selVolumeId = this.liveVolumes[0]?.id || null
       this.loaded = true
+      await useShelfStore().recordOpen(workId)
       queueProjection(workId).catch(console.error)
       const ui = useUiStore()
       ui.view = 'work'
@@ -1334,8 +1335,9 @@ export const useWorkStore = defineStore('work', {
       const row = {
         id: uid(), workId: this.work.id, parentId: parentId || null, refId: null,
         kind: 'event', title: '', text: '', html: null, fold: false, sortOrder: 0,
-        canvasX: null, canvasY: null, w: null, h: null, shape: 'process', pin: false, rels: [],
-        deletedAt: null, createdAt: now(), updatedAt: now(), ...fields
+        canvasX: null, canvasY: null, w: null, h: null, shape: 'process', status: '', pin: false, rels: [],
+        deletedAt: null, createdAt: now(), updatedAt: now(), ...fields,
+        ...(fields.kind === 'event' && !fields.status ? { status: 'planned' } : {})
       }
       if (afterId) {
         const i = siblings.findIndex((s) => s.id === afterId)
@@ -1488,6 +1490,22 @@ export const useWorkStore = defineStore('work', {
       autosave.mark('olnodes', n)
     },
 
+    /** 事件写作状态（设计稿分层画布）：done / writing / revise / planned；空值=未标记。 */
+    olnodeSetStatus(id, status) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.status = ['done', 'writing', 'revise', 'planned'].includes(status) ? status : ''
+      autosave.mark('olnodes', n)
+    },
+
+    /** 容器章节标签（如「第 1—3 章」），只用于层级卡显示。 */
+    olnodeSetChapter(id, chapter) {
+      const n = this.olnodes.find((x) => x.id === id)
+      if (!n) return
+      n.chapter = String(chapter || '').trim()
+      autosave.mark('olnodes', n)
+    },
+
     /** 文本框模块透明度（v0.4.2）：0.15–1，作用于底色层 */
     olnodeSetOpacity(id, v) {
       const n = this.olnodes.find((x) => x.id === id)
@@ -1522,11 +1540,30 @@ export const useWorkStore = defineStore('work', {
     /** 画布偏好读写（appconfig 按作品隔离） */
     async loadCanvasPrefs() {
       const workId = this.work?.id
-      this.canvasPrefs = { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8, arrowSize: 1 }
+      this.canvasPrefs = {
+        snap: true,
+        density: 'detail',
+        edgeStyle: 'bezier',
+        edgeWidth: 1.6,
+        arrowSize: 1,
+        textures: true,
+        scopeId: null,
+        expanded: [],
+        cameras: {}
+      }
       try {
         const row = await db.appconfig.get('olcanvas:' + workId)
         if (this.work?.id === workId && row?.value) this.canvasPrefs = { ...this.canvasPrefs, ...row.value }
       } catch { /* 已重置为旧作品的兼容默认值 */ }
+      /* 分层状态自检：作品切换/容器删除后不能停留在失效层级。 */
+      const nodes = this.liveOlnodes()
+      const byId = new Map(nodes.map((n) => [n.id, n]))
+      const scope = this.canvasPrefs.scopeId
+      if (scope && byId.get(scope)?.kind !== 'container') this.canvasPrefs.scopeId = null
+      const expanded = Array.isArray(this.canvasPrefs.expanded) ? this.canvasPrefs.expanded : []
+      this.canvasPrefs.expanded = expanded.filter((id) => byId.get(id)?.kind === 'container')
+      if (!this.canvasPrefs.cameras || typeof this.canvasPrefs.cameras !== 'object') this.canvasPrefs.cameras = {}
+      this.canvasPrefs.textures = this.canvasPrefs.textures !== false
     },
     async saveCanvasPrefs() {
       if (!this.work) return
@@ -1771,6 +1808,61 @@ export const useWorkStore = defineStore('work', {
       if (oldParent !== (targetParentId || null)) this.olnodeNormalize(oldParent)
       this.olnodeNormalize(targetParentId || null)
       return true
+    },
+
+    /** 多选封装：同层至少两个节点 → 新建容器并迁移，整段只压一次 undo。 */
+    olnodeWrap(ids, fields = {}) {
+      const unique = [...new Set((ids || []).filter(Boolean))]
+      if (unique.length < 2) return null
+      const rows = unique.map((id) => this.olnodes.find((n) => n.id === id && !n.deletedAt)).filter(Boolean)
+      if (rows.length !== unique.length) return null
+      const parentId = rows[0].parentId || null
+      if (rows.some((n) => (n.parentId || null) !== parentId)) return null
+      const title = String(fields.title || '').trim()
+      if (!title) return null
+      this.olnodePushUndo(true)
+      const siblings = this.olnodeChildren(parentId)
+      const order = new Map(siblings.map((n, i) => [n.id, i]))
+      const picked = new Set(unique)
+      rows.sort((a, b) => (order.get(a.id) || 0) - (order.get(b.id) || 0))
+      const firstIdx = order.get(rows[0].id) || 0
+      const beforeCount = siblings.slice(0, firstIdx).filter((n) => !picked.has(n.id)).length
+      const minX = Math.min(...rows.map((n) => n.canvasX ?? 0))
+      const minY = Math.min(...rows.map((n) => n.canvasY ?? 0))
+      const row = {
+        id: uid(),
+        workId: this.work.id,
+        parentId,
+        refId: null,
+        kind: 'container',
+        title,
+        text: String(fields.summary || '').trim(),
+        html: null,
+        fold: false,
+        sortOrder: beforeCount * 1000 + 500,
+        canvasX: Math.round(fields.x ?? minX),
+        canvasY: Math.round(fields.y ?? minY),
+        w: fields.w ? Math.max(340, Number(fields.w)) : null,
+        h: null,
+        shape: 'process',
+        pin: false,
+        rels: [],
+        color: fields.color || '',
+        chapter: String(fields.chapter || '').trim(),
+        deletedAt: null,
+        createdAt: now(),
+        updatedAt: now()
+      }
+      this.olnodes.push(row)
+      rows.forEach((n, i) => {
+        n.parentId = row.id
+        n.sortOrder = i * 1000
+        autosave.mark('olnodes', n)
+      })
+      this.olnodeNormalize(parentId)
+      this.olnodeNormalize(row.id)
+      autosave.mark('olnodes', row)
+      return row
     },
 
     /* 撤销 / 重做（快照栈）：结构操作前 force 快照，连续文本编辑按 1.2s 合并 */

@@ -1,0 +1,207 @@
+{
+  "date": "2026-10-19",
+  "viewport": {
+    "width": 746,
+    "height": 803
+  },
+  "result": "48/48",
+  "checks": [
+    {
+      "name": "就地展开不切换层级",
+      "pass": true
+    },
+    {
+      "name": "展开显示内部事件",
+      "pass": true
+    },
+    {
+      "name": "就地展开不启动进入动画",
+      "pass": true
+    },
+    {
+      "name": "进入动作播放独立动画",
+      "pass": true
+    },
+    {
+      "name": "进入后切换当前层",
+      "pass": true
+    },
+    {
+      "name": "进入后明确显示容器内部",
+      "pass": true
+    },
+    {
+      "name": "进入完成后动画清理",
+      "pass": true
+    },
+    {
+      "name": "容器名称更新",
+      "pass": true
+    },
+    {
+      "name": "容器支持换色",
+      "pass": true
+    },
+    {
+      "name": "容器设置一次撤销恢复名称颜色",
+      "pass": true
+    },
+    {
+      "name": "封装由容器工具发起",
+      "pass": true
+    },
+    {
+      "name": "封装为同一种容器",
+      "pass": true
+    },
+    {
+      "name": "封装保留7个事件",
+      "pass": true
+    },
+    {
+      "name": "封装保留跨容器关系",
+      "pass": true
+    },
+    {
+      "name": "封装一次撤销恢复3个模块",
+      "pass": true
+    },
+    {
+      "name": "容器工具可创建空容器",
+      "pass": true
+    },
+    {
+      "name": "空容器可进入继续写作",
+      "pass": true
+    },
+    {
+      "name": "容器内部可添加event",
+      "pass": true
+    },
+    {
+      "name": "容器内部可添加note",
+      "pass": true
+    },
+    {
+      "name": "容器内部可添加textbox",
+      "pass": true
+    },
+    {
+      "name": "便签文本不计入事件进度",
+      "pass": true
+    },
+    {
+      "name": "返回全书后进度包含新事件",
+      "pass": true
+    },
+    {
+      "name": "第1轮进入切换范围",
+      "pass": true
+    },
+    {
+      "name": "第1轮返回全书",
+      "pass": true
+    },
+    {
+      "name": "第1轮保持原收起状态",
+      "pass": true
+    },
+    {
+      "name": "第1轮清理动画",
+      "pass": true
+    },
+    {
+      "name": "第2轮进入切换范围",
+      "pass": true
+    },
+    {
+      "name": "第2轮返回全书",
+      "pass": true
+    },
+    {
+      "name": "第2轮保持原收起状态",
+      "pass": true
+    },
+    {
+      "name": "第2轮清理动画",
+      "pass": true
+    },
+    {
+      "name": "第3轮进入切换范围",
+      "pass": true
+    },
+    {
+      "name": "第3轮返回全书",
+      "pass": true
+    },
+    {
+      "name": "第3轮保持原收起状态",
+      "pass": true
+    },
+    {
+      "name": "第3轮清理动画",
+      "pass": true
+    },
+    {
+      "name": "快速进入立即返回不会卡住",
+      "pass": true
+    },
+    {
+      "name": "Esc终止动画但保持已进入的层级",
+      "pass": true
+    },
+    {
+      "name": "最终第1轮进入独立层级",
+      "pass": true
+    },
+    {
+      "name": "最终第1轮返回并恢复滚动",
+      "pass": true
+    },
+    {
+      "name": "最终第1轮保持折叠状态",
+      "pass": true
+    },
+    {
+      "name": "最终第1轮无动画残留",
+      "pass": true
+    },
+    {
+      "name": "最终第2轮进入独立层级",
+      "pass": true
+    },
+    {
+      "name": "最终第2轮返回并恢复滚动",
+      "pass": true
+    },
+    {
+      "name": "最终第2轮保持折叠状态",
+      "pass": true
+    },
+    {
+      "name": "最终第2轮无动画残留",
+      "pass": true
+    },
+    {
+      "name": "最终第3轮进入独立层级",
+      "pass": true
+    },
+    {
+      "name": "最终第3轮返回并恢复滚动",
+      "pass": true
+    },
+    {
+      "name": "最终第3轮保持折叠状态",
+      "pass": true
+    },
+    {
+      "name": "最终第3轮无动画残留",
+      "pass": true
+    }
+  ],
+  "notes": [
+    "独立示例数据，不访问正式作品存储。",
+    "最终连续三轮验证进入/返回、滚动恢复、折叠状态与动画清理。",
+    "关键帧取证不覆盖动画的全部中间帧。"
+  ]
+}

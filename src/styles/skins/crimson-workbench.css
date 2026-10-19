@@ -819,8 +819,8 @@ body[data-skin='crimson'] [data-module='outline'] .oc-canvas {
     linear-gradient(90deg, #f0e7d4c7 0%, #f0e7d4ab 70%, #f0e7d44a);
   box-shadow: 0 10px 28px #10161335, 3px 3px 0 #c2b28b;
 }
-/* 节点：设计稿的纸卡（事件/便签/引用/章节锚点/容器各有自己的纸色） */
-body[data-skin='crimson'] [data-module='outline'] .oc-node {
+/* 纸卡材质仅用于内容卡；容器和文本框保持功能性表面。 */
+body[data-skin='crimson'] [data-module='outline'] .oc-node:not(.oc-container):not(.oc-textbox) {
   background: #faf1df;
   border: 1px solid #a99160;
   border-radius: 1px;
@@ -833,7 +833,12 @@ body[data-skin='crimson'] [data-module='outline'] .oc-event { border-top: 3px so
 body[data-skin='crimson'] [data-module='outline'] .oc-note { background: #e4cba5; transform: none; }
 body[data-skin='crimson'] [data-module='outline'] .oc-cite { background: #dce4d4; }
 body[data-skin='crimson'] [data-module='outline'] .oc-anchor { background: #eee2d9; }
-body[data-skin='crimson'] [data-module='outline'] .oc-container { background: #f0e7d4aa; border: 1px dashed #846c4090; }
+body[data-skin='crimson'] [data-module='outline'] .oc-container {
+  background: color-mix(in srgb, var(--bc, #9a8252) 6%, transparent);
+  border: 1px solid var(--bc, #9a8252);
+  border-radius: 12px;
+  box-shadow: none;
+}
 body[data-skin='crimson'] [data-module='outline'] .oc-textbox .oc-fulltext { color: #146878; }
 body[data-skin='crimson'] [data-module='outline'] .gv-kindrow { color: #766247; }
 body[data-skin='crimson'] [data-module='outline'] .oc-elabel { background: none; border: 0; color: #6b5a38; font-size: 12px; }
@@ -905,12 +910,6 @@ body[data-skin='crimson'] .crimson-outline-directory .ol-side-add .btn-ghost {
 }
 body[data-skin='crimson'] .crimson-outline-directory .ol-side-add .btn-ghost:hover { background: #d9c28812; color: #f1dfa9; }
 body[data-skin='crimson'] .crimson-outline-directory .ol-side-search { padding: 4px 0 6px; }
-body[data-skin='crimson'] .crimson-outline-directory .ol-side-search .rp-input,
-body[data-skin='crimson'] .crimson-outline-directory input {
-  background: #15272488 !important;
-  border: 1px solid #9cab9350 !important;
-  color: #e9dfc6 !important;
-}
 body[data-skin='crimson'] .crimson-outline-directory .ol-side-search input::placeholder { color: #a3b6a7; }
 body[data-skin='crimson'] .crimson-outline-directory .side-list { flex: 1; min-height: 0; overflow: auto; padding-top: 6px; }
 body[data-skin='crimson'] .crimson-outline-directory .side-item {
@@ -947,34 +946,6 @@ body[data-skin='crimson'] .crimson-canvas-caption span { font-size: 12px; color:
 body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .om-wrap { position: relative; flex: 1; min-height: 0; padding: 0; }
 body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-canvas { flex: 1; min-height: 0; }
 /* 画布控制条：移到底右，照设计稿的深墨浮条 */
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar {
-  position: absolute;
-  z-index: 8;
-  left: auto;
-  right: 23px;
-  bottom: 22px;
-  height: auto;
-  margin: 0;
-  padding: 7px 11px;
-  border: 1px solid #9a8956;
-  background: #253c34f2;
-  color: #eadcb9;
-  box-shadow: 0 3px 10px #0003;
-  gap: 14px;
-  flex-wrap: nowrap;
-}
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar :is(.oc-chip, .om-btn) {
-  height: 23px;
-  border: 0;
-  background: none;
-  color: #eadcb9;
-  font-size: 12px;
-}
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar :is(.oc-chip, .om-btn):hover { color: #fff0cc; background: #ffffff12; }
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar .oc-chip.on { background: #d5c091; color: #342c20; }
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar .oc-count,
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar .oc-zoom { color: #cfc6ad; font-size: 11px; }
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar .om-btn:disabled { opacity: .4; }
 
 /* 文本视图：一张连续稿本 */
 body[data-skin='crimson'] .outline-text-body.crimson-outline-folio {

@@ -1,0 +1,117 @@
+{
+  "date": "2026-10-19",
+  "checks": [
+    {
+      "name": "crimson画布纸色一致",
+      "pass": true
+    },
+    {
+      "name": "crimson工具按钮可读",
+      "pass": true
+    },
+    {
+      "name": "gravity画布纸色一致",
+      "pass": true
+    },
+    {
+      "name": "gravity工具按钮可读",
+      "pass": true
+    },
+    {
+      "name": "glaze画布纸色一致",
+      "pass": true
+    },
+    {
+      "name": "glaze工具按钮可读",
+      "pass": true
+    },
+    {
+      "name": "original画布纸色一致",
+      "pass": true
+    },
+    {
+      "name": "original工具按钮可读",
+      "pass": true
+    },
+    {
+      "name": "侧栏搜索可定位折叠深层事件",
+      "pass": true
+    },
+    {
+      "name": "作品封面入口返回全书",
+      "pass": true
+    },
+    {
+      "name": "收起目录保持画布范围",
+      "pass": true
+    },
+    {
+      "name": "工具箱可在当前容器创建事件",
+      "pass": true
+    },
+    {
+      "name": "一次撤销还原新建事件",
+      "pass": true
+    },
+    {
+      "name": "保留圆角折线切换",
+      "pass": true
+    },
+    {
+      "name": "第1轮深层定位",
+      "pass": true
+    },
+    {
+      "name": "第1轮返回全书",
+      "pass": true
+    },
+    {
+      "name": "第2轮深层定位",
+      "pass": true
+    },
+    {
+      "name": "第2轮返回全书",
+      "pass": true
+    },
+    {
+      "name": "第3轮深层定位",
+      "pass": true
+    },
+    {
+      "name": "第3轮返回全书",
+      "pass": true
+    },
+    {
+      "name": "原类型管理保留",
+      "pass": true
+    },
+    {
+      "name": "线型状态正确",
+      "pass": true
+    },
+    {
+      "name": "gravity投影线无常驻高亮",
+      "pass": true
+    },
+    {
+      "name": "gravity命中热区透明",
+      "pass": true
+    },
+    {
+      "name": "glaze投影线无常驻高亮",
+      "pass": true
+    },
+    {
+      "name": "glaze命中热区透明",
+      "pass": true
+    },
+    {
+      "name": "crimson投影线无常驻高亮",
+      "pass": true
+    },
+    {
+      "name": "crimson命中热区透明",
+      "pass": true
+    }
+  ]
+}

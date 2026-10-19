@@ -6,6 +6,8 @@ export { projectOnRoute, flattenRoute, shapePorts, routeIsClear, labelPoint } fr
 /* ---------- 节点尺寸与落点 ---------- */
 
 /* 引力书舱档位：按设计稿放大卡片，容纳顶部类型行与宋体大标题（仅新增档位，原版与紧凑口径不变） */
+/* 引力书舱沿用既有放大档位：新设计稿的纸面排版适配这套尺寸，
+ * 不改变旧作品的卡片占位，避免进入容器后原有坐标互相压叠。 */
 const ROOMY_SIZE = {
   event: { w: 210, h: 130 },
   note: { w: 196, h: 130 },
@@ -16,8 +18,11 @@ const ROOMY_SIZE = {
   container: { w: 300, h: 180 }
 }
 
+/* Paper detail is a presentation default; explicit saved w/h always take precedence. */
+const PAPER_SIZE = {event:{w:224,h:154},note:{w:248,h:178},cite:{w:264,h:177},anchor:{w:240,h:153},volume:{w:210,h:124},textbox:{w:300,h:100},container:{w:460,h:178}}
 /** 画布节点尺寸（kind × 密度），container 为空态基准尺寸 */
 export function canvasNodeSize(n, density = 'detail') {
+  if (density === 'paper') return PAPER_SIZE[n.kind] || PAPER_SIZE.container
   if (density === 'roomy') return ROOMY_SIZE[n.kind] || ROOMY_SIZE.container
   const c = density === 'compact'
   switch (n.kind) {
@@ -44,6 +49,11 @@ export function effSize(n, density = 'detail') {
       h: Math.max(36, n.h != null ? n.h : s.h)
     }
   }
+  if (density === 'paper' && n.kind === 'event') {
+    if (n.shape === 'diamond') return {w:250,h:210}
+    if (n.shape === 'para') return {w:254,h:170}
+    if (n.shape === 'ellipse') return {w:210,h:118}
+  }
   const s = canvasNodeSize(n, density)
   if (n.kind === 'event' && n.shape === 'diamond') return { w: s.w + 46, h: s.h + 42 }
   return s
@@ -64,7 +74,7 @@ export function dashOf(style, kind) {
 }
 
 /* 连线自定义色板（v0.4.12）：首项=主题色（空值，跟随关系类型配色），其余为常用色 */
-export const EDGE_COLORS = ['#2980b9', '#c0392b', '#8e44ad', '#d35400', '#27ae60', '#7f8c8d']
+export const EDGE_COLORS = ['#59877e', '#ae715f', '#8971a2', '#b28443', '#6e8c79', '#7f8c8d']
 /** 边渲染色：自定义 color 优先，否则按关系类型配色 */
 export function edgeColor(rel) {
   return rel.color || relColor(rel.kind)
@@ -418,10 +428,10 @@ export function containerRect(n, kids, posOf, sizeOf) {
 /* ---------- 连线类型 / 箭头 / 形状 ---------- */
 
 export const REL_KINDS = [
-  { key: '关联', color: '#2980b9' },
-  { key: '因果', color: '#c0392b' },
-  { key: '伏笔', color: '#8e44ad', dashed: true },
-  { key: '冲突', color: '#d35400' }
+  { key: '关联', color: '#59877e' },
+  { key: '因果', color: '#ae715f' },
+  { key: '伏笔', color: '#8971a2', dashed: true },
+  { key: '冲突', color: '#b28443' }
 ]
 export const relColor = (k) => (REL_KINDS.find((r) => r.key === k) || REL_KINDS[0]).color
 export const relDashed = (k) => !!(REL_KINDS.find((r) => r.key === k) || {}).dashed

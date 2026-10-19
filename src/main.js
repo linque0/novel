@@ -3,6 +3,8 @@ import { createPinia } from 'pinia'
 import naive from 'naive-ui'
 import App from './App.vue'
 import './styles/themes.css'
+import './styles/outline-paper.css'
+import './styles/outline-workbench.css'
 import './assets/fonts/fonts.css'
 import './assets/fonts/fonts-user.css'
 

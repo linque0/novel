@@ -5,6 +5,7 @@ import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
 import CrimsonCover from './CrimsonCover.vue'
 import { playStage } from '../services/stage-play'
+import { formatShelfOpenTime } from '../services/shelf-sort'
 
 const props = defineProps({
   works: { type: Array, required: true },
@@ -13,6 +14,7 @@ const props = defineProps({
   loading: Boolean,
   busy: Boolean,
   query: { type: String, default: '' },
+  openStats: { type: Object, default: () => ({}) },
   menuOptions: { type: Function, required: true }
 })
 const emit = defineEmits(['update:query', 'open', 'menu', 'create', 'settings', 'navigate'])
@@ -46,17 +48,9 @@ const titleLines = computed(() => {
   return [t]
 })
 
-const updated = (t) => {
-  if (!t) return ''
-  const d = new Date(t)
-  if (!Number.isFinite(d.getTime())) return ''
-  const hm = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false })
-  const atMidnight = (x) => { const y = new Date(x); y.setHours(0, 0, 0, 0); return y.getTime() }
-  const diff = (atMidnight(Date.now()) - atMidnight(d.getTime())) / 86400000
-  if (diff === 0) return '今天 ' + hm
-  if (diff === 1) return '昨天 ' + hm
-  return d.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' })
-}
+const featuredStat = computed(() => props.openStats[featured.value?.id] || null)
+const featuredOpenText = computed(() => formatShelfOpenTime(featuredStat.value?.lastOpenedAt))
+const openText = (book) => formatShelfOpenTime(props.openStats[book?.id]?.lastOpenedAt)
 /* 首章卡摘录用真实正文：去标签、压空白，取第一句（最多 42 字） */
 const excerpt = computed(() => {
   const raw = String(props.firstChapter?.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()
@@ -125,7 +119,7 @@ onMounted(() => playStage())
             <div class="crimson-stage-fade" aria-hidden="true"></div>
 
             <div class="crimson-story">
-              <p class="crimson-eyebrow">{{ query ? '搜索结果' : '最近编辑' }}<span v-if="featured.updatedAt">　·　{{ updated(featured.updatedAt) }}</span></p>
+              <p class="crimson-eyebrow">{{ query ? '搜索结果' : '最近打开' }}<span>　·　上次打开 {{ featuredOpenText }}</span></p>
               <h1 class="crimson-main-title" :class="'title-' + titleMode" :title="featured.title">
                 <template v-if="titleMode === 'vertical'">{{ featured.title }}</template>
                 <span v-else v-for="(line, i) in titleLines" :key="i" class="crimson-title-line">{{ line }}</span>
@@ -160,11 +154,6 @@ onMounted(() => playStage())
               </div>
             </div>
 
-            <svg class="crimson-flower" aria-hidden="true" viewBox="0 0 100 100">
-              <path d="M50 10C20 15 12 40 50 85C88 40 80 15 50 10ZM50 10C45 35 30 45 50 85C70 45 55 35 50 10ZM15 35C13 65 30 85 50 85C70 85 87 65 85 35M50 85V99" />
-              <circle cx="50" cy="40" r="6" />
-            </svg>
-
             <button v-if="firstChapter" type="button" class="crimson-chapter-card" :disabled="busy" @click="emit('open', featured)">
               <small>接续上次的故事</small>
               <h3>{{ firstChapter.title }} <span class="arrow">↗</span></h3>
@@ -175,7 +164,7 @@ onMounted(() => playStage())
           <aside v-if="others.length" class="crimson-program">
             <div class="crimson-program-head">
               <h2>未完的剧目</h2>
-              <span>{{ query ? '匹配的作品' : '最近编辑 ↓' }}</span>
+              <span>{{ query ? '匹配的作品' : '最近打开 ↓' }}</span>
             </div>
             <div class="crimson-program-list">
               <div v-for="book in others" :key="book.id" class="crimson-work-row">
@@ -184,6 +173,7 @@ onMounted(() => playStage())
                   <span class="crimson-work-copy">
                     <h3 :title="book.title">{{ book.title }}</h3>
                     <p>{{ words(book.totalWords) }} 字 · {{ book.chapterCount || 0 }} 章</p>
+                    <p class="crimson-work-openat">上次打开 {{ openText(book) }}</p>
                   </span>
                   <span class="arrow" aria-hidden="true">↗</span>
                 </button>
@@ -206,7 +196,7 @@ onMounted(() => playStage())
     </main>
 
     <footer class="crimson-footer">
-      <span>{{ total }} 部作品<template v-if="featured?.updatedAt"> · 最近编辑 {{ updated(featured.updatedAt) }}</template></span>
+      <span>{{ total }} 部作品<template v-if="featured"> · 上次打开 {{ featuredOpenText }}</template></span>
       <div>
         <button type="button" class="crimson-footer-link" @click="playStage()">重播演出</button>
       </div>

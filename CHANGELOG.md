@@ -1,4 +1,14 @@
-## [Unreleased]
+## [1.1.3] - 2026-10-19 · 大纲重置
+
+### 大纲重置：分层画布、纸面素材与四皮肤接入（2026-10-19）
+
+- **分层画布**：`OutlineCanvas` 新增 `scopeId`（null = 全书根层）、面包屑与按层相机；根层只渲染直接子节点，子容器以章节卡呈现（标题/摘要/章节/事件进度/嵌套数），进入容器切换到次级画布，返回恢复原相机与展开状态，支持任意深度。
+- **两种就地编辑**：容器卡可「进入容器」自由摆放，也可「就地展开」为递归两列迷你卡网格（窄容器单列）；迷你卡支持原位改标题/正文、双击抽屉、状态/形状/颜色、四向端口连线，展开时同列模块 220ms 让位。
+- **关系投影与分组**：关系仍保存真实节点 id；收起的端点投影到最近可见祖先（淡线 + 空心落点），层外端点收进「前接/后续」接续卡；同端点同类关系合并为 `类型 · N` 一条，多条并行错开 18px；单条边保留原有类型/箭头/标签/颜色/线型/线宽/箭头大小/连接点/手动路径，合并边提供关系组批量编辑与详情列表，跨层连接点随宿主边重算。
+- **节点状态与封装**：事件新增 `done / writing / revise / planned`，新事件默认 `planned`，进度只统计 `done`；容器可设章节标签与六色线框；多选（含迷你卡）可一次 undo 封装为容器；新增搜索（Ctrl+K）自动进入父层定位、总览/展开一层/收起已完成/整理布局。
+- **素材与四皮肤**：5 张内容卡与 3 张事件形态 WebP 落到 `src/assets/outline-paper/`；`outline-paper.css` 用 `--paper-image/--paper-tone/--paper-edge/--paper-clip` 驱动纸面层，纹理开关按作品持久化；原版米色纸、引力深色画布浅纸深墨、琉光浅青轻纸、赤月折角纸 + 金线分别覆盖，未改皮肤骨架。
+- **侧栏与书架**：侧栏新增模块写入当前层，当前层模块列表可定位；赤月工作台新增模块同层；书架记录并依据 `lastOpenedAt` 排序，三套书架显示「上次打开」。
+- **验证**：`outline-scope` 29/29、`canvas-model` 48/48、`canvas-routing` 57/57、`canvas-relations` 11/11、`outline-paper-size` 5/5；`npm run build` 通过。四皮肤根层截图见 `docs/outline-workbench-integration/screenshots/`。
 
 ### 赤月戏 v3 接入：折屏戏本版式 + 三张新背景（2026-10-18）
 
@@ -6,9 +16,7 @@
 - 人物背景换 `characters-03-staggered-light-v6`、设定换 `world-celestial-atlas-v6` 竖幅、灵感换 `inspiration-lantern-river-v3`；`tools/crimson-art-import.mjs` 转 WebP，`SOURCES.md` 记源/输出 SHA-256。
 - 新增 `src/styles/skins/crimson-v3.css`、`src/components/CrimsonChapterRail.vue`、`tools/crimson-v3-verify.mjs`；`node tools/crimson-v3-verify.mjs` → PASS（1440/1080、设置窗口、其他皮肤隔离、减少动画）；`npm run build` 通过。详见 `docs/前端美化/赤月戏-v3接入记录.md`。
 
-## [1.1.3] - 2026-10-17
-
-### 新皮肤「赤月戏」（金屏夜梅）：按设计稿接入书架与工作台
+### 1.1.3 初版：新皮肤「赤月戏」（金屏夜梅，2026-10-17）
 
 新增第三套内置皮肤 **赤月戏**（id `crimson`，原「新艺术幻戏」方向，2026-10-17 更名）。视觉基线为 `docs/前端美化/oil-ui-v3-功能对齐/赤月剧场-书架方向对比/完整设计稿/金屏夜梅-完整设计稿/`（7 模块 / 10 状态），功能口径仍按 `功能对齐说明.md`。详见 `docs/前端美化/赤月戏-接入记录.md`。
 

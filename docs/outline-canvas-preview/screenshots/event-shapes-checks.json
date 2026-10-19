@@ -1,0 +1,135 @@
+{
+  "shapeSwitches": [
+    {
+      "round": 0,
+      "shape": "diamond",
+      "classes": "canvas-node kind-event shape-diamond selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "210px",
+      "image": "assets/originals/event-diamond.png",
+      "title": "收到旧日来信",
+      "width": "250px"
+    },
+    {
+      "round": 0,
+      "shape": "para",
+      "classes": "canvas-node kind-event shape-para selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "170px",
+      "image": "assets/originals/event-para.png",
+      "title": "收到旧日来信",
+      "width": "254px"
+    },
+    {
+      "round": 0,
+      "shape": "ellipse",
+      "classes": "canvas-node kind-event shape-ellipse selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "118px",
+      "image": "assets/originals/event-ellipse.png",
+      "title": "收到旧日来信",
+      "width": "210px"
+    },
+    {
+      "round": 0,
+      "shape": "process",
+      "classes": "canvas-node kind-event shape-process selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "154px",
+      "image": "assets/event.webp",
+      "title": "收到旧日来信",
+      "width": "224px"
+    },
+    {
+      "round": 1,
+      "shape": "diamond",
+      "classes": "canvas-node kind-event shape-diamond selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "210px",
+      "image": "assets/originals/event-diamond.png",
+      "title": "收到旧日来信",
+      "width": "250px"
+    },
+    {
+      "round": 1,
+      "shape": "para",
+      "classes": "canvas-node kind-event shape-para selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "170px",
+      "image": "assets/originals/event-para.png",
+      "title": "收到旧日来信",
+      "width": "254px"
+    },
+    {
+      "round": 1,
+      "shape": "ellipse",
+      "classes": "canvas-node kind-event shape-ellipse selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "118px",
+      "image": "assets/originals/event-ellipse.png",
+      "title": "收到旧日来信",
+      "width": "210px"
+    },
+    {
+      "round": 1,
+      "shape": "process",
+      "classes": "canvas-node kind-event shape-process selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "154px",
+      "image": "assets/event.webp",
+      "title": "收到旧日来信",
+      "width": "224px"
+    },
+    {
+      "round": 2,
+      "shape": "diamond",
+      "classes": "canvas-node kind-event shape-diamond selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "210px",
+      "image": "assets/originals/event-diamond.png",
+      "title": "收到旧日来信",
+      "width": "250px"
+    },
+    {
+      "round": 2,
+      "shape": "para",
+      "classes": "canvas-node kind-event shape-para selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "170px",
+      "image": "assets/originals/event-para.png",
+      "title": "收到旧日来信",
+      "width": "254px"
+    },
+    {
+      "round": 2,
+      "shape": "ellipse",
+      "classes": "canvas-node kind-event shape-ellipse selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "118px",
+      "image": "assets/originals/event-ellipse.png",
+      "title": "收到旧日来信",
+      "width": "210px"
+    },
+    {
+      "round": 2,
+      "shape": "process",
+      "classes": "canvas-node kind-event shape-process selected",
+      "clip": "url(#event-clip-letter)",
+      "height": "154px",
+      "image": "assets/event.webp",
+      "title": "收到旧日来信",
+      "width": "224px"
+    }
+  ],
+  "geometryTests": "20/20",
+  "titleEditing": true,
+  "dragPathsFollowed": true,
+  "textureToggle": true,
+  "containerHasTexture": false,
+  "textboxTransparent": true,
+  "zoomChecks": [
+    100,
+    210
+  ],
+  "review": "two self-check rounds; no independent review"
+}

@@ -10,6 +10,7 @@ import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { firstChapterOf } from '../db/repo'
+import { sortShelfWorks, formatShelfOpenTime } from '../services/shelf-sort'
 
 const shelf = useShelfStore()
 const work = useWorkStore()
@@ -34,15 +35,18 @@ const editing = ref(null)
 const q = ref('')
 const opening = ref(false)
 
-/* 书架本地检索：书名 / 作者 / 类型 */
+/* 书架本地检索：书名 / 作者 / 类型；结果固定按最近打开时间重排 */
 const filtered = computed(() => {
   const k = q.value.trim().toLowerCase()
-  if (!k) return shelf.works
-  return shelf.works.filter((w) =>
-    (w.title || '').toLowerCase().includes(k) ||
-    (w.author || '').toLowerCase().includes(k) ||
-    (w.genre || '').toLowerCase().includes(k))
+  const base = k
+    ? shelf.works.filter((w) =>
+      (w.title || '').toLowerCase().includes(k) ||
+      (w.author || '').toLowerCase().includes(k) ||
+      (w.genre || '').toLowerCase().includes(k))
+    : shelf.works
+  return sortShelfWorks(base, shelf.openStats)
 })
+const openText = (w) => formatShelfOpenTime(shelf.openStats[w.id]?.lastOpenedAt)
 
 /* 首章白卡 / 首章剧目卡用：随当前展示的作品取它的首章（只读查询，失败/无章节就不显示） */
 const firstChapter = ref(null)
@@ -149,9 +153,9 @@ async function onCardMenu(key, w) {
 
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
-    <GravityShelf v-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
-    <GlazeShelf v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
-    <CrimsonShelf v-else-if="ui.skin === 'crimson'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <GravityShelf v-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <GlazeShelf v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <CrimsonShelf v-else-if="ui.skin === 'crimson'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <template v-else>
     <div class="topbar">
       <div class="shelf-brand">
@@ -195,6 +199,7 @@ async function onCardMenu(key, w) {
               <span class="book-title">{{ w.title }}</span>
               <span class="book-meta">{{ fmtWords(w.totalWords) }} · {{ w.chapterCount }} 章</span>
             </div>
+            <div class="book-openat">上次打开 {{ openText(w) }}</div>
           </div>
         </div>
         <div v-else class="empty-shelf">

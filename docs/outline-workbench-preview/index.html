@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>山海来信 · 大纲工作台</title>
+  <link rel="stylesheet" href="../../src/assets/fonts/fonts-user.css">
+  <link rel="stylesheet" href="workbench.css">
+</head>
+<body>
+  <svg class="icon-library" aria-hidden="true"><defs>
+    <symbol id="i-event" viewBox="0 0 24 24"><path d="m12 3 8 9-8 9-8-9Z"/><path d="M9 12h6m-3-3v6"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3h14v12l-6 6H5Z"/><path d="M13 21v-6h6M8 8h8M8 11h5"/></symbol>
+    <symbol id="i-cite" viewBox="0 0 24 24"><path d="M4 5h16v14H4Z"/><path d="M8 9h3v4H7v-2c0-1 0-2 1-2Zm7 0h3v4h-4v-2c0-1 0-2 1-2Z"/></symbol>
+    <symbol id="i-textbox" viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></symbol>
+    <symbol id="i-container" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11H3Z"/><path d="M3 10h18"/></symbol>
+    <symbol id="i-anchor" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4Z"/><path d="M9 7h6M9 10h4"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="M5 3h14v18H5a2 2 0 0 1 0-4h14M7 3v14"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M8 4 3 9l5 5M3 9h11a6 6 0 0 1 0 12"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-enter" viewBox="0 0 24 24"><path d="M14 4h6v16h-6"/><path d="M3 12h11m-4-4 4 4-4 4"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m-9 0 1 13h10l1-13"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5Z"/><path d="m4 13 8 4.5 8-4.5"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5 9-10"/></symbol>
+    <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></symbol>
+  </defs></svg>
+
+  <div class="wb-shell">
+    <header class="wb-header">
+      <a class="brand" href="../outline-canvas-preview/" title="回到纸本画布设计稿"><span class="brand-seal">叙</span><span>小说工坊</span></a>
+      <nav id="crumbs" class="crumbs" aria-label="大纲层级"></nav>
+      <div class="header-actions">
+        <div class="search-wrap">
+          <label class="search" for="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="search" type="search" placeholder="查找情节、事件或线索" autocomplete="off"><kbd>Ctrl K</kbd></label>
+          <div id="search-results" class="search-results" hidden></div>
+        </div>
+        <button id="materials-open" class="button quiet"><svg aria-hidden="true"><use href="#i-image"/></svg>素材一览</button>
+      </div>
+    </header>
+
+    <aside id="sidebar" class="wb-side">
+      <div class="side-head"><button class="icon-button side-close" data-action="sidebar" aria-label="关闭侧栏"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+      <div class="side-scroll">
+        <button class="book-root" data-action="scope" data-id="book" title="回到全书画布">
+          <span class="book-mark">山<br>海</span>
+          <span class="book-text"><strong>山海来信</strong><small>第一卷 · 潮声 · 长篇</small></span>
+        </button>
+        <div class="side-label">故事结构 <span id="book-progress"></span></div>
+        <div id="tree" class="tree" aria-label="故事结构树"></div>
+        <div class="side-label">添加模块 <span id="palette-hint">七类</span></div>
+        <div id="palette" class="palette" aria-label="模块工具箱"></div>
+        <div class="side-label">本层模块 <span id="layer-count">0</span></div>
+        <div id="layers" class="layers" aria-label="本层模块列表"></div>
+      </div>
+      <div class="side-bottom"><span class="mini-stamp">PAPER<br>STORIES</span><p>纸的温度，<br>故事的秩序。</p></div>
+    </aside>
+
+    <main class="workspace">
+      <div class="workspace-head">
+        <div class="head-title">
+          <div class="eyebrow" id="scope-eyebrow">OUTLINE · 全书画布</div>
+          <div class="title-row"><h1 id="scope-title">全书情节</h1><span id="scope-tag" class="scope-tag">全书画布</span></div>
+          <p id="scope-meta"></p>
+        </div>
+        <div class="head-actions">
+          <button class="quiet" data-action="overview">总览</button>
+          <button class="quiet" data-action="expand-level">展开一层</button>
+          <button class="quiet" data-action="collapse-done">收起已完成</button>
+          <button class="quiet" data-action="tidy">整理布局</button>
+        </div>
+      </div>
+
+      <div class="canvas-toolbar">
+        <button class="quiet structure-toggle" data-action="sidebar" aria-label="打开故事结构"><svg aria-hidden="true"><use href="#i-layers"/></svg>结构</button>
+        <div class="module-tools" id="module-tools" aria-label="添加画布模块"></div>
+        <span class="tool-sep" aria-hidden="true"></span>
+        <button id="multi-toggle" class="quiet" data-action="multi" aria-pressed="false">多选</button>
+        <span id="current-hint" class="current-hint"></span>
+        <div class="toolbar-right">
+          <span class="tool-label">连线</span>
+          <div class="segmented" aria-label="连线样式"><button id="curve-mode" class="active" aria-pressed="true">流畅曲线</button><button id="ortho-mode" aria-pressed="false">圆角折线</button></div>
+          <span class="tool-divider" aria-hidden="true"></span>
+          <button id="texture-toggle" class="text-button" aria-pressed="true"><span class="switch on"></span>纸面材质</button>
+          <span class="tool-divider" aria-hidden="true"></span>
+          <button id="undo" class="icon-button" data-action="undo" title="撤销最近的修改" aria-label="撤销" disabled><svg aria-hidden="true"><use href="#i-undo"/></svg></button>
+        </div>
+      </div>
+
+      <div id="stage" class="stage" tabindex="0" aria-label="大纲画布：可拖动模块、滚轮平移、按住 Ctrl 缩放">
+        <div id="world" class="world">
+          <div id="world-scale" class="world-scale">
+            <div id="frames" class="frames"></div>
+            <svg id="edges" class="edges" aria-label="模块关系连线"></svg>
+            <div id="nodes" class="nodes"></div>
+            <div id="labels" class="edge-labels"></div>
+          </div>
+        </div>
+        <div class="external-lane" id="external-in"></div>
+        <div class="external-lane external-lane-out" id="external-out"></div>
+        <div id="scope-empty" class="scope-empty" hidden>这一层还没有模块。用上方工具条添加事件、便签或容器。</div>
+        <div class="zoom-controls">
+          <button id="zoom-out" aria-label="缩小">−</button>
+          <button id="zoom-value" title="恢复 100%">100%</button>
+          <button id="zoom-in" aria-label="放大">＋</button>
+          <span aria-hidden="true"></span>
+          <button id="fit" title="适应画布" aria-label="适应画布"><svg aria-hidden="true"><use href="#i-fit"/></svg></button>
+        </div>
+        <div class="rel-legend" aria-label="关系图例">
+          <span style="--rel:#59877e">关联</span><span style="--rel:#ae715f">因果</span><span style="--rel:#8971a2">伏笔</span><span style="--rel:#b28443">冲突</span>
+        </div>
+        <div id="selection-bar" class="selection-bar" hidden><span id="selection-count">选择当前层的模块</span><button class="quiet" data-action="cancel-multi">取消</button><button id="wrap-open" class="primary" data-action="wrap-open" disabled>用容器封装</button></div>
+        <div id="edge-inspector" class="edge-inspector" hidden>
+          <span>关系</span>
+          <select id="edit-relation" aria-label="关系类型"><option>关联</option><option>因果</option><option>伏笔</option><option>冲突</option></select>
+          <select id="edit-arrow" aria-label="箭头方向"><option value="forward">单向箭头</option><option value="both">双向箭头</option><option value="none">无箭头</option></select>
+          <input id="edit-label" maxlength="12" placeholder="关系标签" aria-label="关系标签">
+          <button id="edge-details" class="quiet" title="查看这条线连接的真实事件">详情</button>
+          <button id="edge-close" class="icon-button" aria-label="关闭连线属性"><svg aria-hidden="true"><use href="#i-close"/></svg></button>
+        </div>
+        <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      </div>
+
+      <footer class="stage-footer">
+        <span class="footer-hint"><span class="keycap">拖动</span> 移动模块 · <span class="keycap">空白</span> 平移 · <span class="keycap">Ctrl</span> + 滚轮 缩放 · <span class="keycap">双击</span> 编辑</span>
+        <span id="selection-hint" class="footer-hint">端口拖动可建立连线</span>
+      </footer>
+    </main>
+  </div>
+
+  <button id="side-scrim" class="side-scrim" data-action="sidebar" aria-label="关闭侧栏" hidden></button>
+  <aside id="drawer" class="drawer" hidden aria-label="模块设置"></aside>
+
+  <dialog id="materials-dialog" class="materials-dialog">
+    <div class="materials-heading"><div><div class="eyebrow">MATERIAL LIBRARY</div><h2>纸面随形，故事成章。</h2><p>四种事件形状各有纸面；容器自由换色，文本框透明书写。</p></div><button id="materials-close" class="icon-button" aria-label="关闭素材一览"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <h3 class="material-section-title">事件形状</h3><div id="event-shape-grid" class="material-grid"></div>
+    <h3 class="material-section-title">其他内容卡</h3><div id="material-grid" class="material-grid"></div>
+    <div class="materials-footer"><span>无文字原图 · PNG / WebP</span><a class="button primary" href="../outline-canvas-preview/assets/outline-materials.zip" download>下载素材包 <svg aria-hidden="true"><use href="#i-arrow"/></svg></a></div>
+  </dialog>
+
+  <dialog id="wrap-dialog" class="form-dialog">
+    <form id="wrap-form">
+      <div class="dialog-heading"><div><h2 id="wrap-heading">新建容器</h2></div><button type="button" class="icon-button" data-action="wrap-close" aria-label="取消"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+      <p id="wrap-description"></p>
+      <label>容器名称<input id="wrap-title" maxlength="40" required placeholder="例如：灯塔疑云"></label>
+      <label>一句话摘要<textarea id="wrap-summary" rows="3" maxlength="160" placeholder="这段故事发生了什么，又把人物带向哪里？"></textarea></label>
+      <p id="wrap-error" class="error" role="alert"></p>
+      <div class="dialog-actions"><button type="button" class="quiet" data-action="wrap-close">取消</button><button class="primary" type="submit"><span id="wrap-submit-label">封装并收起</span></button></div>
+    </form>
+  </dialog>
+
+  <dialog id="module-dialog" class="form-dialog">
+    <form id="module-form">
+      <div class="dialog-heading"><div><h2 id="module-heading">添加事件</h2></div><button type="button" class="icon-button" data-action="module-close" aria-label="取消"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+      <p id="module-description">新模块会添加到当前层，加入后可拖动摆放。</p>
+      <label>标题<input id="module-title" maxlength="40" required placeholder="给这个模块起个名字"></label>
+      <label>内容<textarea id="module-text" rows="3" maxlength="200" placeholder="一句话说明它写的是什么"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="quiet" data-action="module-close">取消</button><button class="primary" type="submit">添加到当前层</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="relations-dialog" class="form-dialog relations-dialog">
+    <div class="dialog-heading"><div><span class="eyebrow">故事如何相连</span><h2 id="relations-heading">关系详情</h2></div><button class="icon-button" data-action="relations-close" aria-label="关闭关系详情"><svg aria-hidden="true"><use href="#i-close"/></svg></button></div>
+    <div id="relations-list"></div>
+  </dialog>
+
+  <script type="module" src="workbench.js"></script>
+</body>
+</html>

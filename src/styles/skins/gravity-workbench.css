@@ -606,3 +606,38 @@ body[data-skin='gravity'] .panel-host .snippet-surface>.gravity-panel-inspiratio
 /* Keep relationship totals outside the center title's reading width. Geometry remains unchanged. */
 body[data-skin='gravity'] .lg-node.center{padding-inline:10px;gap:6px}
 body[data-skin='gravity'] .lg-node.center .lg-badge{position:absolute;top:-7px;right:-6px;min-width:18px;border:1px solid #30424e;background:#253240;color:#f29c62}
+
+/* ── v1.2.0 纸面大纲：深色画布上的浅纸卡，文字回到深墨色 ───────────── */
+body[data-skin='gravity'] [data-module='outline'] .oc-event,
+body[data-skin='gravity'] [data-module='outline'] .oc-note,
+body[data-skin='gravity'] [data-module='outline'] .oc-cite,
+body[data-skin='gravity'] [data-module='outline'] .oc-anchor { --oc-paper-ink:#23383a; --oc-paper-muted:#5b6c63; }
+body[data-skin='gravity'] [data-module='outline'] .oc-node:not(.oc-container):not(.oc-textbox):not(.oc-volume) .oc-label { color:#23383a; }
+body[data-skin='gravity'] [data-module='outline'] .oc-node:not(.oc-container):not(.oc-textbox):not(.oc-volume) :is(.om-sub,.oc-fulltext) { color:#52635c; }
+body[data-skin='gravity'] [data-module='outline'] .oc-node:not(.oc-container):not(.oc-textbox):not(.oc-volume) :is(.oc-kicker,.oc-index,.oc-status-text) { color:#64746b; }
+body[data-skin='gravity'] [data-module='outline'] .oc-event .oc-shape polygon { stroke:var(--paper-edge,#b8c9cb); }
+body[data-skin='gravity'] [data-module='outline'] .oc-event.sel .oc-shape polygon { stroke:#f29c60; }
+body[data-skin='gravity'] [data-module='outline'] .oc-paper { opacity:.94; }
+body[data-skin='gravity'] [data-module='outline'] .oc-mini { border-color:#3d5360; background:#f7f8f3; }
+body[data-skin='gravity'] [data-module='outline'] .oc-mini:not(.oc-mini-volume) :is(.oc-mini-title,.oc-mini-body,.oc-mini-top,.oc-mini-actions button) { color:#263a3a; }
+body[data-skin='gravity'] [data-module='outline'] .oc-mini:not(.oc-mini-volume) :is(.oc-mini-body,.oc-mini-top) { color:#5b6c63; }
+body[data-skin='gravity'] [data-module='outline'] .oc-mini-volume :is(.oc-mini-title,.oc-mini-body) { color:#f7f5e7; }
+body[data-skin='gravity'] [data-module='outline'] .oc-mini-container { background:color-mix(in srgb,var(--bc,#f59e60) 9%,#f7f8f3); }
+body[data-skin='gravity'] [data-module='outline'] .oc-mini-container :is(.oc-mini-title,.oc-mini-top,.oc-mini-actions button) { color:color-mix(in srgb,var(--bc,#f59e60) 48%,#23383a); }
+body[data-skin='gravity'] [data-module='outline'] .oc-scopebar { border-bottom-color:#30424e; background:#101b25e6; }
+body[data-skin='gravity'] [data-module='outline'] .oc-crumbs button[aria-current='page'] { color:#f1f5f2; }
+body[data-skin='gravity'] [data-module='outline'] .oc-search { background:#0d1821; border-color:#30424e; }
+body[data-skin='gravity'] [data-module='outline'] .oc-search input { color:#e3eceb; }
+body[data-skin='gravity'] [data-module='outline'] .oc-materials-btn { color:#d7e4e2; border-color:#30424e; background:transparent; }
+body[data-skin='gravity'] [data-module='outline'] .oc-materials-btn:hover { color:#f29c60; border-color:#f29c60; }
+body[data-skin='gravity'] [data-module='outline'] .oc-container {
+  background: color-mix(in srgb, var(--bc, #f59e60) 10%, #0e1a23);
+  border-color: color-mix(in srgb, var(--bc, #f59e60) 55%, #30424e);
+}
+body[data-skin='gravity'] [data-module='outline'] .oc-container :is(.oc-ctitle, .oc-ccount) { color: #e7f0ed; }
+body[data-skin='gravity'] [data-module='outline'] .oc-container .oc-ctitle { font-size: 20px; }
+body[data-skin='gravity'] [data-module='outline'] .oc-container :is(.oc-cmeta, .oc-csummary, .oc-cprogress) { color: #a5b7c2; }
+body[data-skin='gravity'] [data-module='outline'] .oc-container .oc-cprogress .done { color: #d7e4e2; }
+body[data-skin='gravity'] [data-module='outline'] .oc-container .oc-cfoot button { color: #a5b7c2; }
+body[data-skin='gravity'] [data-module='outline'] .oc-container .oc-cfoot .enter { color: #f29c60; }
+body[data-skin='gravity'] [data-module='outline'] .oc-container .oc-cfoot button:hover { background: #ffffff0d; color: #f6efe7; }

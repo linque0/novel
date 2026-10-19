@@ -1,0 +1,99 @@
+{
+  "styles": [
+    {
+      "skin": "original",
+      "styles": [
+        {
+          "background": "color(srgb 0.356863 0.545098 0.482353 / 0.07)",
+          "before": "none",
+          "bgLayer": false,
+          "border": "rgb(91, 139, 123)",
+          "image": "none",
+          "kind": "container",
+          "shadow": "none"
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "before": "none",
+          "bgLayer": false,
+          "border": "rgba(0, 0, 0, 0)",
+          "image": "none",
+          "kind": "textbox",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "skin": "gravity",
+      "styles": [
+        {
+          "background": "color(srgb 0.356863 0.545098 0.482353 / 0.03)",
+          "before": "none",
+          "bgLayer": false,
+          "border": "color(srgb 0.272549 0.401961 0.394118)",
+          "image": "none",
+          "kind": "container",
+          "shadow": "none"
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "before": "none",
+          "bgLayer": false,
+          "border": "rgba(0, 0, 0, 0)",
+          "image": "none",
+          "kind": "textbox",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "skin": "glaze",
+      "styles": [
+        {
+          "background": "color(srgb 0.356863 0.545098 0.482353 / 0.03)",
+          "before": "none",
+          "bgLayer": false,
+          "border": "color(srgb 0.535294 0.67451 0.65098)",
+          "image": "none",
+          "kind": "container",
+          "shadow": "none"
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "before": "none",
+          "bgLayer": false,
+          "border": "rgba(0, 0, 0, 0)",
+          "image": "none",
+          "kind": "textbox",
+          "shadow": "none"
+        }
+      ]
+    },
+    {
+      "skin": "crimson",
+      "styles": [
+        {
+          "background": "color(srgb 0.356863 0.545098 0.482353 / 0.06)",
+          "before": "none",
+          "bgLayer": false,
+          "border": "rgb(91, 139, 123)",
+          "image": "none",
+          "kind": "container",
+          "shadow": "none"
+        },
+        {
+          "background": "rgba(0, 0, 0, 0)",
+          "before": "none",
+          "bgLayer": false,
+          "border": "rgba(0, 0, 0, 0)",
+          "image": "none",
+          "kind": "textbox",
+          "shadow": "none"
+        }
+      ]
+    }
+  ],
+  "colorChange": "crimson border rgb(142, 68, 173)",
+  "textEditing": true,
+  "materialCards": 5
+}

@@ -27,13 +27,16 @@ const CRIMSON_MODULE_OPTS = [
   { label: '容器', key: 'container' }
 ]
 function addCrimsonModule(kind) {
-  const n = work.liveOlnodes().length
-  const size = kind === 'textbox' ? { w: 180, h: 64 } : kind === 'container' ? { w: 560, h: 250 } : { w: 220, h: 130 }
-  const row = work.olnodeAdd(null, {
+  const scope = work.canvasPrefs.scopeId && work.liveOlnodes().some((n) => n.id === work.canvasPrefs.scopeId && n.kind === 'container')
+    ? work.canvasPrefs.scopeId
+    : null
+  const siblings = work.olnodeChildren(scope)
+  const size = kind === 'textbox' ? { w: 180, h: 64 } : kind === 'container' ? {} : { w: 224, h: 154 }
+  const row = work.olnodeAdd(scope, {
     kind,
     title: kind === 'container' ? '新容器' : '',
-    canvasX: 60 + (n % 4) * 224,
-    canvasY: 40 + Math.floor(n / 4) * 116,
+    canvasX: 60 + (siblings.length % 4) * 240,
+    canvasY: 40 + Math.floor(siblings.length / 4) * 180,
     ...size
   })
   work.selOlnodeId = row.id
@@ -129,9 +132,9 @@ function onCtx(e) {
 </script>
 
 <template>
-  <TaskLauncher v-if="!ui.isStudioSkin" module="outline" />
+  <TaskLauncher v-if="!ui.isStudioSkin && work.outlineView !== 'canvas'" module="outline" />
   <div class="outline-surface" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
-    <div class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+    <div v-if="work.outlineView !== 'canvas'" class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">大纲</span>
       <span style="font-size: 12px; color: var(--text-dim)">自由模块画布 · 关系链接联动 · 文本与画布双视图</span>
       <button class="om-btn" title="撤销" :disabled="!work.olUndo.length" @click="work.olnodeUndo()">↶</button>
@@ -163,9 +166,6 @@ function onCtx(e) {
         <OutlineSidebar />
       </aside>
       <section class="outline-main" :class="{ 'crimson-outline-main': ui.skin === 'crimson' }">
-        <div v-if="ui.skin === 'crimson' && work.outlineView === 'canvas'" class="crimson-canvas-caption">
-          <h2>{{ crimsonVolume }}</h2><span>自由编排 · 事件、章节与线索</span>
-        </div>
         <OutlineCanvas v-if="work.outlineView === 'canvas'" ref="canvasRef" style="flex: 1; min-height: 0" />
 
         <template v-else>

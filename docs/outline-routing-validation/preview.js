@@ -4,10 +4,11 @@ import { useWorkStore } from '/src/stores/work.js'
 import { useUiStore } from '/src/stores/ui.js'
 import { useAiStore } from '/src/stores/ai.js'
 import { autosave } from '/src/services/autosave.js'
-import { fixture, performanceFixture } from './fixture.js'
+import { fixture, performanceFixture, surfaceFixture } from './fixture.js'
 const params=new URLSearchParams(location.search)
 const before=params.has('before')
 await (before?import('/.superpowers/sdd/outline-routing/baseline/themes.css'):import('/src/styles/themes.css'))
+if(!before) await import('/src/styles/outline-paper.css')
 await import('/src/styles/skins/gravity.css')
 await import('/src/styles/skins/gravity-workbench.css')
 await import('/src/styles/skins/glaze.css')
@@ -21,11 +22,13 @@ const app=createApp({setup(){
   // This isolated acceptance harness uses the production component and store in memory.
   // It never opens a user work and deliberately disables persistence in this page only.
   autosave.mark=()=>{};work.saveCanvasPrefs=async()=>{};ai.loaded=true
-  work.work={id:'routing-ui-sandbox',title:'连线路由验收'};work.olnodes=fixture();work.canvasPrefs={snap:false,density:'detail',edgeStyle:params.get('style')||'ortho',edgeWidth:1.8,arrowSize:1}
+  const scene=params.get('scene')==='surfaces'?surfaceFixture:fixture
+  work.work={id:'routing-ui-sandbox',title:'连线路由验收'};work.olnodes=scene();work.canvasPrefs={snap:false,density:'detail',edgeStyle:params.get('style')||'ortho',edgeWidth:1.8,arrowSize:1,textures:true,scopeId:null,expanded:[],cameras:{}}
+  if(params.has('debug')) window.__routingWork=work
   ui.skin=params.get('skin')||'original';ui.theme='xuan'
   watch(()=>ui.skin,skin=>{document.body.dataset.skin=skin},{immediate:true})
   const result=ref(''),running=ref(false)
-  const reset=()=>{work.olnodes=fixture();work.olUndo=[];work.olRedo=[];result.value=''}
+  const reset=()=>{work.olnodes=scene();work.olUndo=[];work.olRedo=[];result.value=''}
   const benchmark=async()=>{
     if(running.value) return
     running.value=true;result.value='测试中…'
@@ -54,6 +57,7 @@ const app=createApp({setup(){
       h('span',{style:'opacity:.6'},'正式组件 · 临时数据 · 可直接拖动'),
       h('select',{'aria-label':'皮肤',value:ui.skin,onChange:e=>ui.skin=e.target.value},['original','gravity','glaze','crimson'].map((v,i)=>h('option',{value:v},['原版工坊','引力书舱','琉光画境','赤月戏'][i]))),
       h('button',{onClick:benchmark,disabled:running.value},'100 节点帧测试'),
+      h('button',{onClick:()=>{work.olnodes=surfaceFixture();work.olUndo=[];work.olRedo=[];result.value=''}},'分组与文字'),
       h('button',{onClick:reset},'重置场景')]),
     result.value?h('output',{style:'font:11px monospace;padding:4px 24px'},result.value):null,
     h('main',{'data-module':'outline',style:'flex:1;min-height:0;padding:20px;display:flex'},[h(Canvas)])

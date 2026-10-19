@@ -1,0 +1,183 @@
+{
+  "date": "2026-10-19",
+  "viewport": {
+    "width": 746,
+    "height": 803
+  },
+  "result": "42/42",
+  "checks": [
+    {
+      "name": "初始总计12个事件",
+      "pass": true
+    },
+    {
+      "name": "深入当前情节",
+      "pass": true
+    },
+    {
+      "name": "保留前接后续",
+      "pass": true
+    },
+    {
+      "name": "三层面包屑",
+      "pass": true
+    },
+    {
+      "name": "四层面包屑",
+      "pass": true
+    },
+    {
+      "name": "深层3个事件可见",
+      "pass": true
+    },
+    {
+      "name": "窄屏结构树展开",
+      "pass": true
+    },
+    {
+      "name": "返回保留展开状态",
+      "pass": true
+    },
+    {
+      "name": "导航后收起结构抽屉",
+      "pass": true
+    },
+    {
+      "name": "搜索显示完整路径",
+      "pass": true
+    },
+    {
+      "name": "搜索进入正确父级",
+      "pass": true
+    },
+    {
+      "name": "搜索目标高亮",
+      "pass": true
+    },
+    {
+      "name": "摘要同步到折叠卡片",
+      "pass": true
+    },
+    {
+      "name": "少于两个模块时不可封装",
+      "pass": true
+    },
+    {
+      "name": "选中两块可封装",
+      "pass": true
+    },
+    {
+      "name": "封装后同层两个模块",
+      "pass": true
+    },
+    {
+      "name": "封装后事件总数不变",
+      "pass": true
+    },
+    {
+      "name": "封装保留对后续故事的外联",
+      "pass": true
+    },
+    {
+      "name": "第1轮收起后3条可见关系",
+      "pass": true
+    },
+    {
+      "name": "第1轮伏笔保留两条真实关系",
+      "pass": true
+    },
+    {
+      "name": "第1轮展开后内部事件重现",
+      "pass": true
+    },
+    {
+      "name": "第1轮子情节仍收起",
+      "pass": true
+    },
+    {
+      "name": "第2轮收起后3条可见关系",
+      "pass": true
+    },
+    {
+      "name": "第2轮伏笔保留两条真实关系",
+      "pass": true
+    },
+    {
+      "name": "第2轮展开后内部事件重现",
+      "pass": true
+    },
+    {
+      "name": "第2轮子情节仍收起",
+      "pass": true
+    },
+    {
+      "name": "第3轮收起后3条可见关系",
+      "pass": true
+    },
+    {
+      "name": "第3轮伏笔保留两条真实关系",
+      "pass": true
+    },
+    {
+      "name": "第3轮展开后内部事件重现",
+      "pass": true
+    },
+    {
+      "name": "第3轮子情节仍收起",
+      "pass": true
+    },
+    {
+      "name": "聚合线可查看两条原始伏笔",
+      "pass": true
+    },
+    {
+      "name": "聚合关系定位真实深层事件",
+      "pass": true
+    },
+    {
+      "name": "最终默认总览3个收起块",
+      "pass": true
+    },
+    {
+      "name": "Esc取消表单未封装",
+      "pass": true
+    },
+    {
+      "name": "取消未新增撤销记录",
+      "pass": true
+    },
+    {
+      "name": "Esc退出多选",
+      "pass": true
+    },
+    {
+      "name": "最终版本摘要更新",
+      "pass": true
+    },
+    {
+      "name": "一次撤销恢复原摘要",
+      "pass": true
+    },
+    {
+      "name": "展开一层只打开直接子块",
+      "pass": true
+    },
+    {
+      "name": "深层子块保留收起",
+      "pass": true
+    },
+    {
+      "name": "收起已完成只收起完成块",
+      "pass": true
+    },
+    {
+      "name": "收起不改变真实完成数",
+      "pass": true
+    }
+  ],
+  "notes": [
+    "本轮使用独立示例数据，未访问正式作品存储。",
+    "折叠/展开和连线投影按相同流程连续检查三轮。",
+    "部分基础交互在视觉修订前检查，最终版本另复核总览、取消、摘要撤销与快速整理。"
+  ]
+}

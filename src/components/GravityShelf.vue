@@ -5,10 +5,12 @@ import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
 import GravityBook from './GravityBook.vue'
 import GravityCover from './GravityCover.vue'
+import { formatShelfOpenTime } from '../services/shelf-sort'
 
 const props = defineProps({
   works: { type: Array, required: true }, total: { type: Number, required: true },
   loading: Boolean, query: { type: String, default: '' }, busy: Boolean,
+  openStats: { type: Object, default: () => ({}) },
   menuOptions: { type: Function, required: true }
 })
 const emit = defineEmits(['update:query', 'open', 'menu', 'create', 'settings', 'navigate'])
@@ -23,6 +25,9 @@ const activeIndex = computed(() => {
   return i < 0 ? 0 : i
 })
 const activeBook = computed(() => props.works[activeIndex.value] || null)
+const activeStat = computed(() => props.openStats[activeBook.value?.id] || null)
+const activeOpenText = computed(() => formatShelfOpenTime(activeStat.value?.lastOpenedAt))
+const openText = (book) => formatShelfOpenTime(props.openStats[book?.id]?.lastOpenedAt)
 watch(() => props.works.map((w) => w.id).join('|'), () => { activeId.value = props.works[0]?.id ?? null }, { immediate: true })
 
 /* 舞台上的位次：中央 + 两侧（离中央最近的两本，小下标在左、大下标在右）
@@ -114,10 +119,6 @@ function navigate(key) {
   else if (activeBook.value) emit('navigate', key, activeBook.value)
 }
 function words(n) { return (Number(n) || 0).toLocaleString('zh-CN') }
-function date(n) {
-  const value = new Date(n)
-  return Number.isFinite(value.getTime()) ? value.toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }) : '尚未记录'
-}
 </script>
 
 <template>
@@ -139,7 +140,7 @@ function date(n) {
       <NSpin :show="loading || busy">
         <div v-if="activeBook" class="gravity-stage">
           <div :key="'copy-' + activeBook.id" class="gravity-feature-copy">
-            <p class="gravity-eyebrow"><span></span>{{ query.trim() ? '搜索结果' : '最近更新' }} · {{ date(activeBook.updatedAt) }}</p>
+            <p class="gravity-eyebrow"><span></span>{{ query.trim() ? '搜索结果' : '最近打开' }} · 上次打开 {{ activeOpenText }}</p>
             <h2 :class="{ 'gravity-title-long': activeBook.title.length > 10 }">{{ activeBook.title }}</h2>
             <p class="gravity-intro">{{ activeBook.intro || '故事的下一页，正等你落笔。' }}</p>
             <div class="gravity-feature-actions"><NButton type="primary" size="large" @click="emit('open', activeBook)">打开作品 <OIcon name="external" :size="15" /></NButton><button type="button" class="gravity-text-button" @click="emit('navigate', 'outline', activeBook)">故事大纲 <span>↗</span></button></div>
@@ -175,11 +176,11 @@ function date(n) {
         </div>
 
         <section v-if="others.length" class="gravity-library" aria-label="其他作品">
-          <div class="gravity-library-head"><h2>其余的宇宙<span>{{ others.length }}</span></h2><span>按最近更新排序</span></div>
+          <div class="gravity-library-head"><h2>其余的宇宙<span>{{ others.length }}</span></h2><span>按最近打开排序</span></div>
           <div class="gravity-library-grid">
             <article v-for="book in others" :key="book.id" class="gravity-library-item" :class="{ 'is-landing': landingId === book.id }">
               <button type="button" class="gravity-library-open" :aria-label="'将《' + book.title + '》送到中央'" @click="extractBook(book)">
-                <GravityCover :book="book" /><span class="gravity-library-copy"><strong>{{ book.title }}</strong><span>{{ words(book.totalWords) }} 字 <i>/</i> {{ book.chapterCount || 0 }} 章</span><small>{{ book.author || '未署名' }} · {{ book.status || '构思' }}</small></span>
+                <GravityCover :book="book" /><span class="gravity-library-copy"><strong>{{ book.title }}</strong><span>{{ words(book.totalWords) }} 字 <i>/</i> {{ book.chapterCount || 0 }} 章</span><small>{{ book.author || '未署名' }} · {{ book.status || '构思' }}</small><small class="gravity-openat">上次打开 {{ openText(book) }}</small></span>
               </button>
               <NDropdown :options="menuOptions(book)" trigger="click" @select="key => emit('menu', key, book)"><NButton class="gravity-list-menu" size="tiny" quaternary :aria-label="'作品菜单：' + book.title">⋯</NButton></NDropdown>
             </article>

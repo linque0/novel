@@ -487,22 +487,6 @@ body[data-skin='crimson'] .crimson-cover.is-mini :is(.crimson-cover-moon, .crims
 body[data-skin='crimson'] .crimson-cover.is-mini .crimson-cover-title { font-size: 11px; letter-spacing: 1px; text-shadow: none; -webkit-line-clamp: 3; }
 body[data-skin='crimson'] .crimson-cover.is-mini.title-vertical .crimson-cover-title { writing-mode: vertical-rl; font-size: 12px; }
 
-/* 花饰 */
-body[data-skin='crimson'] .crimson-flower {
-  position: absolute;
-  z-index: 4;
-  left: 55%;
-  top: 138px;
-  width: 90px;
-  height: 90px;
-  color: #d2b977;
-  opacity: .9;
-  pointer-events: none;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.4;
-}
-
 /* 首章剧目卡（真实数据） */
 body[data-skin='crimson'] .crimson-chapter-card {
   position: absolute;
@@ -616,17 +600,15 @@ body[data-skin='crimson'] .crimson-empty {
 body[data-skin='crimson'] .crimson-empty h2 { font: 400 30px var(--crimson-kai); letter-spacing: 3px; color: var(--cs-ink); }
 body[data-skin='crimson'] .crimson-empty p { font-size: 14px; }
 
-/* 书架开场（照设计稿：纸景后层/前层、题名遮罩、花饰点亮、书封落位） */
+/* 书架开场（照设计稿：纸景后层/前层、题名遮罩、书封落位） */
 @keyframes paper-back { from { transform: translateX(45px); opacity: .3; } to { transform: translateX(0); opacity: 1; } }
 @keyframes paper-front { from { transform: translateX(-100px) translateY(28px); opacity: .2; } to { transform: translateX(0) translateY(0); opacity: 1; } }
 @keyframes title-mask { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
-@keyframes flower-light { from { opacity: 0; transform: rotate(-18deg); } to { opacity: .9; transform: rotate(0); } }
 @keyframes paper-book { from { opacity: .15; translate: 0 20px; } to { opacity: 1; translate: 0 0; } }
 @keyframes crimson-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
 body[data-skin='crimson'][data-stage-play='1'] .crimson-stage-art { animation: paper-back 1.2s cubic-bezier(.2, .65, .2, 1) both; }
 body[data-skin='crimson'][data-stage-play='1'] .crimson-front-art { animation: paper-front 1.2s cubic-bezier(.2, .65, .2, 1) both; }
-body[data-skin='crimson'][data-stage-play='1'] .crimson-flower { animation: flower-light 1.2s ease-out both; }
 body[data-skin='crimson'][data-stage-play='1'] .crimson-story { animation: title-mask .55s ease-out both; }
 body[data-skin='crimson'][data-stage-play='1'] .crimson-book-stage { animation: paper-book .8s cubic-bezier(.2, .65, .2, 1) both; }
 body[data-skin='crimson'][data-stage-play='1'] .crimson-chapter-card { animation: crimson-enter .5s cubic-bezier(.18, .7, .2, 1) .12s both; }
@@ -657,7 +639,6 @@ body[data-skin='crimson'][data-stage-play='1'] .crimson-program { animation: cri
   body[data-skin='crimson'] .crimson-stats b { font-size: 21px; }
   body[data-skin='crimson'] .crimson-book-stage { left: 47%; top: 190px; }
   body[data-skin='crimson'] .crimson-book-object { width: 142px; height: 200px; }
-  body[data-skin='crimson'] .crimson-flower { left: 53%; top: 96px; width: 66px; height: 66px; }
   body[data-skin='crimson'] .crimson-chapter-card { left: 40%; top: auto; bottom: 14px; width: 270px; padding: 13px 16px; }
   body[data-skin='crimson'] .crimson-chapter-card h3 { font-size: 19px; }
   body[data-skin='crimson'] .crimson-program { top: 66px; width: 240px; height: auto; max-height: calc(100% - 78px); padding: 8px 18px; }
@@ -690,7 +671,6 @@ body[data-skin='crimson'][data-stage-play='1'] .crimson-program { animation: cri
   body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-stats { top: 264px; }
   body[data-skin='crimson'] .crimson-book-stage { top: 150px; }
   body[data-skin='crimson'] .crimson-book-object { width: 122px; height: 172px; }
-  body[data-skin='crimson'] .crimson-flower { top: 70px; width: 54px; height: 54px; }
   body[data-skin='crimson'] .crimson-chapter-card { bottom: 10px; }
   body[data-skin='crimson'] .crimson-program { top: 54px; max-height: calc(100% - 62px); }
 }

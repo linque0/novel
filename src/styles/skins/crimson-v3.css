@@ -94,7 +94,16 @@ body[data-skin='crimson'] .crimson-shelf {
 }
 body[data-skin='crimson'] .crimson-rail { display: none !important; }
 body[data-skin='crimson'] .crimson-main { margin-left: 0; }
-body[data-skin='crimson'] .crimson-toolbar { left: 40px; right: 35px; top: 20px; }
+body[data-skin='crimson'] .crimson-toolbar { left: 40px; right: 20px; top: 20px; }
+/* 书架操作组右移：收紧搜索框与按钮，整组落在右侧纸面上，不再压住插画 */
+body[data-skin='crimson'] .crimson-shelf-actions { gap: 12px; }
+body[data-skin='crimson'] .crimson-search { width: 160px; flex: 0 1 160px; min-width: 100px; }
+body[data-skin='crimson'] .crimson-toolbar .crimson-button.primary { gap: 12px; padding: 0 14px; }
+body[data-skin='crimson'] .crimson-work-copy .crimson-work-openat {
+  margin-top: 4px;
+  font-size: 11px;
+  color: #7a6748;
+}
 body[data-skin='crimson'] .crimson-program {
   top: 95px;
   width: 316px;
@@ -105,7 +114,6 @@ body[data-skin='crimson'] .crimson-program {
 body[data-skin='crimson'] .crimson-program-head { border-top: 1px solid #7d9278; }
 body[data-skin='crimson'] .crimson-work-row { border-bottom: 1px solid #65836e42; }
 body[data-skin='crimson'] .crimson-book-stage { left: 47%; top: 255px; }
-body[data-skin='crimson'] .crimson-flower { left: 53%; top: 138px; }
 body[data-skin='crimson'] .crimson-chapter-card {
   left: 38%;
   top: 584px;
@@ -564,8 +572,6 @@ body[data-skin='crimson'] .crimson-outline-layout { grid-template-columns: 240px
 body[data-skin='crimson'] .crimson-outline-directory { padding: 22px 17px 18px; }
 body[data-skin='crimson'] .crimson-outline-directory .side-head { border-bottom: 1px solid #99ab8c45; padding-bottom: 16px; }
 body[data-skin='crimson'] .crimson-outline-directory .side-head h2 { font: 400 24px var(--crimson-kai); letter-spacing: 2px; color: #f1e8d3; }
-body[data-skin='crimson'] .crimson-outline-directory .ol-side-search,
-body[data-skin='crimson'] .crimson-outline-directory input { border: 0 !important; border-bottom: 1px solid #b39b6266 !important; background: transparent !important; color: #eee4ca !important; }
 body[data-skin='crimson'] .crimson-outline-directory .side-item { border: 0 !important; background: transparent !important; color: #d8cdb4; }
 body[data-skin='crimson'] .crimson-outline-directory .side-item:hover { background: #ffffff0f !important; color: #fae8bb; }
 body[data-skin='crimson'] .crimson-outline-directory .side-item.active { background: transparent !important; color: #f1e8d3 !important; box-shadow: inset 2px 0 0 var(--v3-gold) !important; }
@@ -573,46 +579,84 @@ body[data-skin='crimson'] .crimson-outline-directory .ol-side-add .btn-ghost { b
 body[data-skin='crimson'] .crimson-outline-directory .om-chip { border: 0 !important; background: transparent !important; color: #bdb397; }
 body[data-skin='crimson'] .crimson-outline-directory .om-chip.on { color: #ead39c; box-shadow: inset 0 -1px 0 var(--v3-gold); }
 body[data-skin='crimson'] .crimson-canvas-caption { border-bottom: 0; }
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-canvas {
-  border: 0 !important;
-  box-shadow: 0 26px 54px #0b111033 !important;
-  background: linear-gradient(96deg, #f1e8d6, #f4ecd9 60%, #e8dcc2) !important;
-}
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar {
-  border: 0 !important;
-  background: linear-gradient(90deg, #15191800, #151918d9 20%) !important;
-  box-shadow: none !important;
-}
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar :is(.oc-chip, .om-btn) {
-  border: 0 !important;
-  background: transparent !important;
-  color: #eadcb9 !important;
-}
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar :is(.oc-chip, .om-btn):hover { color: #fae8bb !important; background: #ffffff10 !important; }
-body[data-skin='crimson'] [data-module='outline'] .crimson-outline-main .oc-toolbar .oc-chip.on { color: #f6e7bc; box-shadow: inset 0 -1px 0 var(--v3-gold); }
-body[data-skin='crimson'] [data-module='outline'] .oc-node {
-  border: 0 !important;
-  background: linear-gradient(225deg, transparent 15px, var(--node-paper, #faf1df) 15px) !important;
-  box-shadow: inset 0 3px 0 var(--node-edge, #8f7138), 0 10px 22px #0002 !important;
-  padding-right: 25px;
-}
 body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event { --node-paper: #faf1df; --node-edge: #8f7138; }
 body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-note { --node-paper: #f3e2c4; --node-edge: var(--v3-seal-bright); }
+/* 纸面层接入后补回赤月戏的折角与暖金压边，避免纹理盖掉皮肤识别度。 */
+body[data-skin='crimson'] [data-module='outline'] .oc-node:not(.oc-container):not(.oc-textbox) .oc-kicker { color: #8a744f; }
+body[data-skin='crimson'] [data-module='outline'] .oc-node:not(.oc-container):not(.oc-textbox) .oc-state-dot { box-shadow: 0 0 0 2px #8a744f22; }
 body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-cite { --node-paper: #dfe8dc; --node-edge: #4f6f5e; }
 body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-anchor { --node-paper: #f0e3e1; --node-edge: #8a5b66; }
-body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-container { --node-paper: #f1e7d3; --node-edge: #9a8252; }
-body[data-skin='crimson'] [data-module='outline'] .oc-node:not(.oc-container)::before {
-  content: '';
-  position: absolute;
-  top: -6px;
-  left: 24px;
-  width: 34px;
-  height: 9px;
-  background: #cfb06b66;
-  transform: rotate(-2deg);
-  pointer-events: none;
+/* 形状模块：轮廓本身就是纸面，不再叠加矩形纸卡、切角和顶部胶带 */
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event:is(.sh-diamond, .sh-para) {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding-right: 0;
+  filter: none;
 }
-body[data-skin='crimson'] [data-module='outline'] .oc-canvas .oc-edges path:not(.oc-edge-hit) { stroke: #9e7753; }
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event:is(.sh-diamond, .sh-para)::before { display: none; }
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event:is(.sh-diamond, .sh-para) .oc-shape {
+  filter: drop-shadow(3px 4px 0 #c2b18d70);
+}
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event:is(.sh-diamond, .sh-para) .oc-shape polygon {
+  fill: var(--node-paper, #faf1df);
+  stroke: var(--node-edge, #8f7138);
+}
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event:is(.sh-diamond, .sh-para):hover .oc-shape polygon,
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event:is(.sh-diamond, .sh-para).sel .oc-shape polygon {
+  stroke: #b99a5c;
+}
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event:is(.sh-diamond, .sh-para) .oc-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 14% 26%;
+  text-align: center;
+}
+/* 椭圆同样去掉矩形纸卡的切角与胶带，纸面跟随圆形轮廓 */
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event.sh-ellipse {
+  background: var(--node-paper, #faf1df) !important;
+  border: 1.5px solid var(--node-edge, #8f7138) !important;
+  box-shadow: 3px 4px 0 #c2b18d70 !important;
+  padding-right: 0;
+}
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event.sh-ellipse::before { display: none; }
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event.sh-ellipse .oc-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 10% 20%;
+  text-align: center;
+}
+/* 顶部类型行：与其它工作室皮肤一致，事件 + 操作按钮分列两端 */
+body[data-skin='crimson'] [data-module='outline'] .gv-kindrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 11px;
+  line-height: 1.2;
+  color: #8a744f;
+}
+body[data-skin='crimson'] [data-module='outline'] .gv-kind { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+body[data-skin='crimson'] [data-module='outline'] .gv-more {
+  flex: none;
+  padding: 0 4px;
+  border: 0;
+  background: transparent;
+  color: #8a744f;
+  font: inherit;
+  line-height: 1;
+  cursor: pointer;
+  opacity: .7;
+}
+body[data-skin='crimson'] [data-module='outline'] .gv-more:hover { color: #8b332a; opacity: 1; }
+body[data-skin='crimson'] [data-module='outline'] .oc-node.oc-event:is(.sh-diamond, .sh-para) .gv-kindrow {
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
 body[data-skin='crimson'] .crimson-outline-folio { border: 0 !important; box-shadow: 5px 6px 0 var(--v3-back), 0 18px 36px #0b111026 !important; }
 
 /* ── 设定 / 详情：布景 + 纸面 + 透明目录 ────────────── */
@@ -1543,7 +1587,9 @@ body[data-skin='crimson'] .crimson-rail-empty { margin: 18px 6px; font-size: 11p
   body[data-skin='crimson'] .crimson-shelf-nav { gap: 14px; }
   body[data-skin='crimson'] .crimson-header .crimson-shelf-nav-item { font-size: 14px; letter-spacing: 1px; }
   body[data-skin='crimson'] .crimson-header-actions .n-select { width: 108px; }
-  body[data-skin='crimson'] .crimson-toolbar { left: 20px; right: 16px; top: 12px; }
+  body[data-skin='crimson'] .crimson-toolbar { left: 20px; right: 12px; top: 12px; }
+  body[data-skin='crimson'] .crimson-shelf-actions { gap: 10px; }
+  body[data-skin='crimson'] .crimson-search { width: 130px; flex-basis: 130px; min-width: 90px; }
   body[data-skin='crimson'] .crimson-stage { width: calc(100% - 280px); }
   body[data-skin='crimson'] .crimson-program { width: 280px; top: 66px; height: auto; max-height: calc(100% - 78px); padding: 8px 18px; }
   body[data-skin='crimson'] .crimson-chapter-card { left: 40%; top: auto; bottom: 14px; width: 270px; }

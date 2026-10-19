@@ -1,4 +1,5 @@
 'use strict';
+import { EVENT_SHAPES, eventSurface, eventPort } from './event-shapes.js';
 // An isolated visual prototype; no application data is read or written.
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -7,17 +8,18 @@ const kinds = {
   event: { label:'事件', color:'#5c7c88', material:'冷白棉纸 · 压印细边', sample:'一封迟到的信', body:'故事在这里发生转折。' },
   note: { label:'便签', color:'#9d8552', material:'浅麦纸纹 · 轻盈折角', sample:'突然想到', body:'记下一个值得保留的念头。' },
   cite: { label:'引用卡', color:'#8b7e98', material:'叠页书纸 · 压印引号', sample:'“每一次归来，都始于一次远行。”', body:'摘录 · 写作手记' },
-  textbox: { label:'文本框', color:'#7c8977', material:'薄透书纸 · 自由注记', sample:'写作备忘', body:'给这段故事留一点呼吸的空间。' },
-  container: { label:'容器', color:'#7b9475', material:'浅苔纸面 · 分组页签', sample:'新的故事片段', body:'将有关的事件放在一起。' },
+  textbox: { label:'文本框', color:'#7c8977', sample:'写作备忘', body:'给这段故事留一点呼吸的空间。' },
+  container: { label:'容器', color:'#7b9475', sample:'新的故事片段', body:'将有关的事件放在一起。' },
   anchor: { label:'章节锚点', color:'#a47962', material:'象牙帘纹 · 布面书签', sample:'下一章 · 回声', body:'连接到故事的下一页。' },
   volume: { label:'卷', color:'#5c7c68', material:'深松布纹 · 黄铜细线', sample:'第二卷 · 回声', body:'新的旅程，从这里展开' }
 };
 const initialNodes = [
   {id:'volume',kind:'volume',x:26,y:58,w:210,h:124,title:'第一卷 · 潮声',body:'离开与归来',index:'01'},
-  {id:'act',kind:'container',x:270,y:58,w:844,h:252,title:'第一幕 · 一封迟到的信',body:'起 · 故事的引子',children:['letter','home','truth']},
+  {id:'act',kind:'container',x:270,y:58,w:844,h:280,title:'第一幕 · 一封迟到的信',body:'起 · 故事的引子',children:['letter','home','truth']},
   {id:'letter',kind:'event',x:299,y:123,w:224,h:154,title:'收到旧日来信',body:'失联多年的父亲，寄来一张没有署名的船票。',index:'01',footer:'开端 · 林知夏'},
-  {id:'home',kind:'event',x:579,y:123,w:224,h:154,title:'重返雾港',body:'她循着信中的地址，回到十年前离开的海边小镇。',index:'02',footer:'推进 · 雾港'},
-  {id:'truth',kind:'event',x:859,y:123,w:224,h:154,title:'灯塔里的秘密',body:'守塔人认出了她，却说那封信不可能来自父亲。',index:'03',footer:'转折 · 守塔人'},
+  {id:'home',kind:'event',shape:'para',x:562,y:123,w:254,h:170,title:'重返雾港',body:'她循着信中的地址，回到十年前离开的海边小镇。',index:'02',footer:'推进 · 雾港'},
+  {id:'truth',kind:'event',shape:'diamond',x:850,y:106,w:250,h:210,title:'灯塔里的秘密',body:'那封信，真的来自父亲吗？',index:'03',footer:'转折 · 守塔人'},
+  {id:'memory',kind:'event',shape:'ellipse',x:26,y:215,w:210,h:118,title:'雾港旧事',body:'十年前 · 一次离别',index:'00'},
   {id:'note',kind:'note',x:73,y:370,w:248,h:178,title:'那枚黄铜钥匙',body:'让钥匙在开篇出现，\n到灯塔时才揭开用途。',footer:'灵感 · 待展开'},
   {id:'quote',kind:'cite',x:397,y:382,w:264,h:177,title:'“海会带走一些人，\n也会送回一些答案。”',body:'',footer:'摘自 · 序章《潮汐》'},
   {id:'chapter',kind:'anchor',x:843,y:380,w:240,h:153,title:'第三章 · 灯塔',body:'在风暴到来前，找到答案。',index:'CH.03',footer:'修订中 · 2,480 字'},
@@ -39,15 +41,17 @@ let gesture = null, toastTimer, nextId=1;
 function nodeHTML(n) {
   const meta=kinds[n.kind];
   if(n.kind==='container') return `<div class="group-header">${icon('container')}<span class="group-title">${esc(n.title)}</span><span class="group-count">${(n.children||[]).length} 个事件</span></div><div class="group-footer">${esc(n.body)}</div>`;
-  return `<div class="node-inner"><div class="node-kicker">${icon(n.kind)}<span>${n.kind==='volume'?'VOLUME':meta.label}</span><span class="node-index">${esc(n.index||'')}</span></div><h3 class="node-title">${esc(n.title).replace(/\n/g,'<br>')}</h3><p class="node-body">${esc(n.body).replace(/\n/g,'<br>')}</p><div class="node-footer"><span class="tiny-dot"></span>${esc(n.footer||'故事片段')}</div></div>${['top','right','bottom','left'].map(s=>`<span class="port ${s}"></span>`).join('')}`;
+  if(n.kind==='textbox') return `<div class="node-inner"><p class="node-body">${esc(n.body).replace(/\n/g,'<br>')}</p></div>`;
+  return `${n.kind==='event'?eventSurface(n.id,n.shape):''}<div class="node-inner"><div class="node-kicker">${icon(n.kind)}<span>${n.kind==='volume'?'VOLUME':meta.label}</span><span class="node-index">${esc(n.index||'')}</span></div><h3 class="node-title">${esc(n.title).replace(/\n/g,'<br>')}</h3><p class="node-body">${esc(n.body).replace(/\n/g,'<br>')}</p><div class="node-footer"><span class="tiny-dot"></span>${esc(n.footer||'故事片段')}</div></div>${['top','right','bottom','left'].map(s=>`<span class="port ${s}"></span>`).join('')}`;
 }
 function renderNodes() {
   $('groups').replaceChildren(); $('nodes').replaceChildren();
   for(const n of state.nodes) {
     const el=document.createElement('article');
     el.id=`node-${n.id}`; el.dataset.node=n.id;
-    el.className=`canvas-node kind-${n.kind}${n.id===state.selected?' selected':''}`;
-    el.style.cssText=`left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px`;
+    const shape=EVENT_SHAPES[n.shape]||EVENT_SHAPES.process;
+    el.className=`canvas-node kind-${n.kind}${n.kind==='event'?' shape-'+(n.shape||'process'):''}${n.id===state.selected?' selected':''}`;
+    el.style.cssText=`left:${n.x}px;top:${n.y}px;width:${n.w}px;height:${n.h}px;--group-color:${n.color||kinds.container.color};--paper-tone:${shape.tone};--paper-edge:${shape.edge}`;
     el.tabIndex=0; el.setAttribute('aria-label',`${kinds[n.kind].label}：${n.title}`);
     el.innerHTML=nodeHTML(n);
     (n.kind==='container'?$('groups'):$('nodes')).append(el);
@@ -60,8 +64,8 @@ function renderLayers() {
 }
 const direction={top:{x:0,y:-1},right:{x:1,y:0},bottom:{x:0,y:1},left:{x:-1,y:0}};
 function port(n,side) {
-  const d=direction[side];
-  return {x:n.x+(side==='left'?0:side==='right'?n.w:n.w/2)+d.x*6,y:n.y+(side==='top'?0:side==='bottom'?n.h:n.h/2)+d.y*6};
+  const d=direction[side],p=eventPort(n,side);
+  return {x:p.x+d.x*6,y:p.y+d.y*6};
 }
 function roundedPath(points,r=12) {
   let d=`M ${points[0].x} ${points[0].y}`;
@@ -137,7 +141,7 @@ function selectNode(id,edit=false) {
   document.querySelectorAll('.canvas-node').forEach(el=>el.classList.toggle('selected',el.dataset.node===id));
   const n=state.nodes.find(n=>n.id===id);
   $('selection-hint').textContent=`已选中 ${kinds[n.kind].label} · 双击编辑`;
-  if(edit){$('inspector-kind').textContent=`${kinds[n.kind].label} · 内容`;$('edit-title').value=n.title;$('edit-body').value=n.body;$('inspector').hidden=false;}
+  if(edit){$('inspector-kind').textContent=`${kinds[n.kind].label} · 内容`;$('edit-title').value=n.title;$('edit-body').value=n.body;$('group-color-row').hidden=n.kind!=='container';$('edit-group-color').value=n.color||kinds.container.color;$('event-shape-row').hidden=n.kind!=='event';$('edit-event-shape').value=n.shape||'process';$('inspector').hidden=false;}
   else $('inspector').hidden=true;
   renderLayers();renderEdges();
 }
@@ -224,7 +228,10 @@ $('zoom-in').addEventListener('click',()=>zoomCenter(1.16));$('zoom-out').addEve
 $('zoom-value').addEventListener('click',()=>zoomCenter(1/state.zoom));$('fit').addEventListener('click',()=>fit());
 $('reset').addEventListener('click',()=>{state.nodes=structuredClone(initialNodes);state.edges=structuredClone(initialEdges);clearSelection();renderNodes();fit(true);notify('画布已恢复到初始布局');});
 $('texture-toggle').addEventListener('click',()=>{state.textures=!state.textures;document.body.classList.toggle('no-textures',!state.textures);$('texture-toggle').setAttribute('aria-pressed',state.textures);$('texture-toggle').querySelector('.switch').classList.toggle('on',state.textures);});
-$('material-grid').innerHTML=Object.entries(kinds).map(([kind,m])=>`<article class="material-card"><div class="material-surface" style="background-image:url('assets/${kind}.webp')">${m.label}</div><h3>${m.label}</h3><p>${m.material}</p><a href="assets/originals/${kind}.png" download>下载原图 ↗</a></article>`).join('');
+$('edit-group-color').addEventListener('input',e=>{const n=state.nodes.find(n=>n.id===state.selected);if(n?.kind==='container'){n.color=e.target.value;renderNodes();}});
+$('edit-event-shape').addEventListener('change',e=>{const n=state.nodes.find(n=>n.id===state.selected);if(n?.kind!=='event')return;const s=EVENT_SHAPES[e.target.value];n.shape=e.target.value;n.w=s.w;n.h=s.h;renderNodes();});
+$('event-shape-grid').innerHTML=Object.entries(EVENT_SHAPES).map(([shape,s])=>`<article class="material-card"><div class="shape-swatch shape-${shape}" style="--paper-tone:${s.tone};--paper-edge:${s.edge}">${eventSurface('gallery-'+shape,shape)}<span>${s.label}</span></div><h3>${s.label}事件</h3><p>${s.material}</p><a href="${s.original}" download>下载原图 ↗</a></article>`).join('');
+$('material-grid').innerHTML=Object.entries(kinds).filter(([kind,m])=>m.material&&kind!=='event').map(([kind,m])=>`<article class="material-card material-${kind}"><div class="material-surface" style="background-image:url('assets/${kind}.webp')">${m.label}</div><h3>${m.label}</h3><p>${m.material}</p><a href="assets/originals/${kind}.png" download>下载原图 ↗</a></article>`).join('');
 $('materials-open').addEventListener('click',()=>$('materials-dialog').showModal());
 $('materials-close').addEventListener('click',()=>$('materials-dialog').close());
 $('materials-dialog').addEventListener('click',e=>{if(e.target===$('materials-dialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});

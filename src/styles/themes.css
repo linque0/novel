@@ -367,6 +367,14 @@ body,
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+.book-openat {
+  margin-top: 2px;
+  font-size: 10.5px;
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* 顶栏 · G：品牌块（方印 + 衬线名 + 拉丁微标） */
 .shelf-brand { display: flex; align-items: center; gap: 10px; }
@@ -2622,11 +2630,12 @@ body,
   background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b9770e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 17v5'/%3E%3Cpath d='M9 10.8a2 2 0 0 1-1.1 1.8l-1.8.9A2 2 0 0 0 5 15.2v.8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.8a2 2 0 0 0-1.1-1.8l-1.8-.9a2 2 0 0 1-1.1-1.8V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z'/%3E%3C/svg%3E") center / contain no-repeat;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
 }
-/* 文本框模块（v0.4.2）：独立节点，PPT 式虚线框 + 底色透明度可调 */
+/* 文本框是透明文字层，仅在悬停和选中时显示编辑边界。 */
 .oc-textbox {
   background: transparent;
-  border: 1px dashed var(--text-dim);
+  border: 1px dashed transparent;
   border-radius: 4px;
+  box-shadow: none;
 }
 .oc-textbox:hover {
   border-color: var(--accent);
@@ -2634,12 +2643,7 @@ body,
 .oc-textbox.sel {
   border: 1px solid var(--accent);
 }
-.oc-tbbg {
-  position: absolute;
-  inset: 0;
-  background: var(--bg-panel);
-  border-radius: 3px;
-}
+.oc-textbox .oc-label { display: none; }
 .oc-textbox .oc-body {
   position: relative;
   z-index: 1;

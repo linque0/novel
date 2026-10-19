@@ -6,6 +6,7 @@
   <link rel="stylesheet" href="../../src/assets/fonts/fonts-user.css">
   <link rel="stylesheet" href="canvas.css">
   <link rel="stylesheet" href="polish.css">
+  <link rel="stylesheet" href="event-shapes.css">
 </head>
 <body>
   <svg class="icon-library" aria-hidden="true"><defs>
@@ -27,7 +28,7 @@
     <header class="app-header">
       <a class="brand" href="../book-cover-preview/" title="返回书籍封面设计"><span class="brand-seal">叙</span><span>小说工坊</span></a>
       <div class="breadcrumb"><span>山海来信</span><span class="slash">/</span><strong>大纲画布</strong></div>
-      <div class="header-actions"><span class="edition">纸本叙事</span><button id="materials-open" class="button quiet"><svg><use href="#i-image"/></svg>素材一览</button></div>
+      <div class="header-actions"><span class="edition">纸本叙事</span><a class="button quiet" href="../outline-blocks-preview/">层级大纲 ↗</a><button id="materials-open" class="button quiet"><svg><use href="#i-image"/></svg>素材一览</button></div>
     </header>
     <aside class="sidebar">
       <div class="project-summary"><div class="eyebrow">故事的骨架</div><h1>山海来信</h1><p>把零散的灵感，连成故事。</p></div>
@@ -45,14 +46,14 @@
         <div id="world" class="world"><div id="groups"></div><svg id="edges" class="edges" width="6000" height="5000" viewBox="-2000 -1600 6000 5000" aria-label="模块关系连线"></svg><div id="nodes"></div><div id="edge-labels" class="edge-labels"></div></div>
         <div class="canvas-controls"><button id="zoom-out" aria-label="缩小">−</button><button id="zoom-value" title="恢复 100%">100%</button><button id="zoom-in" aria-label="放大">＋</button><span></span><button id="fit" aria-label="适应画布" title="适应画布"><svg><use href="#i-fit"/></svg></button></div>
         <div class="relation-legend"><span style="--rel:#8971a2">伏笔</span><span style="--rel:#ae715f">因果</span><span style="--rel:#59877e">关联</span><span style="--rel:#b28443">冲突</span></div>
-        <div id="inspector" class="inspector" hidden><div class="inspector-head"><span id="inspector-kind"></span><button id="inspector-close" class="icon-button" aria-label="关闭属性"><svg><use href="#i-close"/></svg></button></div><label>标题<input id="edit-title" maxlength="45"></label><label>内容<textarea id="edit-body" rows="3" maxlength="160"></textarea></label><p>直接编辑文字，纸面保持完整。</p></div>
+        <div id="inspector" class="inspector" hidden><div class="inspector-head"><span id="inspector-kind"></span><button id="inspector-close" class="icon-button" aria-label="关闭属性"><svg><use href="#i-close"/></svg></button></div><label>标题<input id="edit-title" maxlength="45"></label><label id="event-shape-row" hidden>事件形状<select id="edit-event-shape"><option value="process">矩形</option><option value="diamond">菱形</option><option value="para">平行四边形</option><option value="ellipse">椭圆</option></select></label><label>内容<textarea id="edit-body" rows="3" maxlength="160"></textarea></label><label id="group-color-row" hidden>分组颜色<input id="edit-group-color" type="color" value="#7b9475"></label><p>直接编辑文字，容器可调整分组颜色。</p></div>
         <div id="edge-inspector" class="edge-inspector" hidden><span>关系</span><select id="edit-relation" aria-label="关系类型"><option>关联</option><option>因果</option><option>伏笔</option><option>冲突</option></select><select id="edit-arrow" aria-label="箭头方向"><option value="forward">单向箭头</option><option value="both">双向箭头</option><option value="none">无箭头</option></select><button id="edge-close" class="icon-button" aria-label="关闭连线属性"><svg><use href="#i-close"/></svg></button></div>
       </div>
       <footer class="workspace-footer"><span><span class="keycap">拖动</span> 移动模块 <span class="footer-sep">·</span> 空白处平移 <span class="footer-sep">·</span><span class="keycap">Ctrl</span> + 滚轮缩放</span><span id="selection-hint">双击模块编辑文字</span></footer>
     </main>
   </div>
-  <dialog id="materials-dialog" class="materials-dialog"><div class="materials-heading"><div><div class="eyebrow">MATERIAL LIBRARY</div><h2>七种纸面，一套叙事语言。</h2><p>细节留在边缘，让文字成为主角。</p></div><button id="materials-close" class="icon-button" aria-label="关闭素材一览"><svg><use href="#i-close"/></svg></button></div><div id="material-grid" class="material-grid"></div><div class="materials-footer"><span>无文字原图 · PNG / WebP</span><a class="button primary" href="assets/outline-materials.zip" download>下载素材包 <svg><use href="#i-arrow"/></svg></a></div></dialog>
+  <dialog id="materials-dialog" class="materials-dialog"><div class="materials-heading"><div><div class="eyebrow">MATERIAL LIBRARY</div><h2>纸面随形，故事成章。</h2><p>四种事件形状，各有纸面；容器自由换色，文本框透明书写。</p></div><button id="materials-close" class="icon-button" aria-label="关闭素材一览"><svg><use href="#i-close"/></svg></button></div><h3 class="material-section-title">事件形状</h3><div id="event-shape-grid" class="material-grid event-shape-grid"></div><h3 class="material-section-title">其他内容卡</h3><div id="material-grid" class="material-grid"></div><div class="materials-footer"><span>无文字原图 · PNG / WebP</span><a class="button primary" href="assets/outline-materials.zip" download>下载素材包 <svg><use href="#i-arrow"/></svg></a></div></dialog>
   <div id="toast" class="toast" role="status"></div>
-  <script src="canvas.js"></script>
+  <script type="module" src="canvas.js"></script>
 </body>
 </html>

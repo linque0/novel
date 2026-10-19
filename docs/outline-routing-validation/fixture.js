@@ -17,3 +17,14 @@ export function performanceFixture() {
   for(let y=0;y<6;y++) for(let x=0;x<10;x++) nodes[y*10+x].rels.push({id:`pe-${count++}`,toId:nodes[(y+1)*10+x].id,fromSide:'bottom',toSide:'top',arrows:'->'})
   return nodes
 }
+export function surfaceFixture() {
+  const rows=fixture()
+  const base={workId:'routing-ui-sandbox',parentId:null,sortOrder:0,rels:[],deletedAt:null}
+  return [
+    {...base,id:'surface-group',kind:'container',title:'第一幕 · 线索归类',canvasX:40,canvasY:60,w:730,h:290,color:'#5b8b7b'},
+    {...rows[0],parentId:'surface-group',canvasX:95,canvasY:135,w:210,h:110,rels:[{id:'surface-edge',toId:'routing-b',fromSide:'right',toSide:'left',kind:'因果',label:'发现线索',arrows:'->'}]},
+    {...rows[1],parentId:'surface-group',canvasX:465,canvasY:135,w:210,h:110,rels:[]},
+    {...base,id:'surface-text',kind:'textbox',title:'',text:'这一幕的情绪：\n从犹疑，到无法回头。',canvasX:95,canvasY:390,w:360,h:110},
+    {...rows[2],canvasX:520,canvasY:380,w:210,h:130,rels:[]}
+  ]
+}

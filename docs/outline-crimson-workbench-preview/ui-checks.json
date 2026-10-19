@@ -1,0 +1,70 @@
+{
+  "date": "2026-10-19",
+  "checks": [
+    {
+      "name": "就地展开仍处于全书",
+      "pass": true
+    },
+    {
+      "name": "展开容器显示五个子模块",
+      "pass": true
+    },
+    {
+      "name": "收起恢复摘要",
+      "pass": true
+    },
+    {
+      "name": "进入容器第1轮",
+      "pass": true
+    },
+    {
+      "name": "返回全书第1轮",
+      "pass": true
+    },
+    {
+      "name": "进入容器第2轮",
+      "pass": true
+    },
+    {
+      "name": "返回全书第2轮",
+      "pass": true
+    },
+    {
+      "name": "进入容器第3轮",
+      "pass": true
+    },
+    {
+      "name": "返回全书第3轮",
+      "pass": true
+    },
+    {
+      "name": "搜索时仍可看到事件叶子",
+      "pass": true
+    },
+    {
+      "name": "可定位嵌套容器",
+      "pass": true
+    },
+    {
+      "name": "材质开关保留",
+      "pass": true
+    },
+    {
+      "name": "圆角折线可预览",
+      "pass": true
+    },
+    {
+      "name": "780px页面无横向溢出",
+      "pass": true
+    },
+    {
+      "name": "窄窗结构抽屉可打开",
+      "pass": true
+    },
+    {
+      "name": "窄窗结构抽屉可关闭",
+      "pass": true
+    }
+  ],
+  "errors": []
+}

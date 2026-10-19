@@ -1,5 +1,21 @@
 # 设计稿验收
 
+## 2026-10-19：事件形状材质
+
+局部组件深化，沿用纸本方向。本轮由主代理自查两轮，未另做独立打分：第一轮修正菱形／椭圆内层继承矩形高度造成的文字偏移，以及画布被浏览器原生滚动干扰的问题；第二轮确认实际材质、文字和形状边界在 100% 与 210% 放大下可读。
+
+- 四种事件形状在画布及“素材一览”同屏展示；新增三张 imagegen 材质，矩形复用既有材质。
+- 连续三轮切换四种形状，共 12 次，标题保留、素材与 SVG 裁切同步。
+- 修改标题实时更新；原生指针拖动平行四边形，连线路径跟随。
+- 材质开关同时控制四种事件纸面；容器无图片材质、文本框背景透明。
+- `node event-shapes-test.mjs`：20/20 通过；两份 JavaScript 的语法检查通过。
+- 沿用原有悬停、选择和材质开关反馈，没有增加无关动画。保留必要形状名称，未增加画布装饰文案。
+- 证据：`screenshots/event-shapes-overview.jpg`、`screenshots/event-shapes-materials.jpg`、`screenshots/event-shapes-100.jpg`、`screenshots/event-shapes-210.jpg`、`screenshots/event-shapes-checks.json`。
+
+本轮修改限于 `docs/outline-canvas-preview/`；未把这套形状材质接入正式画布皮肤，未修改作品数据。
+
+---
+
 日期：2026-10-18。范围：七类模块素材和独立可操作前端，不修改正式画布。
 
 ## 视觉评审
