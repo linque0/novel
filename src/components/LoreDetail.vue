@@ -9,6 +9,7 @@ import { NButton } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import LoreRelRows from './LoreRelRows.vue'
 import LoreGraph from './LoreGraph.vue'
+import MubuView from './MubuView.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { jumpTo } from '../services/doublelinks'
@@ -20,6 +21,13 @@ const ui = useUiStore()
 const node = computed(() => (ui.loreDetailId ? work.mubu.find((n) => n.id === ui.loreDetailId && !n.deletedAt) || null : null))
 const entries = computed(() => (node.value ? work.loreLinksOf('mubu', node.value.id) : []))
 const hoverLink = ref(null)
+const relatedOpen = ref(false)
+/* 层级面包屑悬停时展示同级节点（根节点则展示其他设定集） */
+const siblings = computed(() => {
+  const n = node.value
+  if (!n) return []
+  return n.parentId ? work.mubuChildren(n.parentId) : work.mubuRoots()
+})
 const directChildren = computed(() => node.value ? work.mubuChildren(node.value.id) : [])
 function descendantContent(parentId, depth = 0) {
   return work.mubuChildren(parentId).flatMap(child => [
@@ -69,6 +77,8 @@ function goTo(id) {
 /** 关系行点击：目标为设定 → 切换详情页；人物 → 关闭页面并跳人物模块 */
 function pickRel(e) {
   if (e.otherKind === 'mubu') {
+    const root = work.mubuRootOf(e.otherId)
+    if (root) work.setMubuSet(root.id)
     ui.loreDetailId = e.otherId
     return
   }
@@ -99,19 +109,69 @@ function onHoverRel(e) {
 function onKey(e) {
   if (e.key !== 'Escape' || !ui.loreDetailId) return
   if (document.querySelector('.n-modal')) return
+  if (document.querySelector('.ob-ctx')) return // 节点操作菜单先收
   if (ui.mubuTagPanel || ui.loreRelationPanel) return // 浮层先收（各自处理 Esc）
   close()
 }
-/* 节点被删除 / 换作品：自动收起 */
+/* 节点被删除 / 换作品：自动收起；打开条目时把左侧设定集切换到它所属的集 */
 watch(node, (n) => {
   if (ui.loreDetailId && !n) ui.loreDetailId = null
+  if (n) {
+    const root = work.mubuRootOf(n.id)
+    if (root) work.setMubuSet(root.id)
+  }
 })
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <div v-if="node" class="ldt-page">
+  <div v-if="node" class="ldt-page" :class="{ 'ldt-crimson': ui.skin === 'crimson' }" data-module="lore">
+    <template v-if="ui.skin === 'crimson'">
+      <div class="crimson-detail-bar">
+        <nav class="crimson-crumbs" aria-label="节点层级">
+          <template v-for="(c, i) in crumbs" :key="c.id">
+            <span v-if="i" class="crimson-crumb-sep">/</span>
+            <span class="crimson-crumb-item" :class="{ current: i === crumbs.length - 1 }">
+              <button type="button" class="crimson-crumb" :title="c.text" @click="goTo(c.id)">{{ c.text }}</button>
+              <div v-if="i === crumbs.length - 1" class="crimson-crumb-menu">
+                <button
+                  v-for="sib in siblings"
+                  :key="sib.id"
+                  type="button"
+                  :class="{ active: sib.id === node.id }"
+                  @click="goTo(sib.id)"
+                >{{ sib.text || '（空节点）' }}</button>
+              </div>
+            </span>
+          </template>
+        </nav>
+        <div class="crimson-detail-actions">
+          <div id="crimson-detail-tools" class="crimson-bar-tools"></div>
+          <button class="crimson-bar-button" type="button" @click="close">← 回到设定集</button>
+          <button class="crimson-bar-button" type="button" @click="locate">定位节点</button>
+        </div>
+      </div>
+      <!-- 详情页 = 同一个大纲的聚焦视图：标题为当前节点，纸面是其子条目 -->
+      <MubuView :focus-node-id="node.id" bar-target="#crimson-detail-tools">
+        <template #paper-footer>
+          <div class="crimson-related">
+            <button type="button" class="crimson-related-toggle" :aria-expanded="relatedOpen" @click="relatedOpen = !relatedOpen">
+              <span>关联内容</span><b>{{ entries.length }}</b><i>{{ relatedOpen ? '收起 ▴' : '展开 ▾' }}</i>
+            </button>
+            <div v-if="relatedOpen" class="crimson-related-body">
+              <LoreRelRows v-if="entries.length" :entries="entries" :hover-link="hoverLink" @pick="pickRel" @hover="onHoverRel" />
+              <div v-else class="ldt-empty">暂无关联关系</div>
+              <div class="ldt-graph">
+                <LoreGraph :node-id="node.id" :entries="entries" @pick="pickRel" @hover="onHoverRel" />
+              </div>
+              <NButton size="small" class="crimson-detail-add" @click="openRelPanel"><OIcon name="plus" :size="11" /> 添加关系</NButton>
+            </div>
+          </div>
+        </template>
+      </MubuView>
+    </template>
+    <template v-else>
     <div class="ldt-top">
       <button class="ldt-back" type="button" title="返回（Esc）" @click="close"><OIcon name="back" :size="14" /> 返回</button>
       <nav class="ldt-crumbs">
@@ -190,5 +250,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <div v-else class="ldt-empty">暂无子条目</div>
       </div>
     </div>
+    </template>
   </div>
 </template>

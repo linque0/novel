@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "theme": "赤月戏",
+  "version": "v3",
+  "createdAt": "2026-10-18",
+  "status": "灵感已通过；人物剪影 v4 待视觉评审",
+  "generationMode": "imagegen-built-in",
+  "reference": "../assets/nouveau.webp",
+  "assets": [
+    {
+      "id": "redmoon-characters-silhouette-fans-v4",
+      "module": "人物",
+      "title": "叠扇剪影",
+      "version": "v4",
+      "status": "待视觉评审",
+      "previousFile": "characters-layered-fans-v3.png",
+      "file": "characters-silhouette-fans-v4.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 3055003,
+      "sha256": "9fa5f3275617e7d72b95c0400573089ca941b3db77b70fff45a0d124fff20ef2",
+      "copyArea": "right"
+    },
+    {
+      "id": "redmoon-inspiration-lantern-river-v3",
+      "module": "灵感",
+      "title": "流光灯河",
+      "status": "用户已通过",
+      "approvedAt": "2026-10-18",
+      "file": "inspiration-lantern-river-v3.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2792439,
+      "sha256": "c808bdda5827fdacc0ad044f7d464cac3dccef858c92337ace29c546ab8831d8",
+      "copyArea": "left"
+    }
+  ]
+}
+

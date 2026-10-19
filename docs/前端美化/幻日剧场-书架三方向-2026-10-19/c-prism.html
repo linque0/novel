@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幻日剧场 · 方向 C 折光镜厅</title>
+<style>
+@font-face{font-family:'OldSong';src:url('assets/fonts/oldsong.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'WenKai';src:url('assets/fonts/wenkai.woff2') format('woff2');font-display:swap}
+:root{
+  --bg:#08070c; --bg-2:#0d0b13;
+  --pearl:#f2ede4; --muted:#a39b90; --faint:#6f6a64;
+  --gold:#d9b877; --line:#ffffff1f;
+  --blue:#9dc4e8; --coral:#e59a76; --jade:#8fd3b2;
+  --serif:'OldSong','KingHwa OldSong','Songti SC','SimSun',serif;
+  --kai:'WenKai','LXGW WenKai','Kaiti SC','KaiTi',serif;
+  --sans:'Noto Sans SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg)}
+body{font-family:var(--sans);color:var(--pearl)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;border:0;background:none;padding:0}
+svg{display:block}
+.hall{position:relative;width:100vw;height:100vh;display:flex;flex-direction:column;overflow:hidden;
+  background:
+    radial-gradient(900px 520px at 50% -6%,#2a2a4a55 0%,transparent 62%),
+    radial-gradient(760px 600px at 8% 78%,#3b1f2f55 0%,transparent 62%),
+    radial-gradient(820px 620px at 92% 74%,#123a3355 0%,transparent 60%),
+    linear-gradient(180deg,#0a0910 0%,#08070c 62%,#060609 100%)}
+.hall::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:radial-gradient(#ffffff12 .5px,transparent .8px);background-size:4px 4px}
+
+/* 顶栏 */
+.top{height:64px;flex:none;display:flex;align-items:center;gap:32px;padding:0 44px;position:relative;z-index:8;border-bottom:1px solid #ffffff12}
+.brand{display:flex;align-items:center;gap:12px;min-width:262px}
+.brand-mark{width:34px;height:34px}
+.brand-cn{font-family:var(--serif);font-size:22px;letter-spacing:5px;line-height:1}
+.brand-en{display:block;margin-top:6px;font-size:8px;letter-spacing:3px;color:#8d867c}
+.nav{display:flex;align-items:center;gap:29px;justify-content:center;flex:1;height:100%}
+.nav a{font-family:var(--kai);font-size:13px;letter-spacing:2px;color:#9d968b;height:100%;display:flex;align-items:center;position:relative;transition:color .2s}
+.nav a:hover{color:var(--pearl)}
+.nav a.on{color:var(--pearl)}
+.nav a.on::after{content:'';position:absolute;left:50%;bottom:13px;transform:translateX(-50%);width:18px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);box-shadow:0 0 10px #d9b877aa}
+.top-actions{display:flex;align-items:center;gap:20px;min-width:360px;justify-content:flex-end}
+.top-actions .search{width:28px;height:28px;display:grid;place-items:center;color:#a39b90}
+.skin-chip{font-family:var(--kai);font-size:11px;letter-spacing:1.2px;color:#b6aea2;display:flex;align-items:center;gap:7px;padding:7px 11px;border:1px solid #ffffff18}
+.skin-chip i{font-style:normal;font-size:8px;color:var(--gold)}
+.new-btn{position:relative;font-family:var(--kai);font-size:12px;letter-spacing:1.6px;color:#f4efe5;padding:9px 18px;border:1px solid transparent;background:
+  linear-gradient(#0d0b12,#0d0b12) padding-box,
+  linear-gradient(110deg,#9dc4e8,#d9b877,#e59a76,#8fd3b2) border-box}
+.new-btn:hover{filter:brightness(1.12)}
+
+/* 主舞台 */
+.main{position:relative;flex:1;min-height:0}
+.halo{position:absolute;left:50%;top:-88px;transform:translateX(-50%);width:1180px;height:520px;pointer-events:none;opacity:.9}
+.beams{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.beams i{position:absolute;top:-40px;width:1px;height:620px;transform-origin:top center;opacity:.24}
+.beams i:nth-child(1){left:24%;background:linear-gradient(180deg,#9dc4e8,transparent 72%);transform:rotate(9deg)}
+.beams i:nth-child(2){left:44%;background:linear-gradient(180deg,#d9b877,transparent 72%);transform:rotate(3deg)}
+.beams i:nth-child(3){left:57%;background:linear-gradient(180deg,#e59a76,transparent 72%);transform:rotate(-3deg)}
+.beams i:nth-child(4){left:76%;background:linear-gradient(180deg,#8fd3b2,transparent 72%);transform:rotate(-9deg)}
+
+.manifesto{position:absolute;left:72px;top:70px;width:384px;z-index:6}
+.manifesto .eyebrow{font-size:9px;letter-spacing:3.2px;color:var(--gold);display:flex;align-items:center;gap:11px}
+.manifesto .eyebrow::after{content:'';width:44px;height:1px;background:linear-gradient(90deg,#d9b87788,transparent)}
+.manifesto h1{margin:13px 0 0;font-family:var(--serif);font-weight:400;font-size:48px;line-height:1.1;letter-spacing:7px;color:var(--pearl);text-shadow:0 0 40px #9dc4e822}
+.manifesto p{width:372px;margin:13px 0 0;font-family:var(--kai);font-size:13px;line-height:1.9;letter-spacing:.4px;color:#b8b0a5}
+
+/* 三联门 */
+.triptych{position:absolute;left:0;right:0;top:0;bottom:110px;z-index:3}
+.portal{position:absolute;overflow:hidden;border-radius:220px 220px 0 0;border:1px solid #ffffff1f;
+  box-shadow:0 30px 80px #00000088, inset 0 0 60px #00000066}
+.portal::before{content:'';position:absolute;inset:10px;border:1px solid #ffffff17;border-radius:inherit;pointer-events:none;z-index:4}
+.portal::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:4;background:linear-gradient(116deg,#ffffff10 0%,transparent 26%,transparent 72%,#ffffff08 100%)}
+.portal svg{width:100%;height:100%}
+.portal-left{left:72px;top:230px;width:392px;height:460px;filter:saturate(.96) brightness(.87)}
+.portal-center{left:510px;top:150px;width:420px;height:540px;border-color:#d9b87755;box-shadow:0 0 0 1px #d9b8771f,0 0 48px #9dc4e822,0 36px 90px #00000099}
+.portal-right{left:976px;top:230px;width:392px;height:460px;filter:saturate(.96) brightness(.87)}
+.portal-caption{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:5;text-align:center;white-space:nowrap}
+.portal-caption b{display:block;font-family:var(--kai);font-size:12px;letter-spacing:5px;color:#f0e9dc;font-weight:400}
+.portal-caption span{display:block;margin-top:6px;font-size:8px;letter-spacing:2.6px;color:#bdb4a6}
+.portal-caption i{display:inline-block;width:5px;height:5px;border-radius:50%;margin-right:7px;background:var(--dot);box-shadow:0 0 10px var(--dot)}
+.portal-center .portal-caption{bottom:auto;top:18px}
+.portal-center .portal-caption b{color:#f6eedf}
+.portal-center .portal-caption span{color:#e0cfa8}
+
+/* 中央主作品 */
+.feature{position:absolute;left:24px;right:24px;bottom:20px;z-index:6;padding:20px 20px 17px;
+  background:linear-gradient(0deg,#05060bf2 0%,#05060bd9 52%,#05060b00 100%)}
+.feature .no{font-size:9px;letter-spacing:2.6px;color:var(--gold);display:flex;align-items:center;gap:9px}
+.feature .no::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,#d9b87766,transparent)}
+.feature h2{margin:10px 0 0;font-family:var(--serif);font-weight:400;font-size:56px;line-height:1.1;letter-spacing:6px;color:#f7f0e4;text-shadow:0 2px 26px #000}
+.feature .en{margin-top:7px;font-size:8.5px;letter-spacing:3.6px;color:#c3b79f}
+.feature p{margin:11px 0 0;font-family:var(--kai);font-size:13px;line-height:1.85;letter-spacing:.3px;color:#d0c8bc}
+.feature .actions{display:flex;align-items:center;gap:18px;margin-top:14px}
+.feature .primary{display:inline-flex;align-items:center;gap:16px;font-family:var(--kai);font-size:13px;letter-spacing:2px;color:#0c0b12;
+  background:linear-gradient(100deg,#d9b877,#f0d8a8);padding:9px 16px}
+.feature .quiet{font-family:var(--kai);font-size:12px;letter-spacing:1.4px;color:#cfc7bb;border-bottom:1px solid #ffffff33;padding-bottom:4px}
+.feature .quiet i{font-style:normal;color:var(--gold);margin-left:5px}
+.feature .stats{display:flex;gap:12px;margin-top:12px;font-family:var(--kai);font-size:11px;letter-spacing:1px;color:#a0988c}
+.feature .stats b{font-family:var(--serif);font-weight:400;font-size:13px;color:#ded5c6}
+.feature .stats em{font-style:normal;color:#56514b}
+
+.book-mini{position:absolute;right:34px;top:128px;width:126px;height:172px;z-index:6;transform:rotate(3deg);
+  background:linear-gradient(145deg,#1c2c48,#0a1220 72%);border:1px solid #d9b87788;box-shadow:0 24px 46px #000000aa,0 0 30px #9dc4e833;
+  display:flex;align-items:center;justify-content:center}
+.book-mini::before{content:'';position:absolute;left:9px;top:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,#d9b87766,transparent)}
+.book-mini span{writing-mode:vertical-rl;font-family:var(--serif);font-size:17px;letter-spacing:5px;color:#efe4cc}
+.book-mini i{position:absolute;bottom:10px;left:12px;writing-mode:vertical-rl;font-style:normal;font-family:var(--kai);font-size:7px;letter-spacing:2px;color:#bfb194}
+.book-mini .seal{position:absolute;bottom:9px;right:9px;width:19px;height:19px;display:grid;place-items:center;border:1px solid #b2544566;color:#d9b5a2;font-size:7px;font-family:var(--serif);writing-mode:horizontal-tb;letter-spacing:1px}
+
+/* 底部索引 */
+.index{position:absolute;left:0;right:0;bottom:0;height:110px;z-index:7;padding:14px 72px 18px;
+  background:linear-gradient(180deg,#06060900 0%,#060609e6 38%,#050508 100%)}
+.index-head{display:flex;align-items:baseline;gap:13px;margin-bottom:9px}
+.index-head h2{margin:0;font-family:var(--serif);font-weight:400;font-size:16px;letter-spacing:2.5px;color:#e9e1d5}
+.index-head small{font-size:8.5px;letter-spacing:2.6px;color:var(--gold)}
+.index-head .more{margin-left:auto;font-family:var(--kai);font-size:10px;letter-spacing:1.2px;color:#807a71}
+.index-list{display:flex;border-top:1px solid #ffffff1f}
+.index-item{flex:1;min-width:0;padding:10px 16px 2px 0;position:relative}
+.index-item + .index-item{padding-left:16px;border-left:1px solid #ffffff12}
+.index-item .row{display:flex;align-items:center;gap:8px}
+.index-item .no{font-size:8.5px;letter-spacing:1.4px;color:#6f6a64}
+.index-item .world{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:8.5px;letter-spacing:1px;color:#8e877d}
+.index-item .world i{width:4px;height:4px;border-radius:50%;background:var(--dot)}
+.index-item h3{margin:5px 0 0;font-family:var(--serif);font-weight:400;font-size:16px;letter-spacing:1.2px;color:#e3dbce;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.index-item p{margin:4px 0 0;font-family:var(--kai);font-size:10.5px;letter-spacing:.5px;color:#948c81}
+.index-item.on h3{color:#f4e9cf}
+.index-item.on .no{color:var(--gold)}
+.index-item.on::before{content:'';position:absolute;left:0;right:16px;top:-1px;height:2px;background:linear-gradient(90deg,var(--gold),#d9b87722)}
+
+/* 页脚 */
+.foot{height:36px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 72px;border-top:1px solid #ffffff10;position:relative;z-index:8;
+  font-size:9px;letter-spacing:1.8px;color:#8d857a;background:#050508}
+.foot .mid{font-family:var(--kai);letter-spacing:3px;color:#a3947a}
+.foot button{font-size:9px;letter-spacing:1.8px;color:#b0a186}
+</style>
+</head>
+<body>
+<div class="hall">
+  <header class="top">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 34 34" aria-hidden="true">
+        <circle cx="17" cy="18" r="5.2" fill="none" stroke="#d9b877" stroke-width="1.1"/>
+        <circle cx="17" cy="18" r="1.8" fill="#d9b877"/>
+        <circle cx="5.2" cy="18" r="1.8" fill="none" stroke="#9dc4e8" stroke-width=".9" opacity=".85"/>
+        <circle cx="28.8" cy="18" r="1.8" fill="none" stroke="#e59a76" stroke-width=".9" opacity=".85"/>
+        <path d="M3 14.8C4 6.8 9.5 2.6 17 2.6s13 4.2 14 12.2" fill="none" stroke="#d9b87755" stroke-width=".7"/>
+        <path d="M8.4 5.2l1.5 2.2M25.6 5.2l-1.5 2.2" stroke="#d9b87777" stroke-width=".7"/>
+      </svg>
+      <div><div class="brand-cn">幻日剧场</div><span class="brand-en">PARHELION HALL</span></div>
+    </div>
+    <nav class="nav">
+      <a class="on" href="#">书架</a><a href="#">正文</a><a href="#">大纲</a><a href="#">设定</a><a href="#">人物</a><a href="#">灵感</a><a href="#">设置</a>
+    </nav>
+    <div class="top-actions">
+      <button class="search" aria-label="搜索作品">
+        <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="#a39b90" stroke-width="1.2"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
+      </button>
+      <span class="skin-chip">幻日剧场 <i>▾</i></span>
+      <button class="new-btn">＋ 新建作品</button>
+    </div>
+  </header>
+
+  <main class="main">
+    <svg class="halo" viewBox="0 0 1180 520" aria-hidden="true">
+      <defs>
+        <linearGradient id="spectrum" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#9dc4e8" stop-opacity="0"/><stop offset=".18" stop-color="#9dc4e8" stop-opacity=".7"/>
+          <stop offset=".4" stop-color="#d9b877" stop-opacity=".85"/><stop offset=".58" stop-color="#e59a76" stop-opacity=".8"/>
+          <stop offset=".8" stop-color="#8fd3b2" stop-opacity=".65"/><stop offset="1" stop-color="#8fd3b2" stop-opacity="0"/>
+        </linearGradient>
+        <filter id="hblur"><feGaussianBlur stdDeviation="18"/></filter>
+      </defs>
+      <ellipse cx="590" cy="320" rx="500" ry="270" fill="none" stroke="url(#spectrum)" stroke-width="16" opacity=".18" filter="url(#hblur)"/>
+      <ellipse cx="590" cy="320" rx="500" ry="270" fill="none" stroke="url(#spectrum)" stroke-width="1.1" opacity=".65"/>
+      <ellipse cx="590" cy="320" rx="430" ry="232" fill="none" stroke="url(#spectrum)" stroke-width=".6" opacity=".28"/>
+      <circle cx="590" cy="318" r="86" fill="none" stroke="#f0d8a8" stroke-width=".7" opacity=".22"/>
+      <circle cx="590" cy="318" r="4" fill="#f4e4c2" opacity=".9"/>
+    </svg>
+    <div class="beams"><i></i><i></i><i></i><i></i></div>
+
+    <div class="manifesto">
+      <div class="eyebrow">第七季 · 六部剧目正在轮演</div>
+      <h1>三界同台</h1>
+      <p>同一座剧场，三束幻日。<br>每一部作品，都是一个正在发生的真实世界。</p>
+    </div>
+
+    <div class="triptych">
+      <!-- 左：赤城 -->
+      <figure class="portal portal-left" style="--dot:var(--coral)">
+        <svg viewBox="0 0 400 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="cSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c07a58"/><stop offset=".45" stop-color="#8b4c3b"/><stop offset="1" stop-color="#3a1d1b"/></linearGradient>
+            <linearGradient id="cFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b3026"/><stop offset="1" stop-color="#160c0b"/></linearGradient>
+            <filter id="cBlur"><feGaussianBlur stdDeviation="12"/></filter>
+            <pattern id="grainC" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".6" fill="#fff" opacity=".05"/></pattern>
+          </defs>
+          <rect width="400" height="620" fill="url(#cSky)"/>
+          <circle cx="206" cy="196" r="58" fill="#ffd8a8" opacity=".62" filter="url(#cBlur)"/>
+          <circle cx="206" cy="196" r="37" fill="#ffe3bd" opacity=".78"/>
+          <path d="M0 430l74-64 56 30 48-52 58 46 62-34 102 62v220H0Z" fill="#6a372c" opacity=".7"/>
+          <path d="M0 470l86-46 62 26 52-34 60 38 70-26 70 44v148H0Z" fill="#3f201c"/>
+          <g fill="#2b1513" opacity=".94">
+            <path d="M0 620V520h400v100z"/>
+            <path d="M38 520V430h17v90zM74 520V386h14v134zM106 520V452h20v68zM150 520V404h17v116zM188 520V440h22v80zM232 520V378h17v142zM278 520V442h20v78zM320 520V396h16v124zM356 520V456h18v64z"/>
+            <path d="M46 470h28v7H46zM158 436h24v6h-24zM240 414h26v7h-26zM326 438h22v6h-22z"/>
+          </g>
+          <g fill="none" stroke="#ffd2a2" stroke-width="1" opacity=".5"><path d="M84 424q8-14 16 0M150 442q9-15 18 0M284 430q8-13 16 0M344 446q7-12 14 0"/></g>
+          <path d="M0 540q50-32 100 0t100 0 100 0 100 0v80H0Z" fill="url(#cFloor)"/>
+          <g stroke="#f2c391" stroke-width=".7" opacity=".18"><path d="M0 560h400M0 586h400M0 612h400"/></g>
+          <rect width="400" height="620" fill="url(#grainC)"/>
+        </svg>
+        <figcaption class="portal-caption" style="--dot:#e59a76"><b>世界 · 赤城</b><span>01 · 落日与城墙</span></figcaption>
+      </figure>
+
+      <!-- 中：雾港（主） -->
+      <figure class="portal portal-center" style="--dot:var(--blue)">
+        <svg viewBox="0 0 420 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="bSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3e5c80"/><stop offset=".48" stop-color="#213953"/><stop offset="1" stop-color="#0b1420"/></linearGradient>
+            <linearGradient id="bWater" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#233f5b"/><stop offset="1" stop-color="#08111b"/></linearGradient>
+            <radialGradient id="bSun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff8e7"/><stop offset=".4" stop-color="#f2ddb2"/><stop offset=".7" stop-color="#c9a76a" stop-opacity=".45"/><stop offset="1" stop-color="#c9a76a" stop-opacity="0"/></radialGradient>
+            <filter id="bBlur"><feGaussianBlur stdDeviation="16"/></filter>
+            <pattern id="grainB" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".6" fill="#fff" opacity=".05"/></pattern>
+          </defs>
+          <rect width="420" height="620" fill="url(#bSky)"/>
+          <circle cx="210" cy="184" r="128" fill="url(#bSun)" opacity=".55"/>
+          <circle cx="210" cy="184" r="42" fill="#f6e8c8" opacity=".85"/>
+          <circle cx="128" cy="168" r="14" fill="#f6e8c8" opacity=".45"/>
+          <circle cx="292" cy="174" r="16" fill="#f6e8c8" opacity=".42"/>
+          <circle cx="210" cy="184" r="76" fill="none" stroke="#e9d2a2" stroke-width=".7" opacity=".28" stroke-dasharray="1 5"/>
+          <g opacity=".5" filter="url(#bBlur)"><path d="M0 250c90-22 160 12 230-6s130-4 190 10v90H0Z" fill="#b7c9d8"/></g>
+          <path d="M0 356l58-58 44 24 40-48 52 42 48-30 60 46 52-22 66 48v162H0Z" fill="#1d344c" opacity=".9"/>
+          <path d="M0 410l70-44 52 22 44-32 56 36 58-22 62 38 78-20v132H0Z" fill="#142639"/>
+          <rect y="470" width="420" height="150" fill="url(#bWater)"/>
+          <g stroke="#9fc2dd" stroke-width=".9" opacity=".32"><path d="M34 492h62M124 502h88M58 518h52M176 528h74M272 500h74M236 540h96M96 552h60M310 556h68"/></g>
+          <g fill="#0a1723"><path d="M118 470h7v-42h-7zM128 470h6v-56h-6zM136 470h5v-38h-5zM302 470h7v-48h-7zM312 470h6v-62h-6zM320 470h5v-34h-5z"/></g>
+          <g stroke="#e6ddd0" stroke-width="1.1" opacity=".5"><path d="M126 428v-14M134 442v-18M310 422v-16M318 408v-18"/></g>
+          <path d="M0 560c42-10 84 8 126-1s84-10 126 0 84 12 168 1v60H0Z" fill="#0b1622" opacity=".85"/>
+          <g fill="#d8b877" opacity=".55"><circle cx="76" cy="534" r="1.2"/><circle cx="156" cy="548" r="1"/><circle cx="250" cy="538" r="1.3"/><circle cx="346" cy="548" r="1"/></g>
+          <rect width="420" height="620" fill="url(#grainB)"/>
+        </svg>
+        <figcaption class="portal-caption" style="--dot:#9dc4e8"><b>世界 · 雾港</b><span>02 · 雾与旧航线 · 正在上演</span></figcaption>
+
+        <div class="book-mini"><span>星尘旅人</span><i>林间 著</i><span class="seal">幻日</span></div>
+
+        <div class="feature">
+          <div class="no">NO. 07 · NOW SHOWING</div>
+          <h2>星尘旅人</h2>
+          <div class="en">STARDUST&nbsp;&nbsp;VOYAGER</div>
+          <p>一枚铜星在雾中熄灭，旧航线失去坐标。林循着父亲留下的观测笔记，走向星图之外。</p>
+          <div class="actions">
+            <a class="primary" href="#">继续写作 →</a>
+            <a class="quiet" href="#">故事大纲 <i>↗</i></a>
+          </div>
+          <div class="stats"><span><b>156,824</b> 字</span><em>·</em><span><b>42</b> 章</span><em>·</em><span>上次写到 第一章 · 初雪</span></div>
+        </div>
+      </figure>
+
+      <!-- 右：青苑 -->
+      <figure class="portal portal-right" style="--dot:var(--jade)">
+        <svg viewBox="0 0 400 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+          <defs>
+            <linearGradient id="jSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5d8a72"/><stop offset=".5" stop-color="#32604f"/><stop offset="1" stop-color="#10241f"/></linearGradient>
+            <linearGradient id="jFloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2f5444"/><stop offset="1" stop-color="#0a1813"/></linearGradient>
+            <filter id="jBlur"><feGaussianBlur stdDeviation="14"/></filter>
+            <pattern id="grainJ" width="4" height="4" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".6" fill="#fff" opacity=".05"/></pattern>
+          </defs>
+          <rect width="400" height="620" fill="url(#jSky)"/>
+          <circle cx="208" cy="256" r="76" fill="#d9e8cf" opacity=".12" filter="url(#jBlur)"/>
+          <circle cx="208" cy="256" r="52" fill="none" stroke="#e8dcc0" stroke-width="2.4" opacity=".55"/>
+          <circle cx="208" cy="256" r="42" fill="#96b79f" opacity=".12"/>
+          <path d="M0 430l66-38 54 22 44-30 60 34 58-22 78 34v200H0Z" fill="#254a3d" opacity=".85"/>
+          <path d="M0 474l72-28 58 20 48-22 60 26 60-18 72 28v140H0Z" fill="#173429"/>
+          <path d="M0 540q48-22 96 0t96 0 96 0 112 0v80H0Z" fill="url(#jFloor)"/>
+          <g fill="#0b1f19" opacity=".9">
+            <path d="M64 540v-52h5v52zM72 488l-14 22 14 14 14-14zM110 546v-46h5v46zM118 500l-13 20 13 13 13-13z"/>
+            <path d="M286 540v-60h5v60zM294 480l-15 24 15 15 15-15zM330 546v-42h5v42zM338 504l-12 19 12 12 12-12z"/>
+          </g>
+          <g stroke="#c8d8c0" stroke-width=".9" opacity=".32"><path d="M28 566h56M104 578h70M196 570h54M274 580h66M148 596h48M236 600h54"/></g>
+          <g fill="#d9b877" opacity=".6"><circle cx="150" cy="500" r="1.2"/><circle cx="252" cy="512" r="1"/><circle cx="188" cy="532" r="1.2"/><circle cx="330" cy="488" r=".9"/></g>
+          <rect width="400" height="620" fill="url(#grainJ)"/>
+        </svg>
+        <figcaption class="portal-caption" style="--dot:#8fd3b2"><b>世界 · 青苑</b><span>03 · 园林与未寄之信</span></figcaption>
+      </figure>
+    </div>
+
+    <section class="index">
+      <div class="index-head"><h2>剧目索引</h2><small>六部作品</small><span class="more">按最近编辑 ↓</span></div>
+      <div class="index-list" id="indexList"></div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>6 部作品 · 3 个世界</span>
+    <span class="mid">幻日剧场 · 折光镜厅</span>
+    <button>重播开场 ↻</button>
+  </footer>
+</div>
+<script src="data.js"></script>
+<script>
+  const idx = document.getElementById('indexList');
+  const f = window.SUNDOG.featured;
+  const fw = window.SUNDOG.worlds[f.world];
+  const all = [{ ...f, no: f.no, updated: '今天 14:32', live: true }, ...window.SUNDOG.others];
+  idx.innerHTML = all.map(b => {
+    const w = window.SUNDOG.worlds[b.world];
+    return `<a class="index-item ${b.live ? 'on' : ''}" href="#" style="--dot:${w.color}">
+      <div class="row"><span class="no">NO. ${b.no}</span><span class="world"><i></i>${b.world}</span></div>
+      <h3>${b.title}</h3>
+      <p>${b.words} 字 · ${b.chapters} 章 · ${b.updated}</p>
+    </a>`;
+  }).join('');
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+{
+  "theme": "赤月戏",
+  "module": "人物",
+  "version": "v5",
+  "createdAt": "2026-10-18",
+  "status": "三版待用户选择",
+  "mode": "imagegen-built-in",
+  "layoutReference": "../characters.html",
+  "assets": [
+    {
+      "id": "a",
+      "name": "折屏众相",
+      "file": "assets/A-folded-cast.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2767629,
+      "sha256": "be91b2bb8a3d0eda12a15152809dadf743e2af508226cbd27e518bbd2f629b10",
+      "source": "C:/Users/linque/.codex/generated_images/01a14dd6-3a1d-78b1-9454-5a70356b1bba/exec-936dedaf-326d-4dcc-8a31-d52382180ec5.png"
+    },
+    {
+      "id": "b",
+      "name": "纱幕叠影",
+      "file": "assets/B-veiled-selves.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2623575,
+      "sha256": "a34299f93b9e273114fd613df1c5e2c84aeb092a8ce4ecf9d5e0d7ab9cd319bc",
+      "source": "C:/Users/linque/.codex/generated_images/01a14dd6-3a1d-78b1-9454-5a70356b1bba/exec-fd3b47d9-7b4a-4104-bc0a-d41589f91c18.png"
+    },
+    {
+      "id": "c",
+      "name": "错屏行影",
+      "file": "assets/C-passing-selves.png",
+      "width": 1672,
+      "height": 940,
+      "bytes": 2670957,
+      "sha256": "d5f0929a6dd92bf8c36711ea3de31d00166fb1f1a4cf9d6a25db0d8075deb89b",
+      "source": "C:/Users/linque/.codex/generated_images/01a14dd6-3a1d-78b1-9454-5a70356b1bba/exec-9806b9be-bdca-4f06-b7fd-a964e78f80d2.png"
+    }
+  ],
+  "visualReview": {
+    "viewports": [
+      "1440x900",
+      "1080x900"
+    ],
+    "screenshots": 6,
+    "reviewer": "主 Agent 自检，未独立评审",
+    "scope": "人物页布景裁切、文字和表单排版；未执行应用功能测试"
+  }
+}

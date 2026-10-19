@@ -1,0 +1,4532 @@
+{
+  "fail": [],
+  "report": {
+    "wide": [
+      {
+        "state": "shelf",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 860,
+          "t": 0,
+          "b": 860
+        },
+        "toolbar": null,
+        "contentTop": 96,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": {
+            "l": 0,
+            "r": 1440,
+            "w": 1440,
+            "h": 860,
+            "t": 0,
+            "b": 860
+          },
+          "toolbar": {
+            "l": 40,
+            "r": 1405,
+            "w": 1365,
+            "h": 40,
+            "t": 96,
+            "b": 136
+          },
+          "program": {
+            "l": 1124,
+            "r": 1440,
+            "w": 316,
+            "h": 652,
+            "t": 171,
+            "b": 823
+          },
+          "programBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "rows": 5,
+          "chapter": {
+            "l": 426,
+            "r": 768,
+            "w": 341,
+            "h": 121,
+            "t": 583,
+            "b": 704
+          },
+          "cover": {
+            "l": 528,
+            "r": 709,
+            "w": 181,
+            "h": 255,
+            "t": 331,
+            "b": 586
+          },
+          "chapterOverlap": 543,
+          "chapterSeal": "\"续\""
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "nouveau-stage"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": null,
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": null,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": null,
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "editor",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": null,
+        "contentTop": 141,
+        "book": {
+          "l": 296,
+          "r": 1406,
+          "w": 1110,
+          "h": 680,
+          "t": 141,
+          "b": 821
+        },
+        "rail": {
+          "l": 32,
+          "r": 280,
+          "w": 248,
+          "h": 712,
+          "t": 148,
+          "b": 860
+        },
+        "page": {
+          "l": 296,
+          "r": 1154,
+          "w": 858,
+          "h": 680,
+          "t": 141,
+          "b": 821
+        },
+        "margin": {
+          "l": 1154,
+          "r": 1406,
+          "w": 252,
+          "h": 680,
+          "t": 141,
+          "b": 821
+        },
+        "chapterScroll": {
+          "sh": 1308,
+          "ch": 426
+        },
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "c-margin"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": null,
+          "book": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "page": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "rail": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "margin": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": null,
+          "book": false,
+          "page": false,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": null,
+        "projectActions": {
+          "w": 452,
+          "sw": 452,
+          "r": 1408,
+          "clipped": false
+        },
+        "errors": []
+      },
+      {
+        "state": "outline",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": {
+          "l": 232,
+          "r": 1408,
+          "w": 1176,
+          "h": 673,
+          "t": 162,
+          "b": 835
+        },
+        "nodes": [
+          {
+            "l": 294,
+            "r": 514,
+            "t": 252,
+            "b": 442
+          },
+          {
+            "l": 611,
+            "r": 829,
+            "t": 315,
+            "b": 503
+          },
+          {
+            "l": 931,
+            "r": 1149,
+            "t": 257,
+            "b": 445
+          },
+          {
+            "l": 291,
+            "r": 537,
+            "t": 539,
+            "b": 694
+          },
+          {
+            "l": 661,
+            "r": 888,
+            "t": 584,
+            "b": 718
+          },
+          {
+            "l": 1161,
+            "r": 1383,
+            "t": 513,
+            "b": 645
+          }
+        ],
+        "nodeLines": "block",
+        "nodeViewBox": "0 0 1176 673",
+        "nodePathLength": 115,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "plot-canvas"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": {
+          "dirR": 232,
+          "currentR": 232
+        },
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": null,
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": [
+            3,
+            0,
+            0,
+            0
+          ]
+        },
+        "shadows": {
+          "paper": null,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": false,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 410,
+          "sw": 410,
+          "r": 1408,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "outline-text",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "outline-folio paper"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": {
+          "dirR": 232,
+          "currentR": 232
+        },
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 410,
+          "sw": 410,
+          "r": 1408,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "world",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": {
+            "l": 212,
+            "r": 1178,
+            "w": 966,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "art": {
+            "l": 32,
+            "r": 232,
+            "w": 200,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "index": {
+            "l": 1198,
+            "r": 1408,
+            "w": 210,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "indexBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "overlap": 13460,
+          "layout": {
+            "l": 32,
+            "r": 1408,
+            "w": 1376,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          }
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "world-paper paper"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 451,
+          "sw": 451,
+          "r": 1408,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "world-detail",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": {
+            "l": 32,
+            "r": 212,
+            "w": 180,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": {
+            "l": 190,
+            "r": 1088,
+            "w": 898,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "art": {
+            "l": 32,
+            "r": 212,
+            "w": 180,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "connections": {
+            "l": 1108,
+            "r": 1408,
+            "w": 300,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "connectionsBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "overlap": 14806,
+          "layout": {
+            "l": 32,
+            "r": 1408,
+            "w": 1376,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          }
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "lore-paper paper"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 284,
+          "sw": 284,
+          "r": 1408,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "characters",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": {
+            "l": 50,
+            "r": 430,
+            "w": 380,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "dossier": {
+            "l": 362,
+            "r": 1408,
+            "w": 1046,
+            "h": 658,
+            "t": 177,
+            "b": 835
+          },
+          "layout": {
+            "l": 32,
+            "r": 1408,
+            "w": 1376,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "overlap": 44744,
+          "cast": {
+            "l": 75,
+            "r": 430,
+            "w": 355,
+            "h": 94,
+            "t": 640,
+            "b": 734
+          },
+          "castDisplay": "flex",
+          "castH": 94,
+          "castCurrentBg": "rgba(0, 0, 0, 0)"
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "portrait-folio"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": false,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 539,
+          "sw": 539,
+          "r": 1408,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "characters-graph",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": {
+            "l": 1215,
+            "r": 1408,
+            "w": 193,
+            "h": 271,
+            "t": 240,
+            "b": 511
+          },
+          "castDisplay": "flex",
+          "castH": 271,
+          "castCurrentBg": "rgba(0, 0, 0, 0)"
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": {
+            "l": 32,
+            "r": 1408,
+            "w": 1376,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "canvas": {
+            "l": 32,
+            "r": 1198,
+            "w": 1166,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "canvasBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "radial-gradient(circle at 42% 42%, rgb(38, 51, 45), rgb(18, 24, 21) 72%), radial-gradient(rgba(207, 176, 107, 0.08) 1px, rgba(0, 0, 0, 0) 1px)"
+          },
+          "indexBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "pathAnimation": "v4-draw"
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "character-graph paper"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": false
+        },
+        "tools": {
+          "w": 539,
+          "sw": 539,
+          "r": 1408,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "inspiration",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": {
+            "l": 230,
+            "r": 650,
+            "w": 420,
+            "h": 627,
+            "t": 208,
+            "b": 835
+          },
+          "reader": {
+            "l": 614,
+            "r": 1408,
+            "w": 794,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "art": {
+            "l": 0,
+            "r": 220,
+            "w": 220,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "overlap": 22572,
+          "layout": {
+            "l": 0,
+            "r": 1408,
+            "w": 1408,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          }
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "idea-wall"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": false,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 408,
+          "sw": 408,
+          "r": 1408,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "settings",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1440,
+          "w": 1440,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": {
+            "l": 184,
+            "r": 1074,
+            "w": 890,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "preview": {
+            "l": 1061,
+            "r": 1390,
+            "w": 329,
+            "h": 687,
+            "t": 162,
+            "b": 849
+          },
+          "layout": {
+            "l": 32,
+            "r": 1408,
+            "w": 1376,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "previewOverlap": 8749,
+          "categories": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "linear-gradient(90deg, rgba(248, 241, 226, 0.91), rgba(248, 241, 226, 0.55) 58%, rgba(248, 241, 226, 0))"
+          },
+          "activeWriting": "vertical-rl",
+          "activeBg": "linear-gradient(100deg, rgb(245, 237, 219), rgb(228, 214, 184))"
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "none",
+          "host": "settings-categories dark-sheet"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(59, 81, 83)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "previewPaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": false,
+          "previewPaper": false,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 76,
+          "sw": 76,
+          "r": 1408,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      }
+    ],
+    "narrow": [
+      {
+        "state": "shelf",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 860,
+          "t": 0,
+          "b": 860
+        },
+        "toolbar": null,
+        "contentTop": 96,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": {
+            "l": 0,
+            "r": 1080,
+            "w": 1080,
+            "h": 860,
+            "t": 0,
+            "b": 860
+          },
+          "toolbar": {
+            "l": 20,
+            "r": 1064,
+            "w": 1044,
+            "h": 40,
+            "t": 96,
+            "b": 136
+          },
+          "program": {
+            "l": 800,
+            "r": 1080,
+            "w": 280,
+            "h": 652,
+            "t": 171,
+            "b": 823
+          },
+          "programBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "rows": 5,
+          "chapter": {
+            "l": 255,
+            "r": 569,
+            "w": 313,
+            "h": 121,
+            "t": 598,
+            "b": 719
+          },
+          "cover": {
+            "l": 376,
+            "r": 557,
+            "w": 181,
+            "h": 255,
+            "t": 331,
+            "b": 586
+          },
+          "chapterOverlap": 0,
+          "chapterSeal": "\"续\""
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "nouveau-stage"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": null,
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": null,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": null,
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "editor",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": null,
+        "contentTop": 141,
+        "book": {
+          "l": 248,
+          "r": 1064,
+          "w": 816,
+          "h": 680,
+          "t": 141,
+          "b": 821
+        },
+        "rail": {
+          "l": 16,
+          "r": 232,
+          "w": 216,
+          "h": 712,
+          "t": 148,
+          "b": 860
+        },
+        "page": {
+          "l": 248,
+          "r": 844,
+          "w": 596,
+          "h": 680,
+          "t": 141,
+          "b": 821
+        },
+        "margin": {
+          "l": 844,
+          "r": 1064,
+          "w": 220,
+          "h": 680,
+          "t": 141,
+          "b": 821
+        },
+        "chapterScroll": {
+          "sh": 1308,
+          "ch": 426
+        },
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "c-margin"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": null,
+          "book": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "page": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "rail": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "margin": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": null,
+          "book": false,
+          "page": false,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": null,
+        "projectActions": {
+          "w": 452,
+          "sw": 452,
+          "r": 1064,
+          "clipped": false
+        },
+        "errors": []
+      },
+      {
+        "state": "outline",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": {
+          "l": 216,
+          "r": 1064,
+          "w": 848,
+          "h": 673,
+          "t": 162,
+          "b": 835
+        },
+        "nodes": [
+          {
+            "l": 230,
+            "r": 424,
+            "t": 246,
+            "b": 431
+          },
+          {
+            "l": 483,
+            "r": 675,
+            "t": 283,
+            "b": 467
+          },
+          {
+            "l": 735,
+            "r": 927,
+            "t": 247,
+            "b": 430
+          },
+          {
+            "l": 229,
+            "r": 425,
+            "t": 496,
+            "b": 674
+          },
+          {
+            "l": 483,
+            "r": 675,
+            "t": 536,
+            "b": 666
+          },
+          {
+            "l": 735,
+            "r": 927,
+            "t": 491,
+            "b": 619
+          }
+        ],
+        "nodeLines": "block",
+        "nodeViewBox": "0 0 848 673",
+        "nodePathLength": 112,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "plot-canvas"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": {
+          "dirR": 216,
+          "currentR": 220
+        },
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": null,
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": [
+            3,
+            0,
+            0,
+            0
+          ]
+        },
+        "shadows": {
+          "paper": null,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": false,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 381,
+          "sw": 381,
+          "r": 1060,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "outline-text",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "outline-folio paper"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": {
+          "dirR": 216,
+          "currentR": 220
+        },
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 381,
+          "sw": 381,
+          "r": 1060,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "world",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": {
+            "l": 182,
+            "r": 860,
+            "w": 678,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "art": {
+            "l": 16,
+            "r": 196,
+            "w": 180,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "index": {
+            "l": 874,
+            "r": 1064,
+            "w": 190,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "indexBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "overlap": 9422,
+          "layout": {
+            "l": 16,
+            "r": 1064,
+            "w": 1048,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          }
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "world-paper paper"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 421,
+          "sw": 421,
+          "r": 1060,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "world-detail",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": {
+            "l": 16,
+            "r": 176,
+            "w": 160,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": {
+            "l": 166,
+            "r": 790,
+            "w": 624,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "art": {
+            "l": 16,
+            "r": 176,
+            "w": 160,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "connections": {
+            "l": 804,
+            "r": 1064,
+            "w": 260,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "connectionsBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "overlap": 6730,
+          "layout": {
+            "l": 16,
+            "r": 1064,
+            "w": 1048,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          }
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "lore-paper paper"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 258,
+          "sw": 258,
+          "r": 1060,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "characters",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": {
+            "l": 42,
+            "r": 372,
+            "w": 330,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "dossier": {
+            "l": 346,
+            "r": 1048,
+            "w": 702,
+            "h": 658,
+            "t": 177,
+            "b": 835
+          },
+          "layout": {
+            "l": 32,
+            "r": 1048,
+            "w": 1016,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "overlap": 17108,
+          "cast": {
+            "l": 67,
+            "r": 372,
+            "w": 305,
+            "h": 94,
+            "t": 600,
+            "b": 694
+          },
+          "castDisplay": "flex",
+          "castH": 94,
+          "castCurrentBg": "rgba(0, 0, 0, 0)"
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "portrait-folio"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": false,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 504,
+          "sw": 504,
+          "r": 1060,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "characters-graph",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": {
+            "l": 887,
+            "r": 1064,
+            "w": 177,
+            "h": 271,
+            "t": 240,
+            "b": 511
+          },
+          "castDisplay": "flex",
+          "castH": 271,
+          "castCurrentBg": "rgba(0, 0, 0, 0)"
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": {
+            "l": 16,
+            "r": 1064,
+            "w": 1048,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "canvas": {
+            "l": 16,
+            "r": 874,
+            "w": 858,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "canvasBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "radial-gradient(circle at 42% 42%, rgb(38, 51, 45), rgb(18, 24, 21) 72%), radial-gradient(rgba(207, 176, 107, 0.08) 1px, rgba(0, 0, 0, 0) 1px)"
+          },
+          "indexBg": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "pathAnimation": "v4-draw"
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "character-graph paper"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": [
+            0,
+            0,
+            0,
+            1
+          ],
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": false
+        },
+        "tools": {
+          "w": 504,
+          "sw": 504,
+          "r": 1060,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "inspiration",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": null,
+          "preview": null,
+          "layout": null,
+          "previewOverlap": 0,
+          "categories": null,
+          "activeWriting": null,
+          "activeBg": null
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": {
+            "l": 196,
+            "r": 570,
+            "w": 374,
+            "h": 627,
+            "t": 208,
+            "b": 835
+          },
+          "reader": {
+            "l": 552,
+            "r": 1048,
+            "w": 496,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "art": {
+            "l": 0,
+            "r": 190,
+            "w": 190,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "overlap": 11286,
+          "layout": {
+            "l": 0,
+            "r": 1048,
+            "w": 1048,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          }
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "flex",
+          "host": "idea-wall"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(47, 43, 33)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "settingsPaper": null,
+          "previewPaper": null,
+          "art": null,
+          "inspirationArt": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": null,
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": null,
+          "previewPaper": null,
+          "ideaPaper": false,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 377,
+          "sw": 377,
+          "r": 1060,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      },
+      {
+        "state": "settings",
+        "overflow": false,
+        "broken": 0,
+        "header": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 76,
+          "t": 0,
+          "b": 76
+        },
+        "footer": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 40,
+          "t": 860,
+          "b": 900
+        },
+        "headerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "footerBg": {
+          "color": "rgba(0, 0, 0, 0)",
+          "image": "none"
+        },
+        "nav": 7,
+        "scene": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 900,
+          "t": 0,
+          "b": 900
+        },
+        "toolbar": {
+          "l": 0,
+          "r": 1080,
+          "w": 1080,
+          "h": 162,
+          "t": 0,
+          "b": 162
+        },
+        "contentTop": 162,
+        "book": null,
+        "rail": null,
+        "page": null,
+        "margin": null,
+        "chapterScroll": null,
+        "canvas": null,
+        "nodes": [],
+        "nodeLines": null,
+        "nodeViewBox": null,
+        "nodePathLength": 0,
+        "settings": {
+          "paper": {
+            "l": 212,
+            "r": 788,
+            "w": 576,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "preview": {
+            "l": 809,
+            "r": 1048,
+            "w": 239,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "layout": {
+            "l": 32,
+            "r": 1048,
+            "w": 1016,
+            "h": 673,
+            "t": 162,
+            "b": 835
+          },
+          "previewOverlap": 0,
+          "categories": {
+            "color": "rgba(0, 0, 0, 0)",
+            "image": "none"
+          },
+          "activeWriting": "horizontal-tb",
+          "activeBg": "linear-gradient(100deg, rgb(245, 237, 219), rgb(228, 214, 184))"
+        },
+        "characters": {
+          "portrait": null,
+          "dossier": null,
+          "layout": null,
+          "overlap": 0,
+          "cast": null,
+          "castDisplay": null,
+          "castH": null,
+          "castCurrentBg": null
+        },
+        "inspiration": {
+          "papers": null,
+          "reader": null,
+          "art": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "world": {
+          "paper": null,
+          "art": null,
+          "index": null,
+          "indexBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "lore": {
+          "paper": null,
+          "art": null,
+          "connections": null,
+          "connectionsBg": null,
+          "overlap": 0,
+          "layout": null
+        },
+        "graph": {
+          "layout": null,
+          "canvas": null,
+          "canvasBg": null,
+          "indexBg": null,
+          "pathAnimation": null
+        },
+        "shelf": {
+          "frame": null,
+          "toolbar": null,
+          "program": null,
+          "programBg": null,
+          "rows": 0,
+          "chapter": null,
+          "cover": null,
+          "chapterOverlap": 0,
+          "chapterSeal": null
+        },
+        "mark": {
+          "exists": true,
+          "position": "absolute",
+          "display": "none",
+          "host": "settings-categories dark-sheet"
+        },
+        "navActive": {
+          "bg": "linear-gradient(rgb(246, 238, 220), rgb(229, 215, 185))",
+          "transform": "matrix(0.999903, -0.0139622, 0.0139622, 0.999903, 0, 0)",
+          "color": "rgb(59, 81, 83)"
+        },
+        "directoryCurrent": null,
+        "ideaOutline": 0,
+        "surfaces": {
+          "paper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "book": null,
+          "page": null,
+          "rail": null,
+          "margin": null,
+          "dossier": null,
+          "worldPaper": null,
+          "lorePaper": null,
+          "outlineFolio": null,
+          "ideaReader": null,
+          "settingsPaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "previewPaper": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "art": null,
+          "inspirationArt": null,
+          "directory": null,
+          "graphIndex": null,
+          "settingsCategories": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "program": null,
+          "worldIndex": null,
+          "characterGraph": null,
+          "loreConnections": null,
+          "ideaPaper": null,
+          "relationship": null,
+          "tag": null,
+          "plotNode": null
+        },
+        "shadows": {
+          "paper": false,
+          "book": null,
+          "page": null,
+          "dossier": null,
+          "settingsPaper": false,
+          "previewPaper": false,
+          "ideaPaper": null,
+          "plotNode": null,
+          "portraitNode": null
+        },
+        "tools": {
+          "w": 84,
+          "sw": 84,
+          "r": 1060,
+          "clipped": false
+        },
+        "projectActions": null,
+        "errors": []
+      }
+    ],
+    "interactions": {
+      "routeDuring": {
+        "curtain": true,
+        "mode": "v4-curtain is-closing",
+        "url": "settings.html"
+      },
+      "routeAfter": {
+        "curtain": false,
+        "state": "editor",
+        "book": true
+      },
+      "routeErrors": [],
+      "chapterTurn": {
+        "turning": true,
+        "title": "第二章 · 领航员",
+        "hasTurn": true
+      },
+      "railOpen": {
+        "railW": 248,
+        "bookL": 296
+      },
+      "railCollapsed": {
+        "railW": 56,
+        "bookL": 104,
+        "progress": "0.08333333333333333",
+        "ring": "conic-gradient(rgb(168, 65, 53) 30deg, rgba(207, 176, 107, 0.133) 0deg)"
+      },
+      "miniNext": {
+        "mini": "03",
+        "current": "2"
+      },
+      "searchHits": 1,
+      "searchReset": 24,
+      "editorErrors": [],
+      "settingsSwapOut": {
+        "cls": "settings-panel v4-swap-out",
+        "text": "编辑器妙笔段落首行缩进段落自动留出两个字符拼写与"
+      },
+      "settingsSwapIn": {
+        "cls": "settings-panel",
+        "text": "编辑器妙笔段落首行缩进段落自动留出两个字符拼写与标点提示写作时显示轻量提"
+      },
+      "person": {
+        "name": "沈砚",
+        "src": "assets/person1.webp",
+        "cls": "portrait-frame v4-portrait-in"
+      },
+      "idea": {
+        "title": "雾港来信",
+        "cls": "idea-reader paper v4-reader-in"
+      },
+      "dialog": {
+        "open": true,
+        "animation": "v4-dialog-in"
+      },
+      "dialogClosed": true,
+      "toast": {
+        "text": "已进入条目编辑",
+        "cls": "v4-toast-in"
+      },
+      "graphAnimation": {
+        "animation": "v4-draw",
+        "dash": "1000px",
+        "offset": "34.424px",
+        "color": "rgba(207, 176, 107, 0.467)"
+      },
+      "reduceRouteResult": {
+        "state": "editor",
+        "curtain": false
+      },
+      "staticView": {
+        "cls": "v4-motion v4-ready static-view",
+        "spotlight": "none"
+      }
+    },
+    "focus": {
+      "tag": "A",
+      "text": "妙笔赤月 · 幻戏",
+      "outlineWidth": 2,
+      "outlineStyle": "solid",
+      "boxShadow": "rgba(21, 25, 24, 0.04) 0px 0px 0px 0.178702px"
+    },
+    "reduced": {
+      "media": true,
+      "duration": "0s",
+      "transition": "0s",
+      "spotlight": false,
+      "motion": false
+    },
+    "contrasts": {
+      "body": 9.32404884580805,
+      "nav": 14.437832155293277,
+      "goldOnInk": 8.508812081906518,
+      "sealText": 5.13946329962933,
+      "paperGold": 4.774688804163424,
+      "paperRed": 4.813567371658191,
+      "relationship": 6.202249934740511,
+      "settingsTitle": 11.237297291876976,
+      "graphIndex": 8.890007938449783,
+      "note": 8.773980516877792
+    }
+  }
+}

@@ -53,12 +53,18 @@ function clearQuery() {
   ui.mubuQuery = ''
 }
 
+function activateSet(n) {
+  const root = work.mubuRootOf(n.id)
+  if (root && root.id !== work.mubuSetId) work.setMubuSet(root.id)
+}
 function select(n) {
+  activateSet(n)
   ui.loreFocusId = n.id
   ui.mubuSelectedId = n.id
 }
 /** 双击条目 → 打开设定详情页（先选中该节点） */
 function openDetail(n) {
+  activateSet(n)
   ui.mubuSelectedId = n.id
   ui.loreDetailId = n.id
 }

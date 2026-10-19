@@ -1,0 +1,56 @@
+[
+  {
+    "file": "editor-@2x.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 180,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「第一幕 / 在纸上开场」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters-@2x.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 99,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「第四幕 / 每个人，都有自己的来处」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world-detail-@2x.png",
+    "state": "world-detail",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 123,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「世界观 / 核心设定」"
+        ]
+      }
+    ]
+  }
+]

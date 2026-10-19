@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>赤月戏 · 折屏戏本 v2 ↔ v3</title>
+<style>
+  @font-face { font-family: OldSong; src: url('assets/oldsong.woff2'); }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #111816; color: #e9dfc6; font: 14px/1.7 'Microsoft YaHei', sans-serif; }
+  a { color: inherit; text-decoration: none; }
+  a:hover { color: #f6dfac; }
+  .top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 26px; min-height: 66px; padding: 10px 32px; background: #151918f2; border-bottom: 1px solid #b99f6640; backdrop-filter: blur(10px); }
+  .brand { display: flex; align-items: baseline; gap: 14px; flex: none; font: 24px/1.2 OldSong, serif; letter-spacing: 4px; color: #f0e7d5; }
+  .brand small { font: 11px 'Microsoft YaHei'; letter-spacing: 2px; color: #bfb59c; }
+  .jump { display: flex; align-items: center; gap: 3px; overflow: auto; scrollbar-width: none; flex: 1; min-width: 0; }
+  .jump a { flex: none; padding: 7px 10px; font-size: 12px; color: #c8bd9f; border: 1px solid transparent; white-space: nowrap; }
+  .jump a:hover { border-color: #b99f6640; background: #cbb06b0f; }
+  .jump a b { font: 11px OldSong; color: #8f7b52; margin-right: 6px; }
+  .links { display: flex; gap: 14px; flex: none; font-size: 12px; color: #d8c18b; }
+  main { max-width: 1560px; margin: 0 auto; padding: 34px 32px 70px; }
+  .intro { display: flex; align-items: flex-end; justify-content: space-between; gap: 40px; padding-bottom: 24px; border-bottom: 1px solid #b99f6640; }
+  .intro h1 { margin: 0 0 10px; font: 400 34px/1.3 OldSong, serif; letter-spacing: 5px; }
+  .intro p { margin: 0; max-width: 760px; color: #bdb397; font-size: 13px; }
+  .intro p b { color: #ead39c; font-weight: 400; }
+  .metrics { display: flex; gap: 26px; flex: none; }
+  .metrics div { text-align: right; color: #a99b80; font-size: 11px; letter-spacing: 1px; }
+  .metrics b { display: block; font: 25px/1.1 OldSong, serif; color: #ead39c; letter-spacing: 1px; }
+  .legend { display: flex; align-items: center; gap: 18px; margin: 18px 0 0; font-size: 11px; color: #a99b80; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .legend i { width: 22px; height: 2px; background: #7d7866; display: inline-block; }
+  .legend .v3line { background: #cfb06b; }
+  .compare { scroll-margin-top: 84px; padding-top: 40px; }
+  .compare-head { display: grid; grid-template-columns: 54px auto minmax(0, 1fr) auto; align-items: baseline; gap: 16px; margin-bottom: 16px; }
+  .compare-head .num { font: 25px/1 OldSong, serif; color: #7f6e4a; }
+  .compare-head h2 { margin: 0; font: 400 26px/1.2 OldSong, serif; letter-spacing: 4px; white-space: nowrap; }
+  .compare-head p { margin: 0; color: #bdb397; font-size: 13px; }
+  .compare-head > a { font-size: 12px; color: #d8c18b; white-space: nowrap; }
+  .shots { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  figure { margin: 0; padding: 9px; background: #18211e; border: 1px solid #9b865540; }
+  figure.v3 { border-color: #c9a95f66; }
+  figcaption { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 2px 4px 10px; font-size: 12px; }
+  figcaption span { font-family: OldSong, serif; letter-spacing: 2px; }
+  figcaption small { color: #a99b80; font-size: 10px; }
+  figure.v3 figcaption span { color: #ead39c; }
+  figure img { display: block; width: 100%; height: auto; border: 1px solid #b69b5d3d; background: #0c1311; }
+  figure a:hover img { outline: 1px solid #cfb06b; outline-offset: 2px; }
+  .extra { padding: 9px 4px 0; font-size: 11px; color: #b9ad8e; text-align: right; }
+  .extra a { color: #d8c18b; border-bottom: 1px solid #b99f6640; }
+  footer { max-width: 1560px; margin: 0 auto; padding: 22px 32px 40px; border-top: 1px solid #b99f6640; display: flex; justify-content: space-between; gap: 20px; color: #a99b80; font-size: 11px; }
+  @media (max-width: 980px) {
+    .top { flex-wrap: wrap; gap: 12px; padding: 12px 18px; }
+    .jump { order: 3; width: 100%; flex-basis: 100%; }
+    .links { margin-left: auto; }
+    main { padding: 24px 18px 50px; }
+    .intro { align-items: flex-start; flex-direction: column; gap: 20px; }
+    .metrics { gap: 20px; }
+    .metrics div { text-align: left; }
+    .compare-head { grid-template-columns: 38px auto minmax(0, 1fr); }
+    .compare-head > a { grid-column: 2 / -1; }
+    .compare-head p { grid-column: 2 / -1; }
+    .shots { grid-template-columns: 1fr; }
+    footer { padding-inline: 18px; flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand">赤月戏<small>折屏戏本 · v2 ↔ v3 视觉对照</small></div>
+  <nav class="jump" aria-label="对照页面">
+    <a href="#shelf"><b>01</b>书架</a>
+    <a href="#editor"><b>02</b>正文</a>
+    <a href="#outline"><b>03</b>大纲</a>
+    <a href="#outline-text"><b>04</b>大纲文本</a>
+    <a href="#world"><b>05</b>设定</a>
+    <a href="#world-detail"><b>06</b>设定详情</a>
+    <a href="#characters"><b>07</b>人物</a>
+    <a href="#characters-graph"><b>08</b>关系图</a>
+    <a href="#inspiration"><b>09</b>灵感</a>
+    <a href="#settings"><b>10</b>设置</a>
+  </nav>
+  <div class="links">
+    <a href="index.html">v3 预览 ↗</a>
+    <a href="../金屏夜梅-重排设计稿/index.html">v2 预览 ↗</a>
+    <a href="../金屏夜梅-重排设计稿/before-after.html">v1 ↔ v2 ↗</a>
+    <a href="视觉升级说明.md">视觉说明 ↗</a>
+  </div>
+</header>
+
+<main>
+  <section class="intro">
+    <div>
+      <h1>从版式正确，到有记忆点</h1>
+      <p>左为 <b>v2 重排稿</b>，右为 <b>v3 折屏戏本</b>。两版都是 1440 × 900，同尺度并排。v3 不改 v2 的 76px 顶栏、章节目录与栏宽，只换一套视觉语法：折缝代替边框，装裱纸代替卡片，朱印/书签代替满铺高亮，月洞/拱形只留给媒体。正文、表单、列表、画布仍保持稳定矩形。</p>
+      <div class="legend">
+        <span><i></i>v2 重排（版式正确）</span>
+        <span><i class="v3line"></i>v3 折屏戏本（去框 + 记忆点）</span>
+        <span>点击任一截图可看原尺寸</span>
+      </div>
+    </div>
+    <div class="metrics">
+      <div><b>10</b>界面状态</div>
+      <div><b>76px</b>统一顶栏</div>
+      <div><b>248px</b>章节目录</div>
+      <div><b>0</b>横向溢出</div>
+    </div>
+  </section>
+
+  <section class="compare" id="shelf">
+    <div class="compare-head">
+      <span class="num">01</span>
+      <h2>书架</h2>
+      <p>首章卡改票根：左上切角、左侧朱红书签、右上“续”印；剧目栏用折缝接舞台，CTA 改切角纸牌。</p>
+      <a href="shelf.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>统一顶栏 · 纸卡首章</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/shelf.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/shelf.png" alt="v2 书架：统一顶栏与纸卡首章"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>票根首章 · 续印 · 折缝剧目</small></figcaption>
+        <a href="screenshots/shelf.png" target="_blank"><img loading="lazy" src="screenshots/shelf.png" alt="v3 书架：票根首章与续印"></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="editor">
+    <div class="compare-head">
+      <span class="num">02</span>
+      <h2>正文</h2>
+      <p>去页内第二层框与三层硬影；稿页/札记用折缝；当前章改朱红书签；收起态换月相进度盘。</p>
+      <a href="editor.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>章节目录 · 稿本 680px</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/editor.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/editor.png" alt="v2 正文：章节目录与纸框"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>装裱稿本 · 朱红书签 · 月相进度</small></figcaption>
+        <a href="screenshots/editor.png" target="_blank"><img loading="lazy" src="screenshots/editor.png" alt="v3 正文：装裱稿本与书签"></a>
+        <div class="extra">另见 <a href="screenshots/editor-collapsed.png" target="_blank">月相进度收起态 ↗</a></div>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="outline">
+    <div class="compare-head">
+      <span class="num">03</span>
+      <h2>大纲 · 自由画布</h2>
+      <p>虚线容器改 L 形角标；节点由卡片改纸片：顶部类型色、胶带、右上切角；控制条文字化。</p>
+      <a href="outline.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>目录 240 · 卡片节点</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/outline.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/outline.png" alt="v2 大纲：卡片节点与虚线容器"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>角标容器 · 纸片节点 · 文字控制条</small></figcaption>
+        <a href="screenshots/outline.png" target="_blank"><img loading="lazy" src="screenshots/outline.png" alt="v3 大纲：纸片节点与角标"></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="outline-text">
+    <div class="compare-head">
+      <span class="num">04</span>
+      <h2>大纲 · 文本视图</h2>
+      <p>稿本改单张装裱纸；目录去外框；标签与筛选文字化；保留 1120px 行长与所有编辑焦点。</p>
+      <a href="outline-text.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>1120px 稿本 · 纸框</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/outline-text.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/outline-text.png" alt="v2 大纲文本：纸框稿本"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>装裱纸 · 无框目录</small></figcaption>
+        <a href="screenshots/outline-text.png" target="_blank"><img loading="lazy" src="screenshots/outline-text.png" alt="v3 大纲文本：装裱纸"></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="world">
+    <div class="compare-head">
+      <span class="num">05</span>
+      <h2>设定 · 幕布</h2>
+      <p>布景去金相框，改卷轴头/拱顶；纸面去闭合边；标签行内化；目录当前项改书签。</p>
+      <a href="world.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>金相框布景 · 纸框</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/world.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/world.png" alt="v2 设定：金相框布景"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>卷轴布景 · 装裱纸 · 书签</small></figcaption>
+        <a href="screenshots/world.png" target="_blank"><img loading="lazy" src="screenshots/world.png" alt="v3 设定：卷轴布景与装裱纸"></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="world-detail">
+    <div class="compare-head">
+      <span class="num">06</span>
+      <h2>设定 · 条目详情</h2>
+      <p>关系面板去外框改暗场；轨道矩形卡改压在轨道线上的文字签；只留中心圆做月洞核心。</p>
+      <a href="world-detail.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>深色面板 · 轨道卡</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/world-detail.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/world-detail.png" alt="v2 设定详情：轨道卡与面板"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>线上文字签 · 月洞核心</small></figcaption>
+        <a href="screenshots/world-detail.png" target="_blank"><img loading="lazy" src="screenshots/world-detail.png" alt="v3 设定详情：线上文字签与月洞核心"></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="characters">
+    <div class="compare-head">
+      <span class="num">07</span>
+      <h2>人物档案</h2>
+      <p>肖像改月洞装裱；演员表从两列卡片改单列缩略图行，当前项书签；卷宗去双层硬影。</p>
+      <a href="characters.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>方形肖像 · 两列演员卡</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/characters.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/characters.png" alt="v2 人物：方形肖像与演员卡"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>月洞肖像 · 单列演员表</small></figcaption>
+        <a href="screenshots/characters.png" target="_blank"><img loading="lazy" src="screenshots/characters.png" alt="v3 人物：月洞肖像与单列演员表"></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="characters-graph">
+    <div class="compare-head">
+      <span class="num">08</span>
+      <h2>人物关系图</h2>
+      <p>肖像节点去硬偏移，改装裱 + 顶部金线；关系词去边框，直接压在关系线上；名册当前行书签。</p>
+      <a href="characters-graph.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>卡片节点 · 标签框</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/characters-graph.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/characters-graph.png" alt="v2 关系图：卡片节点与标签"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>装裱节点 · 线上关系词</small></figcaption>
+        <a href="screenshots/characters-graph.png" target="_blank"><img loading="lazy" src="screenshots/characters-graph.png" alt="v3 关系图：装裱节点与线上关系词"></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="inspiration">
+    <div class="compare-head">
+      <span class="num">09</span>
+      <h2>灵感采集</h2>
+      <p>便签去边框与硬偏移，保留纸片、图钉与旋转；当前态改红钉 + 书签，删除外圈 outline；阅读纸去框。</p>
+      <a href="inspiration.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>纸卡便签 · 当前外框</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/inspiration.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/inspiration.png" alt="v2 灵感：纸卡便签"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>纸片 + 图钉 · 红钉当前态</small></figcaption>
+        <a href="screenshots/inspiration.png" target="_blank"><img loading="lazy" src="screenshots/inspiration.png" alt="v3 灵感：纸片便签与红钉"></a>
+      </figure>
+    </div>
+  </section>
+
+  <section class="compare" id="settings">
+    <div class="compare-head">
+      <span class="num">10</span>
+      <h2>偏好设置</h2>
+      <p>分类当前项改探出的纸书签；预览纸改“样张”，不再第二张同构框；剧场名改竖排朱印。</p>
+      <a href="settings.html">打开 v3 页面 ↗</a>
+    </div>
+    <div class="shots">
+      <figure>
+        <figcaption><span>v2 重排</span><small>满铺分类 · 第二张纸框</small></figcaption>
+        <a href="../金屏夜梅-重排设计稿/screenshots/settings.png" target="_blank"><img loading="lazy" src="../金屏夜梅-重排设计稿/screenshots/settings.png" alt="v2 设置：满铺分类与预览纸框"></a>
+      </figure>
+      <figure class="v3">
+        <figcaption><span>v3 折屏戏本</span><small>书签分类 · 样张 · 朱印</small></figcaption>
+        <a href="screenshots/settings.png" target="_blank"><img loading="lazy" src="screenshots/settings.png" alt="v3 设置：书签分类与样张"></a>
+      </figure>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <span>赤月戏 · 折屏戏本 v3 · 1440 × 900 基准，另做 1080 × 900 检查</span>
+  <span><a href="视觉升级说明.md">视觉升级说明</a> · <a href="capture-report.json">验收数据</a> · <a href="index.html">v3 预览器</a></span>
+</footer>
+
+</body>
+</html>

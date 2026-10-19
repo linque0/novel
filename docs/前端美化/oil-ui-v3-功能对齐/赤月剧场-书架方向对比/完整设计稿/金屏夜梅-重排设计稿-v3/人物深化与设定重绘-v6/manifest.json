@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "project": "赤月戏 · 人物 1 / 3 深化对比",
+  "brief": "沿用原人物界面排版，比较用户偏好的 1、3 两个方向深化前后的素材。设定新稿见本目录 world.html。",
+  "lang": "zh",
+  "round": "人物深化 v6",
+  "nativeViewport": "1440x900",
+  "serve": {
+    "command": "python -m http.server 8895 --bind 127.0.0.1 --directory \"F:/deepseek workplace/novel-studio/docs/前端美化/oil-ui-v3-功能对齐/赤月剧场-书架方向对比/完整设计稿/金屏夜梅-重排设计稿-v3/\"",
+    "cwd": "F:/deepseek workplace/novel-studio",
+    "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E6%B7%B1%E5%8C%96%E4%B8%8E%E8%AE%BE%E5%AE%9A%E9%87%8D%E7%BB%98-v6/style-explorer.html"
+  },
+  "candidates": [
+    {
+      "id": "one-before",
+      "name": "1 · 上一版",
+      "concept": "原彩色折屏与群像剪影。",
+      "typography": "沿用原人物页 OldSong / WenKai / 系统黑体",
+      "palette": [
+        "#133e4a",
+        "#a3382d",
+        "#bb8840"
+      ],
+      "traits": [
+        "v5 留档",
+        "彩色折屏"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E5%B1%8F%E9%A3%8E%E5%89%AA%E5%BD%B1-%E4%B8%89%E7%89%88-v5/A.html"
+    },
+    {
+      "id": "one-after",
+      "name": "1 · 本轮深化",
+      "concept": "调整群像位置，强调彩色折面与简化纹样。",
+      "typography": "沿用原人物页 OldSong / WenKai / 系统黑体",
+      "palette": [
+        "#174151",
+        "#a33b2b",
+        "#c38b43"
+      ],
+      "traits": [
+        "群像上移",
+        "彩色折面",
+        "纹样简化"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E6%B7%B1%E5%8C%96%E4%B8%8E%E8%AE%BE%E5%AE%9A%E9%87%8D%E7%BB%98-v6/characters-01.html"
+    },
+    {
+      "id": "three-before",
+      "name": "3 · 上一版",
+      "concept": "原错位独立屏风与行影。",
+      "typography": "沿用原人物页 OldSong / WenKai / 系统黑体",
+      "palette": [
+        "#172a3a",
+        "#b8792c",
+        "#527b70"
+      ],
+      "traits": [
+        "v5 留档",
+        "错位屏风"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E5%B1%8F%E9%A3%8E%E5%89%AA%E5%BD%B1-%E4%B8%89%E7%89%88-v5/C.html"
+    },
+    {
+      "id": "three-after",
+      "name": "3 · 本轮深化",
+      "concept": "连续起伏屏顶、小幅剪影与大面透光构成纵深。",
+      "typography": "沿用原人物页 OldSong / WenKai / 系统黑体",
+      "palette": [
+        "#152738",
+        "#bd7b2d",
+        "#547366"
+      ],
+      "traits": [
+        "起伏屏顶",
+        "小幅剪影",
+        "透光屏面"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E6%B7%B1%E5%8C%96%E4%B8%8E%E8%AE%BE%E5%AE%9A%E9%87%8D%E7%BB%98-v6/characters-03.html"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "kind": "routing computation; browser frame timings recorded separately",
+  "results": [
+    {
+      "style": "ortho",
+      "nodes": 100,
+      "edges": 150,
+      "coldMs": 21.64,
+      "p50Ms": 1.81,
+      "p95Ms": 3.66,
+      "cacheHits": 20440,
+      "recomputed": 710
+    },
+    {
+      "style": "bezier",
+      "nodes": 100,
+      "edges": 150,
+      "coldMs": 1.9,
+      "p50Ms": 1.18,
+      "p95Ms": 1.82,
+      "cacheHits": 20440,
+      "recomputed": 710
+    }
+  ]
+}

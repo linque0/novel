@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>正文 · 赤月戏 · 重排</title>
+<link rel="stylesheet" href="base.css"><link rel="stylesheet" href="editor-approved.css"><link rel="stylesheet" href="studio.css"><link rel="stylesheet" href="rework.css">
+</head>
+<body data-state="editor">
+<header class="header">
+  <a class="brand" href="shelf.html" aria-label="妙笔书架"><svg class="emblem" viewBox="0 0 44 44" aria-hidden="true"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z"/><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z"/></svg><span>妙笔<small>赤月 · 幻戏</small></span></a>
+  <nav aria-label="功能模块"><a href="shelf.html" class="nav-item">书架</a><a href="editor.html" class="nav-item active" aria-current="page">正文</a><a href="outline.html" class="nav-item">大纲</a><a href="world.html" class="nav-item">设定</a><a href="characters.html" class="nav-item">人物</a><a href="inspiration.html" class="nav-item">灵感</a><a href="settings.html" class="nav-item">设置</a></nav>
+  <button class="profile" data-dialog="个人资料" aria-label="林间的个人资料">林</button>
+</header>
+<main class="c-stage">
+  <img class="backdrop" src="assets/rinpa.webp" alt="金箔折屏、赤月与白梅组成的非对称舞台布景">
+  <div class="project-line"><span>第一卷 / 星图初醒</span><div class="actions"><button class="text-link" data-dialog="查找与替换">查找</button><button class="text-link" data-dialog="章节书签">书签</button><button class="text-link" data-dialog="历史记录">历史</button><button class="text-link" data-dialog="阅读章节">阅读 ↗</button><button class="text-link" data-dialog="独立窗口">独立窗口 ↗</button></div></div>
+  <aside class="c-chapter-rail" aria-label="章节目录">
+    <button class="c-rail-toggle" type="button" data-rail-toggle aria-label="收起章节目录">‹</button>
+    <div class="c-rail-head"><small>赤月戏</small><h2>星尘旅人</h2><span class="seal">雾港纪事</span></div>
+    <div class="c-rail-volume"><span>第一卷 · 星图初醒</span><span>24 章</span></div>
+    <label class="c-rail-search"><svg viewBox="0 0 26 26" aria-hidden="true"><path d="M17 17l6 6M19 11a8 8 0 1 1-16 0 8 8 0 0 1 16 0"/></svg><input type="search" data-chapter-search placeholder="搜索章节" aria-label="搜索章节"></label>
+    <nav class="c-rail-chapters" data-chapter-list>
+      <button class="chapter current" data-chapter="0"><span class="num">01</span><span><b>第一章 · 初雪</b><small>1,253 字</small></span><i>●</i></button>
+      <button class="chapter" data-chapter="1"><span class="num">02</span><span><b>第二章 · 领航员</b><small>2,416 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="2"><span class="num">03</span><span><b>第三章 · 星图的回声</b><small>3,008 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="3"><span class="num">04</span><span><b>第四章 · 白鸽来信</b><small>1,826 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="4"><span class="num">05</span><span><b>第五章 · 失落坐标</b><small>2,104 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="5"><span class="num">06</span><span><b>第六章 · 观测记录</b><small>2,567 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="6"><span class="num">07</span><span><b>第七章 · 冬至之后</b><small>2,230 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="7"><span class="num">08</span><span><b>第八章 · 铜星的低语</b><small>1,984 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="8"><span class="num">09</span><span><b>第九章 · 雾港来信</b><small>2,788 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="9"><span class="num">10</span><span><b>第十章 · 父亲的航线</b><small>3,124 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="10"><span class="num">11</span><span><b>第十一章 · 第十二声</b><small>2,660 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="11"><span class="num">12</span><span><b>第十二章 · 交会</b><small>2,918 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="12"><span class="num">13</span><span><b>第十三章 · 返航</b><small>2,144 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="13"><span class="num">14</span><span><b>第十四章 · 空白的坐标</b><small>2,502 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="14"><span class="num">15</span><span><b>第十五章 · 灯下的人</b><small>1,876 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="15"><span class="num">16</span><span><b>第十六章 · 雪停之前</b><small>2,330 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="16"><span class="num">17</span><span><b>第十七章 · 旧信</b><small>1,642 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="17"><span class="num">18</span><span><b>第十八章 · 星图之外</b><small>2,780 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="18"><span class="num">19</span><span><b>第十九章 · 约定的名字</b><small>2,046 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="19"><span class="num">20</span><span><b>第二十章 · 回声</b><small>2,864 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="20"><span class="num">21</span><span><b>第二十一章 · 最后的钟</b><small>3,120 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="21"><span class="num">22</span><span><b>第二十二章 · 归途</b><small>2,402 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="22"><span class="num">23</span><span><b>第二十三章 · 门</b><small>1,928 字</small></span><i>·</i></button>
+      <button class="chapter" data-chapter="23"><span class="num">24</span><span><b>第二十四章 · 初雪之后</b><small>2,216 字</small></span><i>·</i></button>
+    </nav>
+    <div class="c-rail-foot"><span>共 42 章 · 156,824 字</span><button class="rail-new" data-dialog="新建章节" aria-label="新建章节">＋</button></div>
+    <div class="c-rail-mini" aria-label="章节快捷导航">
+      <span class="mini-current" data-rail-current>01<small>章</small></span>
+      <button class="mini-nav" type="button" data-rail-prev aria-label="上一章">↑</button>
+      <button class="mini-nav" type="button" data-rail-next aria-label="下一章">↓</button>
+    </div>
+  </aside>
+  <section class="c-book">
+    <section class="c-page">
+      <div class="type-tools"><span>京华老宋体 ⌄</span><span>19 ⌄</span><i></i><button><b>B</b></button><button><em>I</em></button><button><u>U</u></button><i></i><button>“ ”</button><button>≡</button><span class="stretch"></span><button data-immersion>沉浸写作 ↗</button></div>
+      <div class="chapter-title"><small>星尘旅人 / 第一卷</small><svg class="ornament" viewBox="0 0 180 28" aria-hidden="true"><path d="M0 14h55m70 0h55M60 14l14-8 16 8-16 8zM90 14l16-8 14 8-14 8zM85 14l5-5 5 5-5 5z"/></svg><h1>第一章 · 初雪</h1><p>雾港，冬至后的第一场雪</p></div>
+      <article class="prose" aria-label="章节正文" contenteditable="true" data-draft><p>穹顶大厅的钟声在雾中回荡了十二下。</p><p>林远把掌心贴在观测台的铜面上。冰凉的触感顺着指骨攀上肩头，三百六十枚星灯悬在头顶，一枚接一枚地暗下去——像被谁依次熄灭的烛火。</p><p>“又熄了一枚。”沈砚说。</p><p>林远没有回答。他望着那片空出来的黑暗，忽然想起父亲离开前说过的话：不要相信一张永远不会改变的星图。</p><p>窗外的雪落得很轻。雾港像一封被反复折叠的信，藏在夜色的褶皱里，等一个迟迟没有归来的收信人。</p><p>他抬头，看见钟楼最高处的窗户里，有一盏灯亮了起来。</p><p>那一刻他忽然明白，星图不是一张纸，而是一个正在呼吸的活物。</p></article>
+      <div class="folio-number">—　01　—</div>
+    </section>
+    <aside class="c-margin"><div class="section-head"><h2>页边留白</h2><span>壹</span></div><div class="note-title"><span>本章备忘</span><span>↗</span></div><p class="note-content" contenteditable="true" aria-label="本章备忘">第十二声钟响，<br>暂时不要解释。</p><div class="references"><a href="characters.html"><span>人</span><b>林远</b><small>观测者</small>↗</a><a href="world-detail.html"><span>设</span><b>星图系统</b><small>核心设定</small>↗</a><a href="outline.html"><span>纲</span><b>铜星熄灭</b><small>第一卷</small>↗</a></div><div class="margin-count"><span>本章字数</span><strong>1,253</strong></div><button class="dream" data-dialog="恍然梦"><svg class="icon" viewBox="0 0 26 26" aria-hidden="true"><path d="M12 2l2.5 7.5L23 12l-8.5 2.5L12 23l-2.5-8.5L1 12l8.5-2.5z"/></svg>恍然梦 ↗</button></aside>
+  </section>
+</main>
+<footer class="studio-footer"><a href="index.html?state=editor">完整设计稿 ↗</a><span>赤月戏 · 重排设计稿 · 星尘旅人</span><div><button data-replay>重播演出</button><button data-static>静态查看</button></div></footer>
+<div id="overlay"></div><div id="toast" role="status" aria-live="polite"></div>
+<script src="design-data.js"></script><script src="studio.js"></script><script src="rework.js"></script>
+</body>
+</html>

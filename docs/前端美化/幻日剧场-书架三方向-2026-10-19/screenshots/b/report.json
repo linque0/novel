@@ -1,0 +1,21 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 2,
+        "examples": [
+          "div.lastline「上次写到 第一章 · 初雪 ↗ 穹顶大厅的钟声在」（2px）",
+          "div.poster-title「星尘旅人」（5px）"
+        ]
+      }
+    ]
+  }
+]

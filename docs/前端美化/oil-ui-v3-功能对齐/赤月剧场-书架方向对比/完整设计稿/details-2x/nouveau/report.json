@@ -1,0 +1,56 @@
+[
+  {
+    "file": "editor-@2x.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 124,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「纸页之间 · 正在续写」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters-@2x.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 200,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「众生的侧影 · 可编辑人物档案」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "world-detail-@2x.png",
+    "state": "world-detail",
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 297,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「世界观 / 核心设定」"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,22 @@
+{
+  "checkedAt": "2026-10-17T06:51:11.227Z",
+  "checks": [
+    "opera: six works, main artwork and title visible; no overflow or broken assets",
+    "opera: book hover responds while retaining its perspective",
+    "opera: search/no-results/reset and selecting a work update the preview",
+    "opera: static mode, replay and rapid replay settle without looping animation",
+    "opera: system reduced-motion preference skips all decorative motion",
+    "nouveau: six works, main artwork and title visible; no overflow or broken assets",
+    "nouveau: book hover responds while retaining its perspective",
+    "nouveau: search/no-results/reset and selecting a work update the preview",
+    "nouveau: static mode, replay and rapid replay settle without looping animation",
+    "nouveau: system reduced-motion preference skips all decorative motion",
+    "avant: six works, main artwork and title visible; no overflow or broken assets",
+    "avant: book hover responds while retaining its perspective",
+    "avant: search/no-results/reset and selecting a work update the preview",
+    "avant: static mode, replay and rapid replay settle without looping animation",
+    "avant: system reduced-motion preference skips all decorative motion",
+    "offline comparison: three live embedded pages load fonts and artwork without a server"
+  ],
+  "count": 16
+}

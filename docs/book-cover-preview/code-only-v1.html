@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>四款作品书封 · 小说工坊</title>
+  <link rel="stylesheet" href="../../src/assets/fonts/fonts-user.css">
+  <link rel="stylesheet" href="code-only-v1.css">
+  <script src="code-only-v1.js" defer></script>
+</head>
+<body>
+  <svg class="svg-definitions" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="paper-grain" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency=".72" numOctaves="3" stitchTiles="stitch"/>
+        <feColorMatrix type="saturate" values="0"/>
+      </filter>
+    </defs>
+  </svg>
+
+  <main>
+    <header class="page-header">
+      <a class="brand" href="./index.html"><span class="brand-mark">坊</span><span>小说工坊<span class="brand-divider">/</span><span class="brand-section">书封设计室</span></span></a>
+      <span class="version">设计探索 <span>·</span> 第 01 版</span>
+    </header>
+
+    <section class="intro" aria-labelledby="page-title">
+      <div><h1 id="page-title">四款作品封面</h1></div>
+      <p class="intro-note">从纸页的触感，到星海的回声。<br>四款独立构图，为你的作品找到合适的表达。</p>
+    </section>
+
+    <form class="preview-toolbar" aria-label="封面预览设置" onsubmit="return false">
+      <label class="field title-field"><span>书名</span><input id="book-title" value="山海来信" placeholder="填写书名" maxlength="64" autocomplete="off"></label>
+      <label class="field author-field"><span>作者</span><input id="book-author" value="林舟" placeholder="未署名" maxlength="24" autocomplete="off"></label>
+      <button class="text-button" id="long-title" type="button">试试长书名 <span aria-hidden="true">↗</span></button>
+      <div class="toolbar-spacer"></div>
+      <fieldset class="segmented"><legend class="sr-only">展示尺寸</legend><button type="button" data-size="large" aria-pressed="true">封面大图</button><button type="button" data-size="shelf" aria-pressed="false">书架尺寸</button></fieldset>
+      <button class="backdrop-toggle" id="backdrop" type="button" aria-pressed="false"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 11.2A6.9 6.9 0 0 1 8.8 3.5a6.7 6.7 0 1 0 7.7 7.7Z"/></svg><span>深色衬底</span></button>
+    </form>
+
+    <section class="cover-gallery" aria-label="四款书籍封面同屏预览">
+      <article class="cover-card" data-style="paper">
+        <div class="book-stage">
+          <div class="book book--paper" role="img" aria-label="纸上藏书：山海来信，林舟 著">
+            <div class="paper-spine" aria-hidden="true"></div>
+            <span class="edition" aria-hidden="true">小说工坊 · 藏书</span>
+            <h2 class="cover-title">山海来信</h2>
+            <div class="paper-imprint"><span class="seal" data-seal aria-hidden="true">林舟</span><span class="cover-author">林舟 著</span></div>
+            <div class="paper-rule" aria-hidden="true"><i></i><span>长篇小说</span></div>
+            <svg class="grain" aria-hidden="true"><rect width="100%" height="100%" filter="url(#paper-grain)"/></svg>
+            <div class="binding" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="caption"><div class="caption-top"><span class="style-number">01</span><h3>纸上藏书</h3><span class="swatch swatch--paper" aria-label="象牙白与靛蓝"></span></div><p class="skin-name">原版工坊</p><p class="style-description">靛蓝布脊，米白纸页。<br>让留白衬出文字。</p><div class="material-tags"><span>纸纹</span><span>宋体</span><span>朱印</span></div></div>
+      </article>
+
+      <article class="cover-card" data-style="space">
+        <div class="book-stage">
+          <div class="book book--space" role="img" aria-label="深空回响：山海来信，林舟 著">
+            <span class="edition" aria-hidden="true">小说工坊 <i></i> 星海文库</span>
+            <svg class="space-art" viewBox="0 0 280 420" fill="none" aria-hidden="true">
+              <defs>
+                <radialGradient id="planet" cx="25%" cy="15%" r="85%"><stop stop-color="#77a4b8"/><stop offset=".18" stop-color="#39566b"/><stop offset=".5" stop-color="#132c44"/><stop offset=".8" stop-color="#071524"/><stop offset="1" stop-color="#050e1a"/></radialGradient>
+                <linearGradient id="atmosphere" x1="70" y1="260" x2="300" y2="430" gradientUnits="userSpaceOnUse"><stop stop-color="#e5f2eb"/><stop offset=".25" stop-color="#7194a8"/><stop offset=".6" stop-color="#2a4c64"/><stop offset="1" stop-color="#122437"/></linearGradient>
+                <clipPath id="planet-clip"><circle cx="279" cy="388" r="145"/></clipPath>
+              </defs>
+              <g stroke="#bb9365" stroke-width=".6" opacity=".73">
+                <ellipse cx="181" cy="303" rx="164" ry="48" transform="rotate(-30 181 303)"/>
+                <ellipse cx="181" cy="303" rx="146" ry="93" transform="rotate(-30 181 303)"/>
+                <ellipse cx="181" cy="303" rx="105" ry="155" transform="rotate(43 181 303)"/>
+                <path d="M38 352 263 169M223 130V420M24 303H280" stroke-dasharray="2 6" opacity=".55"/>
+              </g>
+              <g fill="#e0c197"><circle cx="48" cy="326" r="3"/><circle cx="108" cy="236" r="4.4"/><circle cx="223" cy="196" r="2.5"/><circle cx="92" cy="359" r="2"/></g>
+              <circle cx="279" cy="388" r="146.5" fill="url(#atmosphere)"/>
+              <circle cx="279" cy="388" r="144.7" fill="url(#planet)"/>
+              <g clip-path="url(#planet-clip)" stroke="#94b6be" stroke-width=".65" opacity=".18">
+                <path d="M110 286q75-43 205 1M103 302q99-49 218 4M102 317q97-41 220 10M100 335q100-43 229 14M100 355q100-42 232 18M103 376q100-40 230 25M110 399q103-33 225 28"/>
+                <ellipse cx="279" cy="388" rx="125" ry="145" transform="rotate(-35 279 388)"/><ellipse cx="279" cy="388" rx="84" ry="145" transform="rotate(-35 279 388)"/><ellipse cx="279" cy="388" rx="40" ry="145" transform="rotate(-35 279 388)"/>
+              </g>
+              <g fill="#e4e9e4"><circle cx="34" cy="185" r=".9"/><circle cx="81" cy="205" r=".7"/><circle cx="254" cy="111" r=".8"/><circle cx="251" cy="51" r=".8"/><circle cx="157" cy="192" r=".7"/><circle cx="39" cy="271" r=".8"/><circle cx="193" cy="220" r=".7"/><path d="m48 231 1-6 1 6 6 1-6 1-1 6-1-6-6-1Z"/></g>
+              <circle cx="233" cy="168" r="9" fill="url(#planet)" stroke="#a39276" stroke-width=".6"/>
+              <g stroke="#bb9365" opacity=".55" stroke-width=".6"><circle cx="239" cy="365" r="15"/><circle cx="239" cy="365" r="10"/><path d="M218 365h42m-21-21v42m-10-31 20 20m0-20-20 20"/></g>
+            </svg>
+            <h2 class="cover-title">山海来信</h2>
+            <span class="cover-author">林舟 著</span>
+            <span class="space-coordinate" aria-hidden="true">31° N · 121° E</span>
+            <svg class="grain" aria-hidden="true"><rect width="100%" height="100%" filter="url(#paper-grain)"/></svg>
+            <div class="binding" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="caption"><div class="caption-top"><span class="style-number">02</span><h3>深空回响</h3><span class="swatch swatch--space" aria-label="深海蓝与铜色"></span></div><p class="skin-name">引力书舱</p><p class="style-description">铜色轨道，深蓝星海。<br>写下宇宙里的回响。</p><div class="material-tags"><span>星轨</span><span>铜线</span><span>哑光</span></div></div>
+      </article>
+
+      <article class="cover-card" data-style="glass">
+        <div class="book-stage">
+          <div class="book book--glass" role="img" aria-label="琉光叠影：山海来信，林舟 著">
+            <span class="edition" aria-hidden="true">小说工坊 · 琉光文库</span>
+            <svg class="glass-art" viewBox="0 0 280 420" fill="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="glass-a" x1="20" y1="120" x2="240" y2="390" gradientUnits="userSpaceOnUse"><stop stop-color="#fff" stop-opacity=".8"/><stop offset=".37" stop-color="#b2dce0" stop-opacity=".25"/><stop offset=".65" stop-color="#65becb" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity=".8"/></linearGradient>
+                <linearGradient id="glass-b" x1="75" y1="210" x2="250" y2="340" gradientUnits="userSpaceOnUse"><stop stop-color="#f7e9db" stop-opacity=".5"/><stop offset=".4" stop-color="#fafcf9" stop-opacity=".6"/><stop offset=".7" stop-color="#b0c4de" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity=".8"/></linearGradient>
+                <linearGradient id="glass-edge"><stop stop-color="#fff"/><stop offset=".25" stop-color="#85c8ce"/><stop offset=".5" stop-color="#fff7dc"/><stop offset=".72" stop-color="#cabfdb"/><stop offset="1" stop-color="#fff"/></linearGradient>
+              </defs>
+              <path d="M-35 134 221 222q35 12 35 42v58L16 238q-30-10-30-39Z" fill="url(#glass-a)" stroke="url(#glass-edge)" stroke-width="1.2"/>
+              <path d="M256 264q-2 18-35 31L35 366q-28 11-28 31v-64q0-19 31-32l183-70q34 10 35 33Z" fill="url(#glass-b)" stroke="url(#glass-edge)" stroke-width="1.2"/>
+              <path d="m7 397 263 92v-65L43 344q-36 15-36 53Z" fill="url(#glass-a)" stroke="url(#glass-edge)" stroke-width="1.2"/>
+              <path d="m16 238 240 84M35 366l221-85M43 344l226 80M-8 141l237 82" stroke="#fff" stroke-width=".75" opacity=".8"/>
+              <path d="M210-20v162L280 166V-20Z" fill="url(#glass-a)" stroke="#fff" stroke-opacity=".8"/>
+              <path d="M-20 290 175 217l145 50M-20 299l195-73 145 50" stroke="url(#glass-edge)" stroke-width=".8" opacity=".7"/>
+            </svg>
+            <h2 class="cover-title">山海来信</h2>
+            <span class="glass-vertical" aria-hidden="true">光影之间 · 文字有形</span>
+            <span class="cover-author">林舟 著</span>
+            <div class="binding" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="caption"><div class="caption-top"><span class="style-number">03</span><h3>琉光叠影</h3><span class="swatch swatch--glass" aria-label="冰青与深青"></span></div><p class="skin-name">琉光画境</p><p class="style-description">透光叠片，轻盈文楷。<br>让文字浮于光影之间。</p><div class="material-tags"><span>折射</span><span>文楷</span><span>叠层</span></div></div>
+      </article>
+
+      <article class="cover-card" data-style="moon">
+        <div class="book-stage">
+          <div class="book book--moon" role="img" aria-label="赤月山笺：山海来信，林舟 著">
+            <div class="moon-disc" aria-hidden="true"><svg class="grain" aria-hidden="true"><rect width="100%" height="100%" filter="url(#paper-grain)"/></svg></div>
+            <svg class="mountain-art" viewBox="0 0 280 420" fill="none" aria-hidden="true">
+              <defs><linearGradient id="hill-back" x2="0" y2="1"><stop stop-color="#354239"/><stop offset="1" stop-color="#152720"/></linearGradient><linearGradient id="hill-front" x2="0" y2="1"><stop stop-color="#20352a"/><stop offset="1" stop-color="#101e19"/></linearGradient></defs>
+              <path d="m-15 302 28-22 15 8 20-45 14 8 21-39 13 20 21-9 18 40 20-11 19 31 18-13 23 15 17-30 20 12 30-50 23 17 22-20v220H-15Z" fill="url(#hill-back)" stroke="#93805a" stroke-width=".6"/>
+              <path d="m-10 350 24-23 19 4 24-40 14 11 21-48 18 16 12-5 28 58 20-9 15 28 21-8 18 15 17-37 17 8 19-26 24 20v132H-10Z" fill="#1b3026" stroke="#ae9460" stroke-width=".7"/>
+              <path d="m-20 405 29-39 20 7 24-39 13 8 27-39 11 12 12-4 29 55 19-13 26 25 22-16 22 13 15-24 18 7 25-28v150H-20Z" fill="url(#hill-front)" stroke="#b99c61" stroke-width=".8"/>
+              <g stroke="#a88c59" stroke-width=".6" opacity=".6"><path d="m48 248 3 28-14 20m25-41-2 35 16-14m6-55 4 27-13 35m24-44-3 22 16 27m-7-18 6 29 14 14m-64 1-3 21-21 23m38-27-2 27-13 23m22-48 4 18-9 30m28-56-3 27 19 35m-20-20-1 26 23 17m-42-1-10 39-21 16m29-47-2 29 15 23m-2-43 8 27 22 12m-93-15-3 20-13 14m130-56-3 25 26 29m57-63-5 28-19 13m39-18-5 25-21 17"/></g>
+              <g stroke="#c4a368" stroke-width=".8" opacity=".8"><path d="M45 351v-24m0 10-10-6m10 1 10-8m-6 42v-12m87 19v-26m0 12-8-7m8-1 8-7"/><path d="M30 328q6-7 13-3 9-10 17-1M123 349q5-7 12-3 7-7 14-2"/></g>
+            </svg>
+            <div class="moon-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <h2 class="cover-title">山海来信</h2>
+            <span class="cover-author">林舟 著</span>
+            <span class="seal moon-seal" aria-hidden="true">山海</span>
+            <svg class="grain" aria-hidden="true"><rect width="100%" height="100%" filter="url(#paper-grain)"/></svg>
+            <div class="binding" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="caption"><div class="caption-top"><span class="style-number">04</span><h3>赤月山笺</h3><span class="swatch swatch--moon" aria-label="墨绿与暗红"></span></div><p class="skin-name">赤月戏</p><p class="style-description">赤月入墨，金线叠山。<br>让故事有开场的气韵。</p><div class="material-tags"><span>墨纸</span><span>旧金</span><span>叠山</span></div></div>
+      </article>
+    </section>
+    <footer class="page-footer"><span>纸上藏书 / 深空回响 / 琉光叠影 / 赤月山笺</span><button type="button" id="reset" class="text-button">恢复默认</button></footer>
+    <p class="sr-only" id="announcement" aria-live="polite"></p>
+  </main>
+</body>
+</html>

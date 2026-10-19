@@ -19,8 +19,8 @@
  *
  * 测试钩子（仅本 mock 识别，勿发给真实服务商）：
  *   请求体带 mock_reply（字符串）        → 覆盖固定回复文本
- *   system 消息含【任务：××】标记       → 返回该任务的固定结构化 JSON（四能力 / 自由问答，
- *                                          供 ai-verify.mjs 走「固定 JSON → 卡片渲染 → 应用」全链路）
+ *   system 消息含【任务：××】标记       → 返回该任务的固定结构化 JSON（四能力 / 自由问答）
+ *                                          注：旧版 ai-verify 全链路脚本已退役，本分支暂无脚本消费
  *   请求体带 mock_nonstream（真值）      → 强制走非流式 JSON（curl 直测用）
  *   请求头 x-mock-nonstream: 1          → 同上（供 provider extraHeaders 透传验收容错分支）
  *   API Key 以 -401 / -429 / -402 结尾 → 分别返回 401 鉴权失败 / 429 限流 / 402 余额不足
@@ -74,7 +74,7 @@ const estimateTokens = (s) => Math.max(1, Math.ceil((s || '').length / 2))
 const replyFor = (body) => (typeof body.mock_reply === 'string' ? body.mock_reply : scriptedReply(body) || FIXED_REPLY)
 
 /* ---------- 四能力任务脚本化回复（system 消息【任务：××】标记 → 固定结构化 JSON） ----------
- * 供 tools/ai-verify.mjs 验证「mock 返回固定 JSON → 卡片渲染 → 应用落库」全链路；
+ * 原供已退役的全链路脚本消费，现保留作为固定回复夹具；
  * 内容与 AI 验证书（AI 验证书种子）呼应：人物 林昭/沈青梧、铜符信物、三章短文。 */
 const PLOT_REPLY = JSON.stringify({
   lines: [

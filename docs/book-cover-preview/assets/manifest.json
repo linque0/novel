@@ -1,0 +1,53 @@
+{
+  "version": 2,
+  "created": "2026-10-18",
+  "purpose": "通用书籍封面无字素材；书名与作者由前端叠加，与界面皮肤无绑定",
+  "generator": "built-in image_gen",
+  "originalSize": [
+    1024,
+    1536
+  ],
+  "webSize": [
+    768,
+    1152
+  ],
+  "encoding": "ffmpeg libwebp quality 84; full original retained; no cropping",
+  "assets": [
+    {
+      "id": "cloth-archive",
+      "name": "布面典藏",
+      "original": "originals/cloth-archive.png",
+      "web": "cloth-archive.webp",
+      "layout": "centered two-line title in upper 8–35%; author in bottom 5.5%",
+      "textColor": "#eedcaa",
+      "titleFont": "KingHwa OldSong"
+    },
+    {
+      "id": "mist-paper",
+      "name": "山岚纸本",
+      "original": "originals/mist-paper.png",
+      "web": "mist-paper.webp",
+      "layout": "left aligned title in upper 16–32%; author in bottom 5%",
+      "textColor": "#324b50",
+      "titleFont": "LXGW WenKai"
+    },
+    {
+      "id": "floral-foil",
+      "name": "花影烫金",
+      "original": "originals/floral-foil.png",
+      "web": "floral-foil.webp",
+      "layout": "vertical title in right 14%; horizontal for 5+ characters; author at bottom right",
+      "textColor": "#f0dfbd",
+      "titleFont": "KingHwa OldSong"
+    },
+    {
+      "id": "geometric-print",
+      "name": "几何诗页",
+      "original": "originals/geometric-print.png",
+      "web": "geometric-print.webp",
+      "layout": "single-line title for 1–4 characters at upper 12%; two-line for 5–8 characters; author in bottom 4.8%",
+      "textColor": "#283e60",
+      "titleFont": "Zhaohua Title"
+    }
+  ]
+}

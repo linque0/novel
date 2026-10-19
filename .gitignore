@@ -14,5 +14,8 @@ app
 tools/_*.png
 tools/shot-*.png
 
+# 验收脚本运行快照 / 一次性数据转储（不入库；每次运行都会重新生成）
+tools/_*.json
+
 # 逆向工作区原始产物（第三方压缩代码，不入库）
 .rev-ashes

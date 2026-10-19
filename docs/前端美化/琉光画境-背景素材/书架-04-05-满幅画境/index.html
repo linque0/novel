@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>琉光画境 · 满幅双画境</title>
+<style>
+@font-face{font-family:WenKai;src:url('../../oil-ui-v3-功能对齐/assets/wenkai.woff2')}
+*{box-sizing:border-box}body{--shell:#142e2b;--soft:#c7d9cc;--accent:#e4ddb5;margin:0;background:var(--shell);color:#f3f3e8;font:13px/1.5 "Microsoft YaHei",sans-serif}
+body[data-theme=garden]{--shell:#252b36;--soft:#d8ced7;--accent:#f1c9b9}
+header{min-height:62px;display:flex;align-items:center;gap:18px;padding:10px 24px;border-bottom:1px solid #ffffff18}
+.brand{display:flex;align-items:baseline;gap:13px;white-space:nowrap}.brand b{font:21px WenKai,serif}.brand span{font-size:10px;letter-spacing:3px;color:var(--soft)}
+.themes{display:flex;gap:3px;background:#ffffff08;border:1px solid #ffffff18;border-radius:10px;padding:3px;margin-left:auto}
+button{font:inherit;border:0;color:var(--soft);background:transparent;padding:6px 12px;border-radius:6px;cursor:pointer;transition:background .18s,color .18s}
+button[aria-pressed=true]{background:var(--accent);color:var(--shell)}.modes{display:flex;gap:3px}#motion{border:1px solid #ffffff38;min-width:85px}button:active{transform:translateY(1px)}button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:3px}a{color:inherit;text-decoration:none}
+#stage{position:relative;overflow:hidden;width:100%;background:var(--shell)}#shelf{display:block;width:1440px;height:900px;border:0;transform-origin:top left}#pure{display:none;position:absolute;inset:0;overflow:hidden}.art #pure{display:block}.art #shelf{visibility:hidden}
+.caption{padding:17px 25px;display:flex;gap:16px;align-items:baseline;max-width:1500px;margin:auto}.caption h1{font:23px WenKai,serif;margin:0}.caption p{font-size:12px;margin:0;color:var(--soft)}.caption a{margin-left:auto;font-size:12px;color:var(--soft);white-space:nowrap}
+.gallery{max-width:1500px;margin:auto;display:grid;grid-template-columns:1fr 1fr;gap:18px;padding:0 24px 28px}.choice{position:relative;padding:0;overflow:hidden;border:1px solid #ffffff20;border-radius:12px;text-align:left;display:block}.choice img{display:block;width:100%;aspect-ratio:16/9;object-fit:cover}.choice div{position:absolute;inset:auto 0 0;padding:27px 18px 14px;background:linear-gradient(transparent,#0a1c21df);display:flex;align-items:baseline;gap:12px;color:#fff}.choice b{font:23px WenKai,serif;font-weight:400}.choice small{font-size:12px;color:#f6f3e1cb}.choice[aria-pressed=true]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent);background:none}
+.footer{padding:0 24px 25px;text-align:center;color:var(--soft);font-size:11px;opacity:.7}
+@media(max-width:1000px){header{gap:8px;padding:10px 13px;flex-wrap:wrap}.brand span{display:none}button{padding:5px 9px}.themes{margin-left:auto}.caption{padding:14px;gap:10px;flex-wrap:wrap}.caption a{margin-left:0}.gallery{padding:0 14px 20px;gap:12px}.choice div{display:block;padding:20px 12px 10px}.choice b{font-size:20px}.choice small{display:block;font-size:11px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head>
+<body data-theme="jade">
+<header><div class="brand"><b>琉光画境</b><span>满幅画境</span></div><nav class="themes" aria-label="选择画境"><button data-theme="jade" aria-pressed="true">千峰流碧</button><button data-theme="garden" aria-pressed="false">花汀浮光</button></nav><div class="modes" aria-label="查看方式"><button id="shelf-mode" aria-pressed="true">书架</button><button id="art-mode" aria-pressed="false">画境</button></div><button id="motion" aria-pressed="false">暂停动态</button></header>
+<main id="stage"><iframe id="shelf" title="满幅画境书架效果" src="../../oil-ui-v3-功能对齐/c.html?state=shelf"></iframe><div id="pure" role="img" aria-label="完整的绘画世界与局部动态"></div></main>
+<section class="caption"><h1 id="name">千峰流碧</h1><p id="description">青绿重彩 · 云气穿峰 · 金色江流</p><a id="original" href="jade-scroll.png" target="_blank" rel="noopener">查看原画 ↗</a></section>
+<section class="gallery" aria-label="两幅画境对照"><button class="choice" data-theme="jade" aria-pressed="true"><img src="jade-scroll.png" alt="青绿群峰与江流铺满画面"><div><b>千峰流碧</b><small>青绿矿彩，走进山水长卷</small></div></button><button class="choice" data-theme="garden" aria-pressed="false"><img src="garden-light.png" alt="睡莲、紫藤与暮色倒影的印象派花园"><div><b>花汀浮光</b><small>印象油彩，走进光色花园</small></div></button></section>
+<div class="footer"><span id="status" role="status">正在准备画境</span> · 可暂停观看静态构图</div>
+<script type="module">
+import {mountLandscape} from './landscape.js';
+const themes={
+ jade:{name:'千峰流碧',description:'青绿重彩 · 云气穿峰 · 金色江流',image:'jade-scroll.png',shell:'#14382f',accent:'#e6dbaf',ink:'#f6f5e9',muted:'#d1e0d4',panel:'#143a30ae'},
+ garden:{name:'花汀浮光',description:'印象油彩 · 柳影轻拂 · 暮色流光',image:'garden-light.png',shell:'#293344',accent:'#f1c7b6',ink:'#fcf4ed',muted:'#e1d5dd',panel:'#263244b8'}
+};
+const frame=document.querySelector('#shelf'),stage=document.querySelector('#stage'),pure=document.querySelector('#pure'),motion=document.querySelector('#motion'),status=document.querySelector('#status');
+const media=matchMedia('(prefers-reduced-motion: reduce)');
+let theme=new URLSearchParams(location.search).get('theme')==='garden'?'garden':'jade',art=new URLSearchParams(location.search).get('view')==='art',paused=media.matches;
+let shelfScene,pureScene,revision=0,disposed=false;
+function fit(){const scale=document.documentElement.clientWidth/1440;stage.style.height=(900*scale)+'px';frame.style.transform='scale('+scale+')'}
+function statusUpdate(){const scene=art?pureScene:shelfScene;status.textContent=!scene?'正在准备画境':scene.renderer==='static'?'静态原画':paused?'画境已静止':'动态画境'}
+function controls(){
+ document.body.dataset.theme=theme;document.body.classList.toggle('art',art);
+ document.querySelectorAll('[data-theme]').forEach(button=>{if(button.tagName==='BUTTON')button.setAttribute('aria-pressed',String(button.dataset.theme===theme))});
+ document.querySelector('#shelf-mode').setAttribute('aria-pressed',String(!art));document.querySelector('#art-mode').setAttribute('aria-pressed',String(art));
+ document.querySelector('#name').textContent=themes[theme].name;document.querySelector('#description').textContent=themes[theme].description;
+ document.querySelector('#original').href=themes[theme].image;
+ shelfScene?.setActive(!art);pureScene?.setActive(art);shelfScene?.setPaused(paused);pureScene?.setPaused(paused);
+ motion.textContent=paused?'播放动态':'暂停动态';motion.setAttribute('aria-pressed',String(paused));statusUpdate();
+}
+function styleShelf(doc){
+ const t=themes[theme];let style=doc.querySelector('#full-paint-style');if(!style){style=doc.createElement('style');style.id='full-paint-style';doc.head.append(style)}
+ style.textContent=`
+ body.c{background:${t.shell}!important;--ink:${t.ink};--muted:${t.muted};--accent:${t.accent};--accent-ink:${t.shell};--surface:${t.shell};--raised:#ffffff25;--line:#ffffff38;--wash:#ffffff24}
+ .c .app{position:relative;z-index:1}.c .app-header{background:${t.shell}a6;backdrop-filter:blur(14px)}
+ .c .module-nav{background:${t.shell}91;backdrop-filter:blur(15px);border-color:#ffffff25}
+ .c .nav-item{color:${t.muted}}.c .nav-item.active{background:${t.accent};color:${t.shell}}
+ .c .brand-emblem{background:#fafbef;color:${t.shell}}
+ .c .content{background:transparent}.c .shelf-heading,.c .collection-head{text-shadow:0 2px 8px #091f24}
+ .c .shelf-heading input{background:${t.shell}dc;color:${t.ink};border-color:#ffffff60;backdrop-filter:blur(12px)}
+ .c .shelf-heading input::placeholder{color:${t.muted};opacity:1}
+ .c .feature-copy{width:450px;padding:22px 27px;background:${t.panel};border:1px solid #ffffff30;border-radius:20px;backdrop-filter:blur(13px);box-shadow:0 15px 45px #061b1826}
+ .c .feature-copy h1{font-size:68px;line-height:1.10;letter-spacing:4px;margin:12px 0}
+ .c .feature-copy h1 span{margin-left:44px}.c .feature-copy>p{font-size:16px;line-height:1.8;color:${t.muted}}
+ .c .hero-actions{margin-top:18px}.c .book-meta{margin-top:16px}
+ .c .glass-orb{display:none}.c .mini-book{background:${t.shell}d9;border:1px solid #ffffff3a;box-shadow:0 10px 25px #06131a35;backdrop-filter:blur(12px)}
+ .c .mini-book:hover{background:${t.shell}ee}.c .mini-book .cover-type{color:#173f49}
+ .c .glass-note{left:245px;bottom:13px;background:#fdfbf0ed;color:#29433f;border-color:#fff}
+ .c .glass-note small{color:#516b62}
+ .c .glass-book{box-shadow:0 20px 40px #071b2d4a;background:#ffffff7d}.c .glass-book .cover-type{color:#173f49}
+ .c .primary{box-shadow:0 5px 15px #061e2028}.c .count{border-color:#ffffff65;background:${t.shell}8f}
+ @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+ `;
+}
+async function setup(){
+ const token=++revision;shelfScene?.destroy();pureScene?.destroy();shelfScene=null;pureScene=null;controls();
+ const source=new URL(themes[theme].image,location.href).href,variant=theme,doc=frame.contentDocument;
+ if(doc?.querySelector('.app'))styleShelf(doc);
+ const [s,p]=await Promise.all([
+   doc?.querySelector('.app')?mountLandscape(doc,source,{active:false,variant,onState:statusUpdate}):Promise.resolve(null),
+   mountLandscape(document,source,{active:false,variant,host:pure,onState:statusUpdate})
+ ]);
+ if(token!==revision||disposed){s?.destroy();p?.destroy();return}
+ shelfScene=s;pureScene=p;if(p){pure.append(p.layer);Object.assign(p.layer.style,{position:'absolute'})}
+ controls();
+}
+window.addEventListener('resize',fit);fit();frame.addEventListener('load',setup);
+document.querySelectorAll('button[data-theme]').forEach(button=>button.onclick=()=>{
+ if(theme===button.dataset.theme)return;theme=button.dataset.theme;
+ const url=new URL(location.href);url.searchParams.set('theme',theme);history.replaceState(null,'',url);setup();
+});
+document.querySelector('#shelf-mode').onclick=()=>{art=false;controls()};document.querySelector('#art-mode').onclick=()=>{art=true;controls()};
+motion.onclick=()=>{paused=!paused;controls()};media.addEventListener('change',()=>{paused=media.matches;controls()});
+window.addEventListener('pagehide',e=>{if(!e.persisted){disposed=true;revision++;shelfScene?.destroy();pureScene?.destroy()}});
+controls();if(frame.contentDocument?.readyState==='complete'&&frame.contentDocument?.querySelector('.app'))setup();
+</script></body></html>

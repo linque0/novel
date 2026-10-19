@@ -82,6 +82,7 @@ export async function createWorkRow(payload) {
     deletedAt: null
   }
   await db.works.add(work)
+  await db.appconfig.put({ key: 'olcanvas:' + workId, value: { snap: true, density: 'detail', edgeStyle: 'ortho', edgeWidth: 1.8, arrowSize: 1 } })
   await db.outlines.add({ id: uid(), workId, level: 'master', refId: workId, content: '', updatedAt: t })
   return work
 }

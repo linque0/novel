@@ -1,3 +1,4 @@
+import { relationTransaction, flattenRelations } from '../components/outline/canvas-relations.js'
 import { defineStore } from 'pinia'
 import { db, uid, now } from '../db/database'
 import * as repo from '../db/repo'
@@ -11,6 +12,7 @@ import { useShelfStore } from './shelf'
 import { applyProposal, undoApplication } from '../services/ai/application'
 import { useAiStore } from './ai'
 import { chapterHash, plainChapter } from '../services/ai/contracts'
+import { primaryRole } from '../services/character-tags'
 
 const urlCache = new Map()
 
@@ -46,6 +48,7 @@ export const useWorkStore = defineStore('work', {
     assets: [],
     links: [],
     mubu: [],
+    mubuSetId: null, // 当前设定集（顶层 mubu 节点）id；appconfig mubucoll:<workId> 按作品记忆
     bookmarks: [],
     olnodes: [],
     annotations: [],
@@ -233,10 +236,13 @@ export const useWorkStore = defineStore('work', {
       this.annotations = await db.annotations.where('workId').equals(workId).toArray()
       await this.migrateOlnodes(workId)
       this.olnodes = await db.olnodes.where('workId').equals(workId).toArray()
+      this.olUndo = []; this.olRedo = []; this.olUndoAt = 0
       await this.loadCanvasPrefs()
       await this.loadOlTypes()
       await this.loadWordGoal()
       await this.loadMubuTagMeta()
+      await this.loadMubuSet()
+      this.ensureMubuSet()
       this.prevCounts = new Map(this.liveChapters.map((c) => [c.id, c.wordCount || 0]))
       installWordLogHook(this.prevCounts)
       this.tab = 'chapters'
@@ -965,6 +971,63 @@ export const useWorkStore = defineStore('work', {
       return this.liveMubu().filter((n) => (n.parentId || null) === (parentId || null))
     },
 
+    /* ---------- 设定集：每个顶层节点即一个设定集，条目都在集内 ---------- */
+    mubuRoots() {
+      return this.mubuChildren(null)
+    },
+    /** 节点所属设定集根（沿 parentId 上溯；节点不存在返回 null） */
+    mubuRootOf(id) {
+      let cur = this.mubu.find((n) => n.id === id && !n.deletedAt) || null
+      let guard = 0
+      while (cur?.parentId && guard++ < 100) {
+        cur = this.mubu.find((n) => n.id === cur.parentId && !n.deletedAt) || null
+      }
+      return cur && !cur.parentId ? cur : null
+    },
+    currentMubuRoot() {
+      const live = this.liveMubu()
+      return live.find((n) => n.id === this.mubuSetId && !n.parentId) || live.find((n) => !n.parentId) || null
+    },
+    async loadMubuSet() {
+      try {
+        const row = await db.appconfig.get('mubucoll:' + this.work?.id)
+        this.mubuSetId = row?.value || null
+      } catch {
+        this.mubuSetId = null
+      }
+    },
+    async saveMubuSet() {
+      if (!this.work) return
+      await db.appconfig.put({ key: 'mubucoll:' + this.work.id, value: this.mubuSetId || null })
+    },
+    setMubuSet(id) {
+      const next = id || null
+      if (next === this.mubuSetId) return
+      this.mubuSetId = next
+      void this.saveMubuSet()
+    },
+    /** 当前集失效（被删 / 换作品）时切到第一个设定集 */
+    ensureMubuSet() {
+      const live = this.liveMubu()
+      if (this.mubuSetId && live.some((n) => n.id === this.mubuSetId && !n.parentId)) return
+      const next = live.find((n) => !n.parentId)?.id || null
+      if (next !== this.mubuSetId) {
+        this.mubuSetId = next
+        void this.saveMubuSet()
+      }
+    },
+    /** 新建设定集并切换过去 */
+    createMubuSet(text = '新设定集') {
+      const row = this.mubuAdd(null, null, text)
+      this.setMubuSet(row.id)
+      return row
+    },
+    /** 在当前设定集内新建一条设定（无设定集时自动先建一个） */
+    mubuAddInCurrentSet(text = '', html = null) {
+      const root = this.currentMubuRoot() || this.createMubuSet()
+      return this.mubuAdd(root.id, null, text, html)
+    },
+
     mubuAdd(parentId, afterId = null, text = '', html = null) {
       const siblings = this.mubuChildren(parentId)
       const row = {
@@ -1122,6 +1185,7 @@ export const useWorkStore = defineStore('work', {
         n.deletedAt = t
         autosave.mark('mubu', n)
       }
+      this.ensureMubuSet()
     },
 
     mubuRestore(id) {
@@ -1137,6 +1201,7 @@ export const useWorkStore = defineStore('work', {
       await db.mubu.bulkDelete(all)
       this.mubu = this.mubu.filter((n) => !all.includes(n.id))
       await this.purgeLoreLinksFor('mubu', all)
+      this.ensureMubuSet()
     },
 
     /** 撤销/重做：用快照同步整棵树（增/删/改差异落库） */
@@ -1313,20 +1378,20 @@ export const useWorkStore = defineStore('work', {
       this.olnodePushUndo(true)
       const all = [this.olnodes.find((x) => x.id === id), ...this.olnodeDescendants(id)].filter(Boolean)
       const t = now()
-      const removed = new Set(all.map((n) => n.id))
       for (const n of all) {
         n.deletedAt = t
         autosave.mark('olnodes', n)
       }
-      // 清理其他节点指向被删节点的连线（统一关系层）
-      for (const n of this.liveOlnodes()) {
-        if (Array.isArray(n.rels) && n.rels.some((r) => removed.has(r.toId))) {
-          n.rels = n.rels.filter((r) => !removed.has(r.toId))
+      // A removed target can destroy a host owned by another node. Prune the
+      // full dependency graph, including nested branches, within this undo.
+      const cleaned = relationTransaction(this.olnodes, { type: 'prune' })
+      for (const row of cleaned.nodes) {
+        const n = this.olnodes.find(x => x.id === row.id)
+        if (!n.deletedAt && JSON.stringify(n.rels) !== JSON.stringify(row.rels)) {
+          n.rels = row.rels
           autosave.mark('olnodes', n)
         }
       }
-      // 级联：指向被删节点连线上连接点的连线一并删除（连接点随宿主连线消亡）
-      for (const rid of removed) this.olnodeRemoveCascadeJunctions(rid)
     },
 
     olnodeDescendants(id) {
@@ -1456,12 +1521,12 @@ export const useWorkStore = defineStore('work', {
 
     /** 画布偏好读写（appconfig 按作品隔离） */
     async loadCanvasPrefs() {
+      const workId = this.work?.id
+      this.canvasPrefs = { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8, arrowSize: 1 }
       try {
-        const row = await db.appconfig.get('olcanvas:' + this.work?.id)
-        if (row?.value) this.canvasPrefs = { snap: true, density: 'detail', edgeStyle: 'bezier', edgeWidth: 1.8, arrowSize: 1, ...row.value }
-      } catch {
-        /* 保持默认 */
-      }
+        const row = await db.appconfig.get('olcanvas:' + workId)
+        if (this.work?.id === workId && row?.value) this.canvasPrefs = { ...this.canvasPrefs, ...row.value }
+      } catch { /* 已重置为旧作品的兼容默认值 */ }
     },
     async saveCanvasPrefs() {
       if (!this.work) return
@@ -1748,17 +1813,26 @@ export const useWorkStore = defineStore('work', {
       const arr = n && Array.isArray(n.rels) ? n.rels : []
       return arr.map((r) => ({ arrows: '->', style: '', label: '', kind: '关联', junctions: [], ...r }))
     },
-    olnodeRelAdd(fromId, toId, fields = {}) {
-      if (fromId === toId) return null
-      const n = this.olnodes.find((x) => x.id === fromId)
-      if (!n) return null
-      const arr = this.olnodeRelsOf(fromId)
-      if (arr.some((r) => r.toId === toId && r.kind === (fields.kind || '关联'))) return null
+    /** One validated command = one undo snapshot and one autosave commit. */
+    olnodeRelGesture(command) {
+      const result = relationTransaction(this.olnodes, command, { uid, now: () => Date.now() })
+      if (!result.ok) return result
+      const changes = result.nodes.filter(n => JSON.stringify(n.rels || []) !== JSON.stringify(this.olnodes.find(x => x.id === n.id)?.rels || []))
+      if (!changes.length) return result
       this.olnodePushUndo(true)
-      const rel = { id: uid(), toId, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
-      n.rels = [...arr, rel]
-      autosave.mark('olnodes', n)
-      return rel
+      for (const draft of changes) {
+        const n = this.olnodes.find(n => n.id === draft.id)
+        n.rels = draft.rels
+        autosave.mark('olnodes', n)
+      }
+      return result
+    },
+    olnodeRelReconnect(ownerId, relId, end, endpoint) {
+      return this.olnodeRelGesture({ type: 'reconnect', ownerId, relId, end, endpoint })
+    },
+    olnodeRelAdd(fromId, toId, fields = {}) {
+      const result = this.olnodeRelGesture({ type: 'connect', source: { nodeId: fromId, side: fields.fromSide }, target: { nodeId: toId, side: fields.toSide }, fields })
+      return result.ok ? result.rel : null
     },
     olnodeRelUpdate(ownerId, relId, patch) {
       const n = this.olnodes.find((x) => x.id === ownerId)
@@ -1768,48 +1842,14 @@ export const useWorkStore = defineStore('work', {
     },
     /** 通用 rel 补丁（v1.0.16 塑形用）：目标可以是节点 rels 中的连线，也可以是宿主 rel._out 中的引出连线 */
     olnodeRelPatchAny(ownerId, relId, patch) {
-      const n = this.olnodes.find((x) => x.id === ownerId)
-      if (!n || !Array.isArray(n.rels)) return
-      for (const r of n.rels) {
-        if (r.id === relId) {
-          Object.assign(r, patch)
-          autosave.mark('olnodes', n)
-          return r
-        }
-        const o = (r._out || []).find((x) => x.id === relId)
-        if (o) {
-          Object.assign(o, patch)
-          autosave.mark('olnodes', n)
-          return o
-        }
-      }
+      const e = flattenRelations(this.olnodes).find(e => e.owner.id === ownerId && e.rel.id === relId)
+      if (!e) return
+      Object.assign(e.rel, patch)
+      autosave.mark('olnodes', e.owner)
+      return e.rel
     },
     olnodeRelRemove(ownerId, relId) {
-      const n = this.olnodes.find((x) => x.id === ownerId)
-      if (!n || !Array.isArray(n.rels)) return
-      this.olnodePushUndo(true)
-      n.rels = n.rels.filter((r) => r.id !== relId)
-      autosave.mark('olnodes', n)
-      // 级联：删除连线上所有连接点 → 引用这些连接点的连线一并删除（含递归：被删连线上的连接点同理）
-      const dead = new Set([`${ownerId}:${relId}`])
-      for (let round = 0; round < 8; round++) {
-        let changed = false
-        for (const n2 of this.liveOlnodes()) {
-          if (!Array.isArray(n2.rels)) continue
-          const kept = []
-          for (const r of n2.rels) {
-            if (r.toJunction && dead.has(`${r.toJunction.ownerId}:${r.toJunction.relId}`)) {
-              dead.add(`${n2.id}:${r.id}`)
-              changed = true
-            } else kept.push(r)
-          }
-          if (changed && kept.length !== n2.rels.length) {
-            n2.rels = kept
-            autosave.mark('olnodes', n2)
-          }
-        }
-        if (!changed) break
-      }
+      return this.olnodeRelGesture({ type: 'remove', ownerId, relId })
     },
 
     /* ---------- 连接点（挂在宿主连线上，v1.0.13） ---------- */
@@ -1818,7 +1858,7 @@ export const useWorkStore = defineStore('work', {
     olnodeJunctionAdd(ownerId, relId, t) {
       const n = this.olnodes.find((x) => x.id === ownerId)
       if (!n || !Array.isArray(n.rels)) return null
-      const rel = n.rels.find((r) => r.id === relId)
+      const rel = flattenRelations([n]).find(e => e.rel.id === relId)?.rel
       if (!rel) return null
       this.olnodePushUndo(true)
       const j = { id: uid(), t: Math.max(0, Math.min(1, t)), bornAt: Date.now() }
@@ -1827,73 +1867,20 @@ export const useWorkStore = defineStore('work', {
       return j
     },
     olnodeJunctionRemove(ownerId, relId, junctionId) {
-      const n = this.olnodes.find((x) => x.id === ownerId)
-      if (!n || !Array.isArray(n.rels)) return
-      const rel = n.rels.find((r) => r.id === relId)
-      if (!rel || !Array.isArray(rel.junctions)) return
-      this.olnodePushUndo(true)
-      rel.junctions = rel.junctions.filter((j) => j.id !== junctionId)
-      // 级联：从该连接点引出的连线（宿主 rel._out）一并删除
-      if (Array.isArray(rel._out)) rel._out = rel._out.filter((r) => !(r.fromJunction && r.fromJunction.junctionId === junctionId))
-      autosave.mark('olnodes', n)
-      // 级联：接到该连接点上的连线一并删除
-      for (const n2 of this.liveOlnodes()) {
-        if (!Array.isArray(n2.rels)) continue
-        const kept = n2.rels.filter((r) => !(r.toJunction && r.toJunction.ownerId === ownerId && r.toJunction.relId === relId && r.toJunction.junctionId === junctionId))
-        if (kept.length !== n2.rels.length) {
-          n2.rels = kept
-          autosave.mark('olnodes', n2)
-        }
-      }
+      return this.olnodeRelGesture({ type: 'junction-remove', ownerId, relId, junctionId })
     },
     /** 建一条指向连接点的连线：fromId → 宿主连线上的连接点（连接点作终点） */
     olnodeRelAddToJunction(fromId, host, fields = {}) {
-      const n = this.olnodes.find((x) => x.id === fromId)
-      if (!n) return null
-      const hostNode = this.olnodes.find((x) => x.id === host.ownerId)
-      const hostRel = hostNode?.rels?.find((r) => r.id === host.relId)
-      if (!hostRel || !(hostRel.junctions || []).some((j) => j.id === host.junctionId)) return null
-      this.olnodePushUndo(true)
-      const rel = { id: uid(), toId: null, toJunction: { ...host }, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
-      n.rels = [...(n.rels || []), rel]
-      autosave.mark('olnodes', n)
-      return rel
+      const result = this.olnodeRelGesture({ type: 'connect', source: { nodeId: fromId, side: fields.fromSide }, target: host, fields })
+      return result.ok ? result.rel : null
     },
-    /** 建一条从连接点引出的连线：连接点（起点）→ toId 目标节点 */
     olnodeRelAddFromJunction(host, toId, fields = {}) {
-      const hostNode = this.olnodes.find((x) => x.id === host.ownerId)
-      const hostRel = hostNode?.rels?.find((r) => r.id === host.relId)
-      if (!hostRel || !(hostRel.junctions || []).some((j) => j.id === host.junctionId)) return null
-      const target = this.olnodes.find((x) => x.id === toId)
-      if (!target) return null
-      this.olnodePushUndo(true)
-      const rel = { id: uid(), toId, fromJunction: { ...host }, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
-      hostRel._out = hostRel._out || [] // 引出连线挂在宿主 rel 上（与 junctions 同址，避免新建顶层结构）
-      /* 去重仅限「同一连接点 → 同一目标」：同一条宿主连线上其他连接点引出的同目标连线要保留（v1.0.22 修复） */
-      const outs = hostRel._out.filter((r) => !(r.fromJunction && r.fromJunction.junctionId === host.junctionId && r.toId === toId))
-      outs.push(rel)
-      hostRel._out = outs
-      autosave.mark('olnodes', hostNode)
-      return rel
+      const result = this.olnodeRelGesture({ type: 'connect', source: host, target: { nodeId: toId, side: fields.toSide }, fields })
+      return result.ok ? result.rel : null
     },
-    /** 建一条连接点 → 连接点的连线（线连到线，v1.0.15）：
-     * fromHost 上引出，落到 toHost 的连接点上；两端都钉在各自宿主连线路径上 */
     olnodeRelAddJunctionToJunction(fromHost, toHost, fields = {}) {
-      const fromNode = this.olnodes.find((x) => x.id === fromHost.ownerId)
-      const fromRel = fromNode?.rels?.find((r) => r.id === fromHost.relId)
-      if (!fromRel || !(fromRel.junctions || []).some((j) => j.id === fromHost.junctionId)) return null
-      const toNode = this.olnodes.find((x) => x.id === toHost.ownerId)
-      const toRel = toNode?.rels?.find((r) => r.id === toHost.relId)
-      if (!toRel || !(toRel.junctions || []).some((j) => j.id === toHost.junctionId)) return null
-      this.olnodePushUndo(true)
-      const rel = { id: uid(), toId: null, toJunction: { ...toHost }, fromJunction: { ...fromHost }, label: '', kind: '关联', arrows: '->', style: '', junctions: [], ...fields }
-      fromRel._out = fromRel._out || []
-      /* 去重：同源同目标连接点只留一条 */
-      const outs = fromRel._out.filter((r) => !(r.toJunction && r.toJunction.junctionId === toHost.junctionId))
-      outs.push(rel)
-      fromRel._out = outs
-      autosave.mark('olnodes', fromNode)
-      return rel
+      const result = this.olnodeRelGesture({ type: 'connect', source: fromHost, target: toHost, fields })
+      return result.ok ? result.rel : null
     },
     /** 节点删除时级联清理其 rels 中指向连接点的连线（宿主连线仍可独立存在） */
     olnodeRemoveCascadeJunctions(nodeId) {
@@ -2056,8 +2043,8 @@ export const useWorkStore = defineStore('work', {
       }
       if (scopes.characters) {
         for (const c of this.liveCharacters) {
-          if (((c.name || '') + (c.aliases || '') + (c.content || '')).toLowerCase().includes(ql)) {
-            push({ type: 'characters', id: c.id, title: c.name + (c.role ? `（${c.role}）` : ''), hits: grab(c.content).concat(grab(c.aliases, 1)) })
+          if (((c.name || '') + (c.aliases || '') + (c.role || '') + (c.tags || []).join('') + (c.content || '')).toLowerCase().includes(ql)) {
+            push({ type: 'characters', id: c.id, title: c.name + (primaryRole(c) ? `（${primaryRole(c)}）` : ''), hits: grab(c.content).concat(grab(c.aliases, 1)) })
           }
         }
       }

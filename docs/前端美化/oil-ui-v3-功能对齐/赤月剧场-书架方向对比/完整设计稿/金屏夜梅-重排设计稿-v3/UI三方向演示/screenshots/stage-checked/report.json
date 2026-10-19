@@ -1,0 +1,122 @@
+[
+  {
+    "file": "motion-switch-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "switch",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-switch-start.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 545
+      },
+      "mid": {
+        "file": "motion-switch-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 982
+      },
+      "end": {
+        "file": "motion-switch-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 2647
+      }
+    },
+    "sampling": {
+      "mode": "action",
+      "step": 1,
+      "action": "click",
+      "raw": "click [data-person=\"2\"]"
+    },
+    "durationMs": 2647,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-switch-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  },
+  {
+    "file": "motion-relations-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "relations",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-relations-start.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1419
+      },
+      "mid": {
+        "file": "motion-relations-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 1837
+      },
+      "end": {
+        "file": "motion-relations-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 3506
+      }
+    },
+    "sampling": {
+      "mode": "action",
+      "step": 3,
+      "action": "click",
+      "raw": "click .relation-item"
+    },
+    "durationMs": 3506,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-relations-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  },
+  {
+    "file": "motion-edit-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "edit",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-edit-start.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1694
+      },
+      "mid": {
+        "file": "motion-edit-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 1708
+      },
+      "end": {
+        "file": "motion-edit-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 3770
+      }
+    },
+    "sampling": {
+      "mode": "action",
+      "step": 13,
+      "action": "click",
+      "raw": "click [data-static]"
+    },
+    "durationMs": 3770,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-edit-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  }
+]

@@ -1,0 +1,63 @@
+{
+  "theme": "赤月戏",
+  "version": "v6",
+  "date": "2026-10-18",
+  "mode": "imagegen-built-in",
+  "assets": [
+    {
+      "id": "characters-01",
+      "module": "人物",
+      "name": "1 · 折屏众相深化",
+      "file": "assets/characters-01-folded-cast-v6.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2725636,
+      "sha256": "b8d12822dfb13e47504778f588ba7abb2fd69846edc280a9aef4f6835ab9641e",
+      "source": "C:/Users/linque/.codex/generated_images/01a14dd6-3a1d-78b1-9454-5a70356b1bba/exec-f8150b15-8b6d-4890-8720-ca66837c309d.png",
+      "input": "../人物屏风剪影-三版-v5/assets/A-folded-cast.png",
+      "status": "待用户评审"
+    },
+    {
+      "id": "characters-03",
+      "module": "人物",
+      "name": "3 · 错屏行影深化",
+      "file": "assets/characters-03-staggered-light-v6.png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2512333,
+      "sha256": "db01dfbd346136831a1e5c2b522524cadb9f02b079392cfa071c46b85c913fe8",
+      "source": "C:/Users/linque/.codex/generated_images/01a14dd6-3a1d-78b1-9454-5a70356b1bba/exec-2923d265-4118-455d-9661-bb401068e795.png",
+      "input": "../人物屏风剪影-三版-v5/assets/C-passing-selves.png",
+      "status": "待用户评审"
+    },
+    {
+      "id": "world",
+      "module": "设定",
+      "name": "天仪疆图",
+      "file": "assets/world-celestial-atlas-v6.png",
+      "width": 724,
+      "height": 2172,
+      "bytes": 3013113,
+      "sha256": "81eea0fa14a6e8f3e7acfb50ece51d2b195145389c52f51a88ac03102064065f",
+      "source": "C:/Users/linque/.codex/generated_images/01a14dd6-3a1d-78b1-9454-5a70356b1bba/exec-8f0bbd74-1fe4-4972-82c0-bf2d0374d5f0.png",
+      "styleReference": "../assets/nouveau.webp",
+      "status": "待用户评审"
+    }
+  ],
+  "review": {
+    "type": "主 Agent 画面自检，未独立评审",
+    "viewports": [
+      "1440x900",
+      "1080x900"
+    ],
+    "pages": [
+      "characters-01",
+      "characters-03",
+      "world",
+      "world-detail"
+    ],
+    "screenshots": 8,
+    "functionalTestsRun": false,
+    "applicationAssetsReplaced": false
+  }
+}

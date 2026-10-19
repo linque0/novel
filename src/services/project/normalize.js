@@ -1,5 +1,6 @@
 import { normalizeText, hashContent, rowHash, chapterHash, stableStringify, tokens } from './text.js'
 import { chunkText, paragraphRanges } from './chunker.js'
+import { rolesOf } from '../character-tags.js'
 
 export const PROJECTION_VERSION = 2
 export const SOURCE_TABLES = ['works', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorecats', 'lore', 'mubu', 'olnodes', 'snippets', 'annotations', 'assets', 'links']
@@ -51,7 +52,7 @@ export function projectBook(bundle, previous = []) {
   for (const c of chars.values()) {
     const rels = live('relations').filter((r) => r.fromId === c.id || r.toId === c.id)
     const peers = rels.flatMap((r) => [chars.get(r.fromId), chars.get(r.toId)]).filter(Boolean)
-    const text = [c.name, c.aliases && '别名：' + c.aliases, c.role && '角色：' + c.role, (c.tags || []).join('、'),
+    const text = [c.name, c.aliases && '别名：' + c.aliases, rolesOf(c).length && '角色：' + rolesOf(c).join('、'), (c.tags || []).join('、'),
       ...Object.entries(c.fields || {}).sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => k + '：' + (typeof v === 'object' ? stableStringify(v) : v)),
       normalizeText(c.content, c.fmt), ...rels.map((r) => `${chars.get(r.fromId)?.name || r.fromId} → ${chars.get(r.toId)?.name || r.toId}：${r.label || ''}`)].filter(Boolean).join('\n')
     add('character', c, text, ['人物', c.name || '未命名人物'], 'setting', { aliases: c.aliases, role: c.role, tags: c.tags, temporalStatus: 'unknown' }, [...rels.map((r) => versions('relations', r)), ...peers.map((r) => versions('characters', r))])

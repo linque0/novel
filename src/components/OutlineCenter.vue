@@ -3,14 +3,47 @@
 import TaskLauncher from './ai/TaskLauncher.vue'
 import OIcon from './OIcon.vue'
 import { computed, ref, watch, nextTick } from 'vue'
-import { NPopover } from 'naive-ui'
+import { NPopover, NDropdown } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
+import { popOut } from '../services/panelwindows'
 import { KIND_META } from './outline/canvas-model'
 import DLinkTextMenu from './DLinkTextMenu.vue'
 import OutlineCanvas from './OutlineCanvas.vue'
+import OutlineSidebar from './OutlineSidebar.vue'
 
 const work = useWorkStore()
+const ui = useUiStore()
 const editorEl = ref(null)
+const canvasRef = ref(null)
+/* 赤月戏：模块条上的「整理」「＋模块」走画布已有动作与数据 */
+function tidyCanvas() {
+  canvasRef.value?.tidyAll?.()
+}
+const CRIMSON_MODULE_OPTS = [
+  { label: '事件', key: 'event' },
+  { label: '便签', key: 'note' },
+  { label: '文本框', key: 'textbox' },
+  { label: '容器', key: 'container' }
+]
+function addCrimsonModule(kind) {
+  const n = work.liveOlnodes().length
+  const size = kind === 'textbox' ? { w: 180, h: 64 } : kind === 'container' ? { w: 560, h: 250 } : { w: 220, h: 130 }
+  const row = work.olnodeAdd(null, {
+    kind,
+    title: kind === 'container' ? '新容器' : '',
+    canvasX: 60 + (n % 4) * 224,
+    canvasY: 40 + Math.floor(n / 4) * 116,
+    ...size
+  })
+  work.selOlnodeId = row.id
+  work.canvasFocusTick++
+}
+const crimsonVolume = computed(() => work.liveVolumes.find(v => v.id === work.selVolumeId)?.title || work.liveVolumes[0]?.title || '故事大纲')
+/* 赤月戏：模块条上的「独立窗口」走与「更多 → 拆窗」相同的真实动作 */
+function popOutline() {
+  popOut(work, 'outline', '', `${work.work?.title || ''} · 大纲`)
+}
 
 const COLORS = ['#3c3427', '#8c6f4e', '#c0392b', '#d35400', '#27ae60', '#2980b9', '#8e44ad', '#7f8c8d']
 const HIGHLIGHTS = ['#fff3a3', '#ffd6a5', '#ffa8a8', '#b8f2c9', '#a8d8ff', '#e0c3fc']
@@ -96,7 +129,7 @@ function onCtx(e) {
 </script>
 
 <template>
-  <TaskLauncher module="outline" />
+  <TaskLauncher v-if="!ui.isStudioSkin" module="outline" />
   <div class="outline-surface" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
     <div class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">大纲</span>
@@ -110,9 +143,36 @@ function onCtx(e) {
       </div>
     </div>
 
-    <OutlineCanvas v-if="work.outlineView === 'canvas'" style="flex: 1; min-height: 0" />
+    <!-- 赤月戏：设计稿把视图切换放在应用级模块条里（右侧动作区），这里把同一组按钮送上去 -->
+    <Teleport defer to="#crimson-bar-tools" :disabled="ui.skin !== 'crimson'">
+      <div v-if="ui.skin === 'crimson'" class="crimson-bar-group">
+        <div class="ol-viewtoggle">
+          <button :class="{ on: work.outlineView === 'canvas' }" @click="work.outlineView = 'canvas'">自由画布</button>
+          <button :class="{ on: work.outlineView === 'text' }" @click="work.outlineView = 'text'">文本视图</button>
+        </div>
+        <button class="crimson-bar-button" type="button" title="整理画布模块（固定模块除外）" @click="tidyCanvas">整理</button>
+        <NDropdown trigger="click" :options="CRIMSON_MODULE_OPTS" @select="addCrimsonModule">
+          <button class="crimson-bar-button primary" type="button" title="在画布上新建模块">＋ 模块</button>
+        </NDropdown>
+        <button class="crimson-bar-button" type="button" title="把大纲拆成独立窗口" @click="popOutline">独立窗口 ↗</button>
+      </div>
+    </Teleport>
 
-    <template v-else>
+    <div class="outline-body" :class="{ 'crimson-outline-layout': ui.skin === 'crimson' }">
+      <aside v-if="ui.skin === 'crimson'" class="crimson-outline-directory">
+        <OutlineSidebar />
+      </aside>
+      <section class="outline-main" :class="{ 'crimson-outline-main': ui.skin === 'crimson' }">
+        <div v-if="ui.skin === 'crimson' && work.outlineView === 'canvas'" class="crimson-canvas-caption">
+          <h2>{{ crimsonVolume }}</h2><span>自由编排 · 事件、章节与线索</span>
+        </div>
+        <OutlineCanvas v-if="work.outlineView === 'canvas'" ref="canvasRef" style="flex: 1; min-height: 0" />
+
+        <template v-else>
+          <div class="outline-text-body" :class="{ 'crimson-outline-folio': ui.skin === 'crimson' }">
+            <div v-if="ui.skin === 'crimson'" class="paper-running">
+              <span>{{ work.work?.title || '作品' }} / 大纲</span><span>{{ crimsonVolume }}</span>
+            </div>
       <p v-if="cur" class="ol-meta" style="font-size:12px;color:var(--text-dim)"><span class="ol-meta-tag">{{ cur.outlineNature==='written'?'已写内容纲 · 来源变化后需要重新总结':'未来大纲计划' }}</span><span class="ol-meta-state">{{ cur.progress==='completed'?'已完成':cur.progress==='drafted'?'已写待确认':'尚未完成' }}</span></p>
       <div v-if="cur" class="ol-editor-head">
         <input
@@ -186,7 +246,11 @@ function onCtx(e) {
           <pre v-if="kidText(k)" class="ol-kid-text">{{ kidText(k) }}</pre>
         </div>
       </div>
-    </template>
+            <div v-if="ui.skin === 'crimson'" class="folio-number">—　{{ crimsonVolume }}　—</div>
+          </div>
+        </template>
+      </section>
+    </div>
 
     <DLinkTextMenu ref="dlMenu" />
   </div>

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "project": "赤月戏 · 人物屏风剪影",
+  "brief": "沿用金屏夜梅 v3 人物页的真实排版，只比较三张屏风剪影背景素材。灵感图已通过。",
+  "lang": "zh",
+  "round": "人物屏风 v5",
+  "nativeViewport": "1440x900",
+  "serve": {
+    "command": "python -m http.server 8895 --bind 127.0.0.1 --directory \"F:/deepseek workplace/novel-studio/docs/前端美化/oil-ui-v3-功能对齐/赤月剧场-书架方向对比/完整设计稿/金屏夜梅-重排设计稿-v3/\"",
+    "cwd": "F:/deepseek workplace/novel-studio",
+    "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E5%B1%8F%E9%A3%8E%E5%89%AA%E5%BD%B1-%E4%B8%89%E7%89%88-v5/style-explorer.html"
+  },
+  "candidates": [
+    {
+      "id": "a",
+      "name": "折屏众相",
+      "concept": "以彩色折面承托群像剪影，让人物布景成为卷宗背后的屏风。",
+      "typography": "沿用原稿 OldSong / WenKai / 系统黑体，字号与排版不变",
+      "palette": [
+        "#133e4a",
+        "#a3382d",
+        "#bb8840",
+        "#e8dcc2"
+      ],
+      "traits": [
+        "折屏明暗交替",
+        "小幅群像剪影",
+        "蓝红与暖金"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E5%B1%8F%E9%A3%8E%E5%89%AA%E5%BD%B1-%E4%B8%89%E7%89%88-v5/A.html"
+    },
+    {
+      "id": "b",
+      "name": "纱幕叠影",
+      "concept": "让透光纱屏中的匿名侧影表现角色的内外层次。",
+      "typography": "沿用原稿 OldSong / WenKai / 系统黑体，字号与排版不变",
+      "palette": [
+        "#94aca8",
+        "#857484",
+        "#633f54",
+        "#eadcc4"
+      ],
+      "traits": [
+        "曲面纱屏",
+        "半透叠影",
+        "青瓷与藕紫"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E5%B1%8F%E9%A3%8E%E5%89%AA%E5%BD%B1-%E4%B8%89%E7%89%88-v5/B.html"
+    },
+    {
+      "id": "c",
+      "name": "错屏行影",
+      "concept": "借前后错位的独立屏风和行影，表现角色在故事中的出入。",
+      "typography": "沿用原稿 OldSong / WenKai / 系统黑体，字号与排版不变",
+      "palette": [
+        "#172a3a",
+        "#b8792c",
+        "#527b70",
+        "#974a34"
+      ],
+      "traits": [
+        "独立屏风错位",
+        "行走剪影",
+        "靛蓝与琥珀"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E5%B1%8F%E9%A3%8E%E5%89%AA%E5%BD%B1-%E4%B8%89%E7%89%88-v5/C.html"
+    }
+  ]
+}

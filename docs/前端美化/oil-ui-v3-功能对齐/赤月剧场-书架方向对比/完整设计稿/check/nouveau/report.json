@@ -1,0 +1,58 @@
+[
+  {
+    "file": "editor.png",
+    "state": "editor",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 205,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「纸页之间 · 正在续写」"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 14,
+        "examples": [
+          "span「／ 林间的创作空间」（4.05:1）",
+          "span「书架」（3.89:1）",
+          "span「大纲」（3.89:1）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "characters.png",
+    "state": "characters",
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 225,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「众生的侧影 · 可编辑人物档案」"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 30,
+        "examples": [
+          "span「／ 林间的创作空间」（4.05:1）",
+          "span「书架」（3.89:1）",
+          "span「正文」（3.89:1）"
+        ]
+      }
+    ]
+  }
+]

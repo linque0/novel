@@ -1,0 +1,42 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 128,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 5,
+        "examples": [
+          "small「赤月 · 幻戏」",
+          "small「伏笔 · 时间」",
+          "small「场景 · 线索」"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "page-@2x.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 266,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 5,
+        "examples": [
+          "small「赤月 · 幻戏」",
+          "small「伏笔 · 时间」",
+          "small「场景 · 线索」"
+        ]
+      }
+    ]
+  }
+]

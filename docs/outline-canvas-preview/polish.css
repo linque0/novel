@@ -1,0 +1,41 @@
+/* Final reading-size and canvas geometry refinements. */
+.edges{width:6000px;height:5000px}
+.palette-button{padding:11px 7px;gap:6px;font-size:11px}
+.palette-button span{white-space:nowrap}
+.kind-volume .node-title{font-size:23px;letter-spacing:0;white-space:nowrap}
+.kind-volume .node-body{color:#d1ded3}
+.workspace-header{padding-top:18px;padding-bottom:17px}
+.node-body{font-size:13px;line-height:1.7;color:#586759}
+.node-footer{font-size:10px;color:#65765e;padding-top:7px}
+.node-title{margin-top:10px;margin-bottom:6px}
+.node-inner{padding-top:15px;padding-bottom:15px}
+.kind-note .node-body{color:#766238}
+.kind-note .node-footer{color:#7a663c}
+.node-kicker{color:#577184}
+.kind-note .node-kicker{color:#8a6f38}
+.kind-cite .node-kicker{color:#786580}
+.kind-textbox .node-kicker{color:#627659}
+.kind-anchor .node-kicker{color:#8c644d}
+.kind-volume .node-kicker{color:#d5dec8}
+.node-index{opacity:1}
+.breadcrumb>span:first-child,.edition{color:#67745f}
+.eyebrow,.workspace-header .eyebrow{color:#63775c}
+.project-summary p,.section-label,.section-label>span,.workspace-meta,.tool-label,.text-button,.segmented button{color:#626f59}
+.sidebar-bottom,.workspace-footer,.keycap,.material-card p,.materials-heading p,.materials-footer>span{color:#66765a}
+.group-header{color:#506947}
+.group-count,.group-footer{color:#566d4a}
+.relation-legend{color:#5f7256}
+.kind-textbox .node-body{color:#5d7151}
+.canvas-watermark{color:#7c8c70;font-size:13px;opacity:.8}
+.inspector-head,.inspector label,.inspector p,.edge-inspector>span{color:#617451}
+.layer{color:#56694e}
+.material-card>a{color:#526d49}
+.kind-note .node-kicker{color:#806432}
+.edge-label{font-size:calc(12px / var(--canvas-zoom,1));padding:3px 7px}
+.relation-legend{font-size:11px}
+.node-footer{font-size:11px;padding-top:6px}
+.node-title{margin-top:8px;margin-bottom:5px}
+@media(max-width:850px){.node-inner{padding-top:12px;padding-bottom:12px}.node-kicker,.node-footer{font-size:13px}.node-index{font-size:11px}.relation-legend{font-size:11px}}
+@media(max-width:850px){.app-shell{grid-template-columns:minmax(0,1fr)}.sidebar{display:none}.brand{width:166px}.workspace-footer>span:last-child{display:none}}
+@media(max-width:1000px){.palette-button{font-size:10px;padding:9px 5px;gap:4px}.palette-button svg{width:14px;height:14px}}
+@media(max-width:650px){.workspace-header{padding:17px 18px}.canvas-watermark{font-size:11px}}

@@ -1,3 +1,5 @@
+import { createRoute, planOrthogonal, routePoint, trimRoute, channelCost } from './canvas-routing.js'
+export { projectOnRoute, flattenRoute, shapePorts, routeIsClear, labelPoint } from './canvas-routing.js'
 /* 自由模块画布纯逻辑（8.8.2 / 计划书 9.4.2）：元数据、尺寸、容器派生盒、布局算法、骨架模板。
  * 零依赖（不 import Vue），可被 node 直跑自测（tools/canvas-model-test.mjs）。 */
 
@@ -101,30 +103,6 @@ export function segHitsRect(ax, ay, bx, by, r) {
   return maxx > r.x && minx < r.x + r.w && maxy > r.y && miny < r.y + r.h
 }
 
-/** 折点去重（合并重复点与共线中点） */
-function dedupePoints(pts) {
-  const out = []
-  for (const p of pts) {
-    const last = out[out.length - 1]
-    if (last && Math.abs(last.x - p.x) < 0.5 && Math.abs(last.y - p.y) < 0.5) continue
-    out.push({ x: p.x, y: p.y })
-  }
-  for (let i = out.length - 2; i >= 1; i--) {
-    const a = out[i - 1]
-    const m = out[i]
-    const b = out[i + 1]
-    if ((Math.abs(a.x - m.x) < 0.5 && Math.abs(m.x - b.x) < 0.5) || (Math.abs(a.y - m.y) < 0.5 && Math.abs(m.y - b.y) < 0.5)) out.splice(i, 1)
-  }
-  return out
-}
-
-/** 折线任一线段是否与障碍相交 */
-function pathHits(pts, obstacles) {
-  for (let i = 0; i < pts.length - 1; i++)
-    for (const o of obstacles) if (segHitsRect(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, o)) return true
-  return false
-}
-
 /** 带皮命中测试（A* 与拉直用）：贴边滑行（间距 < 2px）视为穿过，保证绕行段至少留出可视间隙 */
 function segHitsSkin(ax, ay, bx, by, r, pad = 2) {
   return segHitsRect(ax, ay, bx, by, { x: r.x - pad, y: r.y - pad, w: r.w + pad * 2, h: r.h + pad * 2 })
@@ -136,12 +114,18 @@ function segHitsSkin(ax, ay, bx, by, r, pad = 2) {
  * 全局择优，不再产生包络大环绕与重复平行段。dir0 / dirGoal 为出/入桩行进方向
  * （端点处的转弯同样计价），返回 p1→p2 折点数组（含两端），不可达返回 null。
  */
-function astarOrtho(p1, p2, obstacles, margin, dir0, dirGoal, turnPenalty) {
+function astarOrtho(p1, p2, obstacles, margin, dir0, dirGoal, turnPenalty, context = {}) {
   const xs = [p1.x, p2.x]
   const ys = [p1.y, p2.y]
   for (const o of obstacles) {
     xs.push(o.x - margin, o.x + o.w + margin)
     ys.push(o.y - margin, o.y + o.h + margin)
+  }
+  for (const p of [...(context.waypoints || []), ...(context.previous?.pts || [])]) { xs.push(p.x); ys.push(p.y) }
+  // Stable parallel lanes are candidates, never hard exclusions (crossings remain legal).
+  for (const s of context.occupiedSegments || []) {
+    if (Math.abs(s.a.y-s.b.y)<.01) ys.push(s.a.y-12,s.a.y+12)
+    else if (Math.abs(s.a.x-s.b.x)<.01) xs.push(s.a.x-12,s.a.x+12)
   }
   xs.sort((a, b) => a - b)
   ys.sort((a, b) => a - b)
@@ -227,7 +211,7 @@ function astarOrtho(p1, p2, obstacles, margin, dir0, dirGoal, turnPenalty) {
     const cell = s >> 2
     const ci = cell % NX
     const cj = (cell - ci) / NX
-    if (ci === gxi && cj === gyi) {
+    if (ci === gxi && cj === gyi && (dirGoal == null || (d ^ 1) !== dirGoal)) {
       const pts = []
       for (let t = s; t >= 0; t = came[t]) {
         const c = t >> 2
@@ -255,8 +239,11 @@ function astarOrtho(p1, p2, obstacles, margin, dir0, dirGoal, turnPenalty) {
         nj = cj - 1
       }
       const goal = ni === gxi && nj === gyi
+      if (goal && dirGoal != null && (nd ^ 1) === dirGoal) continue
+      let congestion = 0
+      for (const seg of context.occupiedSegments || []) congestion += channelCost({ x: X[ci], y: Y[cj] }, { x: X[ni], y: Y[nj] }, seg.a, seg.b)
       const ng =
-        g + Math.abs(X[ni] - X[ci]) + Math.abs(Y[nj] - Y[cj]) + (nd === d ? 0 : turnPenalty) + (goal && nd !== dirGoal ? turnPenalty : 0)
+        g + Math.abs(X[ni] - X[ci]) + Math.abs(Y[nj] - Y[cj]) + (nd === d ? 0 : turnPenalty) + (goal && dirGoal != null && nd !== dirGoal ? turnPenalty : 0) + congestion
       const ns = stateOf(ni, nj, nd)
       if (ng < gScore[ns] - 1e-9) {
         gScore[ns] = ng
@@ -268,186 +255,9 @@ function astarOrtho(p1, p2, obstacles, margin, dir0, dirGoal, turnPenalty) {
   return null
 }
 
-/**
- * 拉直收敛：子路径能以更短的直连或 L 形替代且不穿障碍时替换之，
- * 消除 A* 网格化残留的小折/绕步；首末段方向（端口出桩/入桩）保持不变。
- */
-function simplifyOrtho(pts, obstacles) {
-  const manh = (a, b) => Math.abs(b.x - a.x) + Math.abs(b.y - a.y)
-  const clear = (a, b) => {
-    for (const o of obstacles) if (segHitsSkin(a.x, a.y, b.x, b.y, o)) return false
-    return true
-  }
-  const sgn = (v) => (v > 0.5 ? 1 : v < -0.5 ? -1 : 0)
-  for (let guard = 0; guard < 12; guard++) {
-    let changed = false
-    for (let i = 1; i < pts.length - 2 && !changed; i++) {
-      const ix = sgn(pts[i].x - pts[i - 1].x)
-      const iy = sgn(pts[i].y - pts[i - 1].y)
-      for (let j = i + 2; j < pts.length - 1; j++) {
-        const ox = sgn(pts[j + 1].x - pts[j].x)
-        const oy = sgn(pts[j + 1].y - pts[j].y)
-        const a = pts[i]
-        const b = pts[j]
-        const dx = sgn(b.x - a.x)
-        const dy = sgn(b.y - a.y)
-        let base = 0
-        for (let k = i; k < j; k++) base += manh(pts[k], pts[k + 1])
-        /* 替换段不得与首/末段反向（避免折返出重叠段）：直连候选四向都查 */
-        if (!(ix && dx === -ix) && !(iy && dy === -iy) && !(ox && dx === -ox) && !(oy && dy === -oy)) {
-          if ((Math.abs(a.x - b.x) < 0.5 || Math.abs(a.y - b.y) < 0.5) && clear(a, b)) {
-            pts.splice(i + 1, j - i - 1)
-            changed = true
-            break
-          }
-        }
-        /* L 形候选按各自首/末段方向查折返：横先纵后查 ix/oy，纵先横后查 iy/ox */
-        let best = null
-        for (const [c, rvs] of [
-          [{ x: b.x, y: a.y }, (ix && dx === -ix) || (oy && dy === -oy)],
-          [{ x: a.x, y: b.y }, (iy && dy === -iy) || (ox && dx === -ox)]
-        ]) {
-          if (rvs) continue
-          if ((Math.abs(c.x - a.x) < 0.5 && Math.abs(c.y - a.y) < 0.5) || (Math.abs(c.x - b.x) < 0.5 && Math.abs(c.y - b.y) < 0.5)) continue
-          const l = manh(a, c) + manh(c, b)
-          if (l < base - 0.5 && clear(a, c) && clear(c, b) && (!best || l < best.l)) best = { c, l }
-        }
-        if (best) {
-          pts.splice(i + 1, j - i - 1, best.c)
-          changed = true
-          break
-        }
-      }
-    }
-    if (!changed) break
-  }
-  return dedupePoints(pts)
-}
-
-/** 单段绕障（旧贪心算法用）：横向段从矩形上/下缘绕，纵向段从左/右缘绕（取近侧）；
- * detours 为累计偏移——同一障碍被多段命中时逐步外扩，避免相邻绕行段贴边互穿 */
-function detourAround(a, b, r, margin, detours) {
-  const extra = detours * margin
-  if (Math.abs(a.y - b.y) < 0.5) {
-    const xa = Math.max(Math.min(a.x, b.x), r.x)
-    const xb = Math.min(Math.max(a.x, b.x), r.x + r.w)
-    const up = a.y <= r.y + r.h / 2
-    const ny = up ? r.y - margin - extra : r.y + r.h + margin + extra
-    return [{ x: xa, y: a.y }, { x: xa, y: ny }, { x: xb, y: ny }, { x: xb, y: a.y }]
-  }
-  const ya = Math.max(Math.min(a.y, b.y), r.y)
-  const yb = Math.min(Math.max(a.y, b.y), r.y + r.h)
-  const left = a.x <= r.x + r.w / 2
-  const nx = left ? r.x - margin - extra : r.x + r.w + margin + extra
-  return [{ x: a.x, y: ya }, { x: nx, y: ya }, { x: nx, y: yb }, { x: a.x, y: yb }]
-}
-
-/**
- * [v0.4.15 兜底] 旧贪心逐段绕行：初始包络拓扑 + 逐段检测命中并外扩绕行。
- * 仅在 A* 不可达的病态布局（节点重叠等）时由 routeOrthogonal 调用。
- */
-function routeOrthogonalLegacy(from, fromSide, to, toSide, obstacles, stub = 18, margin = 16) {
-  const ds = sideDir(fromSide)
-  const de = sideDir(toSide)
-  /* 桩长：源/目标矩形在障碍表时，桩必须延伸出矩形（锚点在边缘上，直线距离为 0 → 取矩形宽高 + margin） */
-  const srcOb = obstacles.find((o) => from.x > o.x - 0.5 && from.x < o.x + o.w + 0.5 && from.y > o.y - 0.5 && from.y < o.y + o.h + 0.5)
-  const dstOb = obstacles.find((o) => to.x > o.x - 0.5 && to.x < o.x + o.w + 0.5 && to.y > o.y - 0.5 && to.y < o.y + o.h + 0.5)
-  const stubS = srcOb ? Math.max(stub, Math.max(srcOb.w, srcOb.h) + margin) : stub
-  const stubE = dstOb ? Math.max(stub, Math.max(dstOb.w, dstOb.h) + margin) : stub
-  const p1 = { x: from.x + ds.x * stubS, y: from.y + ds.y * stubS }
-  const p2 = { x: to.x + de.x * stubE, y: to.y + de.y * stubE }
-  let pts
-  if (ds.x !== 0 && de.x !== 0) {
-    const sameDir = ds.x === de.x && Math.sign(p2.x - p1.x) === ds.x
-    if (sameDir && (p2.x - p1.x) * ds.x > 0) {
-      const mx = (p1.x + p2.x) / 2
-      pts = [from, p1, { x: mx, y: p1.y }, { x: mx, y: p2.y }, p2, to]
-    } else {
-      const ys = obstacles.map((o) => [o.y - margin, o.y + o.h + margin]).flat()
-      const envTop = Math.min(...ys, p1.y, p2.y)
-      const envBot = Math.max(...ys, p1.y, p2.y)
-      const my = (from.y + to.y) / 2 <= (envTop + envBot) / 2 ? envTop : envBot
-      pts = [from, p1, { x: p1.x, y: my }, { x: p2.x, y: my }, p2, to]
-    }
-  } else if (ds.y !== 0 && de.y !== 0) {
-    const sameDir = ds.y === de.y && Math.sign(p2.y - p1.y) === ds.y
-    if (sameDir && (p2.y - p1.y) * ds.y > 0) {
-      const my = (p1.y + p2.y) / 2
-      pts = [from, p1, { x: p1.x, y: my }, { x: p2.x, y: my }, p2, to]
-    } else {
-      const xs = obstacles.map((o) => [o.x - margin, o.x + o.w + margin]).flat()
-      const envLeft = Math.min(...xs, p1.x, p2.x)
-      const envRight = Math.max(...xs, p1.x, p2.x)
-      const mx = (from.x + to.x) / 2 <= (envLeft + envRight) / 2 ? envLeft : envRight
-      pts = [from, p1, { x: mx, y: p1.y }, { x: mx, y: p2.y }, p2, to]
-    }
-  } else if (ds.x !== 0) {
-    pts = [from, p1, { x: p2.x, y: p1.y }, p2, to]
-  } else {
-    pts = [from, p1, { x: p1.x, y: p2.y }, p2, to]
-  }
-  pts = dedupePoints(pts)
-  const detours = new Map()
-  for (let round = 0; round < 24; round++) {
-    let hit = null
-    outer: for (let i = 0; i < pts.length - 1; i++) {
-      for (const ob of obstacles) {
-        if (segHitsRect(pts[i].x, pts[i].y, pts[i + 1].x, pts[i + 1].y, ob)) {
-          hit = { i, ob }
-          break outer
-        }
-      }
-    }
-    if (!hit) break
-    const key = `${Math.round(hit.ob.x)},${Math.round(hit.ob.y)}`
-    const d = (detours.get(key) || 0) + 1
-    detours.set(key, d)
-    pts.splice(hit.i + 1, 0, ...detourAround(pts[hit.i], pts[hit.i + 1], hit.ob, margin, d - 1))
-    pts = dedupePoints(pts)
-  }
-  return pts
-}
-
-/**
- * 正交避障路由（v0.4.16 全局最优）：两端沿端口外法线出短桩，先试最简首形
- * （Z / L，无碰撞直接采用）；被挡或端口背对时在稀疏网格上跑 A* 求全局最短
- * 折线并拉直收敛——贴障碍 margin 通道择近路，无包络大环绕、无重复段；
- * 病态布局（节点重叠致不可达）退回旧贪心绕行。返回折点数组（含起终点）。
- */
-export function routeOrthogonal(from, fromSide, to, toSide, obstacles = [], stub = 18, margin = 16) {
-  const ds = sideDir(fromSide)
-  const de = sideDir(toSide)
-  const p1 = { x: from.x + ds.x * stub, y: from.y + ds.y * stub }
-  const p2 = { x: to.x + de.x * stub, y: to.y + de.y * stub }
-  /* 候选首形：目标在行进方向前方走 Z 形，垂直端口走 L 形；背对端口不设首形（A* 择优环绕） */
-  let naive = null
-  if (ds.x !== 0 && de.x !== 0) {
-    if (Math.sign(p2.x - p1.x) === ds.x) {
-      const mx = (p1.x + p2.x) / 2
-      naive = [from, p1, { x: mx, y: p1.y }, { x: mx, y: p2.y }, p2, to]
-    }
-  } else if (ds.y !== 0 && de.y !== 0) {
-    if (Math.sign(p2.y - p1.y) === ds.y) {
-      const my = (p1.y + p2.y) / 2
-      naive = [from, p1, { x: p1.x, y: my }, { x: p2.x, y: my }, p2, to]
-    }
-  } else if (ds.x !== 0) {
-    naive = [from, p1, { x: p2.x, y: p1.y }, p2, to]
-  } else {
-    naive = [from, p1, { x: p1.x, y: p2.y }, p2, to]
-  }
-  if (naive && !pathHits(naive, obstacles)) return dedupePoints(naive)
-  /* 桩端被压进某个矩形时放宽该矩形（出/入桩穿越已由端口决定，无法避免） */
-  const inside = (p, o) => p.x > o.x && p.x < o.x + o.w && p.y > o.y && p.y < o.y + o.h
-  const obs2 = obstacles.filter((o) => !inside(p1, o) && !inside(p2, o))
-  const dir0 = ds.x !== 0 ? (ds.x > 0 ? 0 : 1) : ds.y > 0 ? 2 : 3
-  const dirGoal = de.x !== 0 ? (de.x > 0 ? 1 : 0) : de.y > 0 ? 3 : 2
-  const mid = astarOrtho(p1, p2, obs2, margin, dir0, dirGoal, margin * 2)
-  if (mid) {
-    const full = simplifyOrtho(dedupePoints([from, ...mid, to]), obs2)
-    if (!pathHits(full, obs2)) return full
-  }
-  return routeOrthogonalLegacy(from, fromSide, to, toSide, obstacles, stub, margin)
+/** Orthogonal compatibility entry. Unreachable routes retain endpoints; routeEdge adds status. */
+export function routeOrthogonal(from, fromSide, to, toSide, obstacles = [], stub = 18, margin = 16, context = {}) {
+  return planOrthogonal(from, fromSide, to, toSide, obstacles, stub, margin, context, astarOrtho).pts
 }
 
 /** 折线路径（拐圆角），返回 SVG d 字符串 */
@@ -487,54 +297,9 @@ export function polyMid(pts) {
   return pts[pts.length - 1]
 }
 
-/**
- * 严格端口连线统一入口：返回 { d, mid, startDir, endDir, a, b, avoided }。
- * bezier 风格且不穿障碍时用贝塞尔（控制点沿端口外法线）；
- * 正交风格或贝塞尔途经障碍时改走正交绕障折线。
- */
-export function routeEdge(a, fromSide, b, toSide, obstacles = [], style = 'bezier', stub = 18, margin = 16) {
-  const ds = sideDir(fromSide)
-  const de = sideDir(toSide)
-  let needOrtho = style === 'ortho'
-  if (!needOrtho && obstacles.length) {
-    const dx = Math.max(36, Math.hypot(b.x - a.x, b.y - a.y) / 2)
-    const c1 = { x: a.x + ds.x * dx, y: a.y + ds.y * dx }
-    const c2 = { x: b.x + de.x * dx, y: b.y + de.y * dx }
-    for (let i = 1; i <= 11 && !needOrtho; i++) {
-      const t = i / 12
-      const u = 1 - t
-      const x = u * u * u * a.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * b.x
-      const y = u * u * u * a.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * b.y
-      for (const o of obstacles) {
-        if (x > o.x && x < o.x + o.w && y > o.y && y < o.y + o.h) {
-          needOrtho = true
-          break
-        }
-      }
-    }
-  }
-  if (!needOrtho) {
-    const dx = Math.max(36, Math.hypot(b.x - a.x, b.y - a.y) / 2)
-    const c1 = { x: a.x + ds.x * dx, y: a.y + ds.y * dx }
-    const c2 = { x: b.x + de.x * dx, y: b.y + de.y * dx }
-    const d = `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
-    const mid = { x: (a.x + 3 * c1.x + 3 * c2.x + b.x) / 8, y: (a.y + 3 * c1.y + 3 * c2.y + b.y) / 8 }
-    return { d, mid, startDir: { x: c1.x - a.x, y: c1.y - a.y }, endDir: { x: b.x - c2.x, y: b.y - c2.y }, a, b, c1, c2, avoided: false }
-  }
-  const pts = routeOrthogonal(a, fromSide, b, toSide, obstacles, stub, margin)
-  const p1 = pts[1] || a
-  const p0 = pts[pts.length - 2] || b
-  const last = pts[pts.length - 1]
-  return {
-    d: pathFromPoints(pts),
-    mid: polyMid(pts),
-    startDir: { x: p1.x - a.x, y: p1.y - a.y },
-    endDir: { x: last.x - p0.x, y: last.y - p0.y },
-    a,
-    b,
-    pts,
-    avoided: true
-  }
+/** Unified visible segments; optional routing context preserves the existing call signature. */
+export function routeEdge(a, fromSide, b, toSide, obstacles = [], style = 'bezier', stub = 18, margin = 16, context = {}) {
+  return createRoute(a, fromSide, b, toSide, obstacles, style, stub, margin, context, astarOrtho)
 }
 
 /**
@@ -542,105 +307,7 @@ export function routeEdge(a, fromSide, b, toSide, obstacles = [], style = 'bezie
  * 消除粗线帽盖住三角内部的"穿线"感。trime/trtrims 分别为末/首端回缩长度（=箭头尺寸）。
  */
 export function trimEdgeD(g, trime = 0, trims = 0) {
-  if (!g || (!trime && !trims)) return g.d
-  if (g.pts && g.pts.length > 1) {
-    const pts = g.pts.map((p) => ({ ...p }))
-    /* 末端回退：沿折线从终点向内走 trime 长度（越过拐点就继续） */
-    if (trime > 0) {
-      let rem = trime
-      for (let i = pts.length - 1; i > 0 && rem > 0; i--) {
-        const l = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y)
-        if (l > rem) {
-          const f = (l - rem) / l
-          pts[i] = { x: pts[i - 1].x + (pts[i].x - pts[i - 1].x) * f, y: pts[i - 1].y + (pts[i].y - pts[i - 1].y) * f }
-          rem = 0
-        } else {
-          rem -= l
-          pts.splice(i, 1)
-        }
-      }
-    }
-    /* 首端回退同理 */
-    if (trims > 0) {
-      let rem = trims
-      for (let i = 0; i < pts.length - 1 && rem > 0; i++) {
-        const l = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
-        if (l > rem) {
-          const f = rem / l
-          pts[i] = { x: pts[i].x + (pts[i + 1].x - pts[i].x) * f, y: pts[i].y + (pts[i + 1].y - pts[i].y) * f }
-          rem = 0
-        } else {
-          rem -= l
-          pts.splice(i, 1)
-          i--
-        }
-      }
-    }
-    return pathFromPoints(pts)
-  }
-  if (g.c1 && g.c2) {
-    /* 贝塞尔：de Casteljau 在 t 处细分（公式已数值验证）。
-     * 一阶：B1=lerp(a,c1,t) B2=lerp(c1,c2,t) B3=lerp(c2,b,t)
-     * 二阶：C1=lerp(B1,B2,t) C2=lerp(B2,B3,t)  P(t)=lerp(C1,C2,t)
-     * 前段 = [a, B1, C1, P]（曲线 0→t）；后段 = [P, C2, B3, b]（曲线 t→1）。
-     * 回缩量按弧长给（=箭头底边深度），而参数 t 与弧长非线性——端部控制点外拉时
-     * 端头行进更快，直接 t=回缩量/弦长 会多缩出缝隙。
-     * 改为数值搜索：沿 t 细分采样累计弧长，二分找到「从端点起弧长 = trim」的 t 再细分取段 */
-    const lerp = (p, q, f) => ({ x: p.x + (q.x - p.x) * f, y: p.y + (q.y - p.y) * f })
-    let a = g.a
-    let c1 = g.c1
-    let c2 = g.c2
-    let b = g.b
-    const pointOn = (t) => {
-      const u = 1 - t
-      return {
-        x: u * u * u * a.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * b.x,
-        y: u * u * u * a.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * b.y
-      }
-    }
-    /* 从 fromEnd 侧端点起，累计弧长达到 trim 的参数 t（采样 + 线性内插） */
-    const tForArc = (trim, fromEnd) => {
-      const N = 40
-      const pts = []
-      for (let i = 0; i <= N; i++) pts.push(pointOn(i / N))
-      if (fromEnd) pts.reverse()
-      let acc = 0
-      for (let i = 0; i < N; i++) {
-        const l = Math.hypot(pts[i + 1].x - pts[i].x, pts[i + 1].y - pts[i].y)
-        if (acc + l >= trim) {
-          const f = (trim - acc) / (l || 1)
-          const t = fromEnd ? 1 - (i + f) / N : (i + f) / N
-          return Math.max(0, Math.min(1, t))
-        }
-        acc += l
-      }
-      return fromEnd ? 0 : 1
-    }
-    const split = (t) => {
-      const B1 = lerp(a, c1, t)
-      const B2 = lerp(c1, c2, t)
-      const B3 = lerp(c2, b, t)
-      const C1 = lerp(B1, B2, t)
-      const C2 = lerp(B2, B3, t)
-      return { B1, C1, C2, B3, P: lerp(C1, C2, t) }
-    }
-    if (trime > 0) {
-      /* 末端回缩：保留前段，细分点 = 从 b 端量起弧长 trime 处 */
-      const { B1, C1, P } = split(tForArc(trime, true))
-      c1 = B1
-      c2 = C1
-      b = P
-    }
-    if (trims > 0) {
-      /* 首端回缩：保留后段，细分点 = 从 a 端量起弧长 trims 处 */
-      const { C2, B3, P } = split(tForArc(trims, false))
-      a = P
-      c1 = C2
-      c2 = B3
-    }
-    return `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
-  }
-  return g.d
+  return g ? trimRoute(g, trime, trims) : ''
 }
 
 /**
@@ -676,35 +343,7 @@ export function customEdgeGeom(a, b, c) {
 
 /** 连线路径参数 t∈[0,1] 处的点：折线按弧长插值，贝塞尔按三次曲线求值。
  * 连接点位置由宿主连线路径派生（v1.0.13），节点挪位/重排后连线重算，连接点随之回到线上。 */
-export function pointAtT(g, t) {
-  if (!g) return null
-  const tt = Math.max(0, Math.min(1, t))
-  if (g.pts && g.pts.length > 1) {
-    const ls = []
-    let total = 0
-    for (let i = 0; i < g.pts.length - 1; i++) {
-      const l = Math.hypot(g.pts[i + 1].x - g.pts[i].x, g.pts[i + 1].y - g.pts[i].y)
-      ls.push(l)
-      total += l
-    }
-    let rem = total * tt
-    for (let i = 0; i < ls.length; i++) {
-      if (rem <= ls[i] || i === ls.length - 1) {
-        const f = ls[i] ? rem / ls[i] : 0
-        return { x: g.pts[i].x + (g.pts[i + 1].x - g.pts[i].x) * f, y: g.pts[i].y + (g.pts[i + 1].y - g.pts[i].y) * f }
-      }
-      rem -= ls[i]
-    }
-  }
-  if (g.c1 && g.c2) {
-    const u = 1 - tt
-    return {
-      x: u * u * u * g.a.x + 3 * u * u * tt * g.c1.x + 3 * u * tt * tt * g.c2.x + tt * tt * tt * g.b.x,
-      y: u * u * u * g.a.y + 3 * u * u * tt * g.c1.y + 3 * u * tt * tt * g.c2.y + tt * tt * tt * g.b.y
-    }
-  }
-  return { x: g.a.x + (g.b.x - g.a.x) * tt, y: g.a.y + (g.b.y - g.a.y) * tt }
-}
+export function pointAtT(g, t) { return routePoint(g, t) }
 
 /**
  * 为新节点找一个不与现有矩形重叠的落点：从起点逐格右移扫描，超过行宽换行。

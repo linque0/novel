@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>赤月戏 v3 接入验收</title>
+<style>
+:root{--ink:#151918;--paper:#eee5cc;--gold:#cfb06b;--gold-paper:#7a5f2c;--seal:#a84135}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:#e9dfc6;font:14px/1.8 "Microsoft YaHei",sans-serif}
+main{max-width:1500px;margin:auto;padding:44px 28px 70px}
+header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;border-bottom:1px solid #cfb06b40;padding-bottom:22px;margin-bottom:30px}
+h1{margin:0;font:400 38px/1.2 "STSong","SimSun",serif;letter-spacing:6px;color:#f4ecd9}
+.eyebrow{font-size:11px;letter-spacing:4px;color:var(--gold)}
+p{color:#c9bea6;margin:8px 0}
+a{color:#e3c98f;text-decoration:none}
+a:hover{text-decoration:underline}
+nav{display:flex;gap:18px;flex-wrap:wrap;font-size:12px}
+h2{margin:34px 0 14px;font:400 24px "STSong","SimSun",serif;letter-spacing:3px;color:#f1e8d3}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+figure{margin:0;background:#1b211e;border-top:1px solid #cfb06b40}
+figure img{display:block;width:100%;height:auto;background:#0c1210}
+figcaption{padding:10px 12px;font-size:12px;color:#c9bea6}
+figcaption b{color:#f1e8d3;font-weight:400;margin-right:10px}
+small{color:#9f957d}
+footer{margin-top:44px;border-top:1px solid #cfb06b30;padding-top:18px;font-size:12px;color:#9f957d}
+@media(max-width:900px){.grid{grid-template-columns:1fr}header{display:block}h1{font-size:30px}}
+</style>
+</head>
+<body><main>
+<header>
+  <div>
+    <div class="eyebrow">赤月戏 · 应用接入验收 · 2026-10-18</div>
+    <h1>折屏戏本 v3</h1>
+    <p>真实应用 10 屏 + 1080×680 窄窗 + 设置窗口；人物 / 设定 / 灵感已换新背景。</p>
+  </div>
+  <nav>
+    <a href="../../赤月戏-v3接入记录.md">接入记录 ↗</a>
+    <a href="../../oil-ui-v3-功能对齐/赤月剧场-书架方向对比/完整设计稿/金屏夜梅-重排设计稿-v3/index.html">v3 设计稿 ↗</a>
+    <a href="capture-report.json">验收报告 ↗</a>
+  </nav>
+</header>
+
+<h2>1440 × 900</h2>
+<section class="grid">
+  <figure><a href="shelf.png"><img src="shelf.png" alt="书架"></a><figcaption><b>01 书架</b>76px 顶栏 · 七模块 · 316 剧目栏 · 票根首章</figcaption></figure>
+  <figure><a href="editor.png"><img src="editor.png" alt="正文"></a><figcaption><b>02 正文</b>248 章节目录 · 296 稿本 · 252 札记</figcaption></figure>
+  <figure><a href="outline.png"><img src="outline.png" alt="大纲画布"></a><figcaption><b>03 大纲 · 自由画布</b>240 目录 · 纸片节点 · 胶带与切角</figcaption></figure>
+  <figure><a href="outline-text.png"><img src="outline-text.png" alt="大纲文本"></a><figcaption><b>04 大纲 · 文本</b>连续稿本 · 240 目录</figcaption></figure>
+  <figure><a href="world.png"><img src="world.png" alt="世界设定"></a><figcaption><b>05 设定 · 幕布</b>220 布景 · 纸面树 · 240 目录</figcaption></figure>
+  <figure><a href="world-detail.png"><img src="world-detail.png" alt="设定详情"></a><figcaption><b>06 设定 · 详情</b>200 布景 · 纸面 · 340 关系折景</figcaption></figure>
+  <figure><a href="characters.png"><img src="characters.png" alt="人物档案"></a><figcaption><b>07 人物</b>330×420 拱顶肖像 · 竖排演员表 · 卷宗纸</figcaption></figure>
+  <figure><a href="characters-graph.png"><img src="characters-graph.png" alt="人物关系图"></a><figcaption><b>08 关系图</b>浅纸画布 · 260 深色名册 · 装裱节点</figcaption></figure>
+  <figure><a href="inspiration.png"><img src="inspiration.png" alt="灵感"></a><figcaption><b>09 灵感</b>220 灯河布景 · 420 手记墙 · 阅读纸</figcaption></figure>
+  <figure><a href="settings.png"><img src="settings.png" alt="设置"></a><figcaption><b>10 设置</b>1000×700 · 书签分类 · 朱印场签 · 260 预览</figcaption></figure>
+</section>
+
+<h2>1080 × 680</h2>
+<section class="grid">
+  <figure><a href="narrow-shelf.png"><img src="narrow-shelf.png" alt="书架 1080"></a><figcaption><b>书架</b>280 剧目栏 · 无横向溢出</figcaption></figure>
+  <figure><a href="narrow-editor.png"><img src="narrow-editor.png" alt="正文 1080"></a><figcaption><b>正文</b>216 / 248 / 210</figcaption></figure>
+  <figure><a href="narrow-outline.png"><img src="narrow-outline.png" alt="大纲 1080"></a><figcaption><b>大纲</b>216 目录 · 画布收缩</figcaption></figure>
+  <figure><a href="narrow-world.png"><img src="narrow-world.png" alt="设定 1080"></a><figcaption><b>设定</b>190 / 180</figcaption></figure>
+  <figure><a href="narrow-characters.png"><img src="narrow-characters.png" alt="人物 1080"></a><figcaption><b>人物</b>300×380 · 卷宗左 362</figcaption></figure>
+  <figure><a href="narrow-inspiration.png"><img src="narrow-inspiration.png" alt="灵感 1080"></a><figcaption><b>灵感</b>190 / 360 · 标题完整</figcaption></figure>
+</section>
+
+<footer>
+  验收命令：<code>node tools/crimson-v3-verify.mjs</code>（需 Vite 5173） · 结果 PASS，fail: []，页面错误 0。<br>
+  设计稿与 v1/v2/v3/v4 目录未改动；本次只接 crimson 皮肤。
+</footer>
+</main></body></html>

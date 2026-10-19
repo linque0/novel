@@ -1,0 +1,62 @@
+{
+  "name": "纸本叙事工作台",
+  "version": 1,
+  "date": "2026-10-18",
+  "generatedWith": "built-in image_gen",
+  "originalSize": [
+    1536,
+    1024
+  ],
+  "webSize": [
+    900,
+    600
+  ],
+  "assets": [
+    {
+      "id": "event",
+      "type": "event card",
+      "png": "originals/event.png",
+      "webp": "event.webp"
+    },
+    {
+      "id": "note",
+      "type": "sticky note",
+      "png": "originals/note.png",
+      "webp": "note.webp"
+    },
+    {
+      "id": "cite",
+      "type": "quotation card",
+      "png": "originals/cite.png",
+      "webp": "cite.webp"
+    },
+    {
+      "id": "textbox",
+      "type": "free text sheet",
+      "png": "originals/textbox.png",
+      "webp": "textbox.webp"
+    },
+    {
+      "id": "container",
+      "type": "group panel",
+      "png": "originals/container.png",
+      "webp": "container.webp"
+    },
+    {
+      "id": "anchor",
+      "type": "chapter bookmark",
+      "png": "originals/anchor.png",
+      "webp": "anchor.webp"
+    },
+    {
+      "id": "volume",
+      "type": "volume index",
+      "png": "originals/volume.png",
+      "webp": "volume.webp"
+    }
+  ],
+  "vectors": [
+    "connector-specimen.svg"
+  ],
+  "note": "文字和连线由前端实时绘制；所有素材未烘焙内容。"
+}

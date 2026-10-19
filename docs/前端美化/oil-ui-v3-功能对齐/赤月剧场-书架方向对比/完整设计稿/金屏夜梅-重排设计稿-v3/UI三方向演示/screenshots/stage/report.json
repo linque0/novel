@@ -1,0 +1,38 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 391,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "span「雾港 / 人物卷」"
+        ]
+      },
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 1,
+        "examples": [
+          "div.stage-motive「心之所向 寻找父亲留下的航线，理解星图为何会改变」（::before）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 8,
+        "examples": [
+          "button.edit-action「执笔 · 编辑人物」（3.51:1）",
+          "span.section-label「星尘旅人」（3.61:1）",
+          "button「人物小传」（2.35:1）"
+        ]
+      }
+    ]
+  }
+]

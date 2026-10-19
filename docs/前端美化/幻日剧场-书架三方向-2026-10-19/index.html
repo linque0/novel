@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幻日剧场 · 书架首屏三方向</title>
+<style>
+@font-face{font-family:'OldSong';src:url('assets/fonts/oldsong.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'WenKai';src:url('assets/fonts/wenkai.woff2') format('woff2');font-display:swap}
+:root{
+  --bg:#0d0c10;--panel:#141218;--line:#ffffff1a;--pearl:#eee7db;--muted:#a39b90;--faint:#746f68;--gold:#d9b877;--red:#b44b38;
+  --serif:'OldSong','Songti SC',serif;--kai:'WenKai','Kaiti SC',serif;--sans:'Noto Sans SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--pearl)}
+body{font-family:var(--sans);-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+.wrap{max-width:1440px;margin:0 auto;padding:34px 48px 26px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;border-bottom:1px solid var(--line);padding-bottom:18px}
+.title h1{margin:0;font-family:var(--serif);font-weight:400;font-size:36px;letter-spacing:6px}
+.title p{margin:9px 0 0;font-family:var(--kai);font-size:12px;letter-spacing:1.6px;color:var(--muted)}
+.meta{text-align:right;font-family:var(--kai);font-size:13px;line-height:1.8;letter-spacing:1.4px;color:#9a9286}
+.meta b{font-weight:400;color:var(--gold)}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:30px;margin-top:24px}
+.card{min-width:0;display:flex;flex-direction:column}
+.shot{position:relative;display:block;border:1px solid var(--line);background:#08070b;overflow:hidden}
+.shot img{display:block;width:100%;height:auto;transition:transform .35s ease,filter .35s ease}
+.shot:hover img{transform:scale(1.012);filter:brightness(1.04)}
+.shot::after{content:'打开原尺寸 ↗';position:absolute;right:10px;bottom:9px;font-family:var(--kai);font-size:10px;letter-spacing:1.4px;color:#f4ecdd;background:#08070bcc;padding:4px 8px;opacity:0;transition:opacity .2s}
+.shot:hover::after{opacity:1}
+.card-head{display:flex;align-items:baseline;gap:12px;margin-top:14px}
+.card-head .letter{font-family:var(--sans);font-size:10px;letter-spacing:2px;color:var(--gold)}
+.card-head h2{margin:0;font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:3px}
+.card-head .tag{margin-left:auto;font-family:var(--kai);font-size:10.5px;letter-spacing:1px;color:#8f887d}
+.card p{margin:9px 0 0;font-family:var(--kai);font-size:13px;line-height:1.85;letter-spacing:.4px;color:#c0b8ac}
+.card .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px}
+.card .tags span{font-family:var(--kai);font-size:10px;letter-spacing:1px;color:#9e968a;border:1px solid #ffffff17;padding:4px 8px}
+.card .open{margin-top:11px;font-family:var(--kai);font-size:11px;letter-spacing:1.3px;color:var(--gold);border-bottom:1px solid #d9b87755;align-self:flex-start;padding-bottom:3px}
+
+.reco{margin-top:28px;display:grid;grid-template-columns:1.25fr 1fr;gap:34px;border-top:1px solid var(--line);padding-top:20px}
+.reco h2{margin:0;font-family:var(--serif);font-weight:400;font-size:20px;letter-spacing:3px}
+.reco h2 b{color:var(--gold);font-weight:400}
+.reco p{margin:9px 0 0;max-width:520px;font-family:var(--kai);font-size:13px;line-height:1.9;letter-spacing:.35px;color:#c0b8ac}
+.reco p strong{font-weight:400;color:var(--pearl);border-bottom:1px solid #d9b87766}
+.reco ul{margin:10px 0 0;padding:0;list-style:none;display:grid;gap:7px}
+.reco li{font-family:var(--kai);font-size:12px;line-height:1.7;color:#b0a89c;padding-left:14px;position:relative}
+.reco li::before{content:'—';position:absolute;left:0;color:var(--gold);opacity:.6}
+.foot{display:flex;justify-content:space-between;align-items:center;margin-top:26px;border-top:1px solid var(--line);padding-top:12px;font-family:var(--kai);font-size:10.5px;letter-spacing:1.4px;color:#91897d}
+.foot a{color:#a89a80}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="title">
+      <h1>幻日剧场 · 书架首屏三方向</h1>
+      <p>同一批作品、同一份数据；三种骨架、三种舞台语法。均为静态方向稿。</p>
+    </div>
+    <div class="meta">
+      1440 × 900　·　2026.10.19<br>
+      美术：自制矢量插画　·　<b>未修改应用代码</b>
+    </div>
+  </header>
+
+  <main class="grid">
+    <article class="card">
+      <a class="shot" href="a-curtain.html" target="_blank" rel="noopener"><img src="screenshots/a/page.png" alt="方向 A 幕启三界 首屏"></a>
+      <div class="card-head"><span class="letter">A</span><h2>幕启三界</h2><span class="tag">暗场 / 镜框舞台</span></div>
+      <p>一座正在开演的剧场。三块世界景片同时立起，主作品立在台唇，五部续演压成舞台票根；主操作与书架一眼可达。</p>
+      <div class="tags"><span>镜框台口</span><span>三联景片</span><span>底部票根</span></div>
+      <a class="open" href="a-curtain.html" target="_blank" rel="noopener">打开 A 原尺寸 ↗</a>
+    </article>
+
+    <article class="card">
+      <a class="shot" href="b-playbill.html" target="_blank" rel="noopener"><img src="screenshots/b/page.png" alt="方向 B 演出年册 首屏"></a>
+      <div class="card-head"><span class="letter">B</span><h2>演出年册</h2><span class="tag">纸本 / 节目册</span></div>
+      <p>一本可以带走的演出年册。超大宋体题名、木刻版画海报与横向节目表；把书架做成作品集，安静、耐看、有出版物的重量。</p>
+      <div class="tags"><span>纸本编排</span><span>木刻海报</span><span>节目表</span></div>
+      <a class="open" href="b-playbill.html" target="_blank" rel="noopener">打开 B 原尺寸 ↗</a>
+    </article>
+
+    <article class="card">
+      <a class="shot" href="c-prism.html" target="_blank" rel="noopener"><img src="screenshots/c/page.png" alt="方向 C 折光镜厅 首屏"></a>
+      <div class="card-head"><span class="letter">C</span><h2>折光镜厅</h2><span class="tag">三联 / 光谱世界门</span></div>
+      <p>三块拱形玻璃后各是一个世界，光谱幻日横贯顶部，主作品在中央门内上演，底部是一条完整的剧目索引。最直接地讲“一戏一世界”。</p>
+      <div class="tags"><span>三联世界门</span><span>光谱幻日</span><span>底部索引</span></div>
+      <a class="open" href="c-prism.html" target="_blank" rel="noopener">打开 C 原尺寸 ↗</a>
+    </article>
+  </main>
+
+  <section class="reco">
+    <div>
+      <h2>推荐 <b>A · 幕启三界</b></h2>
+      <p>它最像“书架”：主作品、继续写作、其他五部作品和七个功能入口在首屏各就各位，同时把<strong>镜框台口、三联世界景片、舞台票根</strong>三件事一次讲清。继续往工作台铺开时，这套舞台语法也最容易延续。</p>
+      <p>如果更想要安静、文学、出版物气质，选 <strong>B</strong>；如果更想要现代、概念、展览感，选 <strong>C</strong>。</p>
+    </div>
+    <div>
+      <h2>本轮边界</h2>
+      <ul>
+        <li>三稿共用同一份示例数据，只写一次。</li>
+        <li>全部主视觉为自制 SVG，不使用此前生成的幻日剧场旧图。</li>
+        <li>静态主状态，不含交互、响应式与动效。</li>
+        <li>未修改应用代码；选定方向后再进入完整页面与接入。</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <span>幻日剧场 · 书架三方向 · 方向对比留档</span>
+    <a href="设计说明.md">设计说明 →</a>
+  </footer>
+</div>
+</body>
+</html>

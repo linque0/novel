@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, provide, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, provide, onMounted, onBeforeUnmount, watch } from 'vue'
 import { NButton, NSelect, NDropdown, NModal, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
@@ -19,7 +19,13 @@ import RightPanel from './RightPanel.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
 import DLinkPopover from './DLinkPopover.vue'
 import InspirationPrompt from './InspirationPrompt.vue'
+import TaskLauncher from './ai/TaskLauncher.vue'
 import { popOut, isPopped, focusPopped } from '../services/panelwindows'
+import { playStage } from '../services/stage-play'
+import artEditor from '../assets/skins/crimson/editor.webp'
+import artOutline from '../assets/skins/crimson/outline.webp'
+import artCharacters from '../assets/skins/crimson/characters.webp'
+import artInspiration from '../assets/skins/crimson/inspiration.webp'
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -58,10 +64,38 @@ function selectTab(key) {
   ui.loreDetailId = null
   work.tab = key
 }
+
+/* ── 赤月戏：顶部横向导航 + 86px 模块条 + 40px 底栏 + 按模块切换的布景（排布照设计稿） ── */
+const crimson = computed(() => ui.skin === 'crimson')
+const crimsonNav = computed(() => [
+  { key: 'shelf', label: '书架' },
+  ...navTabs.value.map(t => ({ key: t.key, label: t.label })),
+  { key: 'settings', label: '设置' }
+])
+const CRIMSON_ART = { chapters: artEditor, outline: artOutline, characters: artCharacters, snippets: artInspiration }
+const crimsonArt = computed(() => CRIMSON_ART[work.tab] || null)
+const CRIMSON_TITLE = { chapters: '写作', outline: '故事大纲', lore: '世界设定', characters: '人物档案', snippets: '灵感采集' }
+const crimsonTitle = computed(() => CRIMSON_TITLE[work.tab] || curTabLabel.value)
+const crimsonSubtitle = computed(() => {
+  if (work.tab === 'chapters') return work.activeChapter?.title || '从左侧选一章开始'
+  if (work.tab === 'outline') return work.liveVolumes.find(v => v.id === work.selVolumeId)?.title || work.liveVolumes[0]?.title || '世界与线索'
+  if (work.tab === 'lore') {
+    const sets = work.mubuRoots()
+    return (sets.find((n) => n.id === work.mubuSetId) || sets[0])?.text || `${work.mubu.length} 个条目`
+  }
+  if (work.tab === 'characters') return work.activeCharacter?.name || `${work.liveCharacters.length} 位人物`
+  if (work.tab === 'snippets') return `${work.liveSnippets.length} 条灵感`
+  return ''
+})
+/* 进入作品 / 切模块 / 切到赤月戏，都放一次入场（CSS 动画，标记由 stage-play 清理） */
+watch(() => work.work?.id, (id) => { if (id && crimson.value) playStage() })
+watch(() => work.tab, () => { if (crimson.value) playStage() })
+watch(() => ui.skin, (skin) => { if (skin === 'crimson') playStage() })
 const moreOptions = computed(() => [
   { label: '拆出独立窗口', key: 'split', children: splitOptions.value.map(o => ({ ...o, key: 'split:' + o.key })) },
   { label: '章节书签', key: 'bookmarks', children: bookmarkOptions.value.map(o => ({ ...o, key: 'bookmark:' + o.key })) },
   { label: ui.focusMode ? '退出沉浸' : '沉浸写作', key: 'focus' },
+  ...(ui.skin === 'crimson' ? [{ label: '重播开场', key: 'replay' }] : []),
   ...(work.tab === 'chapters' ? [{ label: ui.readMode ? '退出阅读' : '阅读模式', key: 'read' }] : []),
   { label: '切回原版皮肤', key: 'original' },
   { label: '外观与设置', key: 'settings' }
@@ -70,6 +104,7 @@ function onMore(key) {
   if (key.startsWith('split:')) return onSplit(key.slice(6))
   if (key.startsWith('bookmark:')) return onBookmarkSelect(key.slice(9))
   if (key === 'focus') ui.focusMode = !ui.focusMode
+  if (key === 'replay') return playStage()
   if (key === 'read') ui.readMode = !ui.readMode
   if (key === 'original') ui.setSkin('original')
   if (key === 'settings') openSettings()
@@ -199,8 +234,56 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <div class="workbench-shell" :class="{ 'is-focus': ui.focusMode, 'is-reading': ui.readMode }" :data-module="work.tab" style="display: flex; flex-direction: column; height: 100%">
-    <header v-show="studio" class="gravity-masthead studio-masthead">
+  <div class="workbench-shell" :class="{ 'is-focus': ui.focusMode, 'is-reading': ui.readMode, 'is-crimson': crimson }" :data-module="work.tab" style="display: flex; flex-direction: column; height: 100%">
+    <!-- 赤月戏：布景层（按模块换图）+ 顶部压暗渐变，内容始终在布景之上 -->
+    <template v-if="crimson">
+      <img v-if="crimsonArt" class="crimson-backdrop" :src="crimsonArt" alt="" aria-hidden="true" />
+      <div class="crimson-shade" aria-hidden="true"></div>
+    </template>
+
+    <!-- 编辑皮肤：任务入口只挂一次，经 Teleport 进页头。原先每个模块各挂一份，
+         切模块时组件与 Teleport 同时移动会触发 Vue 的 patch/unmount 异常。 -->
+    <TaskLauncher v-if="studio" :module="work.tab" />
+
+    <!-- 赤月戏：76px 顶部横向导航（品牌 + 七模块 + 真实工具） -->
+    <header v-if="crimson" class="crimson-topbar">
+      <button class="crimson-work-brand" title="返回书架" @click="work.closeWork()">
+        <span class="crimson-emblem" aria-hidden="true">
+          <svg viewBox="0 0 44 44"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
+        </span>
+        <span class="crimson-brand-text">小说工坊<small>赤月戏</small></span>
+      </button>
+      <nav class="crimson-topnav" aria-label="功能模块">
+        <button
+          v-for="item in crimsonNav"
+          :key="item.key"
+          type="button"
+          class="crimson-topnav-item"
+          :class="{ active: item.key !== 'shelf' && item.key !== 'settings' && work.tab === item.key }"
+          :aria-current="work.tab === item.key ? 'page' : undefined"
+          @click="item.key === 'shelf' ? work.closeWork() : item.key === 'settings' ? openSettings() : selectTab(item.key)"
+        >{{ item.label }}</button>
+      </nav>
+      <div class="crimson-header-tools">
+        <span class="save-badge"><span class="save-dot" :class="badgeClass"></span>{{ badgeText }}</span>
+        <NButton size="small" quaternary @click="ui.searchOpen = true"><OIcon name="search" :size="16" /> 搜索</NButton>
+        <div id="studio-task-actions"></div>
+        <NButton size="small" :type="ui.aiDrawerOpen ? 'primary' : 'default'" :aria-pressed="ui.aiDrawerOpen" title="展开或收起恍然梦对话" @click="ui.aiDrawerOpen = !ui.aiDrawerOpen"><OIcon name="star" :size="14" /> 恍然梦</NButton>
+        <NDropdown trigger="click" :options="moreOptions" @select="onMore"><NButton size="small" quaternary title="拆窗、书签、沉浸、阅读、重播与皮肤">更多 <OIcon name="caret-down" :size="11" /></NButton></NDropdown>
+      </div>
+    </header>
+
+    <!-- 赤月戏：86px 模块工具条（标题 + 真实上下文；动作由各模块 Teleport 进来）。
+         正文页只隐藏、不卸载：Teleport 目标必须始终存在，否则切页时目标与内容同时消失会触发 Vue patch 异常。 -->
+    <div v-show="crimson && work.tab !== 'chapters'" class="crimson-modulebar">
+      <div class="crimson-module-title">
+        <h1>{{ crimsonTitle }}</h1>
+        <span v-if="crimsonSubtitle">{{ crimsonSubtitle }}</span>
+      </div>
+      <div id="crimson-bar-tools" class="crimson-bar-tools"></div>
+    </div>
+
+    <header v-if="studio && !crimson" class="gravity-masthead studio-masthead">
       <button class="gravity-work-brand" title="返回书架" @click="work.closeWork()"><span class="gravity-brand-mark">坊</span><span>小说工坊</span></button>
       <div class="gravity-breadcrumb"><span :title="work.work?.title">{{ work.work?.title }}</span><i>/</i>{{ curTabLabel }}</div>
       <span class="save-badge"><span class="save-dot" :class="badgeClass"></span>{{ badgeText }}</span>
@@ -243,7 +326,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
     </div>
 
     <div class="wb-body">
-      <div v-if="!ui.focusMode && !ui.readMode" class="nav-rail">
+      <div v-if="!ui.focusMode && !ui.readMode && !crimson" class="nav-rail">
         <button v-if="studio" class="rail-item gravity-rail-home" title="返回书架" @click="work.closeWork()"><OIcon name="books" :size="18" /><span class="rail-label">书架</span></button>
         <div
           v-for="t in navTabs"
@@ -283,7 +366,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <button v-if="studio" class="rail-item" title="设置" @click="openSettings"><OIcon name="gear" :size="18" /><span class="rail-label">设置</span></button>
       </div>
 
-      <div v-if="!ui.focusMode && !ui.readMode && !modulePopped" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
+      <div v-if="!ui.focusMode && !ui.readMode && !modulePopped && !(crimson && ['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(work.tab))" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
         <ChapterTree v-if="work.tab === 'chapters'" />
         <OutlineSidebar v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
@@ -291,7 +374,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <SnippetList v-else-if="work.tab === 'snippets'" />
       </div>
       <div
-        v-if="!ui.focusMode && !ui.readMode && !modulePopped"
+        v-if="!ui.focusMode && !ui.readMode && !modulePopped && !(crimson && ['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(work.tab))"
         class="side-resizer"
         title="拖拽调整侧栏宽度（双击恢复默认）"
         @mousedown="startSideResize"
@@ -327,7 +410,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <span class="rp-rail-text">批注栏</span>
       </button>
 
-      <RightPanel v-if="!ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && ui.rightPanelOpen" />
+      <RightPanel v-if="!crimson && !ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && ui.rightPanelOpen" />
 
       <InspirationPrompt v-if="ui.skin === 'gravity' && work.tab === 'snippets' && (!ui.aiDrawerOpen || aiPopped) && !modulePopped && !ui.focusMode && !ui.readMode" />
 
@@ -352,6 +435,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         </div>
       </aside>
     </div>
+
+    <!-- 赤月戏：40px 底栏（作品 · 模块 + 保存状态 + 重播开场） -->
+    <footer v-if="crimson" class="crimson-statusbar">
+      <span>{{ work.work?.title }}<template v-if="curTabLabel"> · {{ curTabLabel }}</template></span>
+      <span class="crimson-status-mark">赤月戏</span>
+      <div>
+        <span class="crimson-status-save"><span class="save-dot" :class="badgeClass"></span>{{ badgeText }}</span>
+        <button type="button" class="crimson-replay" @click="playStage()">重播开场</button>
+      </div>
+    </footer>
 
     <!-- 关系链接悬浮预览窗（全局唯一，悬停关系链接标签 / 纯文本令牌时展示目标内容） -->
     <DLinkPopover />

@@ -7,7 +7,7 @@
  * - 恢复备份 → 先广播 db-restore-begin（全部窗口 flushAll+discardPending，v1.0.22 防覆盖纪律），
  *   恢复完成后广播 db-restored 全员整体重载。
  */
-import { h, ref, onMounted, watch } from 'vue'
+import { h, ref, onMounted, watch, computed } from 'vue'
 import { NButton, NSelect, NTag, NCheckbox } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
@@ -23,6 +23,7 @@ import { pickFiles, getDataLocation, pickDataDir, openDataFolder, moveDataDir, c
 import { broadcastAppEvent } from '../services/appbus'
 import gravityPlanet from '../assets/skins/gravity-planet.png'
 import glazeRibbon from '../assets/skins/glaze-ribbon.png'
+import crimsonSettings from '../assets/skins/crimson/settings.webp'
 
 const ui = useUiStore()
 
@@ -33,6 +34,20 @@ const PAGES = [
   { key: 'about', icon: '关', label: '关于', desc: '统计 / 手册 / 标语' }
 ]
 const page = ref('appearance')
+const crimsonShellStyle = computed(() => ui.skin === 'crimson'
+  ? {
+      backgroundImage: `linear-gradient(#192b3c77, transparent 40%), url(${crimsonSettings})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center 60%'
+    }
+  : null)
+
+function resetAppearance() {
+  ui.setPref('editorFont', 'song')
+  ui.setPref('editorLatin', 'none')
+  ui.setPref('fontSize', 17)
+  ui.setPref('theme', 'xuan')
+}
 
 function closeWindow() {
   window.native?.panelCloseSelf()
@@ -189,8 +204,22 @@ async function clearStalePointer() {
 </script>
 
 <template>
-  <div class="sw-root">
-    <div class="sw-head">
+  <div class="sw-root" :class="{ 'is-crimson': ui.skin === 'crimson' }" :style="crimsonShellStyle">
+    <template v-if="ui.skin === 'crimson'">
+      <header class="crimson-settings-head">
+        <span class="crimson-settings-brand">
+          <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
+          <span>小说工坊<small>赤月戏</small></span>
+        </span>
+        <span class="crimson-settings-window-title">设置</span>
+        <NButton size="small" quaternary title="关闭设置窗口" @click="closeWindow"><OIcon name="close" :size="13" /></NButton>
+      </header>
+      <div class="crimson-settings-bar">
+        <div class="crimson-module-title"><h1>偏好设置</h1><span>纸与光 · 适合你的创作空间</span></div>
+        <button type="button" class="crimson-bar-button" @click="resetAppearance">恢复默认</button>
+      </div>
+    </template>
+    <div v-else class="sw-head">
       <span class="sw-title serif">设置</span>
       <span class="sw-sub">SETTINGS · 小说工坊</span>
       <div style="flex: 1"></div>
@@ -214,6 +243,7 @@ async function clearStalePointer() {
             <i>{{ p.desc }}</i>
           </span>
         </button>
+        <div v-if="ui.skin === 'crimson'" class="crimson-settings-mark" aria-hidden="true">金屏夜梅<small>琳派折景</small></div>
       </nav>
 
       <section class="sw-content" :class="{ 'sw-appearance': page === 'appearance' }">
@@ -251,8 +281,14 @@ async function clearStalePointer() {
             </div>
           </div>
           </div>
-          <aside v-if="ui.isStudioSkin" class="gravity-type-preview" aria-label="正文字体预览">
-            <div class="gravity-preview-art"><img :src="ui.skin === 'glaze' ? glazeRibbon : gravityPlanet" alt="" /><span>阅读预览</span></div>
+          <aside v-if="ui.skin === 'crimson'" class="crimson-preview-paper" aria-label="正文字体预览">
+            <div class="paper-running"><span>排版预览</span><span>01</span></div>
+            <h2>第一章 · 初雪</h2>
+            <p :style="{ fontFamily: 'var(--editor-font)', fontSize: ui.fontSize + 'px' }">穹顶大厅的钟声在雾中回荡了十二下。窗外的雪落得很轻。</p>
+            <span class="crimson-preview-folio">纸白 · 墨黑 · 旧金</span>
+          </aside>
+          <aside v-else-if="ui.isStudioSkin" class="gravity-type-preview" aria-label="正文字体预览">
+            <div class="gravity-preview-art"><img :src="ui.skin === 'glaze' ? glazeRibbon : ui.skin === 'crimson' ? crimsonSettings : gravityPlanet" alt="" /><span>阅读预览</span></div>
             <div class="gravity-preview-copy" :style="{ fontFamily: 'var(--editor-font)', fontSize: ui.fontSize + 'px' }"><small>小说工坊 · 创作片刻</small><h3>第一章　初雪</h3><p>穹顶大厅的钟声在雾中回荡了十二下。</p><p>夜色漫过舷窗，远处的星辰缓缓亮起。她翻开手边的书，故事便有了新的引力。</p><small>跟随当前中文字体、西文字体与字号 · {{ ui.fontSize }} px</small></div>
           </aside>
         </template>
@@ -353,6 +389,11 @@ async function clearStalePointer() {
         </template>
       </section>
     </div>
+
+    <footer v-if="ui.skin === 'crimson'" class="crimson-settings-foot">
+      <span>赤月戏 · 设置</span>
+      <span>偏好即时生效</span>
+    </footer>
 
     <!-- 与主窗口同款的弹层：在设置窗口内完成导入 / 导出 / 回收站 / 统计 / 手册 -->
     <ImportDialog />

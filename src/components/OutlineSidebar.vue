@@ -186,7 +186,7 @@ onMounted(() => {
   <div class="ol-side-root" style="display: flex; flex-direction: column; height: 100%">
     <div class="side-head">
       <template v-if="ui.isStudioSkin">
-        <h2 class="gravity-sidebar-title">模块条目</h2>
+        <h2 class="gravity-sidebar-title">{{ ui.skin === 'crimson' ? '大纲目录' : '模块条目' }}</h2>
         <span class="gravity-side-count">{{ totalCount }} 项</span>
         <button class="gravity-side-gear" :class="{ on: typeManage }" title="自定义类型管理（新建 / 删除）" @click="typeManage = !typeManage"><OIcon name="gear" :size="13" /></button>
       </template>

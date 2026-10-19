@@ -1,0 +1,30 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 211,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "p.eyebrow「作品封面」"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 34,
+        "examples": [
+          "span.brand-section「书封设计室」（4.36:1）",
+          "span.version「设计探索 · 第 01 版」（4.36:1）",
+          "p.eyebrow「作品封面」（4.36:1）"
+        ]
+      }
+    ]
+  }
+]

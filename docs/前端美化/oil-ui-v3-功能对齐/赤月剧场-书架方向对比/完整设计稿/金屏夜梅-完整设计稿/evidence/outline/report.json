@@ -1,0 +1,251 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 759,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 1,
+        "examples": [
+          "button.directory-entry.current「◇ 铜星熄灭 事件」（2px）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "page-@2x.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 2,
+    "animationWaitMs": 701,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 1,
+        "examples": [
+          "button.directory-entry.current「◇ 铜星熄灭 事件」（2px）"
+        ]
+      }
+    ]
+  },
+  {
+    "file": "motion-probe-openmodule",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "openmodule",
+    "motion": {
+      "load": {
+        "elements": 11,
+        "loops": 0,
+        "maxMove": 25,
+        "maxSize": 0.119,
+        "maxOpacity": 0.75,
+        "top": [
+          {
+            "el": "h1",
+            "move": 3,
+            "size": 0.119,
+            "opacity": 0.69,
+            "loop": false,
+            "sources": [
+              "css:ink-reveal"
+            ]
+          },
+          {
+            "el": "img.scene-art",
+            "move": 20,
+            "size": 0.024,
+            "opacity": 0.64,
+            "loop": false,
+            "sources": [
+              "css:scenery-reveal"
+            ]
+          },
+          {
+            "el": "button#event-0.plot-node.event",
+            "move": 25,
+            "size": 0,
+            "opacity": 0.75,
+            "loop": false,
+            "sources": [
+              "css:folio-reveal"
+            ]
+          },
+          {
+            "el": "button.plot-node.plot-note",
+            "move": 25,
+            "size": 0,
+            "opacity": 0.75,
+            "loop": false,
+            "sources": [
+              "css:folio-reveal"
+            ]
+          },
+          {
+            "el": "a.plot-node.plot-cite",
+            "move": 25,
+            "size": 0,
+            "opacity": 0.75,
+            "loop": false,
+            "sources": [
+              "css:folio-reveal"
+            ]
+          },
+          {
+            "el": "button#event-1.plot-node.event",
+            "move": 20,
+            "size": 0,
+            "opacity": 0.73,
+            "loop": false,
+            "sources": [
+              "css:folio-reveal"
+            ]
+          },
+          {
+            "el": "a.plot-node.plot-anchor",
+            "move": 20,
+            "size": 0,
+            "opacity": 0.73,
+            "loop": false,
+            "sources": [
+              "css:folio-reveal"
+            ]
+          },
+          {
+            "el": "button#event-2.plot-node.event",
+            "move": 18,
+            "size": 0,
+            "opacity": 0.75,
+            "loop": false,
+            "sources": [
+              "css:folio-reveal"
+            ]
+          }
+        ]
+      },
+      "steps": {
+        "elements": 1,
+        "loops": 0,
+        "maxMove": 13,
+        "maxSize": 0,
+        "maxOpacity": 0.72,
+        "top": [
+          {
+            "el": "section.dialog",
+            "move": 13,
+            "size": 0,
+            "opacity": 0.72,
+            "loop": false,
+            "sources": [
+              "css:folio-reveal"
+            ]
+          }
+        ]
+      },
+      "hero": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "layers": 0
+      },
+      "scroll": {
+        "elements": 0,
+        "loops": 0,
+        "maxMove": 0,
+        "maxSize": 0,
+        "maxOpacity": 0,
+        "top": [],
+        "scrollable": false
+      }
+    },
+    "issues": []
+  },
+  {
+    "file": "motion-entry-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "entry",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-entry-start.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 152
+      },
+      "mid": {
+        "file": "motion-entry-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 747
+      },
+      "end": {
+        "file": "motion-entry-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 2542
+      }
+    },
+    "sampling": {
+      "mode": "entry"
+    },
+    "durationMs": 2542,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-entry-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  },
+  {
+    "file": "motion-openmodule-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "openmodule",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-openmodule-start.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1224
+      },
+      "mid": {
+        "file": "motion-openmodule-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 1324
+      },
+      "end": {
+        "file": "motion-openmodule-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 2510
+      }
+    },
+    "sampling": {
+      "mode": "action",
+      "step": 4,
+      "action": "key",
+      "raw": "key Escape"
+    },
+    "durationMs": 2510,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-openmodule-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  }
+]

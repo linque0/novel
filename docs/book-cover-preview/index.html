@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>通用书籍封面 · 小说工坊</title>
+  <link rel="stylesheet" href="../../src/assets/fonts/fonts-user.css">
+  <link rel="stylesheet" href="universal.css">
+  <script src="universal.js" defer></script>
+</head>
+<body>
+  <main>
+    <header class="page-header">
+      <a class="brand" href="./"><span class="brand-mark">坊</span><span>小说工坊 <span class="brand-slash">/</span> <span class="brand-section">书封设计室</span></span></a>
+      <span class="edition-label">通用书封 · 第二辑</span>
+    </header>
+    <section class="intro" aria-labelledby="page-title">
+      <div><h1 id="page-title">故事之外，纸页之间。</h1><p>四款通用书封，让每一个故事都有自己的质感。</p></div>
+      <div class="intro-aside">布面 / 纸本 / 烫金 / 拼贴</div>
+    </section>
+    <form class="toolbar" aria-label="封面预览设置" onsubmit="return false">
+      <label class="field"><span>书名</span><input id="book-title" value="山海来信" placeholder="填写书名" maxlength="64" autocomplete="off"></label>
+      <label class="field author-field"><span>作者</span><input id="book-author" value="林舟" placeholder="未署名" maxlength="24" autocomplete="off"></label>
+      <button type="button" class="plain-button" id="long-title">试试长书名</button>
+      <div class="toolbar-spacer"></div>
+      <fieldset class="segmented"><legend class="sr-only">展示内容</legend><button type="button" data-view="cover" aria-pressed="true">完整封面</button><button type="button" data-view="material" aria-pressed="false">无字素材</button></fieldset>
+      <button type="button" class="utility-button" id="size-toggle" aria-pressed="false">书架尺寸</button>
+      <button type="button" class="utility-button" id="backdrop" aria-pressed="false" aria-label="切换为深色衬底"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16.5 11.2A6.9 6.9 0 0 1 8.8 3.5a6.7 6.7 0 1 0 7.7 7.7Z"/></svg></button>
+    </form>
+    <section class="gallery" id="gallery" aria-label="四款通用书籍封面"></section>
+    <footer><p>材质与构图，自由选择。</p><div><a href="assets/book-cover-materials.zip" download>下载四款素材 <span aria-hidden="true">↓</span></a><span class="footer-divider">/</span><button type="button" id="reset" class="plain-button">恢复默认</button></div></footer>
+    <p class="sr-only" id="announcement" aria-live="polite"></p>
+  </main>
+  <dialog id="detail-dialog" aria-labelledby="detail-title">
+    <div class="dialog-header"><h2 id="detail-title">封面细节</h2><button type="button" id="close-detail" aria-label="关闭封面细节">×</button></div>
+    <div id="detail-book"></div>
+    <a id="detail-original" href="assets/originals/cloth-archive.png" target="_blank" rel="noopener">打开无字原图 <span aria-hidden="true">↗</span></a>
+  </dialog>
+</body>
+</html>

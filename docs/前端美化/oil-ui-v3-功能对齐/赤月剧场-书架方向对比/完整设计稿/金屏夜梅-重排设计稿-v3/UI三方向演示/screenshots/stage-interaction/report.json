@@ -1,0 +1,64 @@
+[
+  {
+    "file": "motion-switch-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "switch",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-switch-start.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 540
+      },
+      "mid": {
+        "file": "motion-switch-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 983
+      },
+      "end": {
+        "file": "motion-switch-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 2643
+      }
+    },
+    "sampling": {
+      "mode": "action",
+      "step": 1,
+      "action": "click",
+      "raw": "click [data-person=\"2\"]"
+    },
+    "durationMs": 2643,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-switch-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  },
+  {
+    "file": "motion-relations-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "relations",
+    "failed": true,
+    "issues": [
+      "第 2 步「click .relation-item」：匹配到 2 个元素 .relation-item，但都不可见，不能操作（被祖先 div#stage-relations 隐藏：display:none）；先执行让它出现的那一步，或换成当前可见的元素；线索：去掉最后一段后 \"（空）\" 匹配 0 个元素；例如 click .open"
+    ]
+  },
+  {
+    "file": "motion-edit-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "edit",
+    "failed": true,
+    "issues": [
+      "第 2 步「fill input[name=\"alias\"] 归航者」：匹配到 1 个元素 input[name=\"alias\"]，但都不可见，不能操作（被祖先 dialog#edit-dialog 隐藏：display:none）；先执行让它出现的那一步，或换成当前可见的元素；线索：name=\"viewport\"（不可见）；name=\"name\"（不可见）；name=\"role\"（不可见）；name=\"alias\"（不可见）；name=\"age\"（不可见）；例如 fill .open \"归航者\""
+    ]
+  }
+]

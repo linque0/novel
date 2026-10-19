@@ -1,0 +1,31 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 2,
+        "examples": [
+          "div.eyebrow「第七季 · 六部剧目正在轮演」",
+          "div.no「NO. 07 · NOW SHOWING」"
+        ]
+      },
+      {
+        "rule": "englishLabel",
+        "label": "中文界面里的英文大写标签",
+        "count": 3,
+        "examples": [
+          "span.brand-en「PARHELION HALL」",
+          "div.no「NO. 07 · NOW SHOWING」",
+          "div.en「STARDUST VOYAGER」"
+        ]
+      }
+    ]
+  }
+]

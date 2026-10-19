@@ -5,7 +5,7 @@ import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { useAiStore } from '../stores/ai'
 
-const props = defineProps({ editor: { type: Object, required: true } })
+const props = defineProps({ editor: { type: Object, required: true }, compact: { type: Boolean, default: false } })
 const work = useWorkStore()
 const ai = useAiStore()
 
@@ -110,7 +110,7 @@ const isActive = (name, attrs) => {
 </script>
 
 <template>
-  <div class="editor-toolbar" @click="refocus">
+  <div class="editor-toolbar" :class="{ compact }" @click="refocus">
     <button class="tb" title="撤销" @click="chain().undo().run()">↶</button>
     <button class="tb" title="重做" @click="chain().redo().run()">↷</button>
     <span class="tb-sep" />
@@ -121,15 +121,17 @@ const isActive = (name, attrs) => {
     <button class="tb" :class="{ on: isActive('strike') }" title="删除线" @click="chain().toggleStrike().run()"><s>S</s></button>
     <span class="tb-sep" />
 
-    <button class="tb" :class="{ on: isActive('paragraph') }" title="正文" @click="chain().setParagraph().run()">正文</button>
-    <button class="tb" :class="{ on: isActive('heading', { level: 1 }) }" title="标题一" @click="chain().toggleHeading({ level: 1 }).run()">H1</button>
-    <button class="tb" :class="{ on: isActive('heading', { level: 2 }) }" title="标题二" @click="chain().toggleHeading({ level: 2 }).run()">H2</button>
-    <button class="tb" :class="{ on: isActive('heading', { level: 3 }) }" title="标题三" @click="chain().toggleHeading({ level: 3 }).run()">H3</button>
-    <span class="tb-sep" />
+    <template v-if="!compact">
+      <button class="tb" :class="{ on: isActive('paragraph') }" title="正文" @click="chain().setParagraph().run()">正文</button>
+      <button class="tb" :class="{ on: isActive('heading', { level: 1 }) }" title="标题一" @click="chain().toggleHeading({ level: 1 }).run()">H1</button>
+      <button class="tb" :class="{ on: isActive('heading', { level: 2 }) }" title="标题二" @click="chain().toggleHeading({ level: 2 }).run()">H2</button>
+      <button class="tb" :class="{ on: isActive('heading', { level: 3 }) }" title="标题三" @click="chain().toggleHeading({ level: 3 }).run()">H3</button>
+      <span class="tb-sep" />
+    </template>
 
     <NSelect
       size="tiny"
-      :value="sizeVal"
+      :value="sizeVal || null"
       :options="SIZES"
       placeholder="字号"
       style="width: 88px"
@@ -182,29 +184,53 @@ const isActive = (name, attrs) => {
         <NButton v-if="isActive('link')" size="small" @click="removeLink">移除</NButton>
       </div>
     </NPopover>
-    <span class="tb-sep" />
-
-    <button class="tb" :class="{ on: isActive({ textAlign: 'left' }) }" title="左对齐" @click="chain().setTextAlign('left').run()">左</button>
-    <button class="tb" :class="{ on: isActive({ textAlign: 'center' }) }" title="居中" @click="chain().setTextAlign('center').run()">中</button>
-    <button class="tb" :class="{ on: isActive({ textAlign: 'right' }) }" title="右对齐" @click="chain().setTextAlign('right').run()">右</button>
-    <button class="tb" :class="{ on: isActive({ textAlign: 'justify' }) }" title="两端对齐" @click="chain().setTextAlign('justify').run()">齐</button>
-    <span class="tb-sep" />
-
-    <button class="tb" :class="{ on: isActive('bulletList') }" title="无序列表" @click="chain().toggleBulletList().run()">•≡</button>
-    <button class="tb" :class="{ on: isActive('orderedList') }" title="有序列表" @click="chain().toggleOrderedList().run()">1≡</button>
-    <button class="tb" :class="{ on: isActive('blockquote') }" title="引用" @click="chain().toggleBlockquote().run()">引</button>
-    <span class="tb-sep" />
-
-    <button class="tb" title="清除格式" @click="chain().unsetAllMarks().clearNodes().run()">清除</button>
-    <span class="tb-sep" />
+    <NPopover v-if="compact" trigger="click" :show-arrow="false" placement="bottom-start">
+      <template #trigger>
+        <button class="tb" title="更多格式：段落、对齐、列表、引用、清除与恍然梦">更多格式 ⌄</button>
+      </template>
+      <div class="tb-more">
+        <button class="tb" :class="{ on: isActive('paragraph') }" title="正文" @click="chain().setParagraph().run()">正文</button>
+        <button class="tb" :class="{ on: isActive('heading', { level: 1 }) }" title="标题一" @click="chain().toggleHeading({ level: 1 }).run()">H1</button>
+        <button class="tb" :class="{ on: isActive('heading', { level: 2 }) }" title="标题二" @click="chain().toggleHeading({ level: 2 }).run()">H2</button>
+        <button class="tb" :class="{ on: isActive('heading', { level: 3 }) }" title="标题三" @click="chain().toggleHeading({ level: 3 }).run()">H3</button>
+        <span class="tb-sep" />
+        <button class="tb" :class="{ on: isActive({ textAlign: 'left' }) }" title="左对齐" @click="chain().setTextAlign('left').run()">左</button>
+        <button class="tb" :class="{ on: isActive({ textAlign: 'center' }) }" title="居中" @click="chain().setTextAlign('center').run()">中</button>
+        <button class="tb" :class="{ on: isActive({ textAlign: 'right' }) }" title="右对齐" @click="chain().setTextAlign('right').run()">右</button>
+        <button class="tb" :class="{ on: isActive({ textAlign: 'justify' }) }" title="两端对齐" @click="chain().setTextAlign('justify').run()">齐</button>
+        <span class="tb-sep" />
+        <button class="tb" :class="{ on: isActive('bulletList') }" title="无序列表" @click="chain().toggleBulletList().run()">•≡</button>
+        <button class="tb" :class="{ on: isActive('orderedList') }" title="有序列表" @click="chain().toggleOrderedList().run()">1≡</button>
+        <button class="tb" :class="{ on: isActive('blockquote') }" title="引用" @click="chain().toggleBlockquote().run()">引</button>
+        <button class="tb" title="清除格式" @click="chain().unsetAllMarks().clearNodes().run()">清除</button>
+        <span class="tb-sep" />
+        <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
+      </div>
+    </NPopover>
+    <template v-if="!compact">
+      <span class="tb-sep" />
+      <button class="tb" :class="{ on: isActive({ textAlign: 'left' }) }" title="左对齐" @click="chain().setTextAlign('left').run()">左</button>
+      <button class="tb" :class="{ on: isActive({ textAlign: 'center' }) }" title="居中" @click="chain().setTextAlign('center').run()">中</button>
+      <button class="tb" :class="{ on: isActive({ textAlign: 'right' }) }" title="右对齐" @click="chain().setTextAlign('right').run()">右</button>
+      <button class="tb" :class="{ on: isActive({ textAlign: 'justify' }) }" title="两端对齐" @click="chain().setTextAlign('justify').run()">齐</button>
+      <span class="tb-sep" />
+      <button class="tb" :class="{ on: isActive('bulletList') }" title="无序列表" @click="chain().toggleBulletList().run()">•≡</button>
+      <button class="tb" :class="{ on: isActive('orderedList') }" title="有序列表" @click="chain().toggleOrderedList().run()">1≡</button>
+      <button class="tb" :class="{ on: isActive('blockquote') }" title="引用" @click="chain().toggleBlockquote().run()">引</button>
+      <span class="tb-sep" />
+      <button class="tb" title="清除格式" @click="chain().unsetAllMarks().clearNodes().run()">清除</button>
+      <span class="tb-sep" />
+    </template>
     <button
       class="tb"
       :class="{ on: bmOn }"
       :title="bmOn ? '移除书签' : '收藏本书签'"
       @click="toggleBm"
     ><OIcon :name="bmOn ? 'star-filled' : 'star'" :size="14" /></button>
-    <span class="tb-sep" />
-    <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
+    <template v-if="!compact">
+      <span class="tb-sep" />
+      <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
+    </template>
 
     <!-- 顶栏右端：章节状态 / 字数 / 历史（编辑皮肤由 EditorPane 注入；原版留在自己的 .editor-head） -->
     <slot name="bar-end" />

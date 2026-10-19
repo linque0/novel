@@ -6,6 +6,7 @@ import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services/fileio'
 import { stripTags } from '../services/wordcount'
+import { primaryRole } from '../services/character-tags'
 import { ANNOTATION_KINDS, normalizeNoteColor, noteKindLabel, focusNoteMark, recolorNoteMark } from '../services/annotations'
 
 const work = useWorkStore()
@@ -100,7 +101,7 @@ const presentChars = computed(() => {
       const names = [c.name, ...(c.aliases || '').split(/[,，、/\s]+/)].filter((n) => n && n.length >= 1)
       return names.some((n) => text.includes(n))
     })
-    .map((c) => ({ id: c.id, name: c.name, role: c.role }))
+    .map((c) => ({ id: c.id, name: c.name, role: primaryRole(c) }))
 })
 
 const images = computed(() => {

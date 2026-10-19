@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="470" viewBox="0 0 960 470">
+  <defs>
+    <marker id="a" viewBox="0 -4 9 8" refX="8.5" refY="0" markerWidth="8" markerHeight="7" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0 -3.5 8.5 0 0 3.5 2.3 0Z" fill="context-stroke"/></marker>
+    <style>text{font-family:'Microsoft YaHei',sans-serif;fill:#52694b;font-size:13px}.line{fill:none;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;marker-end:url(#a)}.label{fill:#fafbf5;stroke:#d6dece;rx:4}</style>
+  </defs>
+  <rect width="960" height="470" fill="#f2f4ec" rx="12"/>
+  <text x="35" y="38" style="font-size:19px;fill:#273d38">纸本叙事 · 连线样式</text>
+  <text x="170" y="77">流畅曲线</text><text x="585" y="77">圆角折线</text>
+  <g stroke="#59877e"><path class="line" d="M160 129C270 129 280 151 390 151"/><path class="line" d="M575 129H675Q687 129 687 141V148Q687 160 699 160H805"/></g>
+  <g stroke="#ae715f"><path class="line" d="M160 214C270 214 280 236 390 236"/><path class="line" d="M575 214H675Q687 214 687 226V233Q687 245 699 245H805"/></g>
+  <g stroke="#8971a2"><path class="line" stroke-dasharray="5 5" d="M160 299C270 299 280 321 390 321"/><path class="line" stroke-dasharray="5 5" d="M575 299H675Q687 299 687 311V318Q687 330 699 330H805"/></g>
+  <g stroke="#b28443"><path class="line" marker-start="url(#a)" d="M160 384C270 384 280 406 390 406"/><path class="line" marker-start="url(#a)" d="M575 384H675Q687 384 687 396V403Q687 415 699 415H805"/></g>
+  <text x="40" y="146">关联</text><text x="40" y="231">因果</text><text x="40" y="316">伏笔</text><text x="40" y="401">冲突</text>
+  <rect class="label" x="254" y="112" width="44" height="24"/><text x="263" y="129">关联</text>
+  <rect class="label" x="254" y="197" width="44" height="24"/><text x="263" y="214">因果</text>
+  <rect class="label" x="254" y="282" width="44" height="24"/><text x="263" y="299">伏笔</text>
+  <rect class="label" x="254" y="367" width="44" height="24"/><text x="263" y="384">冲突</text>
+</svg>

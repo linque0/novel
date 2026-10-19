@@ -1,0 +1,14 @@
+{
+  "module": "赤月戏 · 世界设定",
+  "version": "v7",
+  "status": "全幅设计预览，待用户评审",
+  "generationMode": "imagegen built-in",
+  "asset": "assets/world-celestial-atlas-wide-v7.png",
+  "width": 1672,
+  "height": 941,
+  "bytes": 3014459,
+  "sha256": "aa4782555b3b7b0ca935648a26965ec8e20e2b48a537e634bbb62299f6fc4e6c",
+  "reference": "../人物深化与设定重绘-v6/assets/world-celestial-atlas-v6.png",
+  "prompt": "PROMPT.md",
+  "preview": "world.html"
+}

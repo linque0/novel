@@ -1,0 +1,29 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 247,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 1,
+        "examples": [
+          "small「星尘旅人」"
+        ]
+      },
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 2,
+        "examples": [
+          "div.tree-node.selected-node「⌄ 星图系统 核心设定 ↗」（2px）",
+          "button.current「世界观 04」（2px）"
+        ]
+      }
+    ]
+  }
+]

@@ -1,0 +1,951 @@
+/* ============================================================
+   赤月戏 · 折屏戏本 v3
+   视觉层：金屏为台，折缝为幕，纸页为文，朱印为场，书签为序。
+   只覆盖视觉与状态表达；正文、表单、列表、画布的几何与热区不改。
+   ============================================================ */
+
+:root {
+  --v3-ink: #151918;
+  --v3-field: #1b211e;
+  --v3-paper: #eee5cc;
+  --v3-paper-light: #f4ecd9;
+  --v3-paper-deep: #e2d5b7;
+  --v3-back: #c9b98f;
+  --v3-gold: #cfb06b;
+  --v3-gold-paper: #7a5f2c;
+  --v3-seal: #a84135;
+  --v3-seal-bright: #b64b3d;
+  --v3-ink-text: #3c382b;
+  --v3-muted: #746247;
+  --v3-line: #8c794d4a;
+}
+
+/* ── 焦点：双色环，纸面与墨底都可见，且不裁切 ───────────── */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+[contenteditable]:focus-visible {
+  outline: 2px solid #f4ecd9;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px #151918d9;
+}
+
+/* ── 顶栏：场次牌，金色缺口代替下划线 ───────────────────── */
+.header .nav-item.active:after,
+.shelf-view .header.shelf-header .nav-item.active:after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 3px);
+  bottom: 10px;
+  width: 6px;
+  height: 9px;
+  border: 0;
+  border-top: 0;
+  background: var(--v3-gold);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+
+/* ── 模块条：标题下的短金线；动作文字化 ─────────────────── */
+.module-title h1 {
+  position: relative;
+  padding-bottom: 6px;
+}
+.module-title h1:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 24px;
+  border-top: 1px solid #cfb06b;
+}
+.tools .tool,
+.tools .icon-button {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #e8dcc4;
+}
+.tools .tool:hover,
+.tools .icon-button:hover {
+  background: transparent;
+  color: #fae8bb;
+  box-shadow: inset 0 -1px 0 #cfb06b;
+}
+.paper .tool {
+  border: 0;
+  background: transparent;
+  color: #53452e;
+}
+.paper .tool:hover {
+  color: #33291d;
+  box-shadow: inset 0 -1px 0 #8a6f35;
+}
+.icon-button {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+.icon-button:hover {
+  background: #ffffff0d !important;
+  color: #fae8bb;
+}
+.paper .icon-button:hover {
+  background: #00000008 !important;
+  color: #33291d;
+}
+
+/* 主 CTA：切角纸牌，热区仍是完整矩形，焦点环保留在按钮上 */
+.primary {
+  position: relative;
+  isolation: isolate;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--plaque-ink, #342c20);
+  padding: 0 19px;
+}
+.primary:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--plaque, #d5c091);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  box-shadow: inset 0 0 0 1px #cfb06b33, 0 2px 0 #5c4826;
+}
+.paper .primary {
+  --plaque: #42564d;
+  --plaque-ink: #f8edd5;
+  color: var(--plaque-ink);
+}
+.paper .primary:before {
+  box-shadow: inset 0 0 0 1px #f4ecd922, 0 2px 0 #2d3f37;
+}
+.primary:hover:before {
+  filter: brightness(1.06);
+}
+
+/* ── 搜索：只留一道下划线 ──────────────────────────────── */
+.search-field,
+.directory-heading .search-field,
+.c-rail-search {
+  border: 0;
+  border-bottom: 1px solid #b39b6266;
+  background: transparent;
+}
+
+/* ── 非交互标签：文字 + 小菱形，不再是小框 ─────────────── */
+.tag {
+  border: 0;
+  background: none;
+  padding: 0 2px;
+  color: inherit;
+}
+.tag:before {
+  content: '◇';
+  margin-right: 5px;
+  font-size: 9px;
+  opacity: .65;
+}
+.paper .tag {
+  color: #6f5a38;
+}
+
+/* ── 纸页：一张错位背纸 + 软影，取消闭合边与硬偏移 ─────── */
+.paper {
+  border: 0 !important;
+  box-shadow: 5px 6px 0 var(--v3-back), 0 18px 36px #0b111026 !important;
+  --gold: #7a5f2c;
+}
+.paper .text-link {
+  color: #6f5628;
+}
+.settings-layout .preview-paper {
+  border: 0 !important;
+  box-shadow: none !important;
+  background: linear-gradient(180deg, #f4ecd9, #eee5cc 92%) !important;
+  position: relative;
+}
+.settings-layout .preview-paper:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  border-top: 1px solid #a68a4e88;
+  pointer-events: none;
+}
+
+/* ── 深色目录：暗场 + 顶部金线，不再是一整块描边面板 ───── */
+.dark-sheet {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.module-directory,
+.graph-index {
+  background: linear-gradient(180deg, #1b211ef5, #151b18f5) !important;
+  border-top: 0 !important;
+  box-shadow: inset 0 1px 0 #cfb06b55 !important;
+}
+.settings-categories {
+  background: linear-gradient(180deg, #22333bf5, #1b292ff5) !important;
+  border-top: 0 !important;
+  box-shadow: inset 0 1px 0 #cfb06b55 !important;
+}
+
+/* ── 折缝：只落在栏与栏之间，不围合 ────────────────────── */
+.c-chapter-rail:after,
+.module-directory:after,
+.type-preview:before,
+.portrait-folio:after,
+.art-pane:after,
+.inspiration-art:after,
+.nouveau-program:before,
+.graph-index:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 11px;
+  pointer-events: none;
+  z-index: 3;
+  background: linear-gradient(90deg, #0000, #00000066 42%, #00000066 48%, #ffffff12 52%, #0000);
+}
+.c-chapter-rail:after,
+.portrait-folio:after,
+.art-pane:after,
+.inspiration-art:after {
+  right: -11px;
+}
+.module-directory:after,
+.type-preview:before,
+.nouveau-program:before,
+.graph-index:before {
+  left: -11px;
+}
+.module-directory,
+.type-preview,
+.portrait-folio,
+.graph-index {
+  position: relative;
+}
+
+/* ── 正文：装裱稿本、折缝、书签、月相进度 ─────────────── */
+.c-stage .project-line .actions {
+  background: transparent !important;
+  border: 0;
+  box-shadow: none;
+  padding: 4px 0;
+  gap: 0;
+  text-shadow: 0 1px 4px #000, 0 0 10px #0009;
+}
+.c-stage .project-line .actions .text-link {
+  padding: 7px 10px;
+}
+.c-stage .project-line .actions .text-link + .text-link:before {
+  content: '·';
+  margin-right: 10px;
+  color: #cfb06b88;
+}
+
+.c-book {
+  border: 0 !important;
+  box-shadow: 6px 7px 0 var(--v3-back), 0 22px 44px #0004 !important;
+}
+.c-page:before,
+.c-margin:after {
+  display: none !important;
+}
+.c-page {
+  position: relative;
+}
+.c-page:after {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 42px;
+  height: 42px;
+  pointer-events: none;
+  background: linear-gradient(135deg, transparent 48%, #d6c7a5 49%, #c3b18a 52%, #f1e8d3 55%);
+  box-shadow: -4px -4px 10px #6b5a3b1f;
+}
+.c-margin {
+  border-left: 1px solid #b49b6655;
+  box-shadow: inset 10px 0 16px -16px #6f5c3d;
+}
+
+.c-chapter-rail {
+  border: 0 !important;
+  box-shadow: inset 0 1px 0 #cfb06b55 !important;
+  background: linear-gradient(180deg, #1b211ef5, #151b18f5) !important;
+  overflow: visible;
+}
+.c-rail-head .seal {
+  border: 0;
+  background: var(--v3-seal);
+  color: #f4ecd9;
+  writing-mode: vertical-rl;
+  padding: 7px 4px;
+  font: 10px OldSong;
+  letter-spacing: 2px;
+  line-height: 1.2;
+  box-shadow: 0 3px 8px #0003;
+  transform: rotate(-1deg);
+}
+.c-rail-toggle {
+  border: 0;
+  background: transparent;
+}
+.c-rail-toggle:hover {
+  color: #fae8bb;
+  background: #ffffff0a;
+}
+.c-rail-chapters .chapter {
+  border-bottom: 1px solid #b39b6233;
+  background: transparent;
+  color: #d8cdb4;
+}
+.c-rail-chapters .chapter.current {
+  background: transparent;
+  color: #f1e8d3;
+  border-left: 0;
+  box-shadow: inset 3px 0 0 var(--v3-seal);
+  padding-left: 7px;
+}
+.c-rail-chapters .chapter.current .num {
+  color: #ead39c;
+}
+.c-rail-chapters .chapter.current b {
+  color: #f1e8d3;
+}
+.c-rail-chapters .chapter.current small {
+  color: #b7a985;
+}
+.c-rail-foot .rail-new {
+  border: 0;
+  background: transparent;
+  color: #d9c18b;
+}
+.c-rail-foot .rail-new:hover {
+  color: #fae8bb;
+}
+
+/* 收起态：月相进度盘 + 无框翻章 */
+body.rail-collapsed .c-rail-mini {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding-top: 40px;
+}
+.c-rail-mini .mini-current {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  background: radial-gradient(circle at 35% 30%, #2a3530, #141a17);
+  box-shadow: inset 0 0 0 1px #cfb06b55, 0 0 0 3px #a841351f;
+  color: #ead39c;
+  font: 15px/1 OldSong;
+}
+.c-rail-mini .mini-current:before {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(#a84135 calc(var(--chapter-progress, 0) * 1turn), #cfb06b1f 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 3px), #000 calc(100% - 2px));
+}
+.c-rail-mini .mini-current small {
+  font: 8px 'Microsoft YaHei';
+  letter-spacing: 1px;
+  color: #b7a985;
+}
+.c-rail-mini .mini-nav {
+  border: 0;
+  background: transparent;
+  color: #d9c18b;
+}
+.c-rail-mini .mini-nav:hover {
+  color: #fae8bb;
+  background: #ffffff0a;
+}
+
+/* ── 人物：月洞肖像、单列演员表、单张卷宗纸 ───────────── */
+.characters-layout .portrait-frame {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  overflow: visible;
+  isolation: isolate;
+}
+.characters-layout .portrait-frame:before {
+  content: '';
+  position: absolute;
+  inset: -10px -8px -8px;
+  z-index: -1;
+  background: linear-gradient(180deg, #e6d8ba, #d5c39e);
+  border-radius: 46% 46% 0 0 / 14% 14% 0 0;
+  transform: rotate(-.6deg);
+  box-shadow: 0 18px 36px #0004;
+}
+.characters-layout .portrait-frame > img {
+  border-radius: 46% 46% 0 0 / 14% 14% 0 0;
+  outline: 1px solid #cfb06b55;
+  outline-offset: -1px;
+  object-position: center top;
+}
+.characters-layout .portrait-frame:after {
+  inset: 0;
+  border-radius: 46% 46% 0 0 / 14% 14% 0 0;
+}
+.characters-layout .cast-tabs {
+  display: flex !important;
+  flex-direction: column;
+  gap: 0;
+  max-height: 190px;
+  overflow: auto;
+  margin-top: 14px;
+  padding: 6px 10px;
+  background: linear-gradient(90deg, #151918e6, #151918b3);
+  border-top: 1px solid #cfb06b44;
+}
+.characters-layout .cast-tabs > button:not(.cast-add) {
+  width: 100% !important;
+  height: 44px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 11px;
+  padding: 3px 6px;
+  border: 0;
+  border-bottom: 1px solid #b39b6240;
+  background: transparent;
+  color: #eee4ca;
+  text-align: left;
+}
+.characters-layout .cast-tabs > button img {
+  width: 30px;
+  height: 38px;
+  object-fit: cover;
+  border-radius: 2px;
+}
+.characters-layout .cast-tabs > button span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 13px;
+}
+.characters-layout .cast-tabs > button small {
+  font-size: 10px;
+  color: #bdb397;
+}
+.characters-layout .cast-tabs > button.current {
+  background: transparent !important;
+  box-shadow: inset 3px 0 0 var(--v3-gold);
+  color: #f1e8d3;
+}
+.characters-layout .cast-tabs > button.current small {
+  color: #ead39c;
+}
+.characters-layout .cast-add {
+  width: 100% !important;
+  height: 44px;
+  border: 0;
+  background: none;
+  color: var(--v3-gold);
+  text-align: left;
+  padding: 0 8px;
+  font-size: 12px;
+}
+.characters-layout .portrait-note {
+  display: none;
+}
+.characters-layout .cast-add:after {
+  content: ' 人物';
+  letter-spacing: 1px;
+}
+.characters-layout .dossier {
+  box-shadow: 5px 6px 0 var(--v3-back), 0 18px 36px #0b111026 !important;
+}
+.characters-layout .dossier .tag {
+  color: #6f5a38;
+}
+
+/* ── 设置：书签分类、无框控件、样张预览 ───────────────── */
+.settings-categories > button.current {
+  background: #ece1c6;
+  color: #253c43;
+  border-left: 0;
+  margin-right: -18px;
+  padding-right: 30px;
+  position: relative;
+  box-shadow: 3px 4px 0 #0b11102e;
+}
+.settings-categories > button.current:after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+  border-left: 8px solid var(--v3-seal);
+}
+.settings-categories > button.current > span {
+  color: #526460;
+}
+.settings-mark {
+  width: 54px;
+  padding: 10px 6px;
+  background: var(--v3-seal);
+  color: #f4ecd9;
+  font: 15px/1.35 OldSong;
+  letter-spacing: 2px;
+  text-align: center;
+  transform: rotate(-1.2deg);
+  box-shadow: 0 4px 12px #0003;
+}
+.settings-mark small {
+  font: 9px 'Microsoft YaHei';
+  letter-spacing: 1px;
+  color: #f4ecd9cc;
+}
+.setting-row select {
+  border: 0;
+  border-bottom: 1px solid #ac9b7850;
+  background: transparent;
+  padding: 7px 22px 7px 0;
+}
+.settings-layout .type-preview {
+  position: relative;
+}
+.settings-layout .preview-paper {
+  padding-left: 22px;
+}
+
+/* ── 大纲：角标容器、纸片节点、文字化工具条 ───────────── */
+.volume-button {
+  border: 0;
+  background: transparent;
+}
+.directory-entry {
+  border: 0;
+  background: transparent;
+}
+.directory-entry.current {
+  background: transparent;
+  color: #f1e8d3;
+  box-shadow: inset 2px 0 0 var(--v3-gold);
+}
+.directory-types button {
+  border: 0;
+  background: transparent;
+  color: #bdb397;
+  padding: 4px 0;
+  margin-right: 9px;
+}
+.directory-types button.current {
+  background: transparent;
+  color: #ead39c;
+  border: 0;
+  box-shadow: inset 0 -1px 0 var(--v3-gold);
+}
+.plot-canvas {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+.plot-container {
+  border: 0;
+  background: none;
+}
+.plot-container:before,
+.plot-container:after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-color: #a68a4e;
+  border-style: solid;
+  pointer-events: none;
+}
+.plot-container:before {
+  left: 0;
+  top: 0;
+  border-width: 1px 0 0 1px;
+}
+.plot-container:after {
+  right: 0;
+  bottom: 0;
+  border-width: 0 1px 1px 0;
+}
+.plot-container > span {
+  position: absolute;
+  left: 10px;
+  top: -9px;
+  padding: 0 7px;
+  background: #eee5cc;
+  color: #8a6f35;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+body[data-state="outline"] .plot-canvas .plot-node {
+  border: 0;
+  background: linear-gradient(225deg, transparent 15px, var(--node-paper, #faf1df) 15px);
+  box-shadow: inset 0 3px 0 var(--node-edge, #8f7138), 0 10px 22px #0002;
+  padding-right: 25px;
+}
+body[data-state="outline"] .plot-canvas .plot-node.event {
+  --node-paper: #faf1df;
+  --node-edge: #8f7138;
+}
+body[data-state="outline"] .plot-canvas .plot-node.plot-note {
+  --node-paper: #f3e2c4;
+  --node-edge: var(--v3-seal-bright);
+}
+body[data-state="outline"] .plot-canvas .plot-node.plot-cite {
+  --node-paper: #dfe8dc;
+  --node-edge: #4f6f5e;
+}
+body[data-state="outline"] .plot-canvas .plot-node.plot-anchor {
+  --node-paper: #f0e3e1;
+  --node-edge: #8a5b66;
+}
+.plot-node:before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 24px;
+  width: 34px;
+  height: 9px;
+  background: #cfb06b66;
+  transform: rotate(-2deg);
+  pointer-events: none;
+}
+.canvas-controls {
+  border: 0;
+  background: linear-gradient(90deg, #15191800, #151918d9 20%);
+  box-shadow: none;
+  color: #eadcb9;
+  text-shadow: none;
+  padding: 7px 10px 7px 26px;
+}
+.canvas-controls .icon-button,
+.canvas-controls .text-link {
+  border: 0;
+  background: transparent;
+  color: #eadcb9;
+}
+.canvas-controls .text-link:hover,
+.canvas-controls .icon-button:hover {
+  color: #fae8bb;
+  background: #ffffff10 !important;
+}
+
+/* ── 设定 / 详情：卷轴头布景、关系文字签、月洞核心 ───── */
+.art-pane {
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+.art-pane > img {
+  border-radius: 46% 46% 0 0 / 12% 12% 0 0;
+  object-position: center 30%;
+  outline: 1px solid #cfb06b55;
+  outline-offset: -1px;
+}
+.art-pane:before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 17px;
+  height: 1px;
+  background: #cfb06b66;
+  z-index: 2;
+  pointer-events: none;
+}
+.world-index .index-list .current {
+  background: transparent;
+  border-left: 0;
+  box-shadow: inset 2px 0 0 var(--v3-gold);
+  color: #f5dfae;
+}
+.tree-node.selected-node {
+  background: transparent;
+  box-shadow: inset 2px 0 0 var(--v3-gold);
+}
+.lore-prose blockquote {
+  background: none;
+  border-left: 2px solid #a58c50;
+  padding: 8px 0 8px 20px;
+  color: #5f5138;
+}
+.lore-connections {
+  border: 0 !important;
+  background: linear-gradient(180deg, #1d2825f2, #18211ef2) !important;
+  border-top: 1px solid #cfb06b55 !important;
+  box-shadow: none !important;
+}
+.lore-connections .orbit a {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: #eee4ca;
+  text-shadow: 0 1px 2px #0b1110, 0 0 7px #0b1110, 0 0 12px #0b1110;
+}
+.lore-connections .orbit a small {
+  color: #cfc2a3;
+  text-shadow: inherit;
+}
+.lore-connections .orbit-core {
+  background: radial-gradient(circle at 36% 30%, #f1e5c8, #d3bd87 58%, #b89a5f);
+  border: 1px solid var(--v3-gold);
+  box-shadow: 0 0 0 6px #cfb06b24, 0 14px 30px #0005;
+}
+.lore-connections .primary {
+  align-self: stretch;
+}
+
+/* ── 关系图：装裱肖像、线上关系词、文字化布局切换 ─────── */
+.character-graph {
+  position: relative;
+}
+.portrait-node {
+  border: 0;
+  box-shadow: inset 0 2px 0 #8f7138, 0 10px 22px #0003;
+  background: #e5d5b5;
+}
+.graph-toolbar > div > button {
+  border: 0;
+  background: transparent;
+  color: #766245;
+  padding: 6px 8px;
+}
+.graph-toolbar > div > button.selected {
+  color: #4c3c24;
+  box-shadow: inset 0 -1px 0 #8a6f35;
+}
+.relationship {
+  border: 0;
+  background: none;
+  padding: 2px 6px;
+  color: #6d4a3c;
+  text-shadow: 0 1px 2px #eee5cc, 0 0 6px #eee5cc, 0 0 10px #eee5cc;
+}
+.graph-index .cast-tabs {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: none;
+}
+.graph-index .cast-tabs > button:not(.cast-add) {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 3px 7px;
+  border: 0;
+  border-bottom: 1px solid #a58d5840;
+  background: transparent;
+  color: #eee4ca;
+  text-align: left;
+}
+.graph-index .cast-tabs > button img {
+  width: 30px;
+  height: 40px;
+  object-fit: cover;
+}
+.graph-index .cast-tabs > button.current {
+  background: transparent !important;
+  box-shadow: inset 3px 0 0 var(--v3-gold);
+  color: #f1e8d3;
+}
+.graph-index .cast-add {
+  width: 100%;
+  height: auto;
+  border: 0;
+  background: none;
+  color: var(--v3-gold);
+  text-align: left;
+  padding: 8px 7px;
+  font-size: 12px;
+}
+.graph-index .cast-add:after {
+  content: ' 人物';
+  letter-spacing: 1px;
+}
+
+/* ── 灵感：便签纸片、红钉当前态、无外框阅读纸 ─────────── */
+.inspiration-art {
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+.inspiration-art > img {
+  outline: 1px solid #b49a6740;
+  outline-offset: -1px;
+}
+.idea-paper {
+  border: 0;
+  box-shadow: 0 12px 24px #0002;
+}
+.idea-paper:nth-child(1) { rotate: -.5deg; }
+.idea-paper:nth-child(2) { rotate: .55deg; }
+.idea-paper:nth-child(3) { rotate: -.35deg; }
+.idea-paper:nth-child(4) { rotate: .4deg; }
+.idea-paper.current {
+  outline: 0;
+}
+.idea-paper.current:after {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 18px;
+  width: 10px;
+  height: 27px;
+  background: var(--v3-seal);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 82%, 0 100%);
+  box-shadow: 0 2px 5px #0002;
+}
+.idea-pin {
+  width: 9px;
+  height: 9px;
+  background: #9a7b43;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px #f4ecd9aa, 0 1px 2px #0003;
+}
+.idea-paper.current .idea-pin {
+  background: var(--v3-seal);
+}
+.idea-paper:hover {
+  box-shadow: 0 18px 32px #0003;
+}
+
+/* ── 书架：票根首章、折缝剧目、切角继续写作 ───────────── */
+.nouveau-program {
+  border-left: 0 !important;
+}
+.nouveau-chapter {
+  position: relative;
+  isolation: isolate;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.nouveau-chapter:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #eee6d3f2;
+  clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%, 0 12px);
+  box-shadow: 0 14px 28px #0002;
+}
+.nouveau-chapter:after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 14px;
+  bottom: 14px;
+  width: 3px;
+  background: var(--v3-seal);
+  pointer-events: none;
+}
+.nouveau-chapter h3:before {
+  content: '续';
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  background: var(--v3-seal);
+  color: #f4ecd9;
+  font: 12px OldSong;
+  transform: rotate(-2deg);
+  box-shadow: 0 2px 6px #0003;
+  pointer-events: none;
+}
+.shelf-view .button {
+  position: relative;
+  isolation: isolate;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.shelf-view .button:before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--shelf-plaque, #164e4d);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+  box-shadow: inset 0 0 0 1px #cfb06b2e, 0 2px 0 #0002;
+}
+.shelf-view .nouveau-story .button {
+  --shelf-plaque: var(--v3-seal-bright);
+}
+.shelf-view .nouveau-story .button:hover {
+  background: transparent !important;
+  color: #fff3df;
+  filter: brightness(1.05);
+}
+.nouveau-program-head {
+  border-top: 1px solid #7d9278;
+}
+.nouveau-books .work-row {
+  border-bottom: 1px solid #65836e42;
+}
+
+/* ── 1080：画布节点重排，避免右缘裁切；布景说明收紧 ─── */
+@media (max-width: 1140px) {
+  body[data-state="outline"] .plot-canvas .plot-node {
+    width: 190px !important;
+  }
+  body[data-state="outline"] #event-0 { left: 20px !important; top: 105px !important; }
+  body[data-state="outline"] #event-1 { left: 280px !important; top: 139px !important; }
+  body[data-state="outline"] #event-2 { left: 540px !important; top: 108px !important; }
+  body[data-state="outline"] .plot-canvas .plot-note { left: 20px !important; top: 363px !important; }
+  body[data-state="outline"] .plot-canvas .plot-cite { left: 280px !important; top: 391px !important; }
+  body[data-state="outline"] .plot-canvas .plot-anchor { left: 540px !important; top: 363px !important; width: 230px !important; }
+  body[data-state="outline"] .plot-lines {
+    display: none;
+  }
+  body[data-state="editor"] .c-stage .project-line .actions {
+    background: linear-gradient(90deg, #15191800, #15191855 35%, #151918d9 78%) !important;
+    padding: 6px 0 6px 56px;
+  }
+  .art-top p {
+    font-size: 10px;
+    letter-spacing: 1px;
+  }
+}
+
+/* ── 减少动画：保留状态反馈，去掉入场与位移 ───────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

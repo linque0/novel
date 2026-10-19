@@ -1,0 +1,42 @@
+[
+  {
+    "file": "motion-tour-end.jpg",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "tour",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-tour-start.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 4439
+      },
+      "mid": {
+        "file": "motion-tour-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 4776
+      },
+      "end": {
+        "file": "motion-tour-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 7091
+      }
+    },
+    "sampling": {
+      "mode": "action",
+      "step": 7,
+      "action": "click",
+      "raw": "click .global-item[data-go=\"inspiration\"]"
+    },
+    "durationMs": 7091,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-tour-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  }
+]

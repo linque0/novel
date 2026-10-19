@@ -26,6 +26,9 @@ import { resolveSkin } from './skins/registry'
 import './styles/skins/gravity.css'
 import './styles/skins/gravity-workbench.css'
 import './styles/skins/glaze.css'
+import './styles/skins/crimson.css'
+import './styles/skins/crimson-workbench.css'
+import './styles/skins/crimson-v3.css'
 
 const ui = useUiStore()
 const shelf = useShelfStore()
@@ -37,11 +40,20 @@ installAppBus()
 const panelMode = new URLSearchParams(location.search).has('panel')
 
 const activeSkin = computed(() => resolveSkin(ui.skin, panelMode ? 'panel' : ui.view))
-const naiveTheme = computed(() => activeSkin.value.id === 'glaze' ? null : (activeSkin.value.id === 'gravity' || ui.theme === 'night' ? darkTheme : null))
+const naiveTheme = computed(() => activeSkin.value.id === 'glaze' ? null : (activeSkin.value.id === 'gravity' || activeSkin.value.id === 'crimson' || ui.theme === 'night' ? darkTheme : null))
 const overrides = computed(() => {
   if (activeSkin.value.id === 'glaze') return {
     common: { primaryColor:'#146878', primaryColorHover:'#247b89', primaryColorPressed:'#0e5361', primaryColorSuppl:'#146878', textColor1:'#234752', textColor2:'#315763', textColor3:'#4f7079', bodyColor:'#e7eff1', cardColor:'#f8fcfc', modalColor:'#f8fcfc', popoverColor:'#f4fafb', inputColor:'#f5fafb', borderColor:'#adcbd0', borderRadius:'8px' },
     Tree: { nodeColorActive:'#cde3e6',nodeColorHover:'#e3eff1',nodeColorPressed:'#d2e6e9' }
+  }
+  if (activeSkin.value.id === 'crimson') return {
+    common: {
+      primaryColor:'#cfb06b', primaryColorHover:'#e0c684', primaryColorPressed:'#b5924f', primaryColorSuppl:'#cfb06b',
+      textColor1:'#f0e7d5', textColor2:'#e4dcc6', textColor3:'#bfb59c',
+      bodyColor:'#171c1b', cardColor:'#1f2724', modalColor:'#1f2724', popoverColor:'#232b27',
+      borderColor:'#4a5348', inputColor:'#1a211e', borderRadius:'4px'
+    },
+    Tree: { nodeColorActive:'#33413a', nodeColorHover:'#2a352f', nodeColorPressed:'#33413a' }
   }
   if (activeSkin.value.id === 'gravity') {
     return { common: {

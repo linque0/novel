@@ -1,0 +1,19 @@
+/* 全幅设定布景：图片作为整个舞台底层，左侧仅放原有引题。 */
+.world-scene{background:#132421}
+.world-scene>.scene-art{object-fit:cover;object-position:left center}
+.world-scene>.scene-shade{background:linear-gradient(180deg,#06151188,transparent 25%),linear-gradient(90deg,transparent 74%,#061513b3 82%,#061513c9)}
+.world-layout{grid-template-columns:400px minmax(0,1fr) 220px!important}
+.world-scenic-copy{background:none!important;border:0!important;box-shadow:none!important}
+.world-scenic-copy:before,.world-scenic-copy:after{display:none}
+.world-scenic-copy .art-top{padding:20px 22px}
+.world-scenic-copy .art-top h2{font-size:32px;line-height:1.4;letter-spacing:5px;margin:12px 0 7px;white-space:nowrap}
+.world-scenic-copy .art-top p{font-size:13px;line-height:1.6;max-width:none}
+.world-scenic-copy .art-caption{left:22px}
+.world-index{text-shadow:0 1px 6px #07120f}
+.world-index .dream{text-shadow:none}
+@media(max-width:1250px){
+ .world-layout{grid-template-columns:300px minmax(0,1fr) 190px!important;gap:18px}
+ .world-scenic-copy .art-top{padding-left:20px}
+ .world-scenic-copy .art-top h2{font-size:30px}
+}
+

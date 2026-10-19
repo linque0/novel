@@ -6,7 +6,7 @@ export const TASK_OUTPUT_TOOLS = ['submit_chapter','submit_outline_plan','submit
 const str = (v, max = 20000) => { if (typeof v !== 'string' || v.length > max) throw new Error('文本字段格式或长度无效'); return v.trim() }
 const list = (v, max = 30) => { if (!Array.isArray(v) || v.length > max) throw new Error('列表格式或数量无效'); return v }
 const object = v => { if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error('提案应为对象'); return v }
-const aliasesOf = c => [c.name, ...String(c.aliases || '').split(/[、，,\s]+/)].filter(Boolean)
+const aliasesOf = c => [c.name, ...String(c.aliases || '').split(/[、，,/\s]+/)].filter(Boolean)
 export function taskEvidence(refs, work, frozen, required = false) {
   const docs = projectBook(work).docs
   const result = list(refs || [], 100).map(ref => {

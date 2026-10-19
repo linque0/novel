@@ -1,0 +1,21 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "headingSpacing",
+        "label": "标题离上文比离下文还近",
+        "count": 2,
+        "examples": [
+          "h2.cover-title「在世界尽头等一封来信」（上 6px，下 126px）",
+          "h2.cover-title「在世界尽头等一封来信」（上 11px，下 118px）"
+        ]
+      }
+    ]
+  }
+]

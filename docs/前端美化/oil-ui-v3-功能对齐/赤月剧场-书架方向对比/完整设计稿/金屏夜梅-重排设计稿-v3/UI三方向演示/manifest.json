@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "lang": "zh",
+  "project": "妙笔 · 赤月幻戏 / 人物 UI 三方向",
+  "brief": "基于金屏夜梅 v3 的人物档案：比较大字画卷、纵深舞台、关系星轨三种组织方式。三个演示使用同一份人物资料，可切换人物、查看关系、编辑档案及体验动效。",
+  "round": "v3-创意优化-01",
+  "nativeViewport": "1440x900",
+  "candidates": [
+    {
+      "id": "baseline",
+      "name": "金屏夜梅 v3 原稿",
+      "concept": "保留当前人物页作为构图和信息密度的比较基线。",
+      "typography": "OldSong 标题、WenKai 正文、系统界面字体",
+      "palette": ["#123c3b", "#eee6d4", "#a63d32"],
+      "traits": ["左侧人物卡", "右侧大面积资料面板", "三列字段"],
+      "source": "screenshots/baseline-v3.png",
+      "kind": "image",
+      "baseline": true
+    },
+    {
+      "id": "ink",
+      "name": "朱墨破格",
+      "concept": "让人物像画卷中的主角，以大字、朱日与错位留白建立记忆。",
+      "typography": "OldSong 132px 姓名、WenKai 21px 小传，细小界面字作索引",
+      "palette": ["#f2ebda", "#24564f", "#a33c32"],
+      "traits": ["开放的非对称排版", "斜切肖像与朱色日轮", "印章与卷次", "姓名切入、肖像错位入场"],
+      "source": "ink.demo.html",
+      "interactive": true
+    },
+    {
+      "id": "stage",
+      "name": "赤月转景",
+      "concept": "把人物档案变成一场正在开演的戏，前景肖像与后景月色共同转场。",
+      "typography": "OldSong 96px 竖排姓名、WenKai 20px 剧本正文",
+      "palette": ["#102f2e", "#f2e7cf", "#aa6146"],
+      "traits": ["前中后三层场景", "竖排题名与月门肖像", "单张不规则人物笺", "景片、演员、手稿分别入场"],
+      "source": "stage.demo.html",
+      "interactive": true
+    },
+    {
+      "id": "orbit",
+      "name": "星轨织书",
+      "concept": "让人物成为故事的引力中心，用关系与章节轨道替代资料卡片。",
+      "typography": "OldSong 80px 姓名、WenKai 20px 小传，关系姓名 26px",
+      "palette": ["#edf0e5", "#2c5c50", "#a7874d"],
+      "traits": ["中心肖像与卫星人物", "可点击的关系星轨", "章节和所属成为节点", "聚焦收束、弧线浮现"],
+      "source": "orbit.demo.html",
+      "interactive": true
+    }
+  ]
+}

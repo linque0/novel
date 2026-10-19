@@ -1,0 +1,16 @@
+{
+  "title": "赤月剧场 · 两套完整设计稿",
+  "date": "2026-10-17",
+  "viewport": {"width": 1440, "height": 900},
+  "entry": "index.html",
+  "directions": [
+    {"id": "opera", "name": "赤月歌剧院", "page": "opera.html", "screenshots": "screenshots/opera", "recording": "evidence/opera/record-tour.mp4"},
+    {"id": "nouveau", "name": "赤月戏", "page": "nouveau.html", "screenshots": "screenshots/nouveau", "recording": "evidence/nouveau/record-tour.mp4"}
+  ],
+  "states": ["shelf", "editor", "outline", "outline-text", "world", "world-detail", "characters", "characters-graph", "inspiration", "settings"],
+  "scope": "Standalone design prototypes. Session-only fixture edits; no application, database or AI integration.",
+  "review": "视觉评审.md",
+  "verification": "evidence/verification/results.json",
+  "details": "details-2x",
+  "closeups": "closeups"
+}

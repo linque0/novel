@@ -5,6 +5,7 @@ import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
 import GravityShelf from './GravityShelf.vue'
 import GlazeShelf from './GlazeShelf.vue'
+import CrimsonShelf from './CrimsonShelf.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
@@ -43,11 +44,11 @@ const filtered = computed(() => {
     (w.genre || '').toLowerCase().includes(k))
 })
 
-/* 琉光书架的「首章白卡」用：随当前展示的作品取它的首章（只读查询，失败/无章节就不显示） */
+/* 首章白卡 / 首章剧目卡用：随当前展示的作品取它的首章（只读查询，失败/无章节就不显示） */
 const firstChapter = ref(null)
 watch([() => filtered.value[0]?.id, () => ui.skin], async ([id, skin]) => {
   firstChapter.value = null
-  if (!id || skin !== 'glaze') return
+  if (!id || !['glaze', 'crimson'].includes(skin)) return
   try {
     firstChapter.value = await firstChapterOf(id)
   } catch {
@@ -150,6 +151,7 @@ async function onCardMenu(key, w) {
   <div style="display: flex; flex-direction: column; height: 100%">
     <GravityShelf v-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <GlazeShelf v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <CrimsonShelf v-else-if="ui.skin === 'crimson'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <template v-else>
     <div class="topbar">
       <div class="shelf-brand">

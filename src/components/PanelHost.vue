@@ -30,9 +30,16 @@ import LoreRelationPanel from './LoreRelationPanel.vue'
 import LoreDetail from './LoreDetail.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
 import PresetWindow from './ai/PresetWindow.vue'
+import TaskLauncher from './ai/TaskLauncher.vue'
 
 const work = useWorkStore()
 const ui = useUiStore()
+/* 面板窗口也要把皮肤写到 body，皮肤样式统一以 body[data-skin] 为作用域 */
+watch(
+  () => resolveSkin(ui.skin, 'panel').id,
+  (id) => { document.body.dataset.skin = id },
+  { immediate: true }
+)
 
 const spec = ref(null) // { type, workId, entityId }
 const status = ref('loading') // loading | ready | error
@@ -164,6 +171,7 @@ onBeforeUnmount(() => autosave.flushAll())
       <PresetWindow v-if="spec.type === 'ai-presets'" style="flex: 1; min-height: 0" />
       <SettingsWindow v-else-if="spec.type === 'settings'" style="flex: 1; min-height: 0" />
       <template v-else>
+        <TaskLauncher v-if="ui.isStudioSkin" :module="work.tab" />
         <div class="panel-topbar">
           <div v-show="ui.isStudioSkin" id="studio-task-actions"></div>
           <span class="serif" style="font-weight: 700">{{ work.work?.title }} · {{ panelTitle }}</span>
@@ -175,27 +183,31 @@ onBeforeUnmount(() => autosave.flushAll())
           <NButton size="small" @click="flushAndClose">保存并关闭</NButton>
           <NButton size="small" quaternary @click="closePanel"><OIcon name="close" :size="13" /></NButton>
         </div>
+        <div v-if="ui.skin === 'crimson'" class="crimson-panel-bar">
+          <div class="crimson-module-title"><h1>{{ panelTitle }}</h1></div>
+          <div id="crimson-bar-tools" class="crimson-bar-tools"></div>
+        </div>
         <!-- 恍然梦窗口：无侧栏与中央区，全高 AI 界面 -->
         <div v-if="spec.type === 'ai'" class="ai-win">
           <AiAssistantPanel />
         </div>
         <div v-else class="panel-body">
-          <div class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
+          <div v-if="ui.skin !== 'crimson'" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
             <ChapterTree v-if="spec.type === 'chapter'" />
             <OutlineSidebar v-else-if="spec.type === 'outline'" />
             <CharacterList v-else-if="spec.type === 'characters'" />
             <MubuTree v-else-if="spec.type === 'lore'" />
             <SnippetList v-else-if="spec.type === 'snippets'" />
           </div>
-          <div class="side-resizer" title="拖拽调整侧栏宽度（双击恢复默认）" @mousedown="startSideResize" @dblclick="ui.setPref('sideWidth', 252)"></div>
-          <div class="center-pane paper-texture">
+          <div v-if="ui.skin !== 'crimson'" class="side-resizer" title="拖拽调整侧栏宽度（双击恢复默认）" @mousedown="startSideResize" @dblclick="ui.setPref('sideWidth', 252)"></div>
+          <div class="center-pane paper-texture" :class="{ 'crimson-panel-center': ui.skin === 'crimson' }">
             <EditorPane v-if="spec.type === 'chapter'" />
             <OutlineCenter v-else-if="spec.type === 'outline'" style="flex: 1; min-height: 0" />
             <CharacterCenter v-else-if="spec.type === 'characters'" />
             <MubuView v-else-if="spec.type === 'lore'" />
             <SnippetCenter v-else-if="spec.type === 'snippets'" />
           </div>
-          <RightPanel v-if="spec.type === 'chapter'" />
+          <RightPanel v-if="spec.type === 'chapter' && ui.skin !== 'crimson'" />
         </div>
         <DLinkPopover />
         <RevisionsModal />

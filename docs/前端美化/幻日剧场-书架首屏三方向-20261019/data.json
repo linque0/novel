@@ -1,0 +1,17 @@
+{
+  "brand": "幻日剧场",
+  "theme": "剧场中上演的不同剧目，是一个个不同的真实世界",
+  "author": "林间",
+  "updated": "今天 14:32",
+  "chapter": "第四十二章 · 群星入港",
+  "excerpt": "穹顶的钟声越过海湾，最后一艘星船驶入了黎明。",
+  "synopsis": "一枚铜星的熄灭，唤醒了一张被遗忘的星图。",
+  "books": [
+    {"title":"星尘旅人","words":"156,824","chapters":42,"genre":"科幻 · 冒险","color":"#24465a","motif":"orbit"},
+    {"title":"长夜将尽","words":"82,617","chapters":28,"genre":"悬疑 · 都市","color":"#443b50","motif":"moon"},
+    {"title":"雪落界脊之上","words":"63,205","chapters":19,"genre":"奇幻 · 冒险","color":"#536c78","motif":"mountain"},
+    {"title":"山海拾遗录","words":"24,186","chapters":8,"genre":"东方 · 志怪","color":"#3e5d51","motif":"wave"},
+    {"title":"第七位访客","words":"17,430","chapters":6,"genre":"推理 · 悬疑","color":"#784c42","motif":"door"},
+    {"title":"青鸾纪事","words":"93,712","chapters":31,"genre":"古风 · 传奇","color":"#52675f","motif":"feather"}
+  ]
+}

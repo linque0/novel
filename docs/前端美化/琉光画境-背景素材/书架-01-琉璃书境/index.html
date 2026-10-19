@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>琉光画境 · 琉璃书境背景预览</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e7eff1;color:#203f49;font:13px/1.5 "Microsoft YaHei",sans-serif}
+header{height:56px;display:flex;align-items:center;gap:22px;padding:0 24px;background:#f8fcfb;border-bottom:1px solid #bcd3d7}
+header strong{font-size:15px;font-weight:500}header span{color:#667e86}nav{display:flex;gap:6px;margin-left:auto}button,a{font:inherit}
+button{padding:6px 13px;border:1px solid #adc8ce;border-radius:7px;background:transparent;color:#315864;cursor:pointer}button[aria-pressed=true]{background:#146878;color:white;border-color:#146878}
+a{color:#146878;text-decoration:none}button:focus-visible,a:focus-visible{outline:3px solid #84b6c2;outline-offset:3px}
+#viewport{height:calc(100vh - 56px);overflow:auto;display:grid;place-items:start center}iframe{display:block;width:100%;min-width:1080px;height:900px;border:0;background:#e7eff1}
+#art{display:none;width:100%;height:calc(100vh - 56px);object-fit:contain;background:#dcebed}.art-mode #art{display:block}.art-mode #viewport{display:none}
+@media(max-width:900px){header{height:auto;min-height:70px;flex-wrap:wrap;gap:8px;padding:10px 16px}header span{display:none}nav{gap:4px}button{padding:5px 8px}#viewport{height:calc(100vh - 70px)}}
+</style>
+</head>
+<body>
+<header><strong>琉璃书境 · 书架背景 01</strong><span>独立设计预览 · 示例作品</span><nav aria-label="背景预览模式"><button data-mode="new" aria-pressed="true">新背景</button><button data-mode="old" aria-pressed="false">原背景</button><button data-mode="art" aria-pressed="false">纯素材</button></nav><a href="glaze-shelf-sanctuary.png" target="_blank" rel="noopener">查看原图 ↗</a></header>
+<div id="viewport"><iframe id="shelf" title="琉光画境书架背景应用预览" src="../../oil-ui-v3-功能对齐/c.html?state=shelf"></iframe></div>
+<img id="art" src="glaze-shelf-sanctuary.png" alt="浅青玻璃书页与透光展台构成的琉璃书境，无界面文字">
+<script>
+const frame=document.querySelector('#shelf'), asset=new URL('glaze-shelf-sanctuary.png',location.href).href;
+let mode='new';
+function apply(){
+ document.body.classList.toggle('art-mode',mode==='art');
+ document.querySelectorAll('[data-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mode===mode)));
+ const doc=frame.contentDocument;if(!doc||!doc.querySelector('.app'))return;
+ let style=doc.querySelector('#sanctuary-preview');if(!style){style=doc.createElement('style');style.id='sanctuary-preview';doc.head.append(style)}
+ style.textContent=mode==='old'?'':`
+ body.c{background:#e7eff1!important}
+ body.c:before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(to bottom,rgba(231,239,241,.08) 0%,rgba(231,239,241,.02) 55%,rgba(231,239,241,.64) 75%,#e7eff1 100%),url("${asset}") center top/cover no-repeat}
+ .c .app-header{background:#f7fcfb70;backdrop-filter:blur(14px)}
+ .c .module-nav{background:#f7fcfb78;backdrop-filter:blur(14px)}
+ .c .content{background:transparent}
+ .c .glass-orb{display:none}
+ .c .mini-book{background:#f8fcfbd9;box-shadow:0 8px 25px #467b8510}
+ .c .glass-note{left:245px;bottom:13px;background:#f9fdfae8}
+ .c .feature-copy{padding-left:30px}
+ .c .feature-copy h1{font-size:76px}
+ @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+ `;
+}
+frame.addEventListener('load',apply);
+document.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{mode=b.dataset.mode;apply()}));
+</script>
+</body>
+</html>

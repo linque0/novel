@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>琉光画境 · 青岚入画</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#e9f1ec;color:#254642;font:13px/1.5 "Microsoft YaHei",sans-serif}
+header{height:58px;display:flex;align-items:center;gap:24px;padding:0 24px;border-bottom:1px solid #aec7bc66;background:#fafbf7}
+.brand{display:flex;align-items:baseline;gap:12px;white-space:nowrap}.brand b{font-size:16px;font-weight:500}.brand span{font-size:11px;letter-spacing:3px;color:#7b9287}
+nav{display:flex;margin-left:auto;padding:3px;border:1px solid #b8cdc266;border-radius:10px;gap:2px;background:#edf3ee}
+button{font:inherit;color:#55776a;cursor:pointer;border:0;background:transparent;padding:6px 14px;border-radius:7px;transition:background .18s,color .18s}
+nav button[aria-pressed=true]{background:white;box-shadow:0 2px 9px #4869550c;color:#244e42}#motion{border:1px solid #b8cdc2;margin-left:0;min-width:85px}button:active{transform:translateY(1px)}button:focus-visible,a:focus-visible{outline:3px solid #83b6a7;outline-offset:3px}a{color:#55776a;text-decoration:none;white-space:nowrap;font-size:12px}
+main{position:relative;width:100%;overflow:hidden;background:#edf3ef;box-shadow:0 20px 70px #33574512}#shelf{display:block;width:1440px;height:900px;border:0;transform-origin:top left}
+#pure{display:none;position:absolute;inset:0;overflow:hidden}.art #pure{display:block}.art #shelf{visibility:hidden}
+.note{max-width:1440px;margin:auto;padding:16px 25px 22px;display:flex;align-items:center;gap:20px;color:#71877d;font-size:12px}.note strong{font-weight:400;color:#3c6353}.note span:last-child{margin-left:auto}.live-dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:#6a9a82;vertical-align:middle;margin-right:6px}
+@media(max-width:800px){header{padding:0 14px;gap:9px}.brand span{display:none}nav{gap:0}button{padding:6px 10px}.note{padding:14px;gap:10px;flex-wrap:wrap}.note span:last-child{margin-left:0}header>a{display:none}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+<header><div class="brand"><b>青岚入画</b><span>琉光画境</span></div><nav aria-label="背景查看"><button id="shelf-mode" aria-pressed="true">书架</button><button id="art-mode" aria-pressed="false">画境</button></nav><button id="motion" aria-pressed="false">暂停动态</button><a href="qinglan-landscape.png" target="_blank" rel="noopener">查看原画 ↗</a></header>
+<main id="stage"><iframe id="shelf" title="青岚入画书架效果" src="../../oil-ui-v3-功能对齐/c.html?state=shelf"></iframe><div id="pure" role="img" aria-label="青玉透光的层叠山体，山脚薄雾，湖面倒影缓缓流动"></div></main>
+<div class="note"><strong>山色入琉璃，书页生远意。</strong><span>水面折射 · 山间薄雾 · 玉色透光</span><span><i class="live-dot"></i><span id="status" role="status">正在准备画境</span></span></div>
+<script type="module">
+import {mountLandscape} from './landscape.js';
+const frame=document.querySelector('#shelf'),stage=document.querySelector('#stage'),pure=document.querySelector('#pure'),motion=document.querySelector('#motion'),status=document.querySelector('#status');
+const source=new URL('qinglan-landscape.png',location.href).href;
+const media=matchMedia('(prefers-reduced-motion: reduce)');
+let shelfScene,pureScene,paused=media.matches,art=false;
+function fit(){const scale=document.documentElement.clientWidth/1440;stage.style.height=(900*scale)+'px';frame.style.transform='scale('+scale+')'}
+function statusUpdate(){
+  const scene=art?pureScene:shelfScene;
+  status.textContent=!scene?'正在准备画境':scene.renderer==='static'?'静态画境':paused?'画境已静止':'动态画境';
+}
+function update(){
+  document.body.classList.toggle('art',art);
+  document.querySelector('#shelf-mode').setAttribute('aria-pressed',String(!art));
+  document.querySelector('#art-mode').setAttribute('aria-pressed',String(art));
+  shelfScene?.setActive(!art);pureScene?.setActive(art);
+  shelfScene?.setPaused(paused);pureScene?.setPaused(paused);
+  motion.textContent=paused?'播放动态':'暂停动态';motion.setAttribute('aria-pressed',String(paused));
+  statusUpdate();
+}
+window.addEventListener('resize',fit);fit();
+frame.addEventListener('load',async()=>{
+  const doc=frame.contentDocument;if(!doc?.querySelector('.app'))return;shelfScene?.destroy();
+  const style=doc.createElement('style');style.textContent=`
+  body.c{background:#edf3ef!important;--ink:#23433d;--muted:#5a776a;--accent:#28695a;--accent-ink:#fafcf5;--line:#b2c9bc;--surface:#f8fbf3;--raised:#e0ece1}
+  .c .app{position:relative;z-index:1}.c .app-header{background:#fafcf380;backdrop-filter:blur(14px)}.c .module-nav{background:#f9fcf478;backdrop-filter:blur(14px)}
+  .c .content{background:transparent}.c .glass-orb{display:none}.c .feature-copy{padding-left:30px}.c .feature-copy h1{font-size:76px}
+  .c .mini-book{background:#fafcf4e3;border:1px solid #ffffffd9;box-shadow:0 10px 24px #47685210}.c .glass-note{left:245px;bottom:13px;background:#fcfdf5ed}
+  .c .glass-book{box-shadow:0 18px 35px #345b4d24}
+  @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+  `;doc.head.append(style);
+  shelfScene=await mountLandscape(doc,source,{active:!art,onState:statusUpdate});update();
+});
+pureScene=await mountLandscape(document,source,{active:false,onState:statusUpdate});
+pure.append(pureScene.layer);Object.assign(pureScene.layer.style,{position:'absolute'});update();
+document.querySelector('#shelf-mode').onclick=()=>{art=false;update()};
+document.querySelector('#art-mode').onclick=()=>{art=true;update()};
+motion.onclick=()=>{paused=!paused;update()};
+media.addEventListener('change',()=>{paused=media.matches;update()});
+window.addEventListener('pagehide',e=>{if(!e.persisted){shelfScene?.destroy();pureScene?.destroy()}});
+</script></body></html>

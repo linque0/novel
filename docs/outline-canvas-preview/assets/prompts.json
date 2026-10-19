@@ -1,0 +1,41 @@
+{
+  "tool": "built-in image_gen",
+  "generated": "2026-10-18",
+  "assets": [
+    {
+      "id": "event",
+      "type": "event card",
+      "prompt": "Create ONE production-ready bitmap surface asset for a sophisticated Chinese novelist's outline canvas UI, an editorial stationery system. LANDSCAPE 3:2 format. Perfectly flat front-facing orthographic surface, full bleed to all four edges, NO external scene, NO table, NO perspective, NO text, letters, numbers, logos, icons or watermarks. Almost entirely empty and very low-contrast so live HTML dark text can overlay the central 85 percent. Fine tactile material visible at close range but restrained at UI scale; soft upper-left lighting. Not a complete UI screenshot. No outside shadow, no thick frame. Premium Japanese/Swiss editorial restraint. Cool pearl-white cotton cardstock, tiny natural fibers, a subtle mist-blue tint only along the extreme top edge. Micro embossed fine border inset 12px. Immaculate quiet writing area. A tiny blind-embossed four-point geometric detail at the upper right corner, low contrast. All white/blue-gray, no dark elements."
+    },
+    {
+      "id": "note",
+      "type": "sticky note",
+      "prompt": "Create ONE production-ready bitmap surface asset for a sophisticated Chinese novelist's outline canvas UI, an editorial stationery system. LANDSCAPE 3:2 format. Perfectly flat front-facing orthographic surface, full bleed to all four edges, NO external scene, NO table, NO perspective, NO text, letters, numbers, logos, icons or watermarks. Almost entirely empty and very low-contrast so live HTML dark text can overlay the central 85 percent. Fine tactile material visible at close range but restrained at UI scale; soft upper-left lighting. Not a complete UI screenshot. No outside shadow, no thick frame. Premium Japanese/Swiss editorial restraint. Very pale wheat-yellow paper with fine irregular fibers, a small realistic folded-up lower-right corner confined to the last 9 percent of width, pale cream underside, delicate crease shadow. Very slight warm gradient. The paper fills the whole image, no outside background. Clean empty light yellow writing area."
+    },
+    {
+      "id": "cite",
+      "type": "quotation card",
+      "prompt": "Create ONE production-ready bitmap surface asset for a sophisticated Chinese novelist's outline canvas UI, an editorial stationery system. LANDSCAPE 3:2 format. Perfectly flat front-facing orthographic surface, full bleed to all four edges, NO external scene, NO table, NO perspective, NO text, letters, numbers, logos, icons or watermarks. Almost entirely empty and very low-contrast so live HTML dark text can overlay the central 85 percent. Fine tactile material visible at close range but restrained at UI scale; soft upper-left lighting. Not a complete UI screenshot. No outside shadow, no thick frame. Premium Japanese/Swiss editorial restraint. Warm porcelain-white archival paper. Three subtly offset page layers visible only along the bottom 10px and right 8px, with refined gray micro-shadows. Very faint large blind-embossed opening quotation mark shape in the upper-right corner, almost invisible. Empty bright center."
+    },
+    {
+      "id": "textbox",
+      "type": "free text sheet",
+      "prompt": "Create ONE production-ready bitmap surface asset for a sophisticated Chinese novelist's outline canvas UI, an editorial stationery system. LANDSCAPE 3:2 format. Perfectly flat front-facing orthographic surface, full bleed to all four edges, NO external scene, NO table, NO perspective, NO text, letters, numbers, logos, icons or watermarks. Almost entirely empty and very low-contrast so live HTML dark text can overlay the central 85 percent. Fine tactile material visible at close range but restrained at UI scale; soft upper-left lighting. Not a complete UI screenshot. No outside shadow, no thick frame. Premium Japanese/Swiss editorial restraint. Milk-white translucent vellum paper with barely visible fine cloud-like fibers, entirely quiet surface and almost no contrast, subtle light gray-green tint at edge. No decoration, no shapes, no fold. Elegant uncoated book paper macrotexture."
+    },
+    {
+      "id": "container",
+      "type": "group panel",
+      "prompt": "Create ONE production-ready bitmap surface asset for a sophisticated Chinese novelist's outline canvas UI, an editorial stationery system. LANDSCAPE 3:2 format. Perfectly flat front-facing orthographic surface, full bleed to all four edges, NO external scene, NO table, NO perspective, NO text, letters, numbers, logos, icons or watermarks. Almost entirely empty and very low-contrast so live HTML dark text can overlay the central 85 percent. Fine tactile material visible at close range but restrained at UI scale; soft upper-left lighting. Not a complete UI screenshot. No outside shadow, no thick frame. Premium Japanese/Swiss editorial restraint. Extremely pale gray-green mineral paper, very faint fine crosshatch texture and a subtle soft green edge wash. Spacious fully empty center, no drawing or elements. Sophisticated background for a large grouping container, quiet and near-white."
+    },
+    {
+      "id": "anchor",
+      "type": "chapter bookmark",
+      "prompt": "Create ONE production-ready bitmap surface asset for a sophisticated Chinese novelist's outline canvas UI, an editorial stationery system. LANDSCAPE 3:2 format. Perfectly flat front-facing orthographic surface, full bleed to all four edges, NO external scene, NO table, NO perspective, NO text, letters, numbers, logos, icons or watermarks. Almost entirely empty and very low-contrast so live HTML dark text can overlay the central 85 percent. Fine tactile material visible at close range but restrained at UI scale; soft upper-left lighting. Not a complete UI screenshot. No outside shadow, no thick frame. Premium Japanese/Swiss editorial restraint. Ivory laid paper, very subtle vertical grain, a narrow pale muted terracotta cloth bookmark tab entering from the top edge at far right, only 8 percent wide and 22 percent tall, with a precise dovetail notch at its bottom. Everything else blank ivory paper. No markings."
+    },
+    {
+      "id": "volume",
+      "type": "volume index",
+      "prompt": "Create ONE production-ready bitmap surface asset for a sophisticated Chinese novelist's outline canvas UI, an editorial stationery system. LANDSCAPE 3:2 format. Perfectly flat front-facing orthographic surface, full bleed to all four edges, NO external scene, NO table, NO perspective, NO text, letters, numbers, logos, icons or watermarks. Almost entirely empty and very low-contrast so live HTML dark text can overlay the central 85 percent. Fine tactile material visible at close range but restrained at UI scale; soft upper-left lighting. Not a complete UI screenshot. No outside shadow, no thick frame. Premium Japanese/Swiss editorial restraint. Deep desaturated forest-teal bookbinding linen, fine realistic tightly woven threads, flat lit, a narrow pressed vertical seam 7 percent from left edge, a very fine muted antique brass fillet along that seam. Empty uniform dark teal center, calm rich tactile material. No lettering or patterns."
+    }
+  ]
+}

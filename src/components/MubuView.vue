@@ -13,13 +13,31 @@ import { relIconFor, relColor } from '../services/relation-kinds'
 import { jumpTo } from '../services/doublelinks'
 import DLinkPicker from './DLinkPicker.vue'
 import LoreRelRows from './LoreRelRows.vue'
+import LoreSetRail from './LoreSetRail.vue'
+import LoreTocRail from './LoreTocRail.vue'
+import { popOut } from '../services/panelwindows'
 
 const work = useWorkStore()
 const ui = useUiStore()
 const ai = useAiStore()
+/* 详情页复用本组件：focusNodeId = 当前查看的节点（其子条目成为纸面内容）；
+   barTarget = 模块条工具插槽（详情页有自己的工具条容器） */
+const props = defineProps({
+  focusNodeId: { type: String, default: '' },
+  barTarget: { type: String, default: '#crimson-bar-tools' }
+})
 const rootEl = ref(null)
 const ver = ref(0)
 const rows = ref([])
+/* 内容根：详情页 = 当前节点；列表页 = 当前设定集。标题单独显示，不再作为树行 */
+const focusNode = computed(() => (props.focusNodeId ? work.mubu.find((n) => n.id === props.focusNodeId && !n.deletedAt) || null : null))
+const contentRoot = computed(() => focusNode.value || work.currentMubuRoot())
+const contentRootId = computed(() => contentRoot.value?.id || null)
+const titleText = computed(() => contentRoot.value?.text || '未命名设定集')
+/* 赤月戏：模块条上的「独立窗口」与「更多 → 拆窗」同一动作 */
+function popLore() {
+  popOut(work, 'lore', '', `${work.work?.title || ''} · 设定`)
+}
 const pending = reactive({ key: null, offset: 'end' })
 const drag = reactive({ key: null, hintKey: null, zone: null })
 const focusedId = ref(null)
@@ -54,13 +72,18 @@ function build() {
     parentId: n.parentId || null,
     children: (byParent.get(n.id) || []).map(make)
   })
-  rows.value = (byParent.get(null) || []).map(make)
+  /* 只渲染内容根的下一级条目：设定集/节点的标题单独显示在纸面顶部 */
+  const rootNode = contentRoot.value
+  if (rootNode && !focusNode.value && work.mubuSetId !== rootNode.id) work.setMubuSet(rootNode.id)
+  rows.value = rootNode ? (byParent.get(rootNode.id) || []).map(make) : []
   nextTick(() => {
     syncAll()
     checkFocusFlash()
   })
 }
 watch(ver, build)
+watch(() => work.mubuSetId, () => ver.value++)
+watch(() => props.focusNodeId, () => ver.value++)
 watch(
   () => work.mubu.length,
   () => ver.value++
@@ -109,7 +132,46 @@ const visible = computed(() => {
   walk(rows.value, 0)
   return out
 })
-const nodeCount = computed(() => work.mubu.filter((n) => !n.deletedAt).length)
+const nodeCount = computed(() => {
+  let n = 0
+  const walk = (list) => {
+    for (const x of list) {
+      n++
+      walk(x.children)
+    }
+  }
+  walk(rows.value)
+  return n
+})
+/* 当前内容根与右栏目录（目录含折叠中的条目，点击时由 loreFocusId 展开并定位） */
+const tocItems = computed(() => {
+  const out = []
+  const walk = (list, depth) => {
+    for (const n of list) {
+      out.push({ id: n.id, text: n.text || '（空节点）', depth })
+      walk(n.children, depth + 1)
+    }
+  }
+  walk(rows.value, 0)
+  return out
+})
+/* 纸面标题：设定集名 / 详情页当前节点名（可直接改名） */
+function renameTitle(e) {
+  const id = contentRootId.value
+  if (!id) return
+  const v = String(e.target.value || '').trim() || '未命名设定集'
+  work.mubuSetText(id, v)
+  e.target.value = v
+}
+function pickToc(id) {
+  if (id) ui.loreFocusId = id
+}
+function createSet() {
+  pushUndo()
+  const r = work.createMubuSet()
+  ver.value++
+  nextTick(() => flashNode(r.id))
+}
 
 /* ---------- 撤销 / 重做（快照 + 差异落库） ---------- */
 function snapshotFlat() {
@@ -257,13 +319,22 @@ function fmt(cmd, val = null) {
 
 function addSibling(row) {
   pushUndo()
-  const r = row ? work.mubuAdd(row.node.parentId, row.node.id, '') : work.mubuAdd(null, null, '')
+  const r = row
+    ? work.mubuAdd(row.node.parentId, row.node.id, '')
+    : (contentRootId.value ? work.mubuAdd(contentRootId.value, null, '') : work.createMubuSet())
   commit(() => {}, 'm:' + r.id, 'start')
 }
 function createFirst() {
   pushUndo()
-  const r = work.mubuAdd(null, null, '')
+  const r = contentRootId.value ? work.mubuAdd(contentRootId.value, null, '') : work.createMubuSet()
   commit(() => {}, 'm:' + r.id, 'start')
+}
+/* 纸面底部「＋ 添加节点」：优先在选中节点后加同级，否则在顶层第一节点后加 */
+function addBottomNode() {
+  if (!nodeCount.value) return createFirst()
+  const row = focusedRow.value || visible.value.find((r) => r.depth === 0)
+  if (row) addSibling(row)
+  else createFirst()
 }
 function addChild(row) {
   pushUndo()
@@ -277,15 +348,10 @@ function deleteRow(row) {
 }
 function onEnter(row) {
   const n = row.node
-  if (!n.text && !hasChildren(n) && n.parentId) {
-    pushUndo()
-    work.mubuMove(n.id, n.parentId, 'after')
-    commit(() => {}, n.key, 'end')
-    return
-  }
+  /* 幕布习惯：回车 = 新建同级条目；子级用 Tab 或行尾「＋」 */
   pushUndo()
-  const asChild = hasChildren(n) && !n.fold
-  const r = work.mubuAdd(asChild ? n.id : n.parentId, asChild ? null : n.id, '')
+  const parentId = n.parentId || contentRootId.value
+  const r = parentId ? work.mubuAdd(parentId, n.parentId ? n.id : null, '') : work.createMubuSet()
   commit(() => {}, 'm:' + r.id, 'start')
 }
 function indent(row) {
@@ -298,10 +364,10 @@ function indent(row) {
 }
 function outdent(row) {
   const n = row.node
-  if (!n.parentId) return
+  if (!n.parentId || n.parentId === contentRootId.value) return
   pushUndo()
   work.mubuMove(n.id, n.parentId, 'after')
-  commit(() => {}, n.key, 'end')
+  commit(() => {}, row.node.key, 'end')
 }
 function moveRow(row, dir) {
   pushUndo()
@@ -349,8 +415,9 @@ function copyNode(row, cut = false) {
 }
 function pasteClip(asChild) {
   if (!clip.value) return
-  pushUndo()
   const anchor = visible.value.find((r) => r.node.id === ctx.rowId) || visible.value[0]
+  if (!anchor) return
+  pushUndo()
   const clone = regenIds(JSON.parse(JSON.stringify(clip.value)))
   if (asChild) work.mubuAddTree(anchor.node.id, null, clone)
   else work.mubuAddTree(anchor.node.parentId, anchor.node.id, clone)
@@ -501,14 +568,11 @@ function onDropRoot() {
   clearTimeout(expandTimer)
   if (!drag.key) return clearDrag()
   const n = work.mubu.find((x) => x.id === drag.key.slice(2))
-  if (!n) return clearDrag()
+  const rootId = contentRootId.value
+  if (!n || !rootId || n.id === rootId) return clearDrag()
   pushUndo()
-  const oldParent = n.parentId
-  const roots = work.mubuChildren(null).filter((x) => x.id !== n.id)
-  n.parentId = null
-  n.sortOrder = roots.reduce((m, s) => Math.max(m, s.sortOrder || 0), -1000) + 1000
-  work.mubuSetText(n.id, n.text, n.html ?? undefined)
-  if (oldParent) work.mubuNormalize(oldParent)
+  /* 拖到空白处 = 移到当前内容根的一级条目 */
+  work.mubuMove(n.id, rootId, 'inside')
   ver.value++
   nextTick(() => flashNode(n.id))
   clearDrag()
@@ -525,16 +589,19 @@ async function importMd() {
   if (!files.length) return
   pushUndo()
   let nodesAdded = 0
-  const anchor = focusedId.value
+  const anchorId = focusedId.value?.startsWith('m:') ? focusedId.value.slice(2) : null
+  /* 导入落在当前内容根：有焦点则挂在焦点节点下，否则作为一级条目 */
+  const anchorInRoot = anchorId && (anchorId === contentRootId.value || work.mubuRootOf(anchorId)?.id === work.mubuSetId) ? anchorId : null
+  const parentId = anchorInRoot || contentRootId.value || work.createMubuSet().id
   for (const f of files) {
     const { text } = decodeText(f.data)
     const tree = parseMubuMd(text)
     if (!tree.length) continue
-    work.mubuAddTree(anchor || null, null, tree)
+    work.mubuAddTree(parentId, null, tree)
     nodesAdded += countTree(tree)
   }
   ver.value++
-  nextTick(() => anchor && flashNode(anchor))
+  nextTick(() => anchorId && flashNode(anchorId))
   window.$msg?.success(`导入完成：新增 ${nodesAdded} 个节点`)
 }
 function countTree(list) {
@@ -573,6 +640,10 @@ function onRowCtx(row, e) {
   ctx.hasChildren = hasChildren(row.node)
   ctx.linkSearch = false
   ctx.linkSpan = e.target?.closest?.('.dl-link') || null
+  clampCtx()
+}
+/* 菜单定位后自动避让窗口边缘 */
+function clampCtx() {
   nextTick(() => {
     const el = ctxEl.value
     if (!el) return
@@ -580,6 +651,34 @@ function onRowCtx(row, e) {
     ctx.x = Math.max(8, Math.min(ctx.x, window.innerWidth - r.width - 8))
     ctx.y = Math.max(8, Math.min(ctx.y, window.innerHeight - r.height - 8))
   })
+}
+/* 行尾「···」节点操作栏：先聚焦该行，再在按钮下方打开同一套节点菜单 */
+function openRowMenu(row, e) {
+  const rowEl = e.currentTarget?.closest?.('.ob-row')
+  const textEl = rowEl?.querySelector?.('.ob-text')
+  if (textEl) {
+    textEl.focus()
+    try {
+      const sel = window.getSelection()
+      const range = document.createRange()
+      /* 节点菜单的格式操作作用于整条节点（幕布式节点级格式） */
+      range.selectNodeContents(textEl)
+      sel.removeAllRanges()
+      sel.addRange(range)
+    } catch {
+      /* ignore */
+    }
+  }
+  const rect = e.currentTarget.getBoundingClientRect()
+  ctx.open = true
+  ctx.x = rect.left
+  ctx.y = rect.bottom + 4
+  ctx.rowId = row.node.id
+  ctx.folded = !!row.node.fold
+  ctx.hasChildren = hasChildren(row.node)
+  ctx.linkSearch = false
+  ctx.linkSpan = null
+  clampCtx()
 }
 function selectionText() {
   const sel = window.getSelection()
@@ -819,7 +918,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <TaskLauncher module="lore" />
+  <TaskLauncher v-if="!ui.isStudioSkin" module="lore" />
   <div ref="rootEl" class="lore-surface" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
     <div class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">设定</span>
@@ -829,7 +928,32 @@ onBeforeUnmount(() => {
       <NButton size="tiny" @click="work.mubuFoldAll(false); ver++">全部展开</NButton>
     </div>
 
-    <div class="ob-toolbar">
+    <!-- 赤月戏：设计稿三栏——设定集目录 + 纸面树 + 悬停目录 -->
+    <LoreSetRail v-if="ui.skin === 'crimson'" />
+    <Teleport defer :to="barTarget" :disabled="ui.skin !== 'crimson'">
+      <div v-if="ui.skin === 'crimson'" class="crimson-bar-group">
+        <input v-model="ui.mubuQuery" class="crimson-bar-search" type="search" placeholder="搜索内容或标签" aria-label="搜索设定内容或标签" />
+        <button class="crimson-bar-button" type="button" :disabled="!focusedRow" title="新建同级节点" @click="addSibling(focusedRow)">＋ 同级</button>
+        <button class="crimson-bar-button primary" type="button" :disabled="!focusedRow" title="新建子节点" @click="addChild(focusedRow)">＋ 子级</button>
+        <button class="crimson-bar-button" type="button" title="把设定拆成独立窗口" @click="popLore">独立窗口 ↗</button>
+      </div>
+    </Teleport>
+
+    <section class="lore-paper-col" :class="{ 'crimson-lore-paper': ui.skin === 'crimson' }">
+      <template v-if="ui.skin === 'crimson'">
+        <div class="paper-running"><span>{{ work.work?.title || '作品' }} / {{ titleText }}</span><span>幕布</span></div>
+        <div v-if="contentRootId" class="crimson-doc-title">
+          <input
+            class="crimson-doc-title-input"
+            :value="titleText"
+            placeholder="未命名设定集"
+            aria-label="设定集或节点名称"
+            @change="renameTitle"
+          />
+          <span>{{ nodeCount }} 条</span>
+        </div>
+      </template>
+      <div class="ob-toolbar">
       <button class="tb" title="撤销 (Ctrl+Z)" :disabled="!undoStack.length" @click="undo()">↶</button>
       <button class="tb" title="重做 (Ctrl+Y)" :disabled="!redoStack.length" @click="redo()">↷</button>
       <span class="tb-sep" />
@@ -930,15 +1054,23 @@ onBeforeUnmount(() => {
         </span>
         <span class="ob-ops">
           <button class="ob-op" title="添加子节点" @click.stop="addChild(row)"><OIcon name="plus" :size="11" /></button>
+          <button class="ob-op" title="节点操作（格式 / 标签 / 关系 / 复制 / 删除）" @click.stop="openRowMenu(row, $event)">···</button>
           <button class="ob-op" title="删除节点" @click.stop="deleteRow(row)"><OIcon name="close" :size="11" /></button>
         </span>
       </div>
-      <div v-if="nodeCount === 0" class="empty-shelf" style="padding-top: 70px">
-        <div class="big">白纸待书</div>
-        <p>设定库还是空的——写下第一个节点，开始构建你的世界。</p>
-        <button class="btn-primary" @click="createFirst">新建第一个节点</button>
+      <div v-if="!rows.length" class="empty-shelf" style="padding-top: 50px">
+        <template v-if="!work.mubuSetId">
+          <div class="big">尚无设定集</div>
+          <p>先创建一个设定集，再进入其中编写具体设定条目。</p>
+          <button class="btn-primary" @click="createSet">新建设定集</button>
+        </template>
+        <template v-else>
+          <div class="big">{{ focusNodeId ? '这个节点还没有子条目' : '这个设定集还是空的' }}</div>
+          <p>{{ focusNodeId ? '写第一条子条目；按回车继续添加同级，Tab 添加子级。' : '写第一条设定；按回车继续添加同级条目，Tab 添加子级。' }}</p>
+          <button class="btn-primary" @click="createFirst">{{ focusNodeId ? '添加子条目' : '添加第一条设定' }}</button>
+        </template>
       </div>
-      <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到顶层） · 选中文字后可用工具栏或右键设置格式 · 双击条目 打开详情页</div>
+      <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到集内顶层） · 选中文字后可用工具栏或右键设置格式 · 双击条目 打开详情页</div>
 
       <!-- 关联关系悬停浮层（行尾卡片 hover；移入浮层保持，点击行跳转） -->
       <div
@@ -1008,5 +1140,18 @@ onBeforeUnmount(() => {
         </div>
       </div>
     </div>
+      <div v-if="ui.skin === 'crimson'" class="crimson-lore-bottom">
+        <button type="button" @click="addBottomNode">＋ 添加节点</button>
+        <span>Tab 缩进　Shift + Tab 提升层级</span>
+      </div>
+      <slot name="paper-footer" />
+    </section>
+    <LoreTocRail
+      v-if="ui.skin === 'crimson'"
+      :items="tocItems"
+      :active-id="ui.mubuSelectedId || ''"
+      title="设定目录"
+      @pick="pickToc"
+    />
   </div>
 </template>

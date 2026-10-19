@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>山海来信 · 纸本叙事画布</title>
+  <link rel="stylesheet" href="../../src/assets/fonts/fonts-user.css">
+  <link rel="stylesheet" href="canvas.css">
+  <link rel="stylesheet" href="polish.css">
+</head>
+<body>
+  <svg class="icon-library" aria-hidden="true"><defs>
+    <symbol id="i-event" viewBox="0 0 24 24"><path d="m12 3 8 9-8 9-8-9Z"/><path d="M9 12h6m-3-3v6"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 3h14v12l-6 6H5Z"/><path d="M13 21v-6h6M8 8h8M8 11h5"/></symbol>
+    <symbol id="i-cite" viewBox="0 0 24 24"><path d="M4 5h16v14H4Z"/><path d="M8 9h3v4H7v-2c0-1 0-2 1-2Zm7 0h3v4h-4v-2c0-1 0-2 1-2Z"/></symbol>
+    <symbol id="i-textbox" viewBox="0 0 24 24"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></symbol>
+    <symbol id="i-container" viewBox="0 0 24 24"><path d="M3 8V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11H3Z"/><path d="M3 10h18"/></symbol>
+    <symbol id="i-anchor" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4Z"/><path d="M9 7h6M9 10h4"/></symbol>
+    <symbol id="i-volume" viewBox="0 0 24 24"><path d="M5 3h14v18H5a2 2 0 0 1 0-4h14M7 3v14"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M9 4H4v5m11-5h5v5M4 15v5h5m11-5v5h-5"/></symbol>
+    <symbol id="i-image" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8" cy="8" r="1.5"/><path d="m3 17 5-5 4 4 4-6 5 7"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M8 4 3 9l5 5M3 9h11a6 6 0 0 1 0 12"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16m-6-6 6 6-6 6"/></symbol>
+  </defs></svg>
+  <div class="app-shell">
+    <header class="app-header">
+      <a class="brand" href="../book-cover-preview/" title="返回书籍封面设计"><span class="brand-seal">叙</span><span>小说工坊</span></a>
+      <div class="breadcrumb"><span>山海来信</span><span class="slash">/</span><strong>大纲画布</strong></div>
+      <div class="header-actions"><span class="edition">纸本叙事</span><button id="materials-open" class="button quiet"><svg><use href="#i-image"/></svg>素材一览</button></div>
+    </header>
+    <aside class="sidebar">
+      <div class="project-summary"><div class="eyebrow">故事的骨架</div><h1>山海来信</h1><p>把零散的灵感，连成故事。</p></div>
+      <div class="section-label">添加模块 <span>7 种</span></div>
+      <div id="palette" class="palette" aria-label="模块工具箱"></div>
+      <div class="sidebar-divider"></div>
+      <div class="section-label">画布图层 <span id="layer-count">9</span></div>
+      <div id="layers" class="layers" aria-label="画布图层"></div>
+      <div class="sidebar-bottom"><span class="mini-stamp">PAPER<br>STORIES</span><p>纸的温度，<br>故事的秩序。</p></div>
+    </aside>
+    <main class="workspace">
+      <div class="workspace-header"><div><div class="eyebrow">OUTLINE / 01</div><h2>故事从一封信开始</h2></div><div class="workspace-meta"><span class="status-dot"></span><span>第一卷 · 潮声</span></div></div>
+      <div class="canvas-toolbar"><div class="tool-group"><span class="tool-label">连线</span><div class="segmented" aria-label="连线样式"><button id="curve-mode" class="active" aria-pressed="true">流畅曲线</button><button id="ortho-mode" aria-pressed="false">圆角折线</button></div></div><div class="tool-group toolbar-right"><button id="texture-toggle" class="text-button" aria-pressed="true"><span class="switch on"></span>纸面材质</button><span class="tool-divider"></span><button id="reset" class="icon-button" title="恢复初始画布" aria-label="恢复初始画布"><svg><use href="#i-undo"/></svg></button></div></div>
+      <div id="viewport" class="viewport" tabindex="0" aria-label="大纲画布，可拖动模块、滚轮平移、按住 Ctrl 缩放">
+        <div id="world" class="world"><div id="groups"></div><svg id="edges" class="edges" width="6000" height="5000" viewBox="-2000 -1600 6000 5000" aria-label="模块关系连线"></svg><div id="nodes"></div><div id="edge-labels" class="edge-labels"></div></div>
+        <div class="canvas-controls"><button id="zoom-out" aria-label="缩小">−</button><button id="zoom-value" title="恢复 100%">100%</button><button id="zoom-in" aria-label="放大">＋</button><span></span><button id="fit" aria-label="适应画布" title="适应画布"><svg><use href="#i-fit"/></svg></button></div>
+        <div class="relation-legend"><span style="--rel:#8971a2">伏笔</span><span style="--rel:#ae715f">因果</span><span style="--rel:#59877e">关联</span><span style="--rel:#b28443">冲突</span></div>
+        <div id="inspector" class="inspector" hidden><div class="inspector-head"><span id="inspector-kind"></span><button id="inspector-close" class="icon-button" aria-label="关闭属性"><svg><use href="#i-close"/></svg></button></div><label>标题<input id="edit-title" maxlength="45"></label><label>内容<textarea id="edit-body" rows="3" maxlength="160"></textarea></label><p>直接编辑文字，纸面保持完整。</p></div>
+        <div id="edge-inspector" class="edge-inspector" hidden><span>关系</span><select id="edit-relation" aria-label="关系类型"><option>关联</option><option>因果</option><option>伏笔</option><option>冲突</option></select><select id="edit-arrow" aria-label="箭头方向"><option value="forward">单向箭头</option><option value="both">双向箭头</option><option value="none">无箭头</option></select><button id="edge-close" class="icon-button" aria-label="关闭连线属性"><svg><use href="#i-close"/></svg></button></div>
+      </div>
+      <footer class="workspace-footer"><span><span class="keycap">拖动</span> 移动模块 <span class="footer-sep">·</span> 空白处平移 <span class="footer-sep">·</span><span class="keycap">Ctrl</span> + 滚轮缩放</span><span id="selection-hint">双击模块编辑文字</span></footer>
+    </main>
+  </div>
+  <dialog id="materials-dialog" class="materials-dialog"><div class="materials-heading"><div><div class="eyebrow">MATERIAL LIBRARY</div><h2>七种纸面，一套叙事语言。</h2><p>细节留在边缘，让文字成为主角。</p></div><button id="materials-close" class="icon-button" aria-label="关闭素材一览"><svg><use href="#i-close"/></svg></button></div><div id="material-grid" class="material-grid"></div><div class="materials-footer"><span>无文字原图 · PNG / WebP</span><a class="button primary" href="assets/outline-materials.zip" download>下载素材包 <svg><use href="#i-arrow"/></svg></a></div></dialog>
+  <div id="toast" class="toast" role="status"></div>
+  <script src="canvas.js"></script>
+</body>
+</html>

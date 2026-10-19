@@ -1,0 +1,31 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 2,
+        "examples": [
+          "span.relative.inline-flex「FRESH DROPS EVERYDAY」",
+          "div.flex.items-center「BACKGROUNDS」"
+        ]
+      },
+      {
+        "rule": "gradientText",
+        "label": "渐变文字",
+        "count": 3,
+        "examples": [
+          "span.px-[5px].py-[1px]「NEW」",
+          "span.px-[8px].py-[3px]「FRESH DROPS EVERYDAY」",
+          "span.animate-gradient-shift「SUPERPOWERS」"
+        ]
+      }
+    ]
+  }
+]

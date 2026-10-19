@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "theme": "幻日剧场",
+  "updatedAt": "2026-10-18",
+  "assets": [
+    {
+      "id": "characters-identities-v2",
+      "name": "众相剧场",
+      "module": "人物",
+      "file": "characters-identities-v2.png",
+      "status": "用户确认收录",
+      "addedAt": "2026-10-18",
+      "mediaType": "image/png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 3029474,
+      "sha256": "e9278a6d2c1b49e25cb0968789395c651d5146371894c8aedf5712f8da73bfb6",
+      "style": "彩纸浮雕、几何微雕纹理、细铜边、层叠景深",
+      "elements": [
+        "面具",
+        "人物剪影",
+        "朱红牵引线",
+        "舞台景片"
+      ],
+      "palette": [
+        "钴蓝",
+        "赭橙",
+        "灰绿",
+        "象牙色"
+      ],
+      "composition": "主体在左侧与中央，右侧为蓝灰色低密度空间",
+      "source": "../../金屏夜梅-重排设计稿-v3/素材重绘-人物与灵感-v2/characters-identities-v2.png",
+      "prompts": "PROMPTS.md#人物--众相剧场",
+      "generationMode": "built-in image_gen",
+      "notes": "用户认为适用于幻日剧场，明确要求纳入该主题素材库。作为人物模块布景，不是现有角色指定肖像。"
+    },
+    {
+      "id": "inspiration-refraction-v2",
+      "name": "想象折光",
+      "module": "灵感",
+      "file": "inspiration-refraction-v2.png",
+      "status": "用户确认收录",
+      "addedAt": "2026-10-18",
+      "mediaType": "image/png",
+      "width": 1672,
+      "height": 941,
+      "bytes": 2882868,
+      "sha256": "fa57f6bd5c2870bff72d31ea0efcc6225c8f6e076c2b994e84ba08c913899dff",
+      "style": "彩纸浮雕、几何微雕纹理、细铜边、层叠景深",
+      "elements": [
+        "透镜",
+        "棱镜",
+        "色光纸带",
+        "悬浮碎片"
+      ],
+      "palette": [
+        "淡紫",
+        "青绿",
+        "藏黄",
+        "珊瑚色"
+      ],
+      "composition": "主体集中右侧，色光纸带向左上散开，左侧留低密度空间",
+      "source": "../../金屏夜梅-重排设计稿-v3/素材重绘-人物与灵感-v2/inspiration-refraction-v2.png",
+      "prompts": "PROMPTS.md#灵感--想象折光",
+      "generationMode": "built-in image_gen",
+      "notes": "用户认为适用于幻日剧场，明确要求纳入该主题素材库。用于表达捕捉、折射、关联与组合念头。"
+    }
+  ]
+}

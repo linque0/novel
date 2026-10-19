@@ -1,0 +1,702 @@
+/* 赤月戏（金屏夜梅）· 令牌、外壳与书架
+   视觉基线：docs/前端美化/oil-ui-v3-功能对齐/赤月剧场-书架方向对比/完整设计稿/金屏夜梅-完整设计稿
+   书架的纸色/黛青属于「书架页」的一套纸面令牌；工作台用的是墨色 + 旧金（见 crimson-workbench.css）。 */
+
+body[data-skin='crimson'],
+.app-root[data-skin='crimson'] {
+  --bg: #171c1b;
+  --bg-panel: #1c2926;
+  --bg-editor: #181d1b;
+  --bg-hover: #2a352f;
+  --text: #f0e7d5;
+  --text-dim: #bfb59c;
+  --text-faint: #9a9078;
+  --light: #f0e7d5;
+  --muted: #bfb59c;
+  --gold: #cfb06b;
+  --line: #baa36845;
+  --paper: #f1e8d5;
+  --paper-muted: #766247;
+  --ink: #403b30;
+  --accent: #cfb06b;
+  --accent-soft: #cfb06b1c;
+  --accent-deep: #b5924f;
+  --border: #3a453c;
+  --border-strong: #55604f;
+  --danger: #e08b7e;
+  --crimson-red: #b64b3d;
+  --crimson-serif: 'KingHwa OldSong', 'OldSong', 'SimSun', serif;
+  --crimson-kai: 'LXGW WenKai', 'WenKai', 'KaiTi', serif;
+}
+
+body[data-skin='crimson'] { color-scheme: dark; scrollbar-color: #cfb06b55 #171c1b; }
+body[data-skin='crimson'] :is(.side-list, .rich-host, .character-surface, .ob-editor, .ol-editor, .ldt-body, .sw-content) {
+  scrollbar-color: #cfb06b55 transparent;
+  scrollbar-width: thin;
+}
+
+/* ───────────────────────── 书架页 ───────────────────────── */
+body[data-skin='crimson'] .crimson-shelf {
+  --cs-ink: #174545;
+  --cs-muted: #536d62;
+  --cs-line: #53786940;
+  --cs-paper: #eee6d3;
+  --cs-red: #b64b3d;
+  --cs-red-hover: #8b332a;
+  --cs-teal: #164e4d;
+  --cs-gold: #ad8250;
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  grid-template-rows: 87px minmax(0, 1fr) 40px;
+  height: 100%;
+  min-height: 0;
+  background: var(--cs-paper);
+  color: var(--cs-ink);
+  font-family: 'Microsoft YaHei', sans-serif;
+}
+body[data-skin='crimson'] .crimson-shelf button { font: inherit; color: inherit; }
+body[data-skin='crimson'] .crimson-shelf :is(button, a, input):focus-visible { outline: 2px solid #b38d43; outline-offset: 4px; }
+body[data-skin='crimson'] .crimson-shelf :is(button, a) { transition: color .18s, background-color .18s, box-shadow .18s, translate .18s; }
+body[data-skin='crimson'] .crimson-shelf :is(button, a):active { translate: 0 1px; }
+body[data-skin='crimson'] .crimson-shelf :is(h1, h2, h3, p) { margin: 0; }
+body[data-skin='crimson'] .crimson-shelf small { font-size: 13px; }
+
+/* 页头 */
+body[data-skin='crimson'] .crimson-header {
+  grid-column: 1 / -1;
+  color: var(--cs-ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 43px;
+  border-bottom: 1px solid #54796a66;
+  position: relative;
+  z-index: 6;
+}
+body[data-skin='crimson'] .crimson-header::after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 51px);
+  bottom: -3px;
+  width: 102px;
+  height: 5px;
+  border-top: 1px solid var(--cs-gold);
+  border-bottom: 1px solid var(--cs-gold);
+  background: var(--cs-paper);
+}
+body[data-skin='crimson'] .crimson-brand { display: flex; align-items: center; gap: 12px; white-space: nowrap; }
+body[data-skin='crimson'] .crimson-emblem {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  font-family: var(--crimson-serif);
+  font-size: 23px;
+  border: 1px solid #7d967e;
+  border-radius: 14px 0 14px 0;
+  color: var(--cs-ink);
+}
+body[data-skin='crimson'] .crimson-brand-text { font: 400 25px/1 var(--crimson-serif); letter-spacing: 3px; color: var(--cs-ink); }
+body[data-skin='crimson'] .crimson-brand-text small { display: block; margin-top: 5px; font: 12px/1 var(--crimson-kai); letter-spacing: 4px; color: var(--cs-muted); }
+body[data-skin='crimson'] .crimson-header-actions { display: flex; align-items: center; gap: 18px; }
+body[data-skin='crimson'] .crimson-shelf-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font: 400 24px/1 var(--crimson-kai);
+  letter-spacing: 8px;
+  color: var(--cs-ink);
+  pointer-events: none;
+  white-space: nowrap;
+}
+/* 皮肤选择器落在纸面页头：改成纸上的下划线小控件 */
+body[data-skin='crimson'] .crimson-header-actions .n-base-selection {
+  background-color: transparent !important;
+  color: #174545 !important;
+}
+body[data-skin='crimson'] .crimson-header-actions .n-base-selection-label { background-color: transparent !important; }
+body[data-skin='crimson'] .crimson-header-actions .n-select { width: 138px; }
+body[data-skin='crimson'] .crimson-header-actions .n-base-selection__border,
+body[data-skin='crimson'] .crimson-header-actions .n-base-selection__state-border { border-color: #a89975 !important; }
+body[data-skin='crimson'] .crimson-header-actions :is(.n-base-selection-label, .n-base-selection-input, .n-base-selection-placeholder) { color: #174545 !important; }
+body[data-skin='crimson'] .crimson-header-actions .n-button { color: #174545; }
+
+/* 左竖栏：设计稿的书架导航（84px，当前项红字 + 圆角金框） */
+body[data-skin='crimson'] .crimson-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-top: 28px;
+  background: #e5dfcb;
+  border-right: 1px solid var(--cs-line);
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+}
+body[data-skin='crimson'] .crimson-nav-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 70px;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+body[data-skin='crimson'] .crimson-nav-item:last-child { margin-top: auto; margin-bottom: 20px; }
+body[data-skin='crimson'] .crimson-nav-item:hover { background: #ffffff66; }
+body[data-skin='crimson'] .crimson-nav-item.active { color: #a63e31; }
+body[data-skin='crimson'] .crimson-nav-item.active::before {
+  content: '';
+  position: absolute;
+  inset: 3px 17px;
+  border: 1px solid #b78055;
+  border-radius: 25px 25px 5px 5px;
+  pointer-events: none;
+}
+body[data-skin='crimson'] .crimson-nav-item:disabled { opacity: .45; cursor: default; }
+
+/* 主区 */
+body[data-skin='crimson'] .crimson-main { position: relative; min-width: 0; min-height: 0; overflow: hidden; }
+body[data-skin='crimson'] .crimson-toolbar {
+  position: absolute;
+  left: 38px;
+  right: 35px;
+  top: 20px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+body[data-skin='crimson'] .crimson-toolbar h2 { font: 400 23px var(--crimson-kai); letter-spacing: 2px; }
+body[data-skin='crimson'] .crimson-toolbar h2 span { margin-left: 12px; font: 13px 'Microsoft YaHei'; color: var(--cs-muted); letter-spacing: 0; }
+body[data-skin='crimson'] .crimson-shelf-actions { display: flex; align-items: center; gap: 20px; }
+body[data-skin='crimson'] .crimson-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 170px;
+  border-bottom: 1px solid #7b9786;
+  color: var(--cs-ink);
+}
+body[data-skin='crimson'] .crimson-search input {
+  flex: 1;
+  min-width: 0;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: 14px 'Microsoft YaHei';
+}
+body[data-skin='crimson'] .crimson-search input::placeholder { color: var(--cs-muted); opacity: .85; }
+body[data-skin='crimson'] .crimson-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 19px;
+  min-height: 40px;
+  padding: 0 21px;
+  border: 1px solid transparent;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+body[data-skin='crimson'] .crimson-button.primary { background: var(--cs-teal); color: #faf0d9; border-radius: 0 15px 0 15px; }
+body[data-skin='crimson'] .crimson-button.primary:hover { background: var(--cs-red); color: #fff3df; }
+body[data-skin='crimson'] .crimson-quiet {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  padding: 10px 0;
+  border: 0;
+  background: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+body[data-skin='crimson'] .crimson-quiet:hover { color: var(--cs-red); }
+body[data-skin='crimson'] .crimson-button:disabled,
+body[data-skin='crimson'] .crimson-quiet:disabled,
+body[data-skin='crimson'] .crimson-work-open:disabled { opacity: .55; cursor: default; }
+
+/* 舞台：布景 + 前后景叠层（同图两层，前景用 clip-path 露下半，制造景深） */
+body[data-skin='crimson'] .crimson-stage {
+  position: absolute;
+  inset: 0;
+  width: calc(100% - 316px);
+  overflow: hidden;
+}
+body[data-skin='crimson'] .crimson-stage-art,
+body[data-skin='crimson'] .crimson-front-art {
+  position: absolute;
+  inset: 0;
+  background: url('../../assets/skins/crimson/shelf.webp') 56% center / cover no-repeat;
+  pointer-events: none;
+}
+body[data-skin='crimson'] .crimson-front-art {
+  clip-path: polygon(0 100%, 33% 90%, 60% 84%, 79% 65%, 100% 60%, 100% 100%);
+  z-index: 2;
+}
+body[data-skin='crimson'] .crimson-stage-fade {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, #eee6d3 0%, #eee6d3e6 14%, #eee6d369 33%, transparent 55%),
+    linear-gradient(0deg, #eee6d3 0%, transparent 23%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 故事栏：竖排大题名 + 竖排简介 + 行动 + 统计 */
+body[data-skin='crimson'] .crimson-story { position: absolute; z-index: 3; left: 40px; top: 135px; width: 305px; height: 500px; }
+body[data-skin='crimson'] .crimson-eyebrow { font-size: 13px; color: var(--cs-muted); }
+body[data-skin='crimson'] .crimson-main-title {
+  position: absolute;
+  left: 0;
+  top: 55px;
+  width: 77px;
+  height: 300px;
+  font: 400 64px/1.1 var(--crimson-kai);
+  letter-spacing: 6px;
+  color: var(--cs-ink);
+}
+body[data-skin='crimson'] .crimson-main-title.title-vertical { writing-mode: vertical-rl; }
+body[data-skin='crimson'] .crimson-main-title.title-two,
+body[data-skin='crimson'] .crimson-main-title.title-long {
+  left: 0;
+  top: 60px;
+  width: 250px;
+  height: auto;
+  max-height: 190px;
+  letter-spacing: 4px;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+body[data-skin='crimson'] .crimson-title-line { display: block; }
+body[data-skin='crimson'] .crimson-main-title.title-two .crimson-title-line { white-space: nowrap; }
+body[data-skin='crimson'] .crimson-main-title.title-long .crimson-title-line { -webkit-line-clamp: 2; }
+body[data-skin='crimson'] .crimson-synopsis {
+  position: absolute;
+  left: 108px;
+  top: 76px;
+  height: 280px;
+  writing-mode: vertical-rl;
+  font: 400 19px/1.8 var(--crimson-kai);
+  letter-spacing: 2px;
+  color: #355a50;
+  overflow: hidden;
+}
+body[data-skin='crimson'] .crimson-story-actions { position: absolute; left: 0; top: 340px; display: flex; align-items: center; gap: 17px; white-space: nowrap; }
+body[data-skin='crimson'] .crimson-story-actions .crimson-button.primary { background: var(--cs-red); color: #fff3df; border-radius: 0 16px 0 16px; min-height: 44px; padding: 0 19px; }
+body[data-skin='crimson'] .crimson-story-actions .crimson-button.primary:hover { background: var(--cs-red-hover); }
+body[data-skin='crimson'] .crimson-stats {
+  position: absolute;
+  left: 0;
+  top: 405px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--cs-muted);
+}
+body[data-skin='crimson'] .crimson-stats b { font: 400 26px var(--crimson-serif); color: var(--cs-ink); }
+body[data-skin='crimson'] .crimson-stats > span:last-child { display: none; }
+
+/* 5–8 字横排两行、超长截断时：简介改成横排落到题名下方，行动与统计跟随下移（竖排只留给 ≤4 字） */
+body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-synopsis,
+body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-synopsis {
+  writing-mode: horizontal-tb;
+  left: 0;
+  top: 252px;
+  width: 258px;
+  height: auto;
+  max-height: 62px;
+  font-size: 15px;
+  line-height: 1.8;
+  letter-spacing: 0;
+  color: #355a50;
+}
+body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-story-actions,
+body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-story-actions { top: 330px; }
+body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-stats,
+body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-stats { top: 388px; }
+
+/* 书封对象：纸板书 + 书口 + 投影 */
+body[data-skin='crimson'] .crimson-book-stage {
+  position: absolute;
+  z-index: 3;
+  left: 49%;
+  top: 255px;
+  perspective: 900px;
+}
+body[data-skin='crimson'] .crimson-book-stage::after {
+  content: '';
+  position: absolute;
+  left: -20px;
+  right: -45px;
+  bottom: -28px;
+  height: 24px;
+  border-radius: 50%;
+  background: #17454555;
+  filter: blur(8px);
+  z-index: -1;
+}
+body[data-skin='crimson'] .crimson-book-object {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 181px;
+  height: 255px;
+  padding: 0;
+  border: 0;
+  background: #25191a;
+  border-radius: 1px 5px 5px 1px;
+  overflow: hidden;
+  box-shadow: inset 2px 0 3px #fff4, 9px 10px 20px #0008;
+  transform: rotateY(-13deg) rotateZ(5deg);
+  transform-style: preserve-3d;
+  transition: transform .3s, box-shadow .3s;
+  cursor: pointer;
+}
+/* 书脊：设计稿里从书封右缘斜切出去的一道纸口 */
+body[data-skin='crimson'] .crimson-book-spine {
+  position: absolute;
+  z-index: 0;
+  left: 100%;
+  top: 4px;
+  width: 10px;
+  height: calc(100% - 5px);
+  background: repeating-linear-gradient(#e6d8bc 0, #e6d8bc 1px, #b7a991 2px, #f2e5cc 3px);
+  transform-origin: left;
+  transform: skewY(-12deg);
+  pointer-events: none;
+}
+body[data-skin='crimson'] .crimson-book-object:hover { transform: rotateY(-13deg) rotateZ(5deg) translateY(-4px); box-shadow: inset 2px 0 3px #fff4, 11px 14px 24px #000a; }
+body[data-skin='crimson'] .crimson-book-object::after {
+  content: '';
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: linear-gradient(90deg, #0007, transparent 7%, #fff2 9%, transparent 12%), linear-gradient(#0005, transparent 45%, #0006);
+  pointer-events: none;
+}
+body[data-skin='crimson'] .crimson-book-object .crimson-cover { position: absolute; inset: 0; }
+
+/* 书封（生成式：款式配色 + 纸面 + 竖排/两行题名 + 作者印） */
+body[data-skin='crimson'] .crimson-cover {
+  --cc: #2f4a6b;
+  --cc-ink: #f4ead6;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 20px 16px 14px;
+  background:
+    linear-gradient(160deg, color-mix(in srgb, var(--cc) 78%, #000), var(--cc) 55%, color-mix(in srgb, var(--cc) 88%, #000)),
+    var(--cc);
+  color: var(--cc-ink);
+  overflow: hidden;
+  box-shadow: inset 0 0 0 1px #ffffff26, inset 6px 0 0 #0000002e;
+}
+body[data-skin='crimson'] .crimson-cover-moon {
+  position: absolute;
+  z-index: 0;
+  top: 20px;
+  right: 17px;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 35%, #d06a4f, #8e342c 62%, #64231f);
+  box-shadow: 0 0 26px #b64b3d66;
+  opacity: .9;
+}
+body[data-skin='crimson'] .crimson-cover-hills {
+  position: absolute;
+  z-index: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 96px;
+  background:
+    radial-gradient(ellipse at 18% 110%, #0b12102e 0 58%, transparent 59%),
+    radial-gradient(ellipse at 82% 112%, #0b121044 0 62%, transparent 63%),
+    linear-gradient(0deg, #0b121055, transparent 70%);
+  pointer-events: none;
+}
+body[data-skin='crimson'] .crimson-cover-seal {
+  position: absolute;
+  z-index: 2;
+  right: 12px;
+  bottom: 13px;
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  border: 1px solid #d9a96f9a;
+  color: #f0d7b1;
+  font: 10px/1.15 var(--crimson-serif);
+  letter-spacing: 1px;
+  background: #7d332b88;
+}
+body[data-skin='crimson'] .crimson-cover.k-note { --cc: #e6d9bd; --cc-ink: #403b30; }
+body[data-skin='crimson'] .crimson-cover.k-cedar { --cc: #3f5b4c; }
+body[data-skin='crimson'] .crimson-cover.k-violet { --cc: #5b4666; }
+body[data-skin='crimson'] .crimson-cover.k-claret { --cc: #6f2f2c; }
+body[data-skin='crimson'] .crimson-cover.k-ink { --cc: #23282a; --cc-ink: #ece0c8; }
+body[data-skin='crimson'] .crimson-cover-rule {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid color-mix(in srgb, var(--cc-ink) 30%, transparent);
+  pointer-events: none;
+}
+body[data-skin='crimson'] .crimson-cover-title {
+  position: relative;
+  z-index: 1;
+  font: 500 30px/1.22 var(--crimson-kai);
+  letter-spacing: 4px;
+  text-shadow: 0 2px 8px #0008;
+  overflow: hidden;
+}
+body[data-skin='crimson'] .crimson-cover.title-vertical .crimson-cover-title { writing-mode: vertical-rl; align-self: flex-start; max-height: 100%; max-width: calc(100% - 36px); margin-top: 2px; letter-spacing: 6px; }
+body[data-skin='crimson'] .crimson-cover.title-two .crimson-cover-title,
+body[data-skin='crimson'] .crimson-cover.title-clamp .crimson-cover-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+body[data-skin='crimson'] .crimson-cover-line { display: block; }
+body[data-skin='crimson'] .crimson-cover-author {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  font: 11px/1 'Microsoft YaHei';
+  letter-spacing: 3px;
+  opacity: .85;
+}
+body[data-skin='crimson'] .crimson-cover.is-mini { padding: 8px 7px 6px; }
+body[data-skin='crimson'] .crimson-cover.is-mini .crimson-cover-rule { inset: 4px; }
+body[data-skin='crimson'] .crimson-cover.is-mini :is(.crimson-cover-moon, .crimson-cover-hills, .crimson-cover-seal) { display: none; }
+body[data-skin='crimson'] .crimson-cover.is-mini .crimson-cover-title { font-size: 11px; letter-spacing: 1px; text-shadow: none; -webkit-line-clamp: 3; }
+body[data-skin='crimson'] .crimson-cover.is-mini.title-vertical .crimson-cover-title { writing-mode: vertical-rl; font-size: 12px; }
+
+/* 花饰 */
+body[data-skin='crimson'] .crimson-flower {
+  position: absolute;
+  z-index: 4;
+  left: 55%;
+  top: 138px;
+  width: 90px;
+  height: 90px;
+  color: #d2b977;
+  opacity: .9;
+  pointer-events: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+}
+
+/* 首章剧目卡（真实数据） */
+body[data-skin='crimson'] .crimson-chapter-card {
+  position: absolute;
+  z-index: 4;
+  left: 41%;
+  top: 584px;
+  width: 325px;
+  padding: 17px 22px;
+  text-align: left;
+  border-top: 1px solid var(--cs-gold);
+  border-bottom: 1px solid var(--cs-gold);
+  background: #eee6d3ed;
+  cursor: pointer;
+}
+body[data-skin='crimson'] .crimson-chapter-card:hover { background: #f6eeda; }
+body[data-skin='crimson'] .crimson-chapter-card small { display: block; margin-bottom: 9px; font-size: 12px; letter-spacing: 2px; color: #587064; }
+body[data-skin='crimson'] .crimson-chapter-card h3 { display: flex; align-items: center; justify-content: space-between; gap: 12px; font: 400 24px/1.4 var(--crimson-kai); }
+body[data-skin='crimson'] .crimson-chapter-card p { margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--cs-muted); }
+
+/* 右侧剧目栏 */
+body[data-skin='crimson'] .crimson-program {
+  position: absolute;
+  right: 0;
+  top: 95px;
+  width: 316px;
+  height: 652px;
+  max-height: calc(100% - 110px);
+  display: flex;
+  flex-direction: column;
+  padding: 12px 30px;
+  border-left: 1px solid #698a743b;
+  background: linear-gradient(90deg, #eee6d3ed, #eee6d3);
+  z-index: 4;
+}
+body[data-skin='crimson'] .crimson-program-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 22px 0 19px;
+  border-top: 1px solid #7d9278;
+}
+body[data-skin='crimson'] .crimson-program-head h2 { font: 400 27px var(--crimson-kai); letter-spacing: 2px; }
+body[data-skin='crimson'] .crimson-program-head span { font-size: 13px; color: var(--cs-muted); }
+body[data-skin='crimson'] .crimson-program-list { min-height: 0; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: #a8997580 transparent; }
+body[data-skin='crimson'] .crimson-program-list::-webkit-scrollbar { width: 6px; }
+body[data-skin='crimson'] .crimson-program-list::-webkit-scrollbar-thumb { background: #a8997580; border-radius: 3px; }
+body[data-skin='crimson'] .crimson-program-list::-webkit-scrollbar-track { background: transparent; }
+body[data-skin='crimson'] .crimson-work-row { position: relative; display: flex; align-items: center; border-bottom: 1px solid #65836e42; }
+body[data-skin='crimson'] .crimson-work-open {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-width: 0;
+  padding: 19px 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  transition: transform .2s, color .2s;
+}
+body[data-skin='crimson'] .crimson-work-open:hover { transform: translateX(-3px); color: #ae493a; }
+body[data-skin='crimson'] .crimson-work-open .crimson-cover.is-mini { flex: none; width: 48px; height: 67px; border-radius: 11px 0 0 0; box-shadow: 2px 3px 8px #0003; }
+body[data-skin='crimson'] .crimson-work-copy { min-width: 0; flex: 1; }
+body[data-skin='crimson'] .crimson-work-copy h3 { font: 400 20px/1.35 var(--crimson-kai); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+body[data-skin='crimson'] .crimson-work-copy p { margin-top: 8px; font-size: 13px; color: var(--cs-muted); white-space: nowrap; }
+body[data-skin='crimson'] .crimson-work-open .arrow { flex: none; font-size: 17px; color: #a64b38; }
+body[data-skin='crimson'] .crimson-work-menu { position: absolute; right: -6px; top: 8px; opacity: 0; transition: opacity .18s; }
+body[data-skin='crimson'] .crimson-work-row:hover .crimson-work-menu,
+body[data-skin='crimson'] .crimson-work-menu:focus-within { opacity: 1; }
+body[data-skin='crimson'] .crimson-book-stage .crimson-work-menu {
+  position: absolute;
+  z-index: 5;
+  right: -6px;
+  top: 4px;
+  opacity: 1;
+}
+body[data-skin='crimson'] .crimson-work-menu .n-button { color: #536d62; }
+body[data-skin='crimson'] .crimson-work-menu .n-button:hover { color: #a63e31; }
+
+/* 底栏（深墨，与工作台一致） */
+body[data-skin='crimson'] .crimson-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: 40px;
+  padding: 0 32px;
+  background: var(--bg);
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  letter-spacing: 1px;
+}
+body[data-skin='crimson'] .crimson-footer-link { border: 0; background: none; color: inherit; font-size: 12px; cursor: pointer; letter-spacing: 1px; }
+body[data-skin='crimson'] .crimson-footer-link:hover { color: #fae8bb; }
+
+/* 空态 / 加载 */
+body[data-skin='crimson'] .crimson-shelf .n-spin-container { min-height: 100%; }
+body[data-skin='crimson'] .crimson-empty {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  text-align: center;
+  color: var(--cs-muted);
+}
+body[data-skin='crimson'] .crimson-empty h2 { font: 400 30px var(--crimson-kai); letter-spacing: 3px; color: var(--cs-ink); }
+body[data-skin='crimson'] .crimson-empty p { font-size: 14px; }
+
+/* 书架开场（照设计稿：纸景后层/前层、题名遮罩、花饰点亮、书封落位） */
+@keyframes paper-back { from { transform: translateX(45px); opacity: .3; } to { transform: translateX(0); opacity: 1; } }
+@keyframes paper-front { from { transform: translateX(-100px) translateY(28px); opacity: .2; } to { transform: translateX(0) translateY(0); opacity: 1; } }
+@keyframes title-mask { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+@keyframes flower-light { from { opacity: 0; transform: rotate(-18deg); } to { opacity: .9; transform: rotate(0); } }
+@keyframes paper-book { from { opacity: .15; translate: 0 20px; } to { opacity: 1; translate: 0 0; } }
+@keyframes crimson-enter { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+body[data-skin='crimson'][data-stage-play='1'] .crimson-stage-art { animation: paper-back 1.2s cubic-bezier(.2, .65, .2, 1) both; }
+body[data-skin='crimson'][data-stage-play='1'] .crimson-front-art { animation: paper-front 1.2s cubic-bezier(.2, .65, .2, 1) both; }
+body[data-skin='crimson'][data-stage-play='1'] .crimson-flower { animation: flower-light 1.2s ease-out both; }
+body[data-skin='crimson'][data-stage-play='1'] .crimson-story { animation: title-mask .55s ease-out both; }
+body[data-skin='crimson'][data-stage-play='1'] .crimson-book-stage { animation: paper-book .8s cubic-bezier(.2, .65, .2, 1) both; }
+body[data-skin='crimson'][data-stage-play='1'] .crimson-chapter-card { animation: crimson-enter .5s cubic-bezier(.18, .7, .2, 1) .12s both; }
+body[data-skin='crimson'][data-stage-play='1'] .crimson-program { animation: crimson-enter .5s cubic-bezier(.18, .7, .2, 1) .12s both; }
+
+/* 窄窗与矮窗：保持同一构图，收紧尺寸，绝不横向溢出 */
+@media (max-width: 1200px) {
+  body[data-skin='crimson'] .crimson-shelf { grid-template-columns: 72px minmax(0, 1fr); grid-template-rows: 72px minmax(0, 1fr) 36px; }
+  body[data-skin='crimson'] .crimson-header { padding: 0 24px; }
+  body[data-skin='crimson'] .crimson-brand-text { font-size: 20px; }
+  body[data-skin='crimson'] .crimson-nav-item { height: 60px; }
+  body[data-skin='crimson'] .crimson-toolbar { left: 20px; right: 16px; top: 12px; }
+  body[data-skin='crimson'] .crimson-toolbar h2 { font-size: 19px; }
+  body[data-skin='crimson'] .crimson-stage { width: calc(100% - 240px); }
+  body[data-skin='crimson'] .crimson-story { left: 22px; top: 84px; width: 220px; }
+  body[data-skin='crimson'] .crimson-main-title { top: 44px; width: 62px; height: 230px; font-size: 48px; letter-spacing: 4px; }
+  body[data-skin='crimson'] .crimson-main-title.title-two,
+  body[data-skin='crimson'] .crimson-main-title.title-long { width: 210px; max-height: 150px; }
+  body[data-skin='crimson'] .crimson-synopsis { left: 84px; top: 60px; height: 210px; font-size: 16px; }
+  body[data-skin='crimson'] .crimson-story-actions { top: 272px; gap: 12px; }
+  body[data-skin='crimson'] .crimson-stats { top: 330px; gap: 12px; font-size: 12px; }
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-synopsis,
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-synopsis { top: 196px; width: 212px; max-height: 52px; font-size: 13px; }
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-story-actions,
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-story-actions { top: 262px; }
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-stats,
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-stats { top: 316px; }
+  body[data-skin='crimson'] .crimson-stats b { font-size: 21px; }
+  body[data-skin='crimson'] .crimson-book-stage { left: 47%; top: 190px; }
+  body[data-skin='crimson'] .crimson-book-object { width: 142px; height: 200px; }
+  body[data-skin='crimson'] .crimson-flower { left: 53%; top: 96px; width: 66px; height: 66px; }
+  body[data-skin='crimson'] .crimson-chapter-card { left: 40%; top: auto; bottom: 14px; width: 270px; padding: 13px 16px; }
+  body[data-skin='crimson'] .crimson-chapter-card h3 { font-size: 19px; }
+  body[data-skin='crimson'] .crimson-program { top: 66px; width: 240px; height: auto; max-height: calc(100% - 78px); padding: 8px 18px; }
+  body[data-skin='crimson'] .crimson-program-head { padding: 14px 0 12px; }
+  body[data-skin='crimson'] .crimson-program-head h2 { font-size: 21px; }
+  body[data-skin='crimson'] .crimson-work-open { padding: 13px 0; gap: 10px; }
+  body[data-skin='crimson'] .crimson-work-copy h3 { font-size: 16px; }
+  body[data-skin='crimson'] .crimson-work-open .crimson-cover.is-mini { width: 38px; height: 53px; }
+  body[data-skin='crimson'] .crimson-footer { padding: 0 18px; }
+}
+
+@media (max-height: 760px) {
+  body[data-skin='crimson'] .crimson-shelf { grid-template-rows: 60px minmax(0, 1fr) 34px; }
+  body[data-skin='crimson'] .crimson-rail { padding-top: 12px; gap: 6px; }
+  body[data-skin='crimson'] .crimson-nav-item { height: 52px; gap: 3px; font-size: 12px; }
+  body[data-skin='crimson'] .crimson-nav-item.active::before { inset: 1px 13px; }
+  body[data-skin='crimson'] .crimson-toolbar { top: 8px; }
+  body[data-skin='crimson'] .crimson-story { top: 66px; height: 380px; }
+  body[data-skin='crimson'] .crimson-main-title { top: 34px; height: 190px; font-size: 42px; }
+  body[data-skin='crimson'] .crimson-main-title.title-two,
+  body[data-skin='crimson'] .crimson-main-title.title-long { max-height: 110px; font-size: 40px; }
+  body[data-skin='crimson'] .crimson-synopsis { top: 48px; height: 170px; font-size: 14px; }
+  body[data-skin='crimson'] .crimson-story-actions { top: 216px; }
+  body[data-skin='crimson'] .crimson-stats { top: 272px; }
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-synopsis,
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-synopsis { top: 156px; max-height: 44px; }
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-story-actions,
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-story-actions { top: 214px; }
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-stats,
+  body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-stats { top: 264px; }
+  body[data-skin='crimson'] .crimson-book-stage { top: 150px; }
+  body[data-skin='crimson'] .crimson-book-object { width: 122px; height: 172px; }
+  body[data-skin='crimson'] .crimson-flower { top: 70px; width: 54px; height: 54px; }
+  body[data-skin='crimson'] .crimson-chapter-card { bottom: 10px; }
+  body[data-skin='crimson'] .crimson-program { top: 54px; max-height: calc(100% - 62px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body[data-skin='crimson'] *,
+  body[data-skin='crimson'] *::before,
+  body[data-skin='crimson'] *::after { animation: none !important; transition: none !important; }
+}

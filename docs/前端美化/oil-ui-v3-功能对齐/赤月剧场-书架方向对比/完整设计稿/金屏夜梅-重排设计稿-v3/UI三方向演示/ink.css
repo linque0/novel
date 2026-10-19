@@ -1,0 +1,24 @@
+.ink-scene{background:#f2ebda;background-image:radial-gradient(ellipse at 15% 40%,#d9c9a34a,transparent 57%)}
+.ink-scene:after{content:'';position:absolute;inset:86px 0 auto;height:1px;background:linear-gradient(90deg,transparent,#a99b7d66 25%,#a99b7d66 75%,transparent)}
+.ink-sun{position:absolute;width:430px;height:430px;border-radius:50%;left:82px;top:175px;background:#a33c32;box-shadow:inset -25px 20px 90px #742d2822}
+.ink-branch{position:absolute;width:560px;height:450px;object-fit:cover;left:-130px;bottom:54px;opacity:.16;mix-blend-mode:multiply;filter:sepia(.6);mask-image:linear-gradient(90deg,#000,transparent 90%)}
+.portrait-composition{position:absolute;left:110px;top:235px;width:390px;height:490px;transform:rotate(-4deg)}
+.portrait-cut{position:absolute;inset:0;background:#cac3aa;clip-path:polygon(9% 0,100% 6%,93% 100%,0 94%)}
+.portrait-cut:after{content:'';position:absolute;inset:0;background:linear-gradient(0deg,#203b3c88,transparent 50%);pointer-events:none}
+.portrait-cut img{width:100%;height:100%;object-fit:cover;object-position:center 25%;filter:saturate(.65) contrast(1.06);transition:transform .6s cubic-bezier(.2,.8,.2,1)}
+.portrait-cut:hover img{transform:scale(1.04)}
+.portrait-side{position:absolute;writing-mode:vertical-rl;left:-39px;top:54px;font:14px var(--hand);letter-spacing:5px;color:#647465}
+.portrait-caption{position:absolute;left:40px;bottom:24px;color:#fff7e7;font:17px var(--hand);letter-spacing:3px;transform:rotate(4deg)}
+.seal{position:absolute;right:-19px;bottom:70px;width:54px;height:76px;display:grid;place-content:center;background:#aa392f;color:#f9e8ca;font:25px/1.1 var(--serif);border:4px double #edd4b0;transform:rotate(8deg)}
+.name-composition{position:absolute;left:560px;top:178px;width:800px}
+.folio-number{font-size:11px;letter-spacing:5px;color:#817e6a;display:block;margin-bottom:8px}.folio-number b{color:#a33c32;font-weight:normal}
+.name-composition h1{font:132px/1.13 var(--serif);letter-spacing:18px;color:#24564f;margin-left:-6px;width:max-content;position:relative}
+.name-composition h1:after{content:'';position:absolute;left:3px;bottom:8px;width:108%;height:14px;background:#b94c3c2c;transform:rotate(-3deg);z-index:-1}
+.name-under{display:flex;align-items:center;gap:30px;margin-top:16px}.role-stamp{font:18px var(--serif);color:#a33c32;border-left:3px solid #a33c32;padding-left:13px}
+.ink-writing{position:absolute;left:672px;top:414px;width:621px}.ink-writing .subtabs{margin-bottom:20px}.body-copy{font-size:21px;line-height:1.95;max-width:590px}.motive{display:flex;gap:24px;align-items:flex-start;margin-top:26px}.motive .section-label{writing-mode:vertical-rl;letter-spacing:3px;margin-top:6px;color:#a33c32}.motive p{max-width:510px;font-size:20px}
+.ink-facts{position:absolute;left:568px;top:714px;display:flex;gap:38px;margin:0;align-items:flex-start}.ink-facts div{min-width:64px}.ink-facts dt{font-size:11px;color:#817e6a;letter-spacing:2px;margin-bottom:7px}.ink-facts dd{margin:0;font:19px var(--hand)}.ink-facts .chapter-fact{margin-left:10px}.ink-facts dd button:hover{color:#a33c32}
+.ink-cast{position:absolute;left:96px;top:752px;display:flex;align-items:center;gap:20px}.ink-cast>.section-label{writing-mode:vertical-rl;letter-spacing:4px;font-size:10px}.ink-cast button{display:flex;align-items:center;gap:10px;transition:transform .25s;opacity:.65}.ink-cast button:hover{transform:translateY(-5px);opacity:1}.ink-cast button[aria-pressed=true]{opacity:1}.ink-cast img{width:35px;height:45px;clip-path:polygon(5% 0,100% 5%,95% 100%,0 95%);filter:grayscale(.6)}.ink-cast button[aria-pressed=true] img{filter:none}.ink-cast span{font:17px var(--serif)}
+.ink-quote{position:absolute;right:120px;top:805px;margin:0;font:15px var(--hand);letter-spacing:1px;color:#738172}.ink-quote:before{content:'「';color:#a33c32;margin-right:7px}.ink-quote:after{content:'」';color:#a33c32;margin-left:7px}
+.relation-intro{font:23px/1.6 var(--hand);color:#6a7567;margin:4px 0 20px}.relations{display:flex;gap:34px}.relations .relation-item{min-width:215px}.relations small{display:block;margin-top:3px}.relations .relation-item:hover{color:#a33c32}
+.scene-change .portrait-composition{animation:ink-portrait .7s cubic-bezier(.16,1,.3,1) both}.scene-change .name-composition{animation:ink-title .62s cubic-bezier(.16,1,.3,1) both}.scene-change .ink-writing{animation:ink-copy .65s .07s both}.scene-change .ink-sun{animation:ink-sun .75s cubic-bezier(.16,1,.3,1) both}
+@keyframes ink-portrait{from{opacity:.1;transform:translate(-28px,20px) rotate(-7deg)}to{opacity:1;transform:translate(0) rotate(-4deg)}}@keyframes ink-title{from{opacity:0;transform:translateX(38px);clip-path:inset(0 0 0 100%)}to{opacity:1;transform:none;clip-path:inset(0)}}@keyframes ink-copy{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}@keyframes ink-sun{from{opacity:.2;transform:scale(.85)}to{opacity:1;transform:scale(1)}}

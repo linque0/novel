@@ -1,0 +1,37 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "390x844",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "eyebrow",
+        "label": "标题上方的眉标",
+        "count": 2,
+        "examples": [
+          "div.eyebrow「OUTLINE / 01」",
+          "div.node-kicker「便签」"
+        ]
+      },
+      {
+        "rule": "headingSpacing",
+        "label": "标题离上文比离下文还近",
+        "count": 1,
+        "examples": [
+          "h3.node-title「“海会带走一些人， 也会送回一些答案。”」（上 13px，下 20px）"
+        ]
+      },
+      {
+        "rule": "sideStripe",
+        "label": "彩色单侧边线",
+        "count": 1,
+        "examples": [
+          "article#node-chapter.canvas-node.kind-anchor「章节锚点 CH.03 第三章 · 灯塔 在风暴到」（3px）"
+        ]
+      }
+    ]
+  }
+]

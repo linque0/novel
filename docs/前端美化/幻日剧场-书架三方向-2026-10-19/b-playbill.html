@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>幻日剧场 · 方向 B 演出年册</title>
+<style>
+@font-face{font-family:'OldSong';src:url('assets/fonts/oldsong.woff2') format('woff2');font-display:swap}
+@font-face{font-family:'WenKai';src:url('assets/fonts/wenkai.woff2') format('woff2');font-display:swap}
+:root{
+  --paper:#f3ecdf; --paper-2:#ece2d1; --paper-3:#e4d8c3;
+  --ink:#1d2520; --ink-2:#3d453d; --muted:#6c675b; --faint:#928b7d;
+  --red:#a7442f; --red-deep:#843223; --jade:#1e5a50; --gold:#a98a4f;
+  --rule:#1d252026; --rule-strong:#1d25204d;
+  --serif:'OldSong','KingHwa OldSong','Songti SC','SimSun',serif;
+  --kai:'WenKai','LXGW WenKai','Kaiti SC','KaiTi',serif;
+  --sans:'Noto Sans SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden}
+body{background:#d7cbb7;font-family:var(--sans);color:var(--ink)}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;border:0;background:none;padding:0}
+svg{display:block}
+.page{position:relative;width:100vw;height:100vh;overflow:hidden;background:
+  radial-gradient(1200px 700px at 18% -10%,#faf5ea 0%,transparent 60%),
+  radial-gradient(900px 600px at 100% 100%,#e6dac6 0%,transparent 55%),
+  var(--paper);
+  display:flex;flex-direction:column}
+.page::after{content:'';position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:
+  radial-gradient(#1d252012 .55px,transparent .7px);background-size:4px 4px;mix-blend-mode:multiply}
+
+/* 刊头 */
+.masthead{flex:none;display:flex;align-items:flex-end;gap:30px;padding:26px 56px 0;position:relative;z-index:3}
+.brand{display:flex;align-items:flex-start;gap:14px;min-width:300px}
+.brand-mark{width:34px;height:34px;margin-top:6px}
+.brand-cn{font-family:var(--serif);font-size:30px;line-height:1;letter-spacing:6px}
+.brand-sub{margin-top:9px;display:flex;align-items:center;gap:9px;font-family:var(--sans);font-size:9px;letter-spacing:2.8px;color:var(--muted)}
+.brand-sub i{width:18px;height:1px;background:var(--red);display:inline-block}
+.nav{display:flex;align-items:center;gap:27px;flex:1;justify-content:center;padding-bottom:7px}
+.nav a{font-family:var(--kai);font-size:13px;letter-spacing:2px;color:var(--ink-2);position:relative;padding-bottom:6px}
+.nav a.on{color:var(--ink)}
+.nav a.on::after{content:'';position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--red)}
+.top-actions{display:flex;align-items:center;gap:20px;padding-bottom:7px}
+.search{display:flex;align-items:center;gap:7px;font-family:var(--kai);font-size:12px;color:var(--muted);padding-bottom:5px;border-bottom:1px solid var(--rule-strong)}
+.new-btn{font-family:var(--kai);font-size:12px;letter-spacing:1.4px;color:var(--paper);background:var(--ink);padding:8px 15px}
+.new-btn:hover{background:var(--red)}
+.mast-rule{margin:17px 56px 0;height:3px;border-top:2px solid var(--ink);border-bottom:1px solid var(--ink);position:relative;z-index:3}
+.mast-rule::before,.mast-rule::after{content:'';position:absolute;top:-2px;width:1px;height:3px;background:var(--ink)}
+.mast-rule::before{left:0}.mast-rule::after{right:0}
+
+/* 正文 */
+.spread{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 392px;gap:64px;padding:30px 56px 0;position:relative;z-index:3}
+.lead{min-width:0;display:flex;flex-direction:column}
+.kicker{display:flex;align-items:center;gap:12px;font-family:var(--sans);font-size:10px;letter-spacing:2.6px;color:var(--red)}
+.kicker b{font-weight:400;font-family:var(--kai);font-size:12px;letter-spacing:2px;color:var(--ink-2)}
+.kicker::after{content:'';flex:1;height:1px;background:var(--rule)}
+h1{margin:16px 0 0;font-family:var(--serif);font-weight:400;font-size:94px;line-height:1.02;letter-spacing:10px;color:var(--ink)}
+.title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-top:12px;padding-bottom:13px;border-bottom:1px solid var(--rule-strong)}
+.title-en{font-family:var(--sans);font-size:9px;letter-spacing:4.4px;color:var(--muted);padding-bottom:3px}
+.byline{display:flex;align-items:center;gap:12px;font-family:var(--kai);font-size:12px;letter-spacing:1.2px;color:var(--ink-2)}
+.byline .dot{width:4px;height:4px;background:var(--red);border-radius:50%}
+.intro{max-width:560px;margin:19px 0 0;font-family:var(--kai);font-size:15px;line-height:2;letter-spacing:.5px;color:var(--ink-2)}
+.intro strong{font-weight:400;color:var(--ink);border-bottom:1px solid #a7442f55}
+.actions{display:flex;align-items:center;gap:26px;margin-top:20px}
+.primary{display:inline-flex;align-items:center;gap:26px;background:var(--red);color:#f7eee0;font-family:var(--kai);font-size:14px;letter-spacing:2.4px;padding:12px 22px;transition:background .2s}
+.primary:hover{background:var(--red-deep)}
+.primary span{font-family:var(--sans);font-size:15px}
+.quiet{font-family:var(--kai);font-size:13px;letter-spacing:1.6px;color:var(--ink-2);padding-bottom:5px;border-bottom:1px solid var(--rule-strong)}
+.quiet i{font-style:normal;color:var(--red);margin-left:5px}
+.stats{display:flex;align-items:baseline;gap:0;margin-top:21px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);padding:10px 0}
+.stats span{padding:0 18px;font-family:var(--kai);font-size:11px;letter-spacing:1px;color:var(--muted)}
+.stats span:first-child{padding-left:0}
+.stats span + span{border-left:1px solid var(--rule)}
+.stats b{font-family:var(--serif);font-weight:400;font-size:20px;letter-spacing:1px;color:var(--ink);margin-right:4px}
+
+.lastline{display:flex;gap:18px;margin-top:18px;padding-left:15px;border-left:2px solid var(--red)}
+.lastline small{flex:none;writing-mode:vertical-rl;font-family:var(--sans);font-size:9px;letter-spacing:2px;color:var(--red);height:56px;display:flex;align-items:center}
+.lastline h3{margin:0;font-family:var(--serif);font-weight:400;font-size:19px;letter-spacing:1.5px;color:var(--ink)}
+.lastline h3 i{font-style:normal;font-family:var(--sans);font-size:12px;color:var(--red);margin-left:7px}
+.lastline p{margin:6px 0 0;font-family:var(--kai);font-size:12.5px;letter-spacing:.4px;color:var(--muted)}
+
+/* 剧目表 */
+.season{margin-top:auto;padding-top:19px}
+.season-head{display:flex;align-items:baseline;gap:14px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+.season-head h2{margin:0;font-family:var(--serif);font-weight:400;font-size:19px;letter-spacing:2.5px}
+.season-head small{font-family:var(--sans);font-size:9px;letter-spacing:2.4px;color:var(--muted)}
+.season-head .more{margin-left:auto;font-family:var(--kai);font-size:11px;letter-spacing:1.2px;color:var(--muted)}
+.season-row{display:grid;grid-template-columns:46px minmax(0,1.25fr) 78px 150px 70px 18px;align-items:center;gap:12px;padding:9.5px 0;border-bottom:1px solid var(--rule);transition:background .18s}
+.season-row:hover{background:#1d252008}
+.season-row .no{font-family:var(--sans);font-size:10px;letter-spacing:1.2px;color:#7a7467}
+.season-row .tt{font-family:var(--serif);font-size:18px;letter-spacing:1.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.season-row .world{display:flex;align-items:center;gap:6px;font-family:var(--kai);font-size:11px;color:var(--muted)}
+.season-row .world i{width:6px;height:6px;border-radius:50%;background:var(--dot)}
+.season-row .meta{font-family:var(--kai);font-size:11px;color:var(--muted);white-space:nowrap}
+.season-row .upd{font-family:var(--kai);font-size:10.5px;color:#7a7467;white-space:nowrap;text-align:right}
+.season-row .go{font-family:var(--sans);font-size:12px;color:var(--red);text-align:right}
+
+/* 海报栏 */
+.poster-col{display:flex;flex-direction:column;align-items:center;padding-top:4px;position:relative}
+.poster{position:relative;width:356px;height:502px;background:#f7f0e4;border:1px solid var(--ink);padding:17px 17px 15px;
+  box-shadow:0 1px 0 #fff inset,0 18px 44px #1d252018,0 2px 0 #1d25201a;transform:rotate(.6deg)}
+.poster::before{content:'';position:absolute;inset:7px;border:1px solid #1d25203d;pointer-events:none}
+.poster-head{display:flex;align-items:center;justify-content:space-between;font-family:var(--sans);font-size:9px;letter-spacing:2.4px;color:var(--ink-2);padding:2px 4px 8px;border-bottom:1px solid var(--rule-strong)}
+.poster-head b{font-weight:400;font-family:var(--kai);font-size:11px;letter-spacing:3px;color:var(--ink)}
+.poster-art{width:100%;height:278px;margin-top:8px;border:1px solid var(--rule-strong);background:#efe5d5}
+.poster-foot{display:flex;align-items:flex-start;gap:10px;margin-top:11px;min-height:146px}
+.poster-meta{flex:1;display:flex;flex-direction:column;gap:7px;padding-top:5px;font-family:var(--kai);font-size:10.5px;letter-spacing:1.4px;color:var(--muted)}
+.poster-meta b{font-weight:400;font-family:var(--sans);font-size:8.5px;letter-spacing:2px;color:var(--red)}
+.poster-title{writing-mode:vertical-rl;height:142px;font-family:var(--serif);font-size:28px;line-height:1.08;letter-spacing:6px;color:var(--ink);border-left:5px solid var(--red);padding-left:9px;margin-right:2px}
+.poster-seal{position:absolute;right:28px;top:286px;width:35px;height:35px;display:grid;place-items:center;border:1.5px solid #a7442fcc;color:#a7442f;font-family:var(--serif);font-size:12px;line-height:1.05;text-align:center;letter-spacing:1px;transform:rotate(-4deg);background:#f7f0e4}
+.poster-tab{position:absolute;left:-27px;top:74px;writing-mode:vertical-rl;background:var(--red);color:#f7eee0;font-family:var(--kai);font-size:10px;letter-spacing:3px;padding:10px 6px}
+.poster-caption{margin-top:17px;width:356px;display:flex;justify-content:space-between;font-family:var(--kai);font-size:10.5px;letter-spacing:1px;color:var(--muted);border-top:1px solid var(--rule);padding-top:8px}
+.poster-caption b{font-weight:400;color:var(--ink-2)}
+
+.side-season{position:absolute;right:17px;top:170px;writing-mode:vertical-rl;font-family:var(--kai);font-size:10px;letter-spacing:5px;color:#1d252066}
+
+/* 世界索引 */
+.world-index{margin-top:19px;width:356px;border-top:1px solid var(--rule);padding-top:10px}
+.wi-head{display:flex;align-items:baseline;justify-content:space-between;font-family:var(--kai);font-size:11px;letter-spacing:2px;color:var(--ink-2);margin-bottom:5px}
+.wi-head span:last-child{font-family:var(--sans);font-size:8.5px;letter-spacing:1.6px;color:#7a7467}
+.wi-row{display:grid;grid-template-columns:9px 52px 1fr auto;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid #1d252014;font-family:var(--kai);font-size:11px;color:var(--muted)}
+.wi-row i{width:6px;height:6px;border-radius:50%;background:var(--dot)}
+.wi-row b{font-weight:400;font-size:12px;color:var(--ink-2);letter-spacing:1px}
+.wi-row em{font-style:normal;font-size:10px;color:#7a7467}
+
+/* 页脚 */
+.foot{flex:none;height:40px;display:flex;align-items:center;justify-content:space-between;padding:0 56px;border-top:1px solid var(--rule-strong);
+  font-family:var(--sans);font-size:9px;letter-spacing:1.8px;color:var(--muted);position:relative;z-index:3}
+.foot .mid{display:flex;align-items:center;gap:10px;font-family:var(--kai);letter-spacing:2px}
+.foot .mid i{display:inline-block;width:20px;height:1px;background:var(--rule-strong)}
+.foot .page-no{font-family:var(--serif);font-size:13px;letter-spacing:1px;color:var(--ink-2)}
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div class="brand">
+      <svg class="brand-mark" viewBox="0 0 36 36" aria-hidden="true">
+        <circle cx="18" cy="19" r="5.6" fill="none" stroke="#1d2520" stroke-width="1.1"/>
+        <circle cx="18" cy="19" r="1.9" fill="#a7442f"/>
+        <circle cx="5.8" cy="19" r="1.9" fill="none" stroke="#1d2520" stroke-width=".9" opacity=".8"/>
+        <circle cx="30.2" cy="19" r="1.9" fill="none" stroke="#1d2520" stroke-width=".9" opacity=".8"/>
+        <path d="M3 15.5C4 7 10 2.5 18 2.5s14 4.5 15 13" fill="none" stroke="#1d252044" stroke-width=".7"/>
+        <path d="M9 5.5l1.6 2.4M27 5.5l-1.6 2.4" stroke="#1d252055" stroke-width=".7"/>
+      </svg>
+      <div>
+        <div class="brand-cn">幻日剧场</div>
+        <div class="brand-sub"><i></i>SUNDOG THEATRE · 第七季</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <a class="on" href="#">书架</a><a href="#">正文</a><a href="#">大纲</a><a href="#">设定</a><a href="#">人物</a><a href="#">灵感</a><a href="#">设置</a>
+    </nav>
+    <div class="top-actions">
+      <label class="search">
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#6c675b" stroke-width="1.2"><circle cx="7" cy="7" r="4.6"/><path d="M10.6 10.6L14 14"/></svg>
+        搜索作品
+      </label>
+      <button class="new-btn">＋ 新建作品</button>
+    </div>
+  </header>
+  <div class="mast-rule"></div>
+
+  <main class="spread">
+    <section class="lead">
+      <div class="kicker"><span>SEASON 07</span><b>本季主打 · 正在上演</b></div>
+      <h1>星尘旅人</h1>
+      <div class="title-row">
+        <span class="title-en">STARDUST&nbsp;&nbsp;VOYAGER</span>
+        <div class="byline"><span>林间 著</span><span class="dot"></span><span>科幻 · 远行</span><span class="dot"></span><span>连载中</span></div>
+      </div>
+      <p class="intro">一枚铜星在雾中熄灭，旧航线失去坐标。<br><strong>林循着父亲留下的观测笔记，走向星图之外。</strong></p>
+      <div class="actions">
+        <a class="primary" href="#">继续写作 <span>→</span></a>
+        <a class="quiet" href="#">故事大纲 <i>↗</i></a>
+      </div>
+      <div class="stats">
+        <span><b>156,824</b> 字</span><span><b>42</b> 章</span><span><b>雾港</b> 世界</span><span>今天 14:32 更新</span>
+      </div>
+      <div class="lastline">
+        <small>上次写到</small>
+        <div><h3>第一章 · 初雪 <i>↗</i></h3><p>穹顶大厅的钟声在雾中回荡了十二下。</p></div>
+      </div>
+
+      <section class="season">
+        <div class="season-head"><h2>本季其他剧目</h2><small>五部续演</small><span class="more">五部作品 · 按最近编辑 ↓</span></div>
+        <div id="seasonList"></div>
+      </section>
+    </section>
+
+    <aside class="poster-col">
+      <article class="poster">
+        <span class="poster-tab">剧目 07</span>
+        <div class="poster-head"><b>幻日剧场</b><span>第七季 · 三界同台</span></div>
+        <svg class="poster-art" viewBox="0 0 320 300" aria-hidden="true">
+          <defs>
+            <pattern id="dots" width="5" height="5" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r=".75" fill="#1d2520" opacity=".16"/></pattern>
+            <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(32)"><path d="M0 0v6" stroke="#1d2520" stroke-width=".5" opacity=".18"/></pattern>
+            <clipPath id="archL"><path d="M34 250V132q0-30 42-30t42 30v118Z"/></clipPath>
+            <clipPath id="archC"><path d="M120 250V104q0-36 50-36t50 36v146Z"/></clipPath>
+            <clipPath id="archR"><path d="M222 250V138q0-28 36-28t36 28v112Z"/></clipPath>
+          </defs>
+          <rect width="320" height="300" fill="#efe5d5"/>
+          <rect x="8" y="8" width="304" height="284" fill="none" stroke="#1d2520" stroke-width="1.2"/>
+          <rect x="13" y="13" width="294" height="274" fill="none" stroke="#1d2520" stroke-width=".5" opacity=".5"/>
+
+          <!-- 台口 -->
+          <path d="M22 268V54h276v214" fill="none" stroke="#1d2520" stroke-width="1.4"/>
+          <path d="M30 54c50 16 210 16 260 0" fill="none" stroke="#1d2520" stroke-width="1"/>
+          <path d="M30 60c16 0 16 10 32 10s16-10 32-10 16 10 32 10 16-10 32-10 16 10 32 10 16-10 32-10 16 10 32 10 16-10 32-10" fill="none" stroke="#1d2520" stroke-width=".8" opacity=".7"/>
+          <path d="M22 54v214M298 54v214" stroke="#1d2520" stroke-width="5" opacity=".14"/>
+          <path d="M30 70v190M290 70v190" stroke="#1d2520" stroke-width="1" opacity=".4"/>
+
+          <!-- 三个世界 -->
+          <g clip-path="url(#archL)">
+            <rect x="30" y="90" width="92" height="160" fill="#c9d6de"/>
+            <circle cx="76" cy="124" r="16" fill="#f2eadb" stroke="#1d2520" stroke-width=".8"/>
+            <path d="M30 200l26-28 22 12 18-22 26 20v58H30Z" fill="#7d94a4"/>
+            <path d="M30 222l30-18 22 8 20-14 20 12v40H30Z" fill="#526d80"/>
+            <g stroke="#f2eadb" stroke-width="1" opacity=".7"><path d="M44 232h30M88 238h22M58 246h18"/></g>
+            <path d="M64 214v-22M70 214v-30M76 214v-18" stroke="#1d2520" stroke-width="1.4"/>
+            <rect x="30" y="90" width="92" height="160" fill="url(#dots)"/>
+          </g>
+          <g clip-path="url(#archC)">
+            <rect x="120" y="68" width="100" height="182" fill="#ecd2b8"/>
+            <circle cx="170" cy="118" r="24" fill="#d06b4c" opacity=".75"/>
+            <path d="M120 210h100v40H120z" fill="#8e4d3a" opacity=".8"/>
+            <g fill="#5d3328"><path d="M132 210v-40h6v40zM146 210v-58h5v58zM158 210v-34h7v34zM174 210v-66h7v66zM192 210v-44h6v44zM206 210v-56h5v56z"/></g>
+            <g stroke="#f2eadb" stroke-width="1" opacity=".55"><path d="M130 182q5-8 10 0M170 158q6-9 12 0M198 176q5-8 10 0"/></g>
+            <rect x="120" y="68" width="100" height="182" fill="url(#dots)"/>
+          </g>
+          <g clip-path="url(#archR)">
+            <rect x="222" y="110" width="72" height="140" fill="#cdd9c8"/>
+            <circle cx="258" cy="152" r="21" fill="none" stroke="#1d2520" stroke-width="1.6" opacity=".7"/>
+            <path d="M222 212l22-16 16 10 14-14 20 10v48h-72Z" fill="#5c7a62"/>
+            <path d="M222 230l24-10 18 8 16-6 14 6v22h-72Z" fill="#38523f"/>
+            <g fill="#1d2520" opacity=".65"><path d="M236 212v-24h3v24zM240 188l-8 14 8 8 8-8zM274 206v-20h3v20zM278 186l-7 12 7 7 7-7z"/></g>
+            <rect x="222" y="110" width="72" height="140" fill="url(#dots)"/>
+          </g>
+
+          <!-- 景片框 -->
+          <g fill="none" stroke="#1d2520" stroke-width="1.2">
+            <path d="M34 250V132q0-30 42-30t42 30v118"/>
+            <path d="M120 250V104q0-36 50-36t50 36v146"/>
+            <path d="M222 250V138q0-28 36-28t36 28v112"/>
+          </g>
+
+          <!-- 台面与脚灯 -->
+          <path d="M22 250h276v18H22Z" fill="#1d2520" opacity=".16"/>
+          <path d="M22 250h276" stroke="#1d2520" stroke-width="1"/>
+          <g fill="#a7442f"><circle cx="52" cy="258" r="2"/><circle cx="96" cy="258" r="2"/><circle cx="140" cy="258" r="2"/><circle cx="184" cy="258" r="2"/><circle cx="228" cy="258" r="2"/><circle cx="272" cy="258" r="2"/></g>
+          <path d="M22 268h276" stroke="#1d2520" stroke-width="2"/>
+          <rect x="22" y="270" width="276" height="8" fill="url(#hatch)"/>
+
+          <!-- 幻日 -->
+          <g opacity=".5">
+            <circle cx="160" cy="42" r="13" fill="none" stroke="#1d2520" stroke-width=".8"/>
+            <circle cx="160" cy="42" r="4" fill="#a7442f"/>
+            <circle cx="137" cy="40" r="3.2" fill="none" stroke="#1d2520" stroke-width=".7"/>
+            <circle cx="183" cy="40" r="3.2" fill="none" stroke="#1d2520" stroke-width=".7"/>
+            <path d="M128 42a32 32 0 0 1 64 0" fill="none" stroke="#1d2520" stroke-width=".6"/>
+          </g>
+          <text x="160" y="291" text-anchor="middle" font-family="WenKai,KaiTi,serif" font-size="7.5" letter-spacing="3" fill="#1d2520" opacity=".62">一 幕 三 界</text>
+        </svg>
+        <div class="poster-foot">
+          <div class="poster-meta">
+            <b>NO. 07 / 幻日剧场</b>
+            <span>林间 著</span>
+            <span>科幻 · 远行</span>
+            <span>156,824 字 · 42 章</span>
+          </div>
+          <div class="poster-title">星尘旅人</div>
+          <span class="poster-seal">幻日</span>
+        </div>
+      </article>
+      <div class="poster-caption"><span>演出地点 <b>幻日剧场 · 三号厅</b></span><span>开演 <b>每日 20:00</b></span></div>
+      <div class="world-index">
+        <div class="wi-head"><span>三个世界</span><span>六部剧目 · 正在轮演</span></div>
+        <div class="wi-row" style="--dot:#7fa7c9"><i></i><b>雾港</b><span>雾与旧航线</span><em>3 部</em></div>
+        <div class="wi-row" style="--dot:#d98a62"><i></i><b>赤城</b><span>落日与城墙</span><em>1 部</em></div>
+        <div class="wi-row" style="--dot:#82b99f"><i></i><b>青苑</b><span>园林与未寄之信</span><em>2 部</em></div>
+      </div>
+      <span class="side-season">第七季 · 三界同台 · 六部作品</span>
+    </aside>
+  </main>
+
+  <footer class="foot">
+    <span>写作记录 · 今天 14:32</span>
+    <span class="mid"><i></i>幻日剧场 · 节目年册<i></i></span>
+    <span><span class="page-no">07</span> / 全部作品已展示</span>
+  </footer>
+</div>
+<script src="data.js"></script>
+<script>
+  const season = document.getElementById('seasonList');
+  season.innerHTML = window.SUNDOG.others.map(b => {
+    const w = window.SUNDOG.worlds[b.world];
+    return `<a class="season-row" href="#" style="--dot:${w.color}">
+      <span class="no">${b.no}</span>
+      <span class="tt">${b.title}</span>
+      <span class="world"><i></i>${b.world}</span>
+      <span class="meta">${b.words} 字 · ${b.chapters} 章</span>
+      <span class="upd">${b.updated}</span>
+      <span class="go">↗</span>
+    </a>`;
+  }).join('');
+</script>
+</body>
+</html>

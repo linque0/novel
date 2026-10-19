@@ -1,0 +1,243 @@
+[
+  {
+    "name": "new work defaults to rounded orthogonal",
+    "ok": true,
+    "detail": {
+      "snap": true,
+      "density": "detail",
+      "edgeStyle": "ortho",
+      "edgeWidth": 1.8,
+      "arrowSize": 1
+    }
+  },
+  {
+    "name": "dedicated verification work",
+    "ok": true
+  },
+  {
+    "name": "production canvas renders unified routes",
+    "ok": true,
+    "detail": {
+      "nodes": 5,
+      "edges": 3,
+      "blocked": 0,
+      "text": "%\n适应\n事件⋯\n发现异常\n故事从一封匿名信开始\n事件⋯\n追查线索\n选择进入旧城调查\n便签⋯\n支线 · 见证人\n提供相互矛盾的证词\n事件⋯\n真相浮现\n线索最终在此汇合\n便签⋯\n待展开的伏笔\n连线将自动绕开这张卡片\n发现线索\n另一种可能\n因果推进\n画布验证书B · 大纲\n赤月戏\n自动保存就绪\n重播开场"
+    }
+  },
+  {
+    "name": "click selects and shows handles/toolbar",
+    "ok": true
+  },
+  {
+    "name": "path preview stays transient",
+    "ok": true
+  },
+  {
+    "name": "manual routing commits one undo",
+    "ok": true
+  },
+  {
+    "name": "undo restores gesture completely",
+    "ok": true
+  },
+  {
+    "name": "redo restores manual preferences",
+    "ok": true
+  },
+  {
+    "name": "Escape restores pre-gesture state",
+    "ok": true
+  },
+  {
+    "name": "Escape restores the exact visible path, including cached corridors",
+    "ok": true
+  },
+  {
+    "name": "ortho: reconnect target uses previewed port/path",
+    "ok": true
+  },
+  {
+    "name": "ortho: reconnect is one undo",
+    "ok": true
+  },
+  {
+    "name": "ortho: reconnect undo",
+    "ok": true
+  },
+  {
+    "name": "ortho: source reconnect preserves branches and identity",
+    "ok": true
+  },
+  {
+    "name": "ortho: invalid drop leaves data intact",
+    "ok": true
+  },
+  {
+    "name": "ortho: node-node commits once",
+    "ok": true,
+    "detail": "preview rendered"
+  },
+  {
+    "name": "ortho: node-node undo removes provisional junction too",
+    "ok": true
+  },
+  {
+    "name": "ortho: node-line commits once",
+    "ok": true,
+    "detail": "preview rendered"
+  },
+  {
+    "name": "ortho: node-line undo removes provisional junction too",
+    "ok": true
+  },
+  {
+    "name": "ortho: line-node commits once",
+    "ok": true,
+    "detail": "preview rendered"
+  },
+  {
+    "name": "ortho: line-node undo removes provisional junction too",
+    "ok": true
+  },
+  {
+    "name": "ortho: line-line commits once",
+    "ok": true,
+    "detail": "preview rendered"
+  },
+  {
+    "name": "ortho: line-line undo removes provisional junction too",
+    "ok": true
+  },
+  {
+    "name": "ortho: route handle saves manual preference",
+    "ok": true
+  },
+  {
+    "name": "ortho: route edit undo",
+    "ok": true
+  },
+  {
+    "name": "ortho: double click edits properties",
+    "ok": true
+  },
+  {
+    "name": "ortho: text Delete never deletes relation",
+    "ok": true
+  },
+  {
+    "name": "ortho: Delete removes selected edge and branches",
+    "ok": true
+  },
+  {
+    "name": "ortho: deletion undo",
+    "ok": true
+  },
+  {
+    "name": "bezier: reconnect target uses previewed port/path",
+    "ok": true
+  },
+  {
+    "name": "bezier: reconnect is one undo",
+    "ok": true
+  },
+  {
+    "name": "bezier: reconnect undo",
+    "ok": true
+  },
+  {
+    "name": "bezier: source reconnect preserves branches and identity",
+    "ok": true
+  },
+  {
+    "name": "bezier: invalid drop leaves data intact",
+    "ok": true
+  },
+  {
+    "name": "bezier: node-node commits once",
+    "ok": true,
+    "detail": "preview rendered"
+  },
+  {
+    "name": "bezier: node-node undo removes provisional junction too",
+    "ok": true
+  },
+  {
+    "name": "bezier: node-line commits once",
+    "ok": true,
+    "detail": "preview rendered"
+  },
+  {
+    "name": "bezier: node-line undo removes provisional junction too",
+    "ok": true
+  },
+  {
+    "name": "bezier: line-node commits once",
+    "ok": true,
+    "detail": "preview rendered"
+  },
+  {
+    "name": "bezier: line-node undo removes provisional junction too",
+    "ok": true
+  },
+  {
+    "name": "bezier: line-line commits once",
+    "ok": true,
+    "detail": "preview rendered"
+  },
+  {
+    "name": "bezier: line-line undo removes provisional junction too",
+    "ok": true
+  },
+  {
+    "name": "bezier: route handle saves manual preference",
+    "ok": true
+  },
+  {
+    "name": "bezier: route edit undo",
+    "ok": true
+  },
+  {
+    "name": "bezier: double click edits properties",
+    "ok": true
+  },
+  {
+    "name": "bezier: text Delete never deletes relation",
+    "ok": true
+  },
+  {
+    "name": "bezier: Delete removes selected edge and branches",
+    "ok": true
+  },
+  {
+    "name": "bezier: deletion undo",
+    "ok": true
+  },
+  {
+    "name": "unreachable layout displays blocked connection",
+    "ok": true
+  },
+  {
+    "name": "blocked host junction is not a valid snap target",
+    "ok": true
+  },
+  {
+    "name": "node deletion cascades hosts owned by other nodes and all branches",
+    "ok": true
+  },
+  {
+    "name": "node deletion and dependency cleanup undo together",
+    "ok": true
+  },
+  {
+    "name": "manual routing and style survive database reload",
+    "ok": true
+  },
+  {
+    "name": "manual routing and style survive a full page refresh",
+    "ok": true
+  },
+  {
+    "name": "work without saved preferences resets to legacy defaults",
+    "ok": true
+  }
+]

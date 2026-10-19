@@ -81,7 +81,7 @@ export function locateEditorPatch(editor, original) {
 function createOriginal(work, original) {
   if (!original?.name) throw new Error('原创实体缺少名称')
   if (original.type === '人物' || original.type === 'character') return work.addCharacter(original.name)
-  return work.mubuAddTree(null, null, [{ text: original.name + (original.description ? '\n' + original.description : ''), children: [] }])
+  return work.mubuAddInCurrentSet(original.name + (original.description ? '\n' + original.description : ''))
 }
 export async function applyProposal(work, card, options = {}) {
   if (card.kind === 'workflow') return applyWorkflow(work, card, options)

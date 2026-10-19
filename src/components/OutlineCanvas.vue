@@ -10,8 +10,10 @@ import {
   relayoutAll, containerRect, effSize, freeSpotFor,
   relColor, relDashed, cycleArrow, nextShape, SHAPE_LABEL,
   REL_KINDS, KIND_META, KIND_LABEL_DESIGN, tplThreeAct, tplChapterList, dashOf, EDGE_STYLES, EDGE_COLORS, edgeColor,
-  sideBetween, routeEdge, pointAtT, trimEdgeD, customEdgeGeom
+  sideBetween, routeEdge, pointAtT, trimEdgeD, projectOnRoute, shapePorts, labelPoint
 } from './outline/canvas-model'
+import { CanvasRouteCache } from './outline/canvas-route-cache.js'
+import { flattenRelations } from './outline/canvas-relations.js'
 import { uid } from '../db/database'
 import { autosave } from '../services/autosave'
 import { useAiStore } from '../stores/ai'
@@ -43,7 +45,8 @@ const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配
 
 /* ---------- 基础几何 ---------- */
 const live = computed(() => work.liveOlnodes())
-const nodeById = (id) => live.value.find((n) => n.id === id)
+const nodeIndex = computed(() => new Map(live.value.map(n=>[n.id,n])))
+const nodeById = (id) => nodeIndex.value.get(id)
 const posOf = (n) => dragPos.get(n.id) || (n.canvasX != null ? { x: n.canvasX, y: n.canvasY } : null)
 const sizeOf = (n) => dragSize.get(n.id) || effSize(n, cardDensity.value)
 const kidsOf = (n) => live.value.filter((k) => k.parentId === n.id)
@@ -89,185 +92,117 @@ const containerBoxes = computed(() => {
 const rectOf = (n) => (n.kind === 'container' ? containerBoxes.value.get(n.id) : { ...posOf(n), ...sizeOf(n) })
 
 /* ---------- 连线集合与关系链接卫星 ---------- */
-const edges = computed(() => {
-  const out = []
-  for (const n of visNodes.value) {
-    for (const r of work.olnodeRelsOf(n.id)) {
-      /* 接连接点的连线 toId 为空，跳过目标节点守卫（几何由 edgeGeomFor 从宿主连线派生） */
-      if (!r.toJunction) {
-        const m = nodeById(r.toId)
-        if (!m || !posOf(m) || hiddenIds.value.has(m.id)) continue
-      }
-      const g = edgeGeomFor(n, r)
-      if (!g) continue
-      /* 箭头端回缩：线画到箭头三角形底边为止（dTrim），箭头尖顶在真实端点——既不穿进三角内部、也不留缝。
-       * 回缩量 = 三角底边深度 size·cos(0.42)（arrowHeadDir 的翼张角）+ 半个线宽（粗线线端面藏进三角内部，不露头） */
-      const arrows = r.arrows || '->'
-      const arrowTrim = (rel) => 7 * relArrowScale(rel) * Math.cos(0.42) + (relEdgeWidth(rel) / 2) * 0.8
-      const dTrim = r.toJunction
-        ? trimEdgeD(g, arrows === '<->' ? arrowTrim(r) : 0, arrows !== '--' ? arrowTrim(r) : 0)
-        : trimEdgeD(g, arrows !== '--' ? arrowTrim(r) : 0, arrows === '<->' ? arrowTrim(r) : 0)
-      out.push({ key: r.id, ownerId: n.id, rel: r, ...g, dTrim, color: edgeColor(r), dashed: relDashed(r.kind) })
-      /* 从连接点引出的连线（宿主 rel._out）：连接点作起点，终点为普通模块或另一连接点（v1.0.15 线连到线） */
-      for (const r2 of r._out || []) {
-        if (!r2.toJunction) {
-          const m2 = nodeById(r2.toId)
-          if (!m2 || !posOf(m2) || hiddenIds.value.has(m2.id)) continue
-        }
-        const g2 = edgeGeomFromJunction(n, r, r2)
-        if (!g2) continue
-        const a2 = r2.arrows || '->'
-        const dTrim2 = trimEdgeD(g2, a2 !== '--' ? 7 * relArrowScale(r2) * Math.cos(0.42) + (relEdgeWidth(r2) / 2) * 0.8 : 0, 0)
-        out.push({ key: r2.id, ownerId: n.id, rel: { ...r2, kind: r2.kind || r.kind }, ...g2, dTrim: dTrim2, color: edgeColor(r2), dashed: relDashed(r2.kind) })
-      }
-    }
-  }
-  return out
-})
-/* v0.4.15 严格端口：从哪个接口来就从哪个接口出，接入侧同样在建立时记录（toSide）；
- * 旧连线缺端口记录时按首次渲染位置**一次性补记**（此后不再随挪位重算）；
- * 连线途经任何模块（含两端节点本体）时正交绕行。
- * v1.0.13：连线可接到「连接点」（挂在另一条连线 rel.junctions 上）——端点取
- * 宿主连线路径参数 t 处的点，由 pointAtT 实时派生，宿主怎么挪点都钉在线上。
- * v1.0.22：补记从 edges computed 移至 onMounted 的 migrateSides（渲染保持纯读） */
-function migrateSides() {
-  for (const n of work.olnodes) {
-    if (n.deletedAt || !Array.isArray(n.rels)) continue
-    const fromNode = n
-    const A = rectOf(fromNode)
-    if (!A) continue
-    for (const r of n.rels) {
-      if (r.fromSide && r.toSide) continue
-      if (r.toJunction) continue // 连接点连线端口不落库
-      const toNode = nodeById(r.toId)
-      if (!toNode || toNode.deletedAt) continue
-      const B = rectOf(toNode)
-      if (!B) continue
-      const sb = sideBetween(A, B)
-      work.olnodeRelUpdate(n.id, r.id, { fromSide: r.fromSide || sb.from, toSide: r.toSide || sb.to })
-    }
-  }
-}
-function edgeGeomFor(n, r) {
-  let to = null
-  let toSide = r.toSide
-  let toNode = null
-  if (r.toJunction) {
-    const g = hostJunctionGeom(r.toJunction)
-    if (!g) return null
-    to = g.point
-    toSide = g.side
-  } else {
-    toNode = nodeById(r.toId)
-    if (!toNode || !posOf(toNode)) return null
-  }
-  const A = rectOf(n)
-  const B = toNode ? rectOf(toNode) : { x: to.x - 1, y: to.y - 1, w: 2, h: 2 }
-  const sb = sideBetween(A, B)
-  const fromSide = r.fromSide || sb.from
-  /* 缺端口记录的旧连线/模板连线按当前几何回退渲染（toSide 留空表示未补记，连接点连线不落库）；
-   * 补记落库已移至 onMounted 的 migrateSides——computed 内写 store 会破坏「渲染=纯读」（v1.0.22） */
-  if (!toSide) toSide = sb.to
-  if (toNode) to = anchorsOf(B)[toSide]
-  const from = anchorsOf(A)[fromSide]
-  if (!from || !to || !toSide) return null
-  /* v1.0.16 左键拖拽塑形：有 custom 控制点时走自定义弯曲（垂距过近 = 拉直回退自动路由）。
-   * 端点顺序必须与下方直连渲染一致（toJunction 连线直连渲染为 routeEdge(to, from)），
-   * 否则曲线端点倒置、箭头画到模块端（v1.0.22 修复）；端口缺记的补记已移出本函数 */
-  if (r.custom) {
-    const g = r.toJunction ? customEdgeGeom(to, from, r.custom) : customEdgeGeom(from, to, r.custom)
-    if (g) return g
-  }
-  const obstacles = [
-    { x: A.x, y: A.y, w: A.w, h: A.h },
-    ...(toNode ? [{ x: B.x, y: B.y, w: B.w, h: B.h }] : []),
-    ...edgeObstacles(n.id, toNode?.id)
-  ]
-  /* 接连接点的连线零桩直出：从连接点中心（即宿主连线上）出发，视觉无缝衔接 */
-  return r.toJunction
-    ? routeEdge(to, toSide, from, fromSide, obstacles, work.canvasPrefs.edgeStyle, 0)
-    : routeEdge(from, fromSide, to, toSide, obstacles, work.canvasPrefs.edgeStyle)
-}
-/* 宿主连线上的连接点几何：位置 = pointAtT(host, t)；端口朝向取连接点附近路径切线方向，
- * 保证新线沿宿主连线走向出发，衔接处不拐直角弯。
- * 宿主几何直接重算（edgeGeomFor），禁止读 edges.value——computed 内自引用会死循环 */
-function hostJunctionGeom(ref) {
-  const hostNode = nodeById(ref.ownerId)
-  if (!hostNode) return null
-  const hostRel = (hostNode.rels || []).find((r0) => r0.id === ref.relId)
-  if (!hostRel) return null
-  const j = (hostRel.junctions || []).find((x) => x.id === ref.junctionId)
-  if (!j) return null
-  const host = edgeGeomFor(hostNode, hostRel)
-  if (!host) return null
-  const p0 = pointAtT(host, Math.max(0, j.t - 0.02))
-  const p1 = pointAtT(host, Math.min(1, j.t + 0.02))
-  if (!p0 || !p1) return null
-  const dx = p1.x - p0.x
-  const dy = p1.y - p0.y
-  const side = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top'
-  return { point: pointAtT(host, j.t), side }
-}
-/* 从连接点引出的连线（v1.0.13）：起点 = 宿主连线路径上的连接点，终点 = 目标节点端口。
- * v1.0.15：终点也可以是另一条连线上的连接点（r.toJunction，线连到线）——两端都钉在各自宿主上。
- * 起点零桩直出、方向沿宿主连线切线，与所在连线无缝衔接。
- * 注意：宿主几何直接用 edgeGeomFor 重算，禁止回读 edges.value（computed 自引用会死循环卡死画布） */
-function edgeGeomFromJunction(hostNode, hostRel, r) {
-  const j = (hostRel.junctions || []).find((x) => x.id === r.fromJunction.junctionId)
-  if (!j) return null
-  const hostG = edgeGeomFor(hostNode, hostRel)
-  if (!hostG) return null
-  const p0 = pointAtT(hostG, Math.max(0, j.t - 0.02))
-  const p1 = pointAtT(hostG, Math.min(1, j.t + 0.02))
-  if (!p0 || !p1) return null
-  const dx = p1.x - p0.x
-  const dy = p1.y - p0.y
-  const side = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : dy >= 0 ? 'bottom' : 'top'
-  const start = pointAtT(hostG, j.t)
-  /* 终点为连接点：位置/朝向由目标宿主连线路径派生 */
-  if (r.toJunction) {
-    const g2 = hostJunctionGeom(r.toJunction)
-    if (!g2) return null
-    if (r.custom) {
-      const g3 = customEdgeGeom(start, g2.point, r.custom)
-      if (g3) return g3
-    }
-    return routeEdge(start, side, g2.point, g2.side, edgeObstacles(hostNode.id, null), work.canvasPrefs.edgeStyle, 0)
-  }
-  const m = nodeById(r.toId)
-  if (!m || !posOf(m)) return null
-  const B = rectOf(m)
-  const toSide = r.toSide || sideBetween({ x: start.x - 1, y: start.y - 1, w: 2, h: 2 }, B).to
-  const to = anchorsOf(B)[toSide]
-  if (r.custom) {
-    const g3 = customEdgeGeom(start, to, r.custom)
-    if (g3) return g3
-  }
-  const obstacles = [
-    { x: B.x, y: B.y, w: B.w, h: B.h },
-    ...edgeObstacles(hostNode.id, m.id)
-  ]
-  return routeEdge(start, side, to, toSide, obstacles, work.canvasPrefs.edgeStyle, 0)
-}
-/* 障碍集合：除两端节点外的可见模块矩形；容器仅当两端都在其外时才算障碍（子模块边必然穿越所在容器） */
-function edgeObstacles(fromId, toId) {
-  const out = []
-  for (const n of visNodes.value) {
-    if (n.id === fromId || n.id === toId) continue
-    if (n.kind === 'container' && (insideContainer(fromId, n.id) || insideContainer(toId, n.id))) continue
-    const r = rectOf(n)
-    if (r) out.push({ x: r.x, y: r.y, w: r.w, h: r.h })
-  }
-  return out
-}
+const routeCache = new CanvasRouteCache()
+const selectedEdgeKey = ref(null)
+const flowMode = ref('idle') // idle / selected / create / adjust / reconnect
+const routeDraft = ref(null)
+const relationEntries = computed(() => flattenRelations(live.value))
+const obstacleRects = computed(() => visNodes.value.map(n => ({ ...rectOf(n), id: n.id, shape: n.kind === 'event' ? n.shape : null })))
+const containerIds = computed(() => new Set(visNodes.value.filter(n=>n.kind==='container').map(n=>n.id)))
+const portsOf = n => shapePorts(rectOf(n), n.kind === 'event' ? n.shape : null)
 function insideContainer(nodeId, cid) {
   let cur = nodeById(nodeId)
-  while (cur) {
+  const seen = new Set()
+  while (cur && !seen.has(cur.id)) {
     if (cur.id === cid) return true
-    cur = cur.parentId ? nodeById(cur.parentId) : null
+    seen.add(cur.id);cur = cur.parentId ? nodeById(cur.parentId) : null
   }
   return false
 }
+function edgeObstacles(fromId, toId) {
+  if(!containerIds.value.size) return obstacleRects.value
+  return obstacleRects.value.filter(r => {
+    return !containerIds.value.has(r.id) || !(insideContainer(fromId,r.id)||insideContainer(toId,r.id)) || r.id === fromId || r.id === toId
+  })
+}
+function migrateSides() {
+  for (const {owner:n,rel:r} of relationEntries.value) {
+    if (r.fromJunction || r.toJunction || (r.fromSide && r.toSide)) continue
+    const target = nodeById(r.toId), A = rectOf(n), B = target && rectOf(target)
+    if (!A || !B) continue
+    const sides = sideBetween(A,B)
+    work.olnodeRelPatchAny(n.id,r.id,{fromSide:r.fromSide||sides.from,toSide:r.toSide||sides.to})
+  }
+}
+function hostJunctionGeom(ref, visiting = new Set()) {
+  const e = relationEntries.value.find(e => e.owner.id === ref.ownerId && e.rel.id === ref.relId)
+  if (!e) return null
+  const j = e.rel.junctions?.find(j => j.id === ref.junctionId)
+  const host = edgeGeomFor(e.owner,e.rel,visiting)
+  if (!host || host.status === 'blocked' || (!j && !Number.isFinite(ref.t))) return null
+  const t = j?.t ?? ref.t
+  const p0 = pointAtT(host,Math.max(0,t-.002)),p1 = pointAtT(host,Math.min(1,t+.002))
+  const dx=p1.x-p0.x,dy=p1.y-p0.y
+  return {point:pointAtT(host,t),side:Math.abs(dx)>=Math.abs(dy)?(dx>=0?'right':'left'):(dy>=0?'bottom':'top')}
+}
+function endpointGeom(endpoint, other, visiting = new Set()) {
+  if (endpoint.nodeId) {
+    const n=nodeById(endpoint.nodeId)
+    if (!n || !posOf(n) || hiddenIds.value.has(n.id)) return null
+    const r=rectOf(n),side=endpoint.side || sideBetween(r,{x:other?.x||0,y:other?.y||0,w:0,h:0}).from
+    return {point:portsOf(n)[side],side,nodeId:n.id}
+  }
+  if (endpoint.point) return {point:endpoint.point,side:endpoint.side||'left'}
+  return hostJunctionGeom(endpoint,visiting)
+}
+function occupiedChannels(key,a,b) {
+  const left=Math.min(a.x,b.x)-100,right=Math.max(a.x,b.x)+100,top=Math.min(a.y,b.y)-100,bottom=Math.max(a.y,b.y)+100
+  const out=[]
+  for (const [id,entry] of routeCache.entries) {
+    if (id === key || entry.g.status !== 'ok') continue
+    const pts=entry.g.pts || [entry.g.a,entry.g.b]
+    for(let i=1;i<pts.length;i++) {
+      const u=pts[i-1],v=pts[i]
+      if(Math.max(u.x,v.x)<left||Math.min(u.x,v.x)>right||Math.max(u.y,v.y)<top||Math.min(u.y,v.y)>bottom) continue
+      out.push({a:u,b:v})
+    }
+    if(out.length>28) break
+  }
+  return out
+}
+function geometryBetween(source,target,rel={},key='',visiting=new Set(),preview=false) {
+  let dst=endpointGeom(target,null,visiting)
+  if(!dst) return null
+  const src=endpointGeom(source,dst.point,visiting)
+  if(!src) return null
+  if(target.nodeId && !target.side) dst=endpointGeom({...target,side:sideBetween({x:src.point.x,y:src.point.y,w:0,h:0},rectOf(nodeById(target.nodeId))).to},src.point,visiting)
+  const obs=edgeObstacles(src.nodeId,dst.nodeId)
+  const routing=routeDraft.value?.key===key?routeDraft.value.routing:rel.routing
+  const context={waypoints:routing?.waypoints,custom:routing?null:rel.custom}
+  const signature=JSON.stringify([src.point,src.side,dst.point,dst.side,work.canvasPrefs.edgeStyle,context,source.nodeId,target.nodeId,rel.label])
+  const build=previous=>{
+    const g=routeEdge(src.point,src.side,dst.point,dst.side,obs,work.canvasPrefs.edgeStyle,18,16,{...context,previous,occupiedSegments:occupiedChannels(key,src.point,dst.point)})
+    // Legacy module -> junction paths stored t in the reverse direction.
+    g.parameterReversed=!!rel.toJunction&&!rel.fromJunction
+    g.source=source;g.target=target
+    g.mid=labelPoint(g,obs,Math.max(60,Math.min(160,(rel.label||'').length*12+20)),26)
+    return g
+  }
+  return preview?build(routeCache.entries.get(key)?.g):routeCache.get(key,signature,obs,build)
+}
+function edgeGeomFor(n,r,visiting=new Set()) {
+  if(visiting.has(r.id)) return null
+  const next=new Set(visiting);next.add(r.id)
+  return geometryBetween(r.fromJunction||{nodeId:n.id,side:r.fromSide},r.toJunction||{nodeId:r.toId,side:r.toSide},r,r.id,next)
+}
+function edgeGeomFromJunction(n,host,r) {return edgeGeomFor(n,r)}
+const edges = computed(() => {
+  const out=[],keys=new Set(),labels=[]
+  for(const {owner:n,rel:r} of relationEntries.value) {
+    if(hiddenIds.value.has(n.id)) continue
+    const g=edgeGeomFor(n,r)
+    if(!g) continue
+    keys.add(r.id)
+    const arrows=r.arrows||'->',trim=7*relArrowScale(r)*Math.cos(.42)+relEdgeWidth(r)*.4
+    const width=Math.max(52,Math.min(160,(r.label||'').length*12+20))
+    const mid=labelPoint(g,[...edgeObstacles(g.source.nodeId,g.target.nodeId),...labels],width,22)
+    if(r.label) labels.push({x:mid.x-width/2,y:mid.y-28,w:width,h:22})
+    out.push({key:r.id,ownerId:n.id,rel:r,...g,mid,dTrim:trimEdgeD(g,arrows!=='--'?trim:0,arrows==='<->'?trim:0),color:edgeColor(r),dashed:relDashed(r.kind)})
+  }
+  routeCache.prune(keys)
+  return out
+})
+const selectedEdge = computed(() => edges.value.find(e=>e.key===selectedEdgeKey.value))
 /* 箭头三角形：按 rel.arrows 在两端生成；单条连线可经 rel.edgeWidth / rel.arrowScale 覆盖画布全局设置 */
 const relEdgeWidth = (rel) => rel?.edgeWidth || work.canvasPrefs.edgeWidth || 1.8
 const relArrowScale = (rel) => rel?.arrowScale || work.canvasPrefs.arrowSize || 1
@@ -276,14 +211,7 @@ const edgeDecor = computed(() => {
   const fills = []
   for (const e of edges.value) {
     const a = e.rel.arrows || '->'
-    /* 几何方向判别（v1.0.16 修正倒错）：
-     * - 普通连线 / 从连接点引出的 _out 连线（fromJunction，起点=连接点）：正常方向，箭头在 e.b（接入端）
-     * - 模块→连接点的连线（仅 toJunction 无 fromJunction）：路由时 to 在前，几何反转，箭头在 e.a */
-    const reversed = !!e.rel.toJunction && !e.rel.fromJunction
-    const tip = reversed ? e.a : e.b
-    const dir = reversed ? e.startDir : e.endDir
-    const tail = reversed ? e.b : e.a
-    const tdir = reversed ? e.endDir : e.startDir
+    const tip=e.b,dir=e.endDir,tail=e.a,tdir={x:-e.startDir.x,y:-e.startDir.y}
     if (a === '->' || a === '<->') {
       heads.push(arrowHeadDir(tip.x, tip.y, dir, 7 * relArrowScale(e.rel)))
       fills.push(e.color)
@@ -354,6 +282,7 @@ function tidyAll() {
   dragPos.clear()
   nextTick(fitView)
 }
+defineExpose({ tidyAll })
 function fitView() {
   fitTo(bounds.value)
 }
@@ -406,32 +335,27 @@ function onNodeDown(e, n) {
   if (e.button !== 0) return
   if (e.target.closest('button, input, textarea, a, .oc-apt, .oc-mini, .oc-rs')) return
   e.stopPropagation()
+  selectedEdgeKey.value=null;flowMode.value='idle'
   work.selOlnodeId = n.id
   closeFloaters()
   const group = n.kind === 'container' ? [n, ...work.olnodeDescendants(n.id)] : [n]
   draggingId.value = n.id
-  const start = { mx: e.clientX, my: e.clientY, origins: group.map((g) => ({ id: g.id, x: g.canvasX ?? 0, y: g.canvasY ?? 0 })) }
-  let moved = false
-  const move = (ev) => {
-    const dx = (ev.clientX - start.mx) / zoom.value
-    const dy = (ev.clientY - start.my) / zoom.value
-    if (Math.abs(dx) + Math.abs(dy) > 2) moved = true
-    for (const o of start.origins) dragPos.set(o.id, { x: snap(o.x + dx), y: snap(o.y + dy) })
-  }
-  const up = (ev) => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-    draggingId.value = null
-    const dropPt = canvasPt(ev)
-    for (const o of start.origins) {
-      const p = dragPos.get(o.id)
-      if (p) work.olnodeSetCanvas(o.id, p.x, p.y)
+  const start = { mx: e.clientX, my: e.clientY, origins: group.map(g => ({ id: g.id, x: g.canvasX ?? 0, y: g.canvasY ?? 0 })) }
+  const finish=()=>{dragPos.clear();draggingId.value=null}
+  pointerGesture(e,ev=>{
+    const dx=(ev.clientX-start.mx)/zoom.value,dy=(ev.clientY-start.my)/zoom.value
+    for(const o of start.origins) dragPos.set(o.id,{x:snap(o.x+dx),y:snap(o.y+dy)})
+  },(ev,moved)=>{
+    if(moved) {
+      work.olnodePushUndo(true)
+      const undoLength=work.olUndo.length
+      for(const o of start.origins) {const p=dragPos.get(o.id);if(p) work.olnodeSetCanvas(o.id,p.x,p.y)}
+      if(n.kind!=='container') reparentAfterDrop(n,canvasPt(ev))
+      // Reparent uses the normal store command; collapse its snapshot into this gesture.
+      work.olUndo.splice(undoLength)
     }
-    dragPos.clear()
-    if (moved && n.kind !== 'container') reparentAfterDrop(n, dropPt)
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
+    finish()
+  },finish)
 }
 /* 拖入即归组：落点中心命中容器 → 改父；拖出容器外 → 回到根。
  * 判定用「排除被拖子树」的容器盒：否则盒子随节点一起扩张，永远判定在容器内 */
@@ -505,22 +429,16 @@ function startResize(e, n, dir) {
     dragSize.set(n.id, { w, h })
     if (dir.includes('w') || dir.includes('n')) dragPos.set(n.id, { x: Math.round(x), y: Math.round(y) })
   }
-  apply(e)
-  const move = (ev) => apply(ev)
-  const up = () => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-    const p = dragSize.get(n.id)
-    const pos = dragPos.get(n.id)
-    dragSize.delete(n.id)
-    dragPos.delete(n.id)
-    resizing.value = false
-    resizeSmooth.value = false
-    if (pos) work.olnodeSetCanvas(n.id, pos.x, pos.y)
-    if (p) work.olnodeSetSize(n.id, canW ? p.w : n.w, canH ? p.h : n.h)
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
+  const finish=()=>{dragSize.delete(n.id);dragPos.delete(n.id);resizing.value=false;resizeSmooth.value=false}
+  pointerGesture(e,apply,(ev,moved)=>{
+    const size=dragSize.get(n.id),pos=dragPos.get(n.id)
+    if(moved) {
+      work.olnodePushUndo(true)
+      if(pos) work.olnodeSetCanvas(n.id,pos.x,pos.y)
+      if(size) work.olnodeSetSize(n.id,canW?size.w:n.w,canH?size.h:n.h)
+    }
+    finish()
+  },finish)
 }
 
 /* ---------- 容器右键色彩快捷栏（v0.4.2） ---------- */
@@ -563,6 +481,8 @@ function createAt(kind) {
 /* Delete 键删除选中模块（输入态不劫持） */
 function onKey(e) {
   if (e.key === 'Escape') {
+    cancelGesture?.()
+    selectedEdgeKey.value=null;flowMode.value='idle'
     ctxMenu.value = null
     blankCtx.value = null
     edgeCtx.value = null
@@ -574,6 +494,7 @@ function onKey(e) {
   if (t && (t.matches?.('input, textarea, [contenteditable="true"]') || t.isContentEditable)) return
   if (e.key === 'Delete' || e.key === 'Backspace') {
     if (editTitle.value || editText.value || edgeEdit.value || connecting.value || citePick.value) return
+    if (selectedEdge.value) {e.preventDefault();deleteSelectedEdge();return}
     if (work.selOlnodeId && visNodes.value.some((n) => n.id === work.selOlnodeId)) {
       e.preventDefault()
       work.olnodeRemove(work.selOlnodeId)
@@ -582,6 +503,7 @@ function onKey(e) {
     return
   }
   if (!(e.ctrlKey || e.metaKey)) return
+  cancelGesture?.()
   const k = e.key.toLowerCase()
   if (k === 'z' && !e.shiftKey) {
     e.preventDefault()
@@ -642,55 +564,13 @@ function commitInline() {
 /* ---------- 连接点：右键投影 + 创建（v1.0.13 推倒重建） ---------- */
 /* 画布点到连线路径的最近点：先沿真实几何（折线 pts / 贝塞尔 c1c2）采样，再逐段投影。
  * 返回 { point, t }——t 为路径参数，连接点按 t 钉在宿主连线上。 */
-function projectOnEdge(pt, e) {
-  const points = []
-  const N = 64
-  if (e.pts && e.pts.length > 1) {
-    for (const p of e.pts) points.push(p)
-  } else if (e.c1 && e.c2) {
-    for (let i = 0; i <= N; i++) points.push(pointAtT(e, i / N))
-  } else {
-    for (let i = 0; i <= N; i++) points.push({ x: e.a.x + (e.b.x - e.a.x) * (i / N), y: e.a.y + (e.b.y - e.a.y) * (i / N) })
-  }
-  let best = null
-  for (let i = 0; i < points.length - 1; i++) {
-    const a = points[i]
-    const b = points[i + 1]
-    const dx = b.x - a.x
-    const dy = b.y - a.y
-    const l2 = dx * dx + dy * dy || 1
-    let s = ((pt.x - a.x) * dx + (pt.y - a.y) * dy) / l2
-    s = Math.max(0, Math.min(1, s))
-    const q = { x: a.x + dx * s, y: a.y + dy * s }
-    const dist = Math.hypot(pt.x - q.x, pt.y - q.y)
-    if (!best || dist < best.dist) best = { point: q, dist, seg: i, segT: s }
-  }
-  if (!best) return { point: pt, t: 0.5, dist: Infinity }
-  /* t 的口径必须与 pointAtT 一致：折线按弧长加权（v1.0.22 修复——此前按段序均分，
-   * 长短段悬殊时连接点会偏离点击位置数十像素）；贝塞尔采样点按 t 均匀生成，段序即参数 */
-  let t
-  if (e.pts && e.pts.length > 1) {
-    const ls = []
-    let total = 0
-    for (let i = 0; i < points.length - 1; i++) {
-      const l = Math.hypot(points[i + 1].x - points[i].x, points[i + 1].y - points[i].y)
-      ls.push(l)
-      total += l
-    }
-    let acc = 0
-    for (let i = 0; i < best.seg; i++) acc += ls[i]
-    t = total ? (acc + ls[best.seg] * best.segT) / total : 0.5
-  } else {
-    t = (best.seg + best.segT) / (points.length - 1)
-  }
-  return { point: best.point, t: Math.max(0, Math.min(1, t)), dist: best.dist }
-}
+function projectOnEdge(pt,e) {return projectOnRoute(pt,e)}
 /* 编辑浮层内「在此处创建连接点」：在右键落点对应的路径参数处直接建（浮层保持开启） */
 function edgeCtxCreate() {
   const st = edgeCtx.value
   if (!st) return
   const e = edges.value.find((x) => x.ownerId === st.ownerId && x.rel.id === st.relId)
-  if (!e) return
+  if (!e || e.status === 'blocked') return
   const { t } = projectOnEdge({ x: st.px, y: st.py }, e)
   work.olnodeJunctionAdd(st.ownerId, st.relId, t)
 }
@@ -720,172 +600,168 @@ const junctionItems = computed(() => {
   }
   return out
 })
-/* 拖线落点命中连接点（热区 12px）：返回 { ownerId, relId, junctionId } */
-function hitJunctionAt(pt, excludeFromId) {
-  for (const j of junctionItems.value) {
-    const owner = nodeById(j.ownerId)
-    if (owner && owner.id === excludeFromId) continue
-    if (Math.hypot(pt.x - j.x, pt.y - j.y) <= 12) return j
+/* One transient state machine for create, route adjustment and reconnect. */
+let cancelGesture = null
+function pointerGesture(event,onMove,onEnd,onCancel=()=>{}) {
+  cancelGesture?.()
+  const savedRoutes=new Map(routeCache.entries)
+  const origin={x:event.clientX,y:event.clientY}
+  let moved=false,pending=null,frame=0
+  const flush=()=>{frame=0;if(pending){const ev=pending;pending=null;onMove(ev)}}
+  const move=ev=>{
+    if(!moved&&Math.hypot(ev.clientX-origin.x,ev.clientY-origin.y)<4) return
+    moved=true;pending=ev
+    if(!frame) frame=requestAnimationFrame(flush)
   }
-  return null
+  const cleanup=()=>{window.removeEventListener('mousemove',move);window.removeEventListener('mouseup',up);cancelAnimationFrame(frame);frame=0;pending=null;cancelGesture=null}
+  const up=ev=>{
+    if(Math.hypot(ev.clientX-origin.x,ev.clientY-origin.y)>=4) {moved=true;pending=ev}
+    if(pending) flush()
+    cleanup();onEnd(ev,moved)
+  }
+  cancelGesture=()=>{cleanup();routeCache.entries=new Map(savedRoutes);onCancel()}
+  window.addEventListener('mousemove',move);window.addEventListener('mouseup',up)
 }
-/* 拖线落点命中连线本体（12px 容差）：返回被命中的边（供落线自动建连接点接线，v1.0.15）。
- * 排除拖线起点所在的宿主连线（不能把线接回自己）。 */
-function hitEdgeAt(pt, excludeEdgeKey) {
-  for (const e of edges.value) {
-    if (excludeEdgeKey && e.key === excludeEdgeKey) continue
-    if (projectOnEdge(pt, e).dist < 12) return e
-  }
-  return null
+function selectEdge(edge) {
+  selectedEdgeKey.value=edge.key;work.selOlnodeId=null;flowMode.value='selected';closeFloaters()
 }
-/* 连接点作为起点引出连线：mousedown 拖线 → 落点为模块/连接点/连线本体皆可接（v1.0.15 线连到线） */
-function startConnectFromJunction(e, j) {
-  e.stopPropagation()
-  e.preventDefault()
-  const host = { ownerId: j.ownerId, relId: j.relId, junctionId: j.junctionId }
-  const g = hostJunctionGeom(host)
-  const origin = { x: g?.point.x ?? j.x, y: g?.point.y ?? j.y }
-  connecting.value = { fromId: null, fromJunction: host, side: g?.side || 'right', x: origin.x, y: origin.y, x0: origin.x, y0: origin.y }
-  const move = (ev) => {
-    const p = canvasPt(ev)
-    connecting.value = { ...connecting.value, x: p.x, y: p.y }
-  }
-  const up = (ev) => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-    const st = connecting.value
-    connecting.value = null
-    if (!st) return
-    const pt = canvasPt(ev)
-    /* 1. 落到既有连接点：直接接（含连接点→连接点） */
-    const junc = hitJunctionAt(pt, null)
-    if (junc && junc.junctionId !== j.junctionId) {
-      const rel = work.olnodeRelAddJunctionToJunction(host, { ownerId: junc.ownerId, relId: junc.relId, junctionId: junc.junctionId })
-      if (rel) {
-        const g = edgeGeomFromJunction(nodeById(host.ownerId), nodeById(host.ownerId)?.rels?.find((x) => x.id === j.relId), rel) || { mid: { x: (origin.x + junc.x) / 2, y: (origin.y + junc.y) / 2 } }
-        openEdgeEdit(host.ownerId, rel.id, g)
-      }
-      return
-    }
-    /* 2. 落到另一条连线本体：在落点自动创建新连接点并接上（线→线） */
-    const hitEdge = hitEdgeAt(pt, j.relId)
-    if (hitEdge) {
-      const { t, point } = projectOnEdge(pt, hitEdge)
-      const nj = work.olnodeJunctionAdd(hitEdge.ownerId, hitEdge.rel.id, t)
-      if (nj) {
-        const rel = work.olnodeRelAddJunctionToJunction(host, { ownerId: hitEdge.ownerId, relId: hitEdge.rel.id, junctionId: nj.id })
-        if (rel) {
-          const g = edgeGeomFromJunction(nodeById(host.ownerId), nodeById(host.ownerId)?.rels?.find((x) => x.id === j.relId), rel) || { mid: { x: (origin.x + point.x) / 2, y: (origin.y + point.y) / 2 } }
-          openEdgeEdit(host.ownerId, rel.id, g)
-        }
-      }
-      return
-    }
-    /* 3. 落到模块：常规建边 */
-    const target = hitConnTarget(pt, new Set())
-    if (!target) return
-    const tb = rectOf(target)
-    const toSide = sideBetween({ x: origin.x - 1, y: origin.y - 1, w: 2, h: 2 }, tb).to
-    const rel = work.olnodeRelAddFromJunction(host, target.id, { toSide })
-    if (rel) {
-      const g = edgeGeomFromJunction(nodeById(host.ownerId), nodeById(host.ownerId)?.rels?.find((x) => x.id === j.relId), rel)
-      openEdgeEdit(host.ownerId, rel.id, g || { mid: { x: (origin.x + (tb.x + tb.w / 2)) / 2, y: (origin.y + (tb.y + tb.h / 2)) / 2 } })
-    }
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
+function startEdgeShape(e,edge) {
+  if(e.button!==0) return
+  e.preventDefault();selectEdge(edge)
+  if(e.detail>=2) onEdgeDbl(edge)
 }
-function startConnect(e, n) {
-  e.stopPropagation()
-  e.preventDefault()
-  const side = e.currentTarget?.dataset?.side || 'right'
-  const a0 = anchorsOf(rectOf(n))[side] || canvasPt(e)
-  connecting.value = { fromId: n.id, side, x: a0.x, y: a0.y }
-  const move = (ev) => {
-    const p = canvasPt(ev)
-    connecting.value = { fromId: n.id, side, x: p.x, y: p.y }
+function onEdgeDbl(edge) {selectEdge(edge);openEdgeEdit(edge.ownerId,edge.rel.id,edge)}
+function hostAllowed(endpoint,exclude) {
+  if(!exclude||endpoint.nodeId) return true
+  const seen=new Set()
+  function depends(id) {
+    if(id===exclude) return true
+    if(seen.has(id)) return false
+    seen.add(id)
+    const e=relationEntries.value.find(e=>e.rel.id===id)
+    return e&&[e.rel.fromJunction,e.rel.toJunction].filter(Boolean).some(r=>depends(r.relId))
   }
-  const up = (ev) => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-    const st = connecting.value
-    connecting.value = null
-    if (!st) return
-    const pt = canvasPt(ev)
-    /* 优先接连接点（线→线互连）；否则按模块建立 */
-    const junc = hitJunctionAt(pt, n.id)
-    if (junc) {
-      work.olnodeRelAddToJunction(n.id, { ownerId: junc.ownerId, relId: junc.relId, junctionId: junc.junctionId }, { fromSide: side })
-      return
-    }
-    const finalTarget = hitConnTarget(pt, new Set([n.id]))
-    if (!finalTarget) return
-    /* 记录两侧端口：从拖出的接口（fromSide）来，接入侧取面向源节点一侧（toSide） */
-    const tb = rectOf(finalTarget)
-    const toSide = sideBetween(rectOf(n), tb).to
-    const rel = work.olnodeRelAdd(n.id, finalTarget.id, { fromSide: side, toSide })
-    if (!rel) return
-    const g = edgeGeomFor(n, rel) || { mid: pt }
-    openEdgeEdit(n.id, rel.id, g)
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
+  return !depends(endpoint.relId)
 }
-const connPath = computed(() => {
-  const c = connecting.value
-  if (!c) return ''
-  /* 从连接点引出的拖线：起点固定为连接点中心（钉在宿主连线上） */
-  if (c.fromJunction) return `M ${c.x0 ?? c.x} ${c.y0 ?? c.y} L ${c.x} ${c.y}`.replace('NaN', '')
-  const from = nodeById(c.fromId)
-  const anchor = from && rectOf(from) ? anchorsOf(rectOf(from))[c.side] : null
-  const start = anchor || c
-  return `M ${start.x} ${start.y} L ${c.x} ${c.y}`
+function snapEndpoint(pt,exclude) {
+  const radius=12/zoom.value
+  const nodes=[...visNodes.value].reverse().sort((a,b)=>(a.kind==='container')-(b.kind==='container'))
+  let best=null
+  for(const n of nodes) for(const [side,p] of Object.entries(portsOf(n))) {
+    const d=Math.hypot(p.x-pt.x,p.y-pt.y)
+    if(d<=radius&&(!best||d<best.dist)) best={nodeId:n.id,side,point:p,dist:d}
+  }
+  if(best) return best
+  for(const j of junctionItems.value) {
+    if(edges.value.find(e=>e.key===j.relId)?.status==='blocked') continue
+    if(!hostAllowed(j,exclude)) continue
+    const d=Math.hypot(pt.x-j.x,pt.y-j.y)
+    if(d<=radius&&(!best||d<best.dist)) best={ownerId:j.ownerId,relId:j.relId,junctionId:j.junctionId,point:{x:j.x,y:j.y},dist:d}
+  }
+  if(best) return best
+  const n=hitConnTarget(pt)
+  if(n) {
+    const [side,p]=Object.entries(portsOf(n)).sort((a,b)=>Math.hypot(pt.x-a[1].x,pt.y-a[1].y)-Math.hypot(pt.x-b[1].x,pt.y-b[1].y))[0]
+    return {nodeId:n.id,side,point:p}
+  }
+  for(const edge of edges.value) {
+    if(edge.status==='blocked'||!hostAllowed({relId:edge.key},exclude)) continue
+    const proj=projectOnRoute(pt,edge)
+    if(proj.dist<=10/zoom.value&&(!best||proj.dist<best.dist)) best={ownerId:edge.ownerId,relId:edge.key,t:proj.t,point:proj.point,dist:proj.dist}
+  }
+  return best
+}
+function endpointData(e) {
+  if(e.nodeId) return {nodeId:e.nodeId,side:e.side}
+  return {ownerId:e.ownerId,relId:e.relId,...(e.junctionId?{junctionId:e.junctionId}:{t:e.t})}
+}
+function beginConnection(e,source,edge=null,end='target') {
+  if(e.button!==0) return
+  e.preventDefault();e.stopPropagation();closeFloaters()
+  const fixedTarget=edge?.target
+  const originalSource=edge?.source||source
+  connecting.value={source:originalSource,target:fixedTarget,point:canvasPt(e),candidate:null,edgeKey:edge?.key,end,rel:edge?.rel}
+  flowMode.value=edge?'reconnect':'create'
+  const finish=()=>{connecting.value=null;flowMode.value=selectedEdgeKey.value?'selected':'idle'}
+  pointerGesture(e,ev=>{
+    const point=canvasPt(ev),candidate=snapEndpoint(point,edge?.key)
+    connecting.value={...connecting.value,point,candidate}
+  },(ev,moved)=>{
+    const st=connecting.value
+    const preview=connGeometry.value
+    if(moved&&st?.candidate&&preview?.status==='ok') {
+      const endpoint=endpointData(st.candidate)
+      const command=edge?{type:'reconnect',ownerId:edge.ownerId,relId:edge.key,end,endpoint}:{type:'connect',source:st.source,target:endpoint}
+      const result=work.olnodeRelGesture(command)
+      if(result.ok) {selectedEdgeKey.value=result.rel.id;work.selOlnodeId=null}
+      else window.$msg?.warning(result.error)
+    }
+    finish()
+  },finish)
+}
+function startConnect(e,n) {beginConnection(e,{nodeId:n.id,side:e.currentTarget?.dataset?.side||'right'})}
+function startConnectFromJunction(e,j) {beginConnection(e,{ownerId:j.ownerId,relId:j.relId,junctionId:j.junctionId})}
+function startReconnect(e,edge,end) {beginConnection(e,edge.source,edge,end)}
+const connGeometry=computed(()=>{
+  const c=connecting.value
+  if(!c) return null
+  const candidate=c.candidate?endpointData(c.candidate):{point:c.point,side:c.end==='source'?'right':'left'}
+  const source=c.end==='source'?candidate:c.source,target=c.end==='source'?c.target:candidate
+  return geometryBetween(source,target,c.rel||{},c.edgeKey||'__preview',new Set(c.edgeKey?[c.edgeKey]:[]),true)
 })
-
-/* ---------- 左键拖拽塑形（v1.0.16）：替换「点击连线开编辑浮层」 ----------
- * 按住连线拖动 → 弯曲（custom 控制点跟随鼠标，实时预览）；拖回近直线（垂距 < 6px）→ 自动拉直；
- * 点击不动 → 无操作；编辑浮层入口只剩：拖线建边完成后自动弹出。 */
-let shaping = null // { ownerId, relId, moved }
-function startEdgeShape(e, edge) {
-  if (e.button !== 0) return
-  e.stopPropagation()
-  /* 双击拉直：preventDefault 会抑制原生 dblclick 派发，改在 mousedown 里按 e.detail 判定 */
-  if (e.detail >= 2) {
-    e.preventDefault()
-    work.olnodeRelPatchAny(edge.ownerId, edge.rel.id, { custom: null })
-    return
+const connPath=computed(()=>connGeometry.value?.d||'')
+const routeHandles=computed(()=>{
+  const e=selectedEdge.value
+  if(!e||connecting.value) return []
+  if(work.canvasPrefs.edgeStyle!=='ortho') {
+    const wp=e.resolvedWaypoints?.[0]
+    return [{key:'curve',point:wp||pointAtT(e,.5),curve:true,index:0}]
   }
-  e.preventDefault()
-  shaping = { ownerId: edge.ownerId, relId: edge.rel.id, moved: false }
-  const move = (ev) => {
-    if (!shaping) return
-    const p = canvasPt(ev)
-    if (!shaping.moved) {
-      work.olnodePushUndo(true)
-      shaping.moved = true
+  const pts=e.pts||[e.a,e.b],out=[]
+  for(let i=1;i<pts.length-2;i++) if(Math.hypot(pts[i+1].x-pts[i].x,pts[i+1].y-pts[i].y)>=24) out.push({key:i,index:i,point:{x:(pts[i].x+pts[i+1].x)/2,y:(pts[i].y+pts[i+1].y)/2},horizontal:Math.abs(pts[i].y-pts[i+1].y)<.5})
+  if(!out.length) out.push({key:'middle',index:0,point:pointAtT(e,.5),horizontal:Math.abs(e.a.y-e.b.y)<Math.abs(e.a.x-e.b.x),straight:true})
+  return out
+})
+function startRouteAdjust(event,handle) {
+  const edge=selectedEdge.value
+  if(!edge||event.button!==0) return
+  event.preventDefault();event.stopPropagation();closeFloaters();flowMode.value='adjust'
+  const start=canvasPt(event),original=edge.rel.routing?.waypoints|| (edge.rel.custom?[edge.rel.custom]:[])
+  const finish=()=>{routeDraft.value=null;flowMode.value='selected'}
+  pointerGesture(event,ev=>{
+    const p=canvasPt(ev)
+    let waypoints
+    if(handle.curve) {waypoints=original.map(p=>({...p}));waypoints[handle.index]={x:p.x,y:p.y}}
+    else {
+      const pts=(edge.pts||[edge.a,edge.b]).map(p=>({...p}))
+      const delta=handle.horizontal?p.y-start.y:p.x-start.x,axis=handle.horizontal?'y':'x'
+      if(handle.straight) {
+        const a={x:edge.a.x+(edge.b.x-edge.a.x)/3,y:edge.a.y+(edge.b.y-edge.a.y)/3},b={x:edge.a.x+(edge.b.x-edge.a.x)*2/3,y:edge.a.y+(edge.b.y-edge.a.y)*2/3}
+        a[axis]+=delta;b[axis]+=delta;waypoints=[a,b]
+      } else {pts[handle.index][axis]+=delta;pts[handle.index+1][axis]+=delta;waypoints=pts.slice(1,-1)}
     }
-    /* 拖回近直线（与 a-b 端点连线垂距 < 6px）→ 清除 custom 恢复自动路由（拉直） */
-    const a = edge.a
-    const b = edge.b
-    const abx = b.x - a.x
-    const aby = b.y - a.y
-    const l2 = abx * abx + aby * aby || 1
-    const dist = Math.abs((p.x - a.x) * aby - (p.y - a.y) * abx) / Math.sqrt(l2)
-    work.olnodeRelPatchAny(shaping.ownerId, shaping.relId, dist < 6 ? { custom: null } : { custom: { x: p.x, y: p.y } })
-  }
-  const up = () => {
-    window.removeEventListener('mousemove', move)
-    window.removeEventListener('mouseup', up)
-    /* 未移动的点击不再打开编辑浮层（v1.0.16 取消该入口） */
-    shaping = null
-  }
-  window.addEventListener('mousemove', move)
-  window.addEventListener('mouseup', up)
+    routeDraft.value={key:edge.key,routing:{version:1,waypoints}}
+  },(ev,moved)=>{
+    if(moved&&routeDraft.value) work.olnodeRelGesture({type:'patch',ownerId:edge.ownerId,relId:edge.key,patch:{routing:routeDraft.value.routing,custom:null}})
+    finish()
+  },finish)
 }
-/* 连线中点手柄：已有 custom 弯曲的连线显示微型手柄，拖它 = 继续调整弯曲；双击连线 = 拉直恢复自动路由 */
-function onEdgeDbl(edge) {
-  work.olnodeRelPatchAny(edge.ownerId, edge.rel.id, { custom: null })
+function resetRoute(edge=selectedEdge.value) {
+  if(!edge) return
+  routeCache.entries.delete(edge.key)
+  work.olnodeRelGesture({type:'patch',ownerId:edge.ownerId,relId:edge.key,patch:{routing:null,custom:null}})
 }
+function deleteSelectedEdge() {
+  const edge=selectedEdge.value
+  if(edge) work.olnodeRelRemove(edge.ownerId,edge.key)
+  selectedEdgeKey.value=null;flowMode.value='idle';closeFloaters()
+}
+const edgeToolsStyle=computed(()=>{
+  const e=selectedEdge.value,r=canvasEl.value?.getBoundingClientRect()
+  if(!e||!r) return {}
+  const top=Math.min(...(e.samples||[e.a,e.b]).map(p=>p.y))
+  return {left:Math.max(r.left+150,Math.min(r.right-150,r.left+tx.value+e.mid.x*zoom.value))+'px',top:Math.max(r.top+45,Math.min(r.bottom-30,r.top+ty.value+top*zoom.value-26))+'px'}
+})
 
 /* ---------- 边编辑浮层（与容器右键菜单同模式：fixed + 屏幕坐标 + 不随画布缩放重定位） ---------- */
 const edgeLabelInput = ref(null)
@@ -945,55 +821,19 @@ function openEdgeEdit(ownerId, relId, geom) {
   })
 }
 function curRel() {
-  const st = edgeEdit.value
-  if (!st) return null
-  const n = nodeById(st.ownerId)
-  if (!n || !Array.isArray(n.rels)) return null
-  /* 编辑对象可能是宿主 rel 本身，也可能是它某个连接点引出的 _out 连线 */
-  for (const r of n.rels) {
-    if (r.id === st.relId) return r
-    const o = (r._out || []).find((x) => x.id === st.relId)
-    if (o) return o
-  }
-  return null
+  const st=edgeEdit.value
+  return st?relationEntries.value.find(e=>e.owner.id===st.ownerId&&e.rel.id===st.relId)?.rel:null
 }
 function patchRel(patch) {
-  const st = edgeEdit.value
-  if (!st) return
-  const n = nodeById(st.ownerId)
-  if (!n || !Array.isArray(n.rels)) return
-  for (const r of n.rels) {
-    if (r.id === st.relId) {
-      work.olnodeRelUpdate(st.ownerId, st.relId, patch)
-      return
-    }
-    const i = (r._out || []).findIndex((x) => x.id === st.relId)
-    if (i >= 0) {
-      r._out = r._out.map((x, k) => (k === i ? { ...x, ...patch } : x))
-      autosave.mark('olnodes', n)
-      return
-    }
-  }
+  const st=edgeEdit.value
+  if(!st) return
+  work.olnodePushUndo()
+  work.olnodeRelPatchAny(st.ownerId,st.relId,patch)
 }
 function removeRel() {
-  const st = edgeEdit.value
-  if (!st) return
-  const n = nodeById(st.ownerId)
-  if (n && Array.isArray(n.rels)) {
-    for (const r of n.rels) {
-      if (r.id === st.relId) {
-        work.olnodeRelRemove(st.ownerId, st.relId)
-        break
-      }
-      if ((r._out || []).some((x) => x.id === st.relId)) {
-        r._out = r._out.filter((x) => x.id !== st.relId)
-        autosave.mark('olnodes', n)
-        break
-      }
-    }
-  }
-  edgeEdit.value = null
-  edgeCtx.value = null
+  const st=edgeEdit.value
+  if(st) work.olnodeRelRemove(st.ownerId,st.relId)
+  selectedEdgeKey.value=null;flowMode.value='idle';closeFloaters()
 }
 function closeFloaters() {
   edgeEdit.value = null
@@ -1002,6 +842,7 @@ function closeFloaters() {
   editTitle.value = null
 }
 function onWinDown(e) {
+  if (!e.target.closest?.('.oc-edge-hit,.oc-elabel,.oc-route-handle,.oc-endpoint,.oc-endpoint-control,.oc-edge-tools,.oc-eedit,.oc-apt,.oc-junc')) {selectedEdgeKey.value=null;flowMode.value='idle'}
   /* 浮层与其落点数据（edgeCtx）同生共死：点浮层/连线外即一并关闭 */
   if (edgeEdit.value && !e.target.closest?.('.oc-eedit, .oc-edge-hit, .oc-elabel')) {
     edgeEdit.value = null
@@ -1239,7 +1080,10 @@ onMounted(() => {
   juncFlashTimer = setInterval(() => juncFlashTick.value++, 400)
   if (live.value.length) nextTick(fitView)
 })
+watch(() => work.work?.id, () => {cancelGesture?.();routeCache.clear();selectedEdgeKey.value=null;routeDraft.value=null;connecting.value=null;flowMode.value='idle'})
 onBeforeUnmount(() => {
+  cancelGesture?.()
+  routeCache.clear()
   window.removeEventListener('keydown', onKey)
   window.removeEventListener('mousedown', onWinDown, true)
   clearInterval(juncFlashTimer)
@@ -1278,12 +1122,12 @@ onBeforeUnmount(() => {
       <button class="om-btn" title="重做 (Ctrl+Y)" @click="work.olnodeRedo()">↷</button>
       <button class="om-btn text oc-tidy" title="整理布局（固定模块除外）" @click="tidyAll">整理</button>
       <button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)"><OIcon name="minus" :size="13" /></button>
-      <span class="oc-zoom">{{ Math.round(zoom * 100) }}%</span>
+      <button class="oc-zoom" title="恢复 100% 缩放" @click="zoom = 1">{{ Math.round(zoom * 100) }}%</button>
       <button class="om-btn" title="放大" @click="zoom = Math.min(2.2, zoom + 0.15)"><OIcon name="plus" :size="13" /></button>
       <button class="om-btn text" title="适应视图" @click="fitView">适应</button>
     </div>
 
-    <div ref="canvasEl" class="om-canvas oc-canvas" @mousedown="onPanStart" @wheel.prevent="onWheelC" @dblclick.self="addNode('event')" @contextmenu.prevent="onCanvasCtx">
+    <div ref="canvasEl" class="om-canvas oc-canvas" :data-flow-state="flowMode" @mousedown="onPanStart" @wheel.prevent="onWheelC" @dblclick.self="addNode('event')" @contextmenu.prevent="onCanvasCtx">
       <div class="om-inner" :style="innerStyle">
         <svg
           class="om-edges oc-edges"
@@ -1292,29 +1136,28 @@ onBeforeUnmount(() => {
           :height="svgBox.h"
           :viewBox="svgBox.x + ' ' + svgBox.y + ' ' + svgBox.w + ' ' + svgBox.h"
         >
-          <path v-for="e in edges" :key="'h' + e.key" class="oc-edge-hit" :d="e.d" :data-owner="e.ownerId" :data-rel="e.rel.id" @mousedown.stop="startEdgeShape($event, e)" @dblclick.stop="onEdgeDbl(e)" @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)">
-            <title>按住拖动弯曲连线 · 双击拉直 · 右键编辑（含创建连接点）</title>
-          </path>
-          <path
-            v-for="e in edges"
-            :key="'v' + e.key"
-            :d="e.dTrim || e.d"
-            fill="none"
-            :stroke="e.color"
-            :stroke-width="relEdgeWidth(e.rel)"
-            :stroke-dasharray="dashOf(e.rel.style, e.rel.kind)"
-            :opacity="edgeEdit && edgeEdit.relId === e.key ? 1 : 0.85"
-          />
+          <g v-for="e in edges" :key="e.key" class="oc-edge" :class="{ selected: selectedEdgeKey === e.key, blocked: e.status === 'blocked' }" :data-rel="e.key" :data-status="e.status">
+            <path class="oc-edge-highlight" :d="e.d" fill="none" stroke="var(--accent)" :stroke-width="relEdgeWidth(e.rel) + 3 / zoom" />
+            <path class="oc-edge-visible" :d="e.dTrim || e.d" fill="none" :stroke="e.color" :stroke-width="relEdgeWidth(e.rel)" :stroke-dasharray="e.status === 'blocked' ? '4 6' : dashOf(e.rel.style, e.rel.kind)" />
+            <path class="oc-edge-hit" :d="e.d" vector-effect="non-scaling-stroke" :data-owner="e.ownerId" :data-rel="e.rel.id" @mousedown.stop="startEdgeShape($event, e)" @dblclick.stop="onEdgeDbl(e)" @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)">
+              <title>{{ e.status === 'blocked' ? '路径受阻 · 请移动模块或调整路径' : '单击选中 · 拖动手柄调整路径或端点 · 双击编辑' }}</title>
+            </path>
+          </g>
           <polygon v-for="(h, i) in edgeDecor.heads" :key="'a' + i" :points="h" :fill="edgeDecor.fills[i]" />
           <!-- 连接点（v1.0.13）：钉在宿主连线路径上——默认微观透明小圆点；创建后 1.6s 内 flash 高亮（加深显形）便于确认位置，随后淡出隐藏。
                热区圆承担两类操作：mousedown 引出连线（连接点作起点）、被模块锚点拖线命中（作终点）、右键删除 -->
           <g v-for="j in junctionItems" :key="'j' + j.key" class="oc-junc" :class="{ flash: j.flash }">
-            <circle class="oc-junc-hit" :cx="j.x" :cy="j.y" r="10" fill="transparent" :data-junc="j.key" @mousedown.stop.prevent="startConnectFromJunction($event, j)" @contextmenu.prevent.stop="openJunctionCtx($event, j)">
+            <circle class="oc-junc-hit" :cx="j.x" :cy="j.y" :r="10 / zoom" fill="transparent" :data-junc="j.key" @mousedown.stop.prevent="startConnectFromJunction($event, j)" @contextmenu.prevent.stop="openJunctionCtx($event, j)">
               <title>连接点——按住拖出连线 / 模块锚点拖到此接线 · 右键删除</title>
             </circle>
             <circle class="oc-junc-dot" :cx="j.x" :cy="j.y" r="2.5" />
           </g>
-          <path v-if="connecting" :d="connPath" fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="6 4" />
+          <path v-if="connecting" class="oc-connection-preview" :class="{ blocked: connGeometry?.status === 'blocked' }" :d="connPath" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-dasharray="6 4" />
+          <circle v-if="connecting?.candidate" class="oc-snap-indicator" :cx="connecting.candidate.point.x" :cy="connecting.candidate.point.y" :r="8 / zoom" vector-effect="non-scaling-stroke" />
+          <g v-if="selectedEdge && !connecting" class="oc-selection-handles">
+            <circle v-for="end in ['source', 'target']" :key="end" class="oc-endpoint" :data-end="end" :cx="end === 'source' ? selectedEdge.a.x : selectedEdge.b.x" :cy="end === 'source' ? selectedEdge.a.y : selectedEdge.b.y" :r="5 / zoom" vector-effect="non-scaling-stroke" @mousedown.stop="startReconnect($event, selectedEdge, end)"><title>拖动以重连{{ end === 'source' ? '起点' : '终点' }}</title></circle>
+            <circle v-for="h in routeHandles" :key="h.key" class="oc-route-handle" :class="{ horizontal: h.horizontal, curve: h.curve }" :cx="h.point.x" :cy="h.point.y" :r="4 / zoom" vector-effect="non-scaling-stroke" @mousedown.stop="startRouteAdjust($event, h)"><title>{{ h.curve ? '拖动调整曲线路径' : '沿垂直方向拖动线段' }}</title></circle>
+          </g>
         </svg>
 
         <!-- 容器 / 节点层 -->
@@ -1322,6 +1165,7 @@ onBeforeUnmount(() => {
           v-for="n in visNodes"
           :key="n.id"
           class="oc-node"
+          :data-node-id="n.id"
           :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'resize-smooth': resizeSmooth && resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
           :style="nodeStyle(n)"
           :data-dl-target="n.kind === 'cite' && n.refId ? n.refId : null"
@@ -1379,7 +1223,7 @@ onBeforeUnmount(() => {
             </div>
           </template>
 
-          <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" :title="'拖到目标模块或连接点建立连线'" @mousedown="startConnect($event, n)" />
+          <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :class="{ 'snap-target': connecting?.candidate?.nodeId === n.id && connecting?.candidate?.side === sd }" :style="n.shape === 'para' && (sd === 'left' || sd === 'right') ? { [sd]: 'calc(6.8% - 4.5px)' } : null" :data-side="sd" :title="'拖到目标模块或连接点建立连线'" @mousedown="startConnect($event, n)" />
           <template v-if="n.kind !== 'container'">
             <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
             <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
@@ -1391,6 +1235,10 @@ onBeforeUnmount(() => {
             <span class="oc-rs oc-rs-corner" data-dir="nw" title="拖拽调整大小" @mousedown="startResize($event, n, 'nw')" />
           </template>
         </div>
+
+        <template v-if="selectedEdge && !connecting">
+          <button v-for="end in ['source','target']" :key="'endpoint-'+end" class="oc-endpoint-control" :data-end="end" :aria-label="end === 'source' ? '重连起点' : '重连终点'" :style="{left:(end === 'source' ? selectedEdge.a.x : selectedEdge.b.x)+'px',top:(end === 'source' ? selectedEdge.a.y : selectedEdge.b.y)+'px',width:14/zoom+'px',height:14/zoom+'px'}" @mousedown.stop="startReconnect($event,selectedEdge,end)" />
+        </template>
 
         <!-- 关系链接令牌卫星 -->
         <a
@@ -1410,13 +1258,23 @@ onBeforeUnmount(() => {
 
         <!-- 连线标签（纯展示 + 双击拉直；左键编辑入口已随塑形改版取消） -->
         <div
-          v-for="e in edges.filter((x) => x.rel.label)"
+          v-for="e in edges.filter((x) => x.rel.label || x.status === 'blocked')"
           :key="'l' + e.key"
-          class="oc-elabel"
+          class="oc-elabel" :class="{ selected: selectedEdgeKey === e.key, blocked: e.status === 'blocked' }"
+          @mousedown.stop="startEdgeShape($event, e)"
           :style="{ left: e.mid.x + 'px', top: e.mid.y + 'px', borderColor: e.color, color: e.color }"
           @dblclick.stop="onEdgeDbl(e)"
           @contextmenu.prevent.stop="openEdgeCtxFromEvent($event, e)"
-        >{{ e.rel.label }}</div>
+        >{{ e.status === 'blocked' ? '路径受阻' : e.rel.label }}</div>
+
+        <Teleport to=".app-root" v-if="selectedEdge && !connecting && flowMode !== 'adjust' && !edgeEdit">
+          <div class="oc-edge-tools" :style="edgeToolsStyle" @mousedown.stop>
+            <span class="oc-edge-tools-status">{{ selectedEdge.status === 'blocked' ? '路径受阻' : selectedEdge.rel.routing || selectedEdge.rel.custom ? '手动路径' : '自动路径' }}</span>
+            <button title="编辑连线属性与标签" @click="onEdgeDbl(selectedEdge)">编辑</button>
+            <button title="清除手动路径偏好并重新布线" @click="resetRoute()">恢复自动路径</button>
+            <button class="danger" title="删除连线（Delete）" @click="deleteSelectedEdge">删除</button>
+          </div>
+        </Teleport>
 
         <!-- 边编辑浮层：挂 .app-root（theme-* 的 CSS 变量在此元素上，Teleport 到 body 会丢失背景色变透明），
            fixed 定位不受画布缩放影响，尺寸恒定 -->

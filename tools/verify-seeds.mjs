@@ -123,8 +123,8 @@ async function canvasBBook(ctx, meta) {
   return workId
 }
 
-/* ---------- AI 验证书：AI 助手四能力全链路（ai-verify，docs/AI助手接入方案.md §八） ----------
- * 三章正文（林昭贯穿三章、沈青梧见第二章）供 plot 装配（前情摘要 / L2 反查片段），
+/* ---------- AI 验证书：AI 助手任务链路（agent-task-verify，五模块专用任务与提案） ----------
+ * 三章正文（林昭贯穿三章、沈青梧见第二章）供任务装配（前情摘要 / L2 反查片段），
  * 幕布两根节点（同层断言用）、双人物 + 预置关系、大纲根 + 两个子节点（祖先/同级断言用）。 */
 async function aiBook(ctx, meta) {
   const { db, uid, now } = ctx
@@ -200,7 +200,7 @@ export const VERIFY_BOOKS = [
   { title: '画布验证书A', owner: 'olcanvas-verify.mjs', desc: '旧三级大纲迁移 v2（含章纲双链令牌）', create: canvasABook },
   { title: '画布验证书B', owner: 'olcanvas-verify.mjs', desc: '空书快速开始（仅一个幕布节点）', create: canvasBBook },
   { title: '关系跟随验证书', owner: 'relfollow-verify.mjs', desc: '关系图拖线改关系（甲 / 乙 / 丙 三人物）', create: relfollowBook },
-  { title: 'AI 验证书', owner: 'ai-verify.mjs', desc: 'AI 助手四能力全链路：设置区 / 装配器 / 端到端 / 锁门禁（方案 §八）', create: aiBook },
+  { title: 'AI 验证书', owner: 'agent-task-verify.mjs', desc: 'AI 助手任务链路：五模块专用任务与提案（原文证据 / 确认 / 过期 / 回滚）', create: aiBook },
   { title: '多窗口验证书', owner: 'multiwindow-verify.mjs', desc: '拆窗 / 锁 / 落库 / 锁跟随', create: emptyBook },
   { title: '画布右键验证书', owner: 'canvasctx-verify.mjs', desc: '画布右键建模块 + Delete 删除', create: emptyBook },
   { title: '连接点修复验证书', owner: 'junction-fix-verify.mjs / freeze-repro-verify.mjs / visual-fix-verify.mjs', desc: '连接点全链路 + 卡死复现 + 视觉专项（三脚本共用）', create: emptyBook },

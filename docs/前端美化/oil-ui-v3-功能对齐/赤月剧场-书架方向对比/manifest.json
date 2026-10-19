@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "project": "赤月剧场 · 三种书架方向",
+  "brief": "相同六部作品，三种不同的舞台构图、材质和开场演出。",
+  "round": "赤月书架-01",
+  "lang": "zh",
+  "nativeViewport": "1440x900",
+  "candidates": [
+    {
+      "id": "opera",
+      "name": "赤月歌剧院",
+      "concept": "故事在镜框式舞台中央登场，丝绒、雕金与追光共同承托作品。",
+      "typography": "京华老宋体 64px 题名；微软雅黑工具与信息",
+      "palette": [
+        "#150D12",
+        "#8B2735",
+        "#E4C993"
+      ],
+      "traits": [
+        "中央镜框舞台",
+        "丝绒揭幕与追光",
+        "下方横向剧目单"
+      ],
+      "source": "opera.html",
+      "interactive": true
+    },
+    {
+      "id": "nouveau",
+      "name": "赤月戏",
+      "concept": "作品藏在彩绘月色与多层纸景之间，像一出被光唤醒的幻戏。",
+      "typography": "霞鹜文楷 67px 竖向题名；微软雅黑工具与信息",
+      "palette": [
+        "#EEE6D3",
+        "#174545",
+        "#B64B3D"
+      ],
+      "traits": [
+        "非对称多层纸景",
+        "曲线花饰与彩绘月色",
+        "侧边节目册"
+      ],
+      "source": "nouveau.html",
+      "interactive": true
+    },
+    {
+      "id": "avant",
+      "name": "先锋旋转舞台",
+      "concept": "以偏轴圆台与悬吊景片为故事换景，用红蓝撞色和巨字建立冲击。",
+      "typography": "微软雅黑 91px 粗黑展示字；紧凑无衬线工具",
+      "palette": [
+        "#111216",
+        "#F03F2C",
+        "#2748C9"
+      ],
+      "traits": [
+        "偏轴机械转台",
+        "悬吊景片与灯阵",
+        "斜切巨字与连续作品序列"
+      ],
+      "source": "avant.html",
+      "interactive": true
+    }
+  ]
+}

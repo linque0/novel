@@ -1,0 +1,23 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [
+      "加载错误：Failed to load resource: the server responded with a status of 404 () https://images.squarespace-cdn.com/content/57e04229e3df2820361bc4ce/016f8c95-2829-4ac9-8777-5b7ea4e41817/bpfCinema-loop1-still.jpg?format=2500w",
+      "加载错误：Failed to load resource: the server responded with a status of 404 () https://images.squarespace-cdn.com/content/v1/57e04229e3df2820361bc4ce/1598710344309-UXAUYJNEATNM4YB02I4P/favicon.ico?format=100w"
+    ],
+    "lint": [
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 1,
+        "examples": [
+          "div.cr「© 2026 JAMES GARDNER — C」（2.44:1）"
+        ]
+      }
+    ]
+  }
+]

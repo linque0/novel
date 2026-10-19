@@ -1,0 +1,23 @@
+{
+  "kind": "production component in IAB; real requestAnimationFrame intervals; synthetic DOM drag events; 10 warmup frames excluded",
+  "results": [
+    {
+      "nodes": 100,
+      "edges": 150,
+      "style": "ortho",
+      "frames": 129,
+      "distinctPositions": 130,
+      "frameP95Ms": 16.6,
+      "eventP95Ms": 0.1
+    },
+    {
+      "nodes": 100,
+      "edges": 150,
+      "style": "bezier",
+      "frames": 129,
+      "distinctPositions": 130,
+      "frameP95Ms": 11.2,
+      "eventP95Ms": 0.1
+    }
+  ]
+}

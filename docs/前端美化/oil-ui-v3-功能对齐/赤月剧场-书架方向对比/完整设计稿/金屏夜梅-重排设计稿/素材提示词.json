@@ -1,0 +1,21 @@
+{
+  "mode": "built-in image_gen",
+  "references": [
+    "用户提供图一：书架层叠纸景",
+    "用户提供图三：天鹅装饰壁画"
+  ],
+  "prompts": [
+    {
+      "id": "outline",
+      "prompt": "Create ONE new wide 3:2 theatre background illustration, in the SAME art nouveau fantasy aesthetic as the two reference artworks, especially reference 1 sculpted gold, tactile ivory paper, complex organic whiplash lines and physical layered depth. Not a UI mockup. Theme STORY OUTLINE = a magnificent branching STORY TREE. Composition: an asymmetrical delicate gilded tree grows from FAR RIGHT edge, spreading many slender curling branches across UPPER 30 percent, tipped with tiny amber leaves and three jewel-like seed pods connected by a subtle thin vermilion silk thread. Behind tree, 5 layers of midnight indigo, lapis-blue and muted sage cut-paper botanical arches recede into moonlit pearl mist, beautifully separated by soft cast shadows. Rich blue/ivory/old gold palette with tiny burnt-orange accents, regal and intricate. Main LOWER LEFT and CENTER 65 percent blank warm ivory fine paper with faint embossed grain, carefully reserved for actual HTML plot nodes. Artwork concentrated top and far right, no landscape mountains, no scrolls, no gateways, no faces, no tools. Exquisite expensive-looking museum craft, luminous material, sophisticated dimensional papercut stage scenery, matching references but clearly new branching tree composition. No text, letters, labels, symbols, UI cards, buttons."
+    },
+    {
+      "id": "characters",
+      "prompt": "Create ONE new wide 3:2 theatre background illustration, in SAME art nouveau fantasy aesthetic as references, gilded organic filigree, sculptural layered paper, mosaic jewels and tactile materials. Theme CHARACTERS AND RELATIONSHIPS: a pair of different elegant LONG-TAILED SONG BIRDS (not swans), one pearl-white with blush wing and one muted garnet with gold wing, face each other on two interlaced curving gilded branches at FAR LEFT. Their tails and a fine silk cord wind together into an elaborate graceful art nouveau knot near lower-left, representing relationships. Behind birds, 4 physically separated layers of plum-wine foliage, dusty rose scalloped paper wings, pale mauve ivory mist and a luminous oval stage opening. Tiny ruby beads and delicate golden blossoms, sumptuous but restrained, strong depth and cast shadows, finely sculpted not flat printed. Rich mulberry, rose, celadon accents, warm ivory and antique gold. RIGHTMOST 68 percent quiet warm pale dusty rose-ivory paper negative space for HTML character dossier. Whole LEFTMOST 28 percent rich bird theatre wing. No people, no silhouettes, no cameos, no frames, no cranes, no moon, no mountain. Unique organic composition like reference 1 quality, not literal photographed room. No text, UI, letters, buttons."
+    },
+    {
+      "id": "settings",
+      "prompt": "Create ONE new wide 3:2 refined theatrical art nouveau fantasy background matching references in craftsmanship: sculpted gilded whiplash ornament, tactile ivory paper and many recessed scenic layers. Theme PREFERENCES AND ADJUSTMENT = a magnificent botanical IRIS OF LIGHT. At far RIGHT third, an open circular aperture made of 8 overlapping mother-of-pearl petal-shaped paper leaves, edged with delicate old-gold veins; fine brass gear crescents and tiny emerald-blue enamel dials are woven organically into botanical filigree, like an exquisite art nouveau astronomical instrument, no numerals. Through iris, five progressively lighter celadon and dusty aquamarine paper rings recede toward soft warm pearl light with physical shadows; the lowest edge has tiny golden fern fronds. Rich muted peacock blue, pale celadon, ivory, champagne gold; calm but highly ornate craft, not black-gold. LEFTMOST 65 percent calm desaturated pale blue-grey paper negative space reserved for actual HTML settings panel. No mountains, moon, birds, people, lamps, movable type, desks or paper sheets, no literal UI. Entirely different subject from story tree and bird relationships but same reference art style. No text, letters, numerals, labels or buttons."
+    }
+  ]
+}

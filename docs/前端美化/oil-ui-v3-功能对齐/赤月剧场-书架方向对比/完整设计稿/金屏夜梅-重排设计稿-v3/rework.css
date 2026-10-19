@@ -1,0 +1,204 @@
+/* 赤月戏 · 重排设计稿 v2 覆盖层
+   原则：统一 76px 顶栏；不为插画留整列；所有目录可滚动；正文用左侧章节目录替代底部章条。 */
+
+/* ── 统一顶栏 ───────────────────────────────────────────── */
+.shelf-view .header.shelf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  height: 76px;
+  padding: 0 32px;
+  background: #151918;
+  border-bottom: 1px solid #b99f6640;
+  color: #f0e7d5;
+  position: relative;
+  z-index: 6;
+}
+.shelf-view .header.shelf-header nav { display: flex; align-items: center; gap: 37px; height: 76px; }
+.shelf-view .header.shelf-header nav .nav-item { height: 100%; }
+.shelf-view .header.shelf-header .brand { min-width: 190px; }
+.shelf-view .header.shelf-header .brand > span { font: 25px/1.2 OldSong, serif; letter-spacing: 6px; color: #f0e7d5; }
+.shelf-view .header.shelf-header .brand small { display: block; margin-top: 5px; font: 11px 'Microsoft YaHei'; letter-spacing: 3px; color: #bfb59c; }
+.shelf-view .header.shelf-header .emblem { width: 40px; height: 40px; color: #cfb06b; }
+.shelf-view .header.shelf-header .nav-item { color: #bfb59c; font: 16px OldSong, serif; letter-spacing: 3px; }
+.shelf-view .header.shelf-header .nav-item.active { color: #ead39c; }
+.shelf-view .header.shelf-header .nav-item.active:after {
+  content: '';
+  position: absolute;
+  bottom: 13px;
+  left: calc(50% - 10px);
+  width: 20px;
+  border-top: 1px solid #c0a05d;
+}
+.shelf-view .header.shelf-header .profile { color: #f0e7d5; border-color: #cfb06b; }
+.shelf-view .header.shelf-header .profile:hover { background: #cfb06b20; }
+
+/* 书架：去掉 84px 竖栏，内容从 0 开始 */
+.shelf-view .frame { height: 860px !important; }
+.shelf-view .nouveau-rail { display: none !important; }
+.shelf-view .nouveau-main { margin-left: 0 !important; height: 784px !important; }
+.shelf-view .nouveau-toolbar { left: 40px; right: 35px; top: 20px; }
+.shelf-view .nouveau-stage { left: 0; width: calc(100% - 316px); height: 100%; }
+.shelf-view .nouveau-story { left: 40px; top: 135px; }
+.shelf-view .nouveau-book-stage { left: 47%; top: 255px; }
+.shelf-view .nouveau-flower { left: 53%; top: 138px; }
+.shelf-view .nouveau-chapter { left: 38%; top: 584px; }
+.shelf-view .nouveau-program { top: 95px; height: 652px; }
+.shelf-view .nouveau-program-head h2 { font-family: WenKai, serif; }
+
+/* ── 正文：248 章节目录 + 无底部章条 ───────────────────── */
+.c-title-column { display: none !important; }
+.c-volume-label, .c-chapters { display: none !important; }
+.c-book {
+  left: 296px !important;
+  right: 34px;
+  top: 65px;
+  height: 680px !important;
+  grid-template-columns: minmax(0, 1fr) 252px !important;
+}
+.c-stage .project-line { padding-left: 296px; }
+body.rail-collapsed .c-stage .project-line { padding-left: 104px; }
+.c-page .prose { margin: 0 51px; }
+.c-page .chapter-title h1 { font-size: 34px; }
+
+.c-chapter-rail {
+  position: absolute;
+  z-index: 4;
+  left: 32px;
+  top: 72px;
+  width: 248px;
+  bottom: 40px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 16px 12px 12px;
+  background: #1b211ee8;
+  border: 1px solid #aa915b7d;
+  box-shadow: 0 10px 28px #0004;
+  color: #eee4ca;
+}
+.c-rail-head { flex: none; padding: 2px 4px 13px; border-bottom: 1px solid #b39b6240; }
+.c-rail-head small { display: block; font-size: 10px; letter-spacing: 4px; color: #bfb59c; }
+.c-rail-head h2 { margin: 8px 0 6px; font: 400 24px/1.3 OldSong, serif; letter-spacing: 3px; color: #f1e8d3; }
+.c-rail-head .seal { display: inline-block; padding: 3px 7px; border: 1px solid #e1bda4; background: #753e35c9; color: #f6dfbd; font: 11px OldSong, serif; letter-spacing: 2px; }
+.c-rail-toggle { position: absolute; top: 14px; right: 12px; width: 24px; height: 24px; border: 1px solid #b39b6255; background: transparent; color: #cfc6ad; font-size: 14px; cursor: pointer; }
+.c-rail-toggle:hover { color: #fae8bb; border-color: #cfb06b; }
+.c-rail-volume { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 12px 4px 8px; font-size: 12px; letter-spacing: 1px; color: #d9c18b; }
+.c-rail-volume span { font-size: 10px; color: #a99b80; }
+.c-rail-search { flex: none; display: flex; align-items: center; gap: 7px; height: 32px; margin: 0 2px 8px; padding: 0 8px; border-bottom: 1px solid #b39b6255; color: #bfb59c; }
+.c-rail-search svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.3; flex: none; }
+.c-rail-search input { width: 100%; min-width: 0; border: 0; background: none; color: #eee4ca; font-size: 12px; outline: none; }
+.c-rail-search input::placeholder { color: #9f957d; }
+.c-rail-chapters { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; padding: 2px 0; }
+.c-rail-chapters .chapter {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 9px 7px; border: 0; border-bottom: 1px solid #b39b6233;
+  text-align: left; color: #d8cdb4; background: transparent; cursor: pointer;
+}
+.c-rail-chapters .chapter:hover { background: #ffffff0f; color: #fae8bb; }
+.c-rail-chapters .chapter .num { flex: none; width: 24px; font: 18px/1 WenKai, serif; color: #b7a985; }
+.c-rail-chapters .chapter b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 400; }
+.c-rail-chapters .chapter small { display: block; margin-top: 4px; color: #a99b80; font-size: 10px; }
+.c-rail-chapters .chapter i { margin-left: auto; color: #cfb06b; font-size: 8px; font-style: normal; }
+.c-rail-chapters .chapter.current { background: #e9dfc7; color: #403b30; border-left: 3px solid #b64b3d; padding-left: 4px; }
+.c-rail-chapters .chapter > span:nth-child(2) { flex: 1; min-width: 0; }
+.c-rail-chapters .chapter.current b { color: #403b30; }
+.c-rail-chapters .chapter.current .num { color: #7c5b35; }
+.c-rail-chapters .chapter.current small { color: #766247; }
+.c-rail-chapters .chapter.current b { font-weight: 500; }
+.c-rail-foot { flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 4px 0; border-top: 1px solid #b39b6240; color: #a99b80; font-size: 10px; }
+.c-rail-foot .rail-new { width: 28px; height: 26px; border: 1px solid #b39b6255; background: transparent; color: #d9c18b; font-size: 16px; cursor: pointer; }
+.c-rail-foot .rail-new:hover { border-color: #cfb06b; color: #fae8bb; }
+.c-rail-mini { display: none; }
+.c-rail-mini .mini-current { font: 22px/1 OldSong, serif; color: #ead39c; letter-spacing: 1px; }
+.c-rail-mini .mini-current small { display: block; margin-top: 7px; font: 9px 'Microsoft YaHei'; letter-spacing: 2px; color: #a99b80; }
+.c-rail-mini .mini-nav { width: 36px; height: 30px; border: 1px solid #b39b6255; background: transparent; color: #d9c18b; font-size: 14px; cursor: pointer; }
+.c-rail-mini .mini-nav:hover { border-color: #cfb06b; color: #fae8bb; }
+
+/* 收起：只留一条可恢复的窄轨，稿本左移 */
+body.rail-collapsed .c-chapter-rail { width: 56px; padding: 14px 8px; }
+body.rail-collapsed .c-rail-head h2,
+body.rail-collapsed .c-rail-head small,
+body.rail-collapsed .c-rail-head .seal,
+body.rail-collapsed .c-rail-volume,
+body.rail-collapsed .c-rail-search,
+body.rail-collapsed .c-rail-chapters,
+body.rail-collapsed .c-rail-foot { display: none; }
+body.rail-collapsed .c-rail-mini { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding-top: 40px; }
+body.rail-collapsed .c-rail-toggle { right: 15px; top: 18px; }
+body.rail-collapsed .c-book { left: 104px !important; }
+
+/* ── 大纲：目录 240，画布铺到右 32，不留 170 空景 ───── */
+.outline-layout { right: 32px !important; grid-template-columns: 240px minmax(0, 1fr) !important; }
+.outline-layout .module-directory { padding: 22px 17px 18px; }
+.outline-folio { max-width: 1120px; }
+
+/* ── 设定：220 / 纸 / 240；详情 200 / 纸 / 340 ───────── */
+.world-layout { grid-template-columns: 220px minmax(0, 1fr) 240px !important; }
+.lore-layout { grid-template-columns: 200px minmax(0, 1fr) 340px !important; }
+
+/* ── 人物：380 肖像列 + 可滚动的两列演员表 ───────────── */
+.characters-layout { grid-template-columns: 380px minmax(0, 1fr) !important; }
+.characters-layout .portrait-folio { padding-left: 25px !important; padding-top: 40px !important; }
+.characters-layout .portrait-frame { width: 330px !important; height: 420px !important; }
+.characters-layout .portrait-note { width: 330px !important; }
+.characters-layout .cast-tabs {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+  max-height: 176px;
+  overflow: auto;
+  padding-right: 4px;
+  margin-top: 14px;
+}
+.characters-layout .cast-tabs > button:not(.cast-add) { width: auto !important; }
+.characters-layout .cast-add { width: auto !important; height: 56px; }
+.characters-layout .dossier { margin-top: 15px; }
+
+/* ── 关系图：去掉左侧 310 露景，图谱 1fr + 名册 260 ───── */
+.character-graph-layout {
+  left: 32px !important;
+  right: 32px !important;
+  grid-template-columns: minmax(0, 1fr) 260px !important;
+  gap: 22px !important;
+}
+.character-graph-layout .graph-index { padding: 24px 19px; }
+
+/* ── 灵感：220 / 420 / 1fr ───────────────────────────── */
+.inspiration-layout { grid-template-columns: 220px 420px minmax(0, 1fr) !important; }
+.inspiration-layout .idea-papers { gap: 20px 15px; }
+
+/* ── 设置：200 / 纸 / 300，预览纸随栏宽高 ───────────── */
+.settings-layout { grid-template-columns: 200px minmax(0, 1fr) 300px !important; }
+.settings-layout .type-preview { min-width: 0; min-height: 0; }
+.settings-layout .preview-paper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.settings-layout .preview-paper > p { flex: 1; height: auto; min-height: 0; }
+.settings-layout .preview-folio { margin-top: auto; }
+
+/* 窄窗：保持同一逻辑，优先让画布/纸面占满；不整体缩放 */
+@media (max-width: 1200px) {
+  html, body { width: 100% !important; min-width: 0; height: 900px; }
+  .shelf-view .nouveau-toolbar { left: 20px; right: 16px; }
+  .shelf-view .nouveau-stage { width: calc(100% - 280px); }
+  .shelf-view .nouveau-program { width: 280px; }
+  .c-chapter-rail { left: 16px; width: 216px; }
+  .c-book { left: 248px !important; right: 16px; height: 680px !important; }
+  .c-stage .project-line { padding-left: 248px; padding-right: 16px; }
+  .outline-layout { right: 16px !important; grid-template-columns: 216px minmax(0, 1fr) !important; }
+  .world-layout { grid-template-columns: 190px minmax(0, 1fr) 200px !important; }
+  .lore-layout { grid-template-columns: 180px minmax(0, 1fr) 280px !important; }
+  .characters-layout { grid-template-columns: 330px minmax(0, 1fr) !important; }
+  .characters-layout .portrait-frame { width: 300px !important; height: 380px !important; }
+  .characters-layout .portrait-note { width: 300px !important; }
+  .character-graph-layout { left: 16px !important; right: 16px !important; grid-template-columns: minmax(0, 1fr) 220px !important; }
+  .inspiration-layout { grid-template-columns: 190px 380px minmax(0, 1fr) !important; }
+  .settings-layout { grid-template-columns: 180px minmax(0, 1fr) 260px !important; }
+  .settings-layout .preview-paper { width: 100%; }
+  .settings-layout .preview-caption { width: 100%; }
+}

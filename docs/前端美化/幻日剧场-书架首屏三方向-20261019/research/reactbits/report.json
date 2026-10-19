@@ -1,0 +1,47 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "gradientText",
+        "label": "渐变文字",
+        "count": 1,
+        "examples": [
+          "p.category-name.sidebar-pro-name「Explore Pro」"
+        ]
+      },
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 2,
+        "examples": [
+          "div.sc-sponsor.sc-sponsor-diamond（外层 div.right-card.sc-card）",
+          "div.sc-sponsor.sc-sponsor-diamond（外层 div.right-card.sc-card）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 8,
+        "examples": [
+          "span.ln-navbar-pro-label.ln-navbar-pro-label-desktop「Get React Bits Pro」（3.96:1）",
+          "p.category-name.css-1akive2「Get Started」（4.01:1）",
+          "p.category-name.css-wug07u「Text Animations」（4.01:1）"
+        ]
+      },
+      {
+        "rule": "smallText",
+        "label": "正文小于 13px",
+        "count": 1,
+        "examples": [
+          "p.pro-card-desc「Components, page blocks,」（11.5px）"
+        ]
+      }
+    ]
+  }
+]

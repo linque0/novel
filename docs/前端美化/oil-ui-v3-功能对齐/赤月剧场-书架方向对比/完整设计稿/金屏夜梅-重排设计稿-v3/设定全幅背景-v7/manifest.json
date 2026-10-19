@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "project": "赤月戏 · 设定全幅背景",
+  "brief": "以已认可的天仪疆图主题延展全幅设定布景，比较竖幅版与一版全舞台背景效果。",
+  "lang": "zh",
+  "round": "设定全幅 v7",
+  "nativeViewport": "1440x900",
+  "serve": {
+    "command": "python -m http.server 8895 --bind 127.0.0.1 --directory \"F:/deepseek workplace/novel-studio/docs/前端美化/oil-ui-v3-功能对齐/赤月剧场-书架方向对比/完整设计稿/金屏夜梅-重排设计稿-v3/\"",
+    "cwd": "F:/deepseek workplace/novel-studio",
+    "url": "http://127.0.0.1:8895/%E8%AE%BE%E5%AE%9A%E5%85%A8%E5%B9%85%E8%83%8C%E6%99%AF-v7/style-explorer.html"
+  },
+  "candidates": [
+    {
+      "id": "portrait-v6",
+      "name": "竖幅 · 上一版",
+      "baseline": true,
+      "concept": "天仪疆图放在 220px 左布景中。",
+      "typography": "沿用原稿 OldSong / WenKai / 系统黑体",
+      "palette": [
+        "#182623",
+        "#2f6c65",
+        "#ab6748",
+        "#cfb06b"
+      ],
+      "traits": [
+        "竖幅插图",
+        "拱顶裁切"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E4%BA%BA%E7%89%A9%E6%B7%B1%E5%8C%96%E4%B8%8E%E8%AE%BE%E5%AE%9A%E9%87%8D%E7%BB%98-v6/world.html"
+    },
+    {
+      "id": "full-stage-v7",
+      "name": "全幅 · 天仪疆图",
+      "concept": "天仪位于左侧开放布景，疆域纸层与测绘轨道贯穿整个舞台。",
+      "typography": "正文、目录沿用原排印；引题改为单行 32px 宋体",
+      "palette": [
+        "#132421",
+        "#38796e",
+        "#a85637",
+        "#ddd0ae"
+      ],
+      "traits": [
+        "全舞台横幅背景",
+        "连续疆域纸层",
+        "开放式引题"
+      ],
+      "kind": "url",
+      "url": "http://127.0.0.1:8895/%E8%AE%BE%E5%AE%9A%E5%85%A8%E5%B9%85%E8%83%8C%E6%99%AF-v7/world.html"
+    }
+  ]
+}

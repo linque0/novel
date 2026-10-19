@@ -1,0 +1,41 @@
+[
+  {
+    "file": "page.png",
+    "state": null,
+    "size": "1440x900",
+    "zoom": 1,
+    "animationWaitMs": 0,
+    "issues": [],
+    "lint": [
+      {
+        "rule": "nestedCards",
+        "label": "卡片里套卡片",
+        "count": 5,
+        "examples": [
+          "div.overflow-hidden.rounded-lg「Make things float in air」（外层 div.overflow-hidden.rounded-xl）",
+          "div.[transform-style:preserve-3d].[&>*]:[transform-style:preserve-3d]「Make things float in air」（外层 div.overflow-hidden.rounded-lg）",
+          "div.overflow-hidden.rounded-lg「Make things float in air」（外层 div.overflow-hidden.rounded-xl）"
+        ]
+      },
+      {
+        "rule": "contrastLow",
+        "label": "文字对比度不达标（正文低于 4.5:1，大字低于 3:1）",
+        "count": 7,
+        "examples": [
+          "span.text-neutral-400.dark:text-neutral-500「Powered by」（4.43:1）",
+          "a.group.flex「Your logo」（4.43:1）",
+          "p.text-[11px].font-medium「Aceternity UI Pro」（4.18:1）"
+        ]
+      },
+      {
+        "rule": "smallText",
+        "label": "正文小于 13px",
+        "count": 2,
+        "examples": [
+          "p.mt-1.5.text-xs「Full templates, landing 」（12px）",
+          "p.mt-3.px-1「All-Access includes all 」（11px）"
+        ]
+      }
+    ]
+  }
+]

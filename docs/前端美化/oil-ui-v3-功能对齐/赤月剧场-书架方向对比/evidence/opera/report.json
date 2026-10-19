@@ -1,0 +1,89 @@
+[
+  {
+    "file": "motion-replay-end.jpg",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 1,
+    "group": "replay",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-replay-start.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1763
+      },
+      "mid": {
+        "file": "motion-replay-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 2385
+      },
+      "end": {
+        "file": "motion-replay-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 3701
+      }
+    },
+    "sampling": {
+      "mode": "action",
+      "step": 1,
+      "action": "click",
+      "raw": "click [data-replay]"
+    },
+    "durationMs": 3701,
+    "consistency": {
+      "status": "matched",
+      "reference": "motion-replay-end.jpg",
+      "different": false,
+      "changedPixels": 0,
+      "maxTilePixels": 0,
+      "pixelRatio": 0
+    }
+  },
+  {
+    "file": "motion-replay-@2x-end.jpg",
+    "state": "shelf",
+    "size": "1440x900",
+    "zoom": 2,
+    "group": "replay",
+    "issues": [],
+    "frames": {
+      "start": {
+        "file": "motion-replay-@2x-start.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 1961
+      },
+      "mid": {
+        "file": "motion-replay-@2x-mid.jpg",
+        "source": "Page.screencastFrame",
+        "timeMs": 2607
+      },
+      "end": {
+        "file": "motion-replay-@2x-end.jpg",
+        "source": "Page.captureScreenshot",
+        "timeMs": 3984
+      }
+    },
+    "sampling": {
+      "mode": "action",
+      "step": 1,
+      "action": "click",
+      "raw": "click [data-replay]"
+    },
+    "durationMs": 3984,
+    "consistency": {
+      "status": "mismatch",
+      "reference": "motion-replay-@2x-end.jpg",
+      "different": true,
+      "dimensions": [
+        1440,
+        900,
+        2880,
+        1800
+      ],
+      "original": "record-replay-@2x-stream-end.jpg"
+    },
+    "warnings": [
+      "录屏末帧与静止截图差异明显，可能没拍全；静止终态以 motion-replay-@2x-end.jpg 为准，已补为录像最后一帧，原末帧保留在 record-replay-@2x-stream-end.jpg；过渡请单独重录：node 'C:\\Users\\linque\\.agents\\skills\\oil-ui\\scripts\\shoot.mjs' 'docs/前端美化/oil-ui-v3-功能对齐/赤月剧场-书架方向对比/opera.html' --timeout-scale 2 --out 'F:\\deepseek workplace\\novel-studio\\docs\\前端美化\\oil-ui-v3-功能对齐\\赤月剧场-书架方向对比\\evidence\\opera' --size '1440x900' --zoom 2 --states 'shelf' --param 'state' --steps 'replay: click [data-replay]' --record --entry --hold 2000"
+    ]
+  }
+]

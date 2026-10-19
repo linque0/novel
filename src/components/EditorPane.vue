@@ -20,10 +20,12 @@ import { FontSize } from '../services/richtext'
 import { isImageExt } from '../services/fileio'
 import { DlLinkMark } from '../services/doublelinks'
 import { AnnotationMark, setActiveEditor } from '../services/annotations'
-import { isPopped, focusPopped } from '../services/panelwindows'
+import { isPopped, focusPopped, popOut } from '../services/panelwindows'
 import EditorToolbar from './EditorToolbar.vue'
 import EditorContextMenu from './EditorContextMenu.vue'
 import ChapterTree from './ChapterTree.vue'
+import CrimsonChapterRail from './CrimsonChapterRail.vue'
+import RightPanel from './RightPanel.vue'
 import OIcon from './OIcon.vue'
 
 const work = useWorkStore()
@@ -31,6 +33,7 @@ const ui = useUiStore()
 const editor = shallowRef(null)
 const ctxMenu = ref(null)
 const readDrawer = ref(false) // 阅读模式：章节抽屉开合
+const railCollapsed = ref(false) // 赤月戏 v3：左侧章节目录收起态
 
 /* 章节已被拆出为面板窗口时，主窗口本章只读（9.2-W5 两级锁）；阅读模式同样只读预览（v1.0.26） */
 const chapterPopped = computed(() => !!work.activeChapter && isPopped(work, 'chapter', work.activeChapter.id))
@@ -45,6 +48,20 @@ const chapterNo = computed(() => {
   const n = work.activeChapter ? work.chapterOrdinal(work.activeChapter.id) : null
   return n ? String(n).padStart(2, '0') : ''
 })
+
+/* 赤月戏：卷名、独立窗口、稿本列宽（设计稿的 project-line 与左竖题列） */
+const crimsonVolume = computed(() => work.liveVolumes.find(v => v.id === work.activeChapter?.volumeId)?.title || '未分卷')
+const crimsonStatusLabel = computed(() => STATUS_OPTS.find(o => o.value === work.activeChapter?.status)?.label || '草稿')
+function toggleCrimsonBookmark() {
+  const ch = work.activeChapter
+  if (!ch) return
+  const added = work.toggleChapterBookmark(ch.id)
+  window.$msg?.success(added ? '已加入书签' : '已移除书签')
+}
+async function popChapter() {
+  if (!work.activeChapter) return
+  await popOut(work, 'chapter', work.activeChapter.id, `${work.work?.title || ''} · ${work.activeChapter.title}`)
+}
 
 /* 阅读模式 Esc 两级：抽屉开着先关抽屉，否则退出阅读 */
 function onReadKey(e) {
@@ -238,8 +255,8 @@ async function clearGoal() {
 </script>
 
 <template>
-  <TaskLauncher v-if="!ui.readMode" module="chapters" />
-  <div class="editor-wrap" :class="{ 'read-mode': ui.readMode }">
+  <TaskLauncher v-if="!ui.isStudioSkin && !ui.readMode" module="chapters" />
+  <div class="editor-wrap" :class="{ 'read-mode': ui.readMode, 'rail-collapsed': ui.skin === 'crimson' && railCollapsed }">
     <div class="editor-head" v-if="work.activeChapter && !ui.readMode && !ui.isStudioSkin">
       <input
         class="title-input"
@@ -267,39 +284,91 @@ async function clearGoal() {
       <p>从左侧「＋章」新建一章开始写作，章节内容会即时自动保存。</p>
     </div>
     <template v-if="work.activeChapter && editor">
-      <EditorToolbar v-show="!chapterPopped && !ui.readMode" :key="work.selChapterId" :editor="editor">
-        <!-- 编辑皮肤：状态 / 字数 / 历史 归到顶栏右端（原版仍是自己的 .editor-head 一行） -->
-        <template v-if="ui.isStudioSkin" #bar-end>
-          <div class="editor-bar-status">
-            <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
-            <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter.status]">{{ work.activeChapter.wordCount || 0 }} 字</NTag>
-            <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
+      <!-- 赤月戏 v3：project-line → 左侧章节目录 + 稿本（页 + 札记）→ 无底部章条；阅读模式仍走通用稿面 -->
+      <template v-if="ui.skin === 'crimson' && !ui.readMode">
+        <div class="crimson-project-line">
+          <span class="crimson-project-name" :title="work.work?.title">
+            {{ work.work?.title || '未命名作品' }}<i>/ {{ crimsonVolume }}</i>
+          </span>
+          <div class="crimson-project-actions">
+            <button type="button" @click="ui.searchOpen = true">查找</button>
+            <button type="button" :aria-pressed="work.isChapterBookmarked(work.activeChapter.id)" @click="toggleCrimsonBookmark">{{ work.isChapterBookmarked(work.activeChapter.id) ? '已书签' : '书签' }}</button>
+            <button type="button" @click="openHistory">历史</button>
+            <button type="button" :aria-pressed="ui.readMode" @click="ui.readMode = true">阅读 ↗</button>
+            <button type="button" @click="popChapter">独立窗口 ↗</button>
           </div>
-        </template>
-      </EditorToolbar>
+        </div>
+        <div v-show="!chapterPopped" class="crimson-editor-stage">
+          <CrimsonChapterRail v-model:collapsed="railCollapsed" />
+          <section class="crimson-book">
+            <div class="crimson-page" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
+              <div class="crimson-type-tools">
+                <EditorToolbar v-show="!chapterPopped" compact :key="work.selChapterId" :editor="editor">
+                  <template #bar-end>
+                    <div class="editor-bar-status">
+                      <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
+                      <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter.status]">{{ work.activeChapter.wordCount || 0 }} 字</NTag>
+                      <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
+                    </div>
+                  </template>
+                </EditorToolbar>
+              </div>
+              <div class="crimson-page-head">
+                <small class="crimson-page-eyebrow">{{ work.work?.title || '作品' }} / {{ crimsonVolume }}</small>
+                <svg class="crimson-ornament" viewBox="0 0 120 12" aria-hidden="true"><path d="M2 6h44M74 6h44M60 1l5 5-5 5-5-5z" /></svg>
+                <input class="crimson-chapter-title" :value="work.activeChapter.title" placeholder="章节标题" :readonly="chapterPopped" @change="onTitle" @keyup.enter="$event.target.blur()" />
+                <p class="crimson-page-sub">第 {{ chapterNo || '—' }} 章 · {{ crimsonStatusLabel }}</p>
+              </div>
+              <EditorContent :key="work.selChapterId" :editor="editor" class="rich-inner" />
+              <div class="crimson-folio">{{ chapterNo }}</div>
+            </div>
+            <aside class="crimson-margin">
+              <div class="crimson-margin-head">
+                <div class="crimson-section-head"><h2>页边留白</h2><span>壹</span></div>
+              </div>
+              <RightPanel />
+              <div id="crimson-margin-foot" class="crimson-margin-foot"></div>
+              <button type="button" class="crimson-dream" @click="ui.aiDrawerOpen = !ui.aiDrawerOpen">恍然梦 ↗</button>
+            </aside>
+          </section>
+        </div>
+      </template>
+      <template v-else>
+        <EditorToolbar v-show="!chapterPopped && !ui.readMode" :key="work.selChapterId" :editor="editor">
+          <!-- 编辑皮肤：状态 / 字数 / 历史 归到顶栏右端（原版仍是自己的 .editor-head 一行） -->
+          <template v-if="ui.isStudioSkin" #bar-end>
+            <div class="editor-bar-status">
+              <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
+              <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter.status]">{{ work.activeChapter.wordCount || 0 }} 字</NTag>
+              <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
+            </div>
+          </template>
+        </EditorToolbar>
+        <div v-show="!chapterPopped" class="rich-host paper-texture" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
+          <div class="ed-read-col">
+            <header v-if="ui.isStudioSkin && !ui.readMode" class="gravity-manuscript-head">
+              <div class="gravity-manuscript-location"><span>{{ work.liveVolumes.find(v => v.id === work.activeChapter.volumeId)?.title || '未分卷' }}</span><b>{{ chapterNo }}</b></div>
+              <div class="editor-head">
+                <input class="title-input" :value="work.activeChapter.title" placeholder="章节标题" :readonly="chapterPopped" @change="onTitle" @keyup.enter="$event.target.blur()" />
+              </div>
+            </header>
+            <!-- 阅读模式专用头（v1.0.26）：巨排章号 + 章题下划短线；随正文滚动，不进入文档模型 -->
+            <header v-show="ui.readMode" class="ed-read-head">
+              <div class="ed-read-no" aria-hidden="true">{{ chapterNo }}</div>
+              <h1 class="ed-read-title">{{ work.activeChapter.title }}</h1>
+              <div class="ed-read-rule"></div>
+            </header>
+            <EditorContent :key="work.selChapterId" :editor="editor" class="rich-inner" />
+          </div>
+        </div>
+      </template>
       <div v-show="chapterPopped" class="panel-lock-note">
         <span>「{{ work.activeChapter.title }}」已在独立窗口编辑，本窗口此章暂为只读</span>
         <NButton size="small" type="primary" @click="focusPopped(work, 'chapter', work.activeChapter.id)">前往窗口</NButton>
       </div>
-      <div v-show="!chapterPopped" class="rich-host paper-texture" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
-        <div class="ed-read-col">
-          <header v-if="ui.isStudioSkin && !ui.readMode" class="gravity-manuscript-head">
-            <div class="gravity-manuscript-location"><span>{{ work.liveVolumes.find(v => v.id === work.activeChapter.volumeId)?.title || '未分卷' }}</span><b>{{ chapterNo }}</b></div>
-            <div class="editor-head">
-              <input class="title-input" :value="work.activeChapter.title" placeholder="章节标题" :readonly="chapterPopped" @change="onTitle" @keyup.enter="$event.target.blur()" />
-            </div>
-          </header>
-          <!-- 阅读模式专用头（v1.0.26）：巨排章号 + 章题下划短线；随正文滚动，不进入文档模型 -->
-          <header v-show="ui.readMode" class="ed-read-head">
-            <div class="ed-read-no" aria-hidden="true">{{ chapterNo }}</div>
-            <h1 class="ed-read-title">{{ work.activeChapter.title }}</h1>
-            <div class="ed-read-rule"></div>
-          </header>
-          <EditorContent :key="work.selChapterId" :editor="editor" class="rich-inner" />
-        </div>
-      </div>
       <!-- 正文字数目标底栏（v1.0.27）：本章字数 / 进度条 / 目标对照；点击右侧设定每章目标，即时持久化 -->
-      <div v-if="work.activeChapter && !ui.readMode" class="editor-foot">
+      <Teleport defer to="#crimson-margin-foot" :disabled="ui.skin !== 'crimson'">
+        <div v-if="work.activeChapter && !ui.readMode" class="editor-foot">
         <span class="wg-num">本章 <b>{{ fmtNum(work.activeChapter.wordCount || 0) }}</b> 字</span>
         <div class="wg-track" :class="{ done: work.goalProgress.done }" aria-hidden="true">
           <div class="wg-fill" :style="{ width: goalFill }"></div>
@@ -332,7 +401,8 @@ async function clearGoal() {
             </div>
           </div>
         </NPopover>
-      </div>
+        </div>
+      </Teleport>
       <EditorContextMenu v-if="!chapterPopped && !ui.readMode" ref="ctxMenu" :editor="editor" />
 
       <!-- 阅读模式：目录细边条（点击滑出章节抽屉）+ 底右字数（v1.0.26） -->

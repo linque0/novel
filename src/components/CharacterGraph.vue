@@ -10,7 +10,9 @@ import { useUiStore } from '../stores/ui'
 import { characterGeometry, projectCharacterPoint } from '../skins/graph-presentation'
 import { usePanZoom, anchorsOf } from '../services/graphview'
 import OIcon from './OIcon.vue'
+import CharacterList from './CharacterList.vue'
 import { freeSpotFor, dashOf, EDGE_STYLES, sideBetween, routeEdge } from './outline/canvas-model'
+import { rolesOf, primaryRole, characterTagList } from '../services/character-tags'
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -38,11 +40,12 @@ const relInputEl = ref(null)
 
 const chars = computed(() => {
   let list = work.liveCharacters
-  if (roleFilter.value !== '全部') list = list.filter((c) => c.role === roleFilter.value)
-  if (tagFilter.value.length) list = list.filter((c) => (c.tags || []).some((t) => tagFilter.value.includes(t)))
+  if (roleFilter.value !== '全部') list = list.filter((c) => rolesOf(c).includes(roleFilter.value))
+  if (tagFilter.value.length) list = list.filter((c) => characterTagList(c).some((t) => tagFilter.value.includes(t)))
   return list
 })
-const allTags = computed(() => [...new Set(work.liveCharacters.flatMap((c) => c.tags || []))])
+const allTags = computed(() => [...new Set(work.liveCharacters.flatMap((c) => characterTagList(c)))])
+const roleOptions = computed(() => ['全部', ...new Set(work.liveCharacters.flatMap((c) => rolesOf(c)))])
 const posOf = (c) => c ? projectCharacterPoint(dragPos.get(c.id) || layout.value[c.id], geometry.value) : null
 const avatarOf = (c) => (c.avatarAssetId ? work.assetUrl(c.avatarAssetId) : '')
 
@@ -472,6 +475,12 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="om-wrap">
+    <aside v-if="ui.skin === 'crimson'" class="crimson-graph-index" aria-label="人物索引">
+      <div class="crimson-index-head"><h2>关系名册</h2><span>{{ String(work.liveCharacters.length).padStart(2, '0') }}</span></div>
+      <CharacterList />
+      <button type="button" class="crimson-graph-back" @click="work.charView = 'list'">返回人物档案 ↗</button>
+    </aside>
+    <section class="rg-main" :class="{ 'crimson-graph-main': ui.skin === 'crimson' }">
     <!-- 页头：两种设计稿共用人物标题与真实操作 -->
     <header v-if="ui.isStudioSkin" class="gravity-dossier-heading rg-heading">
       <h1>人物关系图</h1><span>人物与人物的关系 · 双击节点打开档案</span>
@@ -484,7 +493,7 @@ onBeforeUnmount(() => {
       >发送为大纲引用卡</button>
     </header>
     <div class="om-toolbar rg-toolbar">
-      <span v-for="r in ['全部', '主角', '配角', '反派', '龙套']" :key="r" class="oc-chip" :class="{ on: roleFilter === r }" @click="roleFilter = r">{{ r }}</span>
+      <span v-for="r in roleOptions" :key="r" class="oc-chip" :class="{ on: roleFilter === r }" @click="roleFilter = r">{{ r }}</span>
       <!-- 琉光：按设计稿 C 版用干净的下拉（原生 multiple 会被渲染成 22px 高的列表框，挤成一团）；
            原版继续用原生多选。v-model 仍绑 tagFilter 数组（focusCharById 会直接置空） -->
       <NSelect
@@ -574,7 +583,7 @@ onBeforeUnmount(() => {
           <div v-else class="rg-avatar rg-avatar-empty">{{ ui.isStudioSkin ? (c.name || '人').slice(0, 1) : '人' }}</div>
           <div class="rg-meta">
             <div class="rg-name">{{ c.name || '未命名' }}</div>
-            <span class="rg-role" :style="{ color: ROLE_COLOR[c.role] || 'var(--text-dim)', borderColor: ROLE_COLOR[c.role] || 'var(--border)' }">{{ c.role || '未定' }}</span>
+            <span class="rg-role" :style="{ color: ROLE_COLOR[primaryRole(c)] || 'var(--text-dim)', borderColor: ROLE_COLOR[primaryRole(c)] || 'var(--border)' }">{{ primaryRole(c) || '未定' }}</span>
           </div>
           <span
             v-for="sd in ['top', 'right', 'bottom', 'left']"
@@ -652,5 +661,6 @@ onBeforeUnmount(() => {
       <span class="rg-hint">拖动人物排列 · 从节点边缘连线 · 双击打开详情 · 右键操作</span>
       <button v-if="selectedChar" type="button" class="rg-open-person" @click="openDetail(selectedChar)">编辑选中人物 ↗</button>
     </div>
+    </section>
   </div>
 </template>

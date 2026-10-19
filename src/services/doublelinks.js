@@ -8,6 +8,7 @@ import { Mark } from '@tiptap/core'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { stripTags } from './wordcount'
+import { primaryRole } from './character-tags'
 
 export const KIND_LABEL = { chapter: '正文', mubu: '设定', character: '人物', outline: '大纲', snippet: '灵感' }
 
@@ -83,7 +84,7 @@ export function searchTargets(query, limit = 40) {
     push('mubu', n.id, (n.text || '').slice(0, 40) || '（空节点）', '设定', n.text)
   }
   for (const c of work.liveCharacters) {
-    push('character', c.id, c.name || '未命名', `人物${c.role ? ' · ' + c.role : ''}`, (c.content || '') + ' ' + (c.aliases || ''))
+    push('character', c.id, c.name || '未命名', `人物${primaryRole(c) ? ' · ' + primaryRole(c) : ''}`, (c.content || '') + ' ' + (c.aliases || ''))
   }
   if (work.work) push('outline', work.work.id, '总纲', '大纲', outlineBody(work.work.id))
   for (const v of work.liveVolumes) {
@@ -130,7 +131,7 @@ export function targetById(kind, id) {
   }
   if (kind === 'character') {
     const c = work.liveCharacters.find((x) => x.id === id)
-    return c ? { kind, id, title: c.name || '未命名', extra: `人物${c.role ? ' · ' + c.role : ''}` } : null
+    return c ? { kind, id, title: c.name || '未命名', extra: `人物${primaryRole(c) ? ' · ' + primaryRole(c) : ''}` } : null
   }
   if (kind === 'outline') {
     const lb = outlineLabel(id)
@@ -207,7 +208,7 @@ export function previewFor(target) {
     return {
       kindLabel: '人物',
       title: c.name || '未命名',
-      meta: [c.role, c.aliases ? '别名 ' + c.aliases : ''].filter(Boolean).join(' · '),
+      meta: [primaryRole(c), c.aliases ? '别名 ' + c.aliases : ''].filter(Boolean).join(' · '),
       body: cut(c.content) || '（暂无小传）'
     }
   }
@@ -236,6 +237,9 @@ export function jumpTo(target) {
     if (c) work.selVolumeId = c.volumeId
   } else if (target.kind === 'mubu') {
     work.tab = 'lore'
+    // 目标可能位于另一个设定集：先切换当前集，再由 MubuView 展开定位
+    const root = work.mubuRootOf(target.id)
+    if (root) work.setMubuSet(root.id)
     ui.loreFocusId = target.id
   } else if (target.kind === 'character') {
     work.tab = 'characters'

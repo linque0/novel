@@ -1,0 +1,557 @@
+{
+  "date": "2026-10-17T07:29:54.459Z",
+  "total": 90,
+  "passed": 90,
+  "results": [
+    {
+      "name": "opera/shelf: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 396
+      }
+    },
+    {
+      "name": "opera/editor: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 746
+      }
+    },
+    {
+      "name": "opera/outline: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 574
+      }
+    },
+    {
+      "name": "opera/outline-text: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 421
+      }
+    },
+    {
+      "name": "opera/world: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 560
+      }
+    },
+    {
+      "name": "opera/world-detail: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 318
+      }
+    },
+    {
+      "name": "opera/characters: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 313
+      }
+    },
+    {
+      "name": "opera/characters-graph: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 257
+      }
+    },
+    {
+      "name": "opera/inspiration: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 461
+      }
+    },
+    {
+      "name": "opera/settings: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 480
+      }
+    },
+    {
+      "name": "opera: book opens on one click",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: selected book context",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: manuscript retained across routes",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: chapter has separate contents",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: chapter return preserves draft",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: immersion entered",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: immersion exits with Escape",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: replace has visible result",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: module edit updates canvas",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: free module drag",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: module directory filter",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: text outline retained",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: tree collapse hides descendants",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: content search includes match",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: world no results",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: distinct detail entry",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: locate returns to continuous tree",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: graph layout switch",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: character fields retained",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: custom fields retained",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: idea no results",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: idea added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: idea inserted into manuscript",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: font sample responds",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: static disables motion",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: editor uses preferred font size",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: reload returns original session fixture",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera/editor: 1100px window, no document overflow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera/world: 1100px window, no document overflow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera/characters: 1100px window, no document overflow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera/settings: 1100px window, no document overflow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: system reduced motion",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "opera: no runtime errors",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "nouveau/shelf: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 383
+      }
+    },
+    {
+      "name": "nouveau/editor: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 745
+      }
+    },
+    {
+      "name": "nouveau/outline: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 579
+      }
+    },
+    {
+      "name": "nouveau/outline-text: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 425
+      }
+    },
+    {
+      "name": "nouveau/world: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 542
+      }
+    },
+    {
+      "name": "nouveau/world-detail: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 300
+      }
+    },
+    {
+      "name": "nouveau/characters: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 309
+      }
+    },
+    {
+      "name": "nouveau/characters-graph: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 260
+      }
+    },
+    {
+      "name": "nouveau/inspiration: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 384
+      }
+    },
+    {
+      "name": "nouveau/settings: render, images, viewport",
+      "passed": true,
+      "details": {
+        "overflow": false,
+        "broken": 0,
+        "footer": 900,
+        "body": 479
+      }
+    },
+    {
+      "name": "nouveau: book opens on one click",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: selected book context",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: manuscript retained across routes",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: chapter has separate contents",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: chapter return preserves draft",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: immersion entered",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: immersion exits with Escape",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: replace has visible result",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: module edit updates canvas",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: free module drag",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: module directory filter",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: text outline retained",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: tree collapse hides descendants",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: content search includes match",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: world no results",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: distinct detail entry",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: locate returns to continuous tree",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: graph layout switch",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: character fields retained",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: custom fields retained",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: idea no results",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: idea added",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: idea inserted into manuscript",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: font sample responds",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: static disables motion",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: editor uses preferred font size",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: reload returns original session fixture",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau/editor: 1100px window, no document overflow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau/world: 1100px window, no document overflow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau/characters: 1100px window, no document overflow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau/settings: 1100px window, no document overflow",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: system reduced motion",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "nouveau: no runtime errors",
+      "passed": true,
+      "details": []
+    },
+    {
+      "name": "comparison: both themes follow state selector",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "comparison: actual size 1440x900",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "comparison: screenshot toggle",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "name": "comparison: both static",
+      "passed": true,
+      "details": ""
+    }
+  ]
+}

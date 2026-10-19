@@ -5,6 +5,7 @@ import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import OIcon from './OIcon.vue'
 
+const props = defineProps({ bare: { type: Boolean, default: false } })
 const work = useWorkStore()
 const ui = useUiStore()
 const quick = ref('')
@@ -23,7 +24,10 @@ function onQuickKey(e) {
   if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeQuick() }
   else if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addQuick() }
 }
-const list = computed(() => work.liveSnippets)
+const list = computed(() => {
+  const q = String(ui.snippetQuery || '').trim().toLowerCase()
+  return work.liveSnippets.filter((s) => !q || String(s.content || '').toLowerCase().includes(q))
+})
 
 function addQuick() {
   const v = quick.value.trim()
@@ -41,8 +45,8 @@ const fmt = (t) => {
 
 <template>
   <div class="snippet-catalog" style="display: flex; flex-direction: column; height: 100%">
-    <header v-if="ui.isStudioSkin" class="gravity-inspiration-heading"><h1>灵感画布</h1><p>{{ list.length }} 条灵感</p></header>
-    <div class="side-head" style="flex-direction: column; align-items: stretch">
+    <header v-if="ui.isStudioSkin && !bare" class="gravity-inspiration-heading"><h1>灵感画布</h1><p>{{ list.length }} 条灵感</p></header>
+    <div v-if="!bare" class="side-head" style="flex-direction: column; align-items: stretch">
       <NPopover v-if="ui.skin === 'gravity'" :show="quickOpen" trigger="click" placement="bottom-start" :show-arrow="false" class="gravity-quick-popover" style="width:350px;max-width:calc(100vw - 64px)" @update:show="showQuick">
         <template #trigger><NButton ref="quickTrigger" class="gravity-quick-trigger" type="primary"><OIcon name="plus" :size="14" /> 记录灵感</NButton></template>
         <NInput ref="quickInput" v-model:value="quick" type="textarea" :rows="4" placeholder="随手记一条灵感…（Ctrl+Enter 添加）" @keydown="onQuickKey" />

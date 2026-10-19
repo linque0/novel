@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>琉光画境 · 流彩成画动态背景</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#e8f1ef;color:#24454a;font:13px/1.5 "Microsoft YaHei",sans-serif}
+header{height:56px;display:flex;align-items:center;gap:18px;padding:0 24px;background:#fafbf6;border-bottom:1px solid #c5d6d1}strong{font-weight:500;font-size:15px}.caption{color:#6c827d;font-size:12px}
+nav{display:flex;gap:6px;margin-left:auto}button,a{font:inherit}button{padding:6px 13px;border:1px solid #b5cbc6;border-radius:7px;color:#315c5b;background:transparent;cursor:pointer;transition:background .18s}button[aria-pressed=true]{background:#266d6b;border-color:#266d6b;color:white}button:active{transform:translateY(1px)}a{color:#315c5b;text-decoration:none}button:focus-visible,a:focus-visible{outline:3px solid #6caea6;outline-offset:3px}
+#viewport{height:calc(100vh - 56px);overflow:auto}#frame-wrap{position:relative;width:100%;overflow:hidden}iframe{display:block;width:1440px;height:900px;border:0;transform-origin:top left}#pure{position:fixed;inset:56px 0 0;display:none;overflow:hidden}.pure #pure{display:block}.pure #viewport{display:none}
+@media(max-width:900px){header{height:auto;min-height:70px;flex-wrap:wrap;padding:10px 14px;gap:8px}.caption{display:none}nav{gap:4px}button{padding:5px 8px}#pure{top:70px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style></head>
+<body>
+<header><strong>流彩成画 · 动态书境</strong><span class="caption">矿彩洇染 · 纸上琉光</span><nav aria-label="预览方式"><button id="shelf-mode" aria-pressed="true">书架效果</button><button id="art-mode" aria-pressed="false">纯背景</button><button id="motion" aria-pressed="false">暂停动态</button></nav><a href="../书架-01-琉璃书境/index.html">静态版 ↗</a></header>
+<div id="viewport"><div id="frame-wrap"><iframe id="shelf" title="流彩成画书架背景预览" src="../../oil-ui-v3-功能对齐/c.html?state=shelf"></iframe></div></div><div id="pure" role="img" aria-label="青绿色矿彩笔触在浅色画纸上缓缓洇染，金色细线沿画迹流动"></div>
+<script type="module">
+import {mountPainting} from './painting.js';
+const frame=document.querySelector('#shelf'),pure=document.querySelector('#pure'),motion=document.querySelector('#motion');
+let shelfPainting,purePainting,paused=matchMedia('(prefers-reduced-motion: reduce)').matches,artMode=false;
+function fit(){const scale=document.documentElement.clientWidth/1440;frame.style.transform='scale('+scale+')';document.querySelector('#frame-wrap').style.height=(900*scale)+'px'}
+window.addEventListener('resize',fit);fit();
+function update(){
+ document.body.classList.toggle('pure',artMode);
+ document.querySelector('#shelf-mode').setAttribute('aria-pressed',String(!artMode));
+ document.querySelector('#art-mode').setAttribute('aria-pressed',String(artMode));
+ shelfPainting?.setPaused(paused||artMode);purePainting?.setPaused(paused||!artMode);
+ motion.textContent=paused?'播放动态':'暂停动态';motion.setAttribute('aria-pressed',String(paused));
+}
+frame.addEventListener('load',()=>{
+ const doc=frame.contentDocument;if(!doc?.querySelector('.app'))return;
+ shelfPainting?.destroy();
+ const style=doc.createElement('style');
+ style.textContent=`
+ body.c{background:#e8f1ef!important}.c .app{position:relative;z-index:1}
+ .c .app-header{background:#f7faf378;backdrop-filter:blur(14px)}.c .module-nav{background:#f8fbf578;backdrop-filter:blur(14px)}
+ .c .content{background:transparent}.c .glass-orb{display:none}
+ .c .feature-copy{padding-left:30px}.c .feature-copy h1{font-size:76px}
+ .c .mini-book{background:#fafcf3d9;box-shadow:0 8px 25px #477e7610}
+ .c .glass-note{left:245px;bottom:13px;background:#f9fdf4ec}
+ @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+ `;
+ doc.head.append(style);shelfPainting=mountPainting(doc);
+ shelfPainting.canvas.addEventListener('motionchange',e=>{paused=e.detail.paused;update()});update();
+});
+// 纯素材与叠加预览分开挂载，隐藏的画面暂停。
+purePainting=mountPainting(document);pure.append(purePainting.canvas);Object.assign(purePainting.canvas.style,{position:'absolute'});
+purePainting.canvas.addEventListener('motionchange',e=>{paused=e.detail.paused;update()});
+document.querySelector('#shelf-mode').onclick=()=>{artMode=false;update()};
+document.querySelector('#art-mode').onclick=()=>{artMode=true;update()};
+motion.onclick=()=>{paused=!paused;update()};
+window.addEventListener('pagehide',event=>{if(!event.persisted){shelfPainting?.destroy();purePainting?.destroy()}});
+update();
+</script></body></html>

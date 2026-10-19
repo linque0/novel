@@ -3,13 +3,17 @@ import { computed } from 'vue'
 import { NButton, NTag } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
+import { primaryRole } from '../services/character-tags'
 
 const work = useWorkStore()
 const ui = useUiStore()
 const ROLE_COLOR = { 主角: 'error', 反派: 'warning', 配角: 'info', 龙套: 'default' }
-const list = computed(() =>
-  work.liveCharacters.map((c) => ({ id: c.id, name: c.name || '未命名', role: c.role || '未定', avatar: (work.urlTick, c.avatarAssetId ? work.assetUrl(c.avatarAssetId) : '') }))
-)
+const list = computed(() => {
+  const q = work.charView === 'list' ? String(ui.charQuery || '').trim().toLowerCase() : ''
+  return work.liveCharacters
+    .filter((c) => !q || [c.name, c.role, c.aliases, ...(c.tags || [])].filter(Boolean).join(' ').toLowerCase().includes(q))
+    .map((c) => ({ id: c.id, name: c.name || '未命名', role: primaryRole(c) || '未定', avatar: (work.urlTick, c.avatarAssetId ? work.assetUrl(c.avatarAssetId) : '') }))
+})
 function pick(c) {
   work.selCharacterId = c.id
   if (work.charView === 'graph') {

@@ -1,0 +1,32 @@
+{
+  "project": "金屏夜梅 · 夜戏台 v4",
+  "selection": {
+    "round": "美术重设计 03 · 夜戏台 v4",
+    "id": "04"
+  },
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "states": [
+    { "id": "shelf", "label": "书架", "url": "shelf.html" },
+    { "id": "editor", "label": "正文", "url": "editor.html" },
+    { "id": "outline", "label": "大纲 · 自由画布", "url": "outline.html" },
+    { "id": "outline-text", "label": "大纲 · 文本", "url": "outline-text.html" },
+    { "id": "world", "label": "设定 · 幕布", "url": "world.html" },
+    { "id": "world-detail", "label": "设定 · 详情", "url": "world-detail.html" },
+    { "id": "characters", "label": "人物 · 档案", "url": "characters.html" },
+    { "id": "characters-graph", "label": "人物 · 关系图", "url": "characters-graph.html" },
+    { "id": "inspiration", "label": "灵感", "url": "inspiration.html" },
+    { "id": "settings", "label": "设置", "url": "settings.html" }
+  ],
+  "assets": {
+    "shelf": "nouveau.webp",
+    "editor": "rinpa.webp",
+    "outline": "outline.webp",
+    "world": "secession.webp",
+    "characters": "characters.webp",
+    "inspiration": "mucha.webp",
+    "settings": "settings.webp"
+  }
+}

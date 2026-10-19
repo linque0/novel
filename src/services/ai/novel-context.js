@@ -89,7 +89,7 @@ export async function assembleSlots(work, frozen, adaptation = {}, privacy = fal
   const session=await readBook(work,{asOfChapterId:frozen.asOfChapterId,allowedIds:frozen.allowedIds,authorProfiles,planScope:extraction?'none':'all',privacy,sourceRevision:frozen.bookRevision})
   const chars = work.characters.filter((c) => !c.deletedAt)
   const namesContext=question+' '+(privacy?'':frozen.selection || plainChapter(chapter).slice(-2400))
-  const relevant=chars.filter((c)=>frozen.refs.characterId===c.id || [c.name,...String(c.aliases||'').split(/[、，,\s]+/)].filter(Boolean).some((n)=>namesContext.includes(n)))
+  const relevant=chars.filter((c)=>frozen.refs.characterId===c.id || [c.name,...String(c.aliases||'').split(/[、，,/\s]+/)].filter(Boolean).some((n)=>namesContext.includes(n)))
   const states=!extraction&&relevant.length?await stateAt(work,{entityIds:relevant.map((c)=>c.id),asOfChapterId:frozen.asOfChapterId,privacy}):[]
   const constraints=constraintPack(session,{chapterId:frozen.chapterId,outlineId:frozen.refs.outlineId,states,budget:Math.max(0,remaining-128)})
   remaining-=estimate(constraints.text)

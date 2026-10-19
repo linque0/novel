@@ -1,8 +1,10 @@
 // Stored character positions remain in the original coordinate space for every skin.
 // Rendering, ports, hit testing and fitting must all use the same projected geometry.
-export const characterGeometry = skin => skin === 'glaze' || skin === 'gravity'
-  ? { width: 150, height: 210, scaleX: 1.2, scaleY: 2.6 }
-  : { width: 132, height: 56, scaleX: 1, scaleY: 1 }
+export const characterGeometry = skin => skin === 'crimson'
+  ? { width: 118, height: 196, scaleX: 1.2, scaleY: 2.6 }
+  : skin === 'glaze' || skin === 'gravity'
+    ? { width: 150, height: 210, scaleX: 1.2, scaleY: 2.6 }
+    : { width: 132, height: 56, scaleX: 1, scaleY: 1 }
 export function projectCharacterPoint(point, geometry, inverse = false) {
   if (!point) return null
   return inverse
