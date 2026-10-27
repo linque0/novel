@@ -19,7 +19,7 @@ export async function connect(match = 'app://', port = process.env.CDP_PORT || '
     if (m.id && pending.has(m.id)) {
       const { res } = pending.get(m.id)
       pending.delete(m.id)
-      res(m.result)
+      res(m.error ? { protocolError: m.error } : m.result)
     }
   }
   const send = (method, params = {}) => {

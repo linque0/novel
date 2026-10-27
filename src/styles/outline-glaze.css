@@ -1,0 +1,490 @@
+/* 琉光画境大纲：由 docs/outline-glaze-workbench-preview 的设计稿接入。
+ * 浅青玻璃外壳 + 冰白纸卡 + 青绿焦点；只作用于大纲模块，不改动书架、正文与其他工作台。
+ * 作用域沿用 body[data-skin] .app-root[data-skin] 逃生口，确保覆盖共享纸面与旧皮肤规则。 */
+
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline']
+  :is(.om-wrap, .ol-paper-sidebar, .outline-surface) {
+  --oc-serif: 'LXGW WenKai', 'KaiTi', serif;
+  --oc-paper: #f8fcfc;
+  --oc-paper-ink: #234752;
+  --oc-paper-muted: #4f7079;
+  --oc-line: #b6cdd1;
+  --oc-sage: #146878;
+  --oc-green: #146878;
+  --oc-paper-opacity: 1;
+  --oc-paper-blend: normal;
+  --bg-panel: #f3f8f9;
+  --bg-editor: #fafdfa;
+  --bg-hover: #dcecee;
+  --text: #234752;
+  --text-dim: #4f7079;
+  --text-faint: #65858e;
+  --border: #bfd3d6;
+  --accent: #146878;
+  --oc-canvas-color: #e2eef0;
+  --oc-canvas-dot: #afc8cc;
+  --oc-canvas-backdrop: #e7eff1;
+}
+
+/* 外壳：开放式玻璃工作台，不再是整块平铺纸面。 */
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .outline-surface {
+  padding: 14px 14px 0 !important;
+  background: #f8fcfccc;
+  border: 1px solid #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 18px 40px #4a788414;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .side-panel {
+  background: #f3f8f9cc;
+  border-right: 1px solid #bfd3d6;
+  backdrop-filter: blur(10px);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline']
+  :is(.center-pane, .outline-body, .outline-main) {
+  background: transparent;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-workspace-head {
+  background: #ffffffa8;
+  border-bottom: 1px solid #bfd3d6;
+  backdrop-filter: blur(10px);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-eyebrow {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-workspace-head h1 {
+  color: #234752;
+  font-family: var(--oc-serif);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-workspace-head p {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-head-actions button {
+  background: #ffffffcc;
+  border-color: #bfd3d6;
+  border-radius: 8px;
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-head-actions button:hover {
+  border-color: #146878;
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-scopebar {
+  background: #f6fbfbcc;
+  border-bottom-color: #bfd3d6;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap.oc-root-scope .oc-scopebar {
+  background: transparent;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline']
+  :is(.oc-back, .oc-crumbs button) {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-crumbs button[aria-current='page'] {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-search {
+  background: #ffffffd9;
+  border-color: #bfd3d6;
+  border-radius: 8px;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-search input {
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-search kbd {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-search-results {
+  background: #f8fcfc;
+  border-color: #bfd3d6;
+  box-shadow: 0 12px 30px #4a78841f;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-search-item {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-search-item:hover {
+  background: #e4f2f3;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-kind-tag {
+  color: #146878;
+  border-color: #b6cdd1;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-toolbar {
+  background: #ffffffb8;
+  border-bottom-color: #bfd3d6;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-module-tools button {
+  color: #4f7079;
+  border-radius: 6px;
+  font-size: 12.5px;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-module-tools button:hover {
+  background: #e4f2f3;
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-chip {
+  color: #4f7079;
+  border-color: transparent;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-chip:hover {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-chip.on {
+  background: #d4e7e9;
+  border-color: #9dbfc6;
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-line-modes {
+  background: #e9f3f4;
+  border: 1px solid #bfd3d6;
+  border-radius: 7px;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-line-modes button[aria-pressed='true'] {
+  background: #ffffff;
+  color: #146878;
+  box-shadow: 0 2px 6px #4a78841a;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-count {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-zoom-controls {
+  background: #ffffffd9;
+  border-color: #bfd3d6;
+  border-radius: 10px;
+  box-shadow: 0 10px 24px #4a78841a;
+  backdrop-filter: blur(8px);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-zoom-controls button {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-zoom-controls button:hover {
+  background: #e4f2f3;
+  color: #146878;
+}
+
+/* 故事结构侧栏：青色玻璃目录。 */
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-paper-sidebar {
+  background: linear-gradient(180deg, #f5fafacc, #edf6f7cc);
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-book-mark {
+  background: #146878;
+  color: #f8fcfc;
+  box-shadow: inset 4px 0 #0e5361, inset 5px 0 #8fd0d6;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-book-text strong {
+  color: #234752;
+  font-family: var(--oc-serif);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-book-text small {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-side-toggle {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-side-toggle:hover {
+  background: #e4f2f3;
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-side-section {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-side-section > span + span {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-story-search {
+  border-bottom-color: #bfd3d6;
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-story-search input {
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-story-row {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-story-row:hover {
+  background: #dcecee;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-story-row.active {
+  background: #d4e7e9;
+  box-shadow: inset 2px 0 #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-story-row.current {
+  background: #e4f2f3;
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-tree-name {
+  color: inherit;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-tree-count {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-tree-current {
+  color: #146878;
+  border-color: #9dbfc6;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-paper-side-footer {
+  border-top-color: #bfd3d6;
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-paper-stamp {
+  border-color: #9dbfc6;
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .ol-side-empty {
+  color: #65858e;
+}
+
+/* 画布与纸卡：浅青水色、冰白纸。 */
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-canvas-surface {
+  box-shadow: inset 0 0 90px #c2dfe22e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-node:not(.oc-container):not(.oc-textbox):not(.oc-volume) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: 0 10px 26px #4a788414;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-node .oc-paper {
+  opacity: 1;
+  filter: saturate(.8) brightness(1.02);
+  box-shadow: none;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-node .oc-paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #d8eef0;
+  opacity: .22;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-node.sel {
+  outline-color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-apt {
+  background: #f8fcfc;
+  border-color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-event .oc-shape polygon {
+  stroke: color-mix(in srgb, #146878 38%, var(--paper-edge, #b6cdd1));
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-event.sel .oc-shape polygon {
+  stroke: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container {
+  background: color-mix(in srgb, var(--bc, #146878) 4%, #fbfdfd);
+  border-color: color-mix(in srgb, var(--bc, #146878) 38%, #b6cdd1);
+  border-left: 3px solid var(--bc, #146878);
+  border-radius: 12px;
+  box-shadow: 0 10px 26px #4a788414;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container :is(.oc-ctitle, .oc-ccount) {
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container .oc-ctitle {
+  font-family: var(--oc-serif);
+  font-size: 21px;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container :is(.oc-cmeta, .oc-csummary, .oc-cprogress) {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container .oc-cprogress {
+  border-top-color: #bfd3d6;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container .oc-cprogress .bar {
+  background: #14687818;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container .oc-cprogress .done {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container .oc-cfoot .enter,
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-inline-toggle {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container .oc-cfoot button {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-container .oc-cfoot button:hover {
+  background: #e4f2f3;
+  color: #146878;
+}
+
+/* 迷你卡：冰白纸，容器为白纸分组。 */
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-mini {
+  background: #fbfefe;
+  border-color: #c7dde0;
+  box-shadow: 0 6px 16px #4a78841a;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-mini-title {
+  color: #234752;
+  font-family: var(--oc-serif);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-mini :is(.oc-mini-body, .oc-mini-top) {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-mini-actions button {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-mini-actions button.enter {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-mini-container {
+  background: color-mix(in srgb, var(--bc, #146878) 4%, #f8fcfc);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-mini-scroll {
+  scrollbar-color: #9dbfc6 transparent;
+}
+
+/* 抽屉与浮动面板：冰白玻璃。 */
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-drawer {
+  background: #fbfefed9;
+  border-color: #b6cdd1;
+  border-radius: 12px;
+  color: #234752;
+  box-shadow: -10px 14px 36px #4a788426;
+  backdrop-filter: blur(12px);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-drawer-eyebrow {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-drawer h2 {
+  color: #234752;
+  font-family: var(--oc-serif);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-drawer-path {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-field {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-field :is(input, textarea, select) {
+  background: #ffffff;
+  border-color: #bfd3d6;
+  border-radius: 7px;
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-quiet {
+  background: #ffffffd9;
+  border-color: #bfd3d6;
+  border-radius: 7px;
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-quiet.primary {
+  background: #146878;
+  border-color: #146878;
+  color: #ffffff;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-stats div {
+  border-bottom-color: #bfd3d6;
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-stats b {
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-connection-list,
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-drawer-foot {
+  border-color: #bfd3d6;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-connection {
+  border-bottom-color: #bfd3d6;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-connection button {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-connection em {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-drawer-empty {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-external-card {
+  background: #ffffffd9;
+  border-color: #bfd3d6;
+  color: #234752;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-external-card button {
+  color: #146878;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline']
+  :is(.oc-selection-bar, .oc-group-inspector, .oc-relations-panel) {
+  background: #ffffffeb;
+  border-color: #bfd3d6;
+  color: #234752;
+  box-shadow: 0 12px 30px #4a788426;
+  backdrop-filter: blur(10px);
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-selection-bar button,
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-group-inspector button {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-selection-bar button.primary,
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-group-inspector button.primary {
+  background: #146878;
+  border-color: #146878;
+  color: #ffffff;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-elabel {
+  background: #f8fcfcd9;
+  border-color: #bfd3d6;
+  border-radius: 4px;
+  padding: 2px 6px;
+  color: #4f7079;
+  box-shadow: 0 2px 8px #4a788414;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-scope-empty {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-quick {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-quick-tip {
+  color: #65858e;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-pick-toggle {
+  background: #ffffffd9;
+  border-color: #bfd3d6;
+  color: #4f7079;
+}
+body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .om-wrap .oc-pick-toggle.on {
+  background: #146878;
+  border-color: #146878;
+  color: #ffffff;
+}
+
+/* 设置浮层被 Teleport 到 .om-wrap 外，只针对包含 .oc-settings 的大纲浮层。 */
+body[data-skin='glaze'] .n-popover:has(.oc-settings) {
+  --n-color: #f8fcfc !important;
+  --n-text-color: #234752 !important;
+  --n-border-color: #bfd3d6 !important;
+  --n-box-shadow: 0 12px 30px #4a788426 !important;
+}
+body[data-skin='glaze'] .n-popover .oc-settings {
+  color: #234752;
+}
+body[data-skin='glaze'] .n-popover .oc-settings-label {
+  color: #234752;
+}
+body[data-skin='glaze'] .n-popover .oc-settings :is(.oc-settings-val, .oc-settings-tip) {
+  color: #4f7079;
+}
+body[data-skin='glaze'] .n-popover .oc-settings .oc-chip {
+  background: #ffffffd9;
+  border-color: #bfd3d6;
+  color: #4f7079;
+}
+body[data-skin='glaze'] .n-popover .oc-settings .oc-chip.on {
+  background: #d4e7e9;
+  border-color: #146878;
+  color: #146878;
+}
+
+/* 窄窗与独立面板：玻璃内衬收窄，避免挤压工具条和缩放控件。 */
+@media (max-width: 900px) {
+  body[data-skin='glaze'] .app-root[data-skin='glaze'] [data-module='outline'] .outline-surface {
+    padding: 8px 8px 0 !important;
+    border-radius: 12px;
+  }
+}

@@ -3,7 +3,9 @@ import { computed, onMounted } from 'vue'
 import { NButton, NDropdown, NSpin } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
-import CrimsonCover from './CrimsonCover.vue'
+import AppTopbar from './AppTopbar.vue'
+import CrimsonBookViewer from './CrimsonBookViewer.vue'
+import CrimsonBookThumbnail from './CrimsonBookThumbnail.vue'
 import { playStage } from '../services/stage-play'
 import { formatShelfOpenTime } from '../services/shelf-sort'
 
@@ -21,15 +23,7 @@ const emit = defineEmits(['update:query', 'open', 'menu', 'create', 'settings', 
 
 const featured = computed(() => props.works[0] || null)
 const others = computed(() => props.works.slice(1))
-const nav = [
-  ['shelf', '书架', 'books'],
-  ['chapters', '正文', 'manuscript'],
-  ['outline', '大纲', 'network'],
-  ['lore', '设定', 'layers'],
-  ['characters', '人物', 'user'],
-  ['snippets', '灵感', 'sparkle'],
-  ['settings', '设置', 'gear']
-]
+
 const words = (n) => Number(n || 0).toLocaleString('zh-CN')
 
 /* 竖排只给短题名；5–8 字均分两行；更长横排两行截断（与封面同一规则） */
@@ -61,7 +55,7 @@ const excerpt = computed(() => {
 
 function navigate(key) {
   if (key === 'settings') emit('settings')
-  else if (key !== 'shelf' && featured.value && !props.busy) emit('navigate', key, featured.value)
+  else if (key !== 'shelf' && featured.value && !props.busy && !props.loading) emit('navigate', key, featured.value)
 }
 
 onMounted(() => playStage())
@@ -69,29 +63,9 @@ onMounted(() => playStage())
 
 <template>
   <section class="crimson-shelf" :class="{ 'is-empty': !featured }">
-    <header class="crimson-header">
-      <div class="crimson-brand">
-        <span class="crimson-emblem" aria-hidden="true">坊</span>
-        <span class="crimson-brand-text">小说工坊<small>赤月戏</small></span>
-      </div>
-      <nav class="crimson-shelf-nav" aria-label="功能模块">
-        <button
-          v-for="[key, label] in nav"
-          :key="key"
-          type="button"
-          class="crimson-shelf-nav-item"
-          :class="{ active: key === 'shelf' }"
-          :aria-current="key === 'shelf' ? 'page' : undefined"
-          :disabled="busy || (!featured && !['shelf', 'settings'].includes(key))"
-          :title="['shelf', 'settings'].includes(key) ? label : '打开展示作品的' + label"
-          @click="navigate(key)"
-        >{{ label }}</button>
-      </nav>
-      <div class="crimson-header-actions">
-        <SkinPicker />
-        <NButton size="small" quaternary aria-label="外观与设置" title="外观与设置" @click="emit('settings')"><OIcon name="gear" :size="18" /></NButton>
-      </div>
-    </header>
+    <AppTopbar active="shelf" :busy="busy || loading" :has-work="!!featured" :target-title="featured?.title" @navigate="navigate">
+      <template #actions><SkinPicker /></template>
+    </AppTopbar>
 
     <main class="crimson-main">
       <div class="crimson-toolbar">
@@ -137,16 +111,7 @@ onMounted(() => playStage())
             </div>
 
             <div class="crimson-book-stage">
-              <button
-                type="button"
-                class="crimson-book-object"
-                :disabled="busy"
-                :aria-label="'打开《' + featured.title + '》'"
-                @click="emit('open', featured)"
-              >
-                <CrimsonCover :book="featured" />
-              </button>
-              <span class="crimson-book-spine" aria-hidden="true"></span>
+              <CrimsonBookViewer :book="featured" :disabled="busy || loading" @open="emit('open', featured)" />
               <div class="crimson-work-menu" @click.stop @keydown.stop>
                 <NDropdown trigger="click" :options="menuOptions(featured)" @select="emit('menu', $event, featured)">
                   <NButton size="tiny" quaternary :aria-label="'作品菜单：' + featured.title">⋯</NButton>
@@ -169,7 +134,7 @@ onMounted(() => playStage())
             <div class="crimson-program-list">
               <div v-for="book in others" :key="book.id" class="crimson-work-row">
                 <button type="button" class="crimson-work-open" :disabled="busy" @click="emit('open', book)">
-                  <CrimsonCover :book="book" variant="mini" />
+                  <CrimsonBookThumbnail :book="book" />
                   <span class="crimson-work-copy">
                     <h3 :title="book.title">{{ book.title }}</h3>
                     <p>{{ words(book.totalWords) }} 字 · {{ book.chapterCount || 0 }} 章</p>

@@ -1,10 +1,12 @@
 <script setup>
 import { computed, ref, provide, onMounted, onBeforeUnmount, watch } from 'vue'
-import { NButton, NSelect, NDropdown, NModal, useMessage } from 'naive-ui'
+import { NButton, NDropdown, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import OIcon from './OIcon.vue'
+import AppTopbar from './AppTopbar.vue'
+import { WORK_NAVIGATION } from './app-navigation'
 import ChapterTree from './ChapterTree.vue'
 import OutlineSidebar from './OutlineSidebar.vue'
 import CharacterList from './CharacterList.vue'
@@ -34,7 +36,7 @@ const inspirationPrompt = ref('把这条灵感扩展成一个场景，保留悬�
 provide('inspirationPrompt', inspirationPrompt)
 const msg = useMessage()
 const studio = computed(() => ui.isStudioSkin)
-const tabIcons = { chapters: 'manuscript', outline: 'network', characters: 'user', lore: 'layers', snippets: 'sparkle' }
+const taskLauncher = ref(null)
 
 /* ---------- 书签（章节快捷收藏） ---------- */
 const bookmarkOptions = computed(() => {
@@ -52,14 +54,7 @@ function onBookmarkSelect(key) {
   if (c) work.selVolumeId = c.volumeId
 }
 
-const tabs = [
-  { key: 'chapters', icon: '文', label: '正文' },
-  { key: 'outline', icon: '纲', label: '大纲' },
-  { key: 'characters', icon: '人', label: '人物' },
-  { key: 'lore', icon: '设', label: '设定' },
-  { key: 'snippets', icon: '灵', label: '灵感' }
-]
-const navTabs = computed(() => studio.value ? ['chapters', 'outline', 'lore', 'characters', 'snippets'].map(key => tabs.find(t => t.key === key)) : tabs)
+const tabs = WORK_NAVIGATION
 function selectTab(key) {
   ui.loreDetailId = null
   work.tab = key
@@ -67,11 +62,6 @@ function selectTab(key) {
 
 /* ── 赤月戏：顶部横向导航 + 86px 模块条 + 40px 底栏 + 按模块切换的布景（排布照设计稿） ── */
 const crimson = computed(() => ui.skin === 'crimson')
-const crimsonNav = computed(() => [
-  { key: 'shelf', label: '书架' },
-  ...navTabs.value.map(t => ({ key: t.key, label: t.label })),
-  { key: 'settings', label: '设置' }
-])
 const CRIMSON_ART = { chapters: artEditor, outline: artOutline, characters: artCharacters, snippets: artInspiration }
 const crimsonArt = computed(() => CRIMSON_ART[work.tab] || null)
 const CRIMSON_TITLE = { chapters: '写作', outline: '故事大纲', lore: '世界设定', characters: '人物档案', snippets: '灵感采集' }
@@ -92,15 +82,16 @@ watch(() => work.work?.id, (id) => { if (id && crimson.value) playStage() })
 watch(() => work.tab, () => { if (crimson.value) playStage() })
 watch(() => ui.skin, (skin) => { if (skin === 'crimson') playStage() })
 const moreOptions = computed(() => [
+  ...(studio.value ? [{ label: '本模块恍然梦助手', key: 'assistant' }] : []),
   { label: '拆出独立窗口', key: 'split', children: splitOptions.value.map(o => ({ ...o, key: 'split:' + o.key })) },
   { label: '章节书签', key: 'bookmarks', children: bookmarkOptions.value.map(o => ({ ...o, key: 'bookmark:' + o.key })) },
   { label: ui.focusMode ? '退出沉浸' : '沉浸写作', key: 'focus' },
   ...(ui.skin === 'crimson' ? [{ label: '重播开场', key: 'replay' }] : []),
   ...(work.tab === 'chapters' ? [{ label: ui.readMode ? '退出阅读' : '阅读模式', key: 'read' }] : []),
-  { label: '切回原版皮肤', key: 'original' },
-  { label: '外观与设置', key: 'settings' }
+  ...(ui.skin !== 'original' ? [{ label: '切回原版皮肤', key: 'original' }] : [])
 ])
 function onMore(key) {
+  if (key === 'assistant') return taskLauncher.value?.open()
   if (key.startsWith('split:')) return onSplit(key.slice(6))
   if (key.startsWith('bookmark:')) return onBookmarkSelect(key.slice(9))
   if (key === 'focus') ui.focusMode = !ui.focusMode
@@ -180,6 +171,9 @@ const modulePopped = computed(() => {
 })
 /* 恍然梦已拆出为独立窗口：主窗口停靠列隐藏，避免两处同时展示（锁随面板，关窗自动恢复） */
 const aiPopped = computed(() => (work.work ? isPopped(work, 'ai', '') : false))
+const aiMounted = ref(ui.aiDrawerOpen)
+watch(() => ui.aiDrawerOpen, open => { if (open) aiMounted.value = true })
+const aiVisible = computed(() => ui.aiDrawerOpen && !ui.focusMode && !ui.readMode && !aiPopped.value)
 const curTabLabel = computed(() => tabs.find((t) => t.key === work.tab)?.label || '')
 const poppedEntityName = computed(() => {
   if (work.tab === 'characters') return work.activeCharacter?.name || ''
@@ -243,37 +237,20 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
     <!-- 编辑皮肤：任务入口只挂一次，经 Teleport 进页头。原先每个模块各挂一份，
          切模块时组件与 Teleport 同时移动会触发 Vue 的 patch/unmount 异常。 -->
-    <TaskLauncher v-if="studio" :module="work.tab" />
+    <TaskLauncher v-if="studio" ref="taskLauncher" :module="work.tab" />
 
-    <!-- 赤月戏：76px 顶部横向导航（品牌 + 七模块 + 真实工具） -->
-    <header v-if="crimson" class="crimson-topbar">
-      <button class="crimson-work-brand" title="返回书架" @click="work.closeWork()">
-        <span class="crimson-emblem" aria-hidden="true">
-          <svg viewBox="0 0 44 44"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
-        </span>
-        <span class="crimson-brand-text">小说工坊<small>赤月戏</small></span>
-      </button>
-      <nav class="crimson-topnav" aria-label="功能模块">
-        <button
-          v-for="item in crimsonNav"
-          :key="item.key"
-          type="button"
-          class="crimson-topnav-item"
-          :class="{ active: item.key !== 'shelf' && item.key !== 'settings' && work.tab === item.key }"
-          :aria-current="work.tab === item.key ? 'page' : undefined"
-          @click="item.key === 'shelf' ? work.closeWork() : item.key === 'settings' ? openSettings() : selectTab(item.key)"
-        >{{ item.label }}</button>
-      </nav>
-      <div class="crimson-header-tools">
+    <AppTopbar :active="work.tab" :has-work="!!work.work" :target-title="work.work?.title" @navigate="key => key === 'shelf' ? work.closeWork() : key === 'settings' ? openSettings() : selectTab(key)">
+      <template #actions>
         <span class="save-badge"><span class="save-dot" :class="badgeClass"></span>{{ badgeText }}</span>
-        <NButton size="small" quaternary @click="ui.searchOpen = true"><OIcon name="search" :size="16" /> 搜索</NButton>
+        <NButton size="small" quaternary aria-label="搜索" @click="ui.searchOpen = true"><OIcon name="search" :size="16" /> 搜索</NButton>
         <div id="studio-task-actions"></div>
         <NButton size="small" :type="ui.aiDrawerOpen ? 'primary' : 'default'" :aria-pressed="ui.aiDrawerOpen" title="展开或收起恍然梦对话" @click="ui.aiDrawerOpen = !ui.aiDrawerOpen"><OIcon name="star" :size="14" /> 恍然梦</NButton>
-        <NDropdown trigger="click" :options="moreOptions" @select="onMore"><NButton size="small" quaternary title="拆窗、书签、沉浸、阅读、重播与皮肤">更多 <OIcon name="caret-down" :size="11" /></NButton></NDropdown>
-      </div>
-    </header>
+        <NDropdown trigger="click" :options="moreOptions" @select="onMore"><NButton size="small" quaternary title="拆窗、书签、沉浸、阅读与皮肤">更多 <OIcon name="caret-down" :size="11" /></NButton></NDropdown>
+      </template>
+    </AppTopbar>
 
     <!-- 赤月戏：86px 模块工具条（标题 + 真实上下文；动作由各模块 Teleport 进来）。
+         它不属于“顶栏”自动隐藏范围：收起顶栏时只隐藏应用级导航，模块工具条保持可见。
          正文页只隐藏、不卸载：Teleport 目标必须始终存在，否则切页时目标与内容同时消失会触发 Vue patch 异常。 -->
     <div v-show="crimson && work.tab !== 'chapters'" class="crimson-modulebar">
       <div class="crimson-module-title">
@@ -283,91 +260,9 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <div id="crimson-bar-tools" class="crimson-bar-tools"></div>
     </div>
 
-    <header v-if="studio && !crimson" class="gravity-masthead studio-masthead">
-      <button class="gravity-work-brand" title="返回书架" @click="work.closeWork()"><span class="gravity-brand-mark">坊</span><span>小说工坊</span></button>
-      <div class="gravity-breadcrumb"><span :title="work.work?.title">{{ work.work?.title }}</span><i>/</i>{{ curTabLabel }}</div>
-      <span class="save-badge"><span class="save-dot" :class="badgeClass"></span>{{ badgeText }}</span>
-      <NButton size="small" quaternary @click="ui.searchOpen = true"><OIcon name="search" :size="18" /> 搜索</NButton>
-      <div id="studio-task-actions"></div>
-      <NButton size="small" :type="ui.aiDrawerOpen ? 'primary' : 'default'" :aria-pressed="ui.aiDrawerOpen" title="展开或收起恍然梦对话" @click="ui.aiDrawerOpen = !ui.aiDrawerOpen"><OIcon name="star" :size="14" /> 恍然梦</NButton>
-      <NDropdown trigger="click" :options="moreOptions" @select="onMore"><NButton size="small" quaternary title="拆窗、书签、沉浸、阅读与皮肤">更多 <OIcon name="caret-down" :size="11" /></NButton></NDropdown>
-    </header>
-    <div v-if="!studio && !(ui.readMode && work.tab === 'chapters')" class="topbar">
-      <NButton size="small" quaternary @click="work.closeWork()"><OIcon name="back" :size="14" /> 书架</NButton>
-      <span class="brand" style="font-size: 15px">{{ work.work?.title }}</span>
-      <span class="save-badge">
-        <span class="save-dot" :class="badgeClass"></span>
-        {{ badgeText }}
-      </span>
-      <div style="flex: 1"></div>
-      <NButton size="small" @click="ui.searchOpen = true"><OIcon name="search" :size="14" /> 搜索</NButton>
-      <NDropdown trigger="click" :options="splitOptions" @select="onSplit">
-        <NButton size="small" title="把模块拆出为独立窗口，可边看大纲边写正文"><OIcon name="split" :size="14" /> 拆窗 <OIcon name="caret-down" :size="11" /></NButton>
-      </NDropdown>
-      <NDropdown trigger="click" :options="bookmarkOptions" @select="onBookmarkSelect">
-        <NButton size="small" title="章节书签快捷跳转（编辑器工具栏或章节右键添加）"><OIcon name="bookmark" :size="14" /> 书签 <OIcon name="caret-down" :size="11" /></NButton>
-      </NDropdown>
-      <NButton size="small" title="设置：外观 / 模型设置 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
-      <NButton size="small" :type="ui.focusMode ? 'primary' : 'default'" @click="ui.focusMode = !ui.focusMode">沉浸</NButton>
-      <NButton v-if="work.tab === 'chapters'" size="small" title="阅读模式：巨排章号 + 宽栏只读排版（Esc 退出）" @click="ui.readMode = !ui.readMode">阅读</NButton>
-    </div>
-
-    <!-- 阅读模式顶栏（正文页）：章节标题 + 状态 + 搜索/设置，其余控件收入阅读态外 -->
-    <div v-else-if="!studio" class="topbar">
-      <NButton size="small" quaternary title="退出阅读模式（Esc）" @click="ui.readMode = false"><OIcon name="back" :size="14" /> 退出阅读</NButton>
-      <span class="brand" style="font-size: 15px">{{ work.activeChapter?.title || work.work?.title }}</span>
-      <span class="save-badge">
-        <span class="save-dot" :class="badgeClass"></span>
-        {{ badgeText }}
-      </span>
-      <div style="flex: 1"></div>
-      <NButton size="small" @click="ui.searchOpen = true"><OIcon name="search" :size="14" /> 搜索</NButton>
-      <NButton size="small" title="设置：外观 / 模型设置 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
-    </div>
-
     <div class="wb-body">
-      <div v-if="!ui.focusMode && !ui.readMode && !crimson" class="nav-rail">
-        <button v-if="studio" class="rail-item gravity-rail-home" title="返回书架" @click="work.closeWork()"><OIcon name="books" :size="18" /><span class="rail-label">书架</span></button>
-        <div
-          v-for="t in navTabs"
-          :key="t.key"
-          class="rail-item"
-          :class="{ active: work.tab === t.key }"
-          :aria-current="work.tab === t.key ? 'page' : undefined"
-          role="button"
-          tabindex="0"
-          @click="selectTab(t.key)"
-          @keydown.enter="selectTab(t.key)"
-          @keydown.space.prevent="selectTab(t.key)"
-        >
-          <div style="text-align: center">
-            <div class="ico"><OIcon v-if="studio" :name="tabIcons[t.key]" :size="18" /><template v-else>{{ t.icon }}</template></div>
-            <div class="rail-label">{{ t.label }}</div>
-          </div>
-        </div>
-        <!-- 恍然梦：独立功能入口，点击开合右侧 AI 界面（不切换中央模块） -->
-        <div
-          v-if="!studio"
-          class="rail-item rail-item-ai"
-          :class="{ active: ui.aiDrawerOpen }"
-          :aria-pressed="ui.aiDrawerOpen"
-          role="button"
-          tabindex="0"
-          title="恍然梦：AI 写作助手（在右侧弹出，不挤压原界面）"
-          @click="ui.aiDrawerOpen = !ui.aiDrawerOpen"
-          @keydown.enter="ui.aiDrawerOpen = !ui.aiDrawerOpen"
-          @keydown.space.prevent="ui.aiDrawerOpen = !ui.aiDrawerOpen"
-        >
-          <div style="text-align: center">
-            <div class="ico"><OIcon v-if="studio" name="star" :size="18" /><template v-else>梦</template></div>
-            <div class="rail-label">恍然梦</div>
-          </div>
-        </div>
-        <button v-if="studio" class="rail-item" title="设置" @click="openSettings"><OIcon name="gear" :size="18" /><span class="rail-label">设置</span></button>
-      </div>
-
-      <div v-if="!ui.focusMode && !ui.readMode && !modulePopped && !(crimson && ['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(work.tab))" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
-        <ChapterTree v-if="work.tab === 'chapters'" />
+      <div v-if="!ui.focusMode && !ui.readMode && !modulePopped && !(crimson && ['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(work.tab))" v-show="work.tab !== 'outline' || ui.outlineSideOpen" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
+        <ChapterTree v-if="work.tab === 'chapters'" @read="onMore('read')" @window="onSplit('chapter')" />
         <OutlineSidebar v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
         <MubuTree v-else-if="work.tab === 'lore'" />
@@ -375,11 +270,24 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </div>
       <div
         v-if="!ui.focusMode && !ui.readMode && !modulePopped && !(crimson && ['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(work.tab))"
+        v-show="work.tab !== 'outline' || ui.outlineSideOpen"
         class="side-resizer"
         title="拖拽调整侧栏宽度（双击恢复默认）"
         @mousedown="startSideResize"
         @dblclick="resetSideWidth"
       ></div>
+
+      <button
+        v-if="!crimson && work.tab === 'outline' && !ui.outlineSideOpen && !ui.focusMode && !ui.readMode && !modulePopped"
+        class="ol-side-rail"
+        type="button"
+        title="展开故事结构"
+        aria-label="展开故事结构"
+        @click="ui.setPref('outlineSideOpen', true)"
+      >
+        <OIcon name="caret-right" :size="12" />
+        <span class="rail-text">故事结构</span>
+      </button>
 
       <!-- 模块已被拆出为面板窗口：主窗口占位，避免双窗口同写 -->
       <div v-if="modulePopped" class="center-pane paper-texture pop-lock-pane">
@@ -414,23 +322,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 
       <InspirationPrompt v-if="ui.skin === 'gravity' && work.tab === 'snippets' && (!ui.aiDrawerOpen || aiPopped) && !modulePopped && !ui.focusMode && !ui.readMode" />
 
-      <!-- 恍然梦停靠列：参与 flex 布局，与原界面并排显示（不遮挡）；左缘可拖宽，拆出独立窗口后此列隐藏 -->
-      <div
-        v-if="ui.aiDrawerOpen && !ui.focusMode && !ui.readMode && !aiPopped"
-        class="ai-dock-resizer"
-        title="拖拽调整恍然梦宽度（双击恢复默认）"
-        @mousedown="startAiResize"
-        @dblclick="resetAiWidth"
-      ></div>
-      <aside v-if="ui.aiDrawerOpen && !ui.focusMode && !aiPopped" class="ai-dock" :style="{ width: ui.aiDrawerWidth + 'px' }">
+      <!-- 非模态覆盖层：开合与拖宽不参与正文排版；隐藏时保留输入与生成状态。 -->
+      <aside v-if="aiMounted" v-show="aiVisible" class="ai-dock" :data-agent-skin="ui.skin" aria-label="恍然梦助手" :style="{ width: 'min(' + ui.aiDrawerWidth + 'px, 100%)' }">
+        <div class="ai-dock-resizer" title="拖拽调整恍然梦宽度（双击恢复默认）" @mousedown="startAiResize" @dblclick="resetAiWidth"></div>
         <div class="ai-drawer-head">
           <span class="ai-drawer-name serif">恍然梦</span>
-          <span class="ai-drawer-sub">AI WRITING ASSISTANT</span>
           <div style="flex: 1"></div>
           <NButton size="tiny" quaternary title="拆出为独立窗口（可与其他模块并排对照）" @click="onSplit('ai')"><OIcon name="split" :size="13" /></NButton>
           <NButton size="tiny" quaternary title="收起恍然梦" @click="ui.aiDrawerOpen = false"><OIcon name="close" :size="13" /></NButton>
         </div>
-        <div class="ai-drawer-body">
+        <div class="ai-drawer-body" style="padding:0;overflow:hidden">
           <AiAssistantPanel />
         </div>
       </aside>
@@ -452,10 +353,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </template>
 
 <style scoped>
-/* 恍然梦停靠列：正常参与 wb-body 的 flex 布局，与原界面并排（同 VS Code 副侧栏）；
-   左缘拖拽手柄调宽（300–640，appconfig 记忆），拆出独立窗口后此列隐藏 */
+.wb-body { position: relative; min-width: 0; }
 .ai-dock {
-  flex: none;
+  --agent-header-color: #896e4e;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 20;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -463,10 +369,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   border-left: 1px solid var(--border-strong, var(--border));
   box-shadow: -8px 0 22px rgba(20, 16, 8, 0.06);
 }
+.ai-dock[data-agent-skin='gravity'] { --agent-header-color: #f3a163; }
+.ai-dock[data-agent-skin='glaze'] { --agent-header-color: #196b78; }
+.ai-dock[data-agent-skin='crimson'] { --agent-header-color: #d2b16c; }
+.ai-dock .ai-drawer-name { color: var(--agent-header-color); font-size: 16px; }
 .ai-dock-resizer {
-  flex: none;
-  width: 5px;
-  margin-left: -5px;
+  position: absolute;
+  left: -4px;
+  top: 0;
+  bottom: 0;
+  width: 8px;
   cursor: col-resize;
   z-index: 5;
 }
@@ -501,11 +413,6 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
   overflow: auto;
   padding: 8px 10px;
 }
-/* 左栏恍然梦入口：与模块项同形，图标用品牌色弱区分 */
-.rail-item-ai .ico {
-  color: var(--accent);
-}
-
 /* 批注栏收起后的右缘细轨：竖排文字，悬停亮起，点击重新展开 */
 .rp-rail {
   flex: none;

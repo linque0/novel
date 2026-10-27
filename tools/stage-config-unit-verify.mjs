@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict'
+import { STAGES, stageForTask, normalizeStageConfig, freezeStage, readWritingSkillFiles, SKILL_TEXT_BUDGET } from '../src/services/ai/stage-config.js'
+assert.equal(STAGES.length, 5)
+assert.equal(stageForTask('chapter.recheck'), 'review')
+assert.equal(stageForTask('memory.extract'), 'memory')
+assert.deepEqual(freezeStage({}, 'drafting', {}), { stage: 'drafting', inherited: true, skill: null })
+assert.throws(() => freezeStage({ stages: { drafting: { providerId: 'gone' } } }, 'drafting', {}))
+assert.throws(() => freezeStage({ stages: { drafting: { model: 'gone' } } }, 'drafting', { providers: [{ id: 'p', activeModel: 'm', models: [{ name: 'm' }] }] }))
+const files = (rows) => rows.map(([name, content]) => ({ name: name.split('/').at(-1), webkitRelativePath: name, text: async () => content }))
+const skill = await readWritingSkillFiles(files([['pkg/SKILL.md', '# Voice\nRead [guide](refs/voice.md)'], ['pkg/refs/voice.md', 'Use concrete verbs.']]))
+assert.match(skill.text, /concrete verbs/)
+for (const ref of ['../secret.md', 'https://evil.test/a.md', '/abs.md']) await assert.rejects(() => readWritingSkillFiles(files([['SKILL.md', `[x](${ref})`]])))
+await assert.rejects(() => readWritingSkillFiles(files([['SKILL.md', '# Fine'], ['run.js', 'alert(1)']])))
+await assert.rejects(() => readWritingSkillFiles(files([['SKILL.md', 'Invoke a subagent to run bash commands.']])))
+await assert.rejects(() => readWritingSkillFiles(files([['SKILL.md', 'a'.repeat(SKILL_TEXT_BUDGET + 1)]])))
+const config = normalizeStageConfig({ stages: { drafting: { skillId: skill.id } }, skills: [skill], apiKey: 'secret' })
+const snapshot = freezeStage(config, 'drafting', {})
+assert.equal(snapshot.skill.text, skill.text)
+assert.ok(snapshot.skill.contentHash)
+config.skills[0].text = 'changed'
+assert.notEqual(snapshot.skill.text, config.skills[0].text)
+assert.ok(!JSON.stringify(snapshot).includes('secret'))
+const preset = { id: 'preset', revision: 2, payload: { prompts: [{ content: 'original' }], apiKey: 'do-not-store' }, credential: 'encrypted-secret' }
+const frozenPreset = freezeStage({ stages: { review: { presetId: 'preset' } } }, 'review', { presets: [preset] })
+preset.payload.prompts[0].content = 'changed'
+assert.equal(frozenPreset.presetSnapshot.payload.prompts[0].content, 'original')
+assert.ok(!JSON.stringify(frozenPreset).includes('do-not-store'))
+assert.ok(!JSON.stringify(frozenPreset).includes('encrypted-secret'))
+assert.throws(() => freezeStage({ stages: { review: { skillId: 'deleted' } } }, 'review', {}))
+assert.throws(() => freezeStage({ stages: { review: { providerId: 'p', model: 'm' } } }, 'review', { providers: [{ id: 'p', models: [{ name: 'm', enabled: false }] }] }))
+console.log('stage-config unit verification passed')

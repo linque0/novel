@@ -50,8 +50,3 @@ export function playStage() {
   if (timer) clearTimeout(timer)
   timer = setTimeout(stopStage, CLEAR_MS)
 }
-
-/* 当前是否允许演出（设置窗口里的「减少动效」与系统偏好都算） */
-export function stageAllowed() {
-  return !reducedMotion()
-}

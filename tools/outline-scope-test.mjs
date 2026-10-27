@@ -58,6 +58,25 @@ const openA = containerCardSize(rows, byId.get('A'), new Set(['A']))
 ok(openA.h === SCOPE_METRICS.collapsedH + 8 + SCOPE_METRICS.miniContainerH, 'A expanded one row')
 const openA2 = containerCardSize(rows, byId.get('A'), new Set(['A', 'a2']))
 ok(openA2.h > openA.h, 'nested expansion grows parent')
+/* 手动高度：展开时可小于内容高度（由画布内容区滚动承接），但不能低于最小高度 */
+const manualOpen = containerCardSize(rows, { ...byId.get('A'), h: 300 }, new Set(['A']))
+ok(manualOpen.h === 300, 'manual container height honored')
+const manualSmall = containerCardSize(rows, { ...byId.get('A'), h: 100 }, new Set(['A']))
+ok(manualSmall.h === SCOPE_METRICS.containerMinH, 'manual height clamps to expanded minimum')
+const manualCollapsed = containerCardSize(rows, { ...byId.get('A'), h: 260 }, new Set())
+ok(manualCollapsed.h === 260, 'manual collapsed height honored')
+/* 手动宽度不被相邻容器压缩；旧作品没有 manualW 时仍自适应收窄 */
+const tight = [
+  node('C1', null, 'container', { canvasX: 0, w: 460, manualW: true }),
+  node('C2', null, 'container', { canvasX: 320, w: 460 })
+]
+const tightLayout = buildLayerLayout(tight, null, new Set())
+ok(tightLayout.sizes.get('C1').w === 460, 'manualW survives neighbour shrink')
+const legacyTight = buildLayerLayout([
+  node('C3', null, 'container', { canvasX: 0, w: 460 }),
+  node('C4', null, 'container', { canvasX: 320, w: 460 })
+], null, new Set())
+ok(legacyTight.sizes.get('C3').w < 460, 'legacy container still shrinks to avoid overlap')
 
 /* 迷你卡布局：两列、容器整行、递归子卡 */
 const layout = buildLayerLayout(rows, null, new Set(['A']))
@@ -65,14 +84,29 @@ ok(layout.visibleIds.has('A') && layout.visibleIds.has('a1') && layout.visibleId
 ok(!layout.visibleIds.has('a2e'), 'collapsed mini container hides grandchild')
 const a1Rect = layout.mini.byId.get('a1').rect
 const a2Rect = layout.mini.byId.get('a2').rect
+ok(layout.mini.byId.get('a1').clipId === 'A', 'mini card knows its scroll container')
 ok(a1Rect.x < a2Rect.x && a1Rect.y === a2Rect.y, 'two-column mini row')
 near(a1Rect.w, (460 - SCOPE_METRICS.miniPad * 2 - SCOPE_METRICS.miniGap) / 2, 'mini card width')
+/* 拖动容器时迷你卡跟随：层级布局必须优先使用拖动中的临时坐标 */
+const dragged = buildLayerLayout(rows, null, new Set(['A']), {
+  posOf: (n) => ({ x: (Number(n.canvasX) || 0) + 120, y: (Number(n.canvasY) || 0) + 80 })
+})
+const draggedA1 = dragged.mini.byId.get('a1').rect
+near(draggedA1.x, a1Rect.x + 120, 'drag offset moves mini card x')
+near(draggedA1.y, a1Rect.y + 80, 'drag offset moves mini card y')
 const nested = buildLayerLayout(rows, null, new Set(['A', 'a2']))
 const nestedA2 = nested.mini.byId.get('a2').rect
 const nestedA2e = nested.mini.byId.get('a2e').rect
 ok(nestedA2.w === 460 - SCOPE_METRICS.miniPad * 2, 'expanded mini container full width')
 ok(nestedA2e.y > nestedA2.y + SCOPE_METRICS.miniContainerH, 'grandchild below mini container header')
 ok(nestedA2e.x >= nestedA2.x + SCOPE_METRICS.miniPad, 'grandchild inside mini container')
+/* 拖动外层容器时，递归展开的孙级迷你卡也必须同步位移 */
+const draggedNested = buildLayerLayout(rows, null, new Set(['A', 'a2']), {
+  posOf: (n) => ({ x: (Number(n.canvasX) || 0) + 120, y: (Number(n.canvasY) || 0) + 80 })
+})
+const draggedNestedA2e = draggedNested.mini.byId.get('a2e').rect
+near(draggedNestedA2e.x, nestedA2e.x + 120, 'drag offset moves nested mini card x')
+near(draggedNestedA2e.y, nestedA2e.y + 80, 'drag offset moves nested mini card y')
 
 /* 关系投影：收起时投影到最近祖先；同容器两端收拢为同一点时隐藏 */
 const rootCollapsed = buildLayerLayout(rows, null, new Set())

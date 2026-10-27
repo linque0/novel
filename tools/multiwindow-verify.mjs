@@ -61,7 +61,7 @@ check('2 重复打开聚焦不新建', pop2.r.ok && pop2.r.focused && pop2.n ===
 
 /* ---------- 3. 主窗口只读占位出现（.panel-lock-note）且编辑器不可写 ---------- */
 const lock = await c.evalx(`(() => {
-  const note = document.querySelector('.panel-lock-note')
+  const note = [...document.querySelectorAll('.panel-lock-note')].find(e=>e.offsetWidth>0 && e.offsetHeight>0)
   const app = document.querySelector('#app').__vue_app__
   const work = app.config.globalProperties.$pinia._s.get('work')
   return { hasNote: !!note, noteText: note?.textContent?.trim().slice(0, 40) || '', editable: window.__ns.editor?.isEditable }
@@ -94,7 +94,7 @@ await p.evalx(`window.native.panelCloseSelf()`)
 await c.sleep(3200)
 const after = await c.evalx(`(async () => {
   const list = await window.native.panelList()
-  const note = document.querySelector('.panel-lock-note')
+  const note = [...document.querySelectorAll('.panel-lock-note')].find(e=>e.offsetWidth>0 && e.offsetHeight>0)
   const app = document.querySelector('#app').__vue_app__
   const work = app.config.globalProperties.$pinia._s.get('work')
   return { n: list.panels.length, locks: list.locks.length, noteGone: !note, editable: window.__ns.editor?.isEditable }
@@ -116,7 +116,7 @@ const full = await p4.evalx(`(() => {
   const side = document.querySelector('.side-panel')
   const center = document.querySelector('.rich-host')
   const right = document.querySelector('.panel-body > div:last-child')
-  const note = document.querySelector('.panel-lock-note')
+  const note = [...document.querySelectorAll('.panel-lock-note')].find(e=>e.offsetWidth>0 && e.offsetHeight>0)
   return { hasSide: !!side, sideKids: side?.children.length || 0, hasEditor: !!center, hasRight: !!right, selfNote: !!note, editable: window.__ns.editor?.isEditable }
 })()`)
 check('5b 面板为完整界面（侧栏+编辑器+右栏）且自身可写', full.hasSide && full.sideKids > 0 && full.hasEditor && full.hasRight && !full.selfNote && full.editable === true)
@@ -135,10 +135,10 @@ const fchk = await c.evalx(`(async () => {
   const work = app.config.globalProperties.$pinia._s.get('work')
   work.selChapterId = '${seed.chId}'
   await new Promise((r) => setTimeout(r, 600))
-  const note1 = !!document.querySelector('.panel-lock-note')
+  const note1 = !!document.querySelector('.panel-lock-note')?.offsetWidth
   work.selChapterId = '${pop4.ch2}'
   await new Promise((r) => setTimeout(r, 600))
-  const note2 = !!document.querySelector('.panel-lock-note')
+  const note2 = !!document.querySelector('.panel-lock-note')?.offsetWidth
   work.selChapterId = '${seed.chId}'
   await new Promise((r) => setTimeout(r, 400))
   return { note1, note2 }

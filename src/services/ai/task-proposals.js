@@ -2,7 +2,7 @@ import { projectBook, orderedChapters } from '../project/normalize.js'
 import { chapterHash, rowHash, hashContent } from '../project/text.js'
 import { taskProfile, normalizeTaskRequest } from './task-profiles.js'
 
-export const TASK_OUTPUT_TOOLS = ['submit_chapter','submit_outline_plan','submit_written_outline','submit_lore','submit_characters','submit_inspiration','submit_memory','submit_draft','submit_proposal']
+export const TASK_OUTPUT_TOOLS = ['submit_chapter_plan','submit_review','submit_recheck','submit_plot_directions','submit_chapter','submit_outline_plan','submit_written_outline','submit_lore','submit_characters','submit_inspiration','submit_memory','submit_draft','submit_proposal']
 const str = (v, max = 20000) => { if (typeof v !== 'string' || v.length > max) throw new Error('文本字段格式或长度无效'); return v.trim() }
 const list = (v, max = 30) => { if (!Array.isArray(v) || v.length > max) throw new Error('列表格式或数量无效'); return v }
 const object = v => { if (!v || typeof v !== 'object' || Array.isArray(v)) throw new Error('提案应为对象'); return v }
@@ -18,6 +18,7 @@ export function taskEvidence(refs, work, frozen, required = false) {
     const first = quote ? doc.plainText.indexOf(quote) : -1
     const start = Number.isInteger(ref.start) ? ref.start : first
     if (!quote || start < 0 || doc.plainText.slice(start,start + quote.length) !== quote || (!Number.isInteger(ref.start) && doc.plainText.indexOf(quote,first + 1) >= 0)) throw new Error('证据必须在来源唯一定位；重复摘引须指定 start')
+    if(frozen.writingBoundary?.chapterId===doc.sourceId&&doc.sourceType==='chapter'&&start+quote.length>frozen.writingBoundary.end)throw new Error('证据越过当前正文位置；选段或后文仅作修改/衔接材料')
     return { sourceType: doc.sourceType, sourceId: doc.sourceId, docId: doc.id, quote, start, sourceHash: doc.sourceHash, textHash: doc.textHash, label: doc.title }
   })
   if (required && !result.some(r => r.sourceType === 'chapter')) throw new Error('正文提取项缺少原文证据')

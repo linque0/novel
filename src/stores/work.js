@@ -1,3 +1,4 @@
+import { normalizeCanvasOpacity } from '../services/canvas-appearance.js'
 import { relationTransaction, flattenRelations } from '../components/outline/canvas-relations.js'
 import { defineStore } from 'pinia'
 import { db, uid, now } from '../db/database'
@@ -13,24 +14,10 @@ import { applyProposal, undoApplication } from '../services/ai/application'
 import { useAiStore } from './ai'
 import { chapterHash, plainChapter } from '../services/ai/contracts'
 import { primaryRole } from '../services/character-tags'
+import { readWritingPosition } from '../services/writing-position.js'
+import { resolveWritingChapter } from '../services/writing-position-core.js'
 
 const urlCache = new Map()
-
-/** 设定条目检索用纯文本：幕布式大纲抽出全部节点文本 */
-function loreText(l) {
-  if (l.fmt !== 'outline') return l.content || ''
-  try {
-    const out = []
-    const walk = (n) => {
-      out.push(n.text || '')
-      ;(n.children || []).forEach(walk)
-    }
-    ;(JSON.parse(l.content || '[]') || []).forEach(walk)
-    return out.join('\n')
-  } catch {
-    return l.content || ''
-  }
-}
 
 export const useWorkStore = defineStore('work', {
   state: () => ({
@@ -70,11 +57,9 @@ export const useWorkStore = defineStore('work', {
     charFocusHandled: 0, // 关系图已处理的定位信号（组件未挂载时请求不丢）
     prevCounts: new Map(),
     tab: 'chapters', // chapters | outline | characters | lore | snippets
-    loreView: 'detail', // lore 视图：detail 详情 | overview 总览
     selChapterId: null,
+    writingRestore: null,
     selCharacterId: null,
-    selLoreId: null,
-    selFolderId: null,
     selSnippetId: null,
     selOutlineId: null,
     selVolumeId: null,
@@ -90,22 +75,12 @@ export const useWorkStore = defineStore('work', {
         .map((b) => ({ ...b, title: s.chapters.find((c) => c.id === b.targetId && !c.deletedAt)?.title || '' }))
         .filter((b) => b.title),
     liveCharacters: (s) => s.characters.filter((c) => !c.deletedAt).sort((a, b) => (a.name || '').localeCompare(b.name || '')),
-    liveLore: (s) =>
-      s.lore
-        .filter((l) => !l.deletedAt)
-        .sort((a, b) => {
-          const sa = a.sortOrder ?? 1e9
-          const sb = b.sortOrder ?? 1e9
-          return sa !== sb ? sa - sb : (a.title || '').localeCompare(b.title || '')
-        }),
-    liveCategories: (s) => s.lorecats.filter((c) => !c.deletedAt).sort((a, b) => a.sortOrder - b.sortOrder),
     liveSnippets: (s) => s.snippets.filter((x) => !x.deletedAt).sort((a, b) => b.createdAt - a.createdAt),
     liveAnnotations: (s) => s.annotations.filter((a) => !a.deletedAt).sort((a, b) => a.createdAt - b.createdAt),
     activeChapter() {
       return this.liveChapters.find((c) => c.id === this.selChapterId) || null
     },
     activeCharacter: (s) => s.characters.find((c) => c.id === s.selCharacterId && !c.deletedAt) || null,
-    activeLore: (s) => s.lore.find((l) => l.id === s.selLoreId && !l.deletedAt) || null,
     activeSnippet: (s) => s.snippets.find((x) => x.id === s.selSnippetId && !x.deletedAt) || null,
     chapterCount() {
       return this.liveChapters.length
@@ -215,7 +190,8 @@ export const useWorkStore = defineStore('work', {
 
   actions: {
     /* ---------- 打开 / 关闭 ---------- */
-    async open(workId) {
+    async open(workId, { chapterId = null, restorePosition = true } = {}) {
+      await autosave.flushAll()
       useAiStore().switchWork(workId)
       const b = await repo.loadWorkBundle(workId)
       this.work = b.work
@@ -246,8 +222,11 @@ export const useWorkStore = defineStore('work', {
       this.prevCounts = new Map(this.liveChapters.map((c) => [c.id, c.wordCount || 0]))
       installWordLogHook(this.prevCounts)
       this.tab = 'chapters'
-      this.selChapterId = this.liveChapters[0]?.id || null
-      this.selVolumeId = this.liveVolumes[0]?.id || null
+      const position = restorePosition && !chapterId ? await readWritingPosition(workId) : null
+      const selected = resolveWritingChapter(this, position, chapterId)
+      this.selChapterId = selected?.id || null
+      this.selVolumeId = selected?.volumeId || this.liveVolumes[0]?.id || null
+      this.writingRestore = selected?.id === position?.chapterId ? position : null
       this.loaded = true
       await useShelfStore().recordOpen(workId)
       queueProjection(workId).catch(console.error)
@@ -421,42 +400,6 @@ export const useWorkStore = defineStore('work', {
       }
     },
 
-    /* ---------- 大纲 ---------- */
-    outlineFor(refId) {
-      return this.outlines.find((o) => o.refId === refId) || null
-    },
-
-    updateOutline(id, content) {
-      const o = this.outlines.find((x) => x.id === id)
-      if (!o) return
-      o.content = content
-      autosave.mark('outlines', o)
-    },
-
-    ensureOutline(refId) {
-      let o = this.outlines.find((x) => x.refId === refId)
-      if (o) return o
-      const isMaster = this.work && refId === this.work.id
-      const isVol = this.volumes.some((v) => v.id === refId)
-      o = {
-        id: uid(),
-        workId: this.work.id,
-        level: isMaster ? 'master' : isVol ? 'volume' : 'chapter',
-        refId,
-        content: '',
-        createdAt: now(),
-        updatedAt: now(),
-        deletedAt: null
-      }
-      this.outlines.push(o)
-      autosave.mark('outlines', o)
-      return o
-    },
-
-    masterOutline() {
-      return this.outlines.find((o) => o.level === 'master') || null
-    },
-
     /* ---------- 人物 ---------- */
     /** 新建人物：内容全部留空待用户填写（name 空时列表/画布显示「未命名」兜底） */
     addCharacter(name = '') {
@@ -525,288 +468,6 @@ export const useWorkStore = defineStore('work', {
       this.relations = this.relations.filter((r) => r.id !== id)
     },
 
-    /* ---------- 设定（文件夹式分类 + 条目） ---------- */
-    addCategory(name = '新分类', parentId = null) {
-      const siblings = this.liveCategories.filter((c) => (c.parentId || null) === (parentId || null))
-      const maxSort = siblings.reduce((m, c) => Math.max(m, c.sortOrder || 0), -1)
-      const row = { id: uid(), workId: this.work.id, name, parentId: parentId || null, sortOrder: maxSort + 1, deletedAt: null }
-      this.lorecats.push(row)
-      autosave.mark('lorecats', row)
-      return row
-    },
-
-    updateLorecat(id, patch) {
-      const c = this.lorecats.find((x) => x.id === id)
-      if (!c) return
-      Object.assign(c, typeof patch === 'string' ? { name: patch } : patch)
-      autosave.mark('lorecats', c)
-    },
-
-    /** 分类子树内所有分类 id（含自身），用于防循环与级联 */
-    categorySubtreeIds(id) {
-      const ids = [id]
-      let grew = true
-      while (grew) {
-        grew = false
-        for (const c of this.liveCategories) {
-          if (ids.includes(c.parentId) && !ids.includes(c.id)) {
-            ids.push(c.id)
-            grew = true
-          }
-        }
-      }
-      return ids
-    },
-
-    /** 删除文件夹：子文件夹与条目上提到其父级（数据不丢失），文件夹本身软删除 */
-    async deleteCategory(id) {
-      const c = this.lorecats.find((x) => x.id === id)
-      if (!c) return
-      const parent = c.parentId || null
-      for (const sub of this.liveCategories.filter((x) => x.parentId === id)) {
-        sub.parentId = parent
-        autosave.mark('lorecats', sub)
-      }
-      for (const e of this.liveLore.filter((x) => x.categoryId === id)) {
-        e.categoryId = parent
-        autosave.mark('lore', e)
-      }
-      await repo.softDeleteRow('lorecats', c)
-    },
-
-    moveCategoryTo(id, newParentId) {
-      const c = this.lorecats.find((x) => x.id === id)
-      if (!c) return
-      const target = newParentId || null
-      if ((c.parentId || null) === target) return
-      if (target && this.categorySubtreeIds(id).includes(target)) return // 不能移入自己的子级
-      c.parentId = target
-      autosave.mark('lorecats', c)
-    },
-
-    moveLoreTo(loreId, categoryId) {
-      const l = this.lore.find((x) => x.id === loreId)
-      if (!l) return
-      l.categoryId = categoryId || null
-      autosave.mark('lore', l)
-    },
-
-    /** 文件夹树：分类嵌套 + 各文件夹内条目；孤儿条目归入「未分类」 */
-    categoryTreeData() {
-      const entryNode = (l) => ({ key: 'l:' + l.id, label: l.title || '未命名条目', type: 'entry', isLeaf: true })
-      const catNode = (c) => ({
-        key: 'c:' + c.id,
-        label: c.name,
-        type: 'folder',
-        isLeaf: false,
-        children: [
-          ...this.liveCategories.filter((x) => x.parentId === c.id).map(catNode),
-          ...this.liveLore.filter((l) => l.categoryId === c.id).map(entryNode)
-        ]
-      })
-      const roots = this.liveCategories.filter((c) => !c.parentId || !this.liveCategories.some((p) => p.id === c.parentId)).map(catNode)
-      const known = new Set(this.liveCategories.map((c) => c.id))
-      const orphans = this.liveLore.filter((l) => !l.categoryId || !known.has(l.categoryId))
-      if (orphans.length) {
-        roots.push({ key: 'c:none', label: '未分类', type: 'folder', isLeaf: false, pseudo: true, children: orphans.map(entryNode) })
-      }
-      return roots
-    },
-
-    /** 同文件夹内条目排序（overview 拖拽/移动用） */
-    reorderLore(entryId, dir) {
-      const l = this.lore.find((x) => x.id === entryId)
-      if (!l) return
-      const siblings = this.liveLore.filter((x) => (x.categoryId || null) === (l.categoryId || null))
-      const i = siblings.findIndex((x) => x.id === entryId)
-      const j = i + dir
-      if (j < 0 || j >= siblings.length) return
-      siblings.forEach((x, idx) => {
-        if (x.sortOrder == null) x.sortOrder = idx * 1000
-      })
-      const tmp = siblings[i].sortOrder
-      siblings[i].sortOrder = siblings[j].sortOrder
-      siblings[j].sortOrder = tmp
-      autosave.mark('lore', siblings[i])
-      autosave.mark('lore', siblings[j])
-    },
-
-    /** 更新设定条目内单个大纲节点的文本（总览视图编辑） */
-    updateOutlineNodeText(loreId, nid, text) {
-      const l = this.lore.find((x) => x.id === loreId)
-      if (!l || l.fmt !== 'outline') return
-      try {
-        const t = JSON.parse(l.content || '[]')
-        const walk = (list) => {
-          for (const n of list) {
-            if (n.id === nid) {
-              n.text = text
-              return true
-            }
-            if (walk(n.children)) return true
-          }
-          return false
-        }
-        if (walk(t)) this.updateLore(loreId, { content: JSON.stringify(t) })
-      } catch {
-        /* 内容损坏时忽略 */
-      }
-    },
-
-    /** 删除设定条目内单个大纲节点 */
-    removeOutlineNode(loreId, nid) {
-      const l = this.lore.find((x) => x.id === loreId)
-      if (!l || l.fmt !== 'outline') return
-      try {
-        const t = JSON.parse(l.content || '[]')
-        const walk = (list) => {
-          const i = list.findIndex((n) => n.id === nid)
-          if (i >= 0) {
-            list.splice(i, 1)
-            return true
-          }
-          return list.some((n) => walk(n.children))
-        }
-        if (walk(t)) this.updateLore(loreId, { content: JSON.stringify(t) })
-      } catch {
-        /* ignore */
-      }
-    },
-
-    /** 在设定条目大纲中某节点后插入新节点（返回新节点 id） */
-    insertOutlineNodeAfter(loreId, nid, text = '') {
-      const l = this.lore.find((x) => x.id === loreId)
-      if (!l || l.fmt !== 'outline') return null
-      const fresh = { id: uid(), text, fold: false, children: [] }
-      try {
-        const t = JSON.parse(l.content || '[]')
-        const walk = (list) => {
-          const i = list.findIndex((n) => n.id === nid)
-          if (i >= 0) {
-            list.splice(i + 1, 0, fresh)
-            return true
-          }
-          return list.some((n) => walk(n.children))
-        }
-        if (walk(t)) {
-          this.updateLore(loreId, { content: JSON.stringify(t) })
-          return fresh.id
-        }
-      } catch {
-        /* ignore */
-      }
-      return null
-    },
-
-    /** 移动设定大纲节点到目标节点前/后（总览视图拖拽/排序） */
-    moveOutlineNodeTo(loreId, nid, targetNid, after = false) {
-      const l = this.lore.find((x) => x.id === loreId)
-      if (!l || l.fmt !== 'outline' || nid === targetNid) return
-      try {
-        const t = JSON.parse(l.content || '[]')
-        let moved = null
-        const remove = (list) => {
-          const i = list.findIndex((n) => n.id === nid)
-          if (i >= 0) {
-            moved = list.splice(i, 1)[0]
-            return true
-          }
-          return list.some((n) => remove(n.children))
-        }
-        if (!remove(t)) return
-        const insert = (list) => {
-          const i = list.findIndex((n) => n.id === targetNid)
-          if (i >= 0) {
-            list.splice(after ? i + 1 : i, 0, moved)
-            return true
-          }
-          return list.some((n) => insert(n.children))
-        }
-        if (insert(t)) this.updateLore(loreId, { content: JSON.stringify(t) })
-      } catch {
-        /* ignore */
-      }
-    },
-
-    /** 同列表内交换两个大纲节点的顺序（Alt+↑↓） */
-    moveOutlineNode(loreId, nid, dir) {
-      const l = this.lore.find((x) => x.id === loreId)
-      if (!l || l.fmt !== 'outline') return
-      try {
-        const t = JSON.parse(l.content || '[]')
-        const walk = (list) => {
-          const i = list.findIndex((n) => n.id === nid)
-          if (i >= 0) {
-            const j = i + dir
-            if (j < 0 || j >= list.length) return true
-            ;[list[i], list[j]] = [list[j], list[i]]
-            return true
-          }
-          return list.some((n) => walk(n.children))
-        }
-        if (walk(t)) this.updateLore(loreId, { content: JSON.stringify(t) })
-      } catch {
-        /* ignore */
-      }
-    },
-
-    /** 导入 MD 解析结果：folders = [{name, children, entries:[{title, lines}]}] */
-    importLoreTree(folders, parentFolderId = null) {
-      let foldersCreated = 0
-      let entriesCreated = 0
-      const walk = (list, parentId) => {
-        for (const f of list) {
-          const cat = this.addCategory(f.name || '导入文件夹', parentId)
-          foldersCreated++
-          for (const e of f.entries || []) {
-            const row = this.addLore(cat.id)
-            const lines = (e.lines || []).filter((x) => x !== null && x !== undefined)
-            const tree = lines.length
-              ? lines.map((t) => ({ id: uid(), text: String(t), fold: false, children: [] }))
-              : [{ id: uid(), text: '', fold: false, children: [] }]
-            this.updateLore(row.id, { title: e.title || '导入条目', content: JSON.stringify(tree), fmt: 'outline' })
-            entriesCreated++
-          }
-          walk(f.children || [], cat.id)
-        }
-      }
-      walk(folders || [], parentFolderId)
-      return { foldersCreated, entriesCreated }
-    },
-
-    addLore(categoryId = null) {
-      const row = {
-        id: uid(),
-        workId: this.work.id,
-        categoryId,
-        title: '新条目',
-        content: '',
-        tags: [],
-        createdAt: now(),
-        updatedAt: now(),
-        deletedAt: null
-      }
-      this.lore.push(row)
-      autosave.mark('lore', row)
-      this.tab = 'lore'
-      this.selLoreId = row.id
-      return row
-    },
-
-    updateLore(id, patch) {
-      const l = this.lore.find((x) => x.id === id)
-      if (!l) return
-      Object.assign(l, patch)
-      autosave.mark('lore', l)
-    },
-
-    async deleteLore(id) {
-      const l = this.lore.find((x) => x.id === id)
-      if (!l) return
-      await repo.softDeleteRow('lore', l)
-      if (this.selLoreId === id) this.selLoreId = null
-    },
-
     /* ---------- 灵感 ---------- */
     addSnippet(content = '') {
       const row = { id: uid(), workId: this.work.id, content, tags: [], createdAt: now(), updatedAt: now(), deletedAt: null }
@@ -853,13 +514,6 @@ export const useWorkStore = defineStore('work', {
         }
       }
       if (changed) this.urlTick++
-    },
-
-    async purgeAsset(meta) {
-      urlCache.delete(meta.id)
-      await repo.deleteAssetRow(meta, true)
-      this.assets = this.assets.filter((a) => a.id !== meta.id)
-      this.links = this.links.filter((l) => l.assetId !== meta.id)
     },
 
     async linkAsset(entityType, entityId, assetId) {
@@ -1325,10 +979,6 @@ export const useWorkStore = defineStore('work', {
       return this.olnodes.find((n) => n.refId === refId && !n.deletedAt) || null
     },
 
-    olnodeByKind(kind) {
-      return this.olnodes.find((n) => n.kind === kind && !n.deletedAt) || null
-    },
-
     olnodeAdd(parentId, fields = {}, afterId = null) {
       this.olnodePushUndo(true)
       const siblings = this.olnodeChildren(parentId)
@@ -1418,14 +1068,6 @@ export const useWorkStore = defineStore('work', {
       autosave.mark('olnodes', n)
     },
 
-    /** 箭头模块旋转角（v1.0.9，仅 arrow 类型使用） */
-    olnodeSetRot(id, rot) {
-      const n = this.olnodes.find((x) => x.id === id)
-      if (!n) return
-      n.rot = Math.round(rot)
-      autosave.mark('olnodes', n)
-    },
-
     /** 骨架模板批量创建：调用方先 olnodePushUndo(true)，本动作不再逐条压栈；_parent 为 rows 序号（创建后回填父级） */
     olnodeBulkAdd(rows) {
       const t = now()
@@ -1451,13 +1093,6 @@ export const useWorkStore = defineStore('work', {
       return created
     },
 
-    olnodeSetKind(id, kind) {
-      const n = this.olnodes.find((x) => x.id === id)
-      if (!n || n.kind === kind) return
-      n.kind = kind
-      autosave.mark('olnodes', n)
-    },
-
     olnodeSetShape(id, shape) {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n) return
@@ -1465,12 +1100,18 @@ export const useWorkStore = defineStore('work', {
       autosave.mark('olnodes', n)
     },
 
-    /** 自定义尺寸（v0.4.1 界面优化）：模块边缘拖拽调整大小，null 恢复默认 */
+    /** 自定义尺寸（v0.4.1 界面优化）：只写入被拖拽的轴；manualW/manualH 让分层布局尊重手动尺寸 */
     olnodeSetSize(id, w, h) {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n) return
-      n.w = w != null ? Math.round(w) : null
-      n.h = h != null ? Math.round(h) : null
+      if (w != null) {
+        n.w = Math.round(w)
+        n.manualW = true
+      }
+      if (h != null) {
+        n.h = Math.round(h)
+        n.manualH = true
+      }
       autosave.mark('olnodes', n)
     },
 
@@ -1503,14 +1144,6 @@ export const useWorkStore = defineStore('work', {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n) return
       n.chapter = String(chapter || '').trim()
-      autosave.mark('olnodes', n)
-    },
-
-    /** 文本框模块透明度（v0.4.2）：0.15–1，作用于底色层 */
-    olnodeSetOpacity(id, v) {
-      const n = this.olnodes.find((x) => x.id === id)
-      if (!n) return
-      n.opacity = Math.min(1, Math.max(0.15, Number(v) || 1))
       autosave.mark('olnodes', n)
     },
 
@@ -1547,6 +1180,7 @@ export const useWorkStore = defineStore('work', {
         edgeWidth: 1.6,
         arrowSize: 1,
         textures: true,
+        canvasOpacity: 100,
         scopeId: null,
         expanded: [],
         cameras: {}
@@ -1563,7 +1197,9 @@ export const useWorkStore = defineStore('work', {
       const expanded = Array.isArray(this.canvasPrefs.expanded) ? this.canvasPrefs.expanded : []
       this.canvasPrefs.expanded = expanded.filter((id) => byId.get(id)?.kind === 'container')
       if (!this.canvasPrefs.cameras || typeof this.canvasPrefs.cameras !== 'object') this.canvasPrefs.cameras = {}
-      this.canvasPrefs.textures = this.canvasPrefs.textures !== false
+      /* 材质入口已移除：旧作品里关闭过纹理也统一回到默认材质。 */
+      this.canvasPrefs.textures = true
+      this.canvasPrefs.canvasOpacity = normalizeCanvasOpacity(this.canvasPrefs.canvasOpacity)
     },
     async saveCanvasPrefs() {
       if (!this.work) return
@@ -1774,20 +1410,6 @@ export const useWorkStore = defineStore('work', {
       return row
     },
 
-    olnodeMoveOrder(id, dir) {
-      const n = this.olnodes.find((x) => x.id === id)
-      if (!n) return
-      const siblings = this.olnodeChildren(n.parentId)
-      const i = siblings.findIndex((s) => s.id === id)
-      const j = i + dir
-      if (j < 0 || j >= siblings.length) return
-      const tmp = siblings[i].sortOrder
-      siblings[i].sortOrder = siblings[j].sortOrder
-      siblings[j].sortOrder = tmp
-      autosave.mark('olnodes', siblings[i])
-      autosave.mark('olnodes', siblings[j])
-    },
-
     /** 拖拽重挂接（8.8 专业导图交互）：把节点移动到目标父级下（afterId 为null时追加到末尾） */
     olnodeMoveTo(id, targetParentId, afterId = null) {
       const n = this.olnodes.find((x) => x.id === id)
@@ -1919,18 +1541,9 @@ export const useWorkStore = defineStore('work', {
       }
       return result
     },
-    olnodeRelReconnect(ownerId, relId, end, endpoint) {
-      return this.olnodeRelGesture({ type: 'reconnect', ownerId, relId, end, endpoint })
-    },
     olnodeRelAdd(fromId, toId, fields = {}) {
       const result = this.olnodeRelGesture({ type: 'connect', source: { nodeId: fromId, side: fields.fromSide }, target: { nodeId: toId, side: fields.toSide }, fields })
       return result.ok ? result.rel : null
-    },
-    olnodeRelUpdate(ownerId, relId, patch) {
-      const n = this.olnodes.find((x) => x.id === ownerId)
-      if (!n || !Array.isArray(n.rels)) return
-      n.rels = n.rels.map((r) => (r.id === relId ? { ...r, ...patch } : r))
-      autosave.mark('olnodes', n)
     },
     /** 通用 rel 补丁（v1.0.16 塑形用）：目标可以是节点 rels 中的连线，也可以是宿主 rel._out 中的引出连线 */
     olnodeRelPatchAny(ownerId, relId, patch) {
@@ -1961,11 +1574,6 @@ export const useWorkStore = defineStore('work', {
     olnodeJunctionRemove(ownerId, relId, junctionId) {
       return this.olnodeRelGesture({ type: 'junction-remove', ownerId, relId, junctionId })
     },
-    /** 建一条指向连接点的连线：fromId → 宿主连线上的连接点（连接点作终点） */
-    olnodeRelAddToJunction(fromId, host, fields = {}) {
-      const result = this.olnodeRelGesture({ type: 'connect', source: { nodeId: fromId, side: fields.fromSide }, target: host, fields })
-      return result.ok ? result.rel : null
-    },
     olnodeRelAddFromJunction(host, toId, fields = {}) {
       const result = this.olnodeRelGesture({ type: 'connect', source: host, target: { nodeId: toId, side: fields.toSide }, fields })
       return result.ok ? result.rel : null
@@ -1974,18 +1582,6 @@ export const useWorkStore = defineStore('work', {
       const result = this.olnodeRelGesture({ type: 'connect', source: fromHost, target: toHost, fields })
       return result.ok ? result.rel : null
     },
-    /** 节点删除时级联清理其 rels 中指向连接点的连线（宿主连线仍可独立存在） */
-    olnodeRemoveCascadeJunctions(nodeId) {
-      for (const n2 of this.liveOlnodes()) {
-        if (n2.id === nodeId || !Array.isArray(n2.rels)) continue
-        const kept = n2.rels.filter((r) => !(r.toJunction && r.toJunction.ownerId === nodeId))
-        if (kept.length !== n2.rels.length) {
-          n2.rels = kept
-          autosave.mark('olnodes', n2)
-        }
-      }
-    },
-
     /* ---------- 书签（章节快捷收藏） ---------- */
     isChapterBookmarked(id) {
       return this.bookmarks.some((b) => !b.deletedAt && b.targetId === id)

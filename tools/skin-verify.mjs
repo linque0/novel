@@ -62,7 +62,7 @@ try {
   await shot('gravity-1400')
   await shot('gravity-1080', 1080, 680)
   check(await evaluate('document.documentElement.scrollWidth<=innerWidth && document.querySelector(".gravity-scroll").scrollWidth<=document.querySelector(".gravity-scroll").clientWidth'), 'minimum desktop width has no horizontal overflow')
-  check(await evaluate(`document.querySelector('.gravity-scroll').getBoundingClientRect().bottom<=document.querySelector('.gravity-dock').getBoundingClientRect().top`), 'navigation never overlays the scrollable book area')
+  check(await evaluate(`document.querySelector('.gravity-scroll').getBoundingClientRect().top>=document.querySelector('.app-topbar').getBoundingClientRect().bottom && !document.querySelector('.gravity-dock')`), 'navigation never overlays the scrollable book area')
   await c.send('Emulation.setDeviceMetricsOverride', { width: 1400, height: 880, deviceScaleFactor: 1, mobile: false })
 
   // Query through the actual input, including no-results recovery.
@@ -70,7 +70,7 @@ try {
     await evaluate(`(()=>{const el=document.querySelector('.gravity-tools input');el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('input',{bubbles:true}));return true})()`)
   }
   await search('不存在的作品');await wait('!!document.querySelector(".gravity-empty")')
-  check(await evaluate('document.querySelectorAll(".gravity-dock button:disabled").length===5'), 'empty search disables only work navigation')
+  check(await evaluate('document.querySelectorAll(".app-topnav button:disabled").length===5'), 'empty search disables only work navigation')
   await shot('no-results')
   await search('星尘旅人');await wait('document.querySelectorAll(".gravity-library-item").length===0 && !!document.querySelector(".gravity-main-book")')
   check(await evaluate('document.querySelector(".gravity-feature-copy h2").textContent==="星尘旅人"'), 'search changes the featured work')
@@ -92,9 +92,9 @@ try {
   check(await evaluate('__skinOpenCount===1'), 'keyboard Enter opens exactly once')
   await evaluate('__skinCheck.work.closeWork().then(()=>true)');await wait('!!document.querySelector(".gravity-shelf")')
   for (const key of ['outline','lore','characters','snippets','chapters']) {
-    await evaluate(`(()=>{const labels={outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感',chapters:'正文'};[...document.querySelectorAll('.gravity-dock button')].find(b=>b.textContent.includes(labels[${JSON.stringify(key)}])).click();return true})()`)
+    await evaluate(`(()=>{const labels={outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感',chapters:'正文'};[...document.querySelectorAll('.app-topnav button')].find(b=>b.textContent.includes(labels[${JSON.stringify(key)}])).click();return true})()`)
     await wait(`__skinCheck.ui.view==='work' && __skinCheck.work.tab===${JSON.stringify(key)}`)
-    check(await evaluate('document.body.dataset.skin==="gravity"'), 'dock opens gravity ' + key)
+    check(await evaluate('document.body.dataset.skin==="gravity"'), 'topbar opens gravity ' + key)
     await evaluate('__skinCheck.work.closeWork().then(()=>true)');await wait('!!document.querySelector(".gravity-shelf")')
   }
 
@@ -163,7 +163,7 @@ try {
 
   await evaluate('(()=>{__skinCheck.shelf.works=[];return true})()')
   await wait('!!document.querySelector(".gravity-empty")');await shot('empty')
-  check(await evaluate('document.querySelectorAll(".gravity-dock button:disabled").length===5'), 'empty library retains create/settings/skin controls')
+  check(await evaluate('document.querySelectorAll(".app-topnav button:disabled").length===5'), 'empty library retains create/settings/skin controls')
   await evaluate('__skinCheck.shelf.refresh().then(()=>true)')
   await c.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
   check(await evaluate('getComputedStyle(document.querySelector(".gravity-main-book")).animationName==="none"'), 'reduced motion disables floating animation')

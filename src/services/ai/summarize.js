@@ -122,24 +122,3 @@ export async function getChapterSummary(chapter, provider = null) {
   return summary
 }
 
-/**
- * 批量取章节摘要（串行，避免并发打爆 API）：返回 Map<chapterId, summary>，
- * 生成失败/无 provider 的章节不出现在 Map 中。
- */
-export async function ensureChapterSummaries(chapters, provider = null, onEach = null) {
-  const out = new Map()
-  for (const ch of chapters || []) {
-    if (!ch || !ch.id) continue
-    try {
-      const s = await getChapterSummary(ch, provider)
-      if (s) {
-        out.set(ch.id, s)
-        onEach?.(ch, s)
-      }
-    } catch (err) {
-      if (err?.name === 'AbortError') throw err
-      console.warn('[ai/summarize] 章节摘要生成失败：', ch.title, String(err))
-    }
-  }
-  return out
-}

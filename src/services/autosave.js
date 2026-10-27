@@ -2,6 +2,7 @@ import { useUiStore } from '../stores/ui'
 import { putRow, addRevision, addWordLog } from '../db/repo'
 import { markChapterStale } from './ai/summarize'
 import { SOURCE_TABLES } from './project/normalize.js'
+import { captureWritingPositions, flushWritingPositions, discardWritingPositions } from './writing-position.js'
 
 /**
  * 自动保存服务：
@@ -19,6 +20,8 @@ const lastSnapshotAt = new Map()
 const lastSnapshotContent = new Map()
 /** 各章节本窗口上次落盘的正文内容：仅在正文较上次落盘变化时打 AI 摘要失效标记（方案 §四「仅变化章节重算」） */
 const flushedChapterContent = new Map()
+const flushHooks=new Set()
+export function registerFlushHook(fn) {flushHooks.add(fn);return()=>flushHooks.delete(fn)}
 
 const ui = () => useUiStore()
 
@@ -97,7 +100,10 @@ export const autosave = {
 
   async flushAll() {
     clearTimeout(flushTimer)
+    captureWritingPositions()
     await doFlush()
+    await flushWritingPositions().catch(e=>console.warn('[writing-position]',e))
+    await Promise.all([...flushHooks].map(fn=>fn()))
   },
 
   /** 丢弃全部待存脏行（不落盘）。用于「恢复备份」前：恢复语义以备份为准，
@@ -106,6 +112,7 @@ export const autosave = {
     clearTimeout(flushTimer)
     pending.clear()
     ui().autosave.pending = 0
+    discardWritingPositions()
   }
 }
 
@@ -115,9 +122,9 @@ export function startAutosave() {
   setInterval(() => {
     if (pending.size) doFlush()
   }, 30000)
-  window.addEventListener('blur', () => doFlush())
-  window.addEventListener('pagehide', () => doFlush())
-  window.__flushNow = () => doFlush()
+  window.addEventListener('blur', () => autosave.flushAll())
+  window.addEventListener('pagehide', () => autosave.flushAll())
+  window.__flushNow = () => autosave.flushAll()
 }
 
 /** 工作打开时装配码字统计钩子（prevCounts: Map<chapterId, 字数>） */

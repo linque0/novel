@@ -15,7 +15,7 @@ const targets = computed(() => [
   ...work.liveCharacters.map((c) => ({ label: '人物 · ' + c.name, value: c.id })),
   ...work.mubu.filter((c) => !c.deletedAt).map((c) => ({ label: '设定 · ' + (c.text || '').slice(0, 40), value: c.id })),
 ])
-const sourceNames={chapter:'正文',mubu:'设定',olnode:'大纲',character:'人物',relation:'关系',snippet:'灵感',annotation:'批注',asset:'附件',outline:'旧版大纲',lore:'旧版设定',volume:'卷',work:'作品',lorecat:'分类'}
+const sourceNames={chapter:'正文',mubu:'设定',olnode:'大纲',outlineconnection:'大纲连线',character:'人物',relation:'人物关系',lorelink:'条目关联',snippet:'灵感',annotation:'批注',asset:'附件',outline:'旧版大纲',lore:'旧版设定',volume:'卷',work:'作品',lorecat:'分类'}
 async function run(fn) {
   error.value = ''
   try {

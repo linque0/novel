@@ -3,7 +3,7 @@
 import TaskLauncher from './ai/TaskLauncher.vue'
 import OIcon from './OIcon.vue'
 import { computed, ref, watch, nextTick } from 'vue'
-import { NPopover, NDropdown } from 'naive-ui'
+import { NPopover } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { popOut } from '../services/panelwindows'
@@ -16,31 +16,9 @@ const work = useWorkStore()
 const ui = useUiStore()
 const editorEl = ref(null)
 const canvasRef = ref(null)
-/* 赤月戏：模块条上的「整理」「＋模块」走画布已有动作与数据 */
+/* 赤月戏：模块条上的「整理」走画布已有动作与数据 */
 function tidyCanvas() {
   canvasRef.value?.tidyAll?.()
-}
-const CRIMSON_MODULE_OPTS = [
-  { label: '事件', key: 'event' },
-  { label: '便签', key: 'note' },
-  { label: '文本框', key: 'textbox' },
-  { label: '容器', key: 'container' }
-]
-function addCrimsonModule(kind) {
-  const scope = work.canvasPrefs.scopeId && work.liveOlnodes().some((n) => n.id === work.canvasPrefs.scopeId && n.kind === 'container')
-    ? work.canvasPrefs.scopeId
-    : null
-  const siblings = work.olnodeChildren(scope)
-  const size = kind === 'textbox' ? { w: 180, h: 64 } : kind === 'container' ? {} : { w: 224, h: 154 }
-  const row = work.olnodeAdd(scope, {
-    kind,
-    title: kind === 'container' ? '新容器' : '',
-    canvasX: 60 + (siblings.length % 4) * 240,
-    canvasY: 40 + Math.floor(siblings.length / 4) * 180,
-    ...size
-  })
-  work.selOlnodeId = row.id
-  work.canvasFocusTick++
 }
 const crimsonVolume = computed(() => work.liveVolumes.find(v => v.id === work.selVolumeId)?.title || work.liveVolumes[0]?.title || '故事大纲')
 /* 赤月戏：模块条上的「独立窗口」走与「更多 → 拆窗」相同的真实动作 */
@@ -154,15 +132,15 @@ function onCtx(e) {
           <button :class="{ on: work.outlineView === 'text' }" @click="work.outlineView = 'text'">文本视图</button>
         </div>
         <button class="crimson-bar-button" type="button" title="整理画布模块（固定模块除外）" @click="tidyCanvas">整理</button>
-        <NDropdown trigger="click" :options="CRIMSON_MODULE_OPTS" @select="addCrimsonModule">
-          <button class="crimson-bar-button primary" type="button" title="在画布上新建模块">＋ 模块</button>
-        </NDropdown>
         <button class="crimson-bar-button" type="button" title="把大纲拆成独立窗口" @click="popOutline">独立窗口 ↗</button>
       </div>
     </Teleport>
 
-    <div class="outline-body" :class="{ 'crimson-outline-layout': ui.skin === 'crimson' }">
-      <aside v-if="ui.skin === 'crimson'" class="crimson-outline-directory">
+    <div class="outline-body" :class="{ 'crimson-outline-layout': ui.skin === 'crimson', 'side-hidden': ui.skin === 'crimson' && !ui.outlineSideOpen }">
+      <button v-if="ui.skin === 'crimson' && !ui.outlineSideOpen" class="ol-side-rail crimson" type="button" title="展开故事结构" @click="ui.setPref('outlineSideOpen', true)">
+        <OIcon name="caret-right" :size="12" /><span class="rail-text">故事结构</span>
+      </button>
+      <aside v-if="ui.skin === 'crimson'" v-show="ui.outlineSideOpen" class="crimson-outline-directory">
         <OutlineSidebar />
       </aside>
       <section class="outline-main" :class="{ 'crimson-outline-main': ui.skin === 'crimson' }">

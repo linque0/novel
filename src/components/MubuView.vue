@@ -385,11 +385,6 @@ function toggleFold(row) {
   work.mubuToggleFold(row.node.id)
   ver.value++
 }
-function foldAll(v) {
-  work.mubuFoldAll(v)
-  ver.value++
-}
-
 /* ---------- 节点复制 / 剪切 / 粘贴（子树） ---------- */
 function collectTree(n) {
   const item = { text: n.text || '', html: n.html ?? null, fold: !!n.fold, children: [] }
@@ -735,10 +730,6 @@ function runCtx(fn) {
   closeCtx()
   ver.value++
 }
-function ctxRow() {
-  return visible.value.find((r) => r.node.id === ctx.rowId) || visible.value[0]
-}
-
 /* 发送给恍然梦（方案 §五.3）：对选中幕布节点生成新增条目草案或扩写草案（diff 确认后写入） */
 const AI_UNSET_HINT = '恍然梦未配置：请先在设置中完成恍然梦配置'
 function aiLoreExpand() {

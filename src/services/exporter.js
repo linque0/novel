@@ -24,11 +24,6 @@ export async function restoreBackup(arrayBuffer) {
   await importBackupJson(text)
 }
 
-export async function exportBook(work, volumes, chapters, asMarkdown) {
-  const text = await buildBookText(work, volumes, chapters, asMarkdown)
-  return saveTextFile(`${work.title || '未命名作品'}.${asMarkdown ? 'md' : 'txt'}`, text)
-}
-
 /* ---------- v1.0.4：按章节勾选导出 + docx ---------- */
 
 export async function exportBookWithFilter(work, volumes, chapters, fmt, onlyIds) {

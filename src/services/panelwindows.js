@@ -41,11 +41,6 @@ function keyOf(workId, type, entityId) {
   return `${workId}:${type}:${entityId || '*'}`
 }
 
-export function usePanels() {
-  ensureListen()
-  return { popped }
-}
-
 export function isPopped(work, type, entityId) {
   if (!work?.work) return false
   ensureListen()

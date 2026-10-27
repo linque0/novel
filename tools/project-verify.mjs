@@ -10,9 +10,9 @@ if(!seed?.ok)throw new Error(JSON.stringify(seed))
 await c.evalx(`window.__bookFixture=${JSON.stringify(seed.books[0])}`)
 const results=[]
 async function test(name,body){const value=await c.evalx(`(async()=>{const f=window.__bookFixture,db=window.__ns.db;${body}})()`);results.push({name,ok:value===true});console.log((value===true?'PASS ':'FAIL ')+name+(value===true?'':' '+JSON.stringify(value)))}
-await test('v11 source snapshot and complete generation publication',`
+await test('source snapshot includes entry associations and publishes complete generation',`
  const r=await import('/src/db/project-repo.js');window.__bookRepo=r;window.__bookSource=await r.readSourceSnapshot(f.workId);const p=await r.ensureProjection(f.workId);window.__bookProjection=p;
- return db.verno===11&&['chapter','mubu','olnode','character','relation','snippet','annotation','asset'].every(t=>p.index.counts[t]>0)&&p.index.issues.some(i=>i.type==='unparsed-asset');
+ return Array.isArray(window.__bookSource.lorelinks)&&['chapter','mubu','olnode','character','relation','snippet','annotation','asset'].every(t=>p.index.counts[t]>0)&&p.index.issues.some(i=>i.type==='unparsed-asset');
 `)
 await test('read model incremental reuse and ancestor rename',`
  const {ensureProjection}=window.__bookRepo;const old=window.__bookProjection,chapter=old.docs.find(d=>d.sourceId===f.c1);await db.mubu.update(f.loreId,{text:'世界规则'});const p=await ensureProjection(f.workId);window.__bookProjection=p;

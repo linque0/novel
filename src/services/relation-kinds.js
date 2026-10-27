@@ -21,10 +21,6 @@ export function relIconFor(label) {
   return (REL_PRESETS.find((p) => p.label === label) || {}).icon || 'link'
 }
 
-export function relReverseFor(label) {
-  return (REL_PRESETS.find((p) => p.label === label) || {}).reverse || ''
-}
-
 export function relColor(label) {
   return tagColor(label || '关联')
 }

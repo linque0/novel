@@ -5,7 +5,11 @@ import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { useAiStore } from '../stores/ai'
 
-const props = defineProps({ editor: { type: Object, required: true }, compact: { type: Boolean, default: false } })
+const props = defineProps({ editor: { type: Object, required: true }, compact: { type: Boolean, default: false },paperControls:{type:Boolean,default:false},bookmarkControl:{type:Boolean,default:true} })
+const toolbar=ref(null),toolbarWidth=ref(0)
+const isCompact=computed(()=>props.compact||props.paperControls&&toolbarWidth.value<1100)
+const paperInMore=computed(()=>props.paperControls&&toolbarWidth.value<720)
+let widthObserver
 const work = useWorkStore()
 const ai = useAiStore()
 
@@ -13,6 +17,7 @@ const tick = ref(0)
 const onTr = () => tick.value++
 props.editor.on('transaction', onTr)
 onBeforeUnmount(() => props.editor.off('transaction', onTr))
+onBeforeUnmount(()=>widthObserver?.disconnect())
 
 const SIZES = ['12', '14', '15', '16', '18', '20', '24', '28', '32', '40'].map((s) => ({ label: s + ' 号', value: s }))
 const HIGHLIGHTS = ['#fff3a3', '#ffd6a5', '#ffa8a8', '#b8f2c9', '#a8d8ff', '#e0c3fc']
@@ -74,6 +79,7 @@ function aiPlotBranch() {
 }
 
 onMounted(() => {
+  if(props.paperControls){widthObserver=new ResizeObserver(entries=>{toolbarWidth.value=entries[0].contentRect.width});widthObserver.observe(toolbar.value)}
   if (!ai.loaded) ai.loadSettings() // 保障入口置灰判定基于已装载的配置（幂等）
 })
 function applyLink() {
@@ -110,7 +116,7 @@ const isActive = (name, attrs) => {
 </script>
 
 <template>
-  <div class="editor-toolbar" :class="{ compact }" @click="refocus">
+  <div ref="toolbar" class="editor-toolbar" :class="{compact:isCompact,'has-paper-controls':paperControls}" @click="refocus">
     <button class="tb" title="撤销" @click="chain().undo().run()">↶</button>
     <button class="tb" title="重做" @click="chain().redo().run()">↷</button>
     <span class="tb-sep" />
@@ -121,7 +127,7 @@ const isActive = (name, attrs) => {
     <button class="tb" :class="{ on: isActive('strike') }" title="删除线" @click="chain().toggleStrike().run()"><s>S</s></button>
     <span class="tb-sep" />
 
-    <template v-if="!compact">
+    <template v-if="!isCompact">
       <button class="tb" :class="{ on: isActive('paragraph') }" title="正文" @click="chain().setParagraph().run()">正文</button>
       <button class="tb" :class="{ on: isActive('heading', { level: 1 }) }" title="标题一" @click="chain().toggleHeading({ level: 1 }).run()">H1</button>
       <button class="tb" :class="{ on: isActive('heading', { level: 2 }) }" title="标题二" @click="chain().toggleHeading({ level: 2 }).run()">H2</button>
@@ -184,11 +190,12 @@ const isActive = (name, attrs) => {
         <NButton v-if="isActive('link')" size="small" @click="removeLink">移除</NButton>
       </div>
     </NPopover>
-    <NPopover v-if="compact" trigger="click" :show-arrow="false" placement="bottom-start">
+    <NPopover v-if="isCompact" trigger="click" :show-arrow="false" placement="bottom-start">
       <template #trigger>
-        <button class="tb" title="更多格式：段落、对齐、列表、引用、清除与恍然梦">更多格式 ⌄</button>
+        <button class="tb" :title="paperInMore ? '更多格式：纸面、段落、对齐、列表、引用、清除与恍然梦' : '更多格式：段落、对齐、列表、引用、清除与恍然梦'">更多格式 ⌄</button>
       </template>
       <div class="tb-more">
+        <span v-if="paperInMore" class="tb-paper-in-more" @click.stop><slot name="paper" /></span>
         <button class="tb" :class="{ on: isActive('paragraph') }" title="正文" @click="chain().setParagraph().run()">正文</button>
         <button class="tb" :class="{ on: isActive('heading', { level: 1 }) }" title="标题一" @click="chain().toggleHeading({ level: 1 }).run()">H1</button>
         <button class="tb" :class="{ on: isActive('heading', { level: 2 }) }" title="标题二" @click="chain().toggleHeading({ level: 2 }).run()">H2</button>
@@ -207,7 +214,7 @@ const isActive = (name, attrs) => {
         <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
       </div>
     </NPopover>
-    <template v-if="!compact">
+    <template v-if="!isCompact">
       <span class="tb-sep" />
       <button class="tb" :class="{ on: isActive({ textAlign: 'left' }) }" title="左对齐" @click="chain().setTextAlign('left').run()">左</button>
       <button class="tb" :class="{ on: isActive({ textAlign: 'center' }) }" title="居中" @click="chain().setTextAlign('center').run()">中</button>
@@ -223,15 +230,18 @@ const isActive = (name, attrs) => {
     </template>
     <button
       class="tb"
+      v-if="bookmarkControl"
+      data-action="bookmark"
       :class="{ on: bmOn }"
       :title="bmOn ? '移除书签' : '收藏本书签'"
       @click="toggleBm"
     ><OIcon :name="bmOn ? 'star-filled' : 'star'" :size="14" /></button>
-    <template v-if="!compact">
+    <template v-if="!isCompact">
       <span class="tb-sep" />
       <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
     </template>
 
+    <span v-if="paperControls&&!paperInMore" class="tb-paper-direct" @click.stop><slot name="paper" /></span>
     <!-- 顶栏右端：章节状态 / 字数 / 历史（编辑皮肤由 EditorPane 注入；原版留在自己的 .editor-head） -->
     <slot name="bar-end" />
   </div>

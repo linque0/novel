@@ -1,6 +1,6 @@
 <script setup>
 /* 通用大纲提案：固定生成锚点、空 edge 不连线，整套应用与撤销走作品 store。 */
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { NButton, NTag } from 'naive-ui'
 import OIcon from '../OIcon.vue'
 import ProposalExtras from './ProposalExtras.vue'

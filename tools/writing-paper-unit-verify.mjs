@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict'
+import {normalizeWritingPaper,saveWritingPaperPreference} from '../src/services/writing-paper.js'
+const state=()=>({writingPaperStyle:'booklet',writingPaperSaving:false})
+let passed=0
+async function test(name,fn){await fn();passed++;console.log('PASS '+name)}
+await test('missing or unsupported saved values fall back without affecting other preferences',()=>{assert.equal(normalizeWritingPaper(undefined),'booklet');assert.equal(normalizeWritingPaper('unknown'),'booklet');assert.equal(normalizeWritingPaper('manuscript'),'manuscript')})
+await test('appearance is applied and broadcast only after persistence succeeds',async()=>{const s=state(),events=[];let finish;const pending=saveWritingPaperPreference(s,'hardcover',{write:row=>new Promise(r=>{events.push(row);finish=r}),notify:()=>events.push('broadcast')});assert.equal(s.writingPaperStyle,'booklet');assert.equal(s.writingPaperSaving,true);assert.deepEqual(events,[{key:'writingPaperStyle',value:'hardcover'}]);finish();assert.equal(await pending,true);assert.equal(s.writingPaperStyle,'hardcover');assert.equal(s.writingPaperSaving,false);assert.equal(events.at(-1),'broadcast')})
+await test('failed writes retain the old appearance, clear busy and never broadcast',async()=>{const s=state();let calls=0;await assert.rejects(saveWritingPaperPreference(s,'manuscript',{write:async()=>{throw new Error('disk failure')},notify:()=>calls++}),/disk failure/);assert.equal(s.writingPaperStyle,'booklet');assert.equal(s.writingPaperSaving,false);assert.equal(calls,0)})
+await test('a pending selection cannot be overwritten by repeated clicks',async()=>{const s=state();let finish,calls=0;const env={write:()=>{calls++;return new Promise(r=>finish=r)},notify:()=>{}};const first=saveWritingPaperPreference(s,'manuscript',env);assert.equal(await saveWritingPaperPreference(s,'hardcover',env),false);finish();await first;assert.equal(calls,1);assert.equal(s.writingPaperStyle,'manuscript')})
+console.log(`${passed}/${passed} paper preference checks passed`)

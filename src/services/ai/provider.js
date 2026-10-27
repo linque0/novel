@@ -1,5 +1,5 @@
 /**
- * services/ai/provider.js — 模型调用层（docs/AI助手接入方案.md §三/§七）
+ * services/ai/provider.js — 模型调用层
  *
  * 设计要点：
  * - 仅用 fetch + ReadableStream 实现 SSE 流式解析，零新依赖

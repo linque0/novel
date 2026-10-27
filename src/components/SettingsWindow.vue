@@ -8,10 +8,13 @@
  *   恢复完成后广播 db-restored 全员整体重载。
  */
 import { h, ref, onMounted, watch, computed } from 'vue'
-import { NButton, NSelect, NTag, NCheckbox } from 'naive-ui'
+import { NButton, NSelect, NTag, NCheckbox, NSwitch } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
+import WritingPaperPicker from './WritingPaperPicker.vue'
+import WritingPaperPreview from './WritingPaperPreview.vue'
 import AiSettings from './ai/AiSettings.vue'
+import KnowledgeModelSettings from './ai/KnowledgeModelSettings.vue'
 import ImportDialog from './ImportDialog.vue'
 import ExportDialog from './ExportDialog.vue'
 import TrashModal from './TrashModal.vue'
@@ -21,8 +24,6 @@ import { useUiStore, FONT_MAP, LATIN_MAP } from '../stores/ui'
 import { backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles, getDataLocation, pickDataDir, openDataFolder, moveDataDir, cleanOldLocation, openOldFolder, clearDataPointer } from '../services/fileio'
 import { broadcastAppEvent } from '../services/appbus'
-import gravityPlanet from '../assets/skins/gravity-planet.png'
-import glazeRibbon from '../assets/skins/glaze-ribbon.png'
 import crimsonSettings from '../assets/skins/crimson/settings.webp'
 
 const ui = useUiStore()
@@ -30,6 +31,7 @@ const ui = useUiStore()
 const PAGES = [
   { key: 'appearance', icon: '外', label: '外观', desc: '主题 / 字体 / 字号' },
   { key: 'ai', icon: '模', label: '模型设置', desc: '供应商预设 / 模型 / 参数' },
+  { key: 'knowledge', icon: '知', label: '知识库模型', desc: '向量模型 / 语义检索' },
   { key: 'data', icon: '数', label: '数据', desc: '导入导出 / 备份 / 存储' },
   { key: 'about', icon: '关', label: '关于', desc: '统计 / 手册 / 标语' }
 ]
@@ -43,10 +45,12 @@ const crimsonShellStyle = computed(() => ui.skin === 'crimson'
   : null)
 
 function resetAppearance() {
+  ui.setWritingPaperStyle('booklet').catch(e=>window.$msg?.error('纸面未能恢复默认：'+e.message))
   ui.setPref('editorFont', 'song')
   ui.setPref('editorLatin', 'none')
   ui.setPref('fontSize', 17)
   ui.setPref('theme', 'xuan')
+  ui.setPref('topbarAutoHide', false)
 }
 
 function closeWindow() {
@@ -216,7 +220,7 @@ async function clearStalePointer() {
       </header>
       <div class="crimson-settings-bar">
         <div class="crimson-module-title"><h1>偏好设置</h1><span>纸与光 · 适合你的创作空间</span></div>
-        <button type="button" class="crimson-bar-button" @click="resetAppearance">恢复默认</button>
+        <button type="button" class="crimson-bar-button" :disabled="ui.writingPaperSaving" @click="resetAppearance">恢复默认</button>
       </div>
     </template>
     <div v-else class="sw-head">
@@ -246,16 +250,25 @@ async function clearStalePointer() {
         <div v-if="ui.skin === 'crimson'" class="crimson-settings-mark" aria-hidden="true">金屏夜梅<small>琳派折景</small></div>
       </nav>
 
-      <section class="sw-content" :class="{ 'sw-appearance': page === 'appearance' }">
+      <section class="sw-content" :class="{ 'sw-appearance': page === 'appearance' }" :data-paper-settings="page==='appearance'||undefined">
         <!-- 外观 -->
         <template v-if="page === 'appearance'">
           <div class="sw-appearance-controls">
           <h2 class="sw-h serif">外观</h2>
+          <NButton v-if="ui.skin!=='crimson'" size="small" quaternary :disabled="ui.writingPaperSaving" @click="resetAppearance">恢复默认</NButton>
           <p class="sw-desc">皮肤、主题、字体与字号，改动即时生效并同步到全部窗口</p>
           <div class="sw-card">
             <div class="sw-row">
               <div class="sw-row-main"><b>工坊皮肤</b><i>书架、创作工作台与独立窗口统一切换</i></div>
               <SkinPicker />
+            </div>
+            <div class="sw-row sw-paper-row">
+              <div class="sw-row-main"><b>正文纸面装帧</b><i>跟随皮肤明暗，切换不改变文字排版</i></div>
+              <WritingPaperPicker settings />
+            </div>
+            <div class="sw-row">
+              <div class="sw-row-main"><b>默认隐藏顶栏</b><i>鼠标移至顶部展开，可随时固定。</i></div>
+              <NSwitch :value="ui.topbarAutoHide" aria-label="默认隐藏顶栏" @update:value="value => ui.setPref('topbarAutoHide', value)" />
             </div>
             <div class="sw-row sw-theme-row">
               <div class="sw-row-main"><b>原版配色主题</b><i>宣纸 / 羊皮纸 / 暗夜书房，切回原版时使用</i></div>
@@ -281,16 +294,7 @@ async function clearStalePointer() {
             </div>
           </div>
           </div>
-          <aside v-if="ui.skin === 'crimson'" class="crimson-preview-paper" aria-label="正文字体预览">
-            <div class="paper-running"><span>排版预览</span><span>01</span></div>
-            <h2>第一章 · 初雪</h2>
-            <p :style="{ fontFamily: 'var(--editor-font)', fontSize: ui.fontSize + 'px' }">穹顶大厅的钟声在雾中回荡了十二下。窗外的雪落得很轻。</p>
-            <span class="crimson-preview-folio">纸白 · 墨黑 · 旧金</span>
-          </aside>
-          <aside v-else-if="ui.isStudioSkin" class="gravity-type-preview" aria-label="正文字体预览">
-            <div class="gravity-preview-art"><img :src="ui.skin === 'glaze' ? glazeRibbon : ui.skin === 'crimson' ? crimsonSettings : gravityPlanet" alt="" /><span>阅读预览</span></div>
-            <div class="gravity-preview-copy" :style="{ fontFamily: 'var(--editor-font)', fontSize: ui.fontSize + 'px' }"><small>小说工坊 · 创作片刻</small><h3>第一章　初雪</h3><p>穹顶大厅的钟声在雾中回荡了十二下。</p><p>夜色漫过舷窗，远处的星辰缓缓亮起。她翻开手边的书，故事便有了新的引力。</p><small>跟随当前中文字体、西文字体与字号 · {{ ui.fontSize }} px</small></div>
-          </aside>
+          <WritingPaperPreview />
         </template>
 
         <!-- 模型设置 -->
@@ -299,6 +303,15 @@ async function clearStalePointer() {
           <p class="sw-desc">多供应商预设：连接、模型与生成参数，改动即时生效</p>
           <div class="sw-card sw-card-ai">
             <AiSettings />
+          </div>
+        </template>
+
+        <!-- 知识库模型：向量模型从供应商参数中独立出来 -->
+        <template v-else-if="page === 'knowledge'">
+          <h2 class="sw-h serif">知识库模型</h2>
+          <p class="sw-desc">语义检索使用的向量模型；连接跟随当前供应商预设</p>
+          <div class="sw-card sw-card-ai">
+            <KnowledgeModelSettings @go-ai="page = 'ai'" />
           </div>
         </template>
 

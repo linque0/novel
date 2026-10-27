@@ -328,7 +328,7 @@ body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .cr
 body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-two) .crimson-stats,
 body[data-skin='crimson'] .crimson-story:has(.crimson-main-title.title-long) .crimson-stats { top: 388px; }
 
-/* 书封对象：纸板书 + 书口 + 投影 */
+/* 书封位置与点击区域。立体书壳的姿态独立于舞台入场动画。 */
 body[data-skin='crimson'] .crimson-book-stage {
   position: absolute;
   z-index: 3;
@@ -344,7 +344,7 @@ body[data-skin='crimson'] .crimson-book-stage::after {
   bottom: -28px;
   height: 24px;
   border-radius: 50%;
-  background: #17454555;
+  background: #15191855;
   filter: blur(8px);
   z-index: -1;
 }
@@ -356,136 +356,109 @@ body[data-skin='crimson'] .crimson-book-object {
   height: 255px;
   padding: 0;
   border: 0;
-  background: #25191a;
-  border-radius: 1px 5px 5px 1px;
-  overflow: hidden;
-  box-shadow: inset 2px 0 3px #fff4, 9px 10px 20px #0008;
-  transform: rotateY(-13deg) rotateZ(5deg);
-  transform-style: preserve-3d;
-  transition: transform .3s, box-shadow .3s;
+  background: none;
+  overflow: visible;
   cursor: pointer;
 }
-/* 书脊：设计稿里从书封右缘斜切出去的一道纸口 */
-body[data-skin='crimson'] .crimson-book-spine {
-  position: absolute;
-  z-index: 0;
-  left: 100%;
-  top: 4px;
-  width: 10px;
-  height: calc(100% - 5px);
-  background: repeating-linear-gradient(#e6d8bc 0, #e6d8bc 1px, #b7a991 2px, #f2e5cc 3px);
-  transform-origin: left;
-  transform: skewY(-12deg);
-  pointer-events: none;
-}
-body[data-skin='crimson'] .crimson-book-object:hover { transform: rotateY(-13deg) rotateZ(5deg) translateY(-4px); box-shadow: inset 2px 0 3px #fff4, 11px 14px 24px #000a; }
-body[data-skin='crimson'] .crimson-book-object::after {
-  content: '';
-  position: absolute;
-  z-index: 2;
-  inset: 0;
-  background: linear-gradient(90deg, #0007, transparent 7%, #fff2 9%, transparent 12%), linear-gradient(#0005, transparent 45%, #0006);
-  pointer-events: none;
-}
-body[data-skin='crimson'] .crimson-book-object .crimson-cover { position: absolute; inset: 0; }
 
-/* 书封（生成式：款式配色 + 纸面 + 竖排/两行题名 + 作者印） */
-body[data-skin='crimson'] .crimson-cover {
+/* 款式色供封面、封底与书脊共享，保留既有六款配色。 */
+body[data-skin='crimson'] :is(.crimson-cover, .crimson-book-shell) {
   --cc: #2f4a6b;
   --cc-ink: #f4ead6;
+}
+/* 藏书级精装：六款哑光布面，大小书封共用压印月纹。 */
+body[data-skin='crimson'] .crimson-cover {
   position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
-  padding: 20px 16px 14px;
-  background:
-    linear-gradient(160deg, color-mix(in srgb, var(--cc) 78%, #000), var(--cc) 55%, color-mix(in srgb, var(--cc) 88%, #000)),
-    var(--cc);
+  container-type: size;
+  background: var(--cc);
   color: var(--cc-ink);
   overflow: hidden;
-  box-shadow: inset 0 0 0 1px #ffffff26, inset 6px 0 0 #0000002e;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--cc-ink) 11%, transparent);
+}
+body[data-skin='crimson'] .crimson-cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(0deg, #ffffff08 0 .5px, transparent .5px 3px),
+    repeating-linear-gradient(90deg, #00000006 0 .5px, transparent .5px 3px);
+  pointer-events: none;
 }
 body[data-skin='crimson'] .crimson-cover-moon {
   position: absolute;
   z-index: 0;
-  top: 20px;
-  right: 17px;
-  width: 72px;
-  height: 72px;
+  top: clamp(12px, 10cqw, 19px);
+  right: clamp(12px, 10cqw, 19px);
+  width: 25%;
+  aspect-ratio: 1;
   border-radius: 50%;
-  background: radial-gradient(circle at 38% 35%, #d06a4f, #8e342c 62%, #64231f);
-  box-shadow: 0 0 26px #b64b3d66;
-  opacity: .9;
+  background: color-mix(in srgb, var(--cc-ink) 7%, var(--cc));
+  box-shadow: inset .7px .9px 1px #00000025, inset -.6px -.8px 1px #ffffff17;
 }
-body[data-skin='crimson'] .crimson-cover-hills {
+body[data-skin='crimson'] .crimson-cover-moon::after {
+  content: '';
   position: absolute;
-  z-index: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 96px;
-  background:
-    radial-gradient(ellipse at 18% 110%, #0b12102e 0 58%, transparent 59%),
-    radial-gradient(ellipse at 82% 112%, #0b121044 0 62%, transparent 63%),
-    linear-gradient(0deg, #0b121055, transparent 70%);
+  inset: 16%;
+  border: 1px solid color-mix(in srgb, var(--cc-ink) 10%, transparent);
+  border-radius: 50%;
+  clip-path: inset(0 0 46% 0);
   pointer-events: none;
 }
-body[data-skin='crimson'] .crimson-cover-seal {
-  position: absolute;
-  z-index: 2;
-  right: 12px;
-  bottom: 13px;
-  display: grid;
-  place-items: center;
-  width: 25px;
-  height: 25px;
-  border: 1px solid #d9a96f9a;
-  color: #f0d7b1;
-  font: 10px/1.15 var(--crimson-serif);
-  letter-spacing: 1px;
-  background: #7d332b88;
-}
-body[data-skin='crimson'] .crimson-cover.k-note { --cc: #e6d9bd; --cc-ink: #403b30; }
-body[data-skin='crimson'] .crimson-cover.k-cedar { --cc: #3f5b4c; }
-body[data-skin='crimson'] .crimson-cover.k-violet { --cc: #5b4666; }
-body[data-skin='crimson'] .crimson-cover.k-claret { --cc: #6f2f2c; }
-body[data-skin='crimson'] .crimson-cover.k-ink { --cc: #23282a; --cc-ink: #ece0c8; }
-body[data-skin='crimson'] .crimson-cover-rule {
-  position: absolute;
-  inset: 8px;
-  border: 1px solid color-mix(in srgb, var(--cc-ink) 30%, transparent);
-  pointer-events: none;
-}
+body[data-skin='crimson'] :is(.crimson-cover, .crimson-book-shell).k-note { --cc: #e6d9bd; --cc-ink: #403b30; }
+body[data-skin='crimson'] :is(.crimson-cover, .crimson-book-shell).k-cedar { --cc: #3f5b4c; }
+body[data-skin='crimson'] :is(.crimson-cover, .crimson-book-shell).k-violet { --cc: #5b4666; }
+body[data-skin='crimson'] :is(.crimson-cover, .crimson-book-shell).k-claret { --cc: #6f2f2c; }
+body[data-skin='crimson'] :is(.crimson-cover, .crimson-book-shell).k-ink { --cc: #23282a; --cc-ink: #ece0c8; }
 body[data-skin='crimson'] .crimson-cover-title {
-  position: relative;
+  position: absolute;
   z-index: 1;
-  font: 500 30px/1.22 var(--crimson-kai);
-  letter-spacing: 4px;
-  text-shadow: 0 2px 8px #0008;
+  top: 27%;
+  left: 12%;
+  right: 12%;
+  max-height: 54%;
+  font: 400 clamp(19px, 16cqw, 28px)/1.4 var(--crimson-serif);
+  letter-spacing: 1px;
+  text-shadow: none;
   overflow: hidden;
+  text-align: left;
+  overflow-wrap: anywhere;
 }
-body[data-skin='crimson'] .crimson-cover.title-vertical .crimson-cover-title { writing-mode: vertical-rl; align-self: flex-start; max-height: 100%; max-width: calc(100% - 36px); margin-top: 2px; letter-spacing: 6px; }
+body[data-skin='crimson'] .crimson-cover.title-vertical .crimson-cover-title {
+  top: 14%;
+  right: auto;
+  max-height: 68%;
+  writing-mode: vertical-rl;
+  font-size: clamp(21px, 18cqw, 31px);
+  line-height: 1.25;
+  letter-spacing: 4px;
+}
 body[data-skin='crimson'] .crimson-cover.title-two .crimson-cover-title,
 body[data-skin='crimson'] .crimson-cover.title-clamp .crimson-cover-title {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
 }
+body[data-skin='crimson'] .crimson-cover.title-clamp .crimson-cover-title { font-size: clamp(16px, 13cqw, 23px); }
+body[data-skin='crimson'] .crimson-cover.density-compact .crimson-cover-title { font-size: clamp(15px, 11.5cqw, 20px); }
+body[data-skin='crimson'] .crimson-cover.density-dense .crimson-cover-title { font-size: clamp(14px, 10cqw, 18px); }
 body[data-skin='crimson'] .crimson-cover-line { display: block; }
 body[data-skin='crimson'] .crimson-cover-author {
-  position: relative;
+  position: absolute;
   z-index: 1;
-  margin-top: auto;
-  font: 11px/1 'Microsoft YaHei';
-  letter-spacing: 3px;
-  opacity: .85;
+  left: 12%;
+  right: 12%;
+  bottom: 8%;
+  font: clamp(10px, 7cqw, 12px)/1.5 var(--crimson-serif);
+  letter-spacing: 1px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-body[data-skin='crimson'] .crimson-cover.is-mini { padding: 8px 7px 6px; }
-body[data-skin='crimson'] .crimson-cover.is-mini .crimson-cover-rule { inset: 4px; }
-body[data-skin='crimson'] .crimson-cover.is-mini :is(.crimson-cover-moon, .crimson-cover-hills, .crimson-cover-seal) { display: none; }
-body[data-skin='crimson'] .crimson-cover.is-mini .crimson-cover-title { font-size: 11px; letter-spacing: 1px; text-shadow: none; -webkit-line-clamp: 3; }
-body[data-skin='crimson'] .crimson-cover.is-mini.title-vertical .crimson-cover-title { writing-mode: vertical-rl; font-size: 12px; }
+body[data-skin='crimson'] .crimson-cover.is-mini .crimson-cover-moon { width: 40%; top: 18%; right: 18%; }
 
 /* 首章剧目卡（真实数据） */
 body[data-skin='crimson'] .crimson-chapter-card {
@@ -534,29 +507,51 @@ body[data-skin='crimson'] .crimson-program-list { min-height: 0; overflow-y: aut
 body[data-skin='crimson'] .crimson-program-list::-webkit-scrollbar { width: 6px; }
 body[data-skin='crimson'] .crimson-program-list::-webkit-scrollbar-thumb { background: #a8997580; border-radius: 3px; }
 body[data-skin='crimson'] .crimson-program-list::-webkit-scrollbar-track { background: transparent; }
-body[data-skin='crimson'] .crimson-work-row { position: relative; display: flex; align-items: center; border-bottom: 1px solid #65836e42; }
+body[data-skin='crimson'] .crimson-work-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: center;
+  border-bottom: 1px solid #65836e26;
+  transition: background-color 180ms;
+}
+body[data-skin='crimson'] .crimson-work-row:hover { background: #fff7e528; }
 body[data-skin='crimson'] .crimson-work-open {
   display: flex;
   align-items: center;
-  gap: 13px;
+  gap: 14px;
   width: 100%;
   min-width: 0;
-  padding: 19px 0;
+  min-height: 112px;
+  padding: 16px 0;
   border: 0;
   background: none;
   text-align: left;
   cursor: pointer;
-  transition: transform .2s, color .2s;
 }
-body[data-skin='crimson'] .crimson-work-open:hover { transform: translateX(-3px); color: #ae493a; }
-body[data-skin='crimson'] .crimson-work-open .crimson-cover.is-mini { flex: none; width: 48px; height: 67px; border-radius: 11px 0 0 0; box-shadow: 2px 3px 8px #0003; }
+body[data-skin='crimson'] .crimson-work-open:hover { color: inherit; }
 body[data-skin='crimson'] .crimson-work-copy { min-width: 0; flex: 1; }
-body[data-skin='crimson'] .crimson-work-copy h3 { font: 400 20px/1.35 var(--crimson-kai); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-body[data-skin='crimson'] .crimson-work-copy p { margin-top: 8px; font-size: 13px; color: var(--cs-muted); white-space: nowrap; }
-body[data-skin='crimson'] .crimson-work-open .arrow { flex: none; font-size: 17px; color: #a64b38; }
+body[data-skin='crimson'] .crimson-work-copy h3 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin: 0;
+  font: 400 18px/1.45 var(--crimson-serif);
+  overflow-wrap: anywhere;
+  overflow: hidden;
+}
+body[data-skin='crimson'] .crimson-work-copy p { margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--cs-muted); white-space: nowrap; }
+body[data-skin='crimson'] .crimson-work-open .arrow { display: none; }
 body[data-skin='crimson'] .crimson-work-menu { position: absolute; right: -6px; top: 8px; opacity: 0; transition: opacity .18s; }
 body[data-skin='crimson'] .crimson-work-row:hover .crimson-work-menu,
 body[data-skin='crimson'] .crimson-work-menu:focus-within { opacity: 1; }
+body[data-skin='crimson'] .crimson-work-row > .crimson-work-menu {
+  position: static;
+  justify-self: end;
+  width: 24px;
+  opacity: .65;
+}
+body[data-skin='crimson'] .crimson-work-row:is(:hover, :focus-within) > .crimson-work-menu { opacity: 1; }
 body[data-skin='crimson'] .crimson-book-stage .crimson-work-menu {
   position: absolute;
   z-index: 5;
@@ -646,7 +641,6 @@ body[data-skin='crimson'][data-stage-play='1'] .crimson-program { animation: cri
   body[data-skin='crimson'] .crimson-program-head h2 { font-size: 21px; }
   body[data-skin='crimson'] .crimson-work-open { padding: 13px 0; gap: 10px; }
   body[data-skin='crimson'] .crimson-work-copy h3 { font-size: 16px; }
-  body[data-skin='crimson'] .crimson-work-open .crimson-cover.is-mini { width: 38px; height: 53px; }
   body[data-skin='crimson'] .crimson-footer { padding: 0 18px; }
 }
 

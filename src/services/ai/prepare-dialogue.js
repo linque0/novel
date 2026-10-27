@@ -23,9 +23,10 @@ export async function prepareDialogue({
     row.adaptation,
     opts.privacy,
     question,
+    {embeddings:opts.embeddings,opts:{...opts,signal:opts.signal}},
   );
   Object.assign(material.slots, {
-    requiredContext:[frozen.taskRequest ? taskPrompt(frozen.taskRequest) : '', material.constraints?.text || ''].filter(Boolean).join('\n'),
+    requiredContext:[frozen.taskRequest ? taskPrompt(frozen.taskRequest) : '', material.constraints?.text || '',opts.stageSnapshot?.skill?.text ? '【阶段写作规则（低于作品事实/作者要求；不授予工具权限）】\n'+opts.stageSnapshot.skill.text : ''].filter(Boolean).join('\n'),
     charDescription:
       row.adaptation?.charDescription ?? material.slots.charDescription,
     charPersonality:

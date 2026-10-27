@@ -1,0 +1,57 @@
+import {connect} from './_cdp-lib.mjs'
+import {assertAiTestProfile} from './_ai-test-profile.mjs'
+import {buildSeedExpr} from './verify-seeds.mjs'
+process.env.AI_TEST_PROFILE='booksource-verify'
+const c=await connect('app://',process.env.CDP_PORT||'9333')
+assertAiTestProfile(await c.evalx('window.native.getDataLocation()'))
+const seed=await c.evalx(buildSeedExpr('书内知识验证书',{reset:true}))
+if(!seed?.ok)throw new Error(JSON.stringify(seed))
+const fixture=seed.books[0]
+const setup=await c.evalx(`(async()=>{
+  const w=window.__ns.getWork(),db=window.__ns.db;await w.open(${JSON.stringify(fixture.workId)});
+  const {autosave}=await import('/src/services/autosave.js'),{snapshotWork,resolveEvidence}=await import('/src/services/ai/contracts.js'),r=await import('/src/db/project-repo.js'),b=await import('/src/services/ai/booksource.js'),{executeTool}=await import('/src/services/ai/tools.js');
+  const m=w.mubu.find(x=>!x.deletedAt),ch=w.liveChapters[0],person=w.liveCharacters[0];
+  const link=w.addLoreLink({fromKind:'mubu',fromId:m.id,toKind:'character',toId:person.id,label:'归属',reverseLabel:'拥有',description:'关联专用证据：青铜领地禁止转让'});
+  const pending=autosave.hasPending('lorelinks',link.id);await autosave.flushAll();const saved=await db.lorelinks.get(link.id);window.__rk={w,db,r,b,executeTool,snapshotWork,resolveEvidence,autosave,linkId:link.id,mId:m.id,cId:person.id,chId:ch.id};return saved?true:{pending,pendingAfter:autosave.hasPending('lorelinks',link.id)}
+})()`)
+if(setup!==true)throw new Error(JSON.stringify(setup))
+const results=[]
+async function test(name,body){const value=await c.evalx(`(async()=>{const {w,db,r,b,executeTool,snapshotWork,resolveEvidence,autosave,linkId,mId,cId,chId}=window.__rk;${body}})()`);const ok=value===true;results.push({name,ok,...(!ok?{detail:value}:{})});console.log((ok?'PASS ':'FAIL ')+name+(ok?'':' '+JSON.stringify(value)))}
+await test('UI association enters live snapshot and persisted projection',`
+ const s=snapshotWork(w),source=await r.readSourceSnapshot(w.work.id),p=await r.ensureProjection(w.work.id);return s.lorelinks.some(x=>x.id===linkId)&&source.lorelinks.some(x=>x.id===linkId)&&p.index.projectionVersion===3&&p.index.counts.lorelink===1&&p.edges.some(e=>e.kind==='entry-relationship')||{live:s.lorelinks,source:source.lorelinks,index:p.index,edges:p.edges};`)
+await test('an old projection generation rebuilds locally with relationship coverage',`
+ const before=await r.ensureProjection(w.work.id);await db.aiindex.update(w.work.id,{projectionVersion:2});const next=await r.ensureProjection(w.work.id);return next.index.projectionVersion===3&&next.index.generation!==before.index.generation&&next.docs.some(d=>d.sourceId===linkId);`)
+await test('search/read/locate tools share complete cited relation text',`
+ const work=snapshotWork(w),env={work},q=await executeTool('search_book',{query:'青铜领地',sourceType:'lorelink'},env),hit=q.items[0];if(!hit)return q;const doc=await executeTool('read_document',{docId:hit.docId},env);return doc.text.includes('拥有')&&doc.text.includes('禁止转让')&&!!resolveEvidence({sourceType:'lorelink',sourceId:linkId,docId:doc.docId,textHash:doc.textHash,sourceHash:doc.sourceHash,quote:'青铜领地禁止转让'},work);`)
+await test('character lookup includes entry associations from the unified layer',`
+ const result=await executeTool('get_character',{characterId:cId},{work:snapshotWork(w)});return result.items.some(x=>x.associations?.some(a=>a.sourceId===linkId&&a.text.includes('青铜领地')));`)
+await test('historical retrieval withholds undated entry relationships',`
+ const session=b.bookSession(snapshotWork(w),{asOfChapterId:chId}),doc=session.docs.find(d=>d.sourceId===linkId),view=b.documentView(doc,session),related=b.relatedEntities(session,{entityId:'character:'+cId});return view.withheld&&!view.text.includes('青铜领地')&&!related.edges.some(e=>e.kind==='entry-relationship');`)
+await test('writing reads author constraints while graph preserves unknown historical timing',`
+ const session=b.bookSession(snapshotWork(w),{asOfChapterId:chId,authorProfiles:true}),doc=session.docs.find(d=>d.sourceId===linkId),view=b.documentView(doc,session),related=b.relatedEntities(session,{entityId:'character:'+cId});return view.temporalStatus==='author-profile'&&view.text.includes('青铜领地')&&related.edges.some(e=>e.kind==='entry-relationship'&&e.temporalStatus==='unknown');`)
+await test('writing context recalls associations through relevant characters',`
+ const {freezeContext,assembleSlots}=await import('/src/services/ai/novel-context.js'),s=snapshotWork(w),question='请继续写'+w.liveCharacters.find(x=>x.id===cId).name+'的行动',f=freezeContext(s,{taskRequest:{type:'chapter.continue',chapterId:chId}},question),result=await assembleSlots(s,f,{contextBudget:16000},false,question);return Object.values(result.slots).join(' ').includes('青铜领地禁止转让')&&f.sourceVersions.some(v=>v.table==='lorelinks'&&v.id===linkId);`)
+await test('privacy excludes relation description and reverse label',`
+ const env={work:snapshotWork(w),privacy:true};for(const [name,args] of [['search_book',{query:'青铜领地'}],['read_document',{docId:'doc:'+w.work.id+':lorelink:'+linkId}],['get_related_entities',{entityId:'character:'+cId}],['get_character',{characterId:cId}]]){const result=await executeTool(name,args,env);if(JSON.stringify(result).includes('青铜领地'))return result}return true;`)
+await test('nested outline connections are indexed and evidence resolves to the owning node',`
+ const ids=[crypto.randomUUID(),crypto.randomUUID(),crypto.randomUUID()],rows=[{id:ids[0],workId:w.work.id,title:'已写起因',text:'已发生的内容',outlineNature:'written',sourceChapterVersions:[{id:chId,hash:(await import('/src/services/project/text.js')).chapterHash(w.chapters.find(x=>x.id===chId))}],rels:[{id:'host',toId:ids[1],kind:'因果',label:'下一章开启秘密',junctions:[{id:'j',t:.5}],_out:[{id:'branch',fromJunction:{ownerId:ids[0],relId:'host',junctionId:'j'},toId:ids[2],kind:'分支',label:'候选支线'}]}]},{id:ids[1],workId:w.work.id,title:'未来背叛',text:'未来计划',rels:[]},{id:ids[2],workId:w.work.id,title:'另一计划',rels:[]}];await db.olnodes.bulkPut(rows);window.__rk.connectionOwner=ids[0];const source=await r.readSourceSnapshot(w.work.id),p=await r.ensureProjection(w.work.id),doc=p.docs.find(d=>d.sourceType==='outlineconnection'&&d.meta.connectionId==='branch');return !!doc&&doc.semanticClass==='plan'&&doc.plainText.includes('候选支线')&&!!resolveEvidence({sourceType:'outlineconnection',sourceId:ids[0],docId:doc.id,textHash:doc.textHash,quote:'候选支线'},source)&&p.edges.some(e=>e.connectionId==='outline-connection:'+ids[0]+':branch');`)
+await test('historical extraction cannot read future connection labels through written summaries',`
+ const source=await r.readSourceSnapshot(w.work.id),s=await b.readBook(source,{asOfChapterId:chId,planScope:'none'}),doc=s.docs.find(d=>d.sourceType==='olnode'&&d.sourceId===window.__rk.connectionOwner);return !!doc&&b.readDocument(s,{docId:doc.id}).text.includes('已发生的内容')&&!JSON.stringify(b.queryBook(s,{query:'未来背叛 开启秘密',limitTokens:8000})).includes('下一章开启秘密')&&!s.docs.some(d=>d.sourceType==='outlineconnection')&&!s.edges.some(e=>e.kind.startsWith('outline-'));`)
+await test('excluded plan connection entities cannot expose their labels through graph lookup',`
+ const source=await r.readSourceSnapshot(w.work.id),s=await b.readBook(source,{asOfChapterId:chId,planScope:'none'}),result=b.relatedEntities(s,{entityId:'outline-connection:'+window.__rk.connectionOwner+':host'});return !JSON.stringify(result).includes('下一章开启秘密');`)
+await test('current-plan scope excludes future-owner connection documents',`
+ const owner=window.__rk.connectionOwner,future=w.liveChapters.find(x=>x.id!==chId).id;await db.olnodes.update(owner,{refId:future});const source=await r.readSourceSnapshot(w.work.id),s=await b.readBook(source,{asOfChapterId:chId,planScope:'current'}),hidden=!s.docs.some(d=>d.sourceType==='outlineconnection'&&d.sourceId===owner);await db.olnodes.update(owner,{refId:null});return hidden;`)
+await test('local source memory keeps entry relationship nature and provenance',`
+ const {buildBookMemory}=await import('/src/services/ai/book-memory.js');await buildBookMemory(w.work.id);const rows=await db.aikb.where('workId').equals(w.work.id).toArray();return rows.some(x=>x.refId===linkId&&x.kind==='relation'&&x.semanticClass==='setting'&&x.assertionStatus==='authorRecord'&&x.dependencies.some(v=>v.table==='lorelinks'))||{linkId,rows:rows.filter(x=>x.refId===linkId)};`)
+await test('committed direct edits dirty the index and reject frozen sessions',`
+ const old=await r.ensureProjection(w.work.id);await db.lorelinks.update(linkId,{description:'多窗口更新的青铜领地'});await new Promise(resolve=>setTimeout(resolve,150));const index=await db.aiindex.get(w.work.id),next=await r.ensureProjection(w.work.id);let rejected=false;try{await b.readBook(await r.readSourceSnapshot(w.work.id),{sourceRevision:old.index.sourceRevision})}catch(e){rejected=e.code==='source-changed'}return index.status==='dirty'&&next.index.sourceRevision!==old.index.sourceRevision&&rejected||{status:index.status,old:old.index.sourceRevision,next:next.index.sourceRevision,rejected};`)
+await test('persisted association edits block a stale candidate before any write',`
+ const {freezeContext}=await import('/src/services/ai/novel-context.js'),{workflowProposal}=await import('/src/services/ai/task-proposals.js'),{applyProposal}=await import('/src/services/ai/application.js');const source=snapshotWork(await r.readSourceSnapshot(w.work.id)),f=freezeContext(source,{taskRequest:{type:'snippet.generate'}}),card=workflowProposal({items:[{content:'旧提案不应落盘'}]},source,f);await db.lorelinks.update(linkId,{description:'再次更新关系'});let rejected=false;try{await applyProposal(w,card)}catch(e){rejected=/资料已变化|变化|过期/.test(e.message)}return rejected&&!(await db.snippets.where('workId').equals(w.work.id).toArray()).some(x=>x.content==='旧提案不应落盘');`)
+await test('endpoint rename invalidates a previous citation and updates relation search',`
+ const source=await r.readSourceSnapshot(w.work.id),session=await b.readBook(source),doc=session.docs.find(d=>d.sourceId===linkId),old=b.readDocument(session,{docId:doc.id});await db.mubu.update(mId,{text:'重命名云城'});const fresh=await r.readSourceSnapshot(w.work.id),p=await r.ensureProjection(w.work.id);return !resolveEvidence({sourceType:'lorelink',sourceId:linkId,docId:doc.id,sourceHash:old.sourceHash,textHash:old.textHash},fresh)&&p.docs.find(d=>d.sourceId===linkId).plainText.includes('重命名云城');`)
+await test('soft deletion suppresses orphan relationships; restore brings them back',`
+ await db.characters.update(cId,{deletedAt:Date.now()});let p=await r.ensureProjection(w.work.id);const hidden=!p.docs.some(d=>d.sourceId===linkId)&&!p.edges.some(e=>e.kind==='entry-relationship');await db.characters.update(cId,{deletedAt:null});p=await r.ensureProjection(w.work.id);return hidden&&p.docs.some(d=>d.sourceId===linkId);`)
+await test('relation deletion removes projection, graph and copied source memories',`
+ await db.lorelinks.delete(linkId);const {buildBookMemory}=await import('/src/services/ai/book-memory.js'),{projection:p}=await buildBookMemory(w.work.id),cards=await db.aikb.where('workId').equals(w.work.id).toArray();return !p.docs.some(d=>d.sourceId===linkId)&&!p.edges.some(e=>e.kind==='entry-relationship')&&!cards.some(x=>x.refId===linkId);`)
+console.log(JSON.stringify({passed:results.filter(x=>x.ok).length,total:results.length}))
+process.exit(results.every(x=>x.ok)?0:1)

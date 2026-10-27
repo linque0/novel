@@ -5,6 +5,7 @@ import { ANNOTATION_KINDS, normalizeNoteColor, noteKindOf } from '../services/an
 import { useWorkStore } from '../stores/work'
 import { useAiStore } from '../stores/ai'
 import { uid } from '../db/database'
+import { useWritingStore } from '../stores/writing.js'
 import DLinkPicker from './DLinkPicker.vue'
 
 const props = defineProps({ editor: { type: Object, required: true } })
@@ -282,6 +283,10 @@ function aiPlotBranch() {
   ai.prepare('请基于当前选段帮助我创作。', {chapterId,selection:sel})
   close()
 }
+function writingTask(mode){
+  if(st.savedFrom!=null)props.editor.commands.setTextSelection({from:st.savedFrom,to:st.savedTo})
+  useWritingStore().open({mode,fresh:true}).catch(e=>window.$msg?.warning(e.message));close()
+}
 function run(fn) {
   fn()
   close()
@@ -522,6 +527,8 @@ defineExpose({ open, close })
       <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除关系链接</span></div>
 
       <div class="ctx-sep" />
+      <div class="ctx-item" @click="writingTask('insert')"><span>恍然梦 · 在此续写剧情</span></div>
+      <div v-if="!selEmpty()||st.savedFrom!=null" class="ctx-item" @click="writingTask('replace')"><span>恍然梦 · 改写选段</span></div>
       <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? '发送给恍然梦（锚点为当前章节）' : AI_UNSET_HINT" @click="ai.ready && aiPlotBranch()">
         <span>发送给恍然梦</span><span class="hint">梦</span>
       </div>

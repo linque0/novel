@@ -8,7 +8,7 @@ export const chapterHash = (ch) => hashContent(JSON.stringify([ch?.title, ch?.fm
 export const entityHash = rowHash
 export const namesOf = (c) => [c.name, ...(c.aliases || '').split(/[,，、/\s]+/)].filter(Boolean)
 export function snapshotWork(work) {
-  const snap = Object.fromEntries(['work', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'mubu', 'olnodes', 'lore', 'lorecats', 'snippets', 'annotations', 'assets', 'links'].map((key) => [key, clone(work[key] || (key === 'work' ? null : []))]))
+  const snap = Object.fromEntries(['work', 'volumes', 'chapters', 'outlines', 'characters', 'relations', 'lorelinks', 'mubu', 'olnodes', 'lore', 'lorecats', 'snippets', 'annotations', 'assets', 'links'].map((key) => [key, clone(work[key] || (key === 'work' ? null : []))]))
   snap.liveCharacters = snap.characters.filter((c) => !c.deletedAt)
   snap.liveChapters = snap.chapters.filter((c) => !c.deletedAt)
   snap.liveOlnodes = () => snap.olnodes.filter((c) => !c.deletedAt)
@@ -36,10 +36,6 @@ export function parseObject(raw) {
     if (!obj || typeof obj !== 'object' || Array.isArray(obj)) throw new Error('顶层应为对象')
     return obj
   } catch (e) { throw new JsonParseError(`JSON 解析失败：${e.message}`) }
-}
-export function requireArray(obj, key, min, max) {
-  if (!Array.isArray(obj[key]) || obj[key].length < min || obj[key].length > max) throw new JsonParseError(`${key} 必须有 ${min}–${max} 项`)
-  return obj[key]
 }
 export const string = (v, max = 20000) => typeof v === 'string' ? v.trim().slice(0, max) : ''
 
@@ -86,7 +82,10 @@ export function resolveEvidence(ref, work, { privacy = false } = {}) {
   if (!source || (table === 'works' ? source.id : source.workId) !== work.work.id) return null
   const sourceHash=type==='chapter'?chapterHash(source):entityHash(source)
   if(ref.sourceHash && ref.sourceHash!==sourceHash)return null
-  const doc=projectBook(work).docs.find((d)=>d.sourceTable===table&&d.sourceId===ref.sourceId&&(!ref.docId||d.id===ref.docId))
+  const candidates=projectBook(work).docs.filter((d)=>d.sourceTable===table&&d.sourceId===ref.sourceId&&(!ref.docId||d.id===ref.docId)&&(type!=='outlineconnection'||d.sourceType===type))
+  const matched=ref.quote?candidates.filter(d=>d.plainText.includes(string(ref.quote,1000))):candidates
+  if(type==='outlineconnection'&&matched.length!==1)return null
+  const doc=matched[0]||candidates[0]
   if(ref.docId&&!doc)return null
   if(ref.textHash&&ref.textHash!==doc?.textHash)return null
   const text = doc?.plainText ?? (type === 'chapter' ? plainChapter(source) : type === 'character' ? [source.name, source.content, ...Object.values(source.fields || {})].filter(Boolean).join('\n') : source.text || source.content || source.name || '')
@@ -95,5 +94,5 @@ export function resolveEvidence(ref, work, { privacy = false } = {}) {
   if (quote && ref.start != null && (!Number.isInteger(ref.start) || ref.start < 0 || text.slice(ref.start, ref.start + quote.length) !== quote)) return null
   const start=quote?(Number.isInteger(ref.start)&&text.slice(ref.start,ref.start+quote.length)===quote?ref.start:text.indexOf(quote)):null
   if(quote&&ref.start==null&&text.indexOf(quote,start+1)>=0)return null
-  return { sourceType: type, sourceId: source.id, sourceHash, label: source.title || source.name || (source.text || '').slice(0, 24), ...(privacy ? {} : { quote, start,docId:doc?.id,textHash:doc?.textHash }) }
+  return { sourceType: type, sourceId: source.id, sourceHash, label: source.title || source.name || (source.text || '').slice(0, 24) || doc?.title, ...(privacy ? {} : { quote, start,docId:doc?.id,textHash:doc?.textHash }) }
 }

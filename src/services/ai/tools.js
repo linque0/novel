@@ -1,16 +1,17 @@
 import { kbQuery } from './retrieval'
+import { retrievalTask } from './retrieval-policy.js'
 import { knowledgeSnapshot, replayForeshadows, ordered } from './knowledge'
 import { getChapterSummary, hashContent } from './summarize'
 import { paginate, plainChapter, namesOf, resolveEvidence, withoutQuotes, chapterHash } from './contracts'
-import { readBook, queryBook, readDocument, readBookManifest, relatedEntities } from './booksource.js'
+import { readBook, queryBook, readDocument, readBookManifest, relatedEntities, documentView } from './booksource.js'
 import { stateAt } from './state.js'
 import { sourceManifest } from '../project/normalize.js'
 
 const paged = (items, args) => paginate(items, { cursor: args.cursor, limit: args.limit, maxTokens: 1600 })
-const book = (env) => readBook(env.bookWork || env.work, { asOfChapterId:env.asOfChapterId, allowedIds:env.allowedIds, authorProfiles:env.authorProfiles, planScope:env.planScope, privacy:env.privacy, signal:env.signal, sourceRevision:env.sourceRevision })
+const book = (env) => readBook(env.bookWork || env.work, { asOfChapterId:env.asOfChapterId, allowedIds:env.allowedIds, authorProfiles:env.authorProfiles, planScope:env.planScope, privacy:env.privacy, signal:env.signal, sourceRevision:env.sourceRevision,writingBoundary:env.writingBoundary })
 export const TOOL_REGISTRY = {
   search_book: {
-    args:'{query,sourceType?,cursor?,limit?}', description:'检索正文、设定、大纲计划、人物、灵感与批注；返回语义性质与段落来源',
+    args:'{query,sourceType?,cursor?,limit?}', description:'检索正文、设定、人物关系、条目关联（lorelink）、大纲连线、灵感与批注；返回语义性质与段落来源',
     async execute(args,env) { const result=queryBook(await book(env),{query:args.query,sourceTypes:args.sourceType?[args.sourceType]:undefined,limitTokens:6000});return {...paged(result.items,args),report:result.report} },
   },
   read_document: {
@@ -27,7 +28,7 @@ export const TOOL_REGISTRY = {
   },
   get_entity_state: {
     args:'{entityId,cursor?,limit?}',description:'回放截至任务位置的正文人物状态；作者当前档案时间不明时不当历史事实',
-    async execute(args,env){return paged(await stateAt(env.bookWork||env.work,{entityIds:[args.entityId],asOfChapterId:env.asOfChapterId,privacy:env.privacy}),args)},
+    async execute(args,env){return paged(await stateAt(env.bookWork||env.work,{entityIds:[args.entityId],asOfChapterId:env.asOfChapterId,privacy:env.privacy,writingBoundary:env.writingBoundary}),args)},
   },
   search_chapters: {
     args: '{query,limit?,cursor?}',
@@ -55,6 +56,7 @@ export const TOOL_REGISTRY = {
     description: '人物档案及关系',
     async execute(args, env) {
       const q = String(args.name || '').toLowerCase()
+      const session=await book(env)
       const chars = env.work.characters.filter(
         (c) => !c.deletedAt && (c.id === args.characterId || (q && namesOf(c).some((n) => n.toLowerCase() === q))),
       )
@@ -66,6 +68,7 @@ export const TOOL_REGISTRY = {
           fields: env.privacy || (env.asOfChapterId && !env.authorProfiles) ? {} : c.fields,
           ...(env.privacy || (env.asOfChapterId && !env.authorProfiles) ? {} : { bio: (c.content || '').slice(0, 800) }),
           relations: env.privacy || (env.asOfChapterId && !env.authorProfiles) ? [] : env.work.relations.filter((r) => !r.deletedAt && (r.fromId === c.id || r.toId === c.id) && (!r.effectiveChapterId || !env.allowedIds || env.allowedIds.includes(r.effectiveChapterId))),
+          associations: session.docs.filter(d=>d.sourceType==='lorelink'&&((d.meta.fromKind==='character'&&d.meta.fromId===c.id)||(d.meta.toKind==='character'&&d.meta.toId===c.id))).map(d=>documentView(d,session)).filter(d=>!d.withheld),
           temporalStatus:env.authorProfiles?'author-profile':'unknown',
           note:'作者人物设定是约束，不等同章节事实；阶段状态须有正文证据。',
         })),
@@ -93,7 +96,7 @@ export const TOOL_REGISTRY = {
     async execute(args, env) {
       const chapters = []
       for (const ch of ordered(env.work).slice(-20).reverse())
-        chapters.push({ id: ch.id, title: ch.title, summary: (await getChapterSummary(ch, null)) || '' })
+        chapters.push({ id: ch.id, title: ch.title, summary: env.writingBoundary?.chapterId===ch.id ? '' : (await getChapterSummary(ch, null)) || '' })
       return paged(chapters, args)
     },
   },
@@ -103,11 +106,16 @@ export const TOOL_REGISTRY = {
     async execute(args, env) {
       const r = await kbQuery({
         work: env.work,
+        task:retrievalTask(env.retrievalOptions?.taskType),
+        anchorId:env.retrievalOptions?.anchorId,
+        embeddings:env.retrievalOptions?.embeddings,
+        opts:env.retrievalOptions?.opts,
         query: args.query || '',
         kind: args.kind,
         asOfChapterId: args.asOfChapterId || env.asOfChapterId,
         privacy: env.privacy,
         limitTokens: 6000,
+        writingBoundary:env.writingBoundary,
       })
       return {
         ...paged(
@@ -115,6 +123,7 @@ export const TOOL_REGISTRY = {
           args,
         ),
         coverage: { ready: r.snapshot.valid.size, total: r.snapshot.chapters.length, stale: r.snapshot.stale.length },
+        vectorFallback:r.vectorFallback,vectorStatus:r.vectorStatus,
       }
     },
   },
@@ -122,7 +131,7 @@ export const TOOL_REGISTRY = {
     args: '{status?,asOfChapterId?,cursor?}',
     description: '截至某章的伏笔登记表',
     async execute(args, env) {
-      const snap = await knowledgeSnapshot(env.work, args.asOfChapterId || env.asOfChapterId)
+      const snap = await knowledgeSnapshot(env.work, args.asOfChapterId || env.asOfChapterId,env.writingBoundary)
       const hooks = replayForeshadows(snap.cards).filter((f) => !args.status || f.status === args.status)
       return paged(env.privacy ? hooks.map(withoutQuotes) : hooks, args)
     },
@@ -131,7 +140,7 @@ export const TOOL_REGISTRY = {
     args: '{characterId,asOfChapterId?,cursor?}',
     description: '截至某章的人物状态历史',
     async execute(args, env) {
-      const snap = await knowledgeSnapshot(env.work, args.asOfChapterId || env.asOfChapterId)
+      const snap = await knowledgeSnapshot(env.work, args.asOfChapterId || env.asOfChapterId,env.writingBoundary)
       const states = snap.cards
         .filter((c) => c.kind === 'charstate' && c.refId === args.characterId)
         .sort((a, b) => a.orderIdx - b.orderIdx)
@@ -142,7 +151,10 @@ export const TOOL_REGISTRY = {
     args: '{sourceType,sourceId,quote?}',
     description: '核对与定位来源；隐私模式不回传摘引',
     async execute(args, env) {
-      return resolveEvidence(args, env.work, { privacy: env.privacy }) || { error: '证据无法定位' }
+      if(env.writingBoundary&&args.sourceType==='chapter'&&args.sourceId===env.writingBoundary.chapterId){const ref=resolveEvidence(args,env.work,{privacy:env.privacy});if(!ref||ref.start==null||ref.start+(ref.quote?.length||0)>env.writingBoundary.end)return {error:'证据超出本轮正文位置'};return ref}
+      const ref=resolveEvidence(args, env.work, { privacy: env.privacy })
+      if(env.writingBoundary&&ref&&!((await book(env)).docs.some(d=>d.id===ref.docId)))return {error:'证据不在本轮可读取的资料范围'}
+      return ref || { error: '证据无法定位' }
     },
   },
 }

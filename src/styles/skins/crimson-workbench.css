@@ -324,7 +324,7 @@ body[data-skin='crimson'][data-stage-play='1'] :is(.crimson-book, .crimson-dossi
 body[data-skin='crimson'][data-stage-play='1'] :is(.crimson-art-pane, .crimson-portrait-column, .crimson-outline-directory, .crimson-idea-wall, .crimson-lore-index, .crimson-graph-index, .crimson-detail-connections, .side-panel, .ai-dock) {
   animation: folio-reveal .7s cubic-bezier(.2, .7, .2, 1) .13s both;
 }
-body[data-skin='crimson'][data-stage-play='1'] :is(.crimson-module-title h1, .crimson-work-vertical, .crimson-chapter-title, .crimson-idea-title, .crimson-detail-paper > h2, .module-heading .serif) {
+body[data-skin='crimson'][data-stage-play='1'] :is(.crimson-module-title h1, .crimson-chapter-title, .crimson-idea-title, .crimson-detail-paper > h2, .module-heading .serif) {
   animation: ink-reveal .6s ease-out both;
 }
 body[data-skin='crimson'][data-stage-play='1'] :is(.rg-canvas, .lg-canvas, .oc-canvas, .ldt-graph) svg path { stroke-dasharray: 600; animation: thread-reveal .8s ease-out .15s both; }
@@ -410,29 +410,6 @@ body[data-skin='crimson'] .crimson-editor-stage {
 }
 
 /* 左竖题列：作品名 + 朱印 + 简介/统计（照设计稿 editor.html 的 c-title-column） */
-body[data-skin='crimson'] .crimson-chapter-column {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0;
-  height: 100%;
-  padding: 12px 0 0 18px;
-  border-left: 1px solid #dac48a90;
-  color: #e4d0a1;
-  min-height: 0;
-  text-shadow: 0 2px 8px #0008;
-}
-body[data-skin='crimson'] .crimson-chapter-column > small { font-size: 11px; letter-spacing: 4px; color: #f0e7d5; margin-top: 6px; }
-body[data-skin='crimson'] .crimson-work-vertical {
-  writing-mode: vertical-rl;
-  max-height: 420px;
-  overflow: hidden;
-  margin: 22px 0 0 18px;
-  font: 400 48px/1.5 var(--crimson-serif);
-  letter-spacing: 13px;
-  color: #f8ebcf;
-}
 body[data-skin='crimson'] .crimson-seal {
   position: absolute;
   top: 302px;
@@ -525,6 +502,16 @@ body[data-skin='crimson'] .tb-more { display: flex; flex-wrap: wrap; gap: 3px; w
 body[data-skin='crimson'] .tb-more .tb { color: #403b30; min-width: 24px; height: 28px; padding: 0 6px; }
 body[data-skin='crimson'] .tb-more .tb:hover { background: #b2904720; color: #634e27; }
 body[data-skin='crimson'] .tb-more .tb.on { background: #d4c18f; color: #33291d; }
+/* 工具栏弹层（更多格式/底色）：teleport 到 body 后默认是深色浮层，墨字按钮看不清——
+   含 .tb 墨字的浮层改为纸面小笺（字体颜色/超链接弹层无墨字按钮，保持深色浮层） */
+body[data-skin='crimson'] .n-popover:has(.tb) {
+  background: linear-gradient(95deg, #ece1c4, #f4ecd9 8%, #f1e8d5 94%, #e3d7ba);
+  border: 1px solid #c2ab77;
+  box-shadow: 0 10px 28px #0006, 3px 3px 0 #c2b28b;
+  padding: 10px 12px;
+}
+/* 弹层内的分隔线不在 .editor-toolbar 作用域内，避免回落深色主题的冷灰线 */
+body[data-skin='crimson'] .n-popover:has(.tb) .tb-sep { background: #9c896055; }
 body[data-skin='crimson'] .crimson-page-head { position: relative; z-index: 1; flex: none; padding: 18px 0 21px; text-align: center; }
 body[data-skin='crimson'] .crimson-page-eyebrow { display: block; font-size: 10px; letter-spacing: 3px; color: #766247; }
 body[data-skin='crimson'] .crimson-chapter-title {
@@ -568,6 +555,16 @@ body[data-skin='crimson'] .crimson-folio {
   color: #766247;
 }
 body[data-skin='crimson'] .crimson-margin {
+  /* 纸面变量：札记列是米色纸底，共用 RightPanel 的文字若沿用深色工坊的全局变量
+     （--text:#f0e7d5 等）会浅字配浅底几乎不可见——此处改回墨色系（同设置窗口 sw-content 的做法） */
+  --text: #403b30;
+  --text-dim: #5f523c;
+  --text-faint: #7d6d53;
+  --border: #b9a06a66;
+  --bg-editor: #ece2ca;
+  --bg-hover: #e2d6b8;
+  --accent: #8a6324;
+  --accent-soft: #8a63241f;
   position: relative;
   min-width: 0;
   min-height: 0;
@@ -595,7 +592,7 @@ body[data-skin='crimson'] .crimson-section-head {
   border-bottom: 1px solid #8c794d4a;
 }
 body[data-skin='crimson'] .crimson-section-head h2 { margin: 0; font: 400 22px var(--crimson-serif); letter-spacing: 3px; color: #4c4331; }
-body[data-skin='crimson'] .crimson-section-head span { font: 15px var(--crimson-serif); color: #8e784b; }
+body[data-skin='crimson'] .crimson-section-head span { font: 15px var(--crimson-serif); color: #6d5a38; }
 body[data-skin='crimson'] .crimson-margin .right-panel {
   position: relative;
   z-index: 1;
@@ -609,12 +606,34 @@ body[data-skin='crimson'] .crimson-margin .right-panel {
   overflow-x: hidden;
   overflow-y: auto;
 }
-body[data-skin='crimson'] .crimson-margin .right-panel::-webkit-scrollbar { width: 6px; }
+/* 纸面滚动条：与稿面正文同款细浮条（EditorPane.vue 的 manuscript 配方，杆色一致 #9b885c）。
+   关键：body 上的 scrollbar-color 会被继承，且非 auto 值会让 ::-webkit-scrollbar* 整条失效——
+   先在本体重置为 auto（子孙滚动容器随之继承 auto），伪元素样式才能生效 */
+body[data-skin='crimson'] .crimson-margin {
+  scrollbar-color: auto;
+  scrollbar-width: auto;
+}
+body[data-skin='crimson'] .crimson-margin ::-webkit-scrollbar { width: 10px; height: 10px; }
+body[data-skin='crimson'] .crimson-margin ::-webkit-scrollbar-track,
+body[data-skin='crimson'] .crimson-margin ::-webkit-scrollbar-corner { background: transparent; }
+body[data-skin='crimson'] .crimson-margin ::-webkit-scrollbar-thumb {
+  min-height: 40px;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: #9b885c70;
+  background-clip: padding-box;
+}
+body[data-skin='crimson'] .crimson-margin ::-webkit-scrollbar-thumb:hover,
+body[data-skin='crimson'] .crimson-margin ::-webkit-scrollbar-thumb:active {
+  border-width: 2px;
+  background-color: #8a744ab0;
+}
+body[data-skin='crimson'] .crimson-margin ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
 body[data-skin='crimson'] .crimson-margin .gravity-right-tabs { display: flex; gap: 18px; padding-top: 12px; }
 body[data-skin='crimson'] .crimson-margin .gravity-right-tabs button {
   border: 0;
   background: none;
-  color: #766247;
+  color: #66543a;
   font-size: 12px;
   letter-spacing: 2px;
   padding: 4px 0;
@@ -626,6 +645,25 @@ body[data-skin='crimson'] .crimson-margin .rp-head { display: none; background: 
 body[data-skin='crimson'] .crimson-margin .rp-head .rp-fold { display: none; }
 body[data-skin='crimson'] .crimson-margin .rp-section { min-height: 0; }
 body[data-skin='crimson'] .crimson-margin .rp-note { border-color: #b9a06a60; }
+/* 札记列内的 naive 控件：全局暗色主题的浅金字在纸面上不可读，改墨/深金
+   （确认气泡等浮层 teleport 到 body，仍是深色浮层，不受此作用域影响） */
+body[data-skin='crimson'] .crimson-margin .n-button {
+  --n-text-color: #5b4c33 !important;
+  --n-text-color-hover: #6d4e1a !important;
+  --n-text-color-pressed: #6d4e1a !important;
+  --n-text-color-focus: #6d4e1a !important;
+  --n-text-color-disabled: #5f523c80 !important;
+}
+body[data-skin='crimson'] .crimson-margin .n-button.n-button--error-type {
+  --n-text-color: #a63a2e !important;
+  --n-text-color-hover: #8b332a !important;
+  --n-text-color-pressed: #8b332a !important;
+}
+body[data-skin='crimson'] .crimson-margin .n-tag {
+  --n-text-color: #6b4f1d !important;
+  --n-color: #f1e4c6 !important;
+  --n-border: 1px solid #d7c29a !important;
+}
 body[data-skin='crimson'] .crimson-margin-foot { position: relative; z-index: 1; flex: none; margin-top: 8px; padding-top: 10px; border-top: 1px solid #937e4e55; }
 body[data-skin='crimson'] .crimson-dream {
   position: relative;
@@ -642,46 +680,6 @@ body[data-skin='crimson'] .crimson-dream {
 }
 body[data-skin='crimson'] .crimson-dream:hover { background: #4a554b; color: #fff3d2; }
 
-/* 底部章条 76px：章号 / 章题 / 字数，当前章旧金填充 + 顶部朱线 */
-body[data-skin='crimson'] .crimson-chapter-strip {
-  order: 3;
-  flex: none;
-  display: flex;
-  gap: 0;
-  height: 76px;
-  margin: 22px 34px 20px 246px;
-  overflow-x: auto;
-  scrollbar-width: thin;
-}
-body[data-skin='crimson'] .crimson-chapter-tab {
-  flex: 1 1 0;
-  min-width: 150px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-  padding: 10px 14px;
-  border: 0;
-  border-top: 1px solid #b9a06a55;
-  background: #171c1bb0;
-  color: #e4d0a1;
-  text-align: left;
-  cursor: pointer;
-  transition: background .2s;
-}
-body[data-skin='crimson'] .crimson-chapter-tab + .crimson-chapter-tab { border-left: 1px solid #b9a06a33; }
-body[data-skin='crimson'] .crimson-chapter-strip { background: transparent; }
-body[data-skin='crimson'] .crimson-chapter-strip .crimson-chapter-tab { background-color: #171c1bd9; }
-body[data-skin='crimson'] .crimson-chapter-strip .crimson-chapter-tab:hover { background-color: #2a352fe6; }
-body[data-skin='crimson'] .crimson-chapter-strip .crimson-chapter-tab.active { background-color: #d4c18f; }
-body[data-skin='crimson'] .crimson-chapter-tab:hover { background: #2a352fd0; }
-body[data-skin='crimson'] .crimson-chapter-tab .num { font: 11px var(--crimson-serif); letter-spacing: 2px; color: #b7ab8f; }
-body[data-skin='crimson'] .crimson-chapter-tab .title { font: 15px/1.3 var(--crimson-serif); letter-spacing: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-body[data-skin='crimson'] .crimson-chapter-tab small { font-size: 11px; color: #b7ab8f; }
-body[data-skin='crimson'] .crimson-chapter-tab.active { background: #d4c18f; color: #3b3326; border-top-color: #b64b3d; border-top-width: 2px; }
-body[data-skin='crimson'] .crimson-chapter-tab.active .num,
-body[data-skin='crimson'] .crimson-chapter-tab.active small { color: #6b5a38; }
-
 /* 字数目标：teleport 进札记列底部，保持设计稿的「本章字数」位置 */
 body[data-skin='crimson'] .crimson-margin-foot .editor-foot {
   display: flex;
@@ -696,14 +694,14 @@ body[data-skin='crimson'] .crimson-margin-foot .editor-foot {
   background: none;
   color: #5b4c33;
 }
-body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-num { font-size: 11px; letter-spacing: 1px; color: #716247; }
+body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-num { font-size: 11px; letter-spacing: 1px; color: #5f523c; }
 body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-num b { font: 28px var(--crimson-kai); color: #4d4431; }
 body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-track { background: #a58c5540; height: 3px; }
 body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-track > i,
 body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-fill { background: #8f7138; }
 body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-set { color: #5b4c33; font-size: 11px; text-align: left; }
 body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-set:hover { color: #8b332a; }
-body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-pct { color: #8f7138; }
+body[data-skin='crimson'] .crimson-margin-foot .editor-foot .wg-pct { color: #6d4e1a; }
 
 /* 阅读模式：稿面在白纸上（读稿不放双页布局） */
 body[data-skin='crimson'] .editor-wrap.read-mode .rich-host { background: none; }
@@ -718,8 +716,6 @@ body[data-skin='crimson'] .editor-wrap.read-mode .ed-read-col {
 
 /* 专注（沉浸）模式：藏起竖题列、札记与章条，稿本居中加宽 */
 body[data-skin='crimson'] .workbench-shell.is-focus .crimson-project-line,
-body[data-skin='crimson'] .workbench-shell.is-focus .crimson-chapter-column,
-body[data-skin='crimson'] .workbench-shell.is-focus .crimson-chapter-strip,
 body[data-skin='crimson'] .workbench-shell.is-focus .crimson-margin,
 body[data-skin='crimson'] .workbench-shell.is-focus .editor-foot { display: none; }
 body[data-skin='crimson'] .workbench-shell.is-focus .crimson-editor-stage { grid-template-columns: minmax(0, 1fr); padding: 0 8vw; }
@@ -730,17 +726,14 @@ body[data-skin='crimson'] .workbench-shell.is-focus .crimson-book { grid-templat
   body[data-skin='crimson'] .crimson-project-actions { gap: 12px; padding: 8px 10px; }
   body[data-skin='crimson'] .crimson-project-actions button { font-size: 12px; }
   body[data-skin='crimson'] .crimson-editor-stage { grid-template-columns: 108px minmax(0, 1fr); gap: 30px; padding: 0 20px 0 24px; }
-  body[data-skin='crimson'] .crimson-work-vertical { font-size: 32px; letter-spacing: 8px; margin-left: 12px; }
   body[data-skin='crimson'] .crimson-seal { top: 220px; font-size: 12px; }
   body[data-skin='crimson'] .crimson-title-poem { font-size: 14px; max-height: 190px; }
   body[data-skin='crimson'] .crimson-book { grid-template-columns: minmax(0, 1fr) 210px; }
-  body[data-skin='crimson'] .crimson-chapter-strip { margin-left: 132px; margin-right: 20px; }
   body[data-skin='crimson'] .crimson-type-tools { margin: 0 18px; }
   body[data-skin='crimson'] .crimson-page .rich-inner .tiptap { padding-inline: 34px; }
 }
 @media (max-height: 760px) {
   body[data-skin='crimson'] .crimson-project-line { height: 48px; }
-  body[data-skin='crimson'] .crimson-chapter-strip { height: 60px; margin-top: 10px; margin-bottom: 12px; }
   body[data-skin='crimson'] .crimson-chapter-title { font-size: 28px; }
   body[data-skin='crimson'] .crimson-page-head { padding-top: 10px; }
 }

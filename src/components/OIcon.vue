@@ -21,6 +21,7 @@ const ICONS = {
   stats: '<path d="M5 20v-8"/><path d="M12 20V6"/><path d="M19 20v-5"/><path d="M3 20h18"/>',
   trash: '<path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/><path d="M10 11v6"/><path d="M14 11v6"/>',
   bookmark: '<path d="M6 3h12v18l-6-4-6 4z"/>',
+  history: '<path d="M3 11a9 9 0 1 1 2.6 7.4"/><path d="M3 4v7h7"/><path d="M12 7v5l3 2"/>',
   'bookmark-filled': '<path fill="currentColor" stroke="none" d="M6 3h12v18l-6-4-6 4z"/>',
   plus: '<path d="M12 5v14"/><path d="M5 12h14"/>',
   minus: '<path d="M5 12h14"/>',

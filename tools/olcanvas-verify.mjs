@@ -487,17 +487,14 @@ const m21b = await c.evalx(`(() => {
 })()`)
 check('容器右键色彩调整（调色板+重置入口）', m21a.menu && m21a.swatches >= 7 && !!m21b.color && !!m21b.bcVar, JSON.stringify({ m21a, m21b }))
 
-/* 容器尺寸由子模块派生；与当前产品一致，不提供手动缩放柄。 */
+/* 分层画布：容器恢复手动缩放柄；内容溢出由内容区滚动承接。 */
 const m22 = await c.evalx(`(() => {
   const w = ${store}
   const cont = w.liveOlnodes().find((x) => x.kind === 'container')
   const el = [...document.querySelectorAll('.oc-node.oc-container')][0]
-  const r = el.getBoundingClientRect()
-  const kids = [...document.querySelectorAll('.oc-node')].filter(k => w.liveOlnodes().some(n => n.id === k.__vnode?.key && n.parentId === cont.id))
-  return { noHandle: !el.querySelector('.oc-rs'), children: kids.length,
-    contains: kids.every(k => {const b=k.getBoundingClientRect();return b.top >= r.top - 1 && b.bottom <= r.bottom + 1}) }
+  return { handle: !!el?.querySelector('.oc-rs[data-dir="se"]'), container: !!cont }
 })()`)
-check('容器自动高度包含子模块且无手动缩放柄', m22.noHandle && m22.children > 0 && m22.contains, JSON.stringify(m22))
+check('容器提供手动缩放柄', m22.handle && m22.container, JSON.stringify(m22))
 
 /* 11k) 侧栏层级树 + 文本视图容器内容展示 */
 const m23 = await c.evalx(`(() => {

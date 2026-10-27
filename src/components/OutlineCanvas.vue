@@ -2,9 +2,10 @@
      四向锚点拖线（因果/伏笔/冲突/关联 + 箭头 + 标签）、贝塞尔/正交折线、网格吸附、双密度、断线检测、
      关系链接卫星与悬停预览（复用全局 DLinkPopover）、骨架模板快速开始；布局数学在 outline/canvas-model.js -->
 <script setup>
+import { normalizeCanvasOpacity } from '../services/canvas-appearance.js'
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useWorkStore } from '../stores/work'
-import { usePanZoom, arrowHeadDir, anchorsOf } from '../services/graphview'
+import { usePanZoom, arrowHeadDir } from '../services/graphview'
 import { parseTokens, findByTitle, targetById, parseTarget, jumpTo, KIND_LABEL } from '../services/doublelinks'
 import {
   relayoutAll, effSize, freeSpotFor,
@@ -19,7 +20,6 @@ import {
   buildLayerLayout,
   containerCardSize,
   descendantsOf,
-  layerNodes,
   nodeStats,
   packLayer,
   projectRelations,
@@ -30,7 +30,6 @@ import {
 } from './outline/outline-scope.js'
 import {
   CONTAINER_COLORS,
-  EVENT_SHAPES,
   PAPER_KINDS,
   STATUS,
   STATUS_COLORS,
@@ -38,7 +37,6 @@ import {
   paperStyle
 } from './outline/outline-paper.js'
 import { uid } from '../db/database'
-import { autosave } from '../services/autosave'
 import { useAiStore } from '../stores/ai'
 import { useUiStore } from '../stores/ui'
 import { NPopover, NSlider, NDropdown } from 'naive-ui'
@@ -46,7 +44,6 @@ import OIcon from './OIcon.vue'
 import DLinkPicker from './DLinkPicker.vue'
 import TaskLauncher from './ai/TaskLauncher.vue'
 import OutlineNodeDrawer from './outline/OutlineNodeDrawer.vue'
-import OutlineMaterials from './outline/OutlineMaterials.vue'
 
 const work = useWorkStore()
 const ai = useAiStore()
@@ -70,7 +67,6 @@ const picked = reactive(new Set())
 const searchQuery = ref('')
 const searchOpen = ref(false)
 const searchEl = ref(null)
-const materialsOpen = ref(false)
 const groupDetailsOpen = ref(false)
 const flashIds = reactive(new Set())
 const STATUS_LABEL = { draft: '草稿', done: '完成', revise: '待修改' }
@@ -91,23 +87,32 @@ const scopeId = computed(() => {
   return live.value.some((n) => n.id === id && n.kind === 'container') ? id : null
 })
 const expandedSet = computed(() => new Set((work.canvasPrefs.expanded || []).filter((id) => live.value.some((n) => n.id === id && n.kind === 'container'))))
-const layerLayout = computed(() => buildLayerLayout(live.value, scopeId.value, expandedSet.value))
+const layerLayout = computed(() => buildLayerLayout(live.value, scopeId.value, expandedSet.value, {
+  sizeOf: (n) => dragSize.get(n.id),
+  posOf: (n) => posOf(n)
+}))
 const visNodes = computed(() => layerLayout.value.layer)
 const miniItems = computed(() => layerLayout.value.mini.items)
 const miniById = computed(() => layerLayout.value.mini.byId)
 const visibleIdSet = computed(() => layerLayout.value.visibleIds)
 const containerSizes = computed(() => layerLayout.value.sizes)
+/* 容器内容区滚动：只影响迷你卡的显示/连线几何，不改真实坐标。 */
+const scrollOffsets = reactive(new Map())
+const MINI_SCROLL_PAD = 6
 const isExpanded = (id) => expandedSet.value.has(id)
 
 const draggingId = ref(null)
 function rectOf(n) {
   if (!n) return null
   const mini = miniById.value.get(n.id)
-  if (mini) return mini.rect
+  if (mini) {
+    const off = mini.clipId ? (scrollOffsets.get(mini.clipId) || 0) : 0
+    return { ...mini.rect, y: mini.rect.y - off }
+  }
   const p = posOf(n)
   if (!p) return null
   const size = n.kind === 'container'
-    ? (containerSizes.value.get(n.id) || containerCardSize(live.value, n, expandedSet.value))
+    ? (containerSizes.value.get(n.id) || dragSize.get(n.id) || containerCardSize(live.value, n, expandedSet.value))
     : sizeOf(n)
   return { ...p, ...size }
 }
@@ -125,7 +130,7 @@ const obstacleRects = computed(() => {
     if (r) out.push({ ...r, id: n.id, shape: n.kind === 'event' ? n.shape : null })
   }
   for (const item of miniItems.value) {
-    out.push({ ...item.rect, id: item.node.id, shape: item.node.kind === 'event' ? item.node.shape : null, mini: true })
+    out.push({ ...(rectOf(item.node) || item.rect), id: item.node.id, shape: item.node.kind === 'event' ? item.node.shape : null, mini: true })
   }
   return out
 })
@@ -230,7 +235,6 @@ function edgeGeomFor(n,r,visiting=new Set()) {
   const next=new Set(visiting);next.add(r.id)
   return geometryBetween(r.fromJunction||{nodeId:n.id,side:r.fromSide},r.toJunction||{nodeId:r.toId,side:r.toSide},r,r.id,next)
 }
-function edgeGeomFromJunction(n,host,r) {return edgeGeomFor(n,r)}
 const scopedRelations = computed(() => projectRelations(relationEntries.value, live.value, scopeId.value, layerLayout.value))
 const edges = computed(() => {
   const out=[],keys=new Set(),labels=[]
@@ -426,26 +430,39 @@ function confirmWrap() {
   })
   window.$msg?.success('已用容器封装，全部关系保留')
 }
-const addOptions = computed(() => {
-  const out = [
-    { label: '事件', key: 'event' },
-    { label: '便签', key: 'note' },
-    { label: '引用卡', key: 'cite' },
-    { label: '文本框', key: 'textbox' },
-    { label: '容器', key: 'container' }
-  ]
-  if (work.liveChapters?.length) out.push({ label: '章节锚点', key: 'anchor', children: work.liveChapters.slice(0, 40).map((c) => ({ label: c.title || '未命名章节', key: `chapter:${c.id}` })) })
-  if (work.liveVolumes?.length) out.push({ label: '卷', key: 'volume', children: work.liveVolumes.map((v) => ({ label: v.title || '未命名卷', key: `volume:${v.id}` })) })
+const anchorMenuOptions = computed(() => {
+  const out = [{ label: '新建空白锚点', key: 'anchor' }]
+  if (work.liveChapters?.length) {
+    out.push({ type: 'divider', key: 'anchor-divider' })
+    out.push(...work.liveChapters.slice(0, 40).map((c) => ({ label: c.title || '未命名章节', key: `chapter:${c.id}` })))
+  }
   return out
 })
-function onAddSelect(key) {
-  if (String(key).startsWith('chapter:')) return addAnchorFromChapter(String(key).slice(8))
-  if (String(key).startsWith('volume:')) return addVolumeFromVolume(String(key).slice(7))
-  addNode(String(key))
+const volumeMenuOptions = computed(() => {
+  const out = [{ label: '新建空白卷锚点', key: 'volume' }]
+  if (work.liveVolumes?.length) {
+    out.push({ type: 'divider', key: 'volume-divider' })
+    out.push(...work.liveVolumes.map((v) => ({ label: v.title || '未命名卷', key: `volume:${v.id}` })))
+  }
+  return out
+})
+function onAnchorSelect(key) {
+  if (key === 'anchor') return addNode('anchor')
+  if (String(key).startsWith('chapter:')) addAnchorFromChapter(String(key).slice(8))
 }
-function toggleTextures() {
-  setPref('textures', work.canvasPrefs.textures === false)
+function onVolumeSelect(key) {
+  if (key === 'volume') return addNode('volume')
+  if (String(key).startsWith('volume:')) addVolumeFromVolume(String(key).slice(7))
 }
+function onModuleSelect(kind, key) {
+  if (kind === 'anchor') return onAnchorSelect(key)
+  if (kind === 'volume') return onVolumeSelect(key)
+}
+const canvasOpacity = computed(() => normalizeCanvasOpacity(work.canvasPrefs.canvasOpacity))
+const canvasOpacityModel = computed({
+  get: () => canvasOpacity.value,
+  set: (v) => setPref('canvasOpacity', normalizeCanvasOpacity(v))
+})
 function statusLabel(n) {
   return n?.status ? STATUS[n.status] || '未标记' : '未标记'
 }
@@ -483,10 +500,81 @@ function containerProgress(n) {
   const s = nodeStats(live.value, n.id)
   return { ...s, pct: s.total ? Math.round((s.done / s.total) * 100) : 0 }
 }
-function miniStyle(item) {
+/* 顶层展开容器的内容区：迷你卡在这里滚动，连线几何随 scrollOffsets 一起位移。 */
+const miniGroups = computed(() => {
+  const groups = new Map()
+  for (const item of miniItems.value) {
+    const clipId = item.clipId
+    if (!clipId) continue
+    if (!groups.has(clipId)) {
+      const cardNode = nodeById(clipId)
+      const card = cardNode ? rectOf(cardNode) : null
+      if (!card) continue
+      const top = SCOPE_METRICS.headH + SCOPE_METRICS.progressH + SCOPE_METRICS.padY
+      const bottom = SCOPE_METRICS.footH + SCOPE_METRICS.padY
+      groups.set(clipId, {
+        id: clipId,
+        rect: {
+          x: card.x + SCOPE_METRICS.miniPad,
+          y: card.y + top,
+          w: Math.max(80, card.w - SCOPE_METRICS.miniPad * 2),
+          h: Math.max(0, card.h - top - bottom)
+        },
+        items: []
+      })
+    }
+    groups.get(clipId).items.push(item)
+  }
+  const out = []
+  for (const group of groups.values()) {
+    const bottom = group.items.reduce((m, item) => Math.max(m, item.rect.y + item.rect.h - group.rect.y), 0)
+    group.contentH = Math.max(group.rect.h, bottom)
+    out.push(group)
+  }
+  return out
+})
+function miniScrollStyle(group) {
   return {
-    left: item.rect.x + 'px',
-    top: item.rect.y + 'px',
+    left: (group.rect.x - MINI_SCROLL_PAD) + 'px',
+    top: group.rect.y + 'px',
+    width: (group.rect.w + MINI_SCROLL_PAD * 2) + 'px',
+    height: group.rect.h + 'px'
+  }
+}
+function onMiniScroll(id, e) {
+  scrollOffsets.set(id, e.target.scrollTop)
+}
+const miniScrollEls = new Map()
+function setMiniScrollEl(id, el) {
+  if (el) {
+    miniScrollEls.set(id, el)
+    scrollOffsets.set(id, el.scrollTop || 0)
+  } else {
+    miniScrollEls.delete(id)
+    scrollOffsets.delete(id)
+  }
+}
+function ensureMiniVisible(id) {
+  const item = miniById.value.get(id)
+  if (!item?.clipId) return
+  const group = miniGroups.value.find((g) => g.id === item.clipId)
+  const el = group && miniScrollEls.get(group.id)
+  if (!group || !el) return
+  const top = item.rect.y - group.rect.y
+  const bottom = top + item.rect.h
+  let next = el.scrollTop
+  if (top < next) next = top
+  else if (bottom > next + group.rect.h) next = bottom - group.rect.h
+  next = Math.max(0, next)
+  if (next !== el.scrollTop) {
+    el.scrollTop = next
+    scrollOffsets.set(group.id, next)
+  }
+}
+function miniStyle(item, group) {
+  return {
+    left: (item.rect.x - group.rect.x + MINI_SCROLL_PAD) + 'px',
+    top: (item.rect.y - group.rect.y) + 'px',
     width: item.rect.w + 'px',
     height: item.rect.h + 'px',
     zIndex: 2 + item.depth,
@@ -587,7 +675,7 @@ const bounds = computed(() => {
     y1 = Math.max(y1, r.y + r.h)
   }
   for (const n of visNodes.value) eat(rectOf(n))
-  for (const item of miniItems.value) eat(item.rect)
+  for (const item of miniItems.value) eat(rectOf(item.node) || item.rect)
   for (const s of sats.value) eat({ x: s.x, y: s.y, w: 150, h: 22 })
   if (x0 === Infinity) return { x: 0, y: 0, w: 600, h: 400 }
   return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 }
@@ -664,15 +752,6 @@ function snap(v) {
 function canvasPt(e) {
   const r = canvasEl.value.getBoundingClientRect()
   return { x: (e.clientX - r.left - tx.value) / zoom.value, y: (e.clientY - r.top - ty.value) / zoom.value }
-}
-function hitNodeAt(pt, exclude = new Set()) {
-  // 命中优先子模块：容器有子模块时，只有落在空白区（非正文区）才轮到容器，避免拖线误锚容器
-  for (const n of [...visNodes.value].reverse()) {
-    if (exclude.has(n.id)) continue
-    const r = rectOf(n)
-    if (r && pt.x >= r.x && pt.x <= r.x + r.w && pt.y >= r.y && pt.y <= r.y + r.h) return n
-  }
-  return null
 }
 function hitConnTarget(pt, exclude = new Set()) {
   // 拖线目标优先命中子模块（事件/便签/引用卡/锚点/卷），其次无子模块的容器；迷你卡也是可连接目标。
@@ -774,6 +853,7 @@ function revealNode(id, { openDrawer = false } = {}) {
     if (!nodeById(id)) return
     work.selOlnodeId = id
     if (openDrawer) drawerId.value = id
+    ensureMiniVisible(id)
     const r = rectOf(n)
     if (r) centerOn(r.x + r.w / 2, r.y + r.h / 2)
     flashIds.add(id)
@@ -856,23 +936,26 @@ function fitIfTinyDelta(after, before) {
   }
 }
 
-function expandAll(open) {
-  const ids = visNodes.value.filter((n) => n.kind === 'container' && (open ? kidsOf(n).length : isExpanded(n.id))).map((n) => n.id)
+function scopeSubtreeNodes() {
+  return scopeId.value ? descendantsOf(live.value, scopeId.value) : live.value.slice()
+}
+function expandAllDeep() {
+  const ids = scopeSubtreeNodes().filter((n) => n.kind === 'container' && kidsOf(n).length).map((n) => n.id)
   if (!ids.length) return
   const list = new Set(work.canvasPrefs.expanded || [])
-  for (const id of ids) open ? list.add(id) : list.delete(id)
+  for (const id of ids) list.add(id)
   work.canvasPrefs.expanded = [...list]
   work.saveCanvasPrefs()
   nextTick(() => fitLayer(false))
 }
-function collapseCompleted() {
-  const ids = visNodes.value.filter((n) => n.kind === 'container' && isExpanded(n.id) && nodeStats(live.value, n.id).complete).map((n) => n.id)
-  if (!ids.length) return window.$msg?.info('当前层没有已完成的展开容器')
+function collapseAllDeep() {
+  const ids = new Set(scopeSubtreeNodes().filter((n) => n.kind === 'container').map((n) => n.id))
+  if (!ids.size) return
   const list = new Set(work.canvasPrefs.expanded || [])
   for (const id of ids) list.delete(id)
   work.canvasPrefs.expanded = [...list]
   work.saveCanvasPrefs()
-  window.$msg?.success(`已收起 ${ids.length} 个已完成容器`)
+  nextTick(() => fitLayer(false))
 }
 function overview() {
   const list = new Set(work.canvasPrefs.expanded || [])
@@ -949,8 +1032,14 @@ function startResize(e, n, dir) {
   e.preventDefault()
   resizing.value = n.id
   resizeSmooth.value = n.kind === 'container'
-  const base = { ...(dragSize.get(n.id) || effSize(n, cardDensity.value)) }
-  const p0 = { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
+  const current = rectOf(n) || effSize(n, cardDensity.value)
+  const base = { w: current.w, h: current.h }
+  const p0 = dragPos.get(n.id) || { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
+  const minW = n.kind === 'container' ? SCOPE_METRICS.cardMinW : 96
+  const maxW = n.kind === 'container' ? SCOPE_METRICS.cardMaxW : Infinity
+  const minH = n.kind === 'container'
+    ? (isExpanded(n.id) ? SCOPE_METRICS.containerMinH : SCOPE_METRICS.collapsedH)
+    : 36
   const mx = e.clientX
   const my = e.clientY
   /* 拖拽方向决定可变轴：未拖的轴保持原值不落库（否则横拖会把高度钉死在当前值） */
@@ -963,14 +1052,14 @@ function startResize(e, n, dir) {
     let h = base.h
     let x = p0.x
     let y = p0.y
-    if (dir.includes('e')) w = Math.max(96, base.w + dx)
-    if (dir.includes('s')) h = Math.max(36, base.h + dy)
+    if (dir.includes('e')) w = Math.min(maxW, Math.max(minW, base.w + dx))
+    if (dir.includes('s')) h = Math.max(minH, base.h + dy)
     if (dir.includes('w')) {
-      w = Math.max(96, base.w - dx)
+      w = Math.min(maxW, Math.max(minW, base.w - dx))
       x = p0.x + (base.w - w)
     }
     if (dir.includes('n')) {
-      h = Math.max(36, base.h - dy)
+      h = Math.max(minH, base.h - dy)
       y = p0.y + (base.h - h)
     }
     dragSize.set(n.id, { w, h })
@@ -982,7 +1071,7 @@ function startResize(e, n, dir) {
     if(moved) {
       work.olnodePushUndo(true)
       if(pos) work.olnodeSetCanvas(n.id,pos.x,pos.y)
-      if(size) work.olnodeSetSize(n.id,canW?size.w:n.w,canH?size.h:n.h)
+      if(size) work.olnodeSetSize(n.id,canW?size.w:null,canH?size.h:null)
     }
     finish()
   },finish)
@@ -1006,6 +1095,16 @@ function openEdgeCtxFromEvent(e, edge) {
   openEdgeEdit(edge.ownerId, edge.rel.id, edge)
 }
 const CREATE_KINDS = Object.fromEntries(Object.entries(KIND_META).filter(([k]) => k !== 'anchor' && k !== 'volume'))
+/* 工具条是唯一的「添加模块」入口：7 类模块 + 多选。 */
+const ADD_TOOLS = [
+  { kind: 'event', label: '事件', icon: 'diamond' },
+  { kind: 'note', label: '便签', icon: 'edit' },
+  { kind: 'cite', label: '引用', icon: 'link' },
+  { kind: 'textbox', label: '文本框', icon: 'textbox' },
+  { kind: 'anchor', label: '锚点', icon: 'anchor' },
+  { kind: 'volume', label: '卷', icon: 'rows' },
+  { kind: 'container', label: '容器', icon: 'container' }
+]
 function onCanvasCtx(e) {
   /* Chromium 对 SVG pointer-events:stroke 路径的 contextmenu 命中可能与 mousedown 不一致
      （mousedown 命中路径，contextmenu 却派发给画布）——用 elementFromPoint 反查真实落点 */
@@ -1604,7 +1703,7 @@ function shapePoly(n) {
 function addNodeAt(kind, pt, fields = {}) {
   const s = kind === 'container' ? { w: SCOPE_METRICS.cardW, h: SCOPE_METRICS.collapsedH } : effSize({ kind }, cardDensity.value)
   const spot = freeSpotFor(
-    [...visNodes.value.map((n) => rectOf(n)).filter(Boolean), ...miniItems.value.map((i) => i.rect)],
+    [...visNodes.value.map((n) => rectOf(n)).filter(Boolean), ...miniItems.value.map((i) => rectOf(i.node)).filter(Boolean)],
     s,
     pt.x - s.w / 2,
     pt.y - s.h / 2
@@ -1677,13 +1776,6 @@ function locateBroken(list) {
   work.selOlnodeId = n.id
   revealNode(n.id)
 }
-function focusNode(id) {
-  const n = nodeById(id)
-  const p = n && posOf(n)
-  if (p) centerOn(p.x + sizeOf(n).w / 2, p.y + sizeOf(n).h / 2)
-  flashIds.add(id)
-  setTimeout(() => flashIds.delete(id), 1600)
-}
 watch(
   () => work.canvasFocusTick,
   () => {
@@ -1751,8 +1843,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="om-wrap" :class="{ 'oc-no-textures': work.canvasPrefs.textures === false, 'oc-compact': work.canvasPrefs.density === 'compact', 'oc-root-scope': !scopeId }">
-    <div class="oc-workspace-head"><div><div class="oc-eyebrow">OUTLINE · 故事大纲</div><h1>{{ scopeTitle }}<small v-if="scopeId">容器内部</small></h1><p>{{ scopeMetaText }}</p></div><div class="oc-head-actions"><button type="button" @click="overview">总览</button><button type="button" @click="expandAll(true)">展开一层</button><button type="button" @click="collapseCompleted">收起已完成</button><button type="button" @click="tidyAll">整理布局</button><button type="button" @click="work.outlineView='text'">文本视图</button><TaskLauncher v-if="!ui.isStudioSkin" module="outline" /></div></div>
+  <div class="om-wrap" :class="{ 'oc-compact': work.canvasPrefs.density === 'compact', 'oc-root-scope': !scopeId, 'oc-background-visible': canvasOpacity < 100 }">
+    <div class="oc-workspace-head"><div><div class="oc-eyebrow">OUTLINE · 故事大纲</div><h1>{{ scopeTitle }}<small v-if="scopeId">容器内部</small></h1><p>{{ scopeMetaText }}</p></div><div class="oc-head-actions"><button type="button" @click="overview">总览</button><button type="button" @click="expandAllDeep">展开全部</button><button type="button" @click="collapseAllDeep">收起全部</button><button type="button" @click="tidyAll">整理布局</button><button type="button" @click="work.outlineView='text'">文本视图</button><TaskLauncher v-if="!ui.isStudioSkin" module="outline" /></div></div>
     <div class="oc-scopebar">
       <button v-if="scopeId" class="oc-back" type="button" title="返回上一级" @click="goBack"><OIcon name="back" :size="12" /> 上一级</button>
       <nav class="oc-crumbs" aria-label="大纲层级">
@@ -1777,12 +1869,17 @@ onBeforeUnmount(() => {
             <p v-if="!searchResults.length" style="padding:8px;font-size:10px;color:var(--text-dim);margin:0">没有匹配的模块。</p>
           </div>
         </div>
-        <button class="om-btn oc-materials-btn" type="button" title="查看纸面素材" @click="materialsOpen = true"><OIcon name="image" :size="12" /> 素材</button>
-        <button class="oc-chip oc-textures-toggle" :class="{ on: work.canvasPrefs.textures !== false }" type="button" title="显示/隐藏纸面纹理" @click="toggleTextures">纹理</button>
       </div>
     </div>
     <div class="om-toolbar oc-toolbar">
-      <div class="oc-module-tools"><button v-for="kind in ['event','note','cite','textbox','container']" :key="kind" type="button" :title="'添加'+CREATE_KINDS[kind].label" @click="addNode(kind)"><OIcon :name="CREATE_KINDS[kind].icon" :size="14" />{{ CREATE_KINDS[kind].label }}</button></div>
+      <div class="oc-module-tools">
+        <template v-for="tool in ADD_TOOLS" :key="tool.kind">
+          <NDropdown v-if="tool.kind === 'anchor' || tool.kind === 'volume'" trigger="click" :options="tool.kind === 'anchor' ? anchorMenuOptions : volumeMenuOptions" @select="onModuleSelect(tool.kind, $event)">
+            <button type="button" :title="'添加'+tool.label"><OIcon :name="tool.icon" :size="14" />{{ tool.label }}</button>
+          </NDropdown>
+          <button v-else type="button" :title="'添加'+tool.label" @click="addNode(tool.kind)"><OIcon :name="tool.icon" :size="14" />{{ tool.label }}</button>
+        </template>
+      </div>
       <button class="oc-chip" type="button" :class="{on:viewMulti}" :aria-pressed="viewMulti" @click="toggleMulti">多选</button>
       <span class="oc-count">{{ visNodes.length }} 模块 · {{ edges.length }} 连线</span>
       <div class="oc-line-modes" aria-label="连线样式"><button type="button" :aria-pressed="work.canvasPrefs.edgeStyle !== 'ortho'" @click="setPref('edgeStyle','bezier')">流畅曲线</button><button type="button" :aria-pressed="work.canvasPrefs.edgeStyle === 'ortho'" @click="setPref('edgeStyle','ortho')">圆角折线</button></div>
@@ -1791,6 +1888,11 @@ onBeforeUnmount(() => {
           <span class="oc-chip" title="画布设置：连线粗细等"><OIcon name="gear" :size="12" /> 设置</span>
         </template>
         <div class="oc-settings"><div class="oc-settings-options"><button type="button" class="oc-chip" :class="{on:work.canvasPrefs.snap}" @click="setPref('snap',!work.canvasPrefs.snap)">网格吸附</button><button class="oc-chip" type="button" @click="setPref('density',work.canvasPrefs.density==='compact'?'detail':'compact')">{{ work.canvasPrefs.density==='compact'?'切换详细卡片':'切换紧凑卡片' }}</button><button v-if="work.olBroken.tails.length" class="oc-chip" type="button" @click="locateBroken(work.olBroken.tails)">烂尾 {{ work.olBroken.tails.length }}</button><button v-if="work.olBroken.missing.length" class="oc-chip" type="button" @click="locateBroken(work.olBroken.missing)">缺铺垫 {{ work.olBroken.missing.length }}</button></div>
+          <div class="oc-settings-row">
+            <span class="oc-settings-label">画布透明度</span>
+            <NSlider v-model:value="canvasOpacityModel" :min="0" :max="100" :step="1" style="width: 150px" />
+            <span class="oc-settings-val">{{ canvasOpacity }}%</span>
+          </div>
           <div class="oc-settings-row">
             <span class="oc-settings-label">连线粗细</span>
             <NSlider v-model:value="edgeWidthModel" :min="0.8" :max="5" :step="0.2" style="width: 150px" />
@@ -1801,12 +1903,9 @@ onBeforeUnmount(() => {
             <NSlider v-model:value="arrowSizeModel" :min="0.5" :max="3" :step="0.1" style="width: 150px" />
             <span class="oc-settings-val">{{ (work.canvasPrefs.arrowSize || 1).toFixed(1) }}×</span>
           </div>
-          <div class="oc-settings-tip">调整画布全部连线与箭头的显示大小；线型（实线/虚线/点线）与箭头方向在连线编辑浮层中按条设置。</div>
+          <div class="oc-settings-tip">画布透明度只影响底色与点阵，模块和连线保持不透明；线型与箭头方向在连线编辑浮层中按条设置。</div>
         </div>
       </NPopover>
-      <NDropdown trigger="click" :options="addOptions" @select="onAddSelect">
-        <button class="om-btn text" type="button" title="在当前层添加模块"><OIcon name="plus" :size="12" /> 模块</button>
-      </NDropdown>
       <button class="om-btn" title="撤销 (Ctrl+Z)" @click="work.olnodeUndo()">↶</button>
       <button class="om-btn" title="重做 (Ctrl+Y)" @click="work.olnodeRedo()">↷</button>
       <div class="oc-zoom-controls"><button class="om-btn" title="缩小" @click="zoom = Math.max(0.3, zoom - 0.15)"><OIcon name="minus" :size="13" /></button>
@@ -1816,6 +1915,7 @@ onBeforeUnmount(() => {
     </div>
 
     <div ref="canvasEl" class="om-canvas oc-canvas" :data-flow-state="flowMode" @mousedown="onPanStart" @wheel.prevent="onWheelC" @dblclick.self="addNode('event')" @contextmenu.prevent="onCanvasCtx">
+      <div class="oc-canvas-surface" :style="{ opacity: canvasOpacity / 100 }" aria-hidden="true"></div>
       <div class="om-inner" :style="innerStyle">
         <svg
           class="om-edges oc-edges"
@@ -1927,86 +2027,99 @@ onBeforeUnmount(() => {
           <button v-if="viewMulti && n.parentId === scopeId" class="oc-pick-toggle" :class="{ on: picked.has(n.id) }" type="button" title="选择此模块" @mousedown.stop @click.stop="togglePick(n.id)">{{ picked.has(n.id) ? '✓' : '+' }}</button>
 
           <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :class="{ 'snap-target': connecting?.candidate?.nodeId === n.id && connecting?.candidate?.side === sd }" :style="n.shape === 'para' && (sd === 'left' || sd === 'right') ? { [sd]: 'calc(6.8% - 4.5px)' } : null" :data-side="sd" :title="'拖到目标模块或连接点建立连线'" @mousedown="startConnect($event, n)" />
-          <template v-if="n.kind !== 'container'">
-            <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
-            <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
-            <span class="oc-rs" data-dir="s" title="拖拽调整高度" @mousedown="startResize($event, n, 's')" />
-            <span class="oc-rs" data-dir="n" title="拖拽调整高度" @mousedown="startResize($event, n, 'n')" />
-            <span class="oc-rs oc-rs-corner" data-dir="se" title="拖拽调整大小" @mousedown="startResize($event, n, 'se')" />
-            <span class="oc-rs oc-rs-corner" data-dir="sw" title="拖拽调整大小" @mousedown="startResize($event, n, 'sw')" />
-            <span class="oc-rs oc-rs-corner" data-dir="ne" title="拖拽调整大小" @mousedown="startResize($event, n, 'ne')" />
-            <span class="oc-rs oc-rs-corner" data-dir="nw" title="拖拽调整大小" @mousedown="startResize($event, n, 'nw')" />
-          </template>
+          <span class="oc-rs" data-dir="e" title="拖拽调整宽度" @mousedown="startResize($event, n, 'e')" />
+          <span class="oc-rs" data-dir="w" title="拖拽调整宽度" @mousedown="startResize($event, n, 'w')" />
+          <span class="oc-rs" data-dir="s" title="拖拽调整高度" @mousedown="startResize($event, n, 's')" />
+          <span class="oc-rs" data-dir="n" title="拖拽调整高度" @mousedown="startResize($event, n, 'n')" />
+          <span class="oc-rs oc-rs-corner" data-dir="se" title="拖拽调整大小" @mousedown="startResize($event, n, 'se')" />
+          <span class="oc-rs oc-rs-corner" data-dir="sw" title="拖拽调整大小" @mousedown="startResize($event, n, 'sw')" />
+          <span class="oc-rs oc-rs-corner" data-dir="ne" title="拖拽调整大小" @mousedown="startResize($event, n, 'ne')" />
+          <span class="oc-rs oc-rs-corner" data-dir="nw" title="拖拽调整大小" @mousedown="startResize($event, n, 'nw')" />
         </div>
 
-        <!-- 就地展开的迷你卡：与容器卡分离渲染，保证连线矩形与 DOM 完全一致 -->
+        <!-- 就地展开的迷你卡：按顶层容器分组，内容区可滚动；连线矩形随 scrollOffsets 位移 -->
         <div
-          v-for="item in miniItems"
-          :key="'mini-' + item.node.id"
-          class="oc-mini"
-          :class="[
-            'oc-mini-' + item.node.kind,
-            'sh-' + (item.node.shape || 'process'),
-            {
-              sel: work.selOlnodeId === item.node.id,
-              flash: flashIds.has(item.node.id),
-              editing: editText && editText.id === item.node.id,
-              'oc-mini-event': item.node.kind === 'event',
-              'oc-mini-container': item.node.kind === 'container'
-            }
-          ]"
-          :style="miniStyle(item)"
-          :data-node-id="item.node.id"
-          :data-mini-id="item.node.id"
-          :data-dl-target="item.node.kind === 'cite' && item.node.refId ? item.node.refId : null"
-          :data-dl-title="item.node.kind === 'cite' ? labelOf(item.node) : null"
+          v-for="group in miniGroups"
+          :key="'mini-scroll-' + group.id"
+          class="oc-mini-scroll"
+          :style="miniScrollStyle(group)"
+          :data-mini-scroll="group.id"
+          :ref="(el) => setMiniScrollEl(group.id, el)"
+          @scroll="onMiniScroll(group.id, $event)"
           @mousedown.stop
-          @click.stop="selectMini(item.node)"
-          @dblclick.stop="onMiniDbl(item)"
-          @contextmenu.prevent="onNodeCtx($event, item.node)"
+          @click.stop
+          @wheel.stop
         >
-          <span v-if="paperFor(item.node)" class="oc-paper" :class="paperClass(item.node)" :style="paperFor(item.node)" aria-hidden="true" />
-          <div class="oc-mini-content">
-            <div class="oc-mini-top">
-              <span class="oc-mini-kind">{{ KIND_LABEL_DESIGN[item.node.kind] || '模块' }}</span>
-              <span class="oc-mini-state">
-                <i v-if="item.node.kind === 'event'" class="oc-state-dot" :style="{ '--state-color': statusColor(item.node) }" />
-                {{ item.node.kind === 'event' ? statusLabel(item.node) : (item.node.kind === 'container' ? `${containerProgress(item.node).done}/${containerProgress(item.node).total}` : '') }}
-              </span>
+          <div class="oc-mini-content" :style="{ height: group.contentH + 'px' }">
+            <div
+              v-for="item in group.items"
+              :key="'mini-' + item.node.id"
+              class="oc-mini"
+              :class="[
+                'oc-mini-' + item.node.kind,
+                'sh-' + (item.node.shape || 'process'),
+                {
+                  sel: work.selOlnodeId === item.node.id,
+                  flash: flashIds.has(item.node.id),
+                  editing: editText && editText.id === item.node.id,
+                  'oc-mini-event': item.node.kind === 'event',
+                  'oc-mini-container': item.node.kind === 'container'
+                }
+              ]"
+              :style="miniStyle(item, group)"
+              :data-node-id="item.node.id"
+              :data-mini-id="item.node.id"
+              :data-dl-target="item.node.kind === 'cite' && item.node.refId ? item.node.refId : null"
+              :data-dl-title="item.node.kind === 'cite' ? labelOf(item.node) : null"
+              @mousedown.stop
+              @click.stop="selectMini(item.node)"
+              @dblclick.stop="onMiniDbl(item)"
+              @contextmenu.prevent="onNodeCtx($event, item.node)"
+            >
+              <span v-if="paperFor(item.node)" class="oc-paper" :class="paperClass(item.node)" :style="paperFor(item.node)" aria-hidden="true" />
+              <div class="oc-mini-content">
+                <div class="oc-mini-top">
+                  <span class="oc-mini-kind">{{ KIND_LABEL_DESIGN[item.node.kind] || '模块' }}</span>
+                  <span class="oc-mini-state">
+                    <i v-if="item.node.kind === 'event'" class="oc-state-dot" :style="{ '--state-color': statusColor(item.node) }" />
+                    {{ item.node.kind === 'event' ? statusLabel(item.node) : (item.node.kind === 'container' ? `${containerProgress(item.node).done}/${containerProgress(item.node).total}` : '') }}
+                  </span>
+                </div>
+                <template v-if="item.node.kind === 'container'">
+                  <h3 class="oc-mini-title">{{ item.node.title || '容器' }}</h3>
+                  <p class="oc-mini-body">{{ containerSummary(item.node) }}</p>
+                  <div class="oc-mini-actions">
+                    <button class="enter" type="button" @click.stop="focusScope(item.node.id)">进入 ↗</button>
+                    <button type="button" @click.stop="toggleInline(item.node.id)">{{ isExpanded(item.node.id) ? '收起' : '展开' }}</button>
+                    <button class="more" type="button" @click.stop="drawerId = item.node.id">设置</button>
+                  </div>
+                </template>
+                <template v-else>
+                  <textarea
+                    v-if="editText && editText.id === item.node.id"
+                    ref="inlineEl"
+                    v-model="editText.value"
+                    class="oc-mini-inline"
+                    spellcheck="false"
+                    @mousedown.stop
+                    @dblclick.stop
+                    @blur="commitInline"
+                    @keydown.esc.prevent="editText = null"
+                    @keydown.ctrl.enter.prevent="commitInline"
+                  ></textarea>
+                  <template v-else>
+                    <h3 class="oc-mini-title">{{ labelOf(item.node) }}</h3>
+                    <p v-if="item.node.kind !== 'textbox'" class="oc-mini-body">{{ plainText(item.node).split('\n')[0].slice(0, 70) || subOf(item.node) }}</p>
+                  </template>
+                  <div class="oc-mini-actions">
+                    <button type="button" @click.stop="drawerId = item.node.id">编辑</button>
+                    <button class="more" type="button" @click.stop="onNodeCtx($event, item.node)">⋯</button>
+                  </div>
+                </template>
+              </div>
+              <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" title="拖到目标模块或连接点建立连线" @mousedown.stop="startConnect($event, item.node)" />
             </div>
-            <template v-if="item.node.kind === 'container'">
-              <h3 class="oc-mini-title">{{ item.node.title || '容器' }}</h3>
-              <p class="oc-mini-body">{{ containerSummary(item.node) }}</p>
-              <div class="oc-mini-actions">
-                <button class="enter" type="button" @click.stop="focusScope(item.node.id)">进入 ↗</button>
-                <button type="button" @click.stop="toggleInline(item.node.id)">{{ isExpanded(item.node.id) ? '收起' : '展开' }}</button>
-                <button class="more" type="button" @click.stop="drawerId = item.node.id">设置</button>
-              </div>
-            </template>
-            <template v-else>
-              <textarea
-                v-if="editText && editText.id === item.node.id"
-                ref="inlineEl"
-                v-model="editText.value"
-                class="oc-mini-inline"
-                spellcheck="false"
-                @mousedown.stop
-                @dblclick.stop
-                @blur="commitInline"
-                @keydown.esc.prevent="editText = null"
-                @keydown.ctrl.enter.prevent="commitInline"
-              ></textarea>
-              <template v-else>
-                <h3 class="oc-mini-title">{{ labelOf(item.node) }}</h3>
-                <p v-if="item.node.kind !== 'textbox'" class="oc-mini-body">{{ plainText(item.node).split('\n')[0].slice(0, 70) || subOf(item.node) }}</p>
-              </template>
-              <div class="oc-mini-actions">
-                <button type="button" @click.stop="drawerId = item.node.id">编辑</button>
-                <button class="more" type="button" @click.stop="onNodeCtx($event, item.node)">⋯</button>
-              </div>
-            </template>
           </div>
-          <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" title="拖到目标模块或连接点建立连线" @mousedown.stop="startConnect($event, item.node)" />
         </div>
 
         <template v-if="selectedEdge && !connecting && !selectedEdge.group && !selectedEdge.projected">
@@ -2275,7 +2388,6 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <OutlineMaterials v-model:show="materialsOpen" />
 
     <!-- 空画布快速开始 -->
     <div v-if="!live.length" class="oc-quick">

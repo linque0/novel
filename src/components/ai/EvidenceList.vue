@@ -9,7 +9,12 @@ const work = useWorkStore()
 async function jump(ref) {
   const current = resolveEvidence(ref, work)
   if (!current || current.sourceHash !== ref.sourceHash) { window.$msg?.warning('来源已变化，请重新核对证据'); return }
-  const tabs = { chapter: 'chapters', character: 'characters', lore: 'lore', mubu:'lore', outline: 'outline', olnode:'outline',snippet:'snippets',annotation:'chapters' }
+  if(ref.sourceType==='lorelink'||ref.sourceType==='relation') {
+    const relation=(ref.sourceType==='lorelink'?work.lorelinks:work.relations).find(r=>r.id===ref.sourceId)
+    if(relation)work.navTo(ref.sourceType==='relation'||relation.fromKind==='character'?'characters':'lore',relation.fromId)
+    return
+  }
+  const tabs = { chapter: 'chapters', character: 'characters', lore: 'lore', mubu:'lore', outline: 'outline', olnode:'outline',outlineconnection:'outline',snippet:'snippets',annotation:'chapters' }
   if(!tabs[ref.sourceType]){window.$msg?.info('来源已核对，请在对应资料中查看');return}
   if(ref.sourceType==='annotation'){const a=work.annotations.find((r)=>r.id===ref.sourceId);if(a)work.navTo('chapters',a.chapterId);return}
   work.navTo(tabs[ref.sourceType], ref.sourceId)
@@ -18,7 +23,7 @@ async function jump(ref) {
     const ed = window.__ns?.editor
     if (ed && !ed.isDestroyed && work.selChapterId === ref.sourceId) try { const range = locateEditorPatch(ed, ref.quote); ed.commands.setTextSelection({ from: range.from, to: range.to }); ed.commands.focus() } catch { window.$msg?.info('已打开证据章节，请对照摘引核对位置') }
   }
-  if (['outline','olnode'].includes(ref.sourceType)) { work.selOlnodeId = ref.sourceId; work.canvasFocusTick++ }
+  if (['outline','olnode','outlineconnection'].includes(ref.sourceType)) { work.selOlnodeId = ref.sourceId; work.canvasFocusTick++ }
 }
 </script>
 <template>

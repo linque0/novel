@@ -22,7 +22,7 @@ const seed = await c.evalx(buildSeedExpr('批注验证书', { reset: true }))
 if (!seed.ok) { console.log('seed 失败', JSON.stringify(seed)); process.exit(1) }
 await c.evalx(`location.reload()`)
 await c.sleep(2600)
-await c.evalx(`[...document.querySelectorAll('.book-card')].find((x) => x.textContent.includes('批注验证书'))?.click()`)
+await c.evalx(`(async()=>{const p=document.querySelector('#app').__vue_app__.config.globalProperties.$pinia;await p._s.get('ui').setSkin('original');await window.__ns.getWork().open(${JSON.stringify(seed.books[0].workId)})})()`)
 await c.sleep(1800)
 check('打开测试书并进入编辑器', await c.evalx(vis('.rich-host .tiptap')))
 /* 补一章，保证抽屉内有可切换的目标（来源脚本 reset 重建，无残留） */
@@ -48,7 +48,12 @@ const before = await c.evalx(`(() => {
 console.log('[before]', JSON.stringify(before))
 
 /* ---------- 2) 点「阅读」进入 ---------- */
-const entered = await c.evalx(clickByText('.topbar button', '阅读'))
+async function enterRead(){
+  await c.evalx(clickByText('.app-topbar button','更多'))
+  await c.sleep(100)
+  return c.evalx(clickByText('.n-dropdown-option-body','阅读模式'))
+}
+const entered = await enterRead()
 await c.sleep(700)
 check('顶栏「阅读」按钮可进入阅读模式', entered && (await c.evalx(`!!document.querySelector('.read-mode')`)), String(entered))
 
@@ -64,11 +69,11 @@ const chrome = await c.evalx(`(() => ({
   readHeadVis: ${vis('.ed-read-head')},
   edgeVis: ${vis('.ed-read-edge')},
   countVis: ${vis('.ed-read-count')},
-  barTexts: [...document.querySelectorAll('.topbar button')].map((b) => b.innerText.trim())
+  barTexts: [...document.querySelectorAll('.app-topbar button')].map((b) => b.innerText.trim())
 }))()`)
-check('两侧区域与任务条全部收起（rail/章节树/批注栏/AI 列/恍然梦助手条）', !chrome.rail && !chrome.side && !chrome.right && !chrome.aiDock && !chrome.taskBar, JSON.stringify(chrome))
+check('阅读时章节树、批注栏与 AI 浮层收起', !chrome.side && !chrome.right && !chrome.aiDock, JSON.stringify(chrome))
 check('章头与工具条隐藏、阅读头/边条/底右字数出现', !chrome.headVis && !chrome.toolbarVis && chrome.readHeadVis && chrome.edgeVis && chrome.countVis, JSON.stringify(chrome))
-check('顶栏切换为阅读变体（退出阅读 + 搜索/设置；书架/沉浸/书签隐去）', chrome.barTexts.some((t) => t.includes('退出阅读')) && !chrome.barTexts.some((t) => t.includes('沉浸')) && !chrome.barTexts.some((t) => t.includes('书签')), JSON.stringify(chrome.barTexts))
+check('阅读时保留统一顶栏搜索及更多入口',chrome.barTexts.some(t=>t.includes('搜索'))&&chrome.barTexts.some(t=>t.includes('更多')))
 
 /* ---------- 4) 巨排章号：与独立重算（liveVolumes×liveChapters）一致 ---------- */
 const ordinal = await c.evalx(`(async () => {
@@ -161,14 +166,14 @@ const esc2 = await c.evalx(`(() => ({
   readHead: ${vis('.ed-read-head')},
   head: ${vis('.editor-head')},
   toolbar: ${vis('.editor-toolbar')},
-  rail: !!document.querySelector('.nav-rail'),
+  rail: !!document.querySelector('.app-topbar'),
   editable: window.__ns.editor.isEditable,
   same: window.__ns.editor === window.__rmRef2
 }))()`)
 check('Esc 第二级：退出阅读，chrome/可编辑恢复且编辑器仍不重建', !esc2.readHead && esc2.head && esc2.toolbar && esc2.rail && esc2.editable === true && esc2.same, JSON.stringify(esc2))
 
 /* ---------- 9) 截图（重新进入阅读态拍图，随后复位） ---------- */
-await c.evalx(clickByText('.topbar button', '阅读'))
+await enterRead()
 await c.sleep(600)
 const shot = await c.send('Page.captureScreenshot', { format: 'png' })
 writeFileSync('tools/_readmode-verify.png', Buffer.from(shot.data, 'base64'))

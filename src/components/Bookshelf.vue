@@ -1,15 +1,18 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
-import { NButton, NModal, NInput, NSelect, NDropdown, NEmpty, NSpin, NCheckbox, useMessage } from 'naive-ui'
+import { liveQuery } from 'dexie'
+import { NButton, NModal, NInput, NSelect, NDropdown, NSpin, NCheckbox, useMessage } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
+import AppTopbar from './AppTopbar.vue'
+import { WORK_NAVIGATION } from './app-navigation'
 import GravityShelf from './GravityShelf.vue'
 import GlazeShelf from './GlazeShelf.vue'
 import CrimsonShelf from './CrimsonShelf.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
-import { firstChapterOf } from '../db/repo'
+import { resumeChapterOf } from '../db/repo'
 import { sortShelfWorks, formatShelfOpenTime } from '../services/shelf-sort'
 
 const shelf = useShelfStore()
@@ -48,16 +51,16 @@ const filtered = computed(() => {
 })
 const openText = (w) => formatShelfOpenTime(shelf.openStats[w.id]?.lastOpenedAt)
 
-/* 首章白卡 / 首章剧目卡用：随当前展示的作品取它的首章（只读查询，失败/无章节就不显示） */
+/* 接续卡与开书使用同一位置解析；没有位置记录时回退首章。 */
 const firstChapter = ref(null)
-watch([() => filtered.value[0]?.id, () => ui.skin], async ([id, skin]) => {
+watch([() => filtered.value[0]?.id, () => ui.skin], ([id, skin], _previous, onCleanup) => {
   firstChapter.value = null
   if (!id || !['glaze', 'crimson'].includes(skin)) return
-  try {
-    firstChapter.value = await firstChapterOf(id)
-  } catch {
-    firstChapter.value = null
-  }
+  const subscription = liveQuery(() => resumeChapterOf(id)).subscribe({
+    next(chapter) { if (filtered.value[0]?.id === id && ui.skin === skin) firstChapter.value = chapter },
+    error() { if (filtered.value[0]?.id === id && ui.skin === skin) firstChapter.value = null }
+  })
+  onCleanup(() => subscription.unsubscribe())
 }, { immediate: true })
 
 function openCreate() {
@@ -100,7 +103,7 @@ async function openWorkAt(w, tab = 'chapters') {
   opening.value = true
   try {
     await work.open(w.id)
-    if (['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(tab)) work.tab = tab
+    if (WORK_NAVIGATION.some(item => item.key === tab)) work.tab = tab
   } catch {
     msg.error('作品未能打开，请重试')
   } finally { opening.value = false }
@@ -157,19 +160,16 @@ async function onCardMenu(key, w) {
     <GlazeShelf v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <CrimsonShelf v-else-if="ui.skin === 'crimson'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <template v-else>
-    <div class="topbar">
-      <div class="shelf-brand">
-        <span class="logo">坊</span>
-        <span class="cn brand">小说工坊</span>
-        <span class="en">Novel&nbsp;Studio</span>
-      </div>
+    <AppTopbar active="shelf" :busy="opening || shelf.loading" :has-work="!!filtered[0]" :target-title="filtered[0]?.title" @navigate="key => key === 'settings' ? openSettings() : key !== 'shelf' && filtered[0] ? openWorkAt(filtered[0], key) : undefined">
+      <template #actions><SkinPicker /></template>
+    </AppTopbar>
+    <div class="shelf-toolbar">
+      <h1>我的作品 <small>{{ shelf.works.length }}</small></h1>
       <div class="shelf-search">
         <NInput v-model:value="q" size="small" placeholder="搜索作品、作者、类型…" clearable>
           <template #prefix><OIcon name="search" :size="13" /></template>
         </NInput>
       </div>
-      <SkinPicker />
-      <NButton size="small" title="设置：外观 / 恍然梦 / 数据 / 关于（独立窗口）" @click="openSettings"><OIcon name="gear" :size="14" /> 设置</NButton>
       <NButton size="small" type="primary" @click="openCreate">＋ 新建作品</NButton>
     </div>
 
@@ -232,3 +232,11 @@ async function onCardMenu(key, w) {
     </NModal>
   </div>
 </template>
+
+<style scoped>
+.shelf-toolbar { display:flex; align-items:center; gap:16px; padding:24px 40px 0; flex:none; }
+.shelf-toolbar h1 { margin:0 auto 0 0; font:600 22px var(--editor-font); white-space:nowrap; }
+.shelf-toolbar h1 small { margin-left:8px; color:var(--text-dim); font-size:13px; }
+.shelf-toolbar .shelf-search { margin:0; }
+@media(max-width:850px) { .shelf-toolbar { flex-wrap:wrap; padding:24px 16px 0; gap:12px; } .shelf-toolbar h1 { width:100%; } .shelf-toolbar .shelf-search { flex:1; min-width:120px; max-width:none; } }
+</style>

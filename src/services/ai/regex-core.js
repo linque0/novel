@@ -1,11 +1,5 @@
 import { expandMacros, copy } from "./presets.js";
 
-export const PLACEMENTS = {
-  USER_INPUT: 1,
-  AI_OUTPUT: 2,
-  WORLD_INFO: 5,
-  REASONING: 6,
-};
 export function escapeRegexMacro(value) {
   return String(value ?? "").replace(
     /[\n\r\t\v\f\0.^$*+?{}[\]\\/|()]/g,

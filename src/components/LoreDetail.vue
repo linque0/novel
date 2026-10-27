@@ -85,11 +85,6 @@ function pickRel(e) {
   close()
   jumpTo({ kind: 'character', id: e.otherId })
 }
-/** 「↗ 跳原位置」：关闭页面 + 定位闪烁（设定）/ 跳转（人物） */
-function jumpRel(e) {
-  close()
-  jumpTo({ kind: e.otherKind, id: e.otherId })
-}
 function locate() {
   const id = node.value?.id
   close()

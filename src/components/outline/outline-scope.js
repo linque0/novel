@@ -3,13 +3,14 @@
 
 export const SCOPE_METRICS = {
   cardW: 460,
-  cardMinW: 340,
+  cardMinW: 260,
   cardMaxW: 720,
   headH: 108,
   progressH: 24,
   footH: 38,
   padY: 8,
   collapsedH: 178,
+  containerMinH: 220,
   miniGap: 12,
   miniPad: 16,
   miniCols: 2,
@@ -65,10 +66,6 @@ export function scopeCrumbs(nodes, scopeId) {
     { id: null, title: '全书' },
     ...scopePathIds(nodes, scopeId).map((id) => ({ id, title: byId.get(id)?.title || '容器' }))
   ]
-}
-
-export function scopeDepth(nodes, scopeId) {
-  return scopePathIds(nodes, scopeId).length
 }
 
 /** 当前层直接子项。 */
@@ -165,7 +162,7 @@ export function layoutMiniChildren(nodes, parent, parentRect, expanded, opts = {
   let rowH = 0
 
   const push = (node, rect, depth, parentId) => {
-    items.push({ node, rect, depth, parentId, mini: true })
+    items.push({ node, rect, depth, parentId, mini: true, clipId: opts.clipId || null })
   }
 
   for (const child of childrenOf(nodes, parent.id)) {
@@ -183,7 +180,8 @@ export function layoutMiniChildren(nodes, parent, parentRect, expanded, opts = {
         topOffset: M.miniContainerH + M.miniOpenGap,
         pad: M.miniPad,
         bottomPad: M.miniOpenGap,
-        depth: (opts.depth || 0) + 1
+        depth: (opts.depth || 0) + 1,
+        clipId: opts.clipId
       })
       items.push(...nested.items)
       y += h + M.miniGap
@@ -207,14 +205,22 @@ export function layoutMiniChildren(nodes, parent, parentRect, expanded, opts = {
 
 export function containerCardSize(nodes, node, expanded, width) {
   const w = width ?? cardWidth(node)
-  if (!isContainer(node) || !expanded.has(node.id)) return { w, h: M.collapsedH }
-  const rect = { x: 0, y: 0, w, h: 0 }
-  const grid = layoutMiniChildren(nodes, node, rect, expanded, {
-    topOffset: M.headH + M.progressH + M.padY,
-    pad: M.miniPad,
-    bottomPad: M.padY
-  })
-  return { w, h: M.headH + M.progressH + M.padY + grid.height + M.padY + M.footH }
+  const open = isContainer(node) && expanded.has(node.id)
+  /* 无手动高度时按内容自动；有手动高度时保留，最小高度由折叠/展开状态决定。
+   * 展开后允许比内容矮，多出的迷你卡由画布的滚动内容区承接。 */
+  let autoH = M.collapsedH
+  if (open) {
+    const rect = { x: 0, y: 0, w, h: 0 }
+    const grid = layoutMiniChildren(nodes, node, rect, expanded, {
+      topOffset: M.headH + M.progressH + M.padY,
+      pad: M.miniPad,
+      bottomPad: M.padY
+    })
+    autoH = M.headH + M.progressH + M.padY + grid.height + M.padY + M.footH
+  }
+  const minH = open ? M.containerMinH : M.collapsedH
+  const manualH = Number(node.h) > 0 ? Math.max(minH, Number(node.h)) : null
+  return { w, h: manualH ?? autoH }
 }
 
 /** 旧作品容器间距可能只有 320px：显式宽度优先，否则在相邻容器之间自适应收窄，
@@ -227,7 +233,10 @@ function layerWidths(nodes, layer) {
     const base = Number(n.w) ? cardWidth(n) : M.cardW
     const next = containers[i + 1]
     const avail = next ? (Number(next.canvasX) || 0) - (Number(n.canvasX) || 0) - 20 : Infinity
-    out.set(n.id, Number.isFinite(avail) ? Math.max(260, Math.min(base, avail)) : base)
+    /* 用户手动调宽后不再被邻居压缩；旧作品没有 manualW，继续自适应收窄避免重叠。 */
+    out.set(n.id, n.manualW
+      ? base
+      : (Number.isFinite(avail) ? Math.max(M.cardMinW, Math.min(base, avail)) : base))
   }
   return out
 }
@@ -235,40 +244,41 @@ function layerWidths(nodes, layer) {
 /**
  * 当前层完整布局：直接子节点、所有就地展开的容器卡尺寸与迷你卡矩形。
  */
-export function buildLayerLayout(nodes, scopeId, expanded) {
+export function buildLayerLayout(nodes, scopeId, expanded, opts = {}) {
   const layer = layerNodes(nodes, scopeId)
   const sizes = new Map()
   const widths = layerWidths(nodes, layer)
   const mini = { items: [], byId: new Map() }
   for (const n of layer) {
-    sizes.set(n.id, isContainer(n) ? containerCardSize(nodes, n, expanded, widths.get(n.id)) : null)
+    const drag = opts.sizeOf?.(n)
+    if (isContainer(n)) {
+      if (drag) {
+        const minH = expanded.has(n.id) ? M.containerMinH : M.collapsedH
+        sizes.set(n.id, {
+          w: Math.max(M.cardMinW, Math.min(M.cardMaxW, Number(drag.w) || M.cardW)),
+          h: Math.max(minH, Number(drag.h) || minH)
+        })
+      } else {
+        sizes.set(n.id, containerCardSize(nodes, n, expanded, widths.get(n.id)))
+      }
+    } else {
+      sizes.set(n.id, null)
+    }
     if (!isContainer(n) || !expanded.has(n.id)) continue
     const card = sizes.get(n.id)
-    const pos = { x: Number(n.canvasX) || 0, y: Number(n.canvasY) || 0 }
+    /* 拖动中的临时坐标优先：容器本体与内部迷你卡必须使用同一实时位置。 */
+    const pos = opts.posOf?.(n) || { x: Number(n.canvasX) || 0, y: Number(n.canvasY) || 0 }
     const grid = layoutMiniChildren(nodes, n, { ...pos, ...card }, expanded, {
       topOffset: M.headH + M.progressH + M.padY,
       pad: M.miniPad,
-      bottomPad: M.padY
+      bottomPad: M.padY,
+      clipId: n.id
     })
     mini.items.push(...grid.items)
     for (const item of grid.items) mini.byId.set(item.node.id, item)
   }
   const visibleIds = new Set([...layer.map((n) => n.id), ...mini.items.map((i) => i.node.id)])
   return { scopeId, layer, sizes, mini, visibleIds }
-}
-
-/** 当前层节点/迷你卡的矩形（迷你卡优先，因为它是同一节点的可见代理）。 */
-export function rectOfNode(nodes, layerLayout, id) {
-  const item = layerLayout.mini.byId.get(id)
-  if (item) return item.rect
-  const n = nodes.find((x) => x.id === id)
-  if (!n) return null
-  const pos = { x: Number(n.canvasX) || 0, y: Number(n.canvasY) || 0 }
-  if (isContainer(n)) {
-    const size = layerLayout.sizes.get(n.id) || containerCardSize(nodes, n, new Set())
-    return { ...pos, ...size }
-  }
-  return { ...pos, w: Number(n.w) || 178, h: Number(n.h) || 54 }
 }
 
 function rangeArrow(a) {

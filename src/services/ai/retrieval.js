@@ -6,6 +6,7 @@ import { embed } from './provider'
 import { hashContent } from './summarize'
 import { queryTerms } from './booksource.js'
 import { db } from '../../db/database.js'
+import { vectorPolicy } from './retrieval-policy.js'
 
 export function cosine(a, b) {
   if (!a.length || a.length !== b.length) return 0
@@ -18,8 +19,8 @@ export function fuseRanks(lists) {
   for (const list of lists) list.forEach((id, i) => scores.set(id, (scores.get(id) || 0) + 1 / (60 + i + 1)))
   return [...scores].sort((a, b) => b[1] - a[1]).map(([id]) => id)
 }
-export async function kbQuery({ work, task = 'chat', anchorId = null, asOfChapterId = null, query = '', kind = null, limitTokens = 2400, privacy = false, embeddings = null, opts = null }) {
-  const snap = await knowledgeSnapshot(work, asOfChapterId)
+export async function kbQuery({ work, task = 'chat', anchorId = null, asOfChapterId = null, query = '', kind = null, limitTokens = 2400, privacy = false, embeddings = null, opts = null,writingBoundary=null }) {
+  const snap = await knowledgeSnapshot(work, asOfChapterId,writingBoundary)
   const seeds = queryTerms(query)
   const current = snap.index.get(asOfChapterId || anchorId) ?? snap.chapters.length - 1
   const hooks = replayForeshadows(snap.cards).filter((f) => f.status === 'active').slice(0, 8)
@@ -48,33 +49,38 @@ export async function kbQuery({ work, task = 'chat', anchorId = null, asOfChapte
     const distance = card.kind === 'arc' ? 1 : 1 / (1 + 0.15 * Math.abs(current - card.orderIdx))
     return { card, score: weight * distance * (1 + Math.min(0.5, 0.1 * hits)) }
   }).filter((x) => x.score > 0).sort((a, b) => b.score - a.score)
-  let vectorFallback = false
-  if (embeddings?.enabled && opts && query) {
+  const policy=vectorPolicy({privacy,embeddings,opts,query})
+  let vectorFallback = false, vectorStatus={mode:'lexical',reason:policy.reason}
+  if (policy.enabled) {
     try {
       const stored = await vectors(work.work.id)
       const applicable = stored.filter((v) => v.model === embeddings.model && (!v.provider || v.provider === opts.baseURL) && snap.cards.some((c) => c.id === v.cardId && v.sourceHash === hashContent(c.title + JSON.stringify(c.body))))
       if (applicable.length) {
         const queryResult = await embed({ ...opts, model: embeddings.model, texts: [query] })
         const q = queryResult.vectors[0]
+        if(!q?.length||!q.every(Number.isFinite)||!applicable.some(v=>v.dim===q.length))throw new Error('向量维度或响应无效')
         opts.onUsage?.(queryResult.usage || { total_tokens: tokens(query), estimated: true })
         const semantic = applicable.filter((v) => v.dim === q.length).map((v) => ({ id: v.cardId, score: cosine(q, new Float32Array(v.vec)) })).sort((a, b) => b.score - a.score).slice(0, 20)
         const ids = fuseRanks([ranked.map((x) => x.card.id), semantic.map((x) => x.id)])
-        ranked = ids.map((id) => ({ card: snap.cards.find((c) => c.id === id) })).filter((x) => x.card && (!kind || x.card.kind === kind))
+        ranked = ids.map((id) => ({ card: snap.cards.find((c) => c.id === id) })).filter((x) => x.card && x.card.kind!=='entity' && (!kind || x.card.kind === kind))
+        vectorStatus={mode:'hybrid',reason:null}
+      } else {
+        vectorFallback=true;vectorStatus={mode:'lexical',reason:'no-current-vectors'}
       }
-    } catch (e) { if (opts.signal?.aborted) throw e; vectorFallback = true }
+    } catch (e) { if (opts.signal?.aborted) throw e; vectorFallback = true;vectorStatus={mode:'lexical',reason:'embedding-unavailable'} }
   }
-  const cards = [], blocks = []
+  const cards = [], blocks = [], omitted=[]
   let remaining = limitTokens
   for (const { card } of ranked) {
     const body = privacy ? withoutQuotes(card.body) : card.body
     const text = `◆ ${card.kind} [${card.id}] ${card.title}${card.chapterId ? ' · 《' + (snap.chapters.find((c) => c.id === card.chapterId)?.title || '') + '》 [sourceId=' + card.chapterId + ']' : ''}：${JSON.stringify(body)}`
     const cost = tokens(text) + 2
-    if (cost > remaining) continue
+    if (cost > remaining) {omitted.push({id:card.id,reason:'retrieval-budget',sourceVersions:card.sourceVersions||card.dependencies||[],chapterId:card.chapterId,sourceHash:card.sourceHash});continue}
     remaining -= cost
     cards.push(card)
     blocks.push({ layer: 'L1.5', label: '知识库 · ' + card.kind + ' · ' + card.title, text: '【知识库：正文提取事实，须核对来源】\n' + text })
   }
-  return { cards, blocks, snapshot: snap, byKeyword, byRef, vectorFallback }
+  return { cards, blocks, snapshot: snap, byKeyword, byRef, vectorFallback,vectorStatus,omitted }
 }
 export async function rebuildVectors({ work, opts, model, onProgress, shouldPause = () => false, onUsage }) {
   const owner = uid(), id = 'knowledge:' + work.work.id

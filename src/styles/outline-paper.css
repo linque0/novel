@@ -24,7 +24,7 @@
   border-radius: inherit;
   background-color: var(--paper-tone, transparent);
   background-image: var(--paper-image);
-  background-size: cover;
+  background-size: 100% 100%;
   background-position: center;
   background-repeat: no-repeat;
   background-blend-mode: var(--oc-paper-blend);
@@ -47,18 +47,16 @@
 .oc-node > .oc-cmeta,
 .oc-node > .oc-csummary,
 .oc-node > .oc-cprogress,
-.oc-node > .oc-cfoot,
 .oc-node > .oc-inline-edit,
 .oc-node > .oc-cite-add {
   position: relative;
   z-index: 1;
 }
+.oc-node > .oc-cfoot { z-index: 1; }
 .oc-event .oc-shape polygon {
   fill: transparent;
   stroke: var(--paper-edge, var(--oc-line));
 }
-.oc-no-textures .oc-paper { display: none; }
-.oc-no-textures .oc-event .oc-shape polygon { fill: var(--oc-shape-fill, var(--bg-panel)); }
 
 /* 事件纸面内部排版：类型行 / 标题 / 正文 / 状态脚注 */
 .oc-kicker {
@@ -256,16 +254,6 @@
   margin-top: 1px;
 }
 .oc-textures-toggle.on { color: var(--accent); border-color: var(--accent); }
-.oc-materials-btn {
-  width: auto !important;
-  min-width: 0;
-  height: 26px;
-  padding: 0 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  white-space: nowrap;
-}
 
 /* ---------- 容器卡 ---------- */
 .oc-container {
@@ -374,7 +362,6 @@
 .oc-cfoot button:hover { background: color-mix(in srgb, var(--bc, #748b80) 10%, transparent); }
 .oc-cfoot .enter { color: color-mix(in srgb, var(--bc, #748b80) 82%, var(--oc-paper-ink)); font-weight: 600; }
 .oc-cfoot .inspect { margin-left: auto; }
-.oc-container > .oc-rs { display: none; }
 .oc-container .oc-caret { color: color-mix(in srgb, var(--bc, #748b80) 76%, var(--oc-paper-muted)); }
 .oc-container .oc-title-edit { height: 24px; font-size: 15px; }
 
@@ -723,68 +710,6 @@
 .oc-drawer-foot .oc-quiet { width: 100%; }
 @keyframes oc-drawer-in { from { opacity: 0; transform: translateX(10px); } to { opacity: 1; transform: none; } }
 
-/* ---------- 素材库 ---------- */
-.oc-materials-modal.n-card {
-  width: min(980px, calc(100vw - 48px));
-  max-height: 90dvh;
-  border-radius: 12px;
-  background: #fafbf6;
-}
-.oc-materials-modal .n-card__content { overflow: auto; }
-.oc-materials { color: #273d38; }
-.oc-materials-head { margin-bottom: 8px; }
-.oc-materials-eyebrow { font-size: 9px; letter-spacing: 2px; color: #8b9980; }
-.oc-materials-head p { margin: 6px 0 12px; font-size: 12px; line-height: 1.7; color: #66765a; }
-.oc-materials h3 { font-size: 12px; font-weight: 500; color: #50664f; margin: 16px 0 10px; }
-.oc-material-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 18px 14px; }
-.oc-material-grid.shapes { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-.oc-material-card { min-width: 0; }
-.oc-material-swatch {
-  position: relative;
-  height: 118px;
-  display: grid;
-  place-items: center;
-  border: 1px solid #d7dece;
-  border-radius: 6px;
-  background-color: #fdfcf8;
-  background-image: var(--paper-image);
-  background-size: cover;
-  background-position: center;
-  box-shadow: 0 4px 12px #384c3509;
-  font-family: var(--serif);
-  font-size: 20px;
-  color: #465a4d;
-}
-.oc-material-swatch.shape { height: 138px; border: 0; background-color: transparent; box-shadow: none; filter: drop-shadow(0 4px 5px #384c3510); }
-.oc-material-swatch.shape::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-color: var(--paper-tone);
-  background-image: var(--paper-image);
-  background-size: cover;
-  background-position: center;
-  clip-path: var(--paper-clip);
-  box-shadow: inset 0 0 0 1px var(--paper-edge);
-}
-.oc-material-swatch.shape span { position: relative; z-index: 1; }
-.oc-material-swatch.shape-diamond::before { clip-path: polygon(50% 2%, 98% 50%, 50% 98%, 2% 50%); }
-.oc-material-swatch.shape-para::before { clip-path: polygon(12% 2%, 98% 2%, 88% 98%, 2% 98%); }
-.oc-material-swatch.shape-ellipse::before { clip-path: ellipse(49% 49% at 50% 50%); }
-.oc-material-swatch.kind-volume { color: #f7f5e7; background-color: #294c48; }
-.oc-material-card h4 { font-size: 11px; font-weight: 500; margin: 8px 0 3px; }
-.oc-material-card p { margin: 0; font-size: 9.5px; line-height: 1.6; color: #66765a; }
-.oc-materials-foot {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 18px;
-  padding-top: 12px;
-  border-top: 1px solid #dee4d6;
-  font-size: 9.5px;
-  color: #66765a;
-}
-
 /* ---------- 进入 / 返回 ---------- */
 .oc-scope-portal {
   position: fixed;
@@ -936,8 +861,6 @@
   .oc-crumbs button { max-width: 120px; }
   .oc-search kbd { display: none; }
   .oc-search input { width: 88px; }
-  .oc-material-grid,
-  .oc-material-grid.shapes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (max-width: 680px) {
   .oc-scopebar { flex-wrap: wrap; min-height: 0; }
@@ -948,9 +871,43 @@
   .oc-selection-bar { width: calc(100% - 20px); justify-content: space-between; }
   .oc-group-inspector { max-width: calc(100% - 20px); flex-wrap: wrap; justify-content: center; }
   .oc-relation-row { grid-template-columns: 1fr 18px 1fr; gap: 6px; }
-  .oc-materials-modal.n-card { width: calc(100vw - 16px); }
 }
 @media (prefers-reduced-motion: reduce) {
   .oc-scope-portal { display: none; }
   .oc-drawer { animation: none; }
+}
+
+/* ---------- 画布背景透明度 ---------- */
+.oc-canvas { isolation: isolate; }
+.oc-canvas-surface {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--oc-canvas-color, #f0f3e9);
+  background-image: radial-gradient(var(--oc-canvas-dot, #d4ddcc) .65px, transparent .8px);
+  background-size: 22px 22px;
+  transition: opacity .16s ease;
+}
+.oc-canvas > .om-inner { z-index: 1; }
+
+/* ---------- 展开容器的内容区滚动 ---------- */
+.oc-mini-scroll {
+  position: absolute;
+  z-index: 2;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--oc-line, #dfe3dc) 70%, transparent) transparent;
+}
+.oc-mini-scroll::-webkit-scrollbar { width: 7px; height: 7px; }
+.oc-mini-scroll::-webkit-scrollbar-track { background: transparent; }
+.oc-mini-scroll::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--oc-line, #dfe3dc) 70%, transparent);
+}
+.oc-mini-content { position: relative; }
+@media (prefers-reduced-motion: reduce) {
+  .oc-canvas-surface { transition: none; }
 }

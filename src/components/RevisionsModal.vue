@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { NModal, NButton, NEmpty, NTag } from 'naive-ui'
+import { NModal, NButton, NEmpty } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 

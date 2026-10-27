@@ -85,15 +85,6 @@ export function edgeColor(rel) {
  * 避障路由 v0.4.16 起为全局最优：先试最简首形，被挡时在 Hanan 稀疏网格上跑
  * A*（长度 + 转向惩罚）求最短折线并拉直收敛，旧贪心逐段绕行仅作病态兜底。 */
 
-/** 接口外法线方向 */
-export function sideDir(side) {
-  if (side === 'right') return { x: 1, y: 0 }
-  if (side === 'left') return { x: -1, y: 0 }
-  if (side === 'bottom') return { x: 0, y: 1 }
-  if (side === 'top') return { x: 0, y: -1 }
-  return { x: 1, y: 0 }
-}
-
 /** 依据两矩形相对位置给出默认端口组合（建边未记录侧 / 旧数据回退用） */
 export function sideBetween(A, B) {
   const dx = B.x + B.w / 2 - (A.x + A.w / 2)
@@ -320,37 +311,6 @@ export function trimEdgeD(g, trime = 0, trims = 0) {
   return g ? trimRoute(g, trime, trims) : ''
 }
 
-/**
- * 自定义弯曲连线（v1.0.16 左键拖拽塑形）：端点 a→b，控制点 c（拖拽位置）。
- * 二次贝塞尔提升为三次（对称控制点），返回与 routeEdge 同构（c1/c2 供 pointAtT/trimEdgeD 用）。
- * 拖到接近 a-b 直线时（垂距 < 6px）视为拉直，返回 null 由调用方回退自动路由。
- */
-export function customEdgeGeom(a, b, c) {
-  if (!a || !b || !c) return null
-  /* 控制点到 a-b 弦的垂距：太近 = 拉直 */
-  const abx = b.x - a.x
-  const aby = b.y - a.y
-  const l2 = abx * abx + aby * aby || 1
-  const dist = Math.abs((c.x - a.x) * aby - (c.y - a.y) * abx) / Math.sqrt(l2)
-  if (dist < 6) return null
-  /* 二次 → 三次：控制点缩放 2/3 对称放置 */
-  const c1 = { x: a.x + (c.x - a.x) * (2 / 3), y: a.y + (c.y - a.y) * (2 / 3) }
-  const c2 = { x: b.x + (c.x - b.x) * (2 / 3), y: b.y + (c.y - b.y) * (2 / 3) }
-  const d = `M ${a.x} ${a.y} C ${c1.x} ${c1.y}, ${c2.x} ${c2.y}, ${b.x} ${b.y}`
-  const mid = { x: (a.x + 3 * c1.x + 3 * c2.x + b.x) / 8, y: (a.y + 3 * c1.y + 3 * c2.y + b.y) / 8 }
-  return {
-    d,
-    mid,
-    startDir: { x: c1.x - a.x, y: c1.y - a.y },
-    endDir: { x: b.x - c2.x, y: b.y - c2.y },
-    a,
-    b,
-    c1,
-    c2,
-    avoided: false
-  }
-}
-
 /** 连线路径参数 t∈[0,1] 处的点：折线按弧长插值，贝塞尔按三次曲线求值。
  * 连接点位置由宿主连线路径派生（v1.0.13），节点挪位/重排后连线重算，连接点随之回到线上。 */
 export function pointAtT(g, t) { return routePoint(g, t) }
@@ -437,7 +397,6 @@ export const relColor = (k) => (REL_KINDS.find((r) => r.key === k) || REL_KINDS[
 export const relDashed = (k) => !!(REL_KINDS.find((r) => r.key === k) || {}).dashed
 export const ARROWS = ['->', '<->', '--']
 export const cycleArrow = (a) => ARROWS[(ARROWS.indexOf(a) + 1) % ARROWS.length]
-export const arrowLabel = (a) => ({ '->': '单向 →', '<->': '双向 ↔', '--': '无向 —' }[a] || '单向 →')
 
 export const SHAPES = ['process', 'para', 'diamond', 'ellipse']
 export const nextShape = (s) => SHAPES[(SHAPES.indexOf(s) + 1) % SHAPES.length]

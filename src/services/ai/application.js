@@ -10,6 +10,9 @@ import { sourceManifest } from '../project/normalize.js'
 import { readSourceSnapshot } from '../../db/project-repo.js'
 import { applyWorkflow, undoWorkflow } from './task-application.js'
 import { taskApplyActions } from './task-profiles.js'
+import { validateWritingAnchor } from './writing-anchor.js'
+import { markChapterStale } from './summarize.js'
+import { closeHistory } from '@tiptap/pm/history'
 
 const TABLES = ['chapters', 'outlines', 'olnodes', 'mubu', 'characters', 'relations']
 const applying = new Set()
@@ -25,7 +28,7 @@ function targetOf(work, card) {
   return { type, row: rows.find((r) => r.id === card.anchorId && !r.deletedAt) }
 }
 export function proposalGuard(work, card, action) {
-  if (card.source?.taskRequest && !taskApplyActions(card.source.taskRequest.type, card.original).includes(action)) throw new Error('当前专用任务不允许此写回操作')
+  if (card.source?.taskRequest && !taskApplyActions(card.source.taskRequest.type, card.original,card.source.taskRequest.writingAnchor).includes(action)) throw new Error('当前专用任务不允许此写回操作')
   if (!work.work || card.workId !== work.work.id) throw new Error('提案属于其他作品，请重新生成')
   if (card.source?.layoutHash && fingerprint(ordered(work).map((ch) => [ch.id, ch.volumeId])) !== card.source.layoutHash)
     throw new Error('章节顺序或所属卷已变化，请重新生成')
@@ -89,14 +92,21 @@ export async function applyProposal(work, card, options = {}) {
   const operation = card.id + ':' + action
   if (applying.has(operation)) throw new Error('此提案正在应用，请稍候')
   proposalGuard(work, card, action)
-  if (['draft', 'rewrite', 'append', 'replace'].includes(action) || card.kind === 'rewrite') {
+  if (['draft', 'rewrite', 'append', 'replace','insert'].includes(action) || card.kind === 'rewrite') {
     const editor = window.__ns?.editor
     if (!editor || editor.isDestroyed || work.selChapterId !== card.anchorId) throw new Error('请先打开提案对应章节')
     if (!editor.isEditable) throw new Error('当前编辑器只读')
-    if ((card.kind === 'rewrite' || action === 'replace') && locateEditorPatch(editor, card.original).protectedMark)
+    const anchor=card.source?.taskRequest?.writingAnchor
+    if(anchor)validateWritingAnchor(editor,anchor)
+    if (!anchor&&(card.kind === 'rewrite' || action === 'replace') && locateEditorPatch(editor, card.original).protectedMark)
       throw new Error('修改范围跨越关系链接或批注，已禁用一键应用，请人工处理草案')
   }
   await autosave.flushAll()
+  const task=card.source?.taskRequest
+  if(task?.selectedDirection&&task.writingSessionId&&!options.useFrozenDirection){
+    const record=await db.airuns.get(task.writingSessionId),direction=record?.session?.directions.find(d=>d.id===task.selectedDirection.id)
+    if(!direction||direction.revision!==task.selectedDirection.revision||JSON.stringify(direction.draft)!==JSON.stringify({title:task.selectedDirection.title,development:task.selectedDirection.development}))throw new Error('方向版本已变化：请按新方向生成，或明确采用本候选绑定的方向版本')
+  }
   const owner = uid(),
     leaseId = 'apply:' + card.workId
   if (!(await leaseJob({ id: leaseId, workId: card.workId, type: 'application-lock', owner })))
@@ -132,6 +142,7 @@ export async function applyProposal(work, card, options = {}) {
   const undoBefore = clone(work.olUndo)
   const redoBefore = clone(work.olRedo)
   let editorBefore = null
+  let targetEditor = null, editorAfter = null, editorChange = null
   let changes = []
   const auditId = uid()
   applying.add(operation)
@@ -176,22 +187,27 @@ export async function applyProposal(work, card, options = {}) {
         title: card.title,
         text: [card.summary, card.tension, JSON.stringify(card.impact)].filter(Boolean).join('\n'),
       })
-    } else if (card.kind === 'rewrite' || ['draft', 'append', 'replace'].includes(action)) {
+    } else if (card.kind === 'rewrite' || ['draft', 'append', 'replace','insert'].includes(action)) {
       const editor = window.__ns.editor
+      targetEditor = editor
       editorBefore = editor.getJSON()
       autosave.mark('chapters', row, { forceSnapshot: true })
       await autosave.flushAll()
       proposalGuard(work, card, action)
       if (work.selChapterId !== card.anchorId || editor !== window.__ns.editor || editor.isDestroyed || !editor.isEditable)
         throw new Error('编辑器目标已变化')
-      const replacement = card.kind === 'draft' ? card.text : card.replacement || card.opening || ''
+      const anchor=card.source?.taskRequest?.writingAnchor
+      if(anchor)validateWritingAnchor(editor,anchor)
+      if(anchor)editor.view.dispatch(closeHistory(editor.state.tr))
+      const replacement = card.editText ?? (card.kind === 'draft' ? card.text : card.replacement || card.opening || '')
+      if(typeof replacement!=='string'||!replacement.trim()||replacement.length>200000)throw new Error('待采纳正文为空或过长')
       const paragraphs = replacement
         .split(/\n+/)
         .filter(Boolean)
         .map((text) => ({ type: 'paragraph', content: [{ type: 'text', text }] }))
       if (!paragraphs.length) throw new Error('没有可应用的正文')
       if (card.kind === 'rewrite' || action === 'replace') {
-        const range = locateEditorPatch(editor, card.original)
+        const range = anchor || locateEditorPatch(editor, card.original)
         if (range.protectedMark) throw new Error('修改范围含关系链接或批注')
         const inline =
           !replacement.includes('\n') && editor.state.doc.resolve(range.from).parent === editor.state.doc.resolve(range.to).parent
@@ -201,7 +217,13 @@ export async function applyProposal(work, card, options = {}) {
           ? { type: 'text', text: replacement, marks: (editor.state.doc.nodeAt(range.from)?.marks || []).map((m) => m.toJSON()) }
           : paragraphs
         if (!editor.chain().focus().insertContentAt({ from: range.from, to: range.to }, content).run()) throw new Error('改稿事务未提交')
+      } else if(anchor){
+        const inline=!replacement.includes('\n')
+        if(!editor.chain().focus().insertContentAt(anchor.from,inline?{type:'text',text:replacement}:paragraphs).run())throw new Error('续写事务未提交')
       } else if (!editor.chain().focus('end').insertContent(paragraphs).run()) throw new Error('续写事务未提交')
+      editorAfter = JSON.stringify(editor.getJSON())
+      editorChange = {table:'chapters',id:row.id,before:before.chapters.find(c=>c.id===row.id),afterHash:entityHash(row)}
+      if(anchor)editor.view.dispatch(closeHistory(editor.state.tr))
     } else if (card.kind === 'diff' && card.subject === 'lore') {
       if (card.mode === 'add') work.mubuAddTree(row.id, null, [card.tree])
       else work.mubuSetText(row.id, card.revised, null)
@@ -232,7 +254,8 @@ export async function applyProposal(work, card, options = {}) {
     if (work.work?.id !== card.workId) throw new Error('作品已切换')
     work.aiApplying = false
     changes = []
-    for (const table of TABLES)
+    if(editorChange)changes.push(editorChange)
+    else for (const table of TABLES)
       for (const after of work[table]) {
         const prior = before[table].find((r) => r.id === after.id)
         if (!prior || entityHash(prior) !== entityHash(after))
@@ -256,12 +279,18 @@ export async function applyProposal(work, card, options = {}) {
     card.appliedActions = [...(card.appliedActions || []), action]
     card.auditId = auditId
     card.status = 'applied'
+    if(card.taskType?.startsWith('chapter.')){card.memoryPending=true;markChapterStale(card.anchorId)}
     return { ok: true, auditId, affected: changes.map((r) => r.id) }
   } catch (e) {
     if (work.work?.id !== card.workId) throw e
     work.aiApplying = false
-    if (editorBefore && window.__ns?.editor && !window.__ns.editor.isDestroyed) window.__ns.editor.commands.setContent(editorBefore)
-    if (!changes.length)
+    // Validation can fail after awaiting a flush. Until our transaction commits,
+    // nothing belongs to this operation and restoring a snapshot would erase input.
+    if (editorBefore && !editorAfter) throw e
+    if (editorBefore && targetEditor === window.__ns?.editor && work.selChapterId === card.anchorId && !targetEditor.isDestroyed && JSON.stringify(targetEditor.getJSON()) === editorAfter)
+      targetEditor.commands.setContent(editorBefore)
+    if(editorChange&&!changes.length)changes.push(editorChange)
+    if (!editorBefore && !changes.length)
       for (const table of TABLES)
         for (const row of work[table]) {
           const prior = before[table].find((b) => b.id === row.id)

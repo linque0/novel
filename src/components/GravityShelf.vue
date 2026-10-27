@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue'
 import { NButton, NInput, NSpin, NDropdown } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
+import AppTopbar from './AppTopbar.vue'
 import GravityBook from './GravityBook.vue'
 import GravityCover from './GravityCover.vue'
 import { formatShelfOpenTime } from '../services/shelf-sort'
@@ -73,7 +74,7 @@ const sinkingId = ref(null)
 const landingId = ref(null)
 
 function focusBook(book) {
-  if (!book || book.id === activeId.value) return
+  if (props.busy || props.loading || !book || book.id === activeId.value) return
   const leaving = activeBook.value
   risingId.value = null
   sinkingId.value = null
@@ -81,7 +82,7 @@ function focusBook(book) {
   activeId.value = book.id
 }
 function extractBook(book) {
-  if (!book || book.id === activeId.value) return
+  if (props.busy || props.loading || !book || book.id === activeId.value) return
   const leaving = activeBook.value
   activeId.value = book.id
   risingId.value = book.id
@@ -104,29 +105,19 @@ function onStageKeydown(event) {
   step(event.key === 'ArrowRight' ? 1 : -1)
 }
 
-const nav = [
-  { key: 'shelf', label: '书架', icon: 'books' },
-  { key: 'chapters', label: '正文', icon: 'note' },
-  { key: 'outline', label: '大纲', icon: 'container' },
-  { key: 'lore', label: '设定', icon: 'landmark' },
-  { key: 'characters', label: '人物', icon: 'user' },
-  { key: 'snippets', label: '灵感', icon: 'star' },
-  { key: 'settings', label: '设置', icon: 'gear' }
-]
 function navigate(key) {
   if (key === 'shelf') return
   if (key === 'settings') emit('settings')
-  else if (activeBook.value) emit('navigate', key, activeBook.value)
+  else if (activeBook.value && !props.busy && !props.loading) emit('navigate', key, activeBook.value)
 }
 function words(n) { return (Number(n) || 0).toLocaleString('zh-CN') }
 </script>
 
 <template>
   <section class="gravity-shelf" aria-label="引力书舱">
-    <header class="gravity-header">
-      <div class="gravity-brand"><span class="gravity-mark">坊</span><strong>小说工坊</strong><span class="gravity-brand-sub">故事，自有引力。</span></div>
-      <div class="gravity-header-actions"><SkinPicker /><button type="button" class="gravity-icon-button" aria-label="设置" @click="emit('settings')"><OIcon name="gear" :size="19" /></button></div>
-    </header>
+    <AppTopbar active="shelf" :busy="busy || loading" :has-work="!!activeBook" :target-title="activeBook?.title" @navigate="navigate">
+      <template #actions><SkinPicker /></template>
+    </AppTopbar>
 
     <main class="gravity-scroll">
       <div class="gravity-toolbar">
@@ -143,7 +134,7 @@ function words(n) { return (Number(n) || 0).toLocaleString('zh-CN') }
             <p class="gravity-eyebrow"><span></span>{{ query.trim() ? '搜索结果' : '最近打开' }} · 上次打开 {{ activeOpenText }}</p>
             <h2 :class="{ 'gravity-title-long': activeBook.title.length > 10 }">{{ activeBook.title }}</h2>
             <p class="gravity-intro">{{ activeBook.intro || '故事的下一页，正等你落笔。' }}</p>
-            <div class="gravity-feature-actions"><NButton type="primary" size="large" @click="emit('open', activeBook)">打开作品 <OIcon name="external" :size="15" /></NButton><button type="button" class="gravity-text-button" @click="emit('navigate', 'outline', activeBook)">故事大纲 <span>↗</span></button></div>
+            <div class="gravity-feature-actions"><NButton type="primary" size="large" :disabled="busy || loading" @click="emit('open', activeBook)">打开作品 <OIcon name="external" :size="15" /></NButton><button type="button" class="gravity-text-button" :disabled="busy || loading" @click="emit('navigate', 'outline', activeBook)">故事大纲 <span>↗</span></button></div>
             <dl class="gravity-stats"><div><dt>字数</dt><dd>{{ words(activeBook.totalWords) }}<small>字</small></dd></div><div><dt>章节</dt><dd>{{ activeBook.chapterCount || 0 }}<small>章</small></dd></div><div class="gravity-genre"><dt>类型</dt><dd>{{ activeBook.genre || '其他' }}</dd></div></dl>
           </div>
 
@@ -153,7 +144,7 @@ function words(n) { return (Number(n) || 0).toLocaleString('zh-CN') }
             <div v-for="slot in slots" :key="slot.book.id" class="gravity-slot" :class="'gravity-slot--' + slot.pose" :inert="isOuter(slot.pose) ? true : null">
               <div class="gravity-pose">
                 <div class="gravity-lift" :class="{ 'is-rising': risingId === slot.book.id, 'is-sinking': sinkingId === slot.book.id }" @animationend="onLiftEnd(slot.book.id, $event)">
-                  <GravityBook :book="slot.book" :active="slot.pose === 'center'" :class="{ 'gravity-main-book': slot.pose === 'center' }" :options="slot.pose === 'center' ? menuOptions(slot.book) : undefined" @open="emit('open', $event)" @center="focusBook($event)" @menu="(key, book) => emit('menu', key, book)" />
+                  <GravityBook :book="slot.book" :disabled="busy || loading" :active="slot.pose === 'center'" :class="{ 'gravity-main-book': slot.pose === 'center' }" :options="slot.pose === 'center' ? menuOptions(slot.book) : undefined" @open="emit('open', $event)" @center="focusBook($event)" @menu="(key, book) => emit('menu', key, book)" />
                 </div>
               </div>
             </div>
@@ -179,8 +170,8 @@ function words(n) { return (Number(n) || 0).toLocaleString('zh-CN') }
           <div class="gravity-library-head"><h2>其余的宇宙<span>{{ others.length }}</span></h2><span>按最近打开排序</span></div>
           <div class="gravity-library-grid">
             <article v-for="book in others" :key="book.id" class="gravity-library-item" :class="{ 'is-landing': landingId === book.id }">
-              <button type="button" class="gravity-library-open" :aria-label="'将《' + book.title + '》送到中央'" @click="extractBook(book)">
-                <GravityCover :book="book" /><span class="gravity-library-copy"><strong>{{ book.title }}</strong><span>{{ words(book.totalWords) }} 字 <i>/</i> {{ book.chapterCount || 0 }} 章</span><small>{{ book.author || '未署名' }} · {{ book.status || '构思' }}</small><small class="gravity-openat">上次打开 {{ openText(book) }}</small></span>
+              <button type="button" class="gravity-library-open" :disabled="busy || loading" :aria-label="'将《' + book.title + '》送到中央'" @click="extractBook(book)">
+                <GravityCover :book="book" miniature /><span class="gravity-library-copy"><strong :title="book.title">{{ book.title }}</strong><span>{{ words(book.totalWords) }} 字 <i>/</i> {{ book.chapterCount || 0 }} 章</span><small>{{ book.author || '未署名' }} · {{ book.status || '构思' }}</small><small class="gravity-openat">上次打开 {{ openText(book) }}</small></span>
               </button>
               <NDropdown :options="menuOptions(book)" trigger="click" @select="key => emit('menu', key, book)"><NButton class="gravity-list-menu" size="tiny" quaternary :aria-label="'作品菜单：' + book.title">⋯</NButton></NDropdown>
             </article>
@@ -189,6 +180,6 @@ function words(n) { return (Number(n) || 0).toLocaleString('zh-CN') }
       </NSpin>
     </main>
 
-    <footer class="gravity-dock-wrap"><nav class="gravity-dock" aria-label="工坊导航"><button v-for="item in nav" :key="item.key" type="button" :class="{ active: item.key === 'shelf' }" :aria-current="item.key === 'shelf' ? 'page' : undefined" :disabled="busy || (!activeBook && !['shelf', 'settings'].includes(item.key))" :title="!['shelf', 'settings'].includes(item.key) ? '打开当前展示作品的' + item.label : item.label" @click="navigate(item.key)"><OIcon :name="item.icon" :size="19" /><span>{{ item.label }}</span></button></nav></footer>
+
   </section>
 </template>

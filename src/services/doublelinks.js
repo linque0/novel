@@ -9,6 +9,7 @@ import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { stripTags } from './wordcount'
 import { primaryRole } from './character-tags'
+import { doublelinkTitle } from './doublelink-titles.js'
 
 export const KIND_LABEL = { chapter: '正文', mubu: '设定', character: '人物', outline: '大纲', snippet: '灵感' }
 
@@ -42,11 +43,7 @@ export const DlLinkMark = Mark.create({
 export function outlineLabel(refId) {
   const work = useWorkStore()
   if (!work.work) return ''
-  if (refId === work.work.id) return '总纲'
-  const v = work.volumes.find((x) => x.id === refId)
-  if (v) return '卷纲 · ' + v.title
-  const c = work.chapters.find((x) => x.id === refId)
-  return c ? '章纲 · ' + c.title : '大纲'
+  return doublelinkTitle('outline',{id:refId},work)
 }
 
 /* ---------- 全库可链接目标检索：标题或内容命中关键词，内容命中附选段 ---------- */
@@ -81,7 +78,7 @@ export function searchTargets(query, limit = 40) {
     push('chapter', c.id, c.title || '未命名章节', `正文 · ${c.wordCount || 0}字`, stripTags(c.content))
   }
   for (const n of work.liveMubu()) {
-    push('mubu', n.id, (n.text || '').slice(0, 40) || '（空节点）', '设定', n.text)
+    push('mubu', n.id, doublelinkTitle('mubu',n,work), '设定', n.text)
   }
   for (const c of work.liveCharacters) {
     push('character', c.id, c.name || '未命名', `人物${primaryRole(c) ? ' · ' + primaryRole(c) : ''}`, (c.content || '') + ' ' + (c.aliases || ''))
@@ -94,8 +91,7 @@ export function searchTargets(query, limit = 40) {
     push('outline', c.id, '章纲 · ' + c.title, '大纲', outlineBody(c.id))
   }
   for (const s of work.liveSnippets) {
-    const first = (s.content || '').split('\n').find((x) => x.trim()) || '（空）'
-    push('snippet', s.id, first.slice(0, 30), '灵感', s.content)
+    push('snippet', s.id, doublelinkTitle('snippet',s,work), '灵感', s.content)
   }
   // 标题命中优先（稳定排序，保持模块内顺序）
   if (q) out.sort((a, b) => (b.viaTitle ? 1 : 0) - (a.viaTitle ? 1 : 0))
@@ -127,7 +123,7 @@ export function targetById(kind, id) {
   }
   if (kind === 'mubu') {
     const n = work.mubu.find((x) => x.id === id && !x.deletedAt)
-    return n ? { kind, id, title: (n.text || '').slice(0, 40) || '（空节点）', extra: '设定' } : null
+    return n ? { kind, id, title: doublelinkTitle('mubu',n,work), extra: '设定' } : null
   }
   if (kind === 'character') {
     const c = work.liveCharacters.find((x) => x.id === id)
@@ -139,8 +135,7 @@ export function targetById(kind, id) {
   }
   if (kind === 'snippet') {
     const s = work.liveSnippets.find((x) => x.id === id)
-    const first = s ? (s.content || '').split('\n').find((x) => x.trim()) || '（空）' : ''
-    return s ? { kind, id, title: first.slice(0, 30), extra: '灵感' } : null
+    return s ? { kind, id, title: doublelinkTitle('snippet',s,work), extra: '灵感' } : null
   }
   return null
 }

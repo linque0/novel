@@ -8,9 +8,7 @@ export async function aiRows(table, workId) {
 export const kbRows = (workId) => aiRows('aikb', workId)
 export const kbMeta = (workId) => aiRows('aikbmeta', workId)
 export const decisions = (workId) => aiRows('aidecisions', workId)
-export const styleProfiles = (workId) => aiRows('aistyle', workId)
 export const putAiRow = (table, row) => db.table(table).put(json({ ...row, updatedAt: now() }))
-export const deleteAiRow = (table, id) => db.table(table).delete(id)
 
 export async function replaceChapterKnowledge(workId, chapterId, cards, meta, expectedContent) {
   return db.transaction('rw', db.aikb, db.aikbmeta, db.chapters, db.airuns, async () => {

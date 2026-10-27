@@ -174,7 +174,7 @@ db.version(11).stores({
 }))
 
 // v12：条目级「关联关系」（关系链接）——设定↔设定 / 设定↔人物 的类型化关系，
-// 单向存储（from→to + label/reverseLabel）双向展示；不参与 AI 读模型投影（SOURCE_TABLES 未含本表）
+// 单向存储（from→to + label/reverseLabel）双向展示；由 SOURCE_TABLES 接入 AI 投影与变更通知。
 db.version(12).stores({ lorelinks: 'id, workId' })
 
 // Covers direct deletes/imports and all source writes, not just autosave's list.

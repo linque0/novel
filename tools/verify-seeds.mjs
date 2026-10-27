@@ -193,14 +193,14 @@ async function bookSourceBook(ctx,meta) {
 }
 
 export const VERIFY_BOOKS = [
-  {title:'书内知识验证书',owner:'project-verify.mjs',desc:'完整投影、隐私、截止范围、全书知识与增量',create:bookSourceBook},
+  {title:'书内知识验证书',owner:'project-verify.mjs / relation-knowledge-verify.mjs',desc:'完整投影、关联知识、隐私、截止范围、全书知识与增量',create:bookSourceBook},
   { title: '双链验证书', owner: 'dl-verify.mjs', desc: '双链全链路：正文 / 幕布 / 人物 / 灵感 + 大纲令牌', create: dlBook },
   { title: '批注验证书', owner: 'annotation-verify.mjs', desc: '正文批注全链路：正文含一条双链（验证批注与双链共存）', create: annoBook },
   { title: '关系图验证书', owner: 'chargraph-verify.mjs', desc: '人物关系图：5 人物 + 2 关系', create: graphBook },
   { title: '画布验证书A', owner: 'olcanvas-verify.mjs', desc: '旧三级大纲迁移 v2（含章纲双链令牌）', create: canvasABook },
   { title: '画布验证书B', owner: 'olcanvas-verify.mjs', desc: '空书快速开始（仅一个幕布节点）', create: canvasBBook },
   { title: '关系跟随验证书', owner: 'relfollow-verify.mjs', desc: '关系图拖线改关系（甲 / 乙 / 丙 三人物）', create: relfollowBook },
-  { title: 'AI 验证书', owner: 'agent-task-verify.mjs', desc: 'AI 助手任务链路：五模块专用任务与提案（原文证据 / 确认 / 过期 / 回滚）', create: aiBook },
+  { title: 'AI 验证书', owner: 'agent-task-verify.mjs / writing-workflow-verify.mjs / agent-chat-ui-verify.mjs / agent-chat-ui-window-verify.mjs / agent-chat-ui-visual-verify.mjs / crimson-writing-rail-verify.mjs / writing-paper-verify.mjs / writing-paper-window-verify.mjs / writing-paper-visual-verify.mjs / chapter-title-wrap-verify.mjs / studio-writing-skins-verify.mjs / studio-writing-skins-layout.mjs / volume-entry-verify.mjs / crimson-volume-entry-verify.mjs', desc: 'AI 助手任务链路、正文工作流及正文目录/纸面/长标题/专属场景/卷操作定向检查', create: aiBook },
   { title: '多窗口验证书', owner: 'multiwindow-verify.mjs', desc: '拆窗 / 锁 / 落库 / 锁跟随', create: emptyBook },
   { title: '画布右键验证书', owner: 'canvasctx-verify.mjs', desc: '画布右键建模块 + Delete 删除', create: emptyBook },
   { title: '连接点修复验证书', owner: 'junction-fix-verify.mjs / freeze-repro-verify.mjs / visual-fix-verify.mjs', desc: '连接点全链路 + 卡死复现 + 视觉专项（三脚本共用）', create: emptyBook },

@@ -89,11 +89,6 @@ export const CONTAINER_COLORS = [
   ['#748b80', '石绿']
 ]
 
-export const PAPER_MATERIALS = [
-  ...Object.entries(EVENT_SHAPES).map(([shape, item]) => ({ key: shape, kind: 'event-surface', ...item })),
-  ...Object.entries(PAPER_KINDS).map(([kind, item]) => ({ key: kind, kind: `event-${kind}`, ...item }))
-]
-
 /** 事件纸面 CSS 变量；形状裁切与色调由 CSS 继续叠加。 */
 export function paperStyle(shape) {
   const item = EVENT_SHAPES[shape] || EVENT_SHAPES.process

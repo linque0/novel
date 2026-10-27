@@ -43,6 +43,7 @@ import {
 import { rebuildVectors } from "../services/ai/retrieval";
 import * as aiRepo from "../db/ai-repo";
 import { ensureProjection } from '../db/project-repo.js';
+import { completedDirectionRows } from '../services/ai/writing-directions.js';
 
 /** Preset-driven conversation and independent, fixed-prompt factual memory.
  * Secrets remain encrypted in appconfig. Generated proposals never write works here.
@@ -272,20 +273,6 @@ export const useAiStore = defineStore("ai", {
       s.phase === "generating" ||
       s.chatBusy ||
       s.evaluation.running,
-    /** 当前模型且「启用专属参数」打开时的配置；否则 null（完全跟随预设参数） */
-    activeModelCfg: (s) => {
-      const p = activeOf(s);
-      const cfg = p?.modelCfg?.[p.activeModel];
-      return cfg && cfg.enabled ? cfg : null;
-    },
-    /** 生效的上下文预算：模型配置了上下文窗口（>0）时与预设预算取更小值 */
-    effectiveBudget: (s) => {
-      const p = activeOf(s);
-      const budget = p?.params?.maxContext ?? 10000;
-      const cfg = p?.modelCfg?.[p.activeModel];
-      const cw = cfg && cfg.enabled ? Number(cfg.contextWindow) : 0;
-      return cw > 0 ? Math.min(budget, Math.round(cw)) : budget;
-    },
   },
 
   actions: {
@@ -757,8 +744,8 @@ export const useAiStore = defineStore("ai", {
     },
 
     /** 密钥即时解密（仅本次调用内存使用；密文无效/解密失败 → 提示重新配置） */
-    async decryptCredential() {
-      const cipher = this.credential;
+    async decryptCredential(providerId = this.activeProviderId) {
+      const cipher = this.credentials[providerId];
       if (!cipher) return "";
       const plain = await window.native?.credentialDecrypt?.(cipher);
       if (typeof plain !== "string")
@@ -769,15 +756,16 @@ export const useAiStore = defineStore("ai", {
     },
 
     /** 组装 provider 调用参数（request/对话编排消费形态）：连接信息 + API 格式取自当前预设；未配置或网页版在此拦截 */
-    async buildOpts() {
+    async buildOpts(stage = {}) {
       if (!window.native?.credentialDecrypt) {
         throw new AiProviderError(
           AI_ERROR_CODES.NOT_CONFIGURED,
           "恍然梦仅桌面版可用（网页版无凭据加密通道）",
         );
       }
-      const p = this.activeProvider;
-      if (!p || !p.baseURL.trim() || !String(p.activeModel || "").trim()) {
+      const p = stage.providerId ? this.providers.find(p=>p.id===stage.providerId) : this.activeProvider;
+      const selectedModel = stage.model || p?.activeModel;
+      if (!p || !p.baseURL.trim() || !String(selectedModel || "").trim()) {
         throw new AiProviderError(
           AI_ERROR_CODES.NOT_CONFIGURED,
           "恍然梦未配置：请先在设置中添加供应商并填写 API 地址与模型",
@@ -789,7 +777,8 @@ export const useAiStore = defineStore("ai", {
           "当前供应商已停用：请在模型设置中启用它，或切换到其他供应商",
         );
       }
-      const apiKey = await this.decryptCredential();
+      if(stage.model&&!p.models?.some(m=>m.name===stage.model&&m.enabled!==false))throw new Error('阶段模型不属于所选供应商或已停用');
+      const apiKey = await this.decryptCredential(p.id);
       if (!apiKey) {
         throw new AiProviderError(
           AI_ERROR_CODES.NOT_CONFIGURED,
@@ -800,12 +789,12 @@ export const useAiStore = defineStore("ai", {
         baseURL: p.baseURL.trim(),
         apiKey,
         apiFormat: p.apiFormat === "anthropic" ? "anthropic" : "openai",
-        ...this.generationOpts(),
+        ...this.generationOpts(p, selectedModel),
+        embeddings:p.params?.embeddings||{enabled:false},
       };
     },
-    generationOpts() {
-      const p = this.activeProvider;
-      const model = String(p?.activeModel || "").trim();
+    generationOpts(p = this.activeProvider, selectedModel = null) {
+      const model = String(selectedModel || p?.activeModel || "").trim();
       const cfg = p?.modelCfg?.[model]?.enabled ? p.modelCfg[model] : null;
       const known = lookupModelMeta(model);
       const limit = (a, b) => {
@@ -895,12 +884,14 @@ export const useAiStore = defineStore("ai", {
       const rows=await aiRepo.aiRows('airuns',workId);
       if(this.workId!==workId||this.chatBusy)return;
       const audits=rows.filter(r=>['application','workflow-application'].includes(r.type));
+      const writingCandidates=new Map(rows.filter(r=>r.type==='writing-session').sort((a,b)=>a.updatedAt-b.updatedAt).flatMap(r=>(r.session?.candidates||[]).map(c=>[c.id,c])));
       const latest=[...new Map(rows.filter(r=>r.type==='agent-task'&&r.result).sort((a,b)=>a.createdAt-b.createdAt).map(r=>[r.result.id,r])).values()];
       for(const row of latest) {
         if(this.chat.some(m=>m.id===row.result.id))continue;
         const message=copy(row.result);
         message.cards=message.cards.filter(c=>c.status!=='rejected');
         for(const card of message.cards) {
+          if(writingCandidates.has(card.id))Object.assign(card,copy(writingCandidates.get(card.id)));
           const audit=audits.filter(a=>a.cardId===card.id).sort((a,b)=>b.createdAt-a.createdAt)[0];
           if(audit){card.status=audit.status==='applied'?'applied':'undone';card.auditId=audit.status==='applied'?audit.id:null;card.appliedActions=audit.status==='applied'?[audit.action||'apply']:[]}
         }
@@ -953,10 +944,6 @@ export const useAiStore = defineStore("ai", {
       this.pendingPrompt = text;
       this.pendingRefs = contextRefs;
       useUiStore().aiDrawerOpen = true;
-    },
-    prepareTask(type, taskInput = {}, question = '') {
-      const live = useWorkStore();
-      this.prepare(question, {taskRequest:{type,workId:live.work?.id,...taskInput}});
     },
     cancel() {
       evaluationAbort?.abort();
@@ -1198,18 +1185,20 @@ export const useAiStore = defineStore("ai", {
           });
           msg = this.chat.at(-1);
         }
+        const stageModule = await import('../services/ai/stage-config.js');
+        const selectedStage = request.stageSnapshot || (frozen.taskRequest ? stageModule.freezeStage(await stageModule.loadStageConfig(),stageModule.stageForTask(frozen.taskRequest.type),{providers:this.providers,presets:this.presets}) : {});
         const [opts, rows, local, global] = await Promise.all([
-          this.buildOpts(),
+          this.buildOpts(selectedStage),
           presetRepo.listPresets(),
           presetRepo.presetState(workId),
           presetRepo.globalState(),
         ]);
         if (!current()) return false;
-        row = copy(
+        row = copy(selectedStage.presetSnapshot ||
           rows.find(
             (p) =>
               p.id ===
-              (request.presetId || local.presetId || this.selectedPresetId),
+              (request.presetId || selectedStage.presetId || local.presetId || this.selectedPresetId),
           ) || defaultPreset(),
         );
         const prepared = await prepareDialogue({
@@ -1222,7 +1211,7 @@ export const useAiStore = defineStore("ai", {
           state: privacy
             ? { local: {}, global: {} }
             : { local: local.local, global: global.global },
-          opts: { ...opts, privacy: privacy },
+          opts: { ...opts, privacy: privacy, signal:ctl.signal,stageSnapshot:selectedStage },
           continuationText:
             previousDraft?.text || old?.rawContent || old?.content || "",
           candidateIndex: msg.activeCandidate,
@@ -1253,7 +1242,11 @@ export const useAiStore = defineStore("ai", {
           warnings: compiled.warnings,
           dropped: compiled.dropped,
           tokens: compiled.tokens,
+          materials:prepared.material.materials,
+          budget:prepared.material.budget,
+          retrieval:prepared.material.retrieval,
         };
+        msg.stageSnapshot=copy({...selectedStage,providerId:selectedStage.providerId||this.activeProviderId,model:opts.model});
         msg.preset = compiled.presetSnapshot;
         this.phase = "generating";
         const response = await runDialogue({
@@ -1266,8 +1259,15 @@ export const useAiStore = defineStore("ai", {
             ...opts,
             signal: ctl.signal,
             privacy: privacy,
+            rootRemaining:request.rootRemaining,
             onToolDelta: (call) => {
-              if (current()) msg.toolOutput = call.function?.arguments || "";
+              if (current()) {
+                msg.toolOutput = call.function?.arguments || "";
+                if(frozen.taskRequest?.type==='chapter.directions'&&call.function?.name==='submit_plot_directions') {
+                  const rows=completedDirectionRows(msg.toolOutput)
+                  if(rows.length)try{request.onDirectionRows?.(rows)}catch(e){notice(e.message)}
+                }
+              }
             },
             onReasoningDelta: (d) => {
               if (current()) {
@@ -1295,7 +1295,7 @@ export const useAiStore = defineStore("ai", {
                 }, 120);
             }
           },
-          onUsage: (u) => this.addUsage(u),
+          onUsage: (u) => {this.addUsage(u);request.onStageUsage?.(u)},
           onNotice: notice,
         });
         if (!current()) return false;
@@ -1357,6 +1357,7 @@ export const useAiStore = defineStore("ai", {
         clearTimeout(viewTimer);
         if (msg) {
           msg.streaming = false;
+          request.onMessage?.(msg);
           storeCandidate(msg);
           if (msg.source?.taskRequest) {
             try {await aiRepo.putAiRow('airuns',{id:runId,workId,type:'agent-task',question:q,taskType:msg.source.taskRequest.type,status:ctl.signal.aborted?'cancelled':msg.complete?'completed':'incomplete',model:compiled?.opts?.model||this.model,preset:msg.preset,sourceVersions:msg.source.sourceVersions,createdAt:Date.now(),result:copy({id:msg.id,workId,runId,role:'assistant',content:msg.content,rawContent:msg.rawContent,cards:msg.cards,source:msg.source,complete:msg.complete,error:msg.error,finishReason:msg.finishReason,context:msg.context,ts:msg.ts})})}

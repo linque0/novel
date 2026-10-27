@@ -117,7 +117,7 @@ async function boot() {
     return
   }
   try {
-    await work.open(s.workId)
+    await work.open(s.workId, { chapterId: s.type === 'chapter' ? s.entityId : null, restorePosition: false })
   } catch (e) {
     status.value = 'error'
     errMsg.value = '作品打开失败：' + (e?.message || e)
@@ -127,7 +127,10 @@ async function boot() {
   const tabOf = { chapter: 'chapters', outline: 'outline', characters: 'characters', lore: 'lore', snippets: 'snippets' }
   if (tabOf[s.type]) work.tab = tabOf[s.type]
   if (s.type === 'ai-presets' && s.entityId) work.selChapterId = s.entityId
-  if (s.type === 'chapter') work.selChapterId = s.entityId || work.liveChapters[0]?.id || null
+  if (s.type === 'chapter' && s.entityId && work.liveChapters.some(c=>c.id===s.entityId)) {
+    work.selChapterId = s.entityId
+    work.selVolumeId = work.activeChapter?.volumeId || work.selVolumeId
+  }
   if (s.type === 'outline') {
     work.outlineView = 'canvas'
     if (s.entityId) work.selOlnodeId = s.entityId
@@ -171,7 +174,7 @@ onBeforeUnmount(() => autosave.flushAll())
       <PresetWindow v-if="spec.type === 'ai-presets'" style="flex: 1; min-height: 0" />
       <SettingsWindow v-else-if="spec.type === 'settings'" style="flex: 1; min-height: 0" />
       <template v-else>
-        <TaskLauncher v-if="ui.isStudioSkin" :module="work.tab" />
+        <TaskLauncher v-if="ui.isStudioSkin && spec.type !== 'ai'" :module="work.tab" />
         <div class="panel-topbar">
           <div v-show="ui.isStudioSkin" id="studio-task-actions"></div>
           <span class="serif" style="font-weight: 700">{{ work.work?.title }} · {{ panelTitle }}</span>
@@ -183,7 +186,7 @@ onBeforeUnmount(() => autosave.flushAll())
           <NButton size="small" @click="flushAndClose">保存并关闭</NButton>
           <NButton size="small" quaternary @click="closePanel"><OIcon name="close" :size="13" /></NButton>
         </div>
-        <div v-if="ui.skin === 'crimson'" class="crimson-panel-bar">
+        <div v-if="ui.skin === 'crimson' && spec.type !== 'ai'" class="crimson-panel-bar">
           <div class="crimson-module-title"><h1>{{ panelTitle }}</h1></div>
           <div id="crimson-bar-tools" class="crimson-bar-tools"></div>
         </div>
@@ -192,14 +195,25 @@ onBeforeUnmount(() => autosave.flushAll())
           <AiAssistantPanel />
         </div>
         <div v-else class="panel-body">
-          <div v-if="ui.skin !== 'crimson'" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
-            <ChapterTree v-if="spec.type === 'chapter'" />
+          <div v-if="ui.skin !== 'crimson'" v-show="(spec.type !== 'outline' || ui.outlineSideOpen) && (spec.type !== 'chapter' || (!ui.readMode && !ui.focusMode))" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
+            <ChapterTree v-if="spec.type === 'chapter'" in-panel @read="ui.readMode=true" />
             <OutlineSidebar v-else-if="spec.type === 'outline'" />
             <CharacterList v-else-if="spec.type === 'characters'" />
             <MubuTree v-else-if="spec.type === 'lore'" />
             <SnippetList v-else-if="spec.type === 'snippets'" />
           </div>
-          <div v-if="ui.skin !== 'crimson'" class="side-resizer" title="拖拽调整侧栏宽度（双击恢复默认）" @mousedown="startSideResize" @dblclick="ui.setPref('sideWidth', 252)"></div>
+          <div v-if="ui.skin !== 'crimson'" v-show="(spec.type !== 'outline' || ui.outlineSideOpen) && (spec.type !== 'chapter' || (!ui.readMode && !ui.focusMode))" class="side-resizer" title="拖拽调整侧栏宽度（双击恢复默认）" @mousedown="startSideResize" @dblclick="ui.setPref('sideWidth', 252)"></div>
+          <button
+            v-if="ui.skin !== 'crimson' && spec.type === 'outline' && !ui.outlineSideOpen"
+            class="ol-side-rail"
+            type="button"
+            title="展开故事结构"
+            aria-label="展开故事结构"
+            @click="ui.setPref('outlineSideOpen', true)"
+          >
+            <OIcon name="caret-right" :size="12" />
+            <span class="rail-text">故事结构</span>
+          </button>
           <div class="center-pane paper-texture" :class="{ 'crimson-panel-center': ui.skin === 'crimson' }">
             <EditorPane v-if="spec.type === 'chapter'" />
             <OutlineCenter v-else-if="spec.type === 'outline'" style="flex: 1; min-height: 0" />
@@ -240,7 +254,7 @@ onBeforeUnmount(() => autosave.flushAll())
 .ai-win {
   flex: 1;
   min-height: 0;
-  overflow: auto;
-  padding: 10px 12px;
+  overflow: hidden;
+  padding: 0;
 }
 </style>

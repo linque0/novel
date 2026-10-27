@@ -1,11 +1,21 @@
 /* 文档截图专用种子：在独立 profile 中建立演示作品《星尘旅人》
-   （正文 3 卷 9 章 / 人物 6 + 关系 6 / 设定幕布 13 节点 / 灵感 4 / 90 天字数日志 / 大纲画布 17 模块）
+   （正文 3 卷 9 章 / 人物 6 + 关系 6 / 设定幕布 13 节点 / 灵感 4 / 90 天字数日志 / 大纲画布 19 模块）
+   另补 4 本书架陪衬书目，让赤月戏「未完的剧目」栏有真实内容。
    幂等：同名作品整体重建；不写大纲 legacy 内容，避免触发 olnodes 自动迁移产生杂节点 */
 import { connect } from './_cdp-lib.mjs'
 
-const cdp = await connect('127.0.0.1:5173', '9222')
+/* 生产构建用 app://local/index.html；开发模式仍默认 Vite 地址 */
+const cdp = await connect(process.env.NS_APP_MATCH || '127.0.0.1:5173', '9222')
 
 const WORK = { title: '星尘旅人', author: '林间', genre: '科幻', status: '连载', intro: '星图熄灭的三百年后，一名领航员在界脊之上重新点亮了第一枚铜刻星辰。' }
+
+/* 书架陪衬：让非空书架与"未完的剧目"栏目有真实内容（各自 1 章，不参与正文演示） */
+const EXTRA = [
+  ['雾都来信', '岑野', '悬疑', '构思', '一封没有寄件人的信，把旧城的雾分成两半。', '雾从码头漫上来时，邮筒里躺着一封写给她自己的信。'],
+  ['长夜灯行', '苏见', '奇幻', '连载', '提灯人沿河而下，替每盏将熄的灯记住一个名字。', '河面没有月亮，只有一盏灯在走。'],
+  ['北境编年', '顾南', '历史', '完结', '边关十二城，一城一志，写尽三百年的风雪。', '第一场雪落在雁回关时，守将还没有名字。'],
+  ['纸上星图', '林间', '科幻', '构思', '如果把星图画在纸上，纸的背面会不会是另一片天空。', '他把最后一枚星钉按进纸里，桌面轻轻响了一声。']
+]
 
 const VOLUMES = ['第一卷 · 星图初醒', '第二卷 · 雾都钟楼', '第三卷 · 界脊之上']
 
@@ -56,21 +66,21 @@ const LORE = [
 ]
 
 const SNIPPETS = [
-  '灵感：钟楼的第十二响不是声音，是光——从天上落下来，把雾照成雪。',
-  '灵感：阿澈会把每个人说过的话都记下来，包括那些说出口又后悔的。',
-  '灵感：白鸦的银面具下不是伤疤，是半张星图。',
-  '灵感：林远父亲的航海日志最后一页，字迹比前面都新。'
+  '钟楼的第十二响不是声音，是光。',
+  '阿澈记得每个人说过的每一句话。',
+  '白鸦的银面具下是半张星图。',
+  '父亲的航海日志最后一页，字迹比前面都新。'
 ]
 
 /* 画布：一条自左向右的事件主链（含闭环回路）+ 引用卡/锚点/便签/文本框 + 一个归组容器 */
 const CANVAS = {
   events: [
-    ['铜星依次熄灭', 'process', 120, 320, 3, null],
-    ['领航员测试', 'diamond', 440, 320, null, null],
-    ['钟楼即星图', 'ellipse', 760, 320, null, null],
-    ['白鸦抢先一步', 'para', 1080, 320, null, null],
-    ['第十二响', 'process', 1400, 320, null, null],
-    ['终局对决', 'diamond', 1720, 320, null, null]
+    ['铜星依次熄灭', 'process', 120, 320, 3, null, '观测站的铜星一枚接一枚暗下去，冬至之前整张星图将全黑。', 'done'],
+    ['领航员测试', 'diamond', 440, 320, null, null, '林远在测试舱里测出公会历史最高的星感阈值。', 'done'],
+    ['钟楼即星图', 'ellipse', 760, 320, null, null, '雾都钟楼的铜钟刻痕，与观测站的星图连线完全一致。', 'writing'],
+    ['白鸦抢先一步', 'para', 1080, 320, null, null, '星盗白鸦先一步抵达钟楼，三方开始争夺钟内星图。', 'revise'],
+    ['第十二响', 'process', 1400, 320, null, null, '第十二响不是钟声，是三百六十枚星辰同时落下的光。', 'planned'],
+    ['终局对决', 'diamond', 1720, 320, null, null, '界脊之上，林远与白鸦以星感争夺最后的航路。', 'planned']
   ],
   chain: [
     ['铜星依次熄灭', '领航员测试', { label: '触发', kind: '因果' }],
@@ -90,11 +100,16 @@ const CANVAS = {
     ['chapter', '第九章 · 新的平衡', 1720, 130]
   ],
   notes: [
-    ['伏笔', '父亲的日志最后一页，字迹比前面都新。', 440, 560],
-    ['悬念', '星图不是地图，是路。得有人走。', 1080, 560]
+    ['伏笔', '父亲的日志最后一页，字迹比前面都新。', 440, 530],
+    ['悬念', '星图不是地图，是路。得有人走。', 1080, 530]
   ],
   textbox: ['全书主旋律：熄灭 → 寻路 → 点亮', 760, 620],
-  container: ['容器 · 归组示例', 120, 760, 600, 240, ['可用于收纳一组同类模块', '拖入即归组、拖出即回根级']]
+  container: ['容器 · 归组示例', 120, 650, 600, 220, [
+    '可用于收纳一组同类模块',
+    '拖入即归组、拖出即回根级',
+    '右键调色板可改分支颜色',
+    '八向缩放调整宽高'
+  ]]
 }
 
 const r = await cdp.evalx(`(async () => {
@@ -102,10 +117,10 @@ const r = await cdp.evalx(`(async () => {
   const t = now()
   const W = ${JSON.stringify(WORK)}, VOLS = ${JSON.stringify(VOLUMES)}, CHS = ${JSON.stringify(CHAPTERS)}
   const CHARS = ${JSON.stringify(CHARACTERS)}, RELS = ${JSON.stringify(RELATIONS)}, LORE = ${JSON.stringify(LORE)}
-  const SN = ${JSON.stringify(SNIPPETS)}, CV = ${JSON.stringify(CANVAS)}
+  const SN = ${JSON.stringify(SNIPPETS)}, CV = ${JSON.stringify(CANVAS)}, EX = ${JSON.stringify(EXTRA)}
 
-  /* ---- 幂等：清理同名作品的全部数据与迁移标记 ---- */
-  const old = (await db.works.toArray()).filter((w) => w.title === W.title)
+  /* ---- 幂等：清理同名作品（演示书 + 陪衬书）的全部数据与迁移标记 ---- */
+  const old = (await db.works.toArray()).filter((w) => w.title === W.title || EX.some((e) => e[0] === w.title))
   for (const o of old) {
     for (const tb of ['volumes','chapters','outlines','characters','relations','mubu','snippets','olnodes','wordlog','bookmarks','links','revisions']) {
       const rows = await db[tb].where('workId').equals(o.id).toArray().catch(() => [])
@@ -116,9 +131,22 @@ const r = await cdp.evalx(`(async () => {
   }
 
   const workId = uid()
-  await db.works.add({ id: workId, ...W, createdAt: t, updatedAt: t, deletedAt: null })
+  await db.works.add({ id: workId, ...W, kind: 'novel', lastOpenedAt: t, createdAt: t, updatedAt: t, deletedAt: null })
   /* 主大纲保持空内容：不触发 olnodes legacy 自动迁移，画布只含下方手工铺设的模块 */
   await db.outlines.add({ id: uid(), workId, level: 'master', refId: workId, content: '', updatedAt: t })
+
+  /* ---- 书架陪衬：4 本各 1 章的短篇，让剧目栏有真实书目 ---- */
+  for (let i = 0; i < EX.length; i++) {
+    const [title, author, genre, status, intro, firstLine] = EX[i]
+    const at = t - (i + 1) * 86400000
+    const wid = uid()
+    await db.works.add({ id: wid, title, author, genre, status, intro, kind: 'novel', lastOpenedAt: at, createdAt: at, updatedAt: at, deletedAt: null })
+    const vid = uid()
+    await db.volumes.add({ id: vid, workId: wid, title: '第一卷', sortOrder: 0, createdAt: at, updatedAt: at, deletedAt: null })
+    const html = '<p>' + firstLine + '</p>'
+    await db.chapters.add({ id: uid(), workId: wid, volumeId: vid, title: '第一章 · ' + title, content: html,
+      wordCount: countWords(firstLine), status: 'draft', sortOrder: 0, createdAt: at, updatedAt: at, deletedAt: null })
+  }
 
   /* ---- 卷 / 章 ---- */
   const volIds = {}
@@ -174,10 +202,10 @@ const r = await cdp.evalx(`(async () => {
 
   /* ---- 大纲画布 ---- */
   const N = []
-  const add = (o) => { const id = uid(); N.push({ id, workId, parentId: null, refId: null, kind: 'event', title: '', text: '', html: null, fold: false, sortOrder: 0, canvasX: 0, canvasY: 0, w: null, h: null, shape: 'process', pin: false, rels: [], deletedAt: null, createdAt: t, updatedAt: t, ...o }); return id }
+  const add = (o) => { const id = uid(); N.push({ id, workId, parentId: null, refId: null, kind: 'event', title: '', text: '', html: null, fold: false, sortOrder: 0, canvasX: 0, canvasY: 0, w: null, h: null, shape: 'process', pin: false, status: 'planned', rels: [], deletedAt: null, createdAt: t, updatedAt: t, ...o }); return id }
   const evId = {}
-  for (const [title, shape, x, y, w, h] of CV.events) {
-    evId[title] = add({ kind: 'event', title, shape, canvasX: x, canvasY: y, w, h, sortOrder: N.length * 1000 })
+  for (const [title, shape, x, y, w, h, text, status] of CV.events) {
+    evId[title] = add({ kind: 'event', title, shape, canvasX: x, canvasY: y, w, h, text: text || '', status: status || 'planned', sortOrder: N.length * 1000 })
   }
   const relAdd = (fromId, toId, o) => {
     const fn = N.find((n) => n.id === fromId)

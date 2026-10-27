@@ -2,7 +2,6 @@ import { db } from '../../db/database.js'
 import { ensureProjection, readSourceSnapshot } from '../../db/project-repo.js'
 import { sourceManifest } from '../project/normalize.js'
 import { hashContent, checkAbort, sourceChanged } from '../project/text.js'
-import { bookSession, documentView } from './booksource.js'
 
 // Registered material is indexed as registered material, never invented facts.
 // No model is needed to copy author records into the semantic read index.
@@ -13,7 +12,7 @@ export async function buildBookMemory(workId,{signal,onProgress}={}) {
   for(const doc of docs) {
     checkAbort(signal)
     const chunks=projection.chunks.filter((c)=>c.docId===doc.id)
-    const cards=chunks.map((c)=>({id:'source:'+c.id,workId,docId:doc.id,kind:doc.semanticClass==='summary'?'writtenOutline':doc.semanticClass==='plan'?'planBeat':doc.semanticClass==='inspiration'?'inspiration':doc.semanticClass==='comment'?'comment':doc.sourceType==='character'?'characterProfile':doc.sourceType==='relation'?'relation':'authorSetting',
+    const cards=chunks.map((c)=>({id:'source:'+c.id,workId,docId:doc.id,kind:doc.semanticClass==='summary'?'writtenOutline':doc.semanticClass==='plan'?'planBeat':doc.semanticClass==='inspiration'?'inspiration':doc.semanticClass==='comment'?'comment':doc.sourceType==='character'?'characterProfile':['relation','lorelink'].includes(doc.sourceType)?'relation':'authorSetting',
       schemaVersion:1,semanticClass:doc.semanticClass,assertionStatus:'authorRecord',title:doc.title,
       body:{text:c.text,sourceType:doc.sourceType,temporalStatus:doc.meta.temporalStatus||'author-record'},
       refType:doc.sourceType,refId:doc.sourceId,sourceHash:doc.sourceHash,contextHash:doc.contextHash,dependencies:doc.deps,
@@ -38,16 +37,10 @@ export async function buildBookMemory(workId,{signal,onProgress}={}) {
   return {projection,readDocuments:done.length,mode:'source-records'}
 }
 
-export async function sourceKnowledge(work,{asOfChapterId=null,privacy=false}={}) {
-  const session=bookSession(work,{asOfChapterId,privacy})
-  const docs=new Map(session.docs.map((d)=>[d.id,d]))
-  const [rows,decisions]=await Promise.all([db.aikb.where('workId').equals(work.work.id).toArray(),db.aidecisions.where('workId').equals(work.work.id).toArray()])
-  return rows.filter((r)=>r.assertionStatus==='authorRecord'&&docs.has(r.docId)&&r.sourceHash===docs.get(r.docId).sourceHash&&r.contextHash===docs.get(r.docId).contextHash&&!documentView(docs.get(r.docId),session).withheld&&!decisions.some((d)=>d.action==='ignore'&&(d.key==='card:'+r.id||d.key===r.decisionKey)))
-}
-
 export function ruleCandidates(session) {
-  return session.docs.filter((d)=>d.semanticClass==='setting'&&!['character','relation'].includes(d.sourceType)).flatMap((doc)=>
-    doc.plainText.split('\n').filter((line)=>/必须|不得|不能|禁止|不可|只有|需要|代价|上限/.test(line)).map((text)=>({
-      id:'rule:'+hashContent(doc.id+':'+text),docId:doc.id,sourceId:doc.sourceId,text,semanticClass:'setting',strength:'candidate',status:'needsReview',sourceVersions:doc.deps
-    })))
+  return session.docs.filter((d)=>d.semanticClass==='setting'&&!['character','relation','lorelink'].includes(d.sourceType)).flatMap((doc)=>
+    doc.plainText.split('\n').filter((line)=>/必须|不得|不能|禁止|不可|只有|需要|代价|上限/.test(line)).map((text)=>{
+      const row=session.work?.[doc.sourceTable]?.find(r=>r.id===doc.sourceId),rule=row?.rulePolicy || doc.meta?.rulePolicy || {}
+      return {id:'rule:'+hashContent(doc.id+':'+text),docId:doc.id,sourceId:doc.sourceId,text,semanticClass:'setting',strength:'candidate',status:rule.status==='confirmed'?'confirmed':'needsReview',scope:rule.scope,chapterId:rule.chapterId,outlineId:rule.outlineId,targetIds:rule.targetIds,keywords:rule.keywords,sourceVersions:doc.deps}
+    }))
 }

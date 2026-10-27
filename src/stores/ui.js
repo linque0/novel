@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { db } from '../db/database'
 import { broadcastAppEvent } from '../services/appbus'
 import { normalizeSkin, isStudioSkin } from '../skins/registry'
+import {normalizeWritingPaper,saveWritingPaperPreference} from '../services/writing-paper.js'
 
 /* 正文字体：中西文分离。--editor-font = 西文栈 + 中文栈（拉丁字符落西文，汉字落中文）。
    素材：思源宋体/霞鹜文楷/京华老宋体/朝华标题/云游手书/Gothic One 均已本地化（src/assets/fonts） */
@@ -29,7 +30,11 @@ export const useUiStore = defineStore('ui', {
     editorFont: 'song', // 中文正文（CJK_FONTS key）
     editorLatin: 'none', // 西文正文（LATIN_FONTS key）
     fontSize: 17,
+    writingPaperStyle: 'booklet',
+    writingPaperSaving: false,
     sideWidth: 252, // 侧栏宽度（180–480，右缘拖拽调节，appconfig 记忆）
+    topbarAutoHide: false, // 顶栏默认隐藏（跨窗口持久化，悬停临时展开）
+    outlineSideOpen: true, // 大纲侧栏开合（收起后左缘标签恢复，appconfig 记忆）
     focusMode: false,
     readMode: false, // 正文阅读模式（巨排章号 + 限宽只读列；session 级，开书复位）
     dbError: false,
@@ -75,7 +80,10 @@ export const useUiStore = defineStore('ui', {
         if (map.editorFont) this.editorFont = map.editorFont
         if (map.editorLatin) this.editorLatin = map.editorLatin
         if (map.fontSize) this.fontSize = Number(map.fontSize) || 17
+        this.writingPaperStyle = normalizeWritingPaper(map.writingPaperStyle)
         if (map.sideWidth) this.sideWidth = Math.min(480, Math.max(180, Number(map.sideWidth) || 252))
+        if (map.topbarAutoHide !== undefined) this.topbarAutoHide = map.topbarAutoHide === true
+        if (map.outlineSideOpen !== undefined) this.outlineSideOpen = !!map.outlineSideOpen
         if (map.aiDrawerWidth) this.aiDrawerWidth = Math.min(640, Math.max(300, Number(map.aiDrawerWidth) || 400))
         if (map.rightPanelOpen !== undefined) this.rightPanelOpen = !!map.rightPanelOpen
       } catch {
@@ -91,10 +99,17 @@ export const useUiStore = defineStore('ui', {
     },
     async setPref(key, value) {
       if (key === 'skin') return this.setSkin(value)
+      if (key === 'writingPaperStyle') return this.setWritingPaperStyle(value)
       this[key] = value
       await db.appconfig.put({ key, value })
       /* 跨窗口同步：其余窗口重载偏好（主题/字体等即时生效；处理端幂等，自身收到无副作用） */
       broadcastAppEvent('prefs-changed')
+    },
+    async setWritingPaperStyle(value) {
+      return saveWritingPaperPreference(this,value,{
+        write:row=>db.appconfig.put(row),
+        notify:()=>broadcastAppEvent('prefs-changed')
+      })
     }
   }
 })

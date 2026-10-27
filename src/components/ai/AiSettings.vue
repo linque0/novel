@@ -1,7 +1,7 @@
 <script setup>
 /* 模型设置（多供应商预设，ZCode 式管理）：左侧预设列表 + 右侧详情，全部即时保存。
  * - 每个预设 = 一套连接配置（名称 / Base URL / API 格式 / API Key）+ 模型列表（含启停）
- *   + 生成与记忆参数（温度 / 隐私 / 自动记忆 / 语义检索 / 向量模型，随预设切换）；
+ *   + 生成与记忆参数（温度 / 隐私 / 自动记忆，随预设切换）；向量模型与语义检索已独立到「知识库模型」页；
  * - 点列表项 = 切换当前使用中的预设（生成参数随之切换，立即生效）；
  * - API Key：明文只经 safeStorage（Windows DPAPI）加密通道落 ai.cred.<id>（store.saveProviderKey），
  *   本组件不持有明文状态、不回显明文；
@@ -23,7 +23,6 @@ const cur = computed(() => ai.activeProvider)
 /* 连接信息本地编辑态（blur 即存；切换预设/外部更新时重同步） */
 const form = reactive({ name: '', baseURL: '' })
 const tempLocal = ref(0.7)
-const embLocal = ref('')
 const keyInput = ref('')
 const keyBusy = ref(false)
 const testing = ref(false)
@@ -47,7 +46,6 @@ function syncForm() {
   form.name = cur.value?.name || ''
   form.baseURL = cur.value?.baseURL || ''
   tempLocal.value = cur.value?.params?.temperature ?? 0.7
-  embLocal.value = cur.value?.params?.embeddings?.model || ''
   keyInput.value = ''
   testResult.value = null
   fetchMsg.value = null
@@ -163,17 +161,6 @@ function setPrivacy(v) {
 
 function setKbAuto(v) {
   ai.updateParams({ kb: { auto: v } })
-}
-
-function setEmbEnabled(v) {
-  ai.updateParams({ embeddings: { enabled: v } })
-}
-
-async function saveEmbModel() {
-  if (!cur.value) return
-  const v = embLocal.value.trim()
-  if (v === (cur.value.params?.embeddings?.model || '')) return
-  await ai.updateParams({ embeddings: { model: v } })
 }
 
 /* ---------- 连接测试（走当前预设的 API 格式） ---------- */
@@ -407,22 +394,7 @@ function ctxTag(m) {
         <NSwitch :value="cur.params?.kb?.auto" :disabled="cur.params?.privacy" size="small" @update:value="setKbAuto" />
         <span class="ai-set-hint">默认关闭，开启后只更新改动章节与依赖</span>
       </div>
-      <div class="ai-set-row">
-        <span class="lb">语义检索</span>
-        <NSwitch :value="cur.params?.embeddings?.enabled" :disabled="noModelsApi" size="small" @update:value="setEmbEnabled" />
-        <span class="ai-set-hint">{{ noModelsApi ? 'Anthropic Messages 不提供向量接口，不可用' : '默认关闭，失败回落关键词' }}</span>
-      </div>
-      <div class="ai-set-row">
-        <span class="lb">向量模型</span>
-        <NInput
-          v-model:value="embLocal"
-          size="small"
-          :disabled="noModelsApi"
-          placeholder="独立 embeddings 模型名（走当前预设连接）"
-          @blur="saveEmbModel"
-          @keydown.enter="saveEmbModel"
-        />
-      </div>
+      <div class="ai-set-note">语义检索与向量模型已独立到左侧「知识库模型」设置；向量模型仍使用当前预设的连接。</div>
 
       <div class="ai-set-actions">
         <NButton size="small" :loading="testing" @click="onTest"><OIcon name="link" :size="12" /> 连接测试</NButton>

@@ -1,6 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { NButton, NTag, NSelect, NPopconfirm } from 'naive-ui'
+import { NButton, NTag, NPopconfirm } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'

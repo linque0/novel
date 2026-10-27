@@ -2,7 +2,6 @@
 import { ref, computed } from 'vue'
 import { NModal, NButton, NInput, NRadioGroup, NRadio, NCheckbox, NTag, NAlert, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
-import OIcon from './OIcon.vue'
 import { useShelfStore } from '../stores/shelf'
 import { useUiStore } from '../stores/ui'
 import { pickFiles, arrayBufferToBlob, imageMime } from '../services/fileio'

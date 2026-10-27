@@ -10,6 +10,8 @@ import {
 } from "./contracts";
 import { taskProfile, assertTaskTool } from './task-profiles.js';
 import { TASK_OUTPUT_TOOLS, taskEvidence, workflowProposal } from './task-proposals.js';
+import { directionProposal } from './writing-directions.js';
+import { creativeProposal } from './creative-proposals.js';
 
 const functionTool = (name, description, properties, required = []) => ({
   type: "function",
@@ -61,6 +63,10 @@ export function dialogueTools(task = null) {
   if (!task) return readonly;
   const output = taskProfile(task.type).outputTool;
   const descriptions = {
+    submit_chapter_plan:'提交 data={title,scenes:[{id,goal,pov,characters:[姓名],conflict,turn,ending,targetWords}]}。仅计划，不生成正文。',
+    submit_review:'提交 data={items:[{id,category,severity:"error|warning|suggestion|pass",problem,expected,quote,start?,evidence:[{sourceType,sourceId,quote,start?}]}]}。quote 来自 draftSource 的连续原文；重复引文须指定 start。外部事实冲突附来源证据；不足标为待核实。',
+    submit_recheck:'提交 data={items:[{id:原清单ID,status:"resolved|unresolved",quote:修订稿连续原文,start?,explanation}]}。恰好覆盖 confirmedReview.items；修法未落实原问题或缺少证据均 unresolved。',
+    submit_plot_directions:'提交剧情方向，data={directions:[{id:唯一短ID,title:方向标题,development:起因到行动冲突转折和结束状态的简短剧情演变}]}。数量严格等于本次 directionCount，每项在行动、冲突或结局上实质不同；不得提交正文或写回作品。',
     submit_chapter:'提交目标章正文草稿：text正文、title标题、summary说明、evidence来源摘引、warnings冲突与缺口、review对大纲/设定/人物/因果的核查。仅生成待确认草稿。',
     submit_outline_plan:'提交未来大纲：nodes:[{title,points,chapterId?,children:[],evidence:[]}], evidence:[],warnings:[],review。仅生成待确认计划。',
     submit_written_outline:'从指定正文反推已写内容纲：nodes:[{title,points,chapterId,children:[],evidence:[{sourceType:"chapter",sourceId,quote,start?}]}], evidence:[],warnings:[],review。父节点可归并成卷纲，叶节点必须关联章节并附原文依据。',
@@ -275,6 +281,7 @@ export async function runDialogue({
   if (task && !tools.length) throw new Error('专用任务需要工具调用，请提高上下文预算或换用支持工具的模型');
   const readProgress = new Map();
   const roundLimit = task ? 24 : 6;
+  let charged=0;
   for (let round = 0; round < roundLimit; round++) {
     checkAbort(opts.signal);
     const finalRound = round === roundLimit - 1;
@@ -289,6 +296,8 @@ export async function runDialogue({
       toolDefinitionReserve: toolReserve,
       dropped: fitted.dropped,
     });
+    const liability=fitted.tokens.used+toolReserve+(compiled.opts.maxTokens||2048);
+    if(Number.isFinite(opts.rootRemaining)&&charged+liability>opts.rootRemaining)throw new Error('本阶段剩余批次预算不足，已在请求前暂停');
     try {
       result = await chatStream(
         {
@@ -306,6 +315,7 @@ export async function runDialogue({
       );
     } catch (e) {
       checkAbort(opts.signal);
+      if(Number.isFinite(opts.rootRemaining)) {charged+=liability;onUsage?.({total_tokens:liability,estimated:true});}
       if (
         compiled.continuationPrefill &&
         [400, 422].includes(e.status) &&
@@ -346,6 +356,7 @@ export async function runDialogue({
       } else throw e;
     }
     checkAbort(opts.signal);
+    charged+=Number(result.usage?.total_tokens)||fitted.tokens.used+toolReserve+estimate(result.text)+estimate(JSON.stringify(result.toolCalls||[]));
     onUsage?.(
       result.usage || {
         prompt_tokens: fitted.tokens.used + (tools.length ? toolReserve : 0),
@@ -416,6 +427,12 @@ export async function runDialogue({
             draftId: draft.id,
             status: "等待作者确认，尚未保存",
           };
+        } else if(['submit_chapter_plan','submit_review','submit_recheck'].includes(name)) {
+          const card=creativeProposal(args.data,work,frozen,{runId,messageId});cards.push(card);onCard?.(card)
+          response={ok:true,status:'阶段产物，尚未写回作品'}
+        } else if(name==='submit_plot_directions') {
+          const card=directionProposal(args.data,frozen,{runId,messageId});cards.push(card);onCard?.(card)
+          response={ok:true,status:'剧情草案，等待作者编辑与选择'}
         } else if (task && name === taskProfile(task.type).outputTool) {
           const card = workflowProposal(args.data, work, frozen, runId, messageId);
           cards.push(card);
@@ -433,7 +450,9 @@ export async function runDialogue({
               authorProfiles: !!task?.type.startsWith('chapter.'),
               planScope: task && taskProfile(task.type).extraction ? 'none' : 'all',
               sourceRevision: frozen.bookRevision,
+              writingBoundary:frozen.writingBoundary,
               signal:opts.signal,
+              retrievalOptions:{embeddings:opts.embeddings,opts:{...opts,signal:opts.signal,onUsage},taskType:task?.type,anchorId:task?.targetId||frozen.chapterId},
             });
             if (['read_chapter','read_document'].includes(name) && response.sourceType==='chapter' && response.citation && !response.error && !response.withheld) {
               const progress=readProgress.get(response.sourceId)||{end:0,complete:false};

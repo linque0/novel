@@ -1,8 +1,8 @@
 import { knowledgeSnapshot } from './knowledge.js'
 import { withoutQuotes } from './contracts.js'
 
-export async function stateAt(work,{entityIds=[],asOfChapterId=null,privacy=false}={}) {
-  const snapshot=await knowledgeSnapshot(work,asOfChapterId)
+export async function stateAt(work,{entityIds=[],asOfChapterId=null,privacy=false,writingBoundary=null}={}) {
+  const snapshot=await knowledgeSnapshot(work,asOfChapterId,writingBoundary)
   const characters=work.characters.filter((c)=>!c.deletedAt&&(!entityIds.length||entityIds.includes(c.id)||entityIds.includes('character:'+c.id)))
   return characters.map((c)=>{
     const history=snapshot.cards.filter((r)=>r.kind==='charstate'&&r.refType==='character'&&r.refId===c.id).sort((a,b)=>a.orderIdx-b.orderIdx)

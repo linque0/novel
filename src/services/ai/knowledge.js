@@ -42,11 +42,12 @@ export function matchEntity(name, work) {
   if (!exact.length && lore.length === 1) return { refType: 'lore', refId: lore[0].id, name: lore[0].text }
   return null
 }
-export async function knowledgeSnapshot(work, asOfChapterId = null) {
+export async function knowledgeSnapshot(work, asOfChapterId = null, writingBoundary = null) {
   const workId = work.work.id
   const chs = ordered(work)
   const idx = new Map(chs.map((ch, i) => [ch.id, i]))
-  const cut = asOfChapterId ? idx.get(asOfChapterId) : Infinity
+  let cut = asOfChapterId ? idx.get(asOfChapterId) : Infinity
+  if(writingBoundary&&writingBoundary.end<plainChapter(chs.find(ch=>ch.id===writingBoundary.chapterId)).length)cut=Math.min(cut,(idx.get(writingBoundary.chapterId)??0)-1)
   if (asOfChapterId && cut == null) throw new Error('截至章节不存在')
   const [rows, allMetas, decisions] = await Promise.all([repo.kbRows(workId), repo.kbMeta(workId), repo.decisions(workId)])
   const metas=allMetas.filter((m)=>m.chapterId)

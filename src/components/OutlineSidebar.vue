@@ -3,14 +3,13 @@
 <script setup>
 import OIcon from './OIcon.vue'
 import { computed, ref, onMounted, watch } from 'vue'
-import { NButton, NPopover, NModal, NInput, NDropdown } from 'naive-ui'
+import { NButton, NModal, NInput, NDropdown } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import { targetById } from '../services/doublelinks'
 import { STATUS } from './outline/outline-paper'
-import { scopeStats, nodeStats } from './outline/outline-scope.js'
-import DLinkPicker from './DLinkPicker.vue'
+import { scopeStats, nodeStats, scopePathIds } from './outline/outline-scope.js'
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -18,7 +17,6 @@ const ai = useAiStore()
 const q = ref('')
 const typeFilter = ref('全部')
 const showBroken = ref(false)
-const citePicker = ref(false)
 const typeManage = ref(false)
 const newTypeName = ref('')
 const advancedOpen = ref(false)
@@ -39,11 +37,14 @@ const canvasScopeId = computed(() => {
   if (!id) return null
   return work.liveOlnodes().some((n) => n.id === id && n.kind === 'container') ? id : null
 })
-const scopeNode = computed(() => (canvasScopeId.value ? work.liveOlnodes().find((n) => n.id === canvasScopeId.value) : null))
-const layerTitle = computed(() => scopeNode.value?.title || '全书')
-const layerItems = computed(() => work.olnodeChildren(canvasScopeId.value))
-/* 引力书舱按设计稿在「＋」与类型名之间留一个空格，原版保持原紧排文案 */
-const addLabel = (t) => (ui.skin === 'gravity' ? '＋ ' + t : '＋' + t)
+/* 当前层直接子项已包含在故事结构树里：进入容器时自动展开当前容器及其祖先。 */
+watch([canvasScopeId, () => work.work?.id], ([id]) => {
+  if (!id) return
+  const next = new Map(treeState.value)
+  for (const pid of scopePathIds(work.liveOlnodes(), id)) next.set(pid, true)
+  next.set(id, true)
+  treeState.value = next
+}, { immediate: true })
 function addType() {
   const t = work.olTypeAdd(newTypeName.value)
   if (t) newTypeName.value = ''
@@ -153,35 +154,6 @@ function pick(m) {
   work.canvasFocusTick++
   work.outlineView = 'canvas'
 }
-function addModule(kind, fields = {}) {
-  const siblings = work.olnodeChildren(canvasScopeId.value)
-  const row = work.olnodeAdd(canvasScopeId.value, {
-    kind,
-    title: kind === 'event' ? '新事件' : '',
-    canvasX: 60 + (siblings.length % 3) * 280,
-    canvasY: 40 + Math.floor(siblings.length / 3) * 220,
-    ...fields
-  })
-  work.selOlnodeId = row.id
-  work.canvasFocusTick++
-}
-/* 文本框默认尺寸随皮肤：引力用设计稿的大文本框，原版保持原有 180×64 */
-function addTextbox() {
-  addModule('textbox', { opacity: 1 })
-}
-function onCitePick(t) {
-  citePicker.value = false
-  const siblings = work.olnodeChildren(canvasScopeId.value)
-  const row = work.olnodeAdd(canvasScopeId.value, {
-    kind: 'cite',
-    refId: t.kind + ':' + t.id,
-    title: t.title || '',
-    canvasX: 60 + (siblings.length % 3) * 280,
-    canvasY: 40 + Math.floor(siblings.length / 3) * 220
-  })
-  work.selOlnodeId = row.id
-  work.canvasFocusTick++
-}
 function rename(m) {
   /* Electron 不支持 window.prompt（实测抛异常），改用弹窗输入 */
   renameState.value = { show: true, id: m.n.id, value: m.label }
@@ -216,10 +188,13 @@ onMounted(() => {
 <template>
   <div class="ol-side-root ol-paper-sidebar">
     <div class="ol-side-scroll">
-      <button class="ol-book-root" type="button" title="返回全书画布" @click="home">
-        <span class="ol-book-mark" aria-hidden="true"><span v-for="(c,i) in bookMark" :key="i">{{ c }}</span></span>
-        <span class="ol-book-text"><strong>{{ work.work?.title || '未命名作品' }}</strong><small>{{ bookSubtitle }}</small></span>
-      </button>
+      <div class="ol-side-head">
+        <button class="ol-book-root" type="button" title="返回全书画布" @click="home">
+          <span class="ol-book-mark" aria-hidden="true"><span v-for="(c,i) in bookMark" :key="i">{{ c }}</span></span>
+          <span class="ol-book-text"><strong>{{ work.work?.title || '未命名作品' }}</strong><small>{{ bookSubtitle }}</small></span>
+        </button>
+        <button class="ol-side-toggle" type="button" title="收起故事结构" aria-label="收起故事结构" @click="ui.setPref('outlineSideOpen', false)"><OIcon name="back" :size="12" /></button>
+      </div>
       <div class="ol-side-section"><span>故事结构</span><span>{{ bookStats.total ? bookStats.done + ' / ' + bookStats.total : '0' }} 事件</span></div>
       <label class="ol-story-search"><OIcon name="search" :size="13" /><input v-model="q" placeholder="查找模块…" aria-label="侧栏搜索模块" /><button type="button" :aria-expanded="advancedOpen" title="类型筛选与管理" @click.prevent="advancedOpen = !advancedOpen"><OIcon name="gear" :size="13" /></button></label>
       <div v-if="advancedOpen" class="ol-story-filters">
@@ -233,23 +208,12 @@ onMounted(() => {
         <div v-for="m in modules" :key="m.n.id" class="ol-story-row" :class="{active:work.selOlnodeId===m.n.id,current:canvasScopeId===m.n.id,'ol-broken-item':m.broken}" :data-story-id="m.n.id" :style="{'--depth':m.depth}" :title="m.brokenTip || m.label">
           <button v-if="m.hasKids" type="button" class="ol-tree-toggle" :aria-label="(treeIsOpen(m.n)?'收起':'展开')+m.label+'结构'" :aria-expanded="treeIsOpen(m.n)" @click="toggleTree(m.n)"><OIcon :name="treeIsOpen(m.n)?'caret-down':'caret-right'" :size="10" /></button><span v-else class="ol-tree-dot" aria-hidden="true"></span>
           <button class="ol-tree-name" type="button" :title="'定位：'+m.label" @click="pick(m)">{{ m.label }}</button>
+          <span v-if="canvasScopeId===m.n.id" class="ol-tree-current">本层</span>
           <span v-if="m.n.kind==='container'" class="ol-tree-count">{{ statsOf(m.n).total }}</span><i v-else class="ol-tree-state" :class="m.n.status || ''" :title="STATUS[m.n.status] || m.type"></i>
           <NDropdown trigger="click" :options="[{key:'rename',label:'重命名'},{key:'ai',label:'发送给恍然梦',disabled:!ai.ready},{key:'remove',label:'删除'}]" @select="key=>key==='rename'?rename(m):key==='ai'?aiPlan(m):remove(m)"><button class="ol-tree-more" type="button" :aria-label="m.label+'的操作'" @click.stop>⋯</button></NDropdown>
         </div>
-        <p v-if="!modules.length" class="ol-side-empty">{{ q || typeFilter!=='全部'?'没有匹配的模块。':'添加模块，开始搭建故事。' }}</p>
+        <p v-if="!modules.length" class="ol-side-empty">{{ q || typeFilter!=='全部'?'没有匹配的模块。':'使用画布工具条添加模块，开始搭建故事。' }}</p>
       </div>
-      <div class="ol-side-section"><span>添加模块</span><span>工具箱</span></div>
-      <div class="ol-paper-palette" aria-label="模块工具箱">
-        <button type="button" @click="addModule('event')"><OIcon name="diamond" :size="16" />事件</button>
-        <button type="button" @click="addModule('note',{title:'新便签'})"><OIcon name="edit" :size="16" />便签</button>
-        <NPopover trigger="click" :show-arrow="false"><template #trigger><button type="button" title="添加引用卡"><OIcon name="link" :size="16" />引用卡</button></template><DLinkPicker @pick="onCitePick" /></NPopover>
-        <button type="button" @click="addTextbox"><OIcon name="textbox" :size="16" />文本框</button>
-        <button type="button" title="添加章节锚点（可在设置中绑定章节）" @click="addModule('anchor')"><OIcon name="anchor" :size="16" />章节锚点</button>
-        <button type="button" title="添加卷锚点" @click="addModule('volume',{refId:work.selVolumeId || work.liveVolumes[0]?.id || null})"><OIcon name="rows" :size="16" />卷</button>
-        <button class="ol-add-container" type="button" @click="addModule('container',{title:'新容器'})"><OIcon name="container" :size="16" />容器<span>＋</span></button>
-      </div>
-      <div class="ol-side-section"><span>本层模块</span><span>{{ layerItems.length }}</span></div>
-      <div class="ol-layer-list" aria-label="本层模块列表"><button v-for="n in layerItems" :key="n.id" type="button" :class="{active:work.selOlnodeId===n.id}" @click="pick({n})"><OIcon :name="TYPE_META[n.kind]?.icon || 'diamond'" :size="13" /><span>{{ labelOf(n) }}</span><small v-if="n.kind==='container'">{{ statsOf(n).total ? statsOf(n).done + '/' + statsOf(n).total : '空容器' }}</small></button></div>
     </div>
     <div class="ol-paper-side-footer"><span class="ol-paper-stamp" aria-hidden="true">PAPER<br>STORIES</span><button type="button" :class="{on:showBroken}" title="断线检测：烂尾 / 缺铺垫" @click="showBroken=!showBroken">断线 {{ brokenCount }}</button></div>
     <NModal v-model:show="renameState.show" preset="dialog" title="重命名模块">

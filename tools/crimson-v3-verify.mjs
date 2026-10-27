@@ -268,7 +268,7 @@ const sw = await settings.evaluate(() => {
     overflow: document.documentElement.scrollWidth > innerWidth,
     nav: pick('.sw-nav'),
     controls: pick('.sw-appearance-controls'),
-    preview: pick('.crimson-preview-paper'),
+    preview: pick('.writing-paper-preview'),
     mark: !!document.querySelector('.crimson-settings-mark'),
     current: !!document.querySelector('.sw-nav-item.on')
   }

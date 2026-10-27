@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * tools/mock-ai.mjs — 本地假服务器（OpenAI 兼容 + Anthropic Messages，node 零依赖，docs/AI助手接入方案.md §七/§八）
+ * tools/mock-ai.mjs — 本地假服务器（OpenAI 兼容 + Anthropic Messages，node 零依赖）
  *
  * 用途：AI 助手验收与设置区「连接测试」，验收绝不连真实 API。
  * 启动：node tools/mock-ai.mjs [--port 18700]

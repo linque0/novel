@@ -1,0 +1,49 @@
+body[data-skin='crimson'] .crimson-shelf .crimson-book-stage:has(.crimson-book-viewer) {
+  left: calc(47% - 150px); top: 85px; width: 500px; height: 488px;
+  perspective: none;
+}
+body[data-skin='crimson'] .crimson-shelf .crimson-book-stage:has(.crimson-book-viewer)::after { display: none; }
+body[data-skin='crimson'] .crimson-shelf .crimson-book-viewer { width: 100%; height: 100%; position: relative; }
+body[data-skin='crimson'] .crimson-shelf .crimson-book-display {
+  position: relative; width: 100%; height: calc(100% - 32px); outline: none; border-radius: 12px;
+  touch-action: none; user-select: none; cursor: grab;
+}
+body[data-skin='crimson'] .crimson-shelf .crimson-book-display:active { cursor: grabbing; }
+body[data-skin='crimson'] .crimson-shelf .crimson-book-display:focus-visible { outline: 1px solid #846944; outline-offset: -5px; }
+body[data-skin='crimson'] .crimson-shelf .crimson-book-display[aria-disabled='true'] { cursor: wait; opacity: .65; }
+body[data-skin='crimson'] .crimson-shelf .crimson-book-display > canvas { display: block; width: 100%; height: 100%; pointer-events: none; }
+body[data-skin='crimson'] .crimson-shelf .crimson-viewer-controls {
+  width: max-content; max-width: 100%; height: 28px; margin: 2px auto; padding: 0 10px;
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  background: #f3ead8ed; border: 1px solid #a48a5329; border-radius: 18px;
+  color: #696355; font: 11px/1.4 var(--crimson-serif); letter-spacing: .5px; white-space: nowrap;
+}
+body[data-skin='crimson'] .crimson-shelf .crimson-viewer-controls button {
+  background: transparent; border: 0; padding: 5px 0; color: #705638; font: inherit; cursor: pointer;
+}
+body[data-skin='crimson'] .crimson-shelf .crimson-viewer-controls button:disabled { opacity: .5; cursor: wait; }
+body[data-skin='crimson'] .crimson-shelf .crimson-viewer-controls button:focus-visible { outline: 1px solid #846944; outline-offset: 3px; }
+body[data-skin='crimson'] .crimson-shelf .crimson-book-stage:has(.crimson-book-viewer) > .crimson-work-menu { right: 30px; top: 40px; z-index: 3; }
+body[data-skin='crimson'] .crimson-shelf .crimson-viewer-fallback { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; }
+body[data-skin='crimson'] .crimson-shelf .crimson-viewer-fallback > img { width: 100%; height: 100%; object-fit: contain; }
+body[data-skin='crimson'] .crimson-shelf .crimson-viewer-fallback > .crimson-book-shell { width: 181px; height: 255px; }
+body[data-skin='crimson'] .crimson-shelf .crimson-book-thumbnail { position: relative; flex: none; display: block; width: 56px; height: 80px; }
+body[data-skin='crimson'] .crimson-shelf .crimson-book-thumbnail > img { display: block; width: 100%; height: 100%; object-fit: contain; transform: scale(1.33); pointer-events: none; }
+body[data-skin='crimson'] .crimson-shelf :is(.crimson-viewer-fallback, .crimson-book-thumbnail) .crimson-cover {
+  color: #d7b978; background: radial-gradient(ellipse at 25% 15%, #ffffff08, #00000012), var(--cc);
+  box-shadow: inset 0 0 0 1px #b3996155, inset 0 0 0 5px var(--cc), inset 0 0 0 6px #b3996160;
+}
+body[data-skin='crimson'] .crimson-shelf :is(.crimson-viewer-fallback, .crimson-book-thumbnail) .crimson-cover::before { opacity: .2; }
+@media (max-width: 1200px) {
+  body[data-skin='crimson'] .crimson-shelf .crimson-book-stage:has(.crimson-book-viewer) { left: max(250px, calc(47% - 80px)); top: 100px; width: 360px; height: 382px; }
+  body[data-skin='crimson'] .crimson-shelf .crimson-book-thumbnail { width: 44px; height: 64px; }
+}
+@media (max-width: 900px) {
+  body[data-skin='crimson'] .crimson-shelf .crimson-book-stage:has(.crimson-book-viewer) { left: 250px; top: 120px; width: calc(100% - 260px); height: 300px; }
+  body[data-skin='crimson'] .crimson-shelf .crimson-viewer-controls { gap: 9px; padding: 0 8px; font-size: 10px; letter-spacing: 0; }
+  body[data-skin='crimson'] .crimson-shelf .crimson-viewer-controls > span { white-space: nowrap; }
+  body[data-skin='crimson'] .crimson-shelf .crimson-book-stage:has(.crimson-book-viewer) > .crimson-work-menu { right: 4px; top: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body[data-skin='crimson'] .crimson-shelf .crimson-book-stage:has(.crimson-book-viewer) { animation: none !important; }
+}

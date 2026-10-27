@@ -1,6 +1,8 @@
 import { db, uid, now, todayStr } from './database'
 import { htmlToMd, htmlToPlain } from '../services/importers'
 import { suspendProjection, resumeProjection } from './project-repo.js'
+import { readWritingPosition } from '../services/writing-position.js'
+import { resolveWritingChapter } from '../services/writing-position-core.js'
 
 /**
  * Repository 层：所有 Dexie 访问集中在此。
@@ -64,6 +66,16 @@ export async function firstChapterOf(workId) {
     if (hit) return hit
   }
   return ofVol(null)[0] || live.sort(bySort)[0] || null
+}
+
+/** Resume cards must show the same live chapter that opening the work selects. */
+export async function resumeChapterOf(workId) {
+  const [chapters,volumes,position] = await Promise.all([
+    db.chapters.where('workId').equals(workId).toArray(),
+    db.volumes.where('workId').equals(workId).toArray(),
+    readWritingPosition(workId)
+  ])
+  return resolveWritingChapter({chapters,volumes},position)
 }
 
 export async function createWorkRow(payload) {
