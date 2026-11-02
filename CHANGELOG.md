@@ -1,5 +1,13 @@
 ## [Unreleased]
 
+### 作品库底座（M2 第一批）：主进程 IPC + 核心共享（2026-11-02）
+
+- **新增 `packages/novel-core/`**（规范源）：作品库文件存储——索引 + 实体文件 + 操作日志（journal）+ `requestId` 幂等 + `baseRevision` 前置 CAS + 跨进程短锁 + 快照/导入，零外部依赖。DSH 插件 `dsh-novel-studio` 的 `src/core/library.js` 由 `scripts/sync-core.mjs` 从这份规范源生成，两侧共用同一套存储语义。
+- **新增 `electron/library-ipc.js`**：7 个通道 `library:pointer/status/snapshot/submit/pull/import/verify`，主进程以动态 `import()` 加载 ESM 核心；`preload.cjs` 同步暴露 `window.native.library*`。失败统一返回 `{ok:false,error:{code,message}}`。
+- **新增 `src/services/library.js`**（渲染层桥）：`libraryAvailable/status/verify/pull/migrateToLibrary`；并在 `window.__ns.library` 暴露，便于控制台核对。
+- **迁移策略（有意偏离原方案）**：首次迁移改为**作者显式触发**（控制台 `window.__ns.library.migrateToLibrary()`）而非启动即自动，避免在未备份的情况下自动改数据；失败不动本地数据。
+- **验证**：`node tools/library-ipc-unit-verify.mjs` 10/10；`npm run build` 通过；DSH 插件侧 `scripts/sync-core.mjs --check` 一致、冒烟 43/43。
+
 ### 赤月戏札记列文字对比度修复（2026-10-25）
 
 - **根因**：右侧札记列（页边留白）是米色纸底，但共用 `RightPanel`（批注/资料）的文字沿用深色工坊的全局变量（`--text:#f0e7d5`、`--text-dim:#bfb59c`），浅字配浅纸对比度仅 1.2–1.4:1，批注时间/类型/条数、空状态提示、出场人物、本章信息等几乎不可见；批注卡片与「本章大纲」输入框也是深色块浮在纸面上。
@@ -63,6 +71,38 @@
 - 递归展开的孙级迷你卡同样跟随外层容器；松手后相对位置保持不变。
 - `outline-scope` 39/39；新增 `tools/outline-container-drag-verify.mjs`，容器与迷你卡实时位移/相对位置 10/10；截图与记录见 `docs/outline-workbench-integration/screenshots/drag-container-live.png` 与 `drag-checks.json`。
 - `npm run build` 通过。
+
+## [1.1.7] - 2026-11-02 · agent 优化阶段
+
+本版把「恍然梦」agent 从设计稿推进到可运行的完整链路：统一工作区与故事编辑线落地，记忆队列接管长文记忆的增量维护，琉光画境补上博物馆皮肤与画廊选画，3D 书籍改为 worker 渲染管线。合计 201 个文件（+7349 / −640）。
+
+### 统一工作区与 agent 编辑线
+- `App.vue` 主视图由 `Workbench` 换为 `StudioWorkspace` 统一工作区；新增 `components/agent/` 下 `AgentWorkbench`、`StoryEditor`、`StoryScene`、`ReviewPanel`、`CandidateEditor`、`DreamLaunchDialog`、`DreamModeEntries` 与两套配套样式表，候选稿与正文分区编辑，旧版工作台保留为 `LegacyAgentWorkbench`。
+- 故事数据层新增 `db/story-repo`、`db/workflow-repo` 与 `stores/story`、`stores/creative-workflow`；`services/ai/runtime` 处理 `story-document-changed`、`creative-workflow-changed / request / pause` 事件，按来源窗口去重后在窗口间同步章节、场景与工作流状态。
+
+### 记忆队列
+- 新增 `memory-queue` / `memory-queue-core` / `memory-stage`：按作品与章节生成记忆任务，用内容指纹（`isMemoryCurrent`）判断任务是否过期，租约过期由 `recoverMemoryQueue` 回收为 `interrupted`。
+- 主进程启动后每 30 秒回收一次中断任务；`ai-source-changed` 与切到隐私模式时调用 `cancelMemoryJobs` 取消在跑作业，避免跨作品串写。
+
+### 创作流程
+- 新增 `CreativeWorkflow` 面板、`RuleScopeSettings` 规则范围设置与 `stage-config` 阶段预算约束；`workflow-save` 在加载失败时保留原状态不覆盖，恢复后可继续派发。
+
+### 琉光画境：博物馆皮肤与画廊
+- 新增 `glaze-museum` 皮肤（角花 / 卷轴 / 噪声 SVG）与 `useGlazeMuseum`、`useGlazeDrawers` 组合式函数，章节树等组件的弹层改用该质感样式。
+- 新增 `glaze-gallery` 画廊：`manifest.json` 清单 + 19 MB webp 配图，稳定七槽位窗口与循环索引，`GlazePaintingPicker` 选画、`GlazeMiniBook` / `GlazeEasel` 陈列。
+- `theme-textures` 重构：抽出 `drawing` / `glaze-cloth` 绘图工具，金色渐变与布面规则集中管理；`theme-assets` 退役（全仓已无引用）。
+
+### 3D 书籍渲染管线
+- `book3d` 拆为 `engine` + `worker-client` + `render.worker`，封面海报由 `poster-queue` 串行出图，纹理烘焙不再阻塞主线程。
+
+### 其它
+- 设置面板启动：`App.vue` 先加载外观偏好再触发 `panelReady`，独立窗口首帧不再白闪。
+- 面板窗口：`electron/panels.js`、`preload.cjs` 调整，新增 `panel-locks.cjs` 面板锁。
+
+### 验收
+- 10 个纯 Node 单测全绿：`memory-queue`、`creative-workflow`（10/10）、`stage-budget`、`rule-scope`、`workflow-save`、`whole-chapter-apply`、`story-authoring`、`builtin-skills`、`agent-workbench`、`glaze-gallery`。
+- `npm run build` 通过（16.34s，仅有既有的 chunk 体积提示）。
+- CDP 界面类验收本版未执行，留待真机回归。
 
 ## [1.1.3] - 2026-10-19 · 大纲重置
 
