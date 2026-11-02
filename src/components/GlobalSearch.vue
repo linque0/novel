@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { ref, reactive } from 'vue'
 import { NModal, NInput, NCheckbox, NButton, NEmpty } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -48,7 +50,7 @@ function go(r) {
 </script>
 
 <template>
-  <NModal :show="ui.searchOpen" preset="card" title="全局搜索" style="width: 640px" @update:show="(v) => (ui.searchOpen = v)">
+  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" :show="ui.searchOpen" preset="card" title="全局搜索" style="width: 640px" @update:show="(v) => (ui.searchOpen = v)">
     <div style="display: flex; gap: 8px; margin-bottom: 10px">
       <NInput v-model:value="q" placeholder="搜索关键词…" autofocus @keyup.enter="run" @input="ran = false" />
       <NButton type="primary" @click="run">搜索</NButton>

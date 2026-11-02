@@ -4,6 +4,7 @@ import AutoHideTopbar from './AutoHideTopbar.vue'
 import { useUiStore } from '../stores/ui'
 import { SKINS } from '../skins/registry'
 import { APP_NAVIGATION } from './app-navigation'
+import DreamModeEntries from './agent/DreamModeEntries.vue'
 
 const props = defineProps({
   active: { type: String, default: 'shelf' },
@@ -42,7 +43,7 @@ watch(() => [props.active, ui.skin], async () => {
       <nav ref="nav" class="app-topnav" aria-label="功能模块">
         <button v-for="item in APP_NAVIGATION" :key="item.key" type="button" class="app-topnav-item" :data-nav="item.key" :class="{ active: active === item.key }" :aria-current="active === item.key ? 'page' : undefined" :disabled="disabled(item.key)" :title="title(item)" @click="navigate(item.key)">{{ item.label }}</button>
       </nav>
-      <div class="app-topbar-actions"><slot name="actions" /></div>
+      <div class="app-topbar-actions"><DreamModeEntries v-if="active==='shelf'" shelf :disabled="busy" @dream="ui.dreamLauncherOpen=true" /><slot name="actions" /></div>
     </header>
   </AutoHideTopbar>
 </template>

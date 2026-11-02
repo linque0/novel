@@ -1,3 +1,4 @@
+import { memoryStageMessages } from './memory-stage.js'
 import { uid } from '../../db/database'
 import { collectExportChapters, loadWorkBundle } from '../../db/repo'
 import * as repo from '../../db/ai-repo'
@@ -149,7 +150,7 @@ export async function extractChapter({ chapter, work, orderIdx, opts, active, de
     const lore = work.mubu.filter((n)=>!n.deletedAt&&(n.text||'').split('\n')[0]&&chunk.text.includes((n.text||'').split('\n')[0])).map((n)=>({id:n.id,text:(n.text||'').slice(0,60)}))
     const suppliedActive=active.filter((f)=>queryTerms((f.title||'')+' '+(f.content||'')).some((t)=>chunk.text.toLowerCase().includes(t)))
     const user = JSON.stringify({ chapterId: chapter.id, title: chapter.title, characters: relevant.map((c) => ({ id: c.id, name: c.name, aliases: c.aliases })), lore, active:suppliedActive, text: chunk.text })
-    const cacheKey=hashContent(stableStringify({text:chunk.text,prompt:EXTRACTION_PROMPT,version:EXTRACTION_VERSION,model:opts.model,provider:opts.baseURL,dependencies:memoryDependencyHash(work,chapter.id,decisions),active:suppliedActive,decisions}))
+    const cacheKey=hashContent(stableStringify({text:chunk.text,prompt:EXTRACTION_PROMPT,version:EXTRACTION_VERSION,model:opts.model,provider:opts.baseURL,stage:opts.stageSnapshot,dependencies:memoryDependencyHash(work,chapter.id,decisions),active:suppliedActive,decisions}))
     const cacheId='extract:'+docId+':'+chunk.id, cached=await db.aikbblock.get(cacheId)
     let normalized
     if(cached?.cacheKey===cacheKey) {
@@ -160,7 +161,8 @@ export async function extractChapter({ chapter, work, orderIdx, opts, active, de
       const reservation = await onReserve?.(estimated)
       let charge = estimated
       try {
-        const fitted = fitMessages([{ role: 'system', content: EXTRACTION_PROMPT }, { role: 'user', content: user }], { budget: opts.inputBudget || 10000, contextWindow: opts.contextWindow, maxTokens: 2048 })
+        const fitted = fitMessages(memoryStageMessages(EXTRACTION_PROMPT,user,{...opts,maxTokens:2048}), { budget: opts.inputBudget || 10000, contextWindow: opts.contextWindow, maxTokens: 2048 })
+        await opts.assertSourceCurrent?.()
         const response = await chatStream({ ...opts, temperature: 0, maxTokens: fitted.maxTokens, messages: fitted.messages })
         checkAbort(opts.signal)
         const usage = response.usage || { prompt_tokens: tokens(user) + tokens(EXTRACTION_PROMPT), completion_tokens: tokens(response.text), total_tokens: tokens(user) + tokens(EXTRACTION_PROMPT) + tokens(response.text), estimated: true }
@@ -185,7 +187,7 @@ export async function extractChapter({ chapter, work, orderIdx, opts, active, de
   return result
 }
 
-export async function buildKnowledge({ workId, opts, owner, onProgress, onUsage, onlyIds = null, force = false, auto = false, usageCap = 0, shouldPause = () => false }) {
+export async function buildKnowledge({ workId, opts, owner, onProgress, onUsage, onlyIds = null, queue: strictQueue = false, force = false, auto = false, usageCap = 0, shouldPause = () => false }) {
   const id = 'knowledge:' + workId
   const lease = await repo.leaseJob({ id, workId, type: 'knowledge', owner })
   if (!lease) throw new Error('另一窗口正在构建该作品知识库')
@@ -208,13 +210,14 @@ export async function buildKnowledge({ workId, opts, owner, onProgress, onUsage,
       for (const items of groups) {
         checkAbort(opts.signal)
         if (shouldPause()) throw new DOMException('已暂停', 'AbortError')
-        const messages = [{ role: 'system', content: ROLE_PROMPTS.aggregate }, { role: 'user', content: JSON.stringify({ items }) }]
+        const messages = memoryStageMessages(ROLE_PROMPTS.aggregate,JSON.stringify({items}),{...opts,maxTokens:1024})
         const estimated = tokens(JSON.stringify(messages)) + 1024
         const reservation = auto ? await repo.reserveDaily(owner, estimated, usageCap) : null
         if (auto && !reservation) throw new Error('自动记忆已达到每日预算上限')
         let charge = estimated
         try {
           const fitted = fitMessages(messages, { budget: opts.inputBudget || 10000, contextWindow: opts.contextWindow, maxTokens: 1024 })
+          await opts.assertSourceCurrent?.()
           const response = await chatStream({ ...opts, temperature: 0, maxTokens: 1024, messages: fitted.messages })
           const usage = response.usage || { total_tokens: fitted.inputTokens + tokens(response.text), estimated: true }
           charge = usage.total_tokens; used += charge; onUsage?.(usage)
@@ -234,7 +237,7 @@ export async function buildKnowledge({ workId, opts, owner, onProgress, onUsage,
     const missingSummaries=new Set()
     for(const ch of snap.chapters) if(plainChapter(ch)&&!await getChapterSummary(ch,null))missingSummaries.add(ch.id)
     const orphanDependencies = new Set(snap.rows.filter((r) => r.kind === 'foreshadow' && r.body.action !== 'set' && !snap.cards.some((c) => c.kind === 'foreshadow' && c.body.action === 'set' && c.body.foreshadowId === r.body.foreshadowId)).map((r) => r.chapterId))
-    const queue = snap.chapters.filter((ch) => (force || !snap.valid.has(ch.id) || missingSummaries.has(ch.id) || orphanDependencies.has(ch.id)) && (!onlyIds || onlyIds.includes(ch.id) || orphanDependencies.has(ch.id) || snap.metas.find((m) => m.chapterId === ch.id)?.orderIdx !== snap.index.get(ch.id) || !snap.valid.has(ch.id)))
+    const queue = snap.chapters.filter((ch) => (!strictQueue || onlyIds?.includes(ch.id)) && (force || !snap.valid.has(ch.id) || missingSummaries.has(ch.id) || orphanDependencies.has(ch.id)) && (!onlyIds || onlyIds.includes(ch.id) || orphanDependencies.has(ch.id) || snap.metas.find((m) => m.chapterId === ch.id)?.orderIdx !== snap.index.get(ch.id) || !snap.valid.has(ch.id)))
     await repo.updateJob(id, owner, { total: queue.length, done: 0, failed: [], usage: 0, error: '' })
     for (const chapter of queue) {
       checkAbort(opts.signal)
@@ -244,6 +247,7 @@ export async function buildKnowledge({ workId, opts, owner, onProgress, onUsage,
       if (!current) continue
       snap = await knowledgeSnapshot(work, current.id)
       try {
+        if (!strictQueue || !snap.valid.has(current.id)) {
         const cards = await extractChapter({ chapter: current, work, orderIdx: snap.index.get(current.id), opts, active: replayForeshadows(snap.cards.filter((c) => c.chapterId !== current.id)).filter((f) => f.status === 'active'), decisions: snap.decisions,
           onUsage: (u) => { used += u.total_tokens; onUsage?.(u) }, onReserve: auto ? async (amount) => {
             const daily = await repo.reserveDaily(owner, amount, usageCap)
@@ -251,24 +255,27 @@ export async function buildKnowledge({ workId, opts, owner, onProgress, onUsage,
             return { settle: (charge) => repo.settleDaily(daily, owner, charge) }
           } : null })
         checkAbort(opts.signal)
-        await repo.replaceChapterKnowledge(workId, current.id, cards, { id: workId + ':' + current.id, workId, chapterId: current.id, status: cards.extractionIncomplete?'partial':'success',extractionIncomplete:cards.extractionIncomplete, sourceHash: chapterHash(current),dependenciesHash:memoryDependencyHash(work,current.id,snap.decisions), orderIdx: snap.index.get(current.id), version: EXTRACTION_VERSION, updatedAt: Date.now(), runId: id, owner }, current.content)
+        await opts.assertSourceCurrent?.()
+        await repo.replaceChapterKnowledge(workId, current.id, cards, { id: workId + ':' + current.id, workId, chapterId: current.id, status: cards.extractionIncomplete?'partial':'success',extractionIncomplete:cards.extractionIncomplete, sourceHash: chapterHash(current),dependenciesHash:memoryDependencyHash(work,current.id,snap.decisions), orderIdx: snap.index.get(current.id), version: EXTRACTION_VERSION, updatedAt: Date.now(), runId: id, owner, queueGuard: opts.queueGuard }, current.content)
         if(cards.extractionIncomplete)failed.push({chapterId:current.id,stage:'extraction',error:'提取条数达到上限，未声称事实完整'})
+        }
         const summarizeProvider=async ({system,user})=>{
           checkAbort(opts.signal)
-          const fitted=fitMessages([{role:'system',content:system},{role:'user',content:user}],{budget:opts.inputBudget||10000,contextWindow:opts.contextWindow,maxTokens:512})
+          const fitted=fitMessages(memoryStageMessages(system,user,{...opts,maxTokens:512}),{budget:opts.inputBudget||10000,contextWindow:opts.contextWindow,maxTokens:512})
           const estimated=fitted.inputTokens+512,reservation=auto?await repo.reserveDaily(owner,estimated,usageCap):null
           if(auto&&!reservation)throw new Error('自动记忆已达到每日预算上限')
           let charge=estimated
-          try{const response=await chatStream({...opts,temperature:0,maxTokens:512,messages:fitted.messages});checkAbort(opts.signal);const usage=response.usage||{total_tokens:fitted.inputTokens+tokens(response.text),estimated:true};charge=usage.total_tokens;used+=charge;onUsage?.(usage);return response.text}
+          try{await opts.assertSourceCurrent?.();const response=await chatStream({...opts,temperature:0,maxTokens:512,messages:fitted.messages});checkAbort(opts.signal);const usage=response.usage||{total_tokens:fitted.inputTokens+tokens(response.text),estimated:true};charge=usage.total_tokens;used+=charge;onUsage?.(usage);await opts.assertSourceCurrent?.();return response.text}
           finally{if(reservation)await repo.settleDaily(reservation,owner,charge)}
         }
         summarizeProvider.signal=opts.signal
+        summarizeProvider.queueGuard=opts.queueGuard
         summarizeProvider.inputTokens=Math.max(128,Math.min(1800,(opts.inputBudget||10000)-1024))
         try{await getChapterSummary(current,summarizeProvider)}catch(e){checkAbort(opts.signal);failed.push({chapterId:current.id,stage:'summary',error:e.message})}
       } catch (e) {
         checkAbort(opts.signal)
         failed.push({ chapterId: chapter.id, error: e.message })
-        await repo.putAiRow('aikbmeta', { id: workId + ':' + chapter.id, workId, chapterId: chapter.id, status: 'failed', error: e.message })
+        if(!strictQueue)await repo.putAiRow('aikbmeta', { id: workId + ':' + chapter.id, workId, chapterId: chapter.id, status: 'failed', error: e.message })
         if (auto || ['auth', 'rate-limit', 'insufficient-balance'].includes(e.code)) throw e
       }
       done++
@@ -280,6 +287,7 @@ export async function buildKnowledge({ workId, opts, owner, onProgress, onUsage,
     snap = await knowledgeSnapshot(work)
     // Deterministic lower-level summary remains available even if a model aggregation fails.
     const arcs = []
+    if (!strictQueue) {
     for (const volume of work.volumes.filter((v) => !v.deletedAt)) {
       const chapters = snap.chapters.filter((c) => c.volumeId === volume.id)
       const events = snap.cards.filter((c) => c.kind === 'event' && chapters.some((ch) => ch.id === c.chapterId))
@@ -300,8 +308,10 @@ export async function buildKnowledge({ workId, opts, owner, onProgress, onUsage,
         if (states.length) arcs.push({ id: 'arc:char:' + character.id, workId, kind: 'arc', sourceLayout: sourceLayout(work), refType: 'character', refId: character.id, title: character.name + '成长弧线', verified: true, body: { subtype: 'chararc', summary: states.map((s) => s.body.change).join(' → ') }, dependencies: states.map((s) => s.id), sourceChapters: states.map((s) => s.chapterId), updatedAt: Date.now() })
       }
     }
+    }
     checkAbort(opts.signal)
-    await repo.replaceArcs(workId, arcs)
+    await opts.assertSourceCurrent?.()
+    if(!strictQueue)await repo.replaceArcs(workId, arcs)
     const progress = { done, total: queue.length, failed, usage: used, status: shouldPause() ? 'paused' : 'completed', owner: null, leaseUntil: 0 }
     await repo.updateJob(id, owner, progress)
     onProgress?.(progress)

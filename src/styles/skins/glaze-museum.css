@@ -1,0 +1,117 @@
+/* The museum belongs only to the writing surface and its explicitly owned overlays.
+   Detached Dream/AI surfaces never acquire either scope class. */
+.glaze-museum,.glaze-museum-popover {
+  --gm-wall:#dfe9da;--gm-ivory:#f3efe4;--gm-paper:#fbf8f0;
+  --gm-ink:#284c48;--gm-muted:#4e6050;--gm-gold:#a48851;
+  --gm-gold-pale:#d8c8a3;--gm-line:#b7bca5;--gm-teal:#315d50;
+  --gm-light:.7;--gm-carving:1;
+  --gm-title:"Noto Serif SC","LXGW WenKai","SimSun",serif;
+  --gm-hand:"LXGW WenKai","KaiTi",serif;
+  --gm-scroll:url('../../assets/skins/glaze-museum/scroll.svg');
+  --gm-corner:url('../../assets/skins/glaze-museum/corner.svg');
+  --gm-noise:url('../../assets/skins/glaze-museum/noise.svg');
+  color:var(--gm-ink);color-scheme:light;
+}
+.glaze-museum {
+  background:radial-gradient(ellipse at 18% 4%,#ffffedb0,transparent 58%),linear-gradient(112deg,#d2dfd1,#e5eadd 64%,#eee9db);
+  isolation:isolate;
+}
+.glaze-museum[data-glaze-light='gallery'] {
+  --gm-wall:#c8d3be;--gm-light:.25;
+  background:radial-gradient(ellipse at 18% 0,#f5eed0a8,transparent 54%),linear-gradient(112deg,#c4cfbc,#d8decc 64%,#e0dccb);
+}
+.glaze-museum :focus-visible,.glaze-museum-popover :focus-visible {outline:2px solid var(--gm-teal);outline-offset:3px}
+.glaze-museum .gm-cornice {
+  position:relative;display:flex;justify-content:center;align-items:center;gap:12px;height:37px;flex:none;
+  background:linear-gradient(#d6dfd3,#ecf0e4);box-shadow:inset 0 -1px #b9c3ac,inset 0 -4px #eff3e7,inset 0 -5px #c6cbb7,inset 0 5px 8px #35534316;z-index:2;
+}
+.glaze-museum .gm-cornice>span {height:1px;flex:0 1 140px;background:linear-gradient(90deg,transparent,#aaa37b)}
+.glaze-museum .gm-cornice>span:last-child {transform:scaleX(-1)}
+.glaze-museum .gm-cornice>i {width:126px;height:27px;background:var(--gm-scroll) center/contain no-repeat;filter:drop-shadow(0 1px 0 #fffdf1)}
+.glaze-museum .glaze-artwork {margin:0;min-width:0;width:100%;position:relative}
+.glaze-museum .gm-gilt-frame {
+  position:relative;padding:22px;isolation:isolate;
+  background:linear-gradient(125deg,#aa8a4e 0,#ddd0ac 9%,#a88b50 12%,#e7d7b1 35%,#c6ac76 48%,#8e713c 75%,#d6c392 97%,#8c703a);
+  border:1px solid #a48953;box-shadow:0 1px 0 #fff6d6,inset 0 0 0 2px #e7d6b1,inset 0 0 0 4px #8f743d,inset 0 0 0 5px #d1b880,inset 0 0 0 8px #c7af79,8px 17px 24px #384a3545,2px 5px 6px #3a412d44;
+}
+.glaze-museum .gm-gilt-frame::before {content:"";position:absolute;inset:7px;border:3px ridge #deca9b;box-shadow:0 0 0 1px #a78e57,inset 0 0 0 1px #f2dfb9;pointer-events:none}
+.glaze-museum .gm-gilt-frame::after {content:"";position:absolute;inset:13px;border:3px dotted #92743b;opacity:.65;pointer-events:none}
+.glaze-museum .gm-frame-corner {position:absolute;z-index:2;width:71px;height:71px;background:var(--gm-corner) center/contain no-repeat;filter:drop-shadow(0 1px 0 #f8e9c5) drop-shadow(1px 2px 1px #5d482652);pointer-events:none}
+.glaze-museum .gm-frame-corner.tl {top:-7px;left:-7px}
+.glaze-museum .gm-frame-corner.tr {top:-7px;right:-7px;transform:scaleX(-1)}
+.glaze-museum .gm-frame-corner.bl {bottom:-7px;left:-7px;transform:scaleY(-1)}
+.glaze-museum .gm-frame-corner.br {bottom:-7px;right:-7px;transform:scale(-1)}
+.glaze-museum .gm-mat {position:relative;background:#eae5d4;padding:9px;border:1px solid #7e6b40;box-shadow:inset 2px 3px 5px #786a4633,0 0 0 2px #ead8ad}
+.glaze-museum .gm-mat.is-loading {min-height:120px}
+.glaze-museum .gm-art-button {display:block;width:100%;padding:0;border:0;background:transparent;line-height:0;cursor:zoom-in}
+.glaze-museum .gm-art-button:disabled {cursor:wait}
+.glaze-museum .glaze-artwork-image {opacity:0;transition:opacity .2s ease}
+.glaze-museum .glaze-artwork-image.is-ready {opacity:1}
+.glaze-museum .glaze-artwork-image {display:block;width:100%;height:auto;max-height:none;object-fit:contain;border:1px solid #7c7e6699;box-shadow:0 0 0 1px #f8f2dd;box-sizing:border-box}
+.glaze-museum .gm-art-status {position:absolute;inset:0;display:grid;place-items:center;margin:0;background:#eae5d4;font:13px var(--gm-hand);color:var(--gm-muted);pointer-events:none}
+.glaze-museum .gm-art-failure {min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;font-size:13px;color:var(--gm-ink)}
+.glaze-museum .gm-art-failure button {padding:6px 12px;border:1px solid var(--gm-line);background:var(--gm-paper);color:var(--gm-teal);cursor:pointer}
+.glaze-museum .gm-art-caption {display:flex;flex-direction:column;gap:3px;text-align:center;margin:18px 0 0;font:12px/1.6 var(--gm-hand);color:var(--gm-muted);overflow-wrap:anywhere}
+.glaze-museum .gm-art-caption strong {font:20px/1.5 var(--gm-title);color:#51492e;font-weight:400}
+.glaze-museum .gm-art-caption small {font-size:12px}
+.glaze-museum .gm-art-plaque {position:relative;max-width:85%;margin:22px auto 0;padding:11px 18px 13px;background:linear-gradient(135deg,#f2e7c8,#dfd4b6);border:1px solid #a1946a;box-shadow:inset 0 0 0 2px #eadfbe,inset 0 0 0 3px #b9aa7e,0 3px 5px #34482d27;color:#696044}
+.glaze-museum .gm-art-plaque::before,.glaze-museum .gm-art-plaque::after {content:"";position:absolute;top:50%;width:4px;height:4px;border-radius:50%;background:radial-gradient(at 30% 20%,#fff6d2,#927e4c);box-shadow:0 1px 1px #5c543057}
+.glaze-museum .gm-art-plaque::before {left:8px}
+.glaze-museum .gm-art-plaque::after {right:8px}
+.glaze-museum .gm-art-source {margin-top:5px;color:#6c6b55}
+.glaze-museum .is-compact .gm-gilt-frame {padding:14px;box-shadow:inset 0 0 0 2px #e7d6b1,inset 0 0 0 4px #8f743d,inset 0 0 0 5px #d1b880,3px 7px 12px #384a3538}
+.glaze-museum .is-compact .gm-gilt-frame::before {inset:5px;border-width:2px}
+.glaze-museum .is-compact .gm-gilt-frame::after {inset:10px;border-width:1px}
+.glaze-museum .is-compact .gm-frame-corner {width:47px;height:47px}
+.glaze-museum .is-compact .gm-mat {padding:5px}
+.glaze-museum .is-compact .gm-art-caption {margin-top:11px;gap:0}
+.glaze-museum .is-compact .gm-art-caption strong {font-size:14px}
+.glaze-museum .is-compact .gm-art-caption span {font-size:12px}
+.glaze-museum .gm-lighting {display:flex;align-items:center;gap:2px;border:1px solid #b9b99f;padding:3px;background:#f5f1e6b3;border-radius:3px;flex:none}
+.glaze-museum .gm-lighting button {border:0;background:transparent;color:#667261;font:12px/1.5 var(--gm-hand);padding:4px 9px;cursor:pointer;border-radius:1px;white-space:nowrap}
+.glaze-museum .gm-lighting button[aria-pressed='true'] {background:#dedec9;color:#304e3d;box-shadow:inset 0 0 0 1px #b1b591}
+.glaze-museum-popover.gm-art-preview {background:var(--gm-paper);color:var(--gm-ink);border:1px solid var(--gm-gold-pale)}
+.glaze-museum-popover .gm-art-preview-image {display:block;max-width:100%;max-height:72vh;width:auto;height:auto;object-fit:contain;margin:0 auto}
+.glaze-museum-popover .gm-art-preview-caption {margin:14px 0 0;text-align:center;font:14px/1.7 var(--gm-hand);color:var(--gm-muted)}
+
+/* Duplicate scope specificity deliberately outranks the older body[data-skin]
+   gallery selectors without giving the Dream surface a museum provider. */
+.glaze-museum.glaze-museum .gg-picker-trigger {height:38px;display:flex;align-items:center;gap:8px;padding:4px 10px 4px 5px;border:1px solid #b4b99c;border-radius:3px;background:#f7f3e8c9;color:var(--gm-ink);cursor:pointer}
+.glaze-museum.glaze-museum .gg-picker-thumb {width:37px;height:27px;flex:none;border:2px solid #c5af7d;background:#e9e3d0}
+.glaze-museum.glaze-museum .gg-picker-thumb img {display:block;width:100%;height:100%;object-fit:contain}
+.glaze-museum.glaze-museum .gg-picker-copy {display:flex;flex-direction:column;align-items:flex-start;gap:0}
+.glaze-museum.glaze-museum .gg-picker-copy small {font:12px/1.3 var(--gm-hand);color:var(--gm-muted)}
+.glaze-museum.glaze-museum .gg-picker-copy strong {font:13px/1.4 var(--gm-title);font-weight:400;max-width:160px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-pop {width:min(428px,92vw);max-height:min(650px,84vh);overflow:auto;padding:18px;box-sizing:border-box;background:var(--gm-paper);border:1px solid #b7ad8b;box-shadow:0 10px 32px #273f3433;color:var(--gm-ink)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-head {display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--gm-line)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-head>div {display:flex;flex-direction:column;gap:2px}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-head strong {font:22px/1.4 var(--gm-title)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-head small,.glaze-museum-popover.glaze-museum-popover .gg-picker-head>span {font:12px/1.5 var(--gm-hand);color:var(--gm-muted)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-group {margin-top:15px}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-group>header {display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px;font:14px var(--gm-title)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-group>header small {font:12px var(--gm-hand);color:var(--gm-muted);letter-spacing:0}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-item {display:flex;min-width:0;flex-direction:column;gap:6px;text-align:left;padding:5px;background:transparent;border:1px solid transparent;border-radius:2px;cursor:pointer;color:var(--gm-ink)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-item:hover {border-color:var(--gm-gold-pale);background:#ebe8d9}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-item.is-active {border-color:var(--gm-gold);background:#eee6d3;box-shadow:none}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-item.is-pending {border-style:dashed;border-color:var(--gm-teal)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-art {position:relative;display:block;width:100%;aspect-ratio:4/3;padding:2px;box-sizing:border-box;background:#e7dfca;border:1px solid #bca477}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-art img {display:block;width:100%;height:100%;object-fit:contain}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-check {position:absolute;right:4px;bottom:4px;display:grid;place-items:center;width:17px;height:17px;background:var(--gm-teal);color:#fff;border-radius:50%}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-meta {display:flex;flex-direction:column;gap:2px;min-width:0}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-meta strong {font:13px/1.4 var(--gm-title);white-space:normal;overflow-wrap:anywhere;color:var(--gm-ink)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-meta small {font:12px/1.4 var(--gm-hand);white-space:normal;color:var(--gm-muted)}
+.glaze-museum-popover.glaze-museum-popover .gg-picker-foot {margin-top:14px;padding-top:9px;border-top:1px solid var(--gm-line);font:12px/1.5 var(--gm-hand);letter-spacing:0;color:var(--gm-muted)}
+.glaze-museum-popover .gg-picker-status,.glaze-museum-popover .gg-picker-error {font:13px/1.6 var(--gm-hand);margin:12px 0 0}
+.glaze-museum-popover .gg-picker-error {color:#974831}
+@media(max-width:700px) {
+  .glaze-museum .gm-lighting button {padding:4px 6px}
+  .glaze-museum .gm-gilt-frame {padding:17px}
+  .glaze-museum .gm-gilt-frame::after {inset:11px;border-width:2px}
+  .glaze-museum .gm-frame-corner {width:57px;height:57px}
+  .glaze-museum .gm-art-caption strong {font-size:18px}
+  .glaze-museum-popover.glaze-museum-popover .gg-picker-grid {grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(prefers-reduced-motion:reduce) {
+  .glaze-museum .glaze-artwork,.glaze-museum .glaze-artwork-image,.glaze-museum-popover .gg-picker-item {transition:none}
+}

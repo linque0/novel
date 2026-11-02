@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import {ref,nextTick} from 'vue'
 import {NPopover} from 'naive-ui'
 import {useUiStore} from '../stores/ui'
@@ -30,7 +32,7 @@ async function shown(value){if(value){await nextTick();list.value?.querySelector
     </button>
   </div>
   <span v-else class="writing-paper-menu" @click.stop @mousedown.stop>
-    <NPopover v-model:show="open" trigger="click" :show-arrow="false" placement="bottom-end" @update:show="shown">
+    <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="open" trigger="click" :show-arrow="false" placement="bottom-end" @update:show="shown">
       <template #trigger><button ref="trigger" type="button" class="tb paper-menu-trigger" aria-label="纸面" aria-haspopup="menu" :aria-expanded="open" :disabled="ui.writingPaperSaving" :title="'纸面：'+WRITING_PAPERS.find(p=>p.id===ui.writingPaperStyle)?.label" @keydown.esc.stop="close" @mousedown.prevent>纸面 ⌄</button></template>
       <div ref="list" class="writing-paper-menu-list" role="menu" aria-label="选择正文纸面" :data-paper-skin="ui.skin" :data-paper-theme="ui.theme" @keydown="keys">
         <button v-for="paper in WRITING_PAPERS" :key="paper.id" type="button" role="menuitemradio" :data-paper-choice="paper.id" :aria-checked="ui.writingPaperStyle===paper.id" :disabled="ui.writingPaperSaving" @click="choose(paper.id)"><span class="writing-paper-swatch writing-paper-surface" :data-writing-paper="paper.id" aria-hidden="true"><i></i><i></i><i></i></span><span class="paper-option-copy"><strong>{{paper.label}}</strong><small>{{paper.description}}</small></span><span class="paper-check" aria-hidden="true">{{ui.writingPaperStyle===paper.id?'✓':''}}</span></button>

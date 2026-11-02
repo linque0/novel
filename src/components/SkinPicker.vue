@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { ref } from 'vue'
 import { NSelect, useMessage } from 'naive-ui'
 import { useUiStore } from '../stores/ui'
@@ -17,7 +19,7 @@ async function select(value) {
 </script>
 
 <template>
-  <NSelect class="skin-picker" aria-label="工坊皮肤" size="small" :value="ui.skin" :options="options" :disabled="saving" :loading="saving" @update:value="select" />
+  <NSelect :menu-props="{ class: museumPopoverClass }" class="skin-picker" aria-label="工坊皮肤" size="small" :value="ui.skin" :options="options" :disabled="saving" :loading="saving" @update:value="select" />
 </template>
 
 <style scoped>

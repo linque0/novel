@@ -2,6 +2,8 @@
      四向锚点拖线（因果/伏笔/冲突/关联 + 箭头 + 标签）、贝塞尔/正交折线、网格吸附、双密度、断线检测、
      关系链接卫星与悬停预览（复用全局 DLinkPopover）、骨架模板快速开始；布局数学在 outline/canvas-model.js -->
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { normalizeCanvasOpacity } from '../services/canvas-appearance.js'
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { useWorkStore } from '../stores/work'
@@ -1874,7 +1876,7 @@ onBeforeUnmount(() => {
     <div class="om-toolbar oc-toolbar">
       <div class="oc-module-tools">
         <template v-for="tool in ADD_TOOLS" :key="tool.kind">
-          <NDropdown v-if="tool.kind === 'anchor' || tool.kind === 'volume'" trigger="click" :options="tool.kind === 'anchor' ? anchorMenuOptions : volumeMenuOptions" @select="onModuleSelect(tool.kind, $event)">
+          <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight" v-if="tool.kind === 'anchor' || tool.kind === 'volume'" trigger="click" :options="tool.kind === 'anchor' ? anchorMenuOptions : volumeMenuOptions" @select="onModuleSelect(tool.kind, $event)">
             <button type="button" :title="'添加'+tool.label"><OIcon :name="tool.icon" :size="14" />{{ tool.label }}</button>
           </NDropdown>
           <button v-else type="button" :title="'添加'+tool.label" @click="addNode(tool.kind)"><OIcon :name="tool.icon" :size="14" />{{ tool.label }}</button>
@@ -1883,7 +1885,7 @@ onBeforeUnmount(() => {
       <button class="oc-chip" type="button" :class="{on:viewMulti}" :aria-pressed="viewMulti" @click="toggleMulti">多选</button>
       <span class="oc-count">{{ visNodes.length }} 模块 · {{ edges.length }} 连线</span>
       <div class="oc-line-modes" aria-label="连线样式"><button type="button" :aria-pressed="work.canvasPrefs.edgeStyle !== 'ortho'" @click="setPref('edgeStyle','bezier')">流畅曲线</button><button type="button" :aria-pressed="work.canvasPrefs.edgeStyle === 'ortho'" @click="setPref('edgeStyle','ortho')">圆角折线</button></div>
-      <NPopover trigger="click" :show-arrow="false">
+      <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :show-arrow="false">
         <template #trigger>
           <span class="oc-chip" title="画布设置：连线粗细等"><OIcon name="gear" :size="12" /> 设置</span>
         </template>
@@ -2165,7 +2167,7 @@ onBeforeUnmount(() => {
         <!-- 边编辑浮层：挂 .app-root（theme-* 的 CSS 变量在此元素上，Teleport 到 body 会丢失背景色变透明），
            fixed 定位不受画布缩放影响，尺寸恒定 -->
       <Teleport to=".app-root" v-if="edgeEdit">
-      <div class="oc-eedit" :class="'dir-' + (edgeEdit.dir || 'up')" :style="{ position: 'fixed', left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
+      <div class="oc-eedit" :class="[museumPopoverClass, 'dir-' + (edgeEdit.dir || 'up')]" :style="{ position: 'fixed', left: edgeEdit.mx + 'px', top: edgeEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop :data-glaze-light="museumLight">
           <div class="oc-eedit-title">编辑连线</div>
           <div class="oc-eedit-row">
             <input ref="edgeLabelInput" class="rp-input" :value="curRel()?.label || ''" placeholder="连线标签…" @input="patchRel({ label: $event.target.value })" @keydown.enter="edgeEdit = null" @keydown.esc="edgeEdit = null" />

@@ -1,10 +1,11 @@
 import { CanvasTexture, SRGBColorSpace } from 'three'
+import { textureCanvas, textureFont } from './drawing'
 import { wrapBookLines as lines } from './theme-layout'
+import { clothOf, isVerticalTitle, sealChar } from './glaze-cloth'
 
 export const SPACE_COLORS = { novel:'#15324c', note:'#d1c9b7', cedar:'#21443f', violet:'#413c62', claret:'#572c3b', ink:'#141e29' }
-export const LINEN_COLORS = { novel:'#dce5df', note:'#eee8d8', cedar:'#d4ded1', violet:'#ded9e4', claret:'#e8d8d4', ink:'#c7d4d0' }
 const kinds = Object.keys(SPACE_COLORS)
-function canvas(w=1024,h=1440) { const c=document.createElement('canvas');c.width=w;c.height=h;return c }
+const canvas = textureCanvas
 function rng(seed) { return () => { seed=(Math.imul(seed,1664525)+1013904223)|0;return(seed>>>0)/4294967296 } }
 function texture(image,color=false) { const t=new CanvasTexture(image);if(color)t.colorSpace=SRGBColorSpace;t.anisotropy=4;return t }
 function titleLayout(title,ctx,font) {
@@ -12,12 +13,6 @@ function titleLayout(title,ctx,font) {
   for(;size>=50;size-=4){ctx.font=`500 ${size}px ${font}`;rows=lines(title,ctx,790);if(rows.length<=3)break}
   if(rows.length>3){rows=rows.slice(0,3);rows[2]=rows[2].slice(0,-1)+'…'}
   return{size:Math.max(size,50),rows}
-}
-function paintCrop(ctx,image,x,y,w,h,back=false) {
-  // Keep the useful painting interior; generated edge marks are not authorship.
-  const inset=.065,iw=image.width*(1-inset*2),ih=image.height*(1-inset*2),ratio=Math.max(w/iw,h/ih)
-  const sw=w/ratio,sh=h/ratio,sx=image.width*inset+(iw-sw)*(back?.76:.4),sy=image.height*inset+(ih-sh)*.45
-  ctx.drawImage(image,sx,sy,sw,sh,x,y,w,h)
 }
 function weave(w=512,h=720,space=false) {
   const c=canvas(w,h),ctx=c.getContext('2d'),p=ctx.createImageData(w,h),rand=rng(813)
@@ -50,51 +45,147 @@ function foilLines(ctx,kind) {
   ctx.fillStyle='#fff';ctx.fillRect(106,1321,8,18)
   ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(650,1005,700,181,-.38,.15,Math.PI*.85);ctx.stroke()
 }
-function face(book,theme,painting,back=false) {
-  const base=canvas(),foil=canvas(),rough=canvas(),height=canvas(),c=base.getContext('2d'),f=foil.getContext('2d'),r=rough.getContext('2d'),b=height.getContext('2d')
-  const space=theme==='gravity',kind=book.kind||'novel',title=String(book.title||'未命名作品'),author=String(book.author||'').trim(),font=space?'"Microsoft YaHei", sans-serif':getComputedStyle(document.body).getPropertyValue('--glaze-title').trim()||'KaiTi,serif'
-  b.drawImage(weave(512,720,space),0,0,1024,1440)
-  f.fillStyle='#000';f.fillRect(0,0,1024,1440);f.fillStyle='#fff';f.textBaseline='top'
-  c.textBaseline='top';c.fillStyle=space?(SPACE_COLORS[kind]||SPACE_COLORS.novel):'#f3f0e5';c.fillRect(0,0,1024,1440)
-  if(space)spaceArt(c,kind,back)
-  if(!back){
-    const target=space?f:c,{size,rows}=titleLayout(title,target,font)
-    const header=Math.max(350,100+rows.length*size*1.23+(author?83:34))
-    if(!space&&painting){paintCrop(c,painting,0,header,1024,1440-header);c.fillStyle=LINEN_COLORS[kind]||LINEN_COLORS.novel;c.fillRect(0,0,58,1440)}
-    target.fillStyle=space?'#fff':'#294651';target.font=`500 ${size}px ${font}`
-    rows.forEach((row,i)=>target.fillText(row,111,space?116+i*size*1.28:78+i*size*1.23))
-    if(author){target.font=`39px ${font}`;target.fillText(author+' 著',113,space?1245:header-69,785)}
-    if(space)foilLines(f,kind)
-  } else {
-    if(!space&&painting){paintCrop(c,painting,0,875,1024,565,true);c.fillStyle=LINEN_COLORS[kind]||LINEN_COLORS.novel;c.fillRect(966,0,58,1440)}
-    const target=space?f:c;target.fillStyle=space?'#fff':'#36515a';target.font=`51px ${font}`;target.fillText(title,113,118,790)
-    const intro=String(book.intro||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()
-    target.font=`39px ${font}`;lines(intro,target,780).slice(0,8).forEach((row,i)=>target.fillText(row,113,257+i*66))
-    if(author){target.font=`36px ${font}`;target.fillText(author,113,800,780)}
-    if(space)foilLines(f,kind)
-  }
-  if(space){
-    const mask=f.getImageData(0,0,1024,1440),pixels=c.getImageData(0,0,1024,1440),roughness=r.createImageData(1024,1440),relief=b.getImageData(0,0,1024,1440)
-    const gold=kind==='note'?[66,78,85]:[210,190,154]
-    for(let i=0;i<pixels.data.length;i+=4){const a=mask.data[i]/255;for(let k=0;k<3;k++)pixels.data[i+k]=pixels.data[i+k]*(1-a)+gold[k]*a;const v=201-132*a;roughness.data.set([v,v,v,255],i);if(a>.2)relief.data[i]=relief.data[i+1]=relief.data[i+2]=115}
-    c.putImageData(pixels,0,0);r.putImageData(roughness,0,0);b.putImageData(relief,0,0)
-  }else{
-    const color=c.getImageData(0,0,1024,1440),p=b.getImageData(0,0,1024,1440)
-    for(let i=0;i<p.data.length;i+=4){const lum=(color.data[i]+color.data[i+1]+color.data[i+2])/3,v=p.data[i]*.65+lum*.35;p.data[i]=p.data[i+1]=p.data[i+2]=v}
-    b.putImageData(p,0,0);r.fillStyle='#c8c8c8';r.fillRect(0,0,1024,1440)
-  }
-  return {map:texture(base,true),bumpMap:texture(height),roughnessMap:texture(rough),...(space?{metalnessMap:texture(foil)}:{})}
+
+function goldFill(ctx, cloth, kind, inset) {
+  const highlight = kind === 'note' ? '#c9a86a' : '#f0d9a4'
+  const fill = ctx.createLinearGradient(inset, inset, 1024 - inset, 1440 - inset)
+  fill.addColorStop(0, cloth.rule)
+  fill.addColorStop(.28, highlight)
+  fill.addColorStop(.55, cloth.rule)
+  fill.addColorStop(.78, highlight)
+  fill.addColorStop(1, cloth.rule)
+  return fill
 }
-export function themeTextures(book,theme,painting) {
+function foilRect(ctx, rough, x, y, w, h, fill) {
+  ctx.fillStyle = fill
+  ctx.fillRect(x, y, w, h)
+  rough.fillStyle = '#4a4a4a'
+  rough.fillRect(x, y, w, h)
+}
+function foilText(ctx, rough, text, x, y, font, fill, maxWidth, align = 'center', baseline = 'top') {
+  for (const target of [ctx, rough]) {
+    target.font = font
+    target.textAlign = align
+    target.textBaseline = baseline
+    target.fillStyle = target === ctx ? fill : '#4a4a4a'
+    if (maxWidth) target.fillText(text, x, y, maxWidth)
+    else target.fillText(text, x, y)
+  }
+}
+function paintSeal(ctx, cloth, author, title, font, y = 1256) {
+  const ch = sealChar({ author, title })
+  const x = 485
+  ctx.fillStyle = cloth.seal
+  ctx.fillRect(x, y, 54, 54)
+  ctx.strokeStyle = '#fff8e866'
+  ctx.lineWidth = 2
+  ctx.strokeRect(x + 4, y + 4, 46, 46)
+  ctx.fillStyle = '#fff8ec'
+  ctx.font = `700 34px ${font}`
+  ctx.textAlign = 'center'
+  ctx.textBaseline = 'middle'
+  ctx.fillText(ch, 512, y + 29)
+}
+function clothFace(book, back = false, font = textureFont('glaze')) {
+  const base = canvas(), rough = canvas(), height = canvas()
+  const c = base.getContext('2d'), r = rough.getContext('2d'), b = height.getContext('2d')
+  const kind = book.kind || 'novel', title = String(book.title || '未命名作品'), author = String(book.author || '').trim(), cloth = clothOf(kind)
+  b.drawImage(weave(512, 720, false), 0, 0, 1024, 1440)
+  c.fillStyle = cloth.board
+  c.fillRect(0, 0, 1024, 1440)
+  const sheen = c.createLinearGradient(0, 0, 1024, 1440)
+  sheen.addColorStop(0, 'rgba(255,255,255,.075)')
+  sheen.addColorStop(.52, 'rgba(255,255,255,0)')
+  sheen.addColorStop(1, 'rgba(0,0,0,.09)')
+  c.fillStyle = sheen
+  c.fillRect(0, 0, 1024, 1440)
+  r.fillStyle = '#e2e2e2'
+  r.fillRect(0, 0, 1024, 1440)
+  c.textBaseline = 'top'
+  c.textAlign = 'center'
+  const foil = goldFill(c, cloth, kind, 72)
+  const titleFill = kind === 'note' ? cloth.title : foil
+  const inset = 72, inner = inset + 16
+  foilRect(c, r, inset, inset, 880, 3, foil)
+  foilRect(c, r, inset, 1440 - inset - 3, 880, 3, foil)
+  foilRect(c, r, inset, inset, 3, 882, foil)
+  foilRect(c, r, 1024 - inset - 3, inset, 3, 882, foil)
+  foilRect(c, r, inner, inner, 1024 - inner * 2, 1, foil)
+  foilRect(c, r, inner, 1440 - inner - 1, 1024 - inner * 2, 1, foil)
+  foilRect(c, r, inner, inner, 1, 1440 - inner * 2, foil)
+  foilRect(c, r, 1024 - inner - 1, inner, 1, 1440 - inner * 2, foil)
+
+  if (!back) {
+    if (isVerticalTitle(title)) {
+      const chars = [...title], available = 880
+      const size = Math.min(132, available / Math.max(chars.length, 1) / 1.08)
+      const step = size * 1.08, total = chars.length * step
+      const start = 180 + (available - total) / 2
+      chars.forEach((ch, i) => foilText(c, r, ch, 512, start + i * step, `500 ${size}px ${font}`, titleFill))
+    } else {
+      const { size, rows } = titleLayout(title, c, font)
+      const start = 180 + (880 - rows.length * size * 1.23) / 2
+      rows.forEach((row, i) => foilText(c, r, row, 512, start + i * size * 1.23, `500 ${size}px ${font}`, titleFill))
+    }
+    if (author) foilText(c, r, author + ' 著', 512, 1188, `500 40px ${font}`, cloth.author)
+    paintSeal(c, cloth, author, title, font)
+  } else {
+    const titleSize = 50
+    const backRows = lines(title, c, 800).slice(0, 2)
+    if (backRows.length > 1) backRows[1] = backRows[1].slice(0, -1) + '…'
+    backRows.forEach((row, i) => foilText(c, r, row, 512, 112 + i * titleSize * 1.25, `500 ${titleSize}px ${font}`, titleFill, 800))
+    const intro = String(book.intro || '').replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    c.font = `400 36px ${font}`
+    c.fillStyle = cloth.author
+    c.textAlign = 'left'
+    c.textBaseline = 'top'
+    const introRows = intro ? lines(intro, c, 780).slice(0, 8) : []
+    introRows.forEach((row, i) => c.fillText(row, 122, 260 + i * 52))
+    if (author) foilText(c, r, author + ' 著', 512, 1184, `500 38px ${font}`, cloth.author)
+    paintSeal(c, cloth, author, title, font, 1248)
+  }
+  return { map: texture(base, true), bumpMap: texture(height), roughnessMap: texture(rough) }
+}
+
+function face(book, theme, back = false, font = textureFont(theme)) {
+  if (theme !== 'gravity') return clothFace(book, back, font)
+  const base=canvas(),foil=canvas(),rough=canvas(),height=canvas(),c=base.getContext('2d'),f=foil.getContext('2d'),r=rough.getContext('2d'),b=height.getContext('2d')
+  const kind=book.kind||'novel',title=String(book.title||'未命名作品'),author=String(book.author||'').trim()
+  b.drawImage(weave(512,720,true),0,0,1024,1440)
+  f.fillStyle='#000';f.fillRect(0,0,1024,1440);f.fillStyle='#fff';f.textBaseline='top'
+  c.textBaseline='top';c.fillStyle=SPACE_COLORS[kind]||SPACE_COLORS.novel;c.fillRect(0,0,1024,1440)
+  spaceArt(c,kind,back)
+  if(!back){
+    const {size,rows}=titleLayout(title,f,font)
+    f.fillStyle='#fff';f.font=`500 ${size}px ${font}`
+    rows.forEach((row,i)=>f.fillText(row,111,116+i*size*1.28))
+    if(author){f.font=`39px ${font}`;f.fillText(author+' 著',113,1245,785)}
+    foilLines(f,kind)
+  } else {
+    f.fillStyle='#fff';f.font=`51px ${font}`;f.fillText(title,113,118,790)
+    const intro=String(book.intro||'').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim()
+    f.font=`39px ${font}`;lines(intro,f,780).slice(0,8).forEach((row,i)=>f.fillText(row,113,257+i*66))
+    if(author){f.font=`36px ${font}`;f.fillText(author,113,800,780)}
+    foilLines(f,kind)
+  }
+  const mask=f.getImageData(0,0,1024,1440),pixels=c.getImageData(0,0,1024,1440),roughness=r.createImageData(1024,1440),relief=b.getImageData(0,0,1024,1440)
+  const gold=kind==='note'?[66,78,85]:[210,190,154]
+  for(let i=0;i<pixels.data.length;i+=4){const a=mask.data[i]/255;for(let k=0;k<3;k++)pixels.data[i+k]=pixels.data[i+k]*(1-a)+gold[k]*a;const v=201-132*a;roughness.data.set([v,v,v,255],i);if(a>.2)relief.data[i]=relief.data[i+1]=relief.data[i+2]=115}
+  c.putImageData(pixels,0,0);r.putImageData(roughness,0,0);b.putImageData(relief,0,0)
+  return {map:texture(base,true),bumpMap:texture(height),roughnessMap:texture(rough),metalnessMap:texture(foil)}
+}
+export function themeTextures(book,theme,font=textureFont(theme)) {
   const space=theme==='gravity',kind=book.kind||'novel',cloth=weave(256,512,false),spine=canvas(192,1440),s=spine.getContext('2d')
-  s.fillStyle=space?'#14212d':LINEN_COLORS[kind]||LINEN_COLORS.novel;s.fillRect(0,0,192,1440)
-  s.fillStyle=space?'#c5b396':'#38525a';s.textBaseline='top';s.textAlign='center'
+  const palette=clothOf(kind)
+  s.fillStyle=space?'#14212d':palette.board;s.fillRect(0,0,192,1440)
+  s.fillStyle=space?'#c5b396':palette.title;s.textBaseline='top';s.textAlign='center'
   const chars=[...String(book.title||'未命名作品')],size=Math.min(66,1020/Math.max(chars.length,1)/1.25)
-  s.font=`${size}px ${space?'"Microsoft YaHei",sans-serif':'KaiTi,serif'}`;chars.forEach((ch,i)=>s.fillText(ch,96,190+i*size*1.25,150))
+  s.font=`${size}px ${space?'"Microsoft YaHei",sans-serif':font}`;chars.forEach((ch,i)=>s.fillText(ch,96,190+i*size*1.25,150))
   if(space){s.fillRect(32,101,128,4);s.fillRect(32,1304,128,4)}
+  else {s.fillStyle=palette.rule;s.fillRect(32,101,128,4);s.fillRect(32,1304,128,4)}
   const paper=canvas(256,256),p=paper.getContext('2d');p.fillStyle=space?'#e4e0d3':'#f1e9d6';p.fillRect(0,0,256,256)
   const rand=rng(57);for(let x=0;x<256;x+=3){p.fillStyle='#8e806625';p.fillRect(x,0,1+rand(),256)}
   for(let x=5;x<256;x+=19+Math.floor(rand()*5)){p.fillStyle='#8c7e6560';p.fillRect(x,0,3,256)}
   const seam=p.createLinearGradient(0,0,256,0);seam.addColorStop(0,'#534a3d66');seam.addColorStop(.1,'#534a3d00');seam.addColorStop(.9,'#534a3d00');seam.addColorStop(1,'#534a3d66');p.fillStyle=seam;p.fillRect(0,0,256,256)
-  return {front:face(book,theme,painting),back:face(book,theme,painting,true),spine:{map:texture(spine,true),bumpMap:texture(weave(48,720,false))},cloth:texture(cloth),paper:texture(paper,true)}
+  return {front:face(book,theme,false,font),back:face(book,theme,true,font),spine:{map:texture(spine,true),bumpMap:texture(weave(48,720,false))},cloth:texture(cloth),paper:texture(paper,true)}
 }

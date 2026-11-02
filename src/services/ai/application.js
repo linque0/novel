@@ -13,6 +13,9 @@ import { taskApplyActions } from './task-profiles.js'
 import { validateWritingAnchor } from './writing-anchor.js'
 import { markChapterStale } from './summarize.js'
 import { closeHistory } from '@tiptap/pm/history'
+import { freezeDraft } from './review-cycle.js'
+import { normalizeText } from '../project/text.js'
+import {normalizeStoryHTML} from '../story-richtext.js'
 
 const TABLES = ['chapters', 'outlines', 'olnodes', 'mubu', 'characters', 'relations']
 const applying = new Set()
@@ -28,6 +31,7 @@ function targetOf(work, card) {
   return { type, row: rows.find((r) => r.id === card.anchorId && !r.deletedAt) }
 }
 export function proposalGuard(work, card, action) {
+  if(card.workflowStage)throw new Error('这是工作流阶段材料，请在创作任务中确认最终候选');
   if (card.source?.taskRequest && !taskApplyActions(card.source.taskRequest.type, card.original,card.source.taskRequest.writingAnchor).includes(action)) throw new Error('当前专用任务不允许此写回操作')
   if (!work.work || card.workId !== work.work.id) throw new Error('提案属于其他作品，请重新生成')
   if (card.source?.layoutHash && fingerprint(ordered(work).map((ch) => [ch.id, ch.volumeId])) !== card.source.layoutHash)
@@ -54,7 +58,15 @@ export function proposalGuard(work, card, action) {
   if (action === 'outline' && isPopped(work, 'outline', '')) throw new Error('大纲已被其他窗口锁定')
   return row
 }
-export function locateEditorPatch(editor, original) {
+export function locateEditorPatch(editor, original, {wholeChapter=false}={}) {
+  if(wholeChapter){
+    if(normalizeText(editor.getHTML(),'html')!==original)throw new Error('整章正文与候选源稿不一致，请重新生成')
+    let protectedMark=false
+    editor.state.doc.nodesBetween(0,editor.state.doc.content.size,node=>{
+      if(node.marks?.some(mark=>/dl|link|note|annotation/i.test(mark.type.name)))protectedMark=true
+    })
+    return {from:0,to:editor.state.doc.content.size,protectedMark}
+  }
   let text = '',
     last = null
   const map = []
@@ -89,7 +101,16 @@ function createOriginal(work, original) {
 export async function applyProposal(work, card, options = {}) {
   if (card.kind === 'workflow') return applyWorkflow(work, card, options)
   const action = options.action || 'apply'
+  const frozenCandidate=card.workflowBinding?freezeDraft(card):null
+  const revalidateCandidate=async()=>{
+    if(card.storyBinding)await (await import('../../db/story-repo.js')).assertStoryBinding(card.storyBinding)
+    if(!card.workflowBinding)return
+    const current=freezeDraft(card)
+    if(current.contentHash!==frozenCandidate.contentHash||current.revision!==frozenCandidate.revision)throw new Error('采纳期间候选已编辑，请重新确认')
+    await (await import('../../db/workflow-repo.js')).assertStoredCandidate(card)
+  }
   const operation = card.id + ':' + action
+  if(card.workflowBinding)await (await import('../../db/workflow-repo.js')).assertStoredCandidate(card)
   if (applying.has(operation)) throw new Error('此提案正在应用，请稍候')
   proposalGuard(work, card, action)
   if (['draft', 'rewrite', 'append', 'replace','insert'].includes(action) || card.kind === 'rewrite') {
@@ -98,7 +119,7 @@ export async function applyProposal(work, card, options = {}) {
     if (!editor.isEditable) throw new Error('当前编辑器只读')
     const anchor=card.source?.taskRequest?.writingAnchor
     if(anchor)validateWritingAnchor(editor,anchor)
-    if (!anchor&&(card.kind === 'rewrite' || action === 'replace') && locateEditorPatch(editor, card.original).protectedMark)
+    if (!anchor&&(card.kind === 'rewrite' || action === 'replace') && locateEditorPatch(editor, card.original,{wholeChapter:card.source?.taskRequest?.type==='chapter.draft'}).protectedMark)
       throw new Error('修改范围跨越关系链接或批注，已禁用一键应用，请人工处理草案')
   }
   await autosave.flushAll()
@@ -147,6 +168,7 @@ export async function applyProposal(work, card, options = {}) {
   const auditId = uid()
   applying.add(operation)
   try {
+    await revalidateCandidate()
     if (action.startsWith('original:')) {
       if (isPopped(work, 'characters', '') || isPopped(work, 'lore', '')) throw new Error('实体模块被其他窗口锁定')
       createOriginal(work, card.originalProposals[Number(action.split(':')[1])])
@@ -193,6 +215,7 @@ export async function applyProposal(work, card, options = {}) {
       editorBefore = editor.getJSON()
       autosave.mark('chapters', row, { forceSnapshot: true })
       await autosave.flushAll()
+      await revalidateCandidate()
       proposalGuard(work, card, action)
       if (work.selChapterId !== card.anchorId || editor !== window.__ns.editor || editor.isDestroyed || !editor.isEditable)
         throw new Error('编辑器目标已变化')
@@ -205,22 +228,24 @@ export async function applyProposal(work, card, options = {}) {
         .split(/\n+/)
         .filter(Boolean)
         .map((text) => ({ type: 'paragraph', content: [{ type: 'text', text }] }))
+      const storyHTML=card.storyHTML?normalizeStoryHTML(card.storyHTML):null
+      if(storyHTML&&normalizeText(storyHTML,'html')!==replacement)throw new Error('共同工作稿富文本与确认正文不一致')
       if (!paragraphs.length) throw new Error('没有可应用的正文')
       if (card.kind === 'rewrite' || action === 'replace') {
-        const range = anchor || locateEditorPatch(editor, card.original)
+        const range = anchor || locateEditorPatch(editor, card.original,{wholeChapter:card.source?.taskRequest?.type==='chapter.draft'})
         if (range.protectedMark) throw new Error('修改范围含关系链接或批注')
         const inline =
           !replacement.includes('\n') && editor.state.doc.resolve(range.from).parent === editor.state.doc.resolve(range.to).parent
         // At a mark boundary, $from.marks() inherits the left text. Use the
         // first actually selected text node so unmarked replacements stay unmarked.
-        const content = inline
+        const content = storyHTML || (inline
           ? { type: 'text', text: replacement, marks: (editor.state.doc.nodeAt(range.from)?.marks || []).map((m) => m.toJSON()) }
-          : paragraphs
+          : paragraphs)
         if (!editor.chain().focus().insertContentAt({ from: range.from, to: range.to }, content).run()) throw new Error('改稿事务未提交')
       } else if(anchor){
         const inline=!replacement.includes('\n')
         if(!editor.chain().focus().insertContentAt(anchor.from,inline?{type:'text',text:replacement}:paragraphs).run())throw new Error('续写事务未提交')
-      } else if (!editor.chain().focus('end').insertContent(paragraphs).run()) throw new Error('续写事务未提交')
+      } else if (!editor.chain().focus('end').insertContent(storyHTML||paragraphs).run()) throw new Error('续写事务未提交')
       editorAfter = JSON.stringify(editor.getJSON())
       editorChange = {table:'chapters',id:row.id,before:before.chapters.find(c=>c.id===row.id),afterHash:entityHash(row)}
       if(anchor)editor.view.dispatch(closeHistory(editor.state.tr))
@@ -261,6 +286,11 @@ export async function applyProposal(work, card, options = {}) {
         if (!prior || entityHash(prior) !== entityHash(after))
           changes.push({ table, id: after.id, before: prior || null, afterHash: entityHash(after) })
       }
+    // Register only after a successful editor transaction; saving the final row and job is atomic.
+    for (const change of changes.filter(c=>c.table==='chapters')) {
+      const chapter=work.chapters.find(c=>c.id===change.id)
+      if(chapter)autosave.mark('chapters',chapter,{memoryIntent:{applicationId:auditId,cardId:card.id}})
+    }
     await autosave.flushAll()
     for (const change of changes) {
       const persisted = await db.table(change.table).get(change.id)

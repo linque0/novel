@@ -1,0 +1,737 @@
+/* Museum workspaces. All tokens and rules belong to an explicit writing owner;
+   the independent Dream surface retains the historical glaze skin. */
+.glaze-museum,.glaze-museum-popover {
+  --bg:var(--gm-wall);--bg-panel:var(--gm-paper);--bg-hover:#e8ebdc;
+  --text:var(--gm-ink);--text-dim:var(--gm-muted);--text-faint:#59634d;
+  --accent:var(--gm-teal);--accent-soft:#e5ead9;--border:var(--gm-line);--border-strong:#a5af95;
+  --ikb:var(--gm-teal);--ivory:var(--gm-paper);--g-black:var(--gm-ink);--g-hair:var(--gm-line);
+  --glaze-title:var(--gm-title);--success:#526d4a;
+  font-size:14px;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] {
+  --workbench-inset:28px;padding:0 28px 24px;overflow:hidden;
+  background:radial-gradient(ellipse at 15% 0%,#ffffedb0,transparent 57%),linear-gradient(112deg,#d2dfd1,#e5eadd 64%,#eee9db);
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light='gallery'] {
+  background:radial-gradient(ellipse at 18% 0,#f5eed0a8,transparent 54%),linear-gradient(112deg,#c4cfbc,#d8decc 64%,#e0dccb);
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gm-cornice {margin-inline:-28px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-shell {
+  --topbar-bg:#edf0e3;--topbar-text:var(--gm-ink);--topbar-muted:var(--gm-muted);
+  --topbar-accent:#5b6d45;--topbar-line:#b2bba0;--topbar-font:var(--gm-title);
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar {height:76px;padding-inline:28px;gap:22px;background:linear-gradient(#f2f1e5,#e8ecdc)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-mark {border:3px double #a0ab8b;border-radius:0;background:#f7f4e6;color:#566241}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-brand-text {font-size:20px;letter-spacing:2px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-brand-text small {font-size:12px;letter-spacing:1px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topnav {gap:22px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topnav-item {font-size:15px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-actions {gap:4px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.wb-body,.panel-body) {position:relative;padding:24px 0 0;gap:0;min-width:0;min-height:0;flex:1}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .panel-topbar {margin-inline:-28px;padding:15px 28px;background:#edf0e2;border-bottom:1px solid var(--gm-line);font-size:14px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] :is(.wb-body,.panel-body)>.side-panel {
+  padding:3px 16px 0 0;min-width:180px;max-width:480px;background:transparent;border:0;flex-shrink:0;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>.glaze-artwork {flex:none;width:calc(100% - 18px);margin:0 8px 18px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>.glaze-artwork .gm-art-caption {margin-top:10px;padding-bottom:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>.glaze-artwork .gm-art-caption strong {font-size:15px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>.glaze-artwork .gm-art-caption small {font-size:12px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>:is(.chapter-catalog,.character-catalog,.snippet-catalog,.mubu-tree) {flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-resizer {width:6px;margin:0 20px 0 0;border-right:1px solid #abb79a;background:transparent;flex:none}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-resizer:hover {background:#829b6b44}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.side-head,.character-list-head) {padding:12px 0;gap:7px;background:transparent}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.gravity-sidebar-title,.gravity-inspiration-heading h1,.character-list-head h2,.mubu-tree h2) {font:24px/1.5 var(--gm-title);color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-sidebar-title {padding-block:8px;margin:0;border-block:1px solid var(--gm-line)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .catalog-art {display:none}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-list {padding:2px 2px 18px;min-height:0;overflow:auto}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-item {border-radius:1px;padding:11px 8px;border-bottom:1px solid #b5bfa577;background:transparent;color:var(--gm-ink);box-shadow:none}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-item.active {background:#f3f2e3;box-shadow:inset 0 0 0 1px #b7bf9e,inset 0 0 0 3px #e2e7d1}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.gravity-chapter-number,.gravity-chapter-copy small,.gravity-catalog-footer,.ol-side-parent) {color:var(--gm-muted);font-size:12px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-chapter-copy {gap:3px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-chapter-copy>span {font-size:14px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .n-tree .n-tree-node {border-radius:1px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .n-tree .n-tree-node.n-tree-node--selected {background:#f3f2e3;box-shadow:inset 0 0 0 1px #b7bf9e,inset 0 0 0 3px #e2e7d1}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-catalog-footer {padding:12px 3px 0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-catalog-footer b {font-size:22px;color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] :is(.wb-body,.panel-body)>.center-pane {
+  background:var(--gm-paper);border:1px solid #b4b79e;border-radius:1px;box-shadow:0 1px 1px #fff,inset 0 0 0 4px #f7f3e6,inset 0 0 0 5px #d9d3bb,5px 8px 20px #47563c18;overflow:hidden;min-width:0;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .center-pane.paper-texture::before {display:none}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-toolbar {border-radius:0;padding:12px 16px;border-bottom:1px solid #d5cfb7;background:var(--gm-paper)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-toolbar :is(button,.n-button) {color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-manuscript-head {padding:30px clamp(24px,7%,70px) 12px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-manuscript-head::before {content:'';display:block;width:130px;height:28px;margin:0 auto 15px;background:var(--gm-scroll) center/contain no-repeat;opacity:.65}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-manuscript-head::after {display:none}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-manuscript-location {font-size:12px;color:var(--gm-muted)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-head .title-input {font:28px/1.6 var(--gm-title);text-align:center;color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-wrap[data-paper-skin='glaze'] {--wp-page:#faf7ee;--wp-ink:#3f4f42;--wp-muted:#59634d;--wp-edge:#b3ab87;--wp-cover:#7e8a66;--wp-panel:#f7f4e8}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .rich-host .rich-inner {max-width:900px;margin-inline:auto}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .rich-host .rich-inner .tiptap {color:var(--wp-ink,var(--gm-ink));padding:12px clamp(24px,7%,70px) 38vh;line-height:2.1}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-foot {background:var(--gm-paper);border-color:#d5cfb7;padding:10px 18px;color:var(--gm-muted);font-size:12px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .right-panel {width:260px;min-width:0;flex:none;padding:0 0 12px 24px;background:transparent;border:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .rp-head {margin:0;padding:13px 0 16px;background:var(--gm-wall);border-bottom:1px solid var(--gm-line)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .rp-cap {font:24px var(--gm-title);color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-right-tabs {gap:25px;border-color:var(--gm-line)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-right-tabs button {font-size:14px;color:var(--gm-muted);padding:12px 0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-right-tabs button.on {color:var(--gm-teal);border-color:var(--gm-gold)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .rp-section {padding:20px 0;border-color:var(--gm-line)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .rp-title {font-size:14px;color:var(--gm-muted)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .note-item {margin:15px 0;padding:15px;border:1px solid #c3bda0;border-radius:1px;background:#f7f1dbe8;box-shadow:1px 3px 5px #52613f16}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .note-quote {font:17px/1.8 var(--gm-title);color:#665d38}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .note-body {font-size:14px;line-height:1.9;color:#67705a}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.note-time,.note-kind-label,.note-count,.note-orphan-tip) {font-size:12px;color:var(--gm-muted)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.rp-input,.rp-textarea,.ol-editor,.ob-editor) {border-radius:1px;border-color:var(--gm-line);background:var(--gm-paper);color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.rp-rail,.ol-side-rail) {background:transparent;border-color:var(--gm-line);color:var(--gm-muted)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.outline-surface,.lore-surface,.character-surface,.snippet-surface) {padding:24px 28px!important;background:transparent;color:var(--gm-ink);min-height:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.module-heading,.gravity-dossier-heading) {padding:0 0 18px;min-height:0;border-color:#c9c2a9;margin-bottom:18px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.module-heading>.serif,.gravity-dossier-heading h1,.gravity-lore-title h2,.gravity-snippet-heading h1) {font:26px/1.5 var(--gm-title)!important;color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.gravity-lore-title,.gravity-inspiration-heading,.gravity-snippet-heading) {margin:0 0 18px;padding:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.ol-toolbar,.ob-toolbar,.om-toolbar) {border-color:#c9c2a9;background:transparent;color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .oc-canvas {border-radius:1px;border-color:var(--gm-line);background-color:#e5e9d9;background-image:radial-gradient(#a7ae8b88 1px,transparent 1px);background-size:18px 18px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.oc-note,.oc-node,.rg-node) {background:#f7f4e7;border-color:#ada98d;border-radius:1px;box-shadow:inset 0 0 0 4px #ece8d6,inset 0 0 0 5px #c7bea0,2px 4px 9px #394d3221}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .oc-label {color:var(--gm-ink);font:18px var(--gm-title)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.oc-note .oc-label,.om-sub,.gravity-lore-title>span,.gravity-dossier-heading>span,.gravity-field-label,.gravity-section-caption,.gravity-snippet-heading>span) {color:var(--gm-muted);font-size:12px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .ol-viewtoggle {border-color:var(--gm-line);border-radius:1px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .ol-viewtoggle button {border-radius:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .ol-viewtoggle button.on {background:var(--gm-teal);color:#fff}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .ob-row:is(:hover,:focus-within) {background:#e6eadb}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.ob-bullet,.ob-bullet::after) {color:var(--gm-teal)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .ob-guide {border-color:#b5bea3}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .ob-row[data-depth='0'] .ob-text {font:21px/1.6 var(--gm-title)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .character-portrait {transform:none;border:4px double #a4ac8f;padding:4px;border-radius:0;box-shadow:1px 2px 5px #59664527;margin:0 8px 0 0;background:#f7f4e8}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .character-portrait .avatar-lg {border-radius:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.character-initial,.gravity-initial) {background:#e2e6d3;color:#68744e;border-radius:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .character-name-row>.n-input:first-of-type input {font:28px var(--gm-title)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .character-sections {gap:24px 30px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .character-sections .rp-title {font:20px var(--gm-title);color:#5c6147}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-character-copy b {font:19px var(--gm-title);color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-list-avatar {border-color:var(--gm-line);border-radius:0;width:40px;height:49px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .snippet-catalog>.side-list {display:flex;flex-direction:column;gap:8px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .snippet-catalog .side-item {display:flex;flex-direction:column;align-items:stretch;min-height:0;gap:8px;padding:14px 10px;margin:0;background:#f4f0df;border:1px solid #c2baa0;border-radius:1px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .snippet-catalog .side-item:nth-child(even) {margin:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .snippet-catalog h3 {font:18px/1.6 var(--gm-title)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .snippet-catalog .side-item p {font-size:14px;line-height:1.7;color:var(--gm-muted);-webkit-line-clamp:2}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.gravity-snippet-date,.gravity-snippet-open,.gravity-character-copy small) {font-size:12px;color:var(--gm-muted)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .snippet-actions {padding-top:14px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-root {margin-inline:-28px;background:transparent;min-height:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-head {background:#edf0e2;border-color:var(--gm-line);padding:16px 28px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-title {font:25px var(--gm-title);color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-sub {font-size:12px;color:var(--gm-muted);letter-spacing:.07em}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav {width:240px;padding:26px 20px;background:transparent;border-color:var(--gm-line);gap:5px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav>.glaze-artwork {margin:0 5px 24px;width:calc(100% - 10px)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-item {padding:12px 8px;border-radius:1px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-item.on {background:#f3f2e3;box-shadow:inset 0 0 0 1px #b7bf9e,inset 0 0 0 3px #e2e7d1}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-ico {background:transparent;color:#68744e;border:3px double #b5b99b;border-radius:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-text b {font-size:15px;color:var(--gm-ink)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-text i {font-size:12px;color:var(--gm-muted)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-content {padding:28px 32px;background:var(--gm-paper)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-h {font:27px var(--gm-title)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-h2 {font:21px var(--gm-title)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-card {border:0;border-block:1px solid #c9c2a9;border-radius:0;background:transparent;box-shadow:none}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.sw-row,.sw-item) {padding:16px 0;gap:14px;border-color:#d5cfb7;flex-wrap:wrap}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-row-main b {font-size:15px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.sw-row-main i,.sw-desc,.sw-foot,.chip,.fs b) {font-size:12px;color:var(--gm-muted)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chip {background:#f6f2e6;border-color:var(--gm-line);border-radius:1px;height:32px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chip.on {background:var(--gm-teal);border-color:var(--gm-teal);color:#fff}
+/* Owned body teleports get their own tokens; no global body palette is changed. */
+.glaze-museum-popover.glaze-museum-popover {color:var(--gm-ink);background-color:var(--gm-paper);border-color:var(--gm-line);border-radius:2px;max-width:calc(100vw - 32px)}
+.glaze-museum-popover:is(.n-card,.n-dialog) {box-shadow:0 1px #fff,inset 0 0 0 4px #f1ebda,inset 0 0 0 5px #d4cbb0,0 16px 46px #344f423b}
+.glaze-museum-popover:is(.n-card,.n-dialog) :is(.n-card-header__main,.n-dialog__title) {font:25px/1.5 var(--gm-title);color:var(--gm-ink)}
+.glaze-museum-popover :is(.n-card__content,.n-dialog__content) {font-size:14px;line-height:1.8}
+.glaze-museum-popover :is(.n-popover-arrow-wrapper,.n-dropdown-menu) {background:var(--gm-paper)}
+.glaze-museum-popover :is(.mtp-head,.lrp-head,.dl-pop-head) {background:#ecebdc;border-color:var(--gm-line)}
+.glaze-museum-popover :is(.mtp-title,.lrp-title,.dl-pop-title) {font:19px var(--gm-title);color:var(--gm-ink)}
+.glaze-museum-popover.ldt-page {inset:112px 0 0;padding:20px 28px;background:var(--gm-wall)}
+.glaze-museum-popover .ldt-top {background:transparent;border-color:var(--gm-line)}
+.glaze-museum-popover .ldt-body {padding:28px;background:var(--gm-paper);gap:28px;grid-template-columns:minmax(0,1fr) 260px}
+.glaze-museum-popover .ldt-title {font:32px/1.5 var(--gm-title);color:var(--gm-ink);min-height:0;padding:0}
+.glaze-museum-popover .ldt-section-title {font:22px var(--gm-title);color:var(--gm-ink)}
+.glaze-drawer-close,.glaze-pane-toggles,.glaze-drawer-scrim {display:none}
+@media(max-width:1180px) {
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] {--workbench-inset:20px;padding:0 20px 20px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gm-cornice {margin-inline:-20px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar {padding-inline:20px;gap:14px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topnav {gap:16px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-actions .gm-lighting {display:none}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .glaze-pane-toggles {display:flex;align-items:center;gap:15px;padding:13px 0 0;flex:none}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .glaze-pane-toggles>span {flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;color:var(--gm-muted);font:14px var(--gm-title)}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.glaze-directory-toggle,.glaze-notes-toggle,.glaze-drawer-close) {padding:7px 11px;border:1px solid #a9b293;background:#f4f1e4;color:var(--gm-ink);border-radius:1px;font:14px var(--gm-hand);cursor:pointer}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .glaze-drawer-close {display:block;align-self:flex-end;flex:none;margin-bottom:16px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .right-panel .glaze-drawer-close {margin:0 0 0 auto}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] :is(.wb-body,.panel-body)>[data-glaze-drawer] {
+  position:absolute;top:0;bottom:0;z-index:62;display:flex!important;flex-direction:column;
+  width:min(340px,calc(100vw - 64px))!important;max-width:none!important;min-width:0;
+  padding:20px 20px 24px;background:var(--gm-wall);border:1px solid #a4b191;box-shadow:8px 8px 28px #2c412d40;
+  visibility:hidden;pointer-events:none;transform:translateX(-110%);overflow:auto;
+ }
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum [data-glaze-drawer='directory'] {left:-20px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum [data-glaze-drawer='notes'] {right:-20px;left:auto;transform:translateX(110%)!important}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] :is(.wb-body,.panel-body)>.glaze-drawer-visible {visibility:visible;pointer-events:auto;transform:none!important}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .glaze-drawer-scrim {display:block;position:absolute;inset:0 -20px;z-index:60;border:0;padding:0;background:#34473770;cursor:pointer}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.side-resizer,.rp-rail,.ol-side-rail) {display:none!important}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .rp-head {display:flex;align-items:center;gap:12px;flex:none}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .rp-fold {display:none}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .center-pane {width:100%}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-root {margin-inline:-20px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .panel-topbar {margin-inline:-20px;padding-inline:20px}
+}
+@media(max-width:800px) {
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .character-sections {grid-template-columns:minmax(0,1fr)}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .character-sections>section {grid-area:auto}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum :is(.outline-surface,.lore-surface,.character-surface,.snippet-surface) {padding:20px!important}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav {width:180px;padding:22px 12px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-text i {display:none}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-content {padding:24px 20px}
+ .glaze-museum-popover .ldt-body {display:block;padding:20px}
+}
+@media(max-width:600px) {
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar {height:100px;gap:0 12px;padding-inline:12px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-actions>.n-button {padding-inline:6px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-actions>.dream-mode-entries {display:none}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav {width:104px;padding:18px 7px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav>.glaze-artwork {margin:0 0 16px;width:100%}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-item {padding:10px 5px;gap:0}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-ico {display:none}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-text b {font-size:14px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-content {padding:20px 14px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-row-main {flex-basis:100%}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chips {flex-wrap:wrap}
+}
+
+/* Keep writing space available at high zoom; every formatting control remains
+   reachable in its own keyboard-scrollable horizontal strip. */
+@media(max-width:850px) {
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-wrap .editor-toolbar {flex-wrap:nowrap;overflow-x:auto;white-space:nowrap;padding:7px 10px;min-height:44px;flex-shrink:0;scrollbar-width:thin}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-toolbar>* {flex-shrink:0}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-manuscript-head {padding:16px 20px 8px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-manuscript-head::before {height:18px;margin-bottom:8px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-head .title-input {font-size:24px;line-height:1.4}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .editor-foot {padding:6px 10px}
+}
+
+/* Full outline canvas/inspector palette, within its writing owner only. */
+
+
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline']
+  :is(.om-wrap, .ol-paper-sidebar, .outline-surface) {
+  --oc-serif: var(--gm-title);
+  --oc-paper: #faf7ed;
+  --oc-paper-ink: #344f42;
+  --oc-paper-muted: #53614b;
+  --oc-line: #b7b99c;
+  --oc-sage: #536b4d;
+  --oc-green: #536b4d;
+  --oc-paper-opacity: 1;
+  --oc-paper-blend: normal;
+  --bg-panel: #e7ebda;
+  --bg-editor: #faf7ed;
+  --bg-hover: #e7eada;
+  --text: #344f42;
+  --text-dim: #53614b;
+  --text-faint: #59634d;
+  --border: #b8bea4;
+  --accent: #536b4d;
+  --oc-canvas-color: #e0e5d2;
+  --oc-canvas-dot: #abb795;
+  --oc-canvas-backdrop: #e2e6d5;
+}
+
+
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .outline-surface { padding:0!important;background:transparent;border:0;border-radius:0;box-shadow:none;}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .side-panel {
+  background: #e7ebdacc;
+  border-right: 1px solid #b8bea4;
+  backdrop-filter: none;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline']
+  :is(.center-pane, .outline-body, .outline-main) {
+  background: transparent;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-workspace-head {
+  background: #faf7eda8;
+  border-bottom: 1px solid #b8bea4;
+  backdrop-filter: none;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-eyebrow {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-workspace-head h1 {
+  color: #344f42;
+  font-family: var(--oc-serif);
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-workspace-head p {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-head-actions button {
+  background: #faf7edcc;
+  border-color: #b8bea4;
+  border-radius: 2px;
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-head-actions button:hover {
+  border-color: #536b4d;
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-scopebar {
+  background: #f6fbfbcc;
+  border-bottom-color: #b8bea4;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap.oc-root-scope .oc-scopebar {
+  background: transparent;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline']
+  :is(.oc-back, .oc-crumbs button) {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-crumbs button[aria-current='page'] {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-search {
+  background: #faf7edd9;
+  border-color: #b8bea4;
+  border-radius: 2px;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-search input {
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-search kbd {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-search-results {
+  background: #faf7ed;
+  border-color: #b8bea4;
+  box-shadow: 0 12px 30px #4a5d3a1f;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-search-item {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-search-item:hover {
+  background: #e9ecd9;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-kind-tag {
+  color: #536b4d;
+  border-color: #b7b99c;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-toolbar {
+  background: #faf7edb8;
+  border-bottom-color: #b8bea4;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-module-tools button {
+  color: #53614b;
+  border-radius: 2px;
+  font-size: 12.5px;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-module-tools button:hover {
+  background: #e9ecd9;
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-chip {
+  color: #53614b;
+  border-color: transparent;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-chip:hover {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-chip.on {
+  background: #e4e8d3;
+  border-color: #a9b38e;
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-line-modes {
+  background: #ebeada;
+  border: 1px solid #b8bea4;
+  border-radius: 2px;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-line-modes button[aria-pressed='true'] {
+  background: #faf7ed;
+  color: #536b4d;
+  box-shadow: 0 2px 6px #4a5d3a1a;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-count {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-zoom-controls {
+  background: #faf7edd9;
+  border-color: #b8bea4;
+  border-radius: 2px;
+  box-shadow: 0 10px 24px #4a5d3a1a;
+  backdrop-filter: none;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-zoom-controls button {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-zoom-controls button:hover {
+  background: #e9ecd9;
+  color: #536b4d;
+}
+
+
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-paper-sidebar {
+  background: linear-gradient(180deg, #f3f2e6cc, #edf0dfcc);
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-book-mark {
+  background: #536b4d;
+  color: #faf7ed;
+  box-shadow: inset 4px 0 #43593c, inset 5px 0 #c5ccac;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-book-text strong {
+  color: #344f42;
+  font-family: var(--oc-serif);
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-book-text small {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-side-toggle {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-side-toggle:hover {
+  background: #e9ecd9;
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-side-section {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-side-section > span + span {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-story-search {
+  border-bottom-color: #b8bea4;
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-story-search input {
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-story-row {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-story-row:hover {
+  background: #e7eada;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-story-row.active {
+  background: #e4e8d3;
+  box-shadow: inset 2px 0 #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-story-row.current {
+  background: #e9ecd9;
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-tree-name {
+  color: inherit;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-tree-count {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-tree-current {
+  color: #536b4d;
+  border-color: #a9b38e;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-paper-side-footer {
+  border-top-color: #b8bea4;
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-paper-stamp {
+  border-color: #a9b38e;
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .ol-side-empty {
+  color: #59634d;
+}
+
+
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-canvas-surface {
+  box-shadow: inset 0 0 90px #ccd6b22e;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-node:not(.oc-container):not(.oc-textbox):not(.oc-volume) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: 0 10px 26px #4a5d3a14;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-node .oc-paper {
+  opacity: 1;
+  filter: saturate(.8) brightness(1.02);
+  box-shadow: none;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-node .oc-paper::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: #e9e2c9;
+  opacity: .22;
+  mix-blend-mode: soft-light;
+  pointer-events: none;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-node.sel {
+  outline-color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-apt {
+  background: #faf7ed;
+  border-color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-event .oc-shape polygon {
+  stroke: color-mix(in srgb, #536b4d 38%, var(--paper-edge, #b7b99c));
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-event.sel .oc-shape polygon {
+  stroke: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container {
+  background: color-mix(in srgb, var(--bc, #536b4d) 4%, #fbf8ee);
+  border-color: color-mix(in srgb, var(--bc, #536b4d) 38%, #b7b99c);
+  border-left: 3px solid var(--bc, #536b4d);
+  border-radius: 2px;
+  box-shadow: 0 10px 26px #4a5d3a14;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container :is(.oc-ctitle, .oc-ccount) {
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container .oc-ctitle {
+  font-family: var(--oc-serif);
+  font-size: 21px;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container :is(.oc-cmeta, .oc-csummary, .oc-cprogress) {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container .oc-cprogress {
+  border-top-color: #b8bea4;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container .oc-cprogress .bar {
+  background: #536b4d18;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container .oc-cprogress .done {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container .oc-cfoot .enter,
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-inline-toggle {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container .oc-cfoot button {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-container .oc-cfoot button:hover {
+  background: #e9ecd9;
+  color: #536b4d;
+}
+
+
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-mini {
+  background: #fcf9ee;
+  border-color: #c3c6aa;
+  box-shadow: 0 6px 16px #4a5d3a1a;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-mini-title {
+  color: #344f42;
+  font-family: var(--oc-serif);
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-mini :is(.oc-mini-body, .oc-mini-top) {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-mini-actions button {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-mini-actions button.enter {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-mini-container {
+  background: color-mix(in srgb, var(--bc, #536b4d) 4%, #faf7ed);
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-mini-scroll {
+  scrollbar-color: #a9b38e transparent;
+}
+
+
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-drawer {
+  background: #fcf9eed9;
+  border-color: #b7b99c;
+  border-radius: 2px;
+  color: #344f42;
+  box-shadow: -10px 14px 36px #4a5d3a26;
+  backdrop-filter: none;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-drawer-eyebrow {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-drawer h2 {
+  color: #344f42;
+  font-family: var(--oc-serif);
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-drawer-path {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-field {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-field :is(input, textarea, select) {
+  background: #faf7ed;
+  border-color: #b8bea4;
+  border-radius: 2px;
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-quiet {
+  background: #faf7edd9;
+  border-color: #b8bea4;
+  border-radius: 2px;
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-quiet.primary {
+  background: #536b4d;
+  border-color: #536b4d;
+  color: #faf7ed;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-stats div {
+  border-bottom-color: #b8bea4;
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-stats b {
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-connection-list,
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-drawer-foot {
+  border-color: #b8bea4;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-connection {
+  border-bottom-color: #b8bea4;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-connection button {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-connection em {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-drawer-empty {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-external-card {
+  background: #faf7edd9;
+  border-color: #b8bea4;
+  color: #344f42;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-external-card button {
+  color: #536b4d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline']
+  :is(.oc-selection-bar, .oc-group-inspector, .oc-relations-panel) {
+  background: #faf7edeb;
+  border-color: #b8bea4;
+  color: #344f42;
+  box-shadow: 0 12px 30px #4a5d3a26;
+  backdrop-filter: none;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-selection-bar button,
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-group-inspector button {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-selection-bar button.primary,
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-group-inspector button.primary {
+  background: #536b4d;
+  border-color: #536b4d;
+  color: #faf7ed;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-elabel {
+  background: #faf7edd9;
+  border-color: #b8bea4;
+  border-radius: 2px;
+  padding: 2px 6px;
+  color: #53614b;
+  box-shadow: 0 2px 8px #4a5d3a14;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-scope-empty {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-quick {
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-quick-tip {
+  color: #59634d;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-pick-toggle {
+  background: #faf7edd9;
+  border-color: #b8bea4;
+  color: #53614b;
+}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .om-wrap .oc-pick-toggle.on {
+  background: #536b4d;
+  border-color: #536b4d;
+  color: #faf7ed;
+}
+
+
+.glaze-museum-popover.glaze-museum-popover:has(.oc-settings) {
+  --n-color: #faf7ed !important;
+  --n-text-color: #344f42 !important;
+  --n-border-color: #b8bea4 !important;
+  --n-box-shadow: 0 12px 30px #4a5d3a26 !important;
+}
+.glaze-museum-popover.glaze-museum-popover .oc-settings {
+  color: #344f42;
+}
+.glaze-museum-popover.glaze-museum-popover .oc-settings-label {
+  color: #344f42;
+}
+.glaze-museum-popover.glaze-museum-popover .oc-settings :is(.oc-settings-val, .oc-settings-tip) {
+  color: #53614b;
+}
+.glaze-museum-popover.glaze-museum-popover .oc-settings .oc-chip {
+  background: #faf7edd9;
+  border-color: #b8bea4;
+  color: #53614b;
+}
+.glaze-museum-popover.glaze-museum-popover .oc-settings .oc-chip.on {
+  background: #e4e8d3;
+  border-color: #536b4d;
+  color: #536b4d;
+}
+
+
+@media (max-width: 900px) {
+  body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum.glaze-museum[data-glaze-light][data-module='outline'] .outline-surface { padding:0!important;background:transparent;border:0;border-radius:0;box-shadow:none;}
+}
+
+/* Explicitly neutralize historical layout declarations on this skin. */
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] :is(.wb-body,.panel-body)>.side-panel {width:var(--glaze-side-width,240px)!important}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>div:last-child {height:auto!important;flex:1;min-height:0;overflow:hidden}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chapter-catalog {--scene-ink:var(--gm-ink);--scene-muted:var(--gm-muted);--scene-line:var(--gm-line);--scene-accent:var(--gm-teal);--scene-panel:var(--gm-paper);--scene-hover:#e7ead9;--scene-font:var(--gm-title)}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chapter-catalog .catalog-masthead {padding:12px 3px;background:transparent;border:0;border-block:1px solid var(--gm-line);border-radius:0;max-height:180px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chapter-catalog .catalog-masthead h2 {font:24px/1.5 var(--gm-title);margin:10px 0 0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .catalog-masthead-rule {display:none}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .catalog-chapter {flex-direction:row!important;min-height:58px;padding:9px 6px!important}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .catalog-number {color:var(--gm-muted)!important}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chapter-catalog .n-tree-node[data-volume-id] {background:transparent;border-top:1px solid var(--gm-line);border-radius:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chapter-catalog .n-tree-node[data-chapter-id] {border-color:#b5bfa577}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .chapter-catalog .n-tree .n-tree-node.n-tree-node--selected {background:#f3f2e3;box-shadow:inset 0 0 0 1px #b7bf9e,inset 0 0 0 3px #e2e7d1;border-radius:1px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .catalog-total {border-top:0!important;margin-top:0!important;padding-top:9px!important}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .catalog-shortcuts button {min-height:44px;gap:4px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .catalog-footer {padding-top:8px}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .snippet-catalog .side-item::before {display:none}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] :is(.wb-body,.panel-body)>.center-pane {max-width:none;min-width:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-ico {display:inline-flex}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-text i {display:block}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gravity-manuscript-location>b {background:transparent;border:0;border-radius:0;color:var(--gm-gold);padding:0}
+body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .wg-fill {background:var(--gm-teal)}
+@media(max-width:1180px){body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum[data-glaze-light] :is(.wb-body,.panel-body)>[data-glaze-drawer] {width:min(340px,calc(100vw - 64px))!important}}
+@media(max-width:800px){body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-text i {display:none}}
+@media(max-width:600px){body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .sw-nav-ico {display:none}}
+/* Short/narrow windows keep the full painting and a usable directory reachable
+   through the drawer's outer scroll, rather than shrinking its catalogue away. */
+@media(max-width:1180px) {
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gm-cornice {height:20px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .gm-cornice>i {height:18px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar {height:60px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>div:last-child {min-height:300px;flex:1 0 300px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>.glaze-artwork .gm-gilt-frame {width:fit-content;max-width:100%;margin-inline:auto;box-sizing:border-box}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>.glaze-artwork .gm-mat {min-height:0}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>.glaze-artwork .gm-art-button {width:fit-content;max-width:100%}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .side-panel>.glaze-artwork .glaze-artwork-image {width:auto;height:auto;max-width:100%;max-height:clamp(80px,22vh,140px);object-fit:contain}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum [data-glaze-drawer='directory']>.glaze-drawer-close {position:sticky;top:0;z-index:3}
+}
+@media(max-width:600px) {
+ /* Both navigation and actions stay reachable on two compact rows. */
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar {height:60px;grid-template-rows:30px 30px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar-mark {width:26px;height:26px;font-size:20px}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .app-topbar .n-button {--n-height:28px!important}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .glaze-pane-toggles {gap:8px;flex-wrap:wrap}
+ body[data-skin='glaze'] :is(.workbench-shell,.panel-host).glaze-museum .glaze-pane-toggles>span {display:none}
+}

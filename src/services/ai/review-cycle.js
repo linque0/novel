@@ -66,7 +66,7 @@ export function confirmReview(review,draft,decisions={},authorGuidance='') {
   if(!object(decisions)||typeof authorGuidance!=='string'||authorGuidance.length>20000) throw new Error('无效作者确认')
   const ids=new Set(review.items.map(item=>item.id))
   for(const [id,decision] of Object.entries(decisions)) if(!ids.has(id)||!['apply','ignore','defer'].includes(decision)) throw new Error('无效作者选择')
-  return immutable({sourceDraft:freezeDraft(draft),items:review.items.filter(item=>decisions[item.id]==='apply').map(item=>structuredClone(item)),authorGuidance:authorGuidance.trim(),confirmed:true})
+  return immutable({sourceDraft:freezeDraft(draft),items:JSON.parse(JSON.stringify(review.items.filter(item=>decisions[item.id]==='apply'))),authorGuidance:authorGuidance.trim(),confirmed:true})
 }
 export function normalizeRecheck(data,review,revisedDraft) {
   const draft=freezeDraft(revisedDraft)

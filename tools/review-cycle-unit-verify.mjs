@@ -64,4 +64,5 @@ test('protocol caps strings and rejects false evidence verification',()=>{
  const bad=normalizeReview({items:[{problem:'一致性冲突',quote:'唯一结尾。',evidence:[{sourceId:'missing',quote:'材料'}]}]},draft,()=>null)
  assert.equal(bad.items[0].evidenceStatus,'unverified')
 })
+test('author confirmation accepts reactive proxy finding records',()=>{const d={id:'proxy-draft',text:'铜符亮了。',revision:0};const r=normalizeReview({items:[{id:'x',problem:'检查',quote:'铜符亮了。',severity:'warning'}]},d);const proxy={...r,items:r.items.map(i=>new Proxy({...i},{}))};assert.equal(confirmReview(proxy,d,{x:'apply'}).items.length,1)})
 console.log(`${passed} review protocol tests passed`)

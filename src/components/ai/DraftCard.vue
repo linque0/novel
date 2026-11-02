@@ -6,6 +6,7 @@ import { useAiStore } from '../../stores/ai'
 import { useWritingStore } from '../../stores/writing.js'
 import { taskApplyActions } from '../../services/ai/task-profiles.js'
 import EvidenceList from './EvidenceList.vue'
+import { useCreativeWorkflowStore } from '../../stores/creative-workflow.js'
 const props = defineProps({ card: { type: Object, required: true },workflowControls:{type:Boolean,default:false} }),
   work = useWorkStore(),
   ai = useAiStore(),
@@ -23,6 +24,7 @@ const anchor=computed(()=>props.card.source?.taskRequest?.writingAnchor)
 const applied = computed(() => props.card.status === 'applied'),
   canApply = computed(() => props.card.complete && !applied.value && props.card.status!=='rejected' && !busy.value && !ai.busy)
 const allowed = action => !props.card.taskType || taskApplyActions(props.card.taskType,props.card.original,anchor.value).includes(action)
+async function reviewCandidate(){try{await useCreativeWorkflowStore().reviewCandidate(props.card)}catch(e){error.value=e.message}}
 const target = computed(() => work.chapters.find((c) => c.id === props.card.anchorId && !c.deletedAt))
 async function apply() {
   error.value = ''
@@ -93,6 +95,7 @@ function more(key){if(key==='copy')copyText();if(key==='memory')extractMemory()}
     <p v-for="(w,i) in card.warnings || []" :key="i">{{ w }}</p>
     <details v-if="card.review"><summary>核查说明</summary><pre>{{ card.review }}</pre></details>
     <div class="actions">
+      <NButton size="small" :disabled="busy||ai.busy||!card.complete||applied" @click="reviewCandidate">独立审稿与修稿</NButton>
       <NButton v-if="allowed('insert')" type="primary" size="small" :disabled="!canApply||!target||!draftText.trim()" @click="mode='insert';apply()">采纳到原位置</NButton>
       <NButton v-if="allowed('append')" type="primary" size="small" :disabled="!canApply || !target" @click="open('append')">追加到章节</NButton
       ><NButton v-if="allowed('replace')" type="primary" size="small" :disabled="!canApply || !card.original" @click="open('replace')">替换选段</NButton

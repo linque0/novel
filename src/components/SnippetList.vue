@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { computed, ref, nextTick } from 'vue'
 import { NButton, NInput, NPopover } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -47,7 +49,7 @@ const fmt = (t) => {
   <div class="snippet-catalog" style="display: flex; flex-direction: column; height: 100%">
     <header v-if="ui.isStudioSkin && !bare" class="gravity-inspiration-heading"><h1>灵感画布</h1><p>{{ list.length }} 条灵感</p></header>
     <div v-if="!bare" class="side-head" style="flex-direction: column; align-items: stretch">
-      <NPopover v-if="ui.skin === 'gravity'" :show="quickOpen" trigger="click" placement="bottom-start" :show-arrow="false" class="gravity-quick-popover" style="width:350px;max-width:calc(100vw - 64px)" @update:show="showQuick">
+      <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" v-if="ui.skin === 'gravity'" :show="quickOpen" trigger="click" placement="bottom-start" :show-arrow="false" class="gravity-quick-popover" style="width:350px;max-width:calc(100vw - 64px)" @update:show="showQuick">
         <template #trigger><NButton ref="quickTrigger" class="gravity-quick-trigger" type="primary"><OIcon name="plus" :size="14" /> 记录灵感</NButton></template>
         <NInput ref="quickInput" v-model:value="quick" type="textarea" :rows="4" placeholder="随手记一条灵感…（Ctrl+Enter 添加）" @keydown="onQuickKey" />
         <div style="display:flex;justify-content:flex-end;margin-top:12px;gap:8px"><NButton @click="closeQuick">收起</NButton><NButton type="primary" :disabled="!quick.trim()" @click="addQuick">记录</NButton></div>

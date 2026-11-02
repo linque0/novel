@@ -1,3 +1,5 @@
+import { assertMemoryPublication } from '../../db/ai-repo.js'
+import { SOURCE_TABLES } from '../project/normalize.js'
 import { db, uid, now } from '../../db/database'
 import { hashContent, plainChapter, chapterHash, checkAbort, sourceChanged, tokens } from '../project/text.js'
 import { chunkText } from '../project/chunker.js'
@@ -95,14 +97,15 @@ export async function getChapterSummary(chapter, provider = null) {
   if (!chapter || !chapter.id) return null
   const hash = hashContent(chapter.content || '')
   const cached = await db.aisum.where('[entityType+entityId]').equals(['chapter', chapter.id]).first()
-  const fresh = cached && cached.workId === chapter.workId && cached.contentHash === hash && (!cached.sourceHash || cached.sourceHash === chapterHash(chapter)) &&
+  const fresh = cached && (!provider?.queueGuard || cached.sourceHash === chapterHash(chapter)) && cached.workId === chapter.workId && cached.contentHash === hash && (!cached.sourceHash || cached.sourceHash === chapterHash(chapter)) &&
     (cached.coverageVersion === 1 || plainChapter(chapter).length <= 8000) && !staleChapters.has(chapter.id) && cached.summary
   if (fresh) return cached.assertionStatus === 'confirmed' || provider ? cached.summary : null
   if (!provider) return null
   const sourceHash=chapterHash(chapter)
   const summary = await summarizeFullText(plainChapter(chapter),chapter.title || '未命名章节',provider)
   if (!summary) return null
-  await db.transaction('rw',[db.chapters,db.aisum],async()=>{
+  await db.transaction('rw',[...new Set([db.chapters,db.aisum,...(provider.queueGuard?[db.airuns,...SOURCE_TABLES.map(t=>db.table(t))]:[])])],async()=>{
+  if(provider.queueGuard)await assertMemoryPublication(provider.queueGuard)
   checkAbort(provider.signal)
   const current=await db.chapters.get(chapter.id)
   if(!current||current.workId!==chapter.workId||current.deletedAt||chapterHash(current)!==sourceHash)throw sourceChanged()

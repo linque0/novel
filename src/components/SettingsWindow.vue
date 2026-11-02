@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 /* 设置窗口（面板窗口 settings 类型）：左侧分类导航 + 右侧设置内容，替代原顶栏设置弹层。
  * 页面：外观 / 恍然梦 / 数据 / 关于。书签跳转依赖主窗口工作台状态，仍留在主窗口顶栏。
  * 跨窗口安全：
@@ -25,6 +27,8 @@ import { backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles, getDataLocation, pickDataDir, openDataFolder, moveDataDir, cleanOldLocation, openOldFolder, clearDataPointer } from '../services/fileio'
 import { broadcastAppEvent } from '../services/appbus'
 import crimsonSettings from '../assets/skins/crimson/settings.webp'
+import GlazeArtwork from './GlazeArtwork.vue'
+import GlazeLightingToggle from './GlazeLightingToggle.vue'
 
 const ui = useUiStore()
 
@@ -227,12 +231,14 @@ async function clearStalePointer() {
       <span class="sw-title serif">设置</span>
       <span class="sw-sub">SETTINGS · 小说工坊</span>
       <div style="flex: 1"></div>
+      <GlazeLightingToggle v-if="ui.skin === 'glaze'" />
       <NButton size="small" quaternary title="关闭设置窗口" @click="closeWindow"><OIcon name="close" :size="13" /></NButton>
     </div>
 
     <div class="sw-body">
       <nav class="sw-nav">
-        <div v-if="ui.isStudioSkin" class="gravity-settings-intro"><span>偏好设置</span><h2>你的<br />创作手感。</h2></div>
+        <GlazeArtwork v-if="ui.skin === 'glaze'" compact />
+        <div v-if="ui.isStudioSkin && ui.skin !== 'glaze'" class="gravity-settings-intro"><span>偏好设置</span><h2>你的<br />创作手感。</h2></div>
         <button
           v-for="p in PAGES"
           :key="p.key"
@@ -278,11 +284,11 @@ async function clearStalePointer() {
             </div>
             <div class="sw-row">
               <div class="sw-row-main"><b>中文字体</b><i>正文与界面的中文字形</i></div>
-              <NSelect size="small" style="width: 190px" :value="ui.editorFont" :options="CJK_OPTS" @update:value="(v) => ui.setPref('editorFont', v)" />
+              <NSelect :menu-props="{ class: museumPopoverClass }" size="small" style="width: 190px" :value="ui.editorFont" :options="CJK_OPTS" @update:value="(v) => ui.setPref('editorFont', v)" />
             </div>
             <div class="sw-row">
               <div class="sw-row-main"><b>西文字体</b><i>拉丁字符使用的字形</i></div>
-              <NSelect size="small" style="width: 190px" :value="ui.editorLatin" :options="LATIN_OPTS" @update:value="(v) => ui.setPref('editorLatin', v)" />
+              <NSelect :menu-props="{ class: museumPopoverClass }" size="small" style="width: 190px" :value="ui.editorLatin" :options="LATIN_OPTS" @update:value="(v) => ui.setPref('editorLatin', v)" />
             </div>
             <div class="sw-row">
               <div class="sw-row-main"><b>正文字号</b><i>正文编辑与阅读字号（13–24px）</i></div>

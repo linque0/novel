@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
 import { NModal } from 'naive-ui'
 import * as echarts from 'echarts'
@@ -126,7 +128,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <NModal v-model:show="ui.statsOpen" preset="card" :title="work.loaded ? `写作统计 · ${work.work?.title}` : '写作统计（全部作品）'" style="width: 860px">
+  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="ui.statsOpen" preset="card" :title="work.loaded ? `写作统计 · ${work.work?.title}` : '写作统计（全部作品）'" style="width: 860px">
     <div class="stat-cards">
       <div class="stat-card">
         <div class="num">{{ cards.total.toLocaleString() }}</div>

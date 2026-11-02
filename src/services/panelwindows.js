@@ -38,6 +38,7 @@ function ensureListen() {
 }
 
 function keyOf(workId, type, entityId) {
+  if(type==='agent')return `${workId}:chapter:*`
   return `${workId}:${type}:${entityId || '*'}`
 }
 
@@ -85,7 +86,8 @@ export async function popOut(work, type, entityId, title) {
 }
 
 /** 聚焦已拆出的面板窗口（主窗口只读占位上的「前往窗口」按钮） */
-export function focusPopped(work, type, entityId) {
+export async function focusPopped(work, type, entityId) {
   if (!work?.work || !window.native?.panelFocus) return
-  window.native.panelFocus(keyOf(work.work.id, type, entityId))
+  const result=await window.native.panelFocus(keyOf(work.work.id, type, entityId))
+  if(!result?.ok)await window.native.panelFocus(keyOf(work.work.id,type,''))
 }

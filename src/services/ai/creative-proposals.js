@@ -11,6 +11,7 @@ export function creativeProposal(data,work,frozen,{runId,messageId}={}) {
   if(task.type==='chapter.review'){
     const docs=projectBook(work).docs
     const review=normalizeReview(data,task.draftSource,ref=>{
+      if(ref.sourceType==='candidate'&&task.predecessor?.id===ref.sourceId)return {text:task.predecessor.text,verified:true}
       const [verified]=taskEvidence([ref],work,frozen)
       const doc=docs.find(d=>d.id===verified.docId)
       return {text:doc.plainText,verified:true}

@@ -6,7 +6,8 @@ import { BookInteraction } from '../services/book3d/interaction'
 const props = defineProps({ book: { type: Object, required: true }, disabled: Boolean })
 const emit = defineEmits(['open'])
 const display = ref(null), canvas = ref(null), state = ref('loading'), poster = ref('')
-let engine, observer, intersection, frame = 0, previousTime = 0, alive = false, visible = true, generation = 0, captureNext = false
+let engine, api, observer, intersection, frame = 0, previousTime = 0, alive = false, visible = false, generation = 0, initializing = false, dirty = false
+const lifetime = new AbortController()
 const reduced = matchMedia('(prefers-reduced-motion: reduce)')
 const input = new BookInteraction({ onOpen: () => emit('open'), onChange: invalidate, isDisabled: () => props.disabled, isReduced: () => reduced.matches })
 function invalidate() {
@@ -20,7 +21,6 @@ function draw(time) {
   previousTime = time
   try { engine.render(input.rotation, input.zoom) }
   catch { fallback(); return }
-  if (captureNext) { poster.value = engine.capture(); captureNext = false }
   display.value.dataset.rotation = input.rotation.map(n => n.toFixed(5)).join(',')
   display.value.dataset.zoom = input.zoom.toFixed(3)
   if (moving) invalidate()
@@ -58,20 +58,46 @@ function wheel(event) {
   input.wheel(event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? display.value.clientHeight : 1))
 }
 function pause() { input.cancel(); cancelAnimationFrame(frame); frame = 0; previousTime = 0 }
-function visibility() { if (document.hidden) pause(); else invalidate() }
+function resume() { if (!engine) start(); else if (dirty) updateBook(); else { resize(); invalidate() } }
+function visibility() { if (document.hidden) pause(); else if (visible) resume() }
 function lost(event) { event.preventDefault(); fallback() }
 function fallback() {
   pause(); state.value = 'fallback'
   canvas.value?.removeEventListener('webglcontextlost', lost)
   engine?.dispose(); engine = null
 }
+function capturePoster(token) {
+  if (document.hidden || !visible) return
+  const current = engine
+  current?.capture().then(url => { if (alive && token === generation && engine === current) poster.value = url || '' }).catch(() => {})
+}
 async function updateBook() {
   const token = ++generation
   poster.value = ''
-  await document.fonts.ready
-  if (!alive || token !== generation || !engine) return
-  try { engine.setBook(props.book); captureNext = true; resize() }
-  catch { fallback() }
+  if (!alive || !visible || document.hidden || !engine) { dirty = true; return }
+  dirty = false; state.value = 'loading'
+  try {
+    await engine.setBook(props.book, { rotation: input.rotation, zoom: input.zoom })
+    if (!alive || token !== generation) return
+    state.value = 'ready'; resize(); capturePoster(token)
+  } catch { if (alive && token === generation) fallback() }
+}
+async function start() {
+  if (!alive || !api || !visible || document.hidden || engine || initializing || state.value === 'fallback') return
+  initializing = true
+  const token = generation
+  try {
+    const next = await api.createBookViewer(canvas.value, {
+      book: props.book, width: display.value.clientWidth, height: display.value.clientHeight,
+      pixelRatio: devicePixelRatio || 1, rotation: input.rotation, zoom: input.zoom,
+      signal: lifetime.signal, onError: () => { if (alive) fallback() }
+    })
+    if (!alive) { next.dispose(); return }
+    engine = next
+    if (token !== generation || dirty) await updateBook()
+    else { state.value = 'ready'; resize(); capturePoster(token) }
+  } catch { if (alive) fallback() }
+  finally { initializing = false }
 }
 watch(() => [props.book.id, props.book.kind, props.book.title, props.book.author, props.book.intro], (next, old) => {
   if (old && next[0] !== old[0]) input.reset()
@@ -83,18 +109,16 @@ onMounted(async () => {
   document.addEventListener('visibilitychange', visibility)
   reduced.addEventListener('change', pause)
   observer = new ResizeObserver(resize); observer.observe(display.value)
-  intersection = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) invalidate(); else pause() }); intersection.observe(display.value)
+  intersection = new IntersectionObserver(([entry]) => { visible = entry.isIntersecting; if (visible) resume(); else pause() }); intersection.observe(display.value)
   canvas.value.addEventListener('webglcontextlost', lost)
   try {
-    const { createBookRenderer } = await import('../services/book3d/renderer')
+    api = await import('../services/book3d/renderer.js')
     if (!alive) return
-    engine = createBookRenderer(canvas.value)
-    await updateBook()
-    if (engine && alive) { state.value = 'ready'; invalidate() }
+    await start()
   } catch { if (alive) fallback() }
 })
 onBeforeUnmount(() => {
-  alive = false; generation++; pause(); observer?.disconnect(); intersection?.disconnect()
+  alive = false; generation++; lifetime.abort(); pause(); observer?.disconnect(); intersection?.disconnect()
   document.removeEventListener('visibilitychange', visibility); reduced.removeEventListener('change', pause)
   canvas.value?.removeEventListener('webglcontextlost', lost); engine?.dispose(); engine = null
 })

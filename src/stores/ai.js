@@ -44,6 +44,7 @@ import { rebuildVectors } from "../services/ai/retrieval";
 import * as aiRepo from "../db/ai-repo";
 import { ensureProjection } from '../db/project-repo.js';
 import { completedDirectionRows } from '../services/ai/writing-directions.js';
+import { freezeProviderConfig,stageBudgetOptions } from '../services/ai/stage-config.js';
 
 /** Preset-driven conversation and independent, fixed-prompt factual memory.
  * Secrets remain encrypted in appconfig. Generated proposals never write works here.
@@ -778,7 +779,10 @@ export const useAiStore = defineStore("ai", {
         );
       }
       if(stage.model&&!p.models?.some(m=>m.name===stage.model&&m.enabled!==false))throw new Error('阶段模型不属于所选供应商或已停用');
+      const providerFingerprint=freezeProviderConfig(p,selectedModel).providerConfigFingerprint;
+      if(stage.providerConfigFingerprint&&stage.providerConfigFingerprint!==providerFingerprint)throw new Error('阶段供应商配置已变化，请新建工作流后重试');
       const apiKey = await this.decryptCredential(p.id);
+      if(freezeProviderConfig(p,selectedModel).providerConfigFingerprint!==providerFingerprint)throw new Error('阶段供应商配置已变化，请重试');
       if (!apiKey) {
         throw new AiProviderError(
           AI_ERROR_CODES.NOT_CONFIGURED,
@@ -1186,13 +1190,14 @@ export const useAiStore = defineStore("ai", {
           msg = this.chat.at(-1);
         }
         const stageModule = await import('../services/ai/stage-config.js');
-        const selectedStage = request.stageSnapshot || (frozen.taskRequest ? stageModule.freezeStage(await stageModule.loadStageConfig(),stageModule.stageForTask(frozen.taskRequest.type),{providers:this.providers,presets:this.presets}) : {});
-        const [opts, rows, local, global] = await Promise.all([
+        const selectedStage = request.stageSnapshot || (frozen.taskRequest ? stageModule.freezeStage(await stageModule.loadStageConfig(),stageModule.stageForTask(frozen.taskRequest.type),{providers:this.providers,presets:this.presets,currentProviderId:this.activeProviderId,currentModel:this.model}) : {});
+        const [providerOpts, rows, local, global] = await Promise.all([
           this.buildOpts(selectedStage),
           presetRepo.listPresets(),
           presetRepo.presetState(workId),
           presetRepo.globalState(),
         ]);
+        const opts=stageBudgetOptions(providerOpts,request.rootRemaining);
         if (!current()) return false;
         row = copy(selectedStage.presetSnapshot ||
           rows.find(
@@ -1211,12 +1216,13 @@ export const useAiStore = defineStore("ai", {
           state: privacy
             ? { local: {}, global: {} }
             : { local: local.local, global: global.global },
-          opts: { ...opts, privacy: privacy, signal:ctl.signal,stageSnapshot:selectedStage },
+          opts: { ...opts, privacy: privacy, signal:ctl.signal,stageSnapshot:selectedStage,onUsage:u=>{this.addUsage(u);request.onStageUsage?.(u)} },
           continuationText:
             previousDraft?.text || old?.rawContent || old?.content || "",
           candidateIndex: msg.activeCandidate,
         });
         compiled = prepared.compiled;
+        if(Number.isFinite(request.rootRemaining))prepared.material.report.push('有界批次使用关键词检索，向量检索不额外消耗批次预算');
         if (!current()) return false;
         if (!original) {
           const user = this.chat.at(-2);
@@ -1263,6 +1269,7 @@ export const useAiStore = defineStore("ai", {
             onToolDelta: (call) => {
               if (current()) {
                 msg.toolOutput = call.function?.arguments || "";
+                if(frozen.taskRequest?.type==='chapter.story'&&call.function?.name==='submit_chapter')try{request.onStoryProgress?.(msg.toolOutput)}catch(e){notice(e.message)}
                 if(frozen.taskRequest?.type==='chapter.directions'&&call.function?.name==='submit_plot_directions') {
                   const rows=completedDirectionRows(msg.toolOutput)
                   if(rows.length)try{request.onDirectionRows?.(rows)}catch(e){notice(e.message)}

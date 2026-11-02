@@ -1,11 +1,11 @@
 <script setup>
-import { computed, onMounted, watch } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NButton, zhCN, dateZhCN, darkTheme } from 'naive-ui'
 import { useUiStore } from './stores/ui'
 import { startAutosave } from './services/autosave'
 import { openDbWithRetry } from './db/database'
 import Bookshelf from './components/Bookshelf.vue'
-import Workbench from './components/Workbench.vue'
+import StudioWorkspace from './components/StudioWorkspace.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
 import ImportDialog from './components/ImportDialog.vue'
 import ExportDialog from './components/ExportDialog.vue'
@@ -23,14 +23,18 @@ import { useShelfStore } from './stores/shelf'
 import { installAiRuntime } from './services/ai/runtime'
 import { useAiStore } from './stores/ai'
 import { resolveSkin } from './skins/registry'
+import { useGlazeMuseum } from './composables/useGlazeMuseum'
 import './styles/skins/gravity.css'
 import './styles/skins/gravity-workbench.css'
 import './styles/skins/glaze.css'
 import './styles/skins/crimson.css'
 import './styles/skins/crimson-workbench.css'
 import './styles/skins/crimson-v3.css'
+import './styles/skins/glaze-museum.css'
+import './styles/skins/glaze-museum-workbench.css'
 
 const ui = useUiStore()
+const { museumActive } = useGlazeMuseum()
 const shelf = useShelfStore()
 
 /* 跨窗口事件（偏好同步 / 书架刷新 / 恢复备份协议）：主窗口与面板窗口都在根组件装一次 */
@@ -38,10 +42,16 @@ installAppBus()
 
 /* 功能面板窗口（9.2-W5）：URL 带 ?panel=<type>:<workId>:<entityId> 时渲染精简面板布局 */
 const panelMode = new URLSearchParams(location.search).has('panel')
+const settingsPanel = new URLSearchParams(location.search).get('panel')?.split(':')[0] === 'settings'
+const prefsReady = ref(false)
 
 const activeSkin = computed(() => resolveSkin(ui.skin, panelMode ? 'panel' : ui.view))
 const naiveTheme = computed(() => activeSkin.value.id === 'glaze' ? null : (activeSkin.value.id === 'gravity' || activeSkin.value.id === 'crimson' || ui.theme === 'night' ? darkTheme : null))
 const overrides = computed(() => {
+  if (museumActive.value) return {
+    common: { primaryColor:'#536b4d', primaryColorHover:'#657c5b', primaryColorPressed:'#3d5339', primaryColorSuppl:'#536b4d', textColor1:'#344f42', textColor2:'#4b604b', textColor3:'#69745e', bodyColor:'#dce4d2', cardColor:'#faf7ed', modalColor:'#faf7ed', popoverColor:'#faf7ed', inputColor:'#f7f4e8', borderColor:'#b7b99c', borderRadius:'2px' },
+    Tree: { nodeColorActive:'#e8ebda', nodeColorHover:'#eef0e2', nodeColorPressed:'#dce4d2' }
+  }
   if (activeSkin.value.id === 'glaze') return {
     common: { primaryColor:'#146878', primaryColorHover:'#247b89', primaryColorPressed:'#0e5361', primaryColorSuppl:'#146878', textColor1:'#234752', textColor2:'#315763', textColor3:'#4f7079', bodyColor:'#e7eff1', cardColor:'#f8fcfc', modalColor:'#f8fcfc', popoverColor:'#f4fafb', inputColor:'#f5fafb', borderColor:'#adcbd0', borderRadius:'8px' },
     Tree: { nodeColorActive:'#cde3e6',nodeColorHover:'#e3eff1',nodeColorPressed:'#d2e6e9' }
@@ -80,17 +90,28 @@ watch(
   { immediate: true }
 )
 
+async function revealSettings() {
+  if (!settingsPanel) return
+  // Let PanelHost mount and commit its themed layout before showing the native window.
+  await nextTick()
+  requestAnimationFrame(() => requestAnimationFrame(() => window.native?.panelReady?.()))
+}
+
 async function boot() {
   ui.dbError = false
   const ok = await openDbWithRetry()
   if (!ok) {
     ui.dbError = true
+    revealSettings()
     return
   }
+  // Appearance is required for the first panel frame; AI configuration is not.
+  await ui.loadPrefs()
+  prefsReady.value = true
+  revealSettings()
   startAutosave()
   installAiRuntime()
   await useAiStore().loadSettings()
-  await ui.loadPrefs()
   if (panelMode) return
   await seedDevVerifyBooks()
   await shelf.refresh()
@@ -117,8 +138,8 @@ async function seedDevVerifyBooks() {
     <NMessageProvider>
       <NDialogProvider>
         <PrefBridge />
-        <PanelHost v-if="panelMode" />
-        <div v-else class="app-root" :class="'theme-' + ui.theme" :data-skin="activeSkin.id" :style="ui.rootStyle">
+        <PanelHost v-if="panelMode && prefsReady" />
+        <div v-else-if="!panelMode || ui.dbError" class="app-root" :class="'theme-' + ui.theme" :data-skin="activeSkin.id" :style="ui.rootStyle">
           <div v-if="ui.dbError" class="empty-shelf" style="padding-top: 16vh">
             <div class="big">数据的另一扇门被占用了</div>
             <p>
@@ -129,7 +150,7 @@ async function seedDevVerifyBooks() {
           </div>
           <template v-else>
             <Bookshelf v-if="ui.view === 'shelf'" />
-            <Workbench v-else />
+            <StudioWorkspace v-else />
             <GlobalSearch />
             <ImportDialog />
             <ExportDialog />

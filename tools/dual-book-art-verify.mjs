@@ -62,7 +62,7 @@ try {
   await page.evaluate(async()=>{const source=await(await fetch('/src/components/ThemeBook.vue')).text(),path=source.match(/import\(["']([^"']*book3d\/renderer[^"']*)/)[1];window.__artApi=await import(path)})
   async function ready(){
     await settled()
-    await page.waitForFunction(()=>[...document.querySelectorAll('.theme-book')].filter(e=>{const r=e.getBoundingClientRect();return r.top<innerHeight&&r.bottom>0&&r.left<innerWidth&&r.right>0}).every(e=>e.dataset.poster==='ready'),null,{timeout:60000})
+    await page.waitForFunction(()=>[...document.querySelectorAll('.theme-book')].filter(e=>{const r=e.getBoundingClientRect();return !e.closest('[inert]')&&r.top<innerHeight&&r.bottom>0&&r.left<innerWidth&&r.right>0}).every(e=>e.dataset.poster==='ready'),null,{timeout:60000})
   }
   const diag=()=>page.evaluate(()=>__artApi.getBook3DDiagnostics())
   async function restore(){await page.evaluate(async()=>{await __depthCheck.work.closeWork();__depthCheck.shelf.works=__depthCheck.fixtures});await ready()}
@@ -87,10 +87,10 @@ try {
       check(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),skin+' '+width+': no horizontal page overflow')
       check(await page.locator('.theme-book.is-mini').evaluateAll((els,skin)=>els.every(e=>{const r=e.getBoundingClientRect();return r.width<=(skin==='gravity'?65:59)&&r.height<96}),skin),skin+' '+width+': thumbnails retain compact dimensions')
       check(await page.evaluate(skin=>{
-        const a=document.querySelector(skin==='gravity'?'.gravity-feature-actions':'.glaze-feature-actions').getBoundingClientRect(),book=document.querySelector(skin==='gravity'?'.gravity-slot--center .gravity-book-open':'.glaze-stage-book.pose-0').getBoundingClientRect()
-        return book.left>=a.right-1
+        if(skin==='glaze'){const stage=document.querySelector('.gg-viewport').getBoundingClientRect(),plaque=document.querySelector('.gg-plaque').getBoundingClientRect();return plaque.top>=stage.bottom}
+        const a=document.querySelector('.gravity-feature-actions').getBoundingClientRect(),book=document.querySelector('.gravity-slot--center .gravity-book-open').getBoundingClientRect();return book.left>=a.right-1
       },skin),skin+' '+width+': main book does not overlap writing controls')
-      if(skin==='glaze')check(await page.evaluate(()=>{const main=document.querySelector('.glaze-feature-stack').getBoundingClientRect(),note=document.querySelector('.glaze-chapter-note').getBoundingClientRect(),collection=document.querySelector('.glaze-collection').getBoundingClientRect(),lying=document.querySelector('.glaze-stage-book.pose-2').getBoundingClientRect();return note.top>=main.bottom-4&&note.bottom<collection.top+1&&lying.right<=innerWidth-20}),skin+' '+width+': chapter note and lying book fit the exhibition area')
+      if(skin==='glaze')check(await page.evaluate(()=>{const current=document.querySelector('.gg-slot.is-current .gg-book').getBoundingClientRect();return current.left>=0&&current.right<=innerWidth&&document.querySelectorAll('.gg-slot').length<=7}),skin+' '+width+': centered easel fits with bounded display nodes')
     }
     await page.setViewportSize({width:1440,height:900});await ready();await contact(skin);await contact(skin,true)
     const bounds=await page.evaluate(async skin=>{
@@ -107,10 +107,10 @@ try {
       await page.locator('.gravity-orbit-stage').focus();await page.keyboard.press('ArrowRight');await settled();check((await page.locator('.gravity-feature-copy h2').textContent()).trim()!==target,'gravity: outer arrow keys still switch selected work')
       await page.getByPlaceholder(/搜索作品/).fill('不存在的作品');await page.waitForSelector('.gravity-empty');await page.getByPlaceholder(/搜索作品/).fill('');await ready()
     }
-    const mainMenu=page.locator(skin==='gravity'?'.gravity-slot--center .gravity-book-menu button':'.glaze-stage-book.pose-0 .glaze-work-menu button')
+    const mainMenu=page.locator(skin==='gravity'?'.gravity-slot--center .gravity-book-menu button':'.gg-menu button')
     await mainMenu.click();check(await page.getByText('编辑信息',{exact:true}).count()>0,skin+': main menu stays accessible');await page.locator(skin==='gravity'?'.gravity-heading h1':'.glaze-shelf-tools h1').click();await page.waitForSelector('.n-dropdown',{state:'hidden'})
     const mini=page.locator('.theme-book.is-mini img').first(),before=await mini.getAttribute('src')
-    const editedTitle=await page.locator('.'+skin+'-library-open strong[title]').first().getAttribute('title')
+    const editedTitle=await page.locator(skin==='glaze'?'.gg-index-item':'.gravity-library-open strong[title]').first().getAttribute('title')
     await page.evaluate(({skin,title})=>{const book=__depthCheck.shelf.works.find(w=>w.title===title);book.author=skin==='gravity'?'新作家甲':'新作家乙';book.intro='修订后的真实作品简介。'+skin},{skin,title:editedTitle})
     await page.waitForFunction(({skin,old})=>document.querySelector('.'+skin+'-shelf .theme-book.is-mini img')?.src!==old,{skin,old:before});await ready();check(before!==await mini.getAttribute('src'),skin+': metadata edits invalidate book artwork')
     await page.evaluate(()=>{Object.defineProperty(document,'hidden',{configurable:true,value:true});document.dispatchEvent(new Event('visibilitychange'))})
@@ -123,24 +123,24 @@ try {
       await search.fill(book.title);await ready();check(await page.locator('[data-book-theme="'+skin+'"][data-poster="ready"]').count()>0,skin+': six-style search and full title '+book.kind)
     }
     await search.fill('不存在的作品');await page.waitForSelector('.'+skin+'-empty');check(await page.locator('.theme-book').count()===0,skin+': no-results clears model artwork');await search.fill('');await ready()
-    const main=page.locator(skin==='gravity'?'.gravity-slot--center .gravity-book-open':'.glaze-stage-book.pose-0 .glaze-stage-open')
+    const main=page.locator(skin==='gravity'?'.gravity-slot--center .gravity-book-open':'.gg-slot.is-current .gg-book')
     await page.evaluate(()=>{__depthCheck.shelf.loading=true});await settled();check(await main.evaluate(e=>e.disabled||!e.contains(document.elementFromPoint(e.getBoundingClientRect().x+20,e.getBoundingClientRect().y+20))),skin+': loading blocks opening');await page.evaluate(()=>{__depthCheck.shelf.loading=false});await ready()
     const label=await main.getAttribute('aria-label'),title=skin==='gravity'?label.replace('打开作品：',''):label.slice(3,-1)
     await main.focus();await page.keyboard.press('Tab');await page.keyboard.press('Shift+Tab');check(await main.evaluate(e=>e.matches(':focus-visible')),skin+': keyboard focus remains visible')
     await page.keyboard.press('Enter');await page.waitForFunction(title=>__depthCheck.ui.view==='work'&&__depthCheck.work.work?.title===title,title);check(true,skin+': main Enter opens original work');await restore()
-    if(skin==='glaze'){await page.locator('.glaze-stage-book.pose-2 .glaze-stage-open').click();await page.waitForFunction(()=>__depthCheck.ui.view==='work');check(true,'glaze: lying companion opens directly');await restore();await page.locator('.glaze-library-open').first().click();await page.waitForFunction(()=>__depthCheck.ui.view==='work');check(true,'glaze: library opens directly');await restore()}
+    if(skin==='glaze'){const index=page.locator('.gg-index-item').nth(1),title=await index.getAttribute('title');await index.click();await page.waitForFunction(title=>document.querySelector('.gg-plaque h2')?.textContent===title,title);check(await page.evaluate(()=>__depthCheck.ui.view==='shelf'),'glaze: directory selects an easel without opening');await page.locator('.gg-slot.is-current .gg-book').click();await page.waitForFunction(()=>__depthCheck.ui.view==='work');check(true,'glaze: selected easel opens its work');await restore()}
     await page.emulateMedia({reducedMotion:'reduce'});check(await main.evaluate(e=>getComputedStyle(e).transitionDuration.split(',').every(x=>parseFloat(x)===0)),skin+': reduced motion removes book movement');await page.emulateMedia({reducedMotion:'no-preference'})
     await page.evaluate(()=>{__depthCheck.shelf.works=[]});await page.waitForSelector('.'+skin+'-empty');check(await page.getByText(skin==='gravity'?'为你的第一个世界，落笔。':'写下你的第一个故事',{exact:true}).isVisible(),skin+': empty library remains intact');await page.evaluate(()=>{__depthCheck.shelf.works=__depthCheck.fixtures});await ready()
-    await page.evaluate(()=>__depthCheck.ui.setSkin('original'));await page.waitForFunction(()=>__artApi.getBook3DDiagnostics().models===0&&__artApi.getBook3DDiagnostics().posterRenderers===0&&__artApi.getBook3DDiagnostics().cachedPosters===0);check(true,skin+': leaving shelf releases model, renderer and cache')
+    await page.evaluate(()=>__depthCheck.ui.setSkin('original'));await page.waitForFunction(()=>{const d=__artApi.getBook3DDiagnostics();return d.models===0&&d.posterRenderers===0&&d.workers===0&&d.pendingPosters===0&&d.cachedPosters<=48&&d.cacheBytes<=16*1024*1024});check(true,skin+': leaving shelf releases GPU and bounds retained image cache')
   }
   const fallback=await browser.newContext({viewport:{width:1024,height:768},hasTouch:true})
   try{
-    await fallback.addInitScript(()=>{const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return /^webgl/.test(kind)?null:get.call(this,kind,...args)}})
+    await fallback.addInitScript(()=>{Object.defineProperty(window,'OffscreenCanvas',{value:undefined})})
     const p=await fallback.newPage();await p.goto('http://127.0.0.1:5173/',{waitUntil:'networkidle'});await p.waitForFunction(()=>window.__ns&&document.querySelector('#app').__vue_app__?.config.globalProperties.$pinia._s.has('shelf'))
     await p.evaluate(async()=>{const s=document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s;window.__fallbackStores=s;const w=await s.get('shelf').createWork({title:'触屏典藏',kind:'cedar',author:'测试作者',intro:'',withVolume:true});s.get('shelf').works=[w]})
     for(const skin of ['gravity','glaze']){
-      await p.evaluate(skin=>__fallbackStores.get('ui').setSkin(skin),skin);await p.waitForSelector('.theme-book[data-poster="fallback"]');check(await p.locator('.theme-fallback-title').first().textContent()==='触屏典藏',skin+': WebGL unavailable retains complete title and themed static binding');await p.screenshot({path:fileURLToPath(new URL('fallback-'+skin+'.png',out))})
-      await p.locator(skin==='gravity'?'.gravity-slot--center .gravity-book-open':'.glaze-stage-book.pose-0 .glaze-stage-open').tap();await p.waitForFunction(()=>__fallbackStores.get('ui').view==='work');check(true,skin+': fallback touch still opens work');await p.evaluate(()=>__ns.getWork().closeWork())
+      await p.evaluate(skin=>__fallbackStores.get('ui').setSkin(skin),skin);const current=skin==='gravity'?'.gravity-slot--center':'.gg-slot.is-current';await p.waitForSelector(current+' .theme-book[data-poster="fallback"]');check(await p.locator(current+' .theme-fallback-title').textContent()==='触屏典藏',skin+': WebGL unavailable retains complete title and themed static binding');await p.screenshot({path:fileURLToPath(new URL('fallback-'+skin+'.png',out))})
+      await p.locator(skin==='gravity'?'.gravity-slot--center .gravity-book-open':'.gg-slot.is-current .gg-book').tap();await p.waitForFunction(()=>__fallbackStores.get('ui').view==='work');check(true,skin+': fallback touch still opens work');await p.evaluate(()=>__ns.getWork().closeWork())
     }
   }finally{await fallback.close()}
   check(errors.length===0,'no browser runtime errors')

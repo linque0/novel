@@ -3,6 +3,24 @@ import { db } from '../db/database'
 import { broadcastAppEvent } from '../services/appbus'
 import { normalizeSkin, isStudioSkin } from '../skins/registry'
 import {normalizeWritingPaper,saveWritingPaperPreference} from '../services/writing-paper.js'
+import { paintingById } from '../services/gallery-art.js'
+import { createGlazePaintingPreference } from '../services/glaze-painting-preference.js'
+
+const paintingManagers = new WeakMap()
+const preferenceLoads = new WeakMap()
+const pendingPaintingReloads = new WeakSet()
+function paintingManager(ui) {
+  let manager = paintingManagers.get(ui)
+  if (!manager) {
+    manager = createGlazePaintingPreference(ui, {
+      source: id => paintingById(id).displaySrc,
+      write: row => db.appconfig.put(row),
+      notify: () => broadcastAppEvent('prefs-changed')
+    })
+    paintingManagers.set(ui, manager)
+  }
+  return manager
+}
 
 /* 正文字体：中西文分离。--editor-font = 西文栈 + 中文栈（拉丁字符落西文，汉字落中文）。
    素材：思源宋体/霞鹜文楷/京华老宋体/朝华标题/云游手书/Gothic One 均已本地化（src/assets/fonts） */
@@ -25,8 +43,14 @@ export const LATIN_MAP = LATIN_FONTS
 export const useUiStore = defineStore('ui', {
   state: () => ({
     view: 'shelf', // shelf | work
+    workbenchMode: 'writing', // A view of the same work; never a separate manuscript.
+    dreamLauncherOpen: false,
+    agentPage: 'create',
+    agentCandidateId: null,
     theme: 'xuan', // xuan 宣纸 | parchment 羊皮纸 | night 暗夜书房
     skin: 'original',
+    glazePainting: 'sunrise', // 琉光书架首屏背景画作（gallery-art.js 的 id；默认印象·日出）
+    glazeLighting: 'day', // 琉光美术馆当次会话的照明方式
     editorFont: 'song', // 中文正文（CJK_FONTS key）
     editorLatin: 'none', // 西文正文（LATIN_FONTS key）
     fontSize: 17,
@@ -72,11 +96,18 @@ export const useUiStore = defineStore('ui', {
   },
   actions: {
     async loadPrefs() {
+      const load = (preferenceLoads.get(this) || 0) + 1
+      preferenceLoads.set(this, load)
+      const manager = paintingManager(this)
+      const paintingRevision = manager.revision
       try {
         const rows = await db.appconfig.toArray()
+        if (preferenceLoads.get(this) !== load) return
         const map = Object.fromEntries(rows.map((r) => [r.key, r.value]))
         this.skin = normalizeSkin(map.skin)
         if (map.theme) this.theme = map.theme
+        if (manager.saving) pendingPaintingReloads.add(this)
+        else if (manager.revision === paintingRevision && map.glazePainting) this.glazePainting = paintingById(String(map.glazePainting)).id
         if (map.editorFont) this.editorFont = map.editorFont
         if (map.editorLatin) this.editorLatin = map.editorLatin
         if (map.fontSize) this.fontSize = Number(map.fontSize) || 17
@@ -100,6 +131,7 @@ export const useUiStore = defineStore('ui', {
     async setPref(key, value) {
       if (key === 'skin') return this.setSkin(value)
       if (key === 'writingPaperStyle') return this.setWritingPaperStyle(value)
+      if (key === 'glazePainting') return this.setGlazePainting(value)
       this[key] = value
       await db.appconfig.put({ key, value })
       /* 跨窗口同步：其余窗口重载偏好（主题/字体等即时生效；处理端幂等，自身收到无副作用） */
@@ -110,6 +142,20 @@ export const useUiStore = defineStore('ui', {
         write:row=>db.appconfig.put(row),
         notify:()=>broadcastAppEvent('prefs-changed')
       })
+    },
+    async setGlazePainting(value) {
+      const id = paintingById(value).id
+      const manager = paintingManager(this)
+      try { return await manager.choose(id) }
+      finally {
+        if (!manager.saving && pendingPaintingReloads.has(this)) {
+          pendingPaintingReloads.delete(this)
+          await this.loadPrefs()
+        }
+      }
+    },
+    setGlazeLighting(value) {
+      this.glazeLighting = value === 'gallery' ? 'gallery' : 'day'
     }
   }
 })

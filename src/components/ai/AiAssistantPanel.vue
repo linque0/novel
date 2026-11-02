@@ -7,6 +7,7 @@ import {useUiStore} from '../../stores/ui'
 import {useWritingStore} from '../../stores/writing.js'
 import {useAssistantTaskStore} from '../../stores/assistant-task.js'
 import {renderChat,plainChat} from '../../services/ai/chat-text'
+import {autosave} from '../../services/autosave.js'
 import {TASK_PROFILES} from '../../services/ai/task-profiles.js'
 import {directionMessageId,messageCards,showRecoveredWriting} from './assistant-presentation.js'
 import OIcon from '../OIcon.vue'
@@ -16,10 +17,15 @@ import WorkflowCard from './WorkflowCard.vue'
 import PlanCard from './PlanCard.vue'
 import DiffCard from './DiffCard.vue'
 import KnowledgePanel from './KnowledgePanel.vue'
+import CreativeWorkflow from './CreativeWorkflow.vue'
+import StageSettings from './StageSettings.vue'
+import RuleScopeSettings from './RuleScopeSettings.vue'
+import { useCreativeWorkflowStore } from '../../stores/creative-workflow.js'
 import WritingWorkspace from './WritingWorkspace.vue'
 import AssistantTaskParameters from './AssistantTaskParameters.vue'
 
 const ai=useAiStore(),work=useWorkStore(),ui=useUiStore(),writing=useWritingStore(),task=useAssistantTaskStore()
+const creative=useCreativeWorkflowStore(),stageSettingsOpen=ref(false)
 const question=ref(ai.pendingPrompt||''),refs=ref({...ai.pendingRefs}),knowledgeOpen=ref(false),evaluationOpen=ref(false),draftPreview=ref(null),chatPane=ref(null),composer=ref(null),uiError=ref(''),newContent=ref(false),nearEnd=ref(true),panelWidth=ref(400),root=ref(null),modelOpen=ref(false),presetOpen=ref(false)
 const session=computed(()=>writing.active)
 const palettes={
@@ -32,7 +38,7 @@ const colors=computed(()=>palettes[ui.skin]||palettes.original)
 const variables=computed(()=>Object.fromEntries(Object.entries(colors.value).map(([k,v])=>['--agent-'+k,v])))
 const theme=computed(()=>['gravity','crimson'].includes(ui.skin)?darkTheme:null)
 const themeOverrides=computed(()=>({common:{primaryColor:colors.value.accent,primaryColorHover:colors.value.accent,primaryColorPressed:colors.value.accent,primaryColorSuppl:colors.value.accent,bodyColor:colors.value.bg,cardColor:colors.value.raised,popoverColor:colors.value.raised,borderColor:colors.value.line,textColorBase:colors.value.ink,textColor1:colors.value.ink,textColor2:colors.value.ink,textColor3:colors.value.muted,fontFamily:'"Microsoft YaHei UI","PingFang SC",system-ui,sans-serif',borderRadius:'8px'},Input:{color:colors.value.raised,colorFocus:colors.value.raised,border:'1px solid '+colors.value.line,borderHover:'1px solid '+colors.value.accent,borderFocus:'1px solid '+colors.value.accent,textColor:colors.value.ink,placeholderColor:colors.value.muted},Popover:{color:colors.value.raised,textColor:colors.value.ink},Button:{textColor:colors.value.ink}}))
-const taskOptions=computed(()=>[{label:'作品讨论',value:'discussion'},...Object.entries(TASK_PROFILES).filter(([id])=>id!=='chapter.directions').map(([value,p])=>({label:({chapters:'正文',outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感'}[p.module])+' · '+p.label,value}))])
+const taskOptions=computed(()=>[{label:'作品讨论',value:'discussion'},{label:'整章与连续创作 / 审稿修稿',value:'creative'},...Object.entries(TASK_PROFILES).filter(([id])=>!['chapter.directions','chapter.plan','chapter.draft','chapter.review','chapter.revise','chapter.recheck'].includes(id)).map(([value,p])=>({label:({chapters:'正文',outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感'}[p.module])+' · '+p.label,value}))])
 const taskType=computed(()=>task.mode==='discussion'?'discussion':task.mode==='writing'?session.value?.operation||'chapter.continue':task.type)
 const taskLabel=computed(()=>task.mode==='discussion'?'作品讨论':TASK_PROFILES[taskType.value]?.label||'创作任务')
 const text=computed({get:()=>task.mode==='writing'?session.value?.requirement||'':task.mode==='task'?task.requirement:question.value,set:value=>{if(task.mode==='writing'&&session.value){session.value.requirement=value;writing.changed(session.value)}else if(task.mode==='task')task.requirement=value;else question.value=value}})
@@ -46,6 +52,7 @@ const errors=computed(()=>[...new Set([uiError.value,task.error,task.mode==='wri
 const cards=msg=>messageCards(msg,session.value)
 const canonical=card=>!!session.value?.candidates.some(c=>c.id===card.id)
 const call=fn=>Promise.resolve().then(fn).catch(e=>{uiError.value=e.message})
+async function openAgentWorkbench(){await autosave.flushAll();if(new URLSearchParams(location.search).has('panel')){const r=await window.native?.panelOpen?.({type:'agent',workId:work.work.id,entityId:''});if(!r?.ok)throw new Error('正文编辑权已在其他窗口，请先关闭正文窗口')}else ui.workbenchMode='agent';task.openParameters=false}
 
 watch(()=>ai.pendingPrompt,v=>{if(v){question.value=v;refs.value={...ai.pendingRefs};task.mode='discussion'}})
 watch(()=>work.work?.id,id=>{question.value='';refs.value={};if(task.workId!==id)task.reset(id);if(id)writing.load(id).then(()=>writing.reconcile()).catch(e=>{uiError.value=e.message})},{immediate:true})
@@ -108,6 +115,7 @@ function continueDraft(card){task.mode='writing';call(()=>writing.startDraft({pa
           <template v-if="!msg.streaming">
             <template v-for="card in cards(msg)" :key="card.id">
               <details v-if="card.kind==='directions'&&(msg.id!==directionOwner||msg.candidates?.length>1)" class="agent-history-card"><summary>剧情方向 · {{card.directions.length}} 个</summary><div v-for="d in card.directions" :key="d.id"><strong>{{d.title}}</strong><p>{{d.development}}</p></div></details>
+              <details v-else-if="card.workflowStage||['chapter-plan','chapter-review','chapter-recheck'].includes(card.kind)" class="proposal"><summary>{{card.title||'创作阶段材料'}} · 在创作任务中查看与确认</summary><pre>{{card.text||card.plan||card.review||card.check}}</pre><NButton size="small" @click="call(()=>creative.open())">打开创作任务</NButton></details>
               <div v-else-if="card.kind==='draft'" class="proposal writing-candidates"><div class="agent-card-caption">{{card.title||'正文候选'}}<span>{{card.status==='applied'?'已采纳':card.complete?'待采纳':'未完整'}}</span></div><DraftCard :card="card" :workflow-controls="canonical(card)" @change="canonical(card)&&writing.changed(session)" @continue-draft="continueDraft" @continue-saved="call(()=>writing.open({fresh:true,reuseDirections:true,mode:'insert'}))" /></div>
               <details v-else-if="card.kind!=='directions'" class="proposal" open><summary>{{card.title||card.name||(card.subject==='character'?'人物建议':'设定建议')}} · {{card.status==='applied'?'已应用':card.complete===false?'未完整':'待确认'}}</summary><WorkflowCard v-if="card.kind==='workflow'" :card="card" /><PlanCard v-else-if="card.kind==='plan'&&card.complete!==false" :card="card" /><DiffCard v-else-if="card.kind==='diff'&&card.complete!==false" :card="card" @dismiss="dismiss(msg,card.id)" /><NButton size="tiny" quaternary @click="dismiss(msg,card.id)">放弃此提案</NButton></details>
             </template>
@@ -131,7 +139,8 @@ function continueDraft(card){task.mode='writing';call(()=>writing.startDraft({pa
           <div class="agent-composer-controls">
             <NPopover v-model:show="task.openParameters" trigger="click" placement="top-start" :show-arrow="false" :to="false" style="width:min(330px,calc(100vw - 44px));max-height:65vh;overflow:auto" class="agent-function-popover">
               <template #trigger><NButton size="small" quaternary class="agent-function-trigger" aria-label="功能调整" :aria-expanded="task.openParameters"><OIcon name="plus" :size="16" /><span>功能</span></NButton></template>
-              <div class="agent-function-content"><strong>功能调整</strong><label>创作任务<NSelect :value="taskType" :options="taskOptions" :disabled="ai.busy" @update:value="v=>call(()=>task.choose(v))" /></label><AssistantTaskParameters />
+              <div class="agent-function-content"><strong>功能调整</strong><label>创作任务<NSelect :value="taskType" :options="taskOptions" :disabled="ai.busy" @update:value="v=>call(()=>v==='creative'?creative.open():task.choose(v))" /></label><AssistantTaskParameters />
+                <NButton size="small" @click="call(openAgentWorkbench)">打开完整 AI 创作台</NButton><NButton size="small" @click="call(()=>creative.open());task.openParameters=false">整章与连续创作 · 审稿修稿</NButton><NButton size="small" @click="stageSettingsOpen=true;task.openParameters=false">阶段模型与写作 Skill</NButton>
                 <template v-if="task.mode==='writing'&&session?.operation==='chapter.continue'"><NButton size="small" :disabled="ai.busy||session.running" @click="call(()=>writing.startDraft({direct:true}));task.openParameters=false">跳过方向，直接续写</NButton><NButton size="small" @click="writing.addDirection();task.openParameters=false">手写剧情方向</NButton><NButton v-if="session.directions.length" size="small" :disabled="ai.busy||session.running" @click="writing.startDirections();task.openParameters=false">保留已改方向，换其余</NButton></template>
                 <label v-if="panelWidth<350">当前预设<NSelect :value="ai.selectedPresetId" :options="ai.presets.map(p=>({label:p.name,value:p.id}))" :disabled="ai.chatBusy" @update:value="v=>call(()=>ai.selectPreset(v))" /></label>
                 <div class="agent-function-links"><NButton size="small" quaternary @click="knowledgeOpen=true;task.openParameters=false">作品知识</NButton><NButton size="small" quaternary @click="presets">预设编辑 ↗</NButton><NButton size="small" quaternary @click="evaluationOpen=true;task.openParameters=false">预设对照</NButton><NButton size="small" quaternary :disabled="ai.busy" @click="call(()=>ai.clearChat());task.openParameters=false">清空对话</NButton></div><p class="agent-caption">本次会话 {{ai.usage.session.total_tokens}} tokens · {{ai.usage.session.calls}} 次{{ai.usage.session.estimatedCalls?'（含估算）':''}}</p>
@@ -148,6 +157,8 @@ function continueDraft(card){task.mode='writing';call(()=>writing.startDraft({pa
     <NModal :show="!!draftPreview" preset="card" title="正文草稿转换预览" style="width:min(780px,90vw);max-height:85vh;overflow:auto" @update:show="draftPreview=null"><template v-if="draftPreview"><p>{{draftPreview.selected?'使用实际选中的可见文本':'使用当前候选去除展示 HTML 后的处理文本'}} · 候选 {{draftPreview.index+1}}</p><pre class="message-text">{{draftPreview.text}}</pre><NButton type="primary" :disabled="!draftPreview.text.trim()" @click="acceptDraft">确认为正文草稿</NButton></template></NModal>
     <NModal v-model:show="evaluationOpen" preset="card" title="预设输出对照评测" style="width:min(1000px,92vw);max-height:85vh;overflow:auto"><PresetEvaluation /></NModal>
     <NModal v-model:show="knowledgeOpen" preset="card" title="作品知识库" style="width:min(900px,92vw);max-height:85vh;overflow:auto"><KnowledgePanel /></NModal>
+    <NModal v-model:show="creative.visible" preset="card" title="恍然梦 · 创作工作流" style="width:min(960px,94vw);max-height:88vh;overflow:auto"><CreativeWorkflow /></NModal>
+    <NModal v-model:show="stageSettingsOpen" preset="card" title="阶段模型与写作 Skill" style="width:min(860px,94vw);max-height:85vh;overflow:auto"><StageSettings /><details><summary>作品设定规则范围</summary><RuleScopeSettings /></details></NModal>
   </NConfigProvider>
 </template>
 

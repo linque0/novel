@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { ref, computed } from 'vue'
 import { NModal, NButton, NInput, NRadioGroup, NRadio, NCheckbox, NTag, NAlert, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -142,7 +144,7 @@ function reset() {
 </script>
 
 <template>
-  <NModal
+  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight"
     :show="ui.importOpen"
     preset="card"
     title="导入文件"

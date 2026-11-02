@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { ref, watch } from 'vue'
 import { NModal, NButton, NEmpty } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -31,7 +33,7 @@ async function rollback(rev) {
 </script>
 
 <template>
-  <NModal
+  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight"
     :show="!!ui.revisionsCtx"
     preset="card"
     :title="`版本历史 · ${ui.revisionsCtx?.title || ''}`"

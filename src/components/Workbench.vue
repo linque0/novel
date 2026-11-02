@@ -6,12 +6,17 @@ import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import OIcon from './OIcon.vue'
 import AppTopbar from './AppTopbar.vue'
+import DreamModeEntries from './agent/DreamModeEntries.vue'
+import {enterDreamMode,enterLightSleepMode} from '../services/ai/entry-modes.js'
 import { WORK_NAVIGATION } from './app-navigation'
 import ChapterTree from './ChapterTree.vue'
 import OutlineSidebar from './OutlineSidebar.vue'
 import CharacterList from './CharacterList.vue'
 import SnippetList from './SnippetList.vue'
-import EditorPane from './EditorPane.vue'
+import CandidateEditor from './agent/CandidateEditor.vue'
+import {useStoryStore} from '../stores/story.js'
+const story=useStoryStore()
+import { autosave } from '../services/autosave.js'
 import OutlineCenter from './OutlineCenter.vue'
 import CharacterCenter from './CharacterCenter.vue'
 import MubuView from './MubuView.vue'
@@ -28,13 +33,38 @@ import artEditor from '../assets/skins/crimson/editor.webp'
 import artOutline from '../assets/skins/crimson/outline.webp'
 import artCharacters from '../assets/skins/crimson/characters.webp'
 import artInspiration from '../assets/skins/crimson/inspiration.webp'
+import GlazeArtwork from './GlazeArtwork.vue'
+import GlazeLightingToggle from './GlazeLightingToggle.vue'
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+import { useGlazeDrawers } from '../composables/useGlazeDrawers'
 
 const work = useWorkStore()
 const ui = useUiStore()
+const { museumActive, museumPopoverClass } = useGlazeMuseum()
+const museum = computed(() => ui.skin === 'glaze')
+const shell = ref(null)
+const { narrow, drawer, modalDrawer, closeDrawer, toggleDrawer } = useGlazeDrawers(museumActive, shell)
+const showDirectory = computed(() => !ui.focusMode && !ui.readMode && !modulePopped.value && !(crimson.value && ['chapters','outline','lore','characters','snippets'].includes(work.tab)))
+const showNotes = computed(() => !!work.activeChapter && !crimson.value && !ui.focusMode && !ui.readMode && !modulePopped.value && work.tab === 'chapters')
+watch(() => [work.tab, ui.focusMode, ui.readMode], () => closeDrawer(false))
+watch(() => work.activeChapter?.id, id => { if (!id && drawer.value === 'notes') closeDrawer() })
 const ai = useAiStore()
+function returnToShelf(){
+  if(new URLSearchParams(location.search).get('panel')?.startsWith('agent:'))return window.native?.panelCloseSelf()
+  return work.closeWork()
+}
 const inspirationPrompt = ref('把这条灵感扩展成一个场景，保留悬念。')
 provide('inspirationPrompt', inspirationPrompt)
 const msg = useMessage()
+const entryBusy=ref(false)
+async function enterAiMode(mode){
+  if(entryBusy.value)return
+  entryBusy.value=true
+  try{
+    const context={ui,work,flush:()=>autosave.flushAll(),toggle:true,isDetached:()=>isPopped(work,'ai',''),focusDetached:()=>focusPopped(work,'ai','')}
+    await (mode==='dream'?enterDreamMode(context):enterLightSleepMode(context))
+  }catch(e){msg.error(e.message)}finally{entryBusy.value=false}
+}
 const studio = computed(() => ui.isStudioSkin)
 const taskLauncher = ref(null)
 
@@ -228,7 +258,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </script>
 
 <template>
-  <div class="workbench-shell" :class="{ 'is-focus': ui.focusMode, 'is-reading': ui.readMode, 'is-crimson': crimson }" :data-module="work.tab" style="display: flex; flex-direction: column; height: 100%">
+  <div ref="shell" class="workbench-shell" :class="{ 'is-focus': ui.focusMode, 'is-reading': ui.readMode, 'is-crimson': crimson, 'glaze-museum': museum, 'glaze-drawer-open': modalDrawer }" :data-glaze-light="museum ? ui.glazeLighting : undefined" :data-module="work.tab" style="display: flex; flex-direction: column; height: 100%">
+    <div v-if="museum" class="gm-cornice" aria-hidden="true"><span></span><i></i><span></span></div>
     <!-- 赤月戏：布景层（按模块换图）+ 顶部压暗渐变，内容始终在布景之上 -->
     <template v-if="crimson">
       <img v-if="crimsonArt" class="crimson-backdrop" :src="crimsonArt" alt="" aria-hidden="true" />
@@ -239,13 +270,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
          切模块时组件与 Teleport 同时移动会触发 Vue 的 patch/unmount 异常。 -->
     <TaskLauncher v-if="studio" ref="taskLauncher" :module="work.tab" />
 
-    <AppTopbar :active="work.tab" :has-work="!!work.work" :target-title="work.work?.title" @navigate="key => key === 'shelf' ? work.closeWork() : key === 'settings' ? openSettings() : selectTab(key)">
+    <AppTopbar :inert="modalDrawer || undefined" :active="work.tab" :has-work="!!work.work" :target-title="work.work?.title" @navigate="key => key === 'shelf' ? returnToShelf() : key === 'settings' ? openSettings() : selectTab(key)">
       <template #actions>
+        <GlazeLightingToggle v-if="museum" />
         <span class="save-badge"><span class="save-dot" :class="badgeClass"></span>{{ badgeText }}</span>
         <NButton size="small" quaternary aria-label="搜索" @click="ui.searchOpen = true"><OIcon name="search" :size="16" /> 搜索</NButton>
         <div id="studio-task-actions"></div>
-        <NButton size="small" :type="ui.aiDrawerOpen ? 'primary' : 'default'" :aria-pressed="ui.aiDrawerOpen" title="展开或收起恍然梦对话" @click="ui.aiDrawerOpen = !ui.aiDrawerOpen"><OIcon name="star" :size="14" /> 恍然梦</NButton>
-        <NDropdown trigger="click" :options="moreOptions" @select="onMore"><NButton size="small" quaternary title="拆窗、书签、沉浸、阅读与皮肤">更多 <OIcon name="caret-down" :size="11" /></NButton></NDropdown>
+        <DreamModeEntries :disabled="entryBusy" :active="ui.aiDrawerOpen?'light':''" @dream="enterAiMode('dream')" @light="enterAiMode('light')" />
+        <NDropdown :class="museumPopoverClass" trigger="click" :options="moreOptions" @select="onMore"><NButton size="small" quaternary title="拆窗、书签、沉浸、阅读与皮肤">更多 <OIcon name="caret-down" :size="11" /></NButton></NDropdown>
       </template>
     </AppTopbar>
 
@@ -260,8 +292,17 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       <div id="crimson-bar-tools" class="crimson-bar-tools"></div>
     </div>
 
+    <div v-if="museum && narrow && (showDirectory || showNotes)" class="glaze-pane-toggles" :inert="modalDrawer || undefined">
+      <button v-if="showDirectory" type="button" class="glaze-directory-toggle" aria-controls="glaze-writing-directory" :aria-expanded="drawer === 'directory'" @click="ui.outlineSideOpen=true;toggleDrawer('directory',$event)">目录与资料</button>
+      <span>{{ work.work?.title }}</span>
+      <GlazeLightingToggle />
+      <button v-if="showNotes" type="button" class="glaze-notes-toggle" aria-controls="glaze-writing-notes" :aria-expanded="drawer === 'notes'" @click="ui.rightPanelOpen=true;toggleDrawer('notes',$event)">批注与资料</button>
+    </div>
     <div class="wb-body">
-      <div v-if="!ui.focusMode && !ui.readMode && !modulePopped && !(crimson && ['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(work.tab))" v-show="work.tab !== 'outline' || ui.outlineSideOpen" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
+      <button v-if="modalDrawer" type="button" class="glaze-drawer-scrim" aria-label="关闭侧栏" tabindex="-1" @click="closeDrawer()"></button>
+      <div v-if="showDirectory" id="glaze-writing-directory" v-show="museum && narrow || work.tab !== 'outline' || ui.outlineSideOpen" class="side-panel" :class="{ 'glaze-drawer-visible': drawer === 'directory' }" data-glaze-drawer="directory" :role="museum && narrow ? 'dialog' : undefined" :aria-modal="museum && narrow && drawer === 'directory' ? true : undefined" aria-label="目录与资料" :inert="museum && narrow && drawer !== 'directory' || undefined" :style="{ width: ui.sideWidth + 'px', '--glaze-side-width': ui.sideWidth + 'px' }">
+        <button v-if="museum" type="button" class="glaze-drawer-close" aria-label="关闭目录与资料" @click="closeDrawer()">关闭 ×</button>
+        <GlazeArtwork v-if="museum" compact />
         <ChapterTree v-if="work.tab === 'chapters'" @read="onMore('read')" @window="onSplit('chapter')" />
         <OutlineSidebar v-else-if="work.tab === 'outline'" />
         <CharacterList v-else-if="work.tab === 'characters'" />
@@ -290,16 +331,19 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
       </button>
 
       <!-- 模块已被拆出为面板窗口：主窗口占位，避免双窗口同写 -->
-      <div v-if="modulePopped" class="center-pane paper-texture pop-lock-pane">
+      <div v-show="modulePopped" class="center-pane paper-texture pop-lock-pane">
         <div class="pop-lock-note">
           <div class="big serif">{{ poppedEntityName ? `${curTabLabel}「${poppedEntityName}」已在独立窗口编辑` : `${curTabLabel}已在独立窗口编辑` }}</div>
           <p>主窗口此条目暂时只读——两侧同时写入会互相覆盖。关闭独立面板（或在面板中切换到其他条目）后此处自动恢复编辑。</p>
           <NButton type="primary" @click="focusPopped(work, work.tab, curEntityForTab(work.tab))">前往窗口</NButton>
         </div>
       </div>
-      <div v-else class="center-pane paper-texture">
-        <EditorPane v-if="work.tab === 'chapters'" />
-        <OutlineCenter v-else-if="work.tab === 'outline'" />
+      <div v-show="!modulePopped" class="center-pane paper-texture" :inert="modalDrawer || undefined">
+        <div v-if="work.tab==='chapters'&&story.active&&!ui.agentCandidateId" class="story-workshop-bar"><span>{{story.formalView?'正式正文':'与恍然梦共用的工作稿'}} · {{story.active.status==='confirmed'?'本章已确认':'尚未确认入正文'}}</span><button @click="story.formalView=!story.formalView">{{story.formalView?'回到共同工作稿':'对照正式正文'}}</button><button @click="ui.workbenchMode='agent'">回到故事现场</button></div>
+        <div id="writing-story-editor-host" v-show="work.tab==='chapters'&&!ui.agentCandidateId&&story.active&&!story.formalView" class="shared-editor-host story-workshop-editor"></div>
+        <div id="writing-editor-host" v-show="work.tab==='chapters'&&!ui.agentCandidateId&&(!story.active||story.formalView)" class="shared-editor-host"></div>
+        <CandidateEditor v-if="work.tab==='chapters'&&ui.agentCandidateId" :candidate-id="ui.agentCandidateId" handoff @close="ui.agentCandidateId=null" />
+        <OutlineCenter v-if="work.tab === 'outline'" />
         <CharacterCenter v-else-if="work.tab === 'characters'" />
         <template v-else-if="work.tab === 'lore'">
           <MubuView />
@@ -318,15 +362,15 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
         <span class="rp-rail-text">批注栏</span>
       </button>
 
-      <RightPanel v-if="!crimson && !ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && ui.rightPanelOpen" />
+      <RightPanel v-if="showNotes && (ui.rightPanelOpen || museum)" v-show="ui.rightPanelOpen || museum && narrow" id="glaze-writing-notes" :class="{ 'glaze-drawer-visible': drawer === 'notes' }" data-glaze-drawer="notes" :role="museum && narrow ? 'dialog' : undefined" :aria-modal="museum && narrow && drawer === 'notes' ? true : undefined" aria-label="批注与资料" :inert="museum && narrow && drawer !== 'notes' || undefined" @glaze-close="closeDrawer()" />
 
       <InspirationPrompt v-if="ui.skin === 'gravity' && work.tab === 'snippets' && (!ui.aiDrawerOpen || aiPopped) && !modulePopped && !ui.focusMode && !ui.readMode" />
 
       <!-- 非模态覆盖层：开合与拖宽不参与正文排版；隐藏时保留输入与生成状态。 -->
-      <aside v-if="aiMounted" v-show="aiVisible" class="ai-dock" :data-agent-skin="ui.skin" aria-label="恍然梦助手" :style="{ width: 'min(' + ui.aiDrawerWidth + 'px, 100%)' }">
+      <aside v-if="aiMounted" v-show="aiVisible" class="ai-dock" :data-agent-skin="ui.skin" aria-label="恍然梦-浅眠" :style="{ width: 'min(' + ui.aiDrawerWidth + 'px, 100%)' }">
         <div class="ai-dock-resizer" title="拖拽调整恍然梦宽度（双击恢复默认）" @mousedown="startAiResize" @dblclick="resetAiWidth"></div>
         <div class="ai-drawer-head">
-          <span class="ai-drawer-name serif">恍然梦</span>
+          <span class="ai-drawer-name serif">恍然梦-浅眠</span>
           <div style="flex: 1"></div>
           <NButton size="tiny" quaternary title="拆出为独立窗口（可与其他模块并排对照）" @click="onSplit('ai')"><OIcon name="split" :size="13" /></NButton>
           <NButton size="tiny" quaternary title="收起恍然梦" @click="ui.aiDrawerOpen = false"><OIcon name="close" :size="13" /></NButton>
@@ -353,6 +397,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
 </template>
 
 <style scoped>
+.shared-editor-host{display:flex;flex:1;min-height:0;min-width:0;flex-direction:column}
 .wb-body { position: relative; min-width: 0; }
 .ai-dock {
   --agent-header-color: #896e4e;

@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import TaskLauncher from './ai/TaskLauncher.vue'
 import InspirationPrompt from './InspirationPrompt.vue'
 import { computed, ref } from 'vue'
@@ -95,7 +97,7 @@ function toLore() {
   <Teleport defer to="#crimson-bar-tools" :disabled="ui.skin !== 'crimson'">
     <div v-if="ui.skin === 'crimson'" class="crimson-bar-group">
       <input v-model="ui.snippetQuery" class="crimson-bar-search" type="search" placeholder="搜索灵感" aria-label="搜索灵感" />
-      <NPopover v-model:show="quickOpen" trigger="click" placement="bottom-end" :show-arrow="false">
+      <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="quickOpen" trigger="click" placement="bottom-end" :show-arrow="false">
         <template #trigger>
           <button class="crimson-bar-button primary" type="button">＋ 记录灵感</button>
         </template>
@@ -148,7 +150,7 @@ function toLore() {
           <div>
             <NButton size="small" @click="toLore">转为设定</NButton>
             <NButton size="small" type="primary" @click="toChapter">转为章节 ↗</NButton>
-            <NDropdown trigger="click" :options="ideaMenu" @select="onIdeaMenu">
+            <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :options="ideaMenu" @select="onIdeaMenu">
               <button type="button" class="crimson-idea-more" title="灵感操作">···</button>
             </NDropdown>
           </div>
@@ -168,7 +170,7 @@ function toLore() {
       <div style="flex: 1"></div>
       <NButton size="small" @click="toChapter">转为章节</NButton>
       <NButton size="small" @click="toLore">转为设定</NButton>
-      <NPopconfirm @positive-click="work.deleteSnippet(s.id)">
+      <NPopconfirm :class="museumPopoverClass" :data-glaze-light="museumLight" @positive-click="work.deleteSnippet(s.id)">
         <template #trigger>
           <NButton size="small" quaternary type="error">删除</NButton>
         </template>

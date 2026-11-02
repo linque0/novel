@@ -1,5 +1,7 @@
 <!-- 大纲中心（8.8.2）：文本 / 画布双视图；文本视图为 Word 式富文本编辑（text+html 双字段），右键快捷栏含关系链接 -->
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import TaskLauncher from './ai/TaskLauncher.vue'
 import OIcon from './OIcon.vue'
 import { computed, ref, watch, nextTick } from 'vue'
@@ -168,7 +170,7 @@ function onCtx(e) {
         <button class="ol-tb" title="斜体" @mousedown.prevent @click="fmt('italic')"><i>I</i></button>
         <button class="ol-tb" title="下划线" @mousedown.prevent @click="fmt('underline')"><u>U</u></button>
         <button class="ol-tb" title="删除线" @mousedown.prevent @click="fmt('strikeThrough')"><s>S</s></button>
-        <NPopover trigger="click" :show-arrow="false">
+        <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :show-arrow="false">
           <template #trigger>
             <button class="ol-tb" title="字体颜色" @mousedown.prevent><span style="border-bottom: 3px solid var(--accent)">A</span></button>
           </template>
@@ -176,7 +178,7 @@ function onCtx(e) {
             <button v-for="c in COLORS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="fmt('foreColor', c)" />
           </div>
         </NPopover>
-        <NPopover trigger="click" :show-arrow="false">
+        <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :show-arrow="false">
           <template #trigger>
             <button class="ol-tb" title="底色" @mousedown.prevent>底</button>
           </template>

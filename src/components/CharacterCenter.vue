@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import TaskLauncher from './ai/TaskLauncher.vue'
 import { computed, ref, watch, onMounted, nextTick } from 'vue'
 import { NButton, NInput, NSelect, NTag, NDropdown } from 'naive-ui'
@@ -310,7 +312,7 @@ onMounted(() => {
       </div>
       <div>
         <span class="tag">{{ primaryRoleText }}</span>
-        <NDropdown trigger="click" :options="crimsonCharMenu" @select="onCrimsonCharMenu">
+        <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :options="crimsonCharMenu" @select="onCrimsonCharMenu">
           <button type="button" class="crimson-dossier-more" title="人物操作">···</button>
         </NDropdown>
       </div>
@@ -429,7 +431,7 @@ onMounted(() => {
             <NButton size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">恍然梦：丰富</NButton>
             <NButton size="small" quaternary type="error" @click="work.deleteCharacter(c.id)">删除</NButton>
           </div>
-          <NSelect
+          <NSelect :menu-props="{ class: museumPopoverClass }"
             v-if="ui.skin !== 'gravity'"
             class="character-tag-select"
             :value="c.tags"
@@ -481,7 +483,7 @@ onMounted(() => {
       <NButton size="tiny" quaternary @click="work.removeRelation(r.id)"><OIcon name="close" :size="11" /></NButton>
     </div>
     <div class="field-row" style="align-items: center">
-      <NSelect v-model:value="relOther" :options="otherOpts" size="small" placeholder="选择人物" style="width: 140px" />
+      <NSelect :menu-props="{ class: museumPopoverClass }" v-model:value="relOther" :options="otherOpts" size="small" placeholder="选择人物" style="width: 140px" />
       <NInput v-model:value="relLabel" size="small" placeholder="关系（如：师徒 / 宿敌）" style="flex: 1" @keyup.enter="addRelation" />
       <NButton v-if="ui.skin !== 'gravity'" size="tiny" @click="addRelation">添加</NButton>
     </div>

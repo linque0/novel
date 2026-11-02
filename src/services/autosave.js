@@ -1,3 +1,4 @@
+import { mergeMemoryIntent } from './ai/memory-queue-core.js'
 import { useUiStore } from '../stores/ui'
 import { putRow, addRevision, addWordLog } from '../db/repo'
 import { markChapterStale } from './ai/summarize'
@@ -47,7 +48,14 @@ async function flushBatch() {
       const row = JSON.parse(JSON.stringify(it.row))
       await autosave.hooks.beforePut?.(it.table, row)
       row.updatedAt = Date.now()
-      await putRow(it.table, row)
+      const saved = await putRow(it.table, row, { memoryIntent: it.memoryIntent })
+      if (saved.memoryJobId) {
+        const detail={workId:row.workId,jobId:saved.memoryJobId}
+        setTimeout(()=>{
+          window.dispatchEvent(new CustomEvent('memory-queue-ready',{detail}))
+          window.native?.appBroadcast?.({kind:'memory-queue-ready',data:detail})
+        },0)
+      }
       if (SOURCE_TABLES.includes(it.table)) {
         const data = { workId: row.workId || (it.table==='works'?row.id:null), table: it.table, id: row.id, origin: autosave.origin }
         window.dispatchEvent(new CustomEvent('ai-source-changed', { detail: data }))
@@ -67,7 +75,10 @@ async function flushBatch() {
     ui().autosave.lastSavedAt = Date.now()
   } catch (err) {
     console.error('[autosave] 保存失败，已重新排队', err)
-    for (const it of items) pending.set(`${it.table}:${it.row.id}`, it)
+    for (const it of items) {
+      const key=`${it.table}:${it.row.id}`
+      pending.set(key, mergeMemoryIntent(it,pending.get(key)||{}))
+    }
     ui().autosave.pending = pending.size
   } finally {
     items.forEach((it) => flushing.delete(`${it.table}:${it.row.id}`))
@@ -93,7 +104,8 @@ export const autosave = {
 
   mark(table, row, opts = {}) {
     if (!row || !row.id) return
-    pending.set(`${table}:${row.id}`, { table, row, forceSnapshot: !!opts.forceSnapshot })
+    const key = `${table}:${row.id}`
+    pending.set(key, mergeMemoryIntent(pending.get(key), { table, row, forceSnapshot: !!opts.forceSnapshot, ...opts }))
     ui().autosave.pending = pending.size
     schedule()
   },
@@ -125,6 +137,7 @@ export function startAutosave() {
   window.addEventListener('blur', () => autosave.flushAll())
   window.addEventListener('pagehide', () => autosave.flushAll())
   window.__flushNow = () => autosave.flushAll()
+  window.__prepareForPanel = async () => {await autosave.flushAll();if(ui().autosave.pending)throw new Error('编辑尚未保存，无法移交编辑权')}
 }
 
 /** 工作打开时装配码字统计钩子（prevCounts: Map<chapterId, 字数>） */

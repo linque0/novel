@@ -1,4 +1,6 @@
 /** Text-only writing guidance. Never loads modules, runs commands, or stores credentials. */
+import { BUILTIN_WRITING_SKILLS } from './builtin-writing-skills.js'
+export { BUILTIN_WRITING_SKILLS }
 export const STAGES = Object.freeze(['planning', 'drafting', 'review', 'revision', 'memory'])
 export const SKILL_TEXT_BUDGET = 24000
 const fail = message => { throw new Error(message) }
@@ -8,6 +10,14 @@ const safeClone = value => {
   if (Array.isArray(value)) return value.map(safeClone)
   if (value && typeof value === 'object') return Object.fromEntries(Object.entries(value).filter(([key]) => !/^(?:api[_-]?key|key|token|accessToken|refreshToken|authorization|credential|credentials|password|secret|cipher)$/i.test(key)).map(([key, entry]) => [key, safeClone(entry)]))
   return value
+}
+const stable = value => JSON.stringify(value, function(key,entry){return entry&&typeof entry==='object'&&!Array.isArray(entry)?Object.fromEntries(Object.entries(entry).sort(([a],[b])=>a.localeCompare(b))):entry})
+export function freezeProviderConfig(provider,model) {
+  const config=safeClone({baseURL:String(provider.baseURL||'').trim(),apiFormat:provider.apiFormat==='anthropic'?'anthropic':'openai',model,modelCfg:provider.modelCfg?.[model]||{},params:provider.params||{}})
+  return {providerConfigFingerprint:hash(stable(config))}
+}
+export function stageBudgetOptions(opts,rootRemaining) {
+  return Number.isFinite(rootRemaining)?{...opts,embeddings:{...opts.embeddings,enabled:false}}:opts
 }
 const unsafeText = /(?:\b(?:subagents?|subagent_type|allowed-tools|hooks?|mcp__\w+|execute_command|run_command|tool_calls?)\b|\b(?:invoke|execute|run|call)\s+(?:a\s+|the\s+)?(?:bash|powershell|shell|python|node|tools?|commands?|scripts?)\b|(?:调用|执行|启动)(?:工具|脚本|命令|子代理|子智能体))/i
 function validateText(text) {
@@ -24,24 +34,37 @@ export function stageForTask(type = '') {
 }
 export function normalizeStageConfig(raw = {}) {
   const stages = Object.fromEntries(STAGES.map(stage => [stage, Object.fromEntries(['providerId', 'model', 'presetId', 'skillId'].flatMap(key => { const v = binding(raw?.stages?.[stage]?.[key]); return v ? [[key, v]] : [] }))]))
-  const skills = (Array.isArray(raw?.skills) ? raw.skills : []).map(s => {
+  const custom = (Array.isArray(raw?.skills) ? raw.skills : []).filter(s => {
+    if (!String(s?.id || '').startsWith('builtin:')) return true
+    if (!BUILTIN_WRITING_SKILLS.some(skill => skill.id === s.id)) fail('未知的内置 Skill 身份')
+    return false // Rehydrate trusted text and provenance, never accept an imported override.
+  })
+  const skills = [...BUILTIN_WRITING_SKILLS, ...custom].map(s => {
     const text = validateText(s.text), contentHash = hash(text)
-    return { id: binding(s.id) || `skill_${contentHash}`, name: String(s.name || '写作 Skill').slice(0, 120), text, contentHash, charCount: text.length }
+    const builtin = BUILTIN_WRITING_SKILLS.includes(s)
+    return { id: binding(s.id) || `skill_${contentHash}`, name: String(s.name || '写作 Skill').slice(0, 120), text, contentHash, charCount: text.length,
+      ...(builtin ? { builtin: true, stage: s.stage, provenance: safeClone(s.provenance) } : {}) }
   })
   if (new Set(skills.map(s => s.id)).size !== skills.length) fail('Skill ID 重复')
   return { version: 1, stages, skills }
 }
-export function freezeStage(raw, stage, { providers = [], presets = [] } = {}) {
+export function recommendStageSkills(raw = {}) {
+  const config = normalizeStageConfig(raw)
+  for (const skill of BUILTIN_WRITING_SKILLS) if (!config.stages[skill.stage].skillId) config.stages[skill.stage].skillId = skill.id
+  return config
+}
+export function freezeStage(raw, stage, { providers = [], presets = [],currentProviderId,currentModel } = {}) {
   if (!STAGES.includes(stage)) fail('未知创作阶段')
   const config = normalizeStageConfig(raw), selected = config.stages[stage]
   const result = { stage, inherited: !selected.providerId && !selected.model && !selected.presetId, skill: null }
-  if (selected.providerId) {
-    const provider = providers.find(p => p.id === selected.providerId && p.enabled !== false)
+  if (selected.providerId || currentProviderId) {
+    const provider = providers.find(p => p.id === (selected.providerId||currentProviderId) && p.enabled !== false)
     if (!provider) fail('阶段绑定的供应商不可用')
     result.providerId = provider.id
-    const model = selected.model || provider.activeModel
+    const model = selected.model || (!selected.providerId&&currentModel) || provider.activeModel
     if (!model || !provider.models?.some(m => (typeof m === 'string' ? m === model : m.name === model && m.enabled !== false))) fail('阶段绑定的模型不可用')
     result.model = model
+    Object.assign(result,freezeProviderConfig(provider,model))
   } else if (selected.model) {
     if (!providers.some(p => p.enabled !== false && p.models?.some(m => typeof m === 'string' ? m === selected.model : m.name === selected.model && m.enabled !== false))) fail('阶段绑定的模型不可用')
     result.model = selected.model
@@ -55,7 +78,8 @@ export function freezeStage(raw, stage, { providers = [], presets = [] } = {}) {
   if (selected.skillId) {
     const skill = config.skills.find(s => s.id === selected.skillId)
     if (!skill) fail('阶段绑定的 Skill 不可用')
-    result.skill = { ...skill, textBudget: SKILL_TEXT_BUDGET }
+    if (skill.stage && skill.stage !== stage) fail('内置 Skill 不适用于当前阶段')
+    result.skill = { ...safeClone(skill), textBudget: SKILL_TEXT_BUDGET }
   }
   return result
 }

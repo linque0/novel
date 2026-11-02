@@ -1,6 +1,8 @@
 <!-- 正文导出对话框（v1.0.4）：按章节勾选导出 + 三种格式（txt / md / docx）。
      章节树按卷分组、支持全选/单选；docx 为 JSZip 手组 OOXML（零新依赖）。 -->
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { computed, ref, watch } from 'vue'
 import { NModal, NButton, NCheckbox, NInputNumber } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -131,7 +133,7 @@ async function doExport() {
 </script>
 
 <template>
-  <NModal :show="ui.exportOpen" preset="card" title="导出正文" style="width: 520px" @update:show="(v) => (ui.exportOpen = v)">
+  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" :show="ui.exportOpen" preset="card" title="导出正文" style="width: 520px" @update:show="(v) => (ui.exportOpen = v)">
     <div class="exp-tree">
       <label class="exp-all">
         <NCheckbox :checked="allOn" @update:checked="toggleAll">全选章节（{{ allIds.length }}）</NCheckbox>

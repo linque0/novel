@@ -1,5 +1,17 @@
 import assert from 'node:assert/strict'
-import { STAGES, stageForTask, normalizeStageConfig, freezeStage, readWritingSkillFiles, SKILL_TEXT_BUDGET } from '../src/services/ai/stage-config.js'
+import * as stageConfig from '../src/services/ai/stage-config.js'
+const { STAGES, stageForTask, normalizeStageConfig, freezeStage, readWritingSkillFiles, SKILL_TEXT_BUDGET }=stageConfig
+assert.equal(typeof stageConfig.freezeProviderConfig,'function','provider configuration freeze helper must exist')
+const provider={id:'p',enabled:true,baseURL:'https://local/v1',apiFormat:'openai',activeModel:'m',models:[{name:'m',enabled:true}],params:{temperature:0.7,apiKey:'secret'},modelCfg:{m:{maxTokens:2000}}}
+const frozenProvider=stageConfig.freezeProviderConfig(provider,'m')
+assert(!JSON.stringify(frozenProvider).includes('secret'))
+assert.equal(frozenProvider.providerConfigFingerprint,stageConfig.freezeProviderConfig({...provider,params:{apiKey:'changed',temperature:0.7}},'m').providerConfigFingerprint)
+assert.notEqual(frozenProvider.providerConfigFingerprint,stageConfig.freezeProviderConfig({...provider,baseURL:'https://other/v1'},'m').providerConfigFingerprint)
+assert.notEqual(frozenProvider.providerConfigFingerprint,stageConfig.freezeProviderConfig({...provider,params:{temperature:1}},'m').providerConfigFingerprint)
+const inherited=freezeStage({},'drafting',{providers:[provider],currentProviderId:'p',currentModel:'m'})
+assert.equal(inherited.providerId,'p');assert.equal(inherited.model,'m');assert.equal(inherited.providerConfigFingerprint,frozenProvider.providerConfigFingerprint)
+assert.equal(stageConfig.stageBudgetOptions({embeddings:{enabled:true}},1200).embeddings.enabled,false)
+assert.equal(stageConfig.stageBudgetOptions({embeddings:{enabled:true}}).embeddings.enabled,true)
 assert.equal(STAGES.length, 5)
 assert.equal(stageForTask('chapter.recheck'), 'review')
 assert.equal(stageForTask('memory.extract'), 'memory')
@@ -17,8 +29,8 @@ const config = normalizeStageConfig({ stages: { drafting: { skillId: skill.id } 
 const snapshot = freezeStage(config, 'drafting', {})
 assert.equal(snapshot.skill.text, skill.text)
 assert.ok(snapshot.skill.contentHash)
-config.skills[0].text = 'changed'
-assert.notEqual(snapshot.skill.text, config.skills[0].text)
+config.skills.find(s => s.id === skill.id).text = 'changed'
+assert.notEqual(snapshot.skill.text, config.skills.find(s => s.id === skill.id).text)
 assert.ok(!JSON.stringify(snapshot).includes('secret'))
 const preset = { id: 'preset', revision: 2, payload: { prompts: [{ content: 'original' }], apiKey: 'do-not-store' }, credential: 'encrypted-secret' }
 const frozenPreset = freezeStage({ stages: { review: { presetId: 'preset' } } }, 'review', { presets: [preset] })

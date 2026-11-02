@@ -2,6 +2,8 @@
      v1.0.21：出现 / 消失过渡动画；标题栏为拖拽把手——拖离即「钉住」为常驻预览（悬停其他关系链接原位换内容，
      不随鼠标移开消失，× / Esc 关闭）；会话内记忆停靠偏移（后续浮窗停在上次位置），双击标题恢复跟随鼠标。 -->
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { parseTarget, targetById, findByTitle, previewFor, jumpTo, KIND_LABEL, tokenAtPoint } from '../services/doublelinks'
 
@@ -219,7 +221,7 @@ onBeforeUnmount(() => {
 
 <template>
   <Transition name="dl-pop" :css="false" @enter="onEnter" @leave="onLeave">
-    <div v-if="st.show" ref="pop" class="dl-pop" :class="{ pinned: st.pinned, dragging: st.dragging }" :style="{ left: st.x + 'px', top: st.y + 'px' }" @contextmenu.prevent>
+    <div v-if="st.show" ref="pop" class="dl-pop" :class="[museumPopoverClass, { pinned: st.pinned, dragging: st.dragging }]" :data-glaze-light="museumLight" :style="{ left: st.x + 'px', top: st.y + 'px' }" @contextmenu.prevent>
       <div class="dl-pop-head" title="按住拖动 · 双击恢复跟随鼠标" @pointerdown="onDragStart" @dblclick="resetFollow">
         <span class="dl-kind">{{ st.view.kindLabel || '关系链接' }}</span>
         <span class="dl-pop-title">{{ st.view.title }}</span>

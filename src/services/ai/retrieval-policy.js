@@ -8,7 +8,8 @@ export function buildRetrievalRequest(work, frozen, question = '', {privacy=fals
   const anchorId=request.targetId || frozen.refs?.characterId || frozen.refs?.loreId || frozen.refs?.outlineId || frozen.chapterId || null
   const chapter=(work.chapters || []).find(c=>c.id===frozen.chapterId)
   // Only left-of-anchor text may seed factual retrieval. Right is a writing constraint.
-  const context=privacy?'':request.writingAnchor ? request.writingAnchor.left : frozen.writingBoundary ? plainChapter(chapter).slice(0,frozen.writingBoundary.end).slice(-1800) : (frozen.selection || plainChapter(chapter).slice(-1800))
+  const currentDraft=request.story?.text ?? (request.storyDocumentId?(request.revisedDraft?.text??request.draftSource?.text??''):null)
+  const context=privacy?'':currentDraft!==null?currentDraft.slice(-1800):request.writingAnchor ? request.writingAnchor.left : frozen.writingBoundary ? plainChapter(chapter).slice(0,frozen.writingBoundary.end).slice(-1800) : (frozen.selection || plainChapter(chapter).slice(-1800))
   const names=(work.characters || []).filter(c=>!c.deletedAt&&[c.name,...String(c.aliases||'').split(/[、，,/\s]+/)].filter(Boolean).some(n=>(question+' '+context).includes(n))).map(c=>c.name)
   const plans=privacy?[]:(work.olnodes || []).filter(n=>!n.deletedAt&&n.outlineNature!=='written'&&(n.refId===frozen.chapterId||n.id===request.targetId||n.id===frozen.refs?.outlineId)).map(n=>[n.title,n.text].filter(Boolean).join(' '))
   return {task,anchorId,query:[question,frozen.chapterTitle,...names,...plans,request.selectedDirection?.title,request.selectedDirection?.development,context].filter(Boolean).join('\n'),asOfChapterId:frozen.asOfChapterId,writingBoundary:frozen.writingBoundary}

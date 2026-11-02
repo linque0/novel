@@ -1,6 +1,8 @@
 <!-- 帮助 · 使用手册（v1.0.7 内置）：docs/使用手册.md 以 ?raw 导入 + marked 渲染，
      顶栏「帮助」按钮打开，可滚动阅读，随构建更新（手册即源码，永不失同步） -->
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { computed } from 'vue'
 import { NModal, NButton } from 'naive-ui'
 import { useUiStore } from '../stores/ui'
@@ -12,7 +14,7 @@ const html = computed(() => marked.parse(manual, { async: false }))
 </script>
 
 <template>
-  <NModal :show="ui.helpOpen" preset="card" class="help-modal" style="width: 780px; max-width: 92vw" @update:show="(v) => (ui.helpOpen = v)">
+  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" :show="ui.helpOpen" preset="card" class="help-modal" style="width: 780px; max-width: 92vw" @update:show="(v) => (ui.helpOpen = v)">
     <template #header>
       <div class="m-head">
         <span class="cn">使用手册</span>

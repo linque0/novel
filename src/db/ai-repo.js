@@ -1,3 +1,5 @@
+import { readSourceSnapshot } from './project-repo.js'
+import { SOURCE_TABLES, sourceManifest } from '../services/project/normalize.js'
 import { db, now } from './database'
 import { chapterHash } from '../services/ai/contracts'
 
@@ -11,7 +13,8 @@ export const decisions = (workId) => aiRows('aidecisions', workId)
 export const putAiRow = (table, row) => db.table(table).put(json({ ...row, updatedAt: now() }))
 
 export async function replaceChapterKnowledge(workId, chapterId, cards, meta, expectedContent) {
-  return db.transaction('rw', db.aikb, db.aikbmeta, db.chapters, db.airuns, async () => {
+  return db.transaction('rw', [...new Set([db.aikb, db.aikbmeta, db.chapters, db.airuns, ...(meta.queueGuard?SOURCE_TABLES.map(t=>db.table(t)):[])])], async () => {
+    if(meta.queueGuard)await assertMemoryPublication(meta.queueGuard)
     const chapter = await db.chapters.get(chapterId)
     if (!chapter || chapter.workId !== workId || chapter.deletedAt || chapter.content !== expectedContent || chapterHash(chapter) !== meta.sourceHash) throw new Error('章节在提取期间已变化，结果未提交')
     if (meta.runId) {
@@ -83,4 +86,9 @@ export async function replaceVectors(workId, rows) {
     await db.aikbvec.where('workId').equals(workId).delete()
     if (rows.length) await db.aikbvec.bulkPut(rows)
   })
+}
+
+export async function assertMemoryPublication(guard) {
+  const job=await db.airuns.get(guard.id)
+  if(!job||job.owner!==guard.owner||job.status!=='running'||job.leaseUntil<Date.now()||sourceManifest(await readSourceSnapshot(guard.workId)).hash!==guard.sourceVersion)throw new Error('记忆任务来源或租约已失效，结果未提交')
 }

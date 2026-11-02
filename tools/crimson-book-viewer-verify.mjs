@@ -171,18 +171,18 @@ try {
   const directoryTitle=(await page.locator('.crimson-work-open h3').first().innerText()).trim();await page.locator('.crimson-work-open').first().click();await page.waitForFunction(title=>__depthCheck.ui.view==='work'&&__depthCheck.work.work?.title===title,directoryTitle);check(true,'directory click opens work directly');await restore()
   await page.evaluate(()=>{__depthCheck.shelf.loading=true});await settled();check(await viewer.getAttribute('aria-disabled')==='true','loading disables rotation and opening');await page.evaluate(()=>{__depthCheck.shelf.loading=false});await settled()
   for(let i=0;i<3;i++){
-    await page.evaluate(()=>__depthCheck.ui.setSkin('original'));await page.waitForSelector('.crimson-book-viewer',{state:'detached'});await page.waitForFunction(async()=>{const d=window.__bookRendererApi.getBook3DDiagnostics();return d.viewers===0&&d.posterRenderers===0&&d.models===0&&d.cachedPosters===0});
+    await page.evaluate(()=>__depthCheck.ui.setSkin('original'));await page.waitForSelector('.crimson-book-viewer',{state:'detached'});await page.waitForFunction(async()=>{const d=window.__bookRendererApi.getBook3DDiagnostics();return d.viewers===0&&d.posterRenderers===0&&d.models===0&&d.workers===0&&d.pendingPosters===0&&d.cachedPosters<=48&&d.cacheBytes<=16*1024*1024});
     await page.evaluate(()=>__depthCheck.ui.setSkin('crimson'));await ready();await page.waitForFunction(()=>document.querySelectorAll('.crimson-book-thumbnail[data-poster="ready"]').length===5)
   }
-  check((await diag()).models===2,'three skin exit/reentry cycles release and recreate exactly two models')
-  await viewer.evaluate(el=>el.querySelector('canvas').getContext('webgl2').getExtension('WEBGL_lose_context').loseContext());await page.waitForSelector('.crimson-book-display[data-state="fallback"]')
+  {const d=await diag();check(d.viewers===1&&d.models===1+d.posterRenderers&&d.models<=2,'three skin exit/reentry cycles recreate the viewer and reuse cached directory images without leaking models')}
+  await viewer.evaluate(el=>el.querySelector('canvas').dispatchEvent(new Event('webglcontextlost',{cancelable:true})));await page.waitForSelector('.crimson-book-display[data-state="fallback"]')
   check(await page.locator('.crimson-viewer-fallback img').count()===1,'context loss falls back to last same-style render');await shot('context-loss-fallback')
   await viewer.click();await page.waitForFunction(()=>__depthCheck.ui.view==='work');check(true,'fallback click still opens work');await restore()
   await page.evaluate(()=>{__depthCheck.shelf.works=[]});await page.waitForSelector('.crimson-empty');check(await page.getByText('写下你的第一个故事',{exact:true}).isVisible(),'empty bookshelf unchanged')
   // A separate emulated touchscreen and a forced-WebGL-failure context.
   for(const fail of [false,true]){
     const other=await browser.newContext({hasTouch:true,viewport:{width:1024,height:768}})
-    if(fail)await other.addInitScript(()=>{const get=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(kind,...args){return /^webgl/.test(kind)?null:get.call(this,kind,...args)}})
+    if(fail)await other.addInitScript(()=>{Object.defineProperty(window,'OffscreenCanvas',{value:undefined})})
     try{
       const p=await other.newPage();await p.goto('http://127.0.0.1:5173/',{waitUntil:'networkidle'});await p.waitForFunction(()=>window.__ns&&document.querySelector('#app').__vue_app__?.config.globalProperties.$pinia._s.has('shelf'))
       await p.evaluate(async()=>{const stores=document.querySelector('#app').__vue_app__.config.globalProperties.$pinia._s;await stores.get('ui').setSkin('crimson');const s=stores.get('shelf'),w=await s.createWork({title:'触屏典藏',kind:'claret',author:'',intro:'',withVolume:true});s.works=[w]})

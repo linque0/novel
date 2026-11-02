@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { computed, h, ref, watch } from 'vue'
 import { NTree, NButton, NModal, NInput, NPopconfirm, NDropdown, NPopover } from 'naive-ui'
 import OIcon from './OIcon.vue'
@@ -108,7 +110,7 @@ function renderLabel({ option }) {
   if(scene.value){
     const chapter=option.type==='chapter',id=option.key.slice(2)
     const index=chapter?work.chapterOrdinal(id):work.liveVolumes.findIndex(v=>v.id===id)+1
-    const name=h(NPopover,{trigger:'focus',placement:'right',style:{maxWidth:'320px'}},{
+    const name=h(NPopover,{class:museumPopoverClass.value,trigger:'focus',placement:'right',style:{maxWidth:'320px'}},{
       trigger:()=>h('span',{class:'catalog-name',tabindex:0,title:option.label,'aria-label':option.label,onKeydown:e=>{if(e.key==='Enter'){e.preventDefault();e.stopPropagation();onSelect([option.key])}}},option.label),
       default:()=>option.label
     })
@@ -282,7 +284,7 @@ const renameSaving=ref(false),renameComposing=ref(false)
       <div class="catalog-controls">
         <NButton type="primary" size="small" data-action="new-chapter" @click="addCh"><OIcon name="plus" :size="14" />新建章节</NButton>
         <NButton size="small" data-action="new-volume" :disabled="renameSaving" @click="openNewVolume">新建卷</NButton>
-        <NDropdown trigger="click" :options="manageOptions" @select="manage"><NButton size="small" aria-label="目录管理" title="排序、重命名与删除">···</NButton></NDropdown>
+        <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :options="manageOptions" @select="manage"><NButton size="small" aria-label="目录管理" title="排序、重命名与删除">···</NButton></NDropdown>
       </div>
     </template>
     <h2 v-else-if="ui.isStudioSkin" class="gravity-sidebar-title">章节</h2>
@@ -292,7 +294,7 @@ const renameSaving=ref(false),renameComposing=ref(false)
       <NButton size="tiny" :disabled="!selNode" @click="moveSel(-1)">↑</NButton>
       <NButton size="tiny" :disabled="!selNode" @click="moveSel(1)">↓</NButton>
       <NButton size="tiny" :disabled="!selNode" @click="openRename">改名</NButton>
-      <NPopconfirm @positive-click="delSel">
+      <NPopconfirm :class="museumPopoverClass" :data-glaze-light="museumLight" @positive-click="delSel">
         <template #trigger>
           <NButton size="tiny" :disabled="!selNode" quaternary style="color: #c2564a">删除</NButton>
         </template>
@@ -327,7 +329,7 @@ const renameSaving=ref(false),renameComposing=ref(false)
     </footer>
     <div v-else-if="ui.isStudioSkin" class="gravity-catalog-footer"><b>{{ work.liveChapters.length }}</b> 章 / {{ totalWords.toLocaleString() }} 字</div>
 
-    <NDropdown
+    <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight"
       trigger="manual"
       :show="ctx.show"
       :x="ctx.x"
@@ -338,10 +340,10 @@ const renameSaving=ref(false),renameComposing=ref(false)
       @clickoutside="closeCtx"
     />
 
-    <NModal v-model:show="deleteConfirm" preset="dialog" title="确认删除" positive-text="删除" negative-text="取消" @positive-click="confirmDelete">
+    <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="deleteConfirm" preset="dialog" title="确认删除" positive-text="删除" negative-text="取消" @positive-click="confirmDelete">
       {{deleteTarget?.type==='volume'?'将删除本卷及其中章节，删除后可在回收站恢复。':'删除后可在回收站恢复。'}}
     </NModal>
-    <NModal v-model:show="rename.show" preset="dialog" :title="rename.create ? '新建卷' : rename.kind === 'volume' ? '重命名卷' : '重命名章节'">
+    <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="rename.show" preset="dialog" :title="rename.create ? '新建卷' : rename.kind === 'volume' ? '重命名卷' : '重命名章节'">
       <NInput v-model:value="rename.value" :aria-label="rename.kind === 'volume' ? '卷名' : '名称'" :placeholder="rename.kind === 'volume' ? '请输入卷名' : '名称'" :disabled="renameSaving" @keydown.enter="submitRename" @compositionstart="renameComposing=true" @compositionend="renameComposing=false" />
       <template #action>
         <NButton :disabled="renameSaving" @click="rename.show = false">取消</NButton>

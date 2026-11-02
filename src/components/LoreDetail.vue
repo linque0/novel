@@ -4,6 +4,8 @@
      关系图谱（LoreGraph：可拖动 + 位置记忆 + 悬停联动列表高亮）/ 子条目树（点击切换）；
      Esc 或「返回」退出，「幕布中定位」关闭页面并闪烁定位原条目 -->
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { NButton } from 'naive-ui'
 import OIcon from './OIcon.vue'
@@ -121,7 +123,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 </script>
 
 <template>
-  <div v-if="node" class="ldt-page" :class="{ 'ldt-crimson': ui.skin === 'crimson' }" data-module="lore">
+  <div v-if="node" class="ldt-page" :class="[museumPopoverClass, { 'ldt-crimson': ui.skin === 'crimson' }]" :data-glaze-light="museumLight" data-module="lore">
     <template v-if="ui.skin === 'crimson'">
       <div class="crimson-detail-bar">
         <nav class="crimson-crumbs" aria-label="节点层级">

@@ -2,8 +2,8 @@ import * as THREE from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { bookTextures, BOOK_COLORS } from './textures'
 
-export function createBookModel(book){
-  const group=new THREE.Group(),maps=bookTextures(book),width=1.42,height=2,depth=.18
+export function createBookModel(book,{font}={}){
+  const group=new THREE.Group(),maps=bookTextures(book,font),width=1.42,height=2,depth=.18
   const leather=new THREE.MeshPhysicalMaterial({color:BOOK_COLORS[book.kind]||BOOK_COLORS.novel,roughness:.67,metalness:0,bumpMap:maps.leather,bumpScale:.009,clearcoat:.13,clearcoatRoughness:.55})
   const printed=surface=>new THREE.MeshPhysicalMaterial({...surface,metalness:.95,roughness:1,bumpScale:.038,clearcoat:.27,clearcoatRoughness:.38,envMapIntensity:1.4})
   const front=printed(maps.front),back=printed(maps.back),spineMaterial=printed(maps.spine)

@@ -19,7 +19,7 @@ export function installAppBus() {
   if (installed || !window.native?.appOnEvent) return
   installed = true
   window.native.appOnEvent(({ kind, data }) => {
-    if (['book-source-changed', 'ai-preview-request','ai-presets-changed', 'ai-settings-changed', 'kb-changed', 'ai-kb-request', 'ai-source-changed'].includes(kind)) {
+    if (['story-document-changed','creative-workflow-changed','creative-workflow-request','creative-workflow-pause','memory-queue-ready','memory-queue-changed','book-source-changed', 'ai-preview-request','ai-presets-changed', 'ai-settings-changed', 'kb-changed', 'ai-kb-request', 'ai-source-changed'].includes(kind)) {
       handleAiEvent({ kind, data }).catch(console.error)
       return
     }

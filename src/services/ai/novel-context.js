@@ -36,7 +36,7 @@ export function freezeContext(work, request = {}, question = '') {
     scope: wholeBook ? 'book' : 'chapter',
     selection,
     taskRequest,
-    writingBoundary:taskRequest?.writingAnchor?{chapterId:taskRequest.chapterId,end:taskRequest.writingAnchor.cutoff}:null,
+    writingBoundary:taskRequest?.type==='chapter.story'||taskRequest?.storyDocumentId?{chapterId:taskRequest.chapterId,end:0}:taskRequest?.writingAnchor?{chapterId:taskRequest.chapterId,end:taskRequest.writingAnchor.cutoff}:null,
     refs: copy(refs),
     sourceVersions: [],
     anchorLength: chapter ? plainChapter(chapter).length : 0,
@@ -102,7 +102,7 @@ export async function assembleSlots(work, frozen, adaptation = {}, privacy = fal
       scope: frozen.scope,
       selection: privacy ? undefined : frozen.selection,
       insertion: frozen.taskRequest?.writingAnchor?.label || '生成时关联章节末尾',
-      nature: '已保存正文',
+      nature: frozen.taskRequest?.type==='chapter.story'||frozen.taskRequest?.storyDocumentId?'当前分支工作稿；正式底稿仅用于来源版本校验':'已保存正文',
       ...(privacy ? { privacy: '正文与选段已屏蔽' } : {}),
     })
   record('chapter-anchor',slots.chapterAnchor,true,chapter?[{table:'chapters',id:chapter.id,hash:chapterHash(chapter)}]:[])
@@ -110,14 +110,15 @@ export async function assembleSlots(work, frozen, adaptation = {}, privacy = fal
   const session=await readBook(work,{asOfChapterId:frozen.asOfChapterId,allowedIds:frozen.allowedIds,authorProfiles,planScope:extraction?'none':'all',privacy,sourceRevision:frozen.bookRevision,writingBoundary:frozen.writingBoundary,signal:retrievalOptions.opts?.signal})
   const chars = work.characters.filter((c) => !c.deletedAt)
   const anchor=frozen.taskRequest?.writingAnchor
-  const namesContext=question+' '+(privacy?'':frozen.selection || (anchor?anchor.left:plainChapter(chapter).slice(-2400)))
+  const currentDraft=frozen.taskRequest?.story?.text ?? (frozen.taskRequest?.storyDocumentId ? (frozen.taskRequest.revisedDraft?.text??frozen.taskRequest.draftSource?.text??'') : null)
+  const namesContext=question+' '+(privacy?'':currentDraft??(frozen.selection || (anchor?anchor.left:plainChapter(chapter).slice(-2400))))
   const relevant=chars.filter((c)=>frozen.refs.characterId===c.id || [c.name,...String(c.aliases||'').split(/[、，,/\s]+/)].filter(Boolean).some((n)=>namesContext.includes(n)))
   const states=!extraction&&relevant.length?await stateAt(work,{entityIds:relevant.map((c)=>c.id),asOfChapterId:frozen.asOfChapterId,privacy,writingBoundary:frozen.writingBoundary}):[]
   const constraints=constraintPack(session,{chapterId:frozen.chapterId,outlineId:frozen.refs.outlineId,states,budget:Math.max(0,remaining),query:retrievalRequest.query})
   record('constraints',constraints.text,true,constraints.sourceVersions)
   for(const v of constraints.sourceVersions)if(!frozen.sourceVersions.some((x)=>x.table===v.table&&x.id===v.id))frozen.sourceVersions.push(v)
   report.push(...constraints.unresolved)
-  const reference = privacy ? '' : frozen.selection || (anchor?anchor.left:plainChapter(chapter).slice(-Math.min(2400, Math.max(200, remaining))))
+  const reference = privacy ? '' : currentDraft!==null ? currentDraft : frozen.selection || (anchor?anchor.left:plainChapter(chapter).slice(-Math.min(2400, Math.max(200, remaining))))
   if(anchor)report.push('必要原选段、位置前文、后文衔接约束和所选方向作为任务约束保留；当前章位置之后不参与事实记忆回放')
   if (reference) add('writingReference', '写作参照／关联正文片段', [reference])
   add('workBrief', '作品概况／作者登记', [
@@ -220,7 +221,7 @@ export async function assembleSlots(work, frozen, adaptation = {}, privacy = fal
 }
 export function scopedHistory(messages, frozen, privacy) {
   if (privacy) return []
-  if(frozen.taskRequest?.writingAnchor)return [] // Each writing branch carries only its explicit frozen direction.
+  if(frozen.taskRequest?.writingAnchor||['chapter.story','chapter.review','chapter.revise','chapter.recheck'].includes(frozen.taskRequest?.type))return [] // Explicit current manuscript; never inherit rejected variants or generation self-evaluation.
   const allowed = new Set(frozen.allowedIds)
   return messages
     .filter(

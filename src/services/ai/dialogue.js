@@ -64,7 +64,7 @@ export function dialogueTools(task = null) {
   const output = taskProfile(task.type).outputTool;
   const descriptions = {
     submit_chapter_plan:'提交 data={title,scenes:[{id,goal,pov,characters:[姓名],conflict,turn,ending,targetWords}]}。仅计划，不生成正文。',
-    submit_review:'提交 data={items:[{id,category,severity:"error|warning|suggestion|pass",problem,expected,quote,start?,evidence:[{sourceType,sourceId,quote,start?}]}]}。quote 来自 draftSource 的连续原文；重复引文须指定 start。外部事实冲突附来源证据；不足标为待核实。',
+    submit_review:'提交 data={items:[{id,category,severity:"error|warning|suggestion|pass",problem,expected,quote,start?,evidence:[{sourceType,sourceId,quote,start?}]}]}。quote 来自 draftSource 的连续原文；重复引文须指定 start。外部事实冲突附来源证据；predecessor 证据用 sourceType=candidate、sourceId=其ID，只证明未采纳分支内的衔接。证据不足标为待核实。',
     submit_recheck:'提交 data={items:[{id:原清单ID,status:"resolved|unresolved",quote:修订稿连续原文,start?,explanation}]}。恰好覆盖 confirmedReview.items；修法未落实原问题或缺少证据均 unresolved。',
     submit_plot_directions:'提交剧情方向，data={directions:[{id:唯一短ID,title:方向标题,development:起因到行动冲突转折和结束状态的简短剧情演变}]}。数量严格等于本次 directionCount，每项在行动、冲突或结局上实质不同；不得提交正文或写回作品。',
     submit_chapter:'提交目标章正文草稿：text正文、title标题、summary说明、evidence来源摘引、warnings冲突与缺口、review对大纲/设定/人物/因果的核查。仅生成待确认草稿。',
@@ -314,8 +314,8 @@ export async function runDialogue({
         },
       );
     } catch (e) {
-      checkAbort(opts.signal);
       if(Number.isFinite(opts.rootRemaining)) {charged+=liability;onUsage?.({total_tokens:liability,estimated:true});}
+      checkAbort(opts.signal);
       if (
         compiled.continuationPrefill &&
         [400, 422].includes(e.status) &&
@@ -355,7 +355,6 @@ export async function runDialogue({
         );
       } else throw e;
     }
-    checkAbort(opts.signal);
     charged+=Number(result.usage?.total_tokens)||fitted.tokens.used+toolReserve+estimate(result.text)+estimate(JSON.stringify(result.toolCalls||[]));
     onUsage?.(
       result.usage || {
@@ -371,6 +370,7 @@ export async function runDialogue({
         estimated: true,
       },
     );
+    checkAbort(opts.signal);
     if (result.finishReason === "length") {
       for (const call of result.toolCalls || [])
         if (task?.type.startsWith('chapter.') && call.function?.name === 'submit_chapter') {

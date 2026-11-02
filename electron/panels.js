@@ -7,6 +7,7 @@
 const { BrowserWindow, ipcMain, screen, app } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const {panelLockKey,panelLocksConflict}=require('./panel-locks.cjs')
 
 const isDev = !!process.env.NOVEL_STUDIO_DEV || process.argv.includes('--dev')
 
@@ -18,16 +19,17 @@ const PANEL_META = {
   snippets: { label: '灵感', w: 960, h: 660 },
   settings: { label: '设置', w: 1000, h: 700, frame: false },
   'ai-presets': { label: '恍然梦预设', w: 1160, h: 800, minW: 950, minH: 650 },
-  ai: { label: '恍然梦', w: 480, h: 780, minW: 380, minH: 520 }
+  ai: { label: '恍然梦', w: 480, h: 780, minW: 380, minH: 520 },
+  agent: { label: '恍然梦创作台', w: 1440, h: 900, minW: 1100, minH: 720 }
 }
 
 let mainWindow = null
 const panels = [] // { win, key, spec }
 const locks = new Map() // key -> panelKey
+let preparationSequence=0
 
 function lockKeyOf(spec) {
-  if (spec.type === 'ai-presets') return '__global__:ai-presets:*'
-  return `${spec.workId}:${spec.type}:${spec.entityId || '*'}`
+  return panelLockKey(spec)
 }
 
 /* ---------- 几何记忆 ---------- */
@@ -81,11 +83,13 @@ function openPanel(spec) {
   const key = lockKeyOf(spec)
   const existed = panels.find((p) => p.key === key && !p.win.isDestroyed())
   if (existed) {
+    if(existed.spec.type!==spec.type)return {ok:false,reason:'chapter-window-open'}
+    if (!existed.ready) return { ok: true, pending: true }
     if (existed.win.isMinimized()) existed.win.restore()
     existed.win.focus()
     return { ok: true, focused: true }
   }
-  if (locks.has(key) && locks.get(key) !== key) return { ok: false, reason: 'locked' }
+  if ([...locks.keys()].some(k=>panelLocksConflict(key,k))) return { ok: false, reason: 'locked' }
 
   const saved = loadGeom()[spec.type]
   const mainB = mainWindow && !mainWindow.isDestroyed() ? mainWindow.getBounds() : null
@@ -110,6 +114,7 @@ function openPanel(spec) {
     minWidth: meta.minW || 800,
     minHeight: meta.minH || 500,
     frame: meta.frame !== false,
+    show: spec.type !== 'settings',
     backgroundColor: '#f6f2e7',
     title: spec.title || `小说工坊 · ${meta.label}`,
     autoHideMenuBar: true,
@@ -126,7 +131,7 @@ function openPanel(spec) {
     if (!message.includes('DevTools')) console.log(`[panel] ${message} (${source}:${line})`)
   })
 
-  const record = { win, key, spec }
+  const record = { win, key, spec, ready: spec.type !== 'settings' }
   panels.push(record)
   locks.set(key, key)
   broadcast('panel:event', { kind: 'opened', key, spec, locks: [...locks.keys()] })
@@ -135,22 +140,30 @@ function openPanel(spec) {
   win.on('close', (e) => {
     if (win.__flushed) return
     e.preventDefault()
+    if(win.__closePending)return
+    win.__closePending=true
+    let aborted=false
+    const failed=()=>{
+      if(aborted||win.isDestroyed())return
+      aborted=true;win.__closePending=false
+      win.webContents.executeJavaScript(`document.body.inert=false;document.documentElement.style.cursor='';window.dispatchEvent(new CustomEvent('agent-window-close-failed',{detail:${JSON.stringify('保存失败，窗口与输入已保留。')}}))`).catch(()=>{})
+    }
     const done = () => {
-      if (!win || win.__flushed) return
+      if (!win || win.__flushed || aborted) return
       win.__flushed = true
       saveGeom(spec.type, win.getBounds())
       win.close()
     }
-    const t = setTimeout(done, 1500)
+    const t = setTimeout(spec.type==='agent'?failed:done, spec.type==='agent'?15000:1500)
     win.webContents
-      .executeJavaScript('window.__flushNow ? window.__flushNow() : 0', true)
+      .executeJavaScript(spec.type==='agent'?"(async()=>{document.body.inert=true;document.documentElement.style.cursor='progress';await window.__flushNow?.()})()":'window.__flushNow ? window.__flushNow() : 0', true)
       .then(() => {
         clearTimeout(t)
         done()
       })
       .catch(() => {
         clearTimeout(t)
-        done()
+        if(spec.type==='agent')failed();else done()
       })
   })
   win.on('closed', () => {
@@ -167,14 +180,35 @@ function openPanel(spec) {
 
 /* ---------- IPC ---------- */
 function init() {
-  ipcMain.handle('panel:open', (_e, spec) => {
+  ipcMain.handle('panel:ready', (e) => {
+    const p = panels.find(p => !p.win.isDestroyed() && p.win.webContents === e.sender)
+    if (!p || p.spec.type !== 'settings') return { ok: false }
+    if (!p.ready) {
+      p.ready = true
+      p.win.show()
+    }
+    return { ok: true }
+  })
+  ipcMain.handle('panel:open', async (_e, spec) => {
     if (!spec || typeof spec !== 'object') return { ok: false, reason: 'bad-spec' }
-    return openPanel({
+    const prepared=[],token=String(++preparationSequence)
+    const finishPreparation=()=>Promise.all(prepared.filter(w=>!w.isDestroyed()).map(w=>w.webContents.executeJavaScript(`window.dispatchEvent(new CustomEvent('chapter-edit-handoff',{detail:{token:${JSON.stringify(token)},pending:false}}))`).catch(()=>{})))
+    if(['agent','chapter'].includes(spec.type)&&spec.workId){
+      // Flush the previous editor before publishing the exclusive lock, including opens from the AI panel.
+      const workId=JSON.stringify(String(spec.workId))
+      try{
+        await Promise.all(BrowserWindow.getAllWindows().filter(w=>!w.isDestroyed()).map(w=>{
+          prepared.push(w)
+          return w.webContents.executeJavaScript(`(async()=>{if(window.__ns?.getWork?.()?.work?.id!==${workId})return;window.dispatchEvent(new CustomEvent('chapter-edit-handoff',{detail:{token:${JSON.stringify(token)},pending:true}}));await (window.__prepareForPanel?window.__prepareForPanel():window.__flushNow?.())})()`,true)
+        }))
+      }catch{await finishPreparation();return {ok:false,reason:'save-failed'}}
+    }
+    try{return openPanel({
       type: String(spec.type || ''),
       workId: String(spec.workId || ''),
       entityId: spec.entityId ? String(spec.entityId) : '',
       title: spec.title ? String(spec.title).slice(0, 80) : ''
-    })
+    })}finally{await finishPreparation()}
   })
   ipcMain.handle('panel:list', () => ({
     panels: panels.filter((p) => !p.win.isDestroyed()).map((p) => ({ key: p.key, spec: p.spec })),
@@ -183,6 +217,7 @@ function init() {
   ipcMain.handle('panel:focus', (_e, key) => {
     const p = panels.find((x) => x.key === key && !x.win.isDestroyed())
     if (!p) return { ok: false }
+    if (!p.ready) return { ok: true, pending: true }
     if (p.win.isMinimized()) p.win.restore()
     p.win.focus()
     return { ok: true }
@@ -200,7 +235,7 @@ function init() {
     const newSpec = { ...p.spec, entityId: entityId ? String(entityId) : '' }
     const newKey = lockKeyOf(newSpec)
     if (newKey === p.key) return { ok: true, unchanged: true }
-    if (locks.has(newKey)) return { ok: false, reason: 'locked' }
+    if ([...locks.keys()].some(k=>k!==p.key&&panelLocksConflict(newKey,k))) return { ok: false, reason: 'locked' }
     const oldKey = p.key
     if (locks.get(oldKey) === oldKey) locks.delete(oldKey)
     p.spec = newSpec

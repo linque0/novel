@@ -8,6 +8,9 @@ import { pickFiles, arrayBufferToBlob, imageMime, IMAGE_EXTS } from '../services
 import { stripTags } from '../services/wordcount'
 import { primaryRole } from '../services/character-tags'
 import { ANNOTATION_KINDS, normalizeNoteColor, noteKindLabel, focusNoteMark, recolorNoteMark } from '../services/annotations'
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumActive, museumPopoverClass } = useGlazeMuseum()
+const emit = defineEmits(['glaze-close'])
 
 const work = useWorkStore()
 const ui = useUiStore()
@@ -139,6 +142,7 @@ watch(
     <!-- 吸附顶条：内容滚动时始终可见，保证任意滚动位置都能收起 -->
     <div class="rp-head">
       <span class="rp-cap">{{ ui.isStudioSkin ? '批注与资料' : '批注栏' }}</span>
+      <button v-if="museumActive" type="button" class="glaze-drawer-close" aria-label="关闭批注与资料" @click="emit('glaze-close')">关闭 ×</button>
       <button class="rp-fold" title="收起批注栏，留出正文空间（从右缘细轨可再展开）" @click="ui.setPref('rightPanelOpen', false)">
         <OIcon name="caret-right" :size="13" />
       </button>
@@ -206,7 +210,7 @@ watch(
           <div v-if="n.orphan" class="note-orphan-tip">原文已改动，锚点失效——点击无法定位</div>
           <div class="note-actions" @click.stop>
             <NButton size="tiny" quaternary @click="startEdit(n)">编辑</NButton>
-            <NPopconfirm @positive-click="removeNote(n)">
+            <NPopconfirm :class="museumPopoverClass" @positive-click="removeNote(n)">
               <template #trigger><NButton size="tiny" quaternary type="error">删除</NButton></template>
               删除该批注（保留正文文字）？
             </NPopconfirm>

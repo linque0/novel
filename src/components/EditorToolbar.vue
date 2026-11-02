@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 import { NButton, NSelect, NPopover, NColorPicker } from 'naive-ui'
 import OIcon from './OIcon.vue'
@@ -135,7 +137,7 @@ const isActive = (name, attrs) => {
       <span class="tb-sep" />
     </template>
 
-    <NSelect
+    <NSelect :menu-props="{ class: museumPopoverClass }"
       size="tiny"
       :value="sizeVal || null"
       :options="SIZES"
@@ -145,7 +147,7 @@ const isActive = (name, attrs) => {
       @update:value="applySize"
     />
 
-    <NPopover trigger="click" :show-arrow="false">
+    <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :show-arrow="false">
       <template #trigger>
         <button class="tb" title="字体颜色">
           <span :style="{ borderBottom: '3px solid ' + curColor, lineHeight: '13px' }">A</span>
@@ -163,7 +165,7 @@ const isActive = (name, attrs) => {
       </div>
     </NPopover>
 
-    <NPopover trigger="click" :show-arrow="false">
+    <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :show-arrow="false">
       <template #trigger>
         <button class="tb" :class="{ on: isActive('highlight') }" title="突出显示">底色</button>
       </template>
@@ -180,7 +182,7 @@ const isActive = (name, attrs) => {
       </div>
     </NPopover>
 
-    <NPopover trigger="click" :show-arrow="false" :show="showLink" @update:show="(v) => (showLink = v)">
+    <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :show-arrow="false" :show="showLink" @update:show="(v) => (showLink = v)">
       <template #trigger>
         <button class="tb" :class="{ on: isActive('link') }" title="超链接" @click="openLink"><OIcon name="link" :size="14" /></button>
       </template>
@@ -190,7 +192,7 @@ const isActive = (name, attrs) => {
         <NButton v-if="isActive('link')" size="small" @click="removeLink">移除</NButton>
       </div>
     </NPopover>
-    <NPopover v-if="isCompact" trigger="click" :show-arrow="false" placement="bottom-start">
+    <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" v-if="isCompact" trigger="click" :show-arrow="false" placement="bottom-start">
       <template #trigger>
         <button class="tb" :title="paperInMore ? '更多格式：纸面、段落、对齐、列表、引用、清除与恍然梦' : '更多格式：段落、对齐、列表、引用、清除与恍然梦'">更多格式 ⌄</button>
       </template>

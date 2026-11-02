@@ -3,6 +3,8 @@
      从人物节点边缘拖线到另一人物即建关系；悬停高亮一度关系网（其余淡出）；
      圆形/网格一键排布；角色·标签筛选；孤岛人物提示；拖摆位置存 appconfig charGraph:<workId> -->
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { computed, ref, reactive, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { NSelect } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -596,14 +598,14 @@ onBeforeUnmount(() => {
         </div>
 
         <!-- 拖线建关系输入 -->
-        <div v-if="relInput" class="rg-relinput" :style="{ left: relInput.x + 'px', top: relInput.y + 'px' }" @mousedown.stop>
+        <div v-if="relInput" class="rg-relinput" :style="{ left: relInput.x + 'px', top: relInput.y + 'px' }" @mousedown.stop :class="museumPopoverClass" :data-glaze-light="museumLight">
           <input ref="relInputEl" v-model="relInput.value" class="rp-input" placeholder="关系（如：师徒 / 宿敌）…" @keydown.enter="saveRelInput" @keydown.esc="relInput = null" />
           <button class="om-btn" title="保存" @click="saveRelInput"><OIcon name="check" :size="13" /></button>
         </div>
 
         <!-- 边标签编辑（挂 .app-root 保留主题变量；fixed 定位尺寸不随画布缩放） -->
         <Teleport to=".app-root" v-if="relEdit">
-        <div class="rg-eedit" :class="{ flip: relEdit.flip }" :style="{ position: 'fixed', left: relEdit.mx + 'px', top: relEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop>
+        <div class="rg-eedit" :class="[museumPopoverClass, { flip: relEdit.flip }]" :style="{ position: 'fixed', left: relEdit.mx + 'px', top: relEdit.my + 'px' }" @mousedown.stop @contextmenu.prevent.stop :data-glaze-light="museumLight">
           <input class="rp-input" :value="curRel()?.label || ''" placeholder="关系标签…" @input="patchRelLabel" @keydown.enter="relEdit = null" @keydown.esc="relEdit = null" />
           <div class="oc-kindrow">
             <span

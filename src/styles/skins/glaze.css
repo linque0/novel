@@ -552,8 +552,8 @@ body[data-skin='glaze'] .gravity-preview-copy h3{font-size:27px}
 /* 菜单、标签、关联、画布编辑和搜索传送到 body，仍在同一个皮肤作用域。 */
 body[data-skin='glaze'] :is(.oc-ctx,.rg-ctx,.oc-eedit,.rg-eedit,.rg-relinput,.ob-menu,.ob-tagpanel,.lr-panel,.dl-popover,.search-modal){color:#234752;background:#f7fcfceb;border-color:#b6d0d5;box-shadow:0 18px 38px #315d7928}
 body[data-skin='glaze'] :is(.n-card,.n-dialog){box-shadow:0 18px 50px #315d7925}
-body[data-skin='glaze'] :is(.n-button,.side-item,.glaze-library-card,.glaze-stage-open){transition:box-shadow .16s,background .16s,border-color .16s,color .16s}
-/* 书架：左侧真实作品信息、右侧折射叠册、下方可滚动完整集合。 */
+body[data-skin='glaze'] :is(.n-button,.side-item){transition:box-shadow .16s,background .16s,border-color .16s,color .16s}
+/* 书架主体；横向画架长廊的布局由 glaze-gallery.css 管理。 */
 body[data-skin='glaze'] .glaze-shelf{height:100%;display:flex;flex-direction:column;overflow:hidden}
 body[data-skin='glaze'] .glaze-shelf-header{height:76px;padding:0 42px;flex:none;display:flex;align-items:center;justify-content:space-between;gap:24px;background:#ffffff40}
 body[data-skin='glaze'] .glaze-shelf-brand{display:flex;align-items:center;gap:14px}
@@ -566,66 +566,6 @@ body[data-skin='glaze'] .glaze-top-nav button.active{background:#fff;color:#1468
 body[data-skin='glaze'] .glaze-top-nav button:hover:not(:disabled){background:#ffffffb0}
 body[data-skin='glaze'] button:disabled{cursor:default}
 body[data-skin='glaze'] .glaze-top-nav button:disabled{opacity:.38}
-body[data-skin='glaze'] .glaze-shelf-scroll{flex:1;min-height:0;overflow:auto;padding:30px 50px 45px;scrollbar-width:thin}
-body[data-skin='glaze'] .glaze-shelf-tools{display:flex;align-items:center;justify-content:space-between;gap:24px}
-body[data-skin='glaze'] .glaze-shelf-tools h1{margin:0;font:500 29px var(--glaze-title)}
-body[data-skin='glaze'] .glaze-shelf-tools h1 small{font:13px ui-monospace,monospace;color:#63828a;vertical-align:top;margin-left:12px}
-body[data-skin='glaze'] .glaze-shelf-tools>div{display:flex;gap:14px;align-items:center}
-body[data-skin='glaze'] .glaze-shelf-tools .n-input{width:260px}
-body[data-skin='glaze'] .glaze-shelf-hero{display:grid;grid-template-columns:minmax(0,46fr) minmax(520px,54fr);gap:0;align-items:center;height:410px;min-height:410px;padding:0;margin-top:6px}
-body[data-skin='glaze'] .glaze-eyebrow{font-size:12px;color:#4f7079;margin:0 0 16px}
-body[data-skin='glaze'] .glaze-feature-copy{min-width:0;align-self:start;padding:12px 0 0 30px}
-body[data-skin='glaze'] .glaze-feature-copy h2{font:500 clamp(45px,5.3vw,76px)/1.2 var(--glaze-title);letter-spacing:-.025em;margin:0;max-width:600px;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-body[data-skin='glaze'] .glaze-feature-intro{font:17px/1.9 var(--glaze-title);color:#4f7079;max-width:430px;white-space:pre-line;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;margin:23px 0}
-body[data-skin='glaze'] .glaze-feature-actions{display:flex;gap:14px}
-body[data-skin='glaze'] .glaze-feature-actions>.n-button{--n-height:44px!important}
-body[data-skin='glaze'] .glaze-feature-meta{display:flex;flex-wrap:wrap;align-items:center;gap:18px;margin-top:27px;font-size:14px}
-body[data-skin='glaze'] .glaze-feature-meta small{font-size:12px;color:#4f7079}
-body[data-skin='glaze'] .glaze-glass-deck{position:relative;height:415px;perspective:1200px;isolation:isolate}
-body[data-skin='glaze'] .glaze-glass-deck::after{content:'';position:absolute;bottom:6px;left:4%;right:2%;height:46px;border-radius:50%;background:#7eacb62c;filter:blur(17px);z-index:-1}
-body[data-skin='glaze'] .glaze-orb{position:absolute;right:5%;top:6px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle at 30% 25%,#ffffffed,#f6d5c273 38%,#9ccbd188 67%,#f8ffff);border:1px solid #fff;box-shadow:inset -9px -12px 18px #78aab733,0 15px 35px #5f8c9b1a;z-index:0}
-body[data-skin='glaze'] .glaze-stage-book{position:absolute;width:214px;height:300px;top:56px;border-radius:14px;box-shadow:14px 22px 28px #38667925;transform-origin:center bottom}
-body[data-skin='glaze'] .glaze-stage-book.pose-0{left:4%;transform:rotate(-13deg);z-index:3}
-body[data-skin='glaze'] .glaze-stage-book.pose-1{left:32%;top:32px;transform:rotate(7deg);z-index:2}
-body[data-skin='glaze'] .glaze-stage-book.pose-2{left:57%;top:79px;transform:rotate(17deg);z-index:1}
-body[data-skin='glaze'] .glaze-stage-open{padding:0;border:0;border-radius:14px;width:100%;height:100%;background:transparent;text-align:left;cursor:pointer;display:block}
-body[data-skin='glaze'] .glaze-stage-open:hover{box-shadow:0 0 0 3px #14687866,0 15px 30px #38667925}
-body[data-skin='glaze'] .glaze-stage-open:focus-visible{outline-offset:5px}
-body[data-skin='glaze'] .glaze-cover{position:relative;display:flex;flex-direction:column;width:100%;height:100%;overflow:hidden;border:2px solid #ffffffc0;border-radius:12px;background:linear-gradient(140deg,#ffffffb0,#d6eced50 35%,color-mix(in srgb,var(--cover-color) 18%,#eff9fa));box-shadow:inset 0 0 0 6px #ffffff40,inset 7px 0 0 #ffffff70;color:#214c5c;padding:22px;isolation:isolate}
-body[data-skin='glaze'] .glaze-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.62;mix-blend-mode:multiply;z-index:-1;pointer-events:none}
-body[data-skin='glaze'] .glaze-cover strong{margin:auto 0;font:500 35px/1.35 var(--glaze-title);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px #fff}
-body[data-skin='glaze'] .glaze-cover-kicker{font-size:10px;letter-spacing:.05em;color:var(--cover-color);padding-bottom:14px;border-bottom:1px solid #ffffff95}
-body[data-skin='glaze'] .glaze-cover-author{font-size:11px;color:#41636f}
-body[data-skin='glaze'] .glaze-cover.k-note img{opacity:.28;object-position:70% 30%}
-body[data-skin='glaze'] .glaze-cover.k-note strong{font-size:31px;border-block:1px solid #b7c5b5;padding-block:12px}
-body[data-skin='glaze'] .glaze-cover.k-cedar img{object-position:10% 80%;opacity:.4}
-body[data-skin='glaze'] .glaze-cover.k-cedar strong{writing-mode:vertical-rl;align-self:flex-start;max-height:185px;font-size:32px}
-body[data-skin='glaze'] .glaze-cover.k-violet img{transform:rotate(180deg);opacity:.4}
-body[data-skin='glaze'] .glaze-cover.k-violet strong{font-style:italic}
-body[data-skin='glaze'] .glaze-cover.k-claret{background:linear-gradient(140deg,#fff8f1,#f4e6e0b0 50%,#dbc6c480)}
-body[data-skin='glaze'] .glaze-cover.k-claret img{opacity:.23}
-body[data-skin='glaze'] .glaze-cover.k-claret strong{color:#7b4d50}
-body[data-skin='glaze'] .glaze-cover.k-ink img{filter:grayscale(1);opacity:.4}
-body[data-skin='glaze'] .glaze-cover.k-ink strong{font-size:32px;color:#3d5259}
-body[data-skin='glaze'] .glaze-work-menu{position:absolute;right:10px;top:10px;z-index:5;border-radius:8px;background:#faffffd9;box-shadow:0 3px 9px #4c77871c}
-body[data-skin='glaze'] .glaze-collection{border-top:1px solid #bdcfd2;padding-top:22px}
-body[data-skin='glaze'] .glaze-collection>header{display:flex;align-items:center;gap:18px;margin-bottom:18px}
-body[data-skin='glaze'] .glaze-collection h2{font:500 22px var(--glaze-title);margin:0}
-body[data-skin='glaze'] .glaze-collection>header>span{font-size:12px;color:#4f7079}
-body[data-skin='glaze'] .glaze-collection-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:20px}
-body[data-skin='glaze'] .glaze-library-card{position:relative;min-width:0;border:1px solid #fff;border-radius:13px;background:#ffffff70;box-shadow:0 8px 22px #426d7c0d}
-body[data-skin='glaze'] .glaze-library-card:hover{background:#ffffffb0;box-shadow:0 10px 24px #426d7c20}
-body[data-skin='glaze'] .glaze-library-open{display:flex;align-items:center;gap:18px;padding:14px;text-align:left;border:0;background:transparent;width:100%;height:100%;color:inherit;cursor:pointer}
-body[data-skin='glaze'] .glaze-library-open>.glaze-cover{flex:none;width:64px;height:90px;padding:8px;border-radius:5px}
-body[data-skin='glaze'] .glaze-library-open .glaze-cover :is(.glaze-cover-kicker,.glaze-cover-author){display:none}
-body[data-skin='glaze'] .glaze-library-open .glaze-cover strong{font-size:15px;line-height:1.3;-webkit-line-clamp:3;writing-mode:horizontal-tb}
-body[data-skin='glaze'] .glaze-library-open>span:last-child{display:flex;flex-direction:column;gap:12px;min-width:0;padding-right:15px}
-body[data-skin='glaze'] .glaze-library-open>span>strong{font:500 20px/1.5 var(--glaze-title);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-body[data-skin='glaze'] .glaze-library-open small{font-size:11px;color:#4f7079}
-body[data-skin='glaze'] .glaze-library-open .glaze-openat{margin-top:-6px;color:#63828a}
-body[data-skin='glaze'] .glaze-empty{padding:100px 20px;text-align:center}
-body[data-skin='glaze'] .glaze-empty h2{font:500 34px var(--glaze-title)}
-body[data-skin='glaze'] .glaze-empty p{font-size:14px;color:#4f7079;margin-bottom:26px}
 @media(max-width:1200px){
  body[data-skin='glaze'] .gravity-masthead{height:76px;padding-inline:20px;gap:9px}
  body[data-skin='glaze'] .gravity-breadcrumb{margin-left:4px;gap:9px}
@@ -634,12 +574,6 @@ body[data-skin='glaze'] .glaze-empty p{font-size:14px;color:#4f7079;margin-botto
  body[data-skin='glaze'] .right-panel{width:225px;padding-left:17px}
  body[data-skin='glaze'] .character-sections{column-gap:22px}
  body[data-skin='glaze'] .sw-content.sw-appearance{gap:24px;grid-template-columns:minmax(280px,1fr) 240px}
- body[data-skin='glaze'] .glaze-shelf-scroll{padding-inline:36px}
- body[data-skin='glaze'] .glaze-shelf-hero{grid-template-columns:minmax(0,1fr) 440px;gap:0;height:410px;min-height:410px;padding:0}
- body[data-skin='glaze'] .glaze-glass-deck{height:410px}
- body[data-skin='glaze'] .glaze-stage-book{width:180px;height:265px}
- body[data-skin='glaze'] .glaze-stage-book.pose-2{left:56%;top:66px}
- body[data-skin='glaze'] .glaze-cover strong{font-size:30px}
 }
 @media(max-width:1000px){
  body[data-skin='glaze'] .panel-body>.side-panel{max-width:180px;min-width:170px}
@@ -668,19 +602,9 @@ body[data-skin='glaze'] [data-module='outline'] .module-heading>.serif{font:500 
 body[data-skin='glaze'] .sw-nav-item{line-height:1.5}
 body[data-skin='glaze'] .gravity-settings-intro h2{font-size:34px;white-space:nowrap}
 body[data-skin='glaze'] .character-sections .rp-title{font-weight:500}
-body[data-skin='glaze'] .glaze-shelf-tools .n-button{--n-height:44px!important}
-body[data-skin='glaze'] .glaze-shelf-tools .n-input{--n-height:44px!important}
 body[data-skin='glaze'] .ol-side-search .rp-input{min-height:40px}
 body[data-skin='glaze'] .ol-typefilter .om-chip{border-radius:6px;padding:5px 9px;font-size:13px}
 body[data-skin='glaze'] .rg-avatar-empty{display:flex;align-items:center;justify-content:center}
-@media(max-width:1200px){body[data-skin='glaze'] .glaze-stage-book.pose-2{left:48%}}
-body[data-skin='glaze'] .glaze-cover img{mix-blend-mode:normal;opacity:.82}
-body[data-skin='glaze'] .glaze-cover.k-note img{opacity:.35}
-body[data-skin='glaze'] .glaze-cover.k-claret img{opacity:.28}
-body[data-skin='glaze'] .glaze-title-line{display:block}
-body[data-skin='glaze'] .glaze-title-line+.glaze-title-line{padding-left:.75em}
-body[data-skin='glaze'] .glaze-orb{left:0;right:auto;top:auto;bottom:8px;width:88px;height:88px}
-body[data-skin='glaze'] .glaze-stage-book .glaze-cover{border-width:8px;padding:18px}
 body[data-skin='glaze'] .glaze-inspiration-dialogue>.n-card__content{display:flex;min-height:0;overflow:auto;padding:0 20px 20px}
 /* Open manuscript hierarchy, with focus feedback rather than a second enclosing form. */
 body[data-skin='glaze'] :is(.ol-title-input,.ol-title-static){font:500 32px/1.5 var(--glaze-title);color:#234752;background:transparent;border:0;border-bottom:1px solid #b6cdd1;border-radius:0;padding:8px 0 16px}
@@ -700,9 +624,6 @@ body[data-skin='glaze'] .editor-toolbar .tb{min-width:26px;padding:4px 6px;font-
 body[data-skin='glaze'] .editor-toolbar .tb-sep{margin-inline:2px}
 /* 章节状态 / 字数 / 历史：原在章题下一行，现归顶栏右端（margin-left:auto 推到本行末尾；窄窗随工具条换行/滚动） */
 body[data-skin='glaze'] .editor-bar-status{display:flex;align-items:center;gap:9px;margin-left:auto;padding-left:10px;opacity:.85}
-body[data-skin='glaze'] .glaze-stage-book .glaze-cover strong{font-size:clamp(23px,2.2vw,32px);-webkit-line-clamp:3;writing-mode:horizontal-tb;max-height:none}
-body[data-skin='glaze'] .glaze-library-open>.glaze-cover{padding:6px}
-body[data-skin='glaze'] .glaze-library-open .glaze-cover strong{font-size:12px;line-height:1.45;-webkit-line-clamp:3;border:0;padding:0}
 body[data-skin='glaze'] .snippet-catalog h3{max-height:4.5em;flex-shrink:0}
 body[data-skin='glaze'] .snippet-catalog .side-item p{flex:none;margin-top:5px}
 body[data-skin='glaze'] .glaze-module-menu{opacity:1!important;min-width:24px;min-height:26px;border:1px solid #adcbd0!important;border-radius:5px!important}
@@ -711,7 +632,6 @@ body[data-skin='glaze'] .ol-side-parent{display:none}
 body[data-skin='glaze'] ::-webkit-scrollbar{width:6px;height:6px}
 @media(max-width:1200px){
  body[data-skin='glaze'] .editor-toolbar{flex-wrap:nowrap;overflow-x:auto}
- body[data-skin='glaze'] .glaze-stage-book .glaze-cover strong{font-size:24px}
 }
 @media(max-width:850px){
  body[data-skin='glaze'] .panel-host .module-heading{min-height:42px;flex-wrap:nowrap;gap:8px;padding-bottom:8px}
@@ -815,87 +735,6 @@ body[data-skin='glaze'] .ol-meta-state{color:#4f7079}
 /* 工具条右端的关系链接说明：包成工具形态，文案不变（它解释的是真实功能）；
    行内样式留给其它皮肤，故此处 !important */
 body[data-skin='glaze'] .ol-toolbar .ol-tb-hint{font-size:12px!important;color:#4f7079!important;background:#ffffff55;border:1px solid #afc8cc;border-radius:6px;padding:5px 10px}
-
-/* ─────────────────────────────────────────────────────────────────────
-   书架屏：左栏排版 + 右侧封面舞台对齐 C 版（设计稿 .feature-copy / .glass-book）
-   数值取自 style.css 的 .c 覆盖块；左栏排版与舞台几何全在这个文件里，
-   不动 DOM 契约（glaze-shelf-verify 的红线：1080×680 无横向溢出、DOM 选择器、降动效）。
-   ───────────────────────────────────────────────────────────────────── */
-/* 左栏：「我的作品」26px；数量做成独立药丸（原来是 h1 内的上标小字） */
-body[data-skin='glaze'] .glaze-shelf-tools h1{display:flex;align-items:center;gap:20px;font:400 26px var(--glaze-title);letter-spacing:0}
-body[data-skin='glaze'] .glaze-shelf-tools h1 small{margin:0;padding:2px 10px;border:1px solid #afc8cc;border-radius:50px;font:14px ui-monospace,Consolas,monospace;letter-spacing:0;color:#55707a;vertical-align:baseline}
-/* 元信息行 13px / 字距 1px（分隔符与相对时间在组件里） */
-body[data-skin='glaze'] .glaze-eyebrow{font-size:13px;letter-spacing:1px;color:#55707a;margin:0 0 12px}
-/* 标题按实际长度分级：短题保留设计稿气势，中长题不再压垮 410px 舞台。 */
-body[data-skin='glaze'] .glaze-feature-copy h2{font:400 clamp(45px,5.3vw,76px)/1.08 var(--glaze-title);letter-spacing:2px;max-width:600px}
-body[data-skin='glaze'] .glaze-feature-copy.title-medium h2{font-size:clamp(46px,4.35vw,62px)}
-body[data-skin='glaze'] .glaze-feature-copy.title-long h2{font-size:clamp(36px,3.4vw,49px);line-height:1.15;letter-spacing:1px}
-body[data-skin='glaze'] .glaze-title-line+.glaze-title-line{padding-left:58px}
-/* 简介、操作和统计合并成一组，避免内容沉到首屏底部。 */
-body[data-skin='glaze'] .glaze-feature-intro{line-height:1.72;color:#4c6a72;max-width:500px;margin:15px 0 0}
-body[data-skin='glaze'] .glaze-feature-actions{gap:22px;margin-top:17px}
-body[data-skin='glaze'] .glaze-feature-meta{gap:22px;margin-top:16px;font-size:13px;color:#55707a}
-body[data-skin='glaze'] .glaze-feature-meta strong{font-size:17px;font-weight:400;color:#203f49}
-body[data-skin='glaze'] .glaze-feature-meta small{font-size:13px;color:#55707a}
-/* 搜索框 210px（设计稿 .shelf-actions input） */
-body[data-skin='glaze'] .glaze-shelf-tools .n-input{width:210px}
-/* 舞台：410px 双栏比例 + 明确的前中后三层景深。 */
-body[data-skin='glaze'] .glaze-glass-deck{height:410px;min-width:0;perspective:1050px;perspective-origin:47% 45%;transform-style:preserve-3d;overflow:visible}
-body[data-skin='glaze'] .glaze-glass-deck::after{background:none}
-body[data-skin='glaze'] .glaze-feature-stack{position:absolute;left:100px;top:30px;width:228px;z-index:4;transform-style:preserve-3d;overflow:visible}
-body[data-skin='glaze'] .glaze-stage-book{--glaze-book-pose:translateZ(0) rotateY(0) rotateZ(0);padding:10px;border-radius:16px;background:#ffffff75;border:1px solid #ffffffb0;box-shadow:inset 0 1px 0 #fff,0 20px 35px #3b6c7a28;transform:var(--glaze-book-pose);transform-style:preserve-3d;transition:transform .22s ease,background-color .22s ease,box-shadow .22s ease,filter .22s ease,opacity .22s ease}
-body[data-skin='glaze'] .glaze-feature-stack>.glaze-stage-book.pose-0{position:relative;inset:auto;width:100%;z-index:3;--glaze-book-pose:translateZ(52px) rotateY(-10deg) rotateZ(-8deg);transform:var(--glaze-book-pose);box-shadow:inset 0 1px 0 #fff,10px 26px 38px #315e7035}
-body[data-skin='glaze'] .glaze-stage-book.pose-1{left:250px;top:66px;width:190px;z-index:2;--glaze-book-pose:translateZ(-38px) rotateY(-18deg) rotateZ(7deg);transform:var(--glaze-book-pose);opacity:.92;filter:saturate(.93) brightness(.99);box-shadow:inset 0 1px 0 #fff,8px 20px 30px #315e7029}
-body[data-skin='glaze'] .glaze-stage-book.pose-2{left:370px;top:105px;width:158px;z-index:1;--glaze-book-pose:translateZ(-92px) rotateY(-25deg) rotateZ(16deg);transform:var(--glaze-book-pose);opacity:.78;filter:saturate(.82) brightness(.96);box-shadow:inset 0 1px 0 #fff,5px 14px 22px #315e701f}
-body[data-skin='glaze'] .glaze-stage-book:hover{z-index:6;background:#ffffffb0;box-shadow:inset 0 1px 0 #fff,0 30px 40px #3b6c7a30;transform:translateY(-5px) var(--glaze-book-pose)}
-body[data-skin='glaze'] .glaze-stage-book .glaze-cover{border-width:0;border-radius:8px}
-body[data-skin='glaze'] .glaze-stage-open{border-radius:10px;box-shadow:none}
-/* 首章白卡是主书簇的组成部分；顶部小纸舌给出可见的从属连接。 */
-body[data-skin='glaze'] .glaze-chapter-note{position:absolute;left:136px;top:calc(100% - 36px);z-index:6;min-width:166px;padding:13px 20px;background:#ffffffb5;backdrop-filter:blur(20px);border:1px solid #fffd;border-radius:12px;box-shadow:0 9px 20px #3d6b761c;transform:translateZ(70px) rotate(-3deg);font:19px var(--glaze-title);color:#203f49;white-space:nowrap}
-body[data-skin='glaze'] .glaze-chapter-note::before{content:'';position:absolute;left:25px;top:-9px;width:34px;height:15px;background:linear-gradient(150deg,#fffffff0 0 50%,transparent 52%);border-left:1px solid #fffd;transform:skewX(-24deg);filter:drop-shadow(0 -1px 0 #9bbdc42b)}
-body[data-skin='glaze'] .glaze-chapter-note small{display:block;margin-top:7px;font:13px 'Microsoft YaHei',sans-serif;color:#55707a}
-/* 底部：区题 23px / 右侧 13px / 网格 gap 18 / 卡题 17px / 副信息 13px / 缩略封面 58px */
-body[data-skin='glaze'] .glaze-collection h2{font-size:23px}
-body[data-skin='glaze'] .glaze-collection>header>span{font-size:13px}
-body[data-skin='glaze'] .glaze-collection-grid{gap:18px}
-body[data-skin='glaze'] .glaze-library-open>.glaze-cover{width:58px;height:87px}
-body[data-skin='glaze'] .glaze-library-open>span>strong{font:500 17px/1.5 var(--glaze-title)}
-body[data-skin='glaze'] .glaze-library-open small{font-size:13px}
-body[data-skin='glaze'] .glaze-glass-deck.book-count-1 .glaze-feature-stack{left:180px}
-body[data-skin='glaze'] .glaze-glass-deck.book-count-2 .glaze-feature-stack{left:130px}
-body[data-skin='glaze'] .glaze-orb{width:82px;height:82px;left:35px;bottom:12px}
-/* 1080 档维持同一透视关系，整体收小并降低旋转角度。 */
-@media(max-width:1200px){
-  body[data-skin='glaze'] .glaze-feature-copy{padding-left:18px}
-  body[data-skin='glaze'] .glaze-feature-copy.title-medium h2{font-size:54px}
-  body[data-skin='glaze'] .glaze-feature-copy.title-long h2{font-size:42px}
-  body[data-skin='glaze'] .glaze-title-line+.glaze-title-line{padding-left:46px}
-  body[data-skin='glaze'] .glaze-glass-deck{perspective:950px}
-  body[data-skin='glaze'] .glaze-feature-stack{left:50px;top:45px;width:190px}
-  body[data-skin='glaze'] .glaze-feature-stack>.glaze-stage-book.pose-0{--glaze-book-pose:translateZ(30px) rotateY(-7deg) rotateZ(-6deg)}
-  body[data-skin='glaze'] .glaze-stage-book.pose-1{left:175px;top:68px;width:165px;--glaze-book-pose:translateZ(-20px) rotateY(-12deg) rotateZ(6deg)}
-  body[data-skin='glaze'] .glaze-stage-book.pose-2{left:280px;top:110px;width:135px;--glaze-book-pose:translateZ(-55px) rotateY(-17deg) rotateZ(12deg)}
-  body[data-skin='glaze'] .glaze-chapter-note{left:105px;top:calc(100% - 28px);min-width:145px;padding:10px 14px;font-size:16px}
-  body[data-skin='glaze'] .glaze-glass-deck.book-count-1 .glaze-feature-stack{left:120px}
-  body[data-skin='glaze'] .glaze-glass-deck.book-count-2 .glaze-feature-stack{left:75px}
-  body[data-skin='glaze'] .glaze-orb{width:64px;height:64px;left:0;bottom:6px}
-}
-/* 三张卡的书名分级（设计稿 gb1/2/3 = 34 / 28 / 22px），背卡不再被挤到换行截断 */
-body[data-skin='glaze'] .glaze-stage-book.pose-0 .glaze-cover strong{font-size:34px}
-body[data-skin='glaze'] .glaze-stage-book.pose-1 .glaze-cover strong{font-size:28px}
-body[data-skin='glaze'] .glaze-stage-book.pose-2 .glaze-cover strong{font-size:22px}
-/* 背卡收窄留白并隐去副标（设计稿 gb2/gb3 如此） */
-body[data-skin='glaze'] .glaze-stage-book:not(.pose-0) .glaze-cover{padding:15px}
-body[data-skin='glaze'] .glaze-stage-book:not(.pose-0) .glaze-cover-kicker{display:none}
-
-/* 封面排版对齐设计稿（.cover-type / .glass-book）：封面竖幅 2:3、书名两行贴顶、顶行与作者的字号字距 */
-body[data-skin='glaze'] .glaze-stage-book{height:auto}
-body[data-skin='glaze'] .glaze-stage-book .glaze-cover{aspect-ratio:2/3;height:auto}
-body[data-skin='glaze'] .glaze-cover-line{display:block}
-/* 书名贴顶（原来是 margin:auto 0 垂直居中）；不写 font 简写，免得压掉下面各卡的字号分级 */
-body[data-skin='glaze'] .glaze-stage-book .glaze-cover strong{margin:22px 0 0;font-family:var(--glaze-title);font-weight:500;line-height:1.25;letter-spacing:3px;color:#173f49;max-height:none}
-body[data-skin='glaze'] .glaze-stage-book .glaze-cover-kicker{font-size:13px;letter-spacing:2px;color:#315862;padding-bottom:0;border-bottom:0}
-body[data-skin='glaze'] .glaze-stage-book .glaze-cover-author{margin-top:auto;font-size:13px;letter-spacing:3px;color:#315862}
 
 /* 大纲交互精简：画布底色透明度、故事结构收起/恢复、容器内容区滚动条 */
 body[data-skin='glaze'] [data-module='outline'] .om-wrap{--oc-canvas-backdrop:#e7eff1}

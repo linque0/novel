@@ -1,0 +1,108 @@
+/* 琉光美术馆：完整画作、当前手稿、纵向作品目录。 */
+body[data-skin='glaze'] .glaze-shelf.glaze-museum {
+  --gg-ink:var(--gm-ink,#284c48); --gg-muted:var(--gm-muted,#66766c);
+  --gg-paper:var(--gm-paper,#fbf8f0); --gg-gold:var(--gm-gold,#a48851);
+  height:100%; min-height:0; display:flex; flex-direction:column; overflow:hidden;
+  color:var(--gg-ink); background:radial-gradient(ellipse at 18% 4%,#ffffedb0,transparent 58%),var(--gm-wall,#dfe9e2);
+}
+.glaze-shelf.glaze-museum[data-glaze-light='gallery'] { background:radial-gradient(ellipse at 18% 0,#f5eed0a8,transparent 54%),var(--gm-wall,#c8d3be); }
+.glaze-shelf.glaze-museum > .gm-cornice { height:28px; }
+.glaze-shelf.glaze-museum .gg-scroll { flex:1; min-height:0; overflow:auto; padding:20px 36px 24px; scrollbar-width:thin; }
+.glaze-shelf.glaze-museum .gg-scroll > .n-spin-container,
+.glaze-shelf.glaze-museum .gg-scroll > .n-spin-container > .n-spin-content { min-height:100%; }
+.glaze-shelf.glaze-museum .gg-layout { display:grid; grid-template-columns:minmax(0,42fr) minmax(0,58fr); gap:36px; width:100%; max-width:1500px; margin:0 auto; align-items:start; }
+.glaze-shelf.glaze-museum .gg-exhibition { min-width:0; padding:0 2px; }
+.glaze-shelf.glaze-museum .gg-exhibition-head { display:flex; min-height:42px; justify-content:space-between; align-items:center; gap:12px; margin-bottom:24px; }
+.glaze-shelf.glaze-museum .gg-exhibition-head > span { font-size:14px; color:var(--gg-muted); white-space:nowrap; }
+.glaze-shelf.glaze-museum .gg-artwork { width:100%; margin:0; }
+.glaze-shelf.glaze-museum .gg-catalog { min-width:0; }
+.glaze-shelf.glaze-museum .gg-catalog-head { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:42px; margin-bottom:18px; }
+.glaze-shelf.glaze-museum .gg-catalog-head h1 { margin:0; font:400 26px/1.3 var(--glaze-title,serif); }
+.glaze-shelf.glaze-museum .gg-catalog-head h1 small { margin-left:12px; font:14px/1.5 'Microsoft YaHei',sans-serif; color:var(--gg-muted); font-variant-numeric:tabular-nums; }
+.glaze-shelf.glaze-museum .gg-new { flex:none; font-size:14px; }
+.glaze-shelf.glaze-museum .gg-plaque { position:relative; min-width:0; padding:16px 22px 20px; border:1px solid #c9c5b2; border-top:3px solid var(--gg-gold); background:var(--gg-paper); }
+.glaze-shelf.glaze-museum .gg-feature-top { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:28px; margin-bottom:7px; font-size:12px; color:#756746; font-variant-numeric:tabular-nums; }
+.glaze-shelf.glaze-museum .gg-controls { display:flex; align-items:center; gap:8px; }
+.glaze-shelf.glaze-museum .gg-controls > button { display:grid; place-items:center; width:30px; height:28px; padding:0; border:1px solid #c4b795; background:transparent; color:var(--gg-ink); cursor:pointer; transition:background .15s; }
+.glaze-shelf.glaze-museum .gg-controls > button:hover:not(:disabled) { background:#e7e3d3; }
+.glaze-shelf.glaze-museum .gg-prev-icon { transform:rotate(180deg); }
+.glaze-shelf.glaze-museum .gg-plaque h2 { margin:0; font:400 38px/1.25 var(--glaze-title,serif); overflow-wrap:anywhere; }
+.glaze-shelf.glaze-museum .gg-author { margin:6px 0 10px; font-size:14px; line-height:1.5; color:var(--gg-muted); overflow-wrap:anywhere; }
+.glaze-shelf.glaze-museum .gg-intro { margin:0 0 12px; font-size:14px; line-height:1.65; color:var(--gg-ink); display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; overflow-wrap:anywhere; }
+.glaze-shelf.glaze-museum .gg-metadata { display:flex; flex-wrap:wrap; gap:5px 16px; margin-bottom:9px; font-size:12px; line-height:1.6; color:var(--gg-muted); }
+.glaze-shelf.glaze-museum .gg-chapter { display:flex; align-items:baseline; gap:12px; margin:0 0 14px; font-size:14px; line-height:1.5; }
+.glaze-shelf.glaze-museum .gg-chapter > span { flex:none; color:var(--gg-muted); font-size:12px; }
+.glaze-shelf.glaze-museum .gg-chapter strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:400; }
+.glaze-shelf.glaze-museum .gg-actions { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.glaze-shelf.glaze-museum .gg-actions .n-button { height:38px; font-size:14px; border-radius:2px; }
+.glaze-shelf.glaze-museum .gg-actions .n-button--primary-type { padding:0 20px; }
+.glaze-shelf.glaze-museum .gg-actions .n-button__content { gap:12px; }
+.glaze-shelf.glaze-museum .gg-menu { margin-left:auto; }
+.glaze-shelf.glaze-museum .gg-menu .n-button { width:38px; padding:0; font-size:22px; }
+.glaze-shelf.glaze-museum .gg-index-head { display:flex; justify-content:space-between; align-items:center; gap:16px; padding:16px 0 10px; }
+.glaze-shelf.glaze-museum .gg-index-head > span { font:400 18px/1.4 var(--glaze-title,serif); flex:none; }
+.glaze-shelf.glaze-museum .gg-index-head .n-input { width:196px; font-size:14px; background:#fbf8f0a3; }
+.glaze-shelf.glaze-museum .gg-index { display:flex; flex-direction:column; max-height:312px; overflow:auto; overscroll-behavior:contain; scrollbar-width:thin; scrollbar-color:#a6b2a3 transparent; }
+.glaze-shelf.glaze-museum .gg-index-item { display:grid; grid-template-columns:28px minmax(0,1fr) auto; gap:14px; align-items:center; flex:none; width:100%; min-height:52px; border:0; border-bottom:1px solid #b9c5b780; padding:10px 12px; color:var(--gg-ink); background:transparent; text-align:left; cursor:pointer; transition:background .15s; }
+.glaze-shelf.glaze-museum .gg-index-item:hover:not(:disabled) { background:#f5f4e96b; }
+.glaze-shelf.glaze-museum .gg-index-item.is-current { background:#f7f3e8; box-shadow:inset 3px 0 var(--gg-gold); }
+.glaze-shelf.glaze-museum .gg-row-number { font-size:12px; color:#756746; font-variant-numeric:tabular-nums; }
+.glaze-shelf.glaze-museum .gg-index-item strong { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font:400 16px/1.5 var(--glaze-title,serif); }
+.glaze-shelf.glaze-museum .gg-row-meta { font-size:12px; line-height:1.5; color:var(--gg-muted); white-space:nowrap; }
+.glaze-shelf.glaze-museum .gg-empty h2 { margin:54px 0 14px; font:400 30px/1.4 var(--glaze-title,serif); }
+.glaze-shelf.glaze-museum .gg-empty p { font-size:14px; line-height:1.6; margin:0 0 24px; color:var(--gg-muted); }
+.glaze-shelf.glaze-museum :is(.gg-controls > button,.gg-index-item):focus-visible { outline:2px solid #315d50; outline-offset:-3px; }
+.glaze-shelf.glaze-museum :is(.gg-controls > button,.gg-index-item):disabled { opacity:.45; cursor:default; }
+
+@media (max-height:760px) and (min-width:901px) {
+  .glaze-shelf.glaze-museum .gg-scroll { padding-block:12px; }
+  .glaze-shelf.glaze-museum .gg-catalog-head { min-height:34px; margin-bottom:8px; }
+  .glaze-shelf.glaze-museum .gg-exhibition-head { min-height:34px; margin-bottom:16px; }
+  .glaze-shelf.glaze-museum .gg-plaque { padding:10px 18px 12px; }
+  .glaze-shelf.glaze-museum .gg-feature-top { margin-bottom:2px; }
+  .glaze-shelf.glaze-museum .gg-plaque h2 { font-size:36px; }
+  .glaze-shelf.glaze-museum .gg-author { margin:3px 0 5px; }
+  .glaze-shelf.glaze-museum .gg-intro { margin-bottom:7px; }
+  .glaze-shelf.glaze-museum .gg-metadata { margin-bottom:5px; gap:3px 12px; }
+  .glaze-shelf.glaze-museum .gg-chapter { margin-bottom:8px; }
+  .glaze-shelf.glaze-museum .gg-index-head { padding-top:10px; padding-bottom:8px; }
+  .glaze-shelf.glaze-museum .gg-index { max-height:192px; }
+  .glaze-shelf.glaze-museum .gg-index-item { min-height:48px; padding-block:8px; }
+}
+@media (max-width:1100px) and (min-width:901px) {
+  .glaze-shelf.glaze-museum .gg-scroll { padding-inline:24px; }
+  .glaze-shelf.glaze-museum .gg-layout { gap:32px; }
+  .glaze-shelf.glaze-museum .gg-exhibition-head > span { display:none; }
+  .glaze-shelf.glaze-museum .gg-exhibition-head { justify-content:flex-end; }
+  .glaze-shelf.glaze-museum .gg-index-item { gap:8px; grid-template-columns:24px minmax(0,1fr) auto; padding-inline:8px; }
+}
+@media (max-width:900px) {
+  .glaze-shelf.glaze-museum .gg-scroll { padding:16px 20px 24px; }
+  .glaze-shelf.glaze-museum .gg-layout { grid-template-columns:minmax(0,1fr); gap:24px; }
+  .glaze-shelf.glaze-museum .gg-catalog { grid-row:1; }
+  .glaze-shelf.glaze-museum .gg-catalog-head { margin-bottom:12px; }
+  .glaze-shelf.glaze-museum .gg-plaque { padding:14px 18px 18px; }
+  .glaze-shelf.glaze-museum .gg-plaque h2 { font-size:36px; }
+  .glaze-shelf.glaze-museum .gg-index { max-height:208px; }
+  .glaze-shelf.glaze-museum .gg-exhibition { width:100%; max-width:480px; margin-inline:auto; }
+  .glaze-shelf.glaze-museum .gg-exhibition-head { margin-bottom:14px; }
+}
+@media (max-width:520px) {
+  .glaze-shelf.glaze-museum .gg-scroll { padding-inline:12px; }
+  .glaze-shelf.glaze-museum .gg-catalog-head { gap:10px; }
+  .glaze-shelf.glaze-museum .gg-catalog-head h1 { font-size:24px; }
+  .glaze-shelf.glaze-museum .gg-catalog-head h1 small { margin-left:6px; }
+  .glaze-shelf.glaze-museum .gg-new { padding-inline:10px; }
+  .glaze-shelf.glaze-museum .gg-plaque { padding-inline:14px; }
+  .glaze-shelf.glaze-museum .gg-actions { gap:8px; }
+  .glaze-shelf.glaze-museum .gg-actions .n-button--primary-type { padding-inline:14px; }
+  .glaze-shelf.glaze-museum .gg-index-head .n-input { width:160px; }
+  .glaze-shelf.glaze-museum .gg-index-item { grid-template-columns:22px minmax(0,1fr); gap:6px 10px; padding:8px 10px; min-height:62px; }
+  .glaze-shelf.glaze-museum .gg-row-number { grid-row:1/3; }
+  .glaze-shelf.glaze-museum .gg-row-meta { grid-column:2; }
+  .glaze-shelf.glaze-museum .gg-index { max-height:248px; }
+
+}
+@media (prefers-reduced-motion:reduce) {
+  .glaze-shelf.glaze-museum :is(.gg-index-item,.gg-controls > button) { transition:none; }
+}

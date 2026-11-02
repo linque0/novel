@@ -1,6 +1,8 @@
 <!-- 大纲侧边栏（8.8.2）：模块条目列表——搜索 / 类型筛选 / 新建（事件·便签·引用卡·分组）/ 定位画布 / 删除；
      断线检测列表；条目点击选中并让画布居中 -->
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import OIcon from './OIcon.vue'
 import { computed, ref, onMounted, watch } from 'vue'
 import { NButton, NModal, NInput, NDropdown } from 'naive-ui'
@@ -210,13 +212,13 @@ onMounted(() => {
           <button class="ol-tree-name" type="button" :title="'定位：'+m.label" @click="pick(m)">{{ m.label }}</button>
           <span v-if="canvasScopeId===m.n.id" class="ol-tree-current">本层</span>
           <span v-if="m.n.kind==='container'" class="ol-tree-count">{{ statsOf(m.n).total }}</span><i v-else class="ol-tree-state" :class="m.n.status || ''" :title="STATUS[m.n.status] || m.type"></i>
-          <NDropdown trigger="click" :options="[{key:'rename',label:'重命名'},{key:'ai',label:'发送给恍然梦',disabled:!ai.ready},{key:'remove',label:'删除'}]" @select="key=>key==='rename'?rename(m):key==='ai'?aiPlan(m):remove(m)"><button class="ol-tree-more" type="button" :aria-label="m.label+'的操作'" @click.stop>⋯</button></NDropdown>
+          <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :options="[{key:'rename',label:'重命名'},{key:'ai',label:'发送给恍然梦',disabled:!ai.ready},{key:'remove',label:'删除'}]" @select="key=>key==='rename'?rename(m):key==='ai'?aiPlan(m):remove(m)"><button class="ol-tree-more" type="button" :aria-label="m.label+'的操作'" @click.stop>⋯</button></NDropdown>
         </div>
         <p v-if="!modules.length" class="ol-side-empty">{{ q || typeFilter!=='全部'?'没有匹配的模块。':'使用画布工具条添加模块，开始搭建故事。' }}</p>
       </div>
     </div>
     <div class="ol-paper-side-footer"><span class="ol-paper-stamp" aria-hidden="true">PAPER<br>STORIES</span><button type="button" :class="{on:showBroken}" title="断线检测：烂尾 / 缺铺垫" @click="showBroken=!showBroken">断线 {{ brokenCount }}</button></div>
-    <NModal v-model:show="renameState.show" preset="dialog" title="重命名模块">
+    <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="renameState.show" preset="dialog" title="重命名模块">
       <NInput v-model:value="renameState.value" placeholder="模块名称" @keyup.enter="confirmRename" />
       <template #action>
         <NButton size="small" @click="renameState.show = false">取消</NButton>

@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 /* 设定标签面板（全局单例，ui.mubuTagPanel = { nodeId, x, y } 驱动；主窗口与面板窗口各挂一份）：
  * - 选择栏：标签池按创建时间升序 + 彩色卡片（与条目尾部同款）；3 列网格默认显示前 9 个，
  *   超过则「显示全部」就地展开；点击卡片即时切换该标签在当前节点上的应用（选中 = 实卡）。
@@ -121,8 +123,7 @@ onBeforeUnmount(() => {
   <div
     v-if="panel && node"
     id="mubu-tag-panel"
-    class="mtp-panel"
-    :class="{ dragging: !!drag }"
+    class="mtp-panel" :class="[museumPopoverClass, { dragging: !!drag }]" :data-glaze-light="museumLight"
     :style="{ left: pos.x + 'px', top: pos.y + 'px' }"
     @contextmenu.prevent
   >

@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import TaskLauncher from './ai/TaskLauncher.vue'
 import WritingPaperPicker from './WritingPaperPicker.vue'
 import ChapterTitleField from './ChapterTitleField.vue'
@@ -19,6 +21,7 @@ import { NButton, NDrawer, NDrawerContent, NInputNumber, NPopover, NSelect, NTag
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { autosave } from '../services/autosave'
+import { db } from '../db/database.js'
 import { fmtNum } from '../services/wordcount'
 import { FontSize } from '../services/richtext'
 import { isImageExt } from '../services/fileio'
@@ -116,8 +119,29 @@ async function bindWritingPosition(ed, chapter, position) {
 }
 
 /* 章节已被拆出为面板窗口时，主窗口本章只读（9.2-W5 两级锁）；阅读模式同样只读预览（v1.0.26） */
+const handoffTokens=new Set(),handoffPending=ref(false)
+function prepareHandoff(e){if(e.detail?.pending)handoffTokens.add(e.detail.token);else handoffTokens.delete(e.detail?.token);handoffPending.value=handoffTokens.size>0}
 const chapterPopped = computed(() => !!work.activeChapter && isPopped(work, 'chapter', work.activeChapter.id))
-watch([chapterPopped, () => ui.readMode], ([popped, reading], [, wasReading]) => {
+let refreshGeneration=0,refreshingEditor=false,remoteRefreshNeeded=false
+watch([chapterPopped, () => ui.readMode, handoffPending], async ([popped, reading, handing], [wasPopped, wasReading]) => {
+  if(wasPopped&&!popped)remoteRefreshNeeded=true
+  if(popped||handing){refreshGeneration++;editor.value?.setEditable(false,false);return}
+  if(remoteRefreshNeeded){
+    const generation=++refreshGeneration,workId=work.work?.id,chapterId=work.selChapterId
+    refreshingEditor=true;editor.value?.setEditable(false,false)
+    try{
+      const row=await db.chapters.get(chapterId)
+      if(generation!==refreshGeneration||work.work?.id!==workId||work.selChapterId!==chapterId||chapterPopped.value||handoffPending.value)return
+      if(!row||row.deletedAt)throw new Error('章节已删除，请重新选择章节')
+      Object.assign(work.activeChapter,row)
+      // A remote writer owns the new content and history. Recreate before allowing local input.
+      mountEditor()
+      refreshingEditor=false
+      editor.value?.setEditable(!ui.readMode,false)
+    }catch(e){window.$msg?.error('同步最新正文失败，暂保持只读：'+e.message)}
+    return
+  }
+  if(refreshingEditor)return
   editor.value?.setEditable(!popped && !reading, false)
   /* 退出阅读恢复编辑并回焦（选区由 ProseMirror state 保留） */
   if (wasReading && !reading) editor.value?.commands.focus()
@@ -234,6 +258,9 @@ function handleImages(files) {
 }
 
 function mountEditor() {
+  refreshGeneration++
+  refreshingEditor=false
+  remoteRefreshNeeded=false
   detachWritingPosition()
   editor.value?.destroy()
   editor.value = null
@@ -245,7 +272,7 @@ function mountEditor() {
   editor.value = new Editor({
     content: toEditorHtml(ch),
     extensions,
-    editable: !chapterPopped.value && !ui.readMode,
+    editable: !chapterPopped.value && !handoffPending.value && !ui.readMode,
     editorProps: {
       handleDOMEvents: {
         // 超链接在系统默认浏览器打开，不劫持应用窗口
@@ -270,7 +297,7 @@ function mountEditor() {
       handleDrop: (_view, event) => handleImages(event.dataTransfer?.files)
     },
     onUpdate: ({ editor: ed }) => {
-      if (work.selChapterId === id) {
+      if (work.selChapterId === id && !chapterPopped.value && !handoffPending.value && !refreshingEditor) {
         work.setChapterContent(id, ed.getHTML(), 'html')
         window.dispatchEvent(new Event('writing-document-changed'))
         if (writingSession?.ed===ed) writingSession.edited()
@@ -279,6 +306,7 @@ function mountEditor() {
     onSelectionUpdate: ({ editor: ed }) => { if (writingSession?.ed===ed) writingSession.selectionChanged() }
   })
   window.__ns.editor = editor.value
+  window.__ns.editorTarget = {workId:work.work.id,chapterId:id}
   setActiveEditor(editor.value) // 右侧批注栏据此操作正文标记
   bindWritingPosition(editor.value,ch,position)
 }
@@ -294,6 +322,7 @@ watch(
 onMounted(() => {
   mountEditor()
   window.addEventListener('keydown', onReadKey)
+  window.addEventListener('chapter-edit-handoff',prepareHandoff)
 })
 onBeforeUnmount(() => {
   detachWritingPosition()
@@ -303,6 +332,7 @@ onBeforeUnmount(() => {
   editor.value?.destroy()
   editor.value = null
   window.removeEventListener('keydown', onReadKey)
+  window.removeEventListener('chapter-edit-handoff',prepareHandoff)
 })
 
 // Reading mode moves the same editor into a different scroll host, without replacing its state.
@@ -371,7 +401,7 @@ async function clearGoal() {
         :readonly="chapterPopped"
         @commit="onTitle"
       />
-      <NSelect
+      <NSelect :menu-props="{ class: museumPopoverClass }"
         size="tiny"
         :value="work.activeChapter.status"
         :options="STATUS_OPTS"
@@ -406,7 +436,7 @@ async function clearGoal() {
                   <template #paper><WritingPaperPicker /></template>
                   <template #bar-end>
                     <div class="editor-bar-status">
-                      <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
+                      <NSelect :menu-props="{ class: museumPopoverClass }" size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
                       <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter.status]">{{ work.activeChapter.wordCount || 0 }} 字</NTag>
                       <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
                     </div>
@@ -439,7 +469,7 @@ async function clearGoal() {
           <!-- 编辑皮肤：状态 / 字数 / 历史 归到顶栏右端（原版仍是自己的 .editor-head 一行） -->
           <template v-if="ui.isStudioSkin" #bar-end>
             <div class="editor-bar-status">
-              <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
+              <NSelect :menu-props="{ class: museumPopoverClass }" size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" style="width:92px" @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
               <NTag size="small" :bordered="false" :type="STATUS_COLOR[work.activeChapter.status]">{{ work.activeChapter.wordCount || 0 }} 字</NTag>
               <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
             </div>
@@ -479,7 +509,7 @@ async function clearGoal() {
         <div class="wg-track" :class="{ done: work.goalProgress.done }" aria-hidden="true">
           <div class="wg-fill" :style="{ width: goalFill }"></div>
         </div>
-        <NPopover :show="goalShow" trigger="click" :show-arrow="false" placement="top" @update:show="toggleGoal">
+        <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" :show="goalShow" trigger="click" :show-arrow="false" placement="top" @update:show="toggleGoal">
           <template #trigger>
             <button class="wg-set" type="button" :title="work.wordGoal > 0 ? '修改每章字数目标' : '设定每章字数目标'">
               <template v-if="work.wordGoal > 0">
@@ -516,7 +546,7 @@ async function clearGoal() {
         <OIcon name="caret-right" :size="13" />
       </button>
       <div v-if="ui.readMode && !chapterPopped" class="ed-read-count">{{ work.activeChapter.wordCount || 0 }} 字</div>
-      <NDrawer v-if="ui.readMode" v-model:show="readDrawer" placement="left" :width="300" :close-on-esc="false">
+      <NDrawer :class="museumPopoverClass" :data-glaze-light="museumLight" v-if="ui.readMode" v-model:show="readDrawer" placement="left" :width="300" :close-on-esc="false">
         <NDrawerContent title="目录" closable :native-scrollbar="false" body-content-style="padding: 6px 10px 10px;">
           <ChapterTree navigation-only />
         </NDrawerContent>

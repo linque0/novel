@@ -21,6 +21,7 @@ contextBridge.exposeInMainWorld('native', {
   clearDataPointer: () => ipcRenderer.invoke('data:clearPointer'),
   /* 功能面板多窗口（9.2-W5） */
   panelOpen: (spec) => ipcRenderer.invoke('panel:open', spec),
+  panelReady: () => ipcRenderer.invoke('panel:ready'),
   panelList: () => ipcRenderer.invoke('panel:list'),
   panelFocus: (key) => ipcRenderer.invoke('panel:focus', key),
   panelCloseSelf: () => ipcRenderer.invoke('panel:close-self'),

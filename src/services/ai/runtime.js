@@ -1,14 +1,40 @@
+import { runMemoryQueue, cancelMemoryJobs, recoverMemoryQueue } from './memory-queue.js';
 import { useAiStore } from "../../stores/ai";
 import { useWorkStore } from "../../stores/work";
 import { autosave } from "../autosave";
 import { db } from "../../db/database";
 import { installProjectionPipeline, queueProjection } from '../project/pipeline.js';
+import { canExecuteCreativeHere } from './workbench-view.js';
 
 let installed = false;
 let timer = null;
 const queue = new Map();
 const isMain = () => !new URLSearchParams(location.search).has("panel");
 export async function handleAiEvent({ kind, data }) {
+  if(kind==='story-document-changed'&&data?.workId&&data?.chapterId){
+    const {STORY_WINDOW_ORIGIN}=await import('../../db/story-repo.js');if(data.origin===STORY_WINDOW_ORIGIN)return;
+    const {useStoryStore}=await import('../../stores/story.js');await useStoryStore().refreshDocument(data.workId,data.chapterId);return;
+  }
+  if(kind==='creative-workflow-changed'&&data?.workId){
+    const {CREATIVE_WINDOW_ORIGIN}=await import('../../db/workflow-repo.js');if(data.origin===CREATIVE_WINDOW_ORIGIN)return;
+    const {useCreativeWorkflowStore}=await import('../../stores/creative-workflow.js');const flow=useCreativeWorkflowStore();
+    await flow.load(data.workId,data.runId);return;
+  }
+  if(kind==='creative-workflow-request'&&isMain()){
+    const {useCreativeWorkflowStore}=await import('../../stores/creative-workflow.js');const flow=useCreativeWorkflowStore();
+    if(useWorkStore().work?.id!==data?.workId)return;
+    await flow.load(data.workId,data.runId);await flow.dispatch(data.action,data.index||0);return;
+  }
+  if(kind==='creative-workflow-pause'&&canExecuteCreativeHere(location.search)){
+    const {useCreativeWorkflowStore}=await import('../../stores/creative-workflow.js');const flow=useCreativeWorkflowStore();
+    if(flow.active?.id===data?.runId)flow.pause({remote:true});return;
+  }
+  if(kind==='memory-queue-changed'){window.dispatchEvent(new CustomEvent('memory-queue-changed',{detail:data}));return;}
+  if (kind === 'memory-queue-ready' && isMain()) {
+    const ai=useAiStore(); if(!ai.loaded)await ai.loadSettings();
+    await runMemoryQueue(ai,data); return;
+  }
+  if (kind === 'ai-source-changed') cancelMemoryJobs(data?.workId);
   if (kind === 'book-source-changed') { await queueProjection(data?.workId); return; }
   const ai = useAiStore();
   if (kind === "ai-preview-request" && isMain()) {
@@ -42,6 +68,7 @@ export async function handleAiEvent({ kind, data }) {
     const wasPrivate = ai.privacy;
     await ai.loadSettings();
     if (!wasPrivate && ai.privacy) {
+      cancelMemoryJobs();
       ai.cancel();
       ai.pauseKnowledge();
     }
@@ -115,12 +142,16 @@ export function installAiRuntime() {
   if (installed) return;
   installed = true;
   installProjectionPipeline();
+  if(isMain()){recoverMemoryQueue().catch(console.error);setInterval(()=>recoverMemoryQueue().catch(console.error),30000);}
+  window.addEventListener('memory-queue-ready',e=>{if(isMain())handleAiEvent({kind:'memory-queue-ready',data:e.detail}).catch(console.error)});
+  window.addEventListener('memory-queue-cancel',()=>cancelMemoryJobs());
   window.addEventListener("ai-source-changed", (e) => {
     handleAiEvent({ kind: "ai-source-changed", data: e.detail }).catch(
       console.error,
     );
   });
   window.addEventListener("pagehide", () => {
+    cancelMemoryJobs();
     if (isMain()) useAiStore().pauseKnowledge();
   });
 }

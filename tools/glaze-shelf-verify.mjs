@@ -5,7 +5,8 @@ import assert from 'node:assert/strict'
 import { writeFile } from 'node:fs/promises'
 import { connect } from './_cdp-lib.mjs'
 
-const c = await connect('http://127.0.0.1:5173', '9224')
+const debugPort=process.env.CDP_PORT||'9224'
+const c = await connect('http://127.0.0.1:5173', debugPort)
 const evaluate = async (code, client = c) => {
   const result = await client.evalx(code)
   if (result?.PAGE_ERR) throw new Error(result.PAGE_ERR)
@@ -39,7 +40,7 @@ try {
   await c.send('Page.reload', { ignoreCache: true })
   await init()
   const loc = await evaluate('window.native.getDataLocation()')
-  check(loc.defaultDir.endsWith('小说工坊-glaze-skin-verify'), 'isolated verification profile')
+  check(loc.defaultDir.endsWith('小说工坊-'+(process.env.SKIN_PROFILE||'glaze-skin-verify')), 'isolated verification profile')
   check(loc.current === loc.defaultDir && !loc.isCustom, 'verification profile does not redirect to another data directory')
   originalPrefs = await evaluate('(async()=>{const rows=await __ns.db.appconfig.toArray();return rows.filter(r=>["skin","theme"].includes(r.key))})()')
   await evaluate(`(async()=>{await __skinCheck.ui.setSkin('original');await __skinCheck.shelf.refresh();return true})()`)
@@ -59,19 +60,17 @@ try {
   await wait('!!document.querySelector(".glaze-shelf")')
   check(await evaluate('document.body.dataset.skin==="glaze"'), 'shelf uses glaze effective skin')
   check(await evaluate(`getComputedStyle(document.body).getPropertyValue('--bg-panel').trim()==='#f3f8f9' && getComputedStyle(document.querySelector('.app-root')).getPropertyValue('--bg-panel').trim()==='#f3f8f9'`), 'glaze tokens override original theme on root and teleported surfaces')
-  check(await evaluate('document.querySelectorAll(".glaze-library-card").length===__skinCheck.shelf.works.length-1'), 'all remaining works are accessible')
+  check(await evaluate('document.querySelectorAll(".gg-index-item").length===__skinCheck.shelf.works.length'), 'all remaining works are accessible')
   check(await evaluate(`(async()=>{const rows=await __ns.db.works.bulkGet(__skinFixtures);return rows.map(r=>r.kind).join(',')==='novel,note,cedar,violet,claret,ink' && (await __ns.db.volumes.where('workId').equals(__skinFixtures[0]).count())===0 && (await __ns.db.volumes.where('workId').equals(__skinFixtures[1]).count())===1})()`), 'six cover choices and default-volume choice are preserved')
   await shot('glaze-1440',1440,900)
   await shot('glaze-1400')
   await shot('glaze-1080', 1080, 680)
   check(await evaluate('document.documentElement.scrollWidth<=innerWidth && document.querySelector(".glaze-shelf-scroll").scrollWidth<=document.querySelector(".glaze-shelf-scroll").clientWidth'), 'minimum desktop width has no horizontal overflow')
   check(await evaluate(`(()=>{
-    const note=document.querySelector('.glaze-chapter-note'),book=document.querySelector('.glaze-stage-book.pose-0')
-    if(!note||!book||!note.closest('.glaze-feature-stack'))return false
-    const n=note.getBoundingClientRect(),b=book.getBoundingClientRect()
-    return Math.min(n.right,b.right)-Math.max(n.left,b.left)>=40 && Math.min(n.bottom,b.bottom)-Math.max(n.top,b.top)>=8
-  })()`), '1080px chapter card remains attached to and overlapping the featured book')
-  check(await evaluate(`document.querySelector('.glaze-shelf-scroll').getBoundingClientRect().top>=document.querySelector('.glaze-top-nav').getBoundingClientRect().bottom`), 'navigation never overlays the scrollable book area')
+    const note=document.querySelector('.gg-chapter'),plaque=document.querySelector('.gg-plaque'),stage=document.querySelector('.gg-viewport')
+    return !!note&&note.closest('.gg-plaque')===plaque&&note.dataset.workId===plaque.dataset.workId&&plaque.getBoundingClientRect().top>=stage.getBoundingClientRect().bottom
+  })()`), '1080px continuation label belongs to the selected work below the easel')
+  check(await evaluate(`document.querySelector('.glaze-shelf-scroll').getBoundingClientRect().top>=document.querySelector('.app-topnav').getBoundingClientRect().bottom`), 'navigation never overlays the scrollable book area')
   await c.send('Emulation.setDeviceMetricsOverride', { width: 1400, height: 880, deviceScaleFactor: 1, mobile: false })
 
   // Query through the actual input, including no-results recovery.
@@ -79,53 +78,55 @@ try {
     await evaluate(`(()=>{const el=document.querySelector('.glaze-shelf-tools input');el.value=${JSON.stringify(value)};el.dispatchEvent(new Event('input',{bubbles:true}));return true})()`)
   }
   await search('不存在的作品');await wait('!!document.querySelector(".glaze-empty")')
-  check(await evaluate('document.querySelectorAll(".glaze-top-nav button:disabled").length===5'), 'empty search disables only work navigation')
+  check(await evaluate('document.querySelectorAll(".app-topnav button:disabled").length===5'), 'empty search disables only work navigation')
   await shot('no-results')
-  await search('星尘旅人');await wait('document.querySelectorAll(".glaze-library-card").length===0 && !!document.querySelector(".glaze-stage-book.pose-0")')
-  check(await evaluate('document.querySelector(".glaze-feature-copy h2").textContent==="星尘旅人"'), 'search changes the featured work')
+  await search('星尘旅人');await wait('document.querySelectorAll(".gg-index-item").length===1 && !!document.querySelector(".gg-slot.is-current")')
+  check(await evaluate('document.querySelector(".gg-plaque h2").textContent==="星尘旅人"'), 'search changes the featured work')
   await shot('single')
-  await search('');await wait('!!document.querySelector(".glaze-library-card")')
+  await search('');await wait('!!document.querySelector(".gg-index-item")')
 
   // A normal click opens the displayed work, then every original module remains reachable.
-  const expected = await evaluate('__skinCheck.shelf.works[0].id')
-  await evaluate('document.querySelector(".glaze-stage-book.pose-0 .glaze-stage-open").click()')
+  const expected = await evaluate('document.querySelector(".gg-plaque").dataset.workId')
+  await evaluate('document.querySelector(".gg-slot.is-current .gg-book").click()')
   await wait('__skinCheck.ui.view==="work" && !!document.querySelector(".wb-body")')
   check(await evaluate('__skinCheck.work.work.id') === expected, 'single click opens the correct work')
   check(await evaluate('document.body.dataset.skin==="glaze" && __skinCheck.ui.skin==="glaze"'), 'workbench shares the selected glaze skin')
   await evaluate('__skinCheck.work.closeWork().then(()=>true)')
   await wait('!!document.querySelector(".glaze-shelf")')
-  await evaluate(`(()=>{window.__skinOpenCount=0;__skinCheck.work.$onAction(({name})=>{if(name==='open')__skinOpenCount++});document.querySelector('.glaze-stage-book.pose-0 .glaze-stage-open').focus();return true})()`)
+  await evaluate(`(()=>{window.__skinOpenCount=0;__skinCheck.work.$onAction(({name})=>{if(name==='open')__skinOpenCount++});document.querySelector('.gg-slot.is-current .gg-book').focus();return true})()`)
   await c.send('Input.dispatchKeyEvent', { type: 'keyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13, nativeVirtualKeyCode: 13, text: '\r' })
   await c.send('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
   await wait('__skinCheck.ui.view==="work"')
   check(await evaluate('__skinOpenCount===1'), 'keyboard Enter opens exactly once')
   await evaluate('__skinCheck.work.closeWork().then(()=>true)');await wait('!!document.querySelector(".glaze-shelf")')
   for (const key of ['outline','lore','characters','snippets','chapters']) {
-    await evaluate(`(()=>{const labels={outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感',chapters:'正文'};[...document.querySelectorAll('.glaze-top-nav button')].find(b=>b.textContent.includes(labels[${JSON.stringify(key)}])).click();return true})()`)
+    await evaluate(`(()=>{const labels={outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感',chapters:'正文'};[...document.querySelectorAll('.app-topnav button')].find(b=>b.textContent.includes(labels[${JSON.stringify(key)}])).click();return true})()`)
     await wait(`__skinCheck.ui.view==='work' && __skinCheck.work.tab===${JSON.stringify(key)}`)
     check(await evaluate('document.body.dataset.skin==="glaze"'), 'dock opens glaze ' + key)
     await evaluate('__skinCheck.work.closeWork().then(()=>true)');await wait('!!document.querySelector(".glaze-shelf")')
   }
 
   // Menu must not open a book; edit via the existing shared modal.
-  await evaluate('document.querySelector(".glaze-stage-book.pose-0 .glaze-work-menu button").click()')
+  await evaluate('document.querySelector(".gg-menu button").click()')
   await wait('!!document.querySelector(".n-dropdown-menu")')
   check(await evaluate('__skinCheck.ui.view==="shelf"'), 'book menu does not trigger opening')
   await evaluate(`[...document.querySelectorAll('.n-dropdown-option-body')].find(n=>n.textContent.includes('编辑信息')).click()`)
   await wait('!!document.querySelector(".n-modal input")')
   await shot('edit')
   await evaluate(`(()=>{const fields=document.querySelectorAll('.n-modal input');for(const [el,value] of [[fields[0],'星尘旅人 · 修订'],[fields[1],'林间修订'],[document.querySelector('.n-modal textarea'),'修订后的作品简介']]){el.value=value;el.dispatchEvent(new Event('input',{bubbles:true}))}[...document.querySelectorAll('.n-modal button')].find(b=>b.textContent.trim()==='保存').click();return true})()`)
-  await wait('!document.querySelector(".n-modal") && document.querySelector(".glaze-feature-copy h2").textContent==="星尘旅人 · 修订"')
+  await wait('!document.querySelector(".n-modal") && document.querySelector(".gg-plaque h2").textContent==="星尘旅人 · 修订"')
   check(await evaluate(`(async()=>{const row=await __ns.db.works.get(${JSON.stringify(expected)});return row.title==='星尘旅人 · 修订'&&row.author==='林间修订'&&row.intro==='修订后的作品简介'})()`), 'shared edit form persists title/author/introduction and refreshes shelf')
 
   // Use the original create form, then delete this newly created work via its menu.
   await evaluate('document.querySelector(".glaze-shelf-tools button").click()');await wait('!!document.querySelector(".n-modal input")')
   await evaluate(`(()=>{const el=document.querySelector('.n-modal input');el.value='引力验收·表单新建';el.dispatchEvent(new Event('input',{bubbles:true}));[...document.querySelectorAll('.n-modal button')].find(b=>b.textContent.trim()==='创建').click();return true})()`)
-  await wait('!document.querySelector(".n-modal") && document.querySelector(".glaze-feature-copy h2").textContent==="引力验收·表单新建"')
-  const createdId = await evaluate('__skinCheck.shelf.works[0].id');fixtureIds.push(createdId)
+  await wait('!document.querySelector(".n-modal") && __skinCheck.shelf.works.some(w=>w.title==="引力验收·表单新建")')
+  const createdId = await evaluate('__skinCheck.shelf.works.find(w=>w.title==="引力验收·表单新建").id');fixtureIds.push(createdId)
+  await evaluate("[...document.querySelectorAll('.gg-index-item')].find(button=>button.title==='引力验收·表单新建').click()")
+  await wait('document.querySelector(".gg-plaque h2").textContent==="引力验收·表单新建"')
   check(await evaluate(`__ns.db.volumes.where('workId').equals(${JSON.stringify(createdId)}).count().then(n=>n===1)`), 'shared create form creates a work with its default volume')
-  check(await evaluate('!document.querySelector(".glaze-chapter-note")'), 'a featured work without chapters leaves no chapter-card placeholder')
-  await evaluate('document.querySelector(".glaze-stage-book.pose-0 .glaze-work-menu button").click()');await wait('!!document.querySelector(".n-dropdown-menu")')
+  check(await evaluate('!document.querySelector(".gg-chapter")'), 'a featured work without chapters leaves no chapter-card placeholder')
+  await evaluate('document.querySelector(".gg-menu button").click()');await wait('!!document.querySelector(".n-dropdown-menu")')
   await evaluate(`[...document.querySelectorAll('.n-dropdown-option-body')].find(n=>n.textContent.includes('删除')).click()`)
   await wait(`!__skinCheck.shelf.works.some(w=>w.id===${JSON.stringify(createdId)})`)
   check(await evaluate(`__ns.db.works.get(${JSON.stringify(createdId)}).then(w=>!!w.deletedAt)`), 'delete remains recoverable soft deletion')
@@ -144,11 +145,11 @@ try {
   // Actual native settings window persists and broadcasts the change back to main.
   await evaluate('window.native.panelOpen({type:"settings",workId:"app",entityId:"",title:"设置"})')
   const panelDeadline = Date.now() + 10000
-  while (!(await (await fetch('http://127.0.0.1:9224/json/list')).json()).some(row=>row.url.includes('panel='))) {
+  while (!(await (await fetch(`http://127.0.0.1:${debugPort}/json/list`)).json()).some(row=>row.url.includes('panel='))) {
     assert.ok(Date.now() < panelDeadline, 'settings panel appears')
     await c.sleep(80)
   }
-  panel = await connect('panel=', '9224');await init(panel)
+  panel = await connect('panel=', debugPort);await init(panel)
   await wait('!!document.querySelector(".sw-root")', panel)
   await wait('document.body.dataset.skin==="glaze" && document.querySelector(".app-root").dataset.skin==="glaze"', panel)
   check(await evaluate('document.body.dataset.skin==="glaze" && document.querySelector(".app-root").dataset.skin==="glaze" && !!document.querySelector(".skin-picker")', panel), 'settings window shares glaze skin with skin picker')
@@ -176,10 +177,10 @@ try {
   emptySnapshot=await evaluate(`(async()=>{const {autosave}=await import('/src/services/autosave.js');await autosave.flushAll();return (await __ns.db.works.toArray()).filter(w=>!w.deletedAt)})()`)
   await evaluate(`(async()=>{await __ns.db.works.bulkPut(${JSON.stringify(emptySnapshot)}.map(w=>({...w,deletedAt:Date.now()})));await __skinCheck.shelf.refresh();return true})()`)
   await wait('!!document.querySelector(".glaze-empty")');await shot('empty')
-  check(await evaluate('document.querySelectorAll(".glaze-top-nav button:disabled").length===5'), 'empty library retains create/settings/skin controls')
+  check(await evaluate('document.querySelectorAll(".app-topnav button:disabled").length===5'), 'empty library retains create/settings/skin controls')
   await evaluate(`__ns.db.works.bulkPut(${JSON.stringify(emptySnapshot)}).then(()=>__skinCheck.shelf.refresh()).then(()=>true)`);emptySnapshot=null
   await c.send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] })
-  check(await evaluate('getComputedStyle(document.querySelector(".glaze-stage-book.pose-0")).animationName==="none"'), 'reduced motion disables floating animation')
+  check(await evaluate('getComputedStyle(document.querySelector(".gg-slot.is-current")).animationName==="none"'), 'reduced motion disables floating animation')
   console.log('ALL SKIN INTEGRATION CHECKS PASSED')
 } catch (error) {
   console.error(error);process.exitCode = 1
@@ -193,7 +194,7 @@ try {
       const url=await evaluate('location.href',panel)
       await evaluate('setTimeout(()=>window.native.panelCloseSelf(),50);true',panel)
       const deadline=Date.now()+15000
-      while((await(await fetch('http://127.0.0.1:9224/json/list')).json()).some(t=>t.url===url)){
+      while((await(await fetch(`http://127.0.0.1:${debugPort}/json/list`)).json()).some(t=>t.url===url)){
         assert.ok(Date.now()<deadline,'settings panel closes');await c.sleep(80)
       }
     }

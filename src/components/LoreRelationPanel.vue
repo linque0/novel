@@ -1,4 +1,6 @@
 <script setup>
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+const { museumPopoverClass, museumLight } = useGlazeMuseum()
 /* 关联关系设置面板（全局单例，ui.loreRelationPanel = { kind, id, x, y } 驱动；主窗口与面板窗口各挂一份）：
  * - 已有关系：出向/入向统一列出（入向按反向名展示），行尾 × 即删
  * - 新建关系：搜索目标（设定 + 人物）→ 类型（预设 chips，可自定义 + 反向名）→ 描述 → 添加
@@ -137,8 +139,7 @@ onBeforeUnmount(() => {
   <div
     v-if="panel && entity"
     id="lore-rel-panel"
-    class="lrp-panel"
-    :class="{ dragging: !!drag }"
+    class="lrp-panel" :class="[museumPopoverClass, { dragging: !!drag }]" :data-glaze-light="museumLight"
     :style="{ left: pos.x + 'px', top: pos.y + 'px' }"
     @contextmenu.prevent
   >
@@ -160,7 +161,7 @@ onBeforeUnmount(() => {
         <span>新建关系</span>
         <span class="lrp-hint">当前：{{ relKindLabel(kind) }}</span>
       </div>
-      <NSelect v-model:value="target" :options="targetOptions" filterable size="small" placeholder="搜索目标（设定 / 人物）" />
+      <NSelect :menu-props="{ class: museumPopoverClass }" v-model:value="target" :options="targetOptions" filterable size="small" placeholder="搜索目标（设定 / 人物）" />
       <div class="lrp-chips">
         <span
           v-for="p in REL_PRESETS"

@@ -30,10 +30,19 @@ import LoreRelationPanel from './LoreRelationPanel.vue'
 import LoreDetail from './LoreDetail.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
 import PresetWindow from './ai/PresetWindow.vue'
+import StudioWorkspace from './StudioWorkspace.vue'
 import TaskLauncher from './ai/TaskLauncher.vue'
+import GlazeArtwork from './GlazeArtwork.vue'
+import GlazeLightingToggle from './GlazeLightingToggle.vue'
+import { useGlazeMuseum } from '../composables/useGlazeMuseum'
+import { useGlazeDrawers } from '../composables/useGlazeDrawers'
 
 const work = useWorkStore()
 const ui = useUiStore()
+const { museumActive } = useGlazeMuseum()
+const shell = ref(null)
+const { narrow, drawer, modalDrawer, closeDrawer, toggleDrawer } = useGlazeDrawers(museumActive, shell)
+watch(() => work.activeChapter?.id, id => { if (!id && drawer.value === 'notes') closeDrawer() })
 /* 面板窗口也要把皮肤写到 body，皮肤样式统一以 body[data-skin] 为作用域 */
 watch(
   () => resolveSkin(ui.skin, 'panel').id,
@@ -45,7 +54,7 @@ const spec = ref(null) // { type, workId, entityId }
 const status = ref('loading') // loading | ready | error
 const errMsg = ref('')
 
-const PANEL_TITLES = { chapter: '正文', outline: '大纲', characters: '人物', lore: '设定', snippets: '灵感', settings: '设置', 'ai-presets': '恍然梦预设', ai: '恍然梦' }
+const PANEL_TITLES = { chapter: '正文', outline: '大纲', characters: '人物', lore: '设定', snippets: '灵感', settings: '设置', 'ai-presets': '恍然梦预设', ai: '恍然梦', agent: '恍然梦创作台' }
 const ENTITY_SEL = {
   chapter: () => work.activeChapter?.title,
   characters: () => work.activeCharacter?.name,
@@ -126,6 +135,7 @@ async function boot() {
   // 完整界面：切到对应页签并预选中拆窗时的实体（恍然梦无页签，仅携带作品上下文）
   const tabOf = { chapter: 'chapters', outline: 'outline', characters: 'characters', lore: 'lore', snippets: 'snippets' }
   if (tabOf[s.type]) work.tab = tabOf[s.type]
+  if(s.type==='agent')ui.workbenchMode='agent'
   if (s.type === 'ai-presets' && s.entityId) work.selChapterId = s.entityId
   if (s.type === 'chapter' && s.entityId && work.liveChapters.some(c=>c.id===s.entityId)) {
     work.selChapterId = s.entityId
@@ -163,7 +173,8 @@ onBeforeUnmount(() => autosave.flushAll())
 </script>
 
 <template>
-  <div class="app-root panel-host" :class="'theme-' + ui.theme" :data-skin="resolveSkin(ui.skin, 'panel').id" :data-module="work.tab" :style="ui.rootStyle" style="height: 100vh; display: flex; flex-direction: column">
+  <div ref="shell" class="app-root panel-host" :class="['theme-' + ui.theme, { 'glaze-museum': museumActive, 'glaze-drawer-open': modalDrawer }]" :data-glaze-light="museumActive ? ui.glazeLighting : undefined" :data-skin="resolveSkin(ui.skin, 'panel').id" :data-module="work.tab" :style="ui.rootStyle" style="height: 100vh; display: flex; flex-direction: column">
+    <div v-if="museumActive" class="gm-cornice" aria-hidden="true"><span></span><i></i><span></span></div>
     <div v-if="status === 'error'" class="empty-shelf" style="padding-top: 18vh">
       <div class="big">面板无法打开</div>
       <p>{{ errMsg }}</p>
@@ -173,9 +184,11 @@ onBeforeUnmount(() => autosave.flushAll())
       <!-- 设置窗口：独立布局（左导航 + 右内容），无作品顶栏 -->
       <PresetWindow v-if="spec.type === 'ai-presets'" style="flex: 1; min-height: 0" />
       <SettingsWindow v-else-if="spec.type === 'settings'" style="flex: 1; min-height: 0" />
+      <StudioWorkspace v-else-if="spec.type==='agent'" />
       <template v-else>
         <TaskLauncher v-if="ui.isStudioSkin && spec.type !== 'ai'" :module="work.tab" />
-        <div class="panel-topbar">
+        <div class="panel-topbar" :inert="modalDrawer || undefined">
+          <GlazeLightingToggle v-if="museumActive" />
           <div v-show="ui.isStudioSkin" id="studio-task-actions"></div>
           <span class="serif" style="font-weight: 700">{{ work.work?.title }} · {{ panelTitle }}</span>
           <span class="save-badge">
@@ -194,8 +207,15 @@ onBeforeUnmount(() => autosave.flushAll())
         <div v-if="spec.type === 'ai'" class="ai-win">
           <AiAssistantPanel />
         </div>
-        <div v-else class="panel-body">
-          <div v-if="ui.skin !== 'crimson'" v-show="(spec.type !== 'outline' || ui.outlineSideOpen) && (spec.type !== 'chapter' || (!ui.readMode && !ui.focusMode))" class="side-panel" :style="{ width: ui.sideWidth + 'px' }">
+        <div v-if="museumActive && narrow && spec.type !== 'ai'" class="glaze-pane-toggles" :inert="modalDrawer || undefined">
+          <button type="button" class="glaze-directory-toggle" aria-controls="glaze-panel-directory" :aria-expanded="drawer === 'directory'" @click="ui.outlineSideOpen=true;toggleDrawer('directory',$event)">目录与资料</button>
+          <button v-if="spec.type === 'chapter' && work.activeChapter" type="button" class="glaze-notes-toggle" aria-controls="glaze-panel-notes" :aria-expanded="drawer === 'notes'" @click="toggleDrawer('notes',$event)">批注与资料</button>
+        </div>
+        <div v-if="spec.type !== 'ai'" class="panel-body">
+          <button v-if="modalDrawer" type="button" class="glaze-drawer-scrim" aria-label="关闭侧栏" tabindex="-1" @click="closeDrawer()"></button>
+          <div v-if="ui.skin !== 'crimson'" id="glaze-panel-directory" v-show="museumActive && narrow || (spec.type !== 'outline' || ui.outlineSideOpen) && (spec.type !== 'chapter' || (!ui.readMode && !ui.focusMode))" class="side-panel" :class="{ 'glaze-drawer-visible': drawer === 'directory' }" data-glaze-drawer="directory" :role="museumActive && narrow ? 'dialog' : undefined" :aria-modal="museumActive && narrow && drawer === 'directory' ? true : undefined" aria-label="目录与资料" :inert="museumActive && narrow && drawer !== 'directory' || undefined" :style="{ width: ui.sideWidth + 'px', '--glaze-side-width': ui.sideWidth + 'px' }">
+            <button v-if="museumActive" type="button" class="glaze-drawer-close" aria-label="关闭目录与资料" @click="closeDrawer()">关闭 ×</button>
+            <GlazeArtwork v-if="museumActive" compact />
             <ChapterTree v-if="spec.type === 'chapter'" in-panel @read="ui.readMode=true" />
             <OutlineSidebar v-else-if="spec.type === 'outline'" />
             <CharacterList v-else-if="spec.type === 'characters'" />
@@ -214,14 +234,14 @@ onBeforeUnmount(() => autosave.flushAll())
             <OIcon name="caret-right" :size="12" />
             <span class="rail-text">故事结构</span>
           </button>
-          <div class="center-pane paper-texture" :class="{ 'crimson-panel-center': ui.skin === 'crimson' }">
+          <div class="center-pane paper-texture" :class="{ 'crimson-panel-center': ui.skin === 'crimson' }" :inert="modalDrawer || undefined">
             <EditorPane v-if="spec.type === 'chapter'" />
             <OutlineCenter v-else-if="spec.type === 'outline'" style="flex: 1; min-height: 0" />
             <CharacterCenter v-else-if="spec.type === 'characters'" />
             <MubuView v-else-if="spec.type === 'lore'" />
             <SnippetCenter v-else-if="spec.type === 'snippets'" />
           </div>
-          <RightPanel v-if="spec.type === 'chapter' && ui.skin !== 'crimson'" />
+          <RightPanel v-if="spec.type === 'chapter' && ui.skin !== 'crimson'" id="glaze-panel-notes" :class="{ 'glaze-drawer-visible': drawer === 'notes' }" data-glaze-drawer="notes" :role="museumActive && narrow ? 'dialog' : undefined" :aria-modal="museumActive && narrow && drawer === 'notes' ? true : undefined" aria-label="批注与资料" :inert="museumActive && narrow && drawer !== 'notes' || undefined" @glaze-close="closeDrawer()" />
         </div>
         <DLinkPopover />
         <RevisionsModal />

@@ -5,6 +5,7 @@ import { NButton, NModal, NInput, NSelect, NDropdown, NSpin, NCheckbox, useMessa
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
 import AppTopbar from './AppTopbar.vue'
+import DreamLaunchDialog from './agent/DreamLaunchDialog.vue'
 import { WORK_NAVIGATION } from './app-navigation'
 import GravityShelf from './GravityShelf.vue'
 import GlazeShelf from './GlazeShelf.vue'
@@ -53,12 +54,15 @@ const openText = (w) => formatShelfOpenTime(shelf.openStats[w.id]?.lastOpenedAt)
 
 /* 接续卡与开书使用同一位置解析；没有位置记录时回退首章。 */
 const firstChapter = ref(null)
-watch([() => filtered.value[0]?.id, () => ui.skin], ([id, skin], _previous, onCleanup) => {
+const glazeSelectedId = ref(null)
+const resumeWorkId = computed(() => ui.skin === 'glaze' && filtered.value.some(book => book.id === glazeSelectedId.value)
+  ? glazeSelectedId.value : filtered.value[0]?.id)
+watch([resumeWorkId, () => ui.skin], ([id, skin], _previous, onCleanup) => {
   firstChapter.value = null
   if (!id || !['glaze', 'crimson'].includes(skin)) return
   const subscription = liveQuery(() => resumeChapterOf(id)).subscribe({
-    next(chapter) { if (filtered.value[0]?.id === id && ui.skin === skin) firstChapter.value = chapter },
-    error() { if (filtered.value[0]?.id === id && ui.skin === skin) firstChapter.value = null }
+    next(chapter) { if (resumeWorkId.value === id && ui.skin === skin) firstChapter.value = chapter },
+    error() { if (resumeWorkId.value === id && ui.skin === skin) firstChapter.value = null }
   })
   onCleanup(() => subscription.unsubscribe())
 }, { immediate: true })
@@ -103,6 +107,7 @@ async function openWorkAt(w, tab = 'chapters') {
   opening.value = true
   try {
     await work.open(w.id)
+    ui.workbenchMode=tab==='agent'?'agent':'writing'
     if (WORK_NAVIGATION.some(item => item.key === tab)) work.tab = tab
   } catch {
     msg.error('作品未能打开，请重试')
@@ -141,11 +146,13 @@ function fmtWords(n) {
 
 const cardMenu = (w) => [
   { label: '打开', key: 'open' },
+  { label: '用恍然梦-入梦打开', key: 'agent' },
   { label: '编辑信息', key: 'edit' },
   { label: '删除（可回收站恢复，一期先软删除）', key: 'del', props: { style: { color: ui.skin === 'gravity' ? '#f18f86' : '#c2564a' } } }
 ]
 async function onCardMenu(key, w) {
   if (key === 'open') await onWorkClick(w)
+  if (key === 'agent') await openWorkAt(w,'agent')
   if (key === 'edit') openEdit(w)
   if (key === 'del') {
     await shelf.deleteWork(w)
@@ -157,7 +164,7 @@ async function onCardMenu(key, w) {
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
     <GravityShelf v-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
-    <GlazeShelf v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <GlazeShelf @select-work="glazeSelectedId = $event" v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <CrimsonShelf v-else-if="ui.skin === 'crimson'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <template v-else>
     <AppTopbar active="shelf" :busy="opening || shelf.loading" :has-work="!!filtered[0]" :target-title="filtered[0]?.title" @navigate="key => key === 'settings' ? openSettings() : key !== 'shelf' && filtered[0] ? openWorkAt(filtered[0], key) : undefined">
@@ -211,6 +218,7 @@ async function onCardMenu(key, w) {
     </div>
 
     </template>
+    <DreamLaunchDialog />
     <NModal v-model:show="showCreate" preset="card" :title="editing ? '编辑作品信息' : '新建作品'" style="width: 460px">
       <div style="display: flex; flex-direction: column; gap: 12px">
         <NInput v-model:value="form.title" placeholder="书名 *" />

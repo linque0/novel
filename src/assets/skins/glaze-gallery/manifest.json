@@ -1,0 +1,217 @@
+{
+  "generatedAt": "2026-10-28T17:06:03.165Z",
+  "world": [
+    {
+      "id": "impression-sunrise",
+      "file": "Monet - Impression, Sunrise.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Monet_-_Impression,_Sunrise.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/5/59/Monet_-_Impression%2C_Sunrise.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "artist": "Claude Monet",
+      "date": "1872 date QS:P571,+1872-00-00T00:00:00Z/9",
+      "original": {
+        "width": 5773,
+        "height": 4478,
+        "bytes": 7105965
+      },
+      "downloaded": "3840,2979",
+      "main": {
+        "dimensions": "3200,2482",
+        "bytes": 2306608
+      },
+      "thumb": {
+        "dimensions": "480,372",
+        "bytes": 16532
+      }
+    },
+    {
+      "id": "poppy-field",
+      "file": "Claude Monet - Poppy Field - Google Art Project.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Claude_Monet_-_Poppy_Field_-_Google_Art_Project.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/8/89/Claude_Monet_-_Poppy_Field_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "artist": "Claude Monet",
+      "date": "1873",
+      "original": {
+        "width": 5586,
+        "height": 4258,
+        "bytes": 5220393
+      },
+      "downloaded": "3840,2927",
+      "main": {
+        "dimensions": "3200,2440",
+        "bytes": 2140746
+      },
+      "thumb": {
+        "dimensions": "480,366",
+        "bytes": 22140
+      }
+    },
+    {
+      "id": "starry-night",
+      "file": "Van Gogh - Starry Night - Google Art Project.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ea/Van_Gogh_-_Starry_Night_-_Google_Art_Project.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "artist": "Vincent van Gogh",
+      "date": "1889 date QS:P571,+1889-00-00T00:00:00Z/9",
+      "original": {
+        "width": 44567,
+        "height": 35291,
+        "bytes": 696195208
+      },
+      "downloaded": "3840,3041",
+      "main": {
+        "dimensions": "3200,2534",
+        "bytes": 3666530
+      },
+      "thumb": {
+        "dimensions": "480,380",
+        "bytes": 59186
+      }
+    },
+    {
+      "id": "great-wave",
+      "file": "Great Wave off Kanagawa2.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Great_Wave_off_Kanagawa2.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Great_Wave_off_Kanagawa2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "artist": "After Katsushika Hokusai",
+      "date": "First publication: between 1826 and 1833 date QS:P571,+1850-00-00T00:00:00Z/7,P1319,+1826-00-00T00:00:00Z/9,P1326,+1833-00-00T00:00:00Z/9 . This edition: Reprint by Adachi from the Shōwa period (between 1926 and 1989).",
+      "original": {
+        "width": 8242,
+        "height": 5640,
+        "bytes": 12795605
+      },
+      "downloaded": "3840,2628",
+      "main": {
+        "dimensions": "3200,2190",
+        "bytes": 1925690
+      },
+      "thumb": {
+        "dimensions": "480,328",
+        "bytes": 40368
+      }
+    },
+    {
+      "id": "fighting-temeraire",
+      "file": "The Fighting Temeraire, JMW Turner, National Gallery.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:The_Fighting_Temeraire,_JMW_Turner,_National_Gallery.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/3/30/The_Fighting_Temeraire%2C_JMW_Turner%2C_National_Gallery.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "artist": "J. M. W. Turner",
+      "date": "1839 date QS:P571,+1839-00-00T00:00:00Z/9",
+      "original": {
+        "width": 5684,
+        "height": 4223,
+        "bytes": 8438383
+      },
+      "downloaded": "3840,2853",
+      "main": {
+        "dimensions": "3200,2378",
+        "bytes": 1257872
+      },
+      "thumb": {
+        "dimensions": "480,356",
+        "bytes": 12240
+      }
+    },
+    {
+      "id": "view-of-delft",
+      "file": "Vermeer-view-of-delft.jpg",
+      "sourcePage": "https://commons.wikimedia.org/wiki/File:Vermeer-view-of-delft.jpg",
+      "sourceUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a2/Vermeer-view-of-delft.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=original",
+      "license": "Public domain",
+      "artist": "Johannes Vermeer",
+      "date": "between circa 1660 and circa 1661 date QS:P,+1660-00-00T00:00:00Z/8,P1319,+1660-00-00T00:00:00Z/9,P1326,+1661-00-00T00:00:00Z/9,P1480,Q5727902 Baroque (late 16 th century date QS:P,+1550-00-00T00:00:00Z/7,P4241,Q40719766 –1750s date QS:P,+1750-00-00T00:00:00Z/8 )",
+      "original": {
+        "width": 3000,
+        "height": 2491,
+        "bytes": 1216498
+      },
+      "downloaded": "3000,2491",
+      "main": {
+        "dimensions": "3000,2492",
+        "bytes": 1680238
+      },
+      "thumb": {
+        "dimensions": "480,398",
+        "bytes": 21518
+      }
+    }
+  ],
+  "studio": [
+    {
+      "kind": "novel",
+      "source": "src\\assets\\skins\\glaze-art\\novel.png",
+      "main": {
+        "dimensions": "1086,1448",
+        "bytes": 400840
+      },
+      "thumb": {
+        "dimensions": "320,426",
+        "bytes": 32150
+      }
+    },
+    {
+      "kind": "note",
+      "source": "src\\assets\\skins\\glaze-art\\note.png",
+      "main": {
+        "dimensions": "1086,1448",
+        "bytes": 473292
+      },
+      "thumb": {
+        "dimensions": "320,426",
+        "bytes": 46154
+      }
+    },
+    {
+      "kind": "cedar",
+      "source": "src\\assets\\skins\\glaze-art\\cedar.png",
+      "main": {
+        "dimensions": "1086,1448",
+        "bytes": 470602
+      },
+      "thumb": {
+        "dimensions": "320,426",
+        "bytes": 41740
+      }
+    },
+    {
+      "kind": "violet",
+      "source": "src\\assets\\skins\\glaze-art\\violet.png",
+      "main": {
+        "dimensions": "1086,1448",
+        "bytes": 413952
+      },
+      "thumb": {
+        "dimensions": "320,426",
+        "bytes": 34208
+      }
+    },
+    {
+      "kind": "claret",
+      "source": "src\\assets\\skins\\glaze-art\\claret.png",
+      "main": {
+        "dimensions": "1086,1448",
+        "bytes": 402370
+      },
+      "thumb": {
+        "dimensions": "320,426",
+        "bytes": 37626
+      }
+    },
+    {
+      "kind": "ink",
+      "source": "src\\assets\\skins\\glaze-art\\ink.png",
+      "main": {
+        "dimensions": "1086,1448",
+        "bytes": 444690
+      },
+      "thumb": {
+        "dimensions": "320,426",
+        "bytes": 39164
+      }
+    }
+  ]
+}

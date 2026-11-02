@@ -1,3 +1,4 @@
+import { memoryJob, recoverMemoryJob } from '../services/ai/memory-queue-core.js'
 import { db, uid, now, todayStr } from './database'
 import { htmlToMd, htmlToPlain } from '../services/importers'
 import { suspendProjection, resumeProjection } from './project-repo.js'
@@ -111,8 +112,16 @@ export async function seedWorkDefaults(workId, { withVolume = true } = {}) {
   )
 }
 
-export async function putRow(table, row) {
+export async function putRow(table, row, opts = {}) {
   row.updatedAt = now()
+  if(table === 'chapters' && opts.memoryIntent) {
+    const job=memoryJob(row,opts.memoryIntent)
+    await db.transaction('rw',db.chapters,db.airuns,async()=>{
+      await db.chapters.put(JSON.parse(JSON.stringify(row)))
+      if(!await db.airuns.get(job.id))await db.airuns.put(job)
+    })
+    return {...row,memoryJobId:job.id}
+  }
   await db.table(table).put(JSON.parse(JSON.stringify(row)))
   return row
 }
@@ -204,7 +213,7 @@ export async function exportBackupJson() {
     const rows = await db.table(t).toArray()
     /* 密钥绝不进备份 JSON（方案 §三/§六.4）：appconfig 的 ai.credential / ai.cred.<供应商id>（safeStorage 密文）
        导出时按 ai.cred 前缀整体剔除，恢复备份后需在模型设置重新配置 API 密钥 */
-    dump.data[t] = t === 'appconfig' ? rows.filter((r) => !String(r?.key || '').startsWith('ai.cred')) : t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: Array.from(new Float32Array(r.vec)) })) : t === 'airuns' ? rows.map((r) => ({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? 'paused' : r.status })) : rows
+    dump.data[t] = t === 'appconfig' ? rows.filter((r) => !String(r?.key || '').startsWith('ai.cred')) : t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: Array.from(new Float32Array(r.vec)) })) : t === 'airuns' ? rows.map((r) => (recoverMemoryJob({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? (r.type==='memory-queue'?'interrupted':'paused') : r.status }))) : rows
   }
   const assetRows = await db.assets.toArray()
   for (const a of assetRows) {
@@ -229,11 +238,12 @@ export async function importBackupJson(text) {
     const blob = dataUrl ? await (await fetch(dataUrl)).blob() : null
     assets.push({ ...meta, blob })
   }
+  window.dispatchEvent(new CustomEvent('memory-queue-cancel'))
   suspendProjection()
   try { await db.transaction('rw', db.tables, async () => {
     for (const table of db.tables) await table.clear()
     for (const [t, rows] of Object.entries(dump.data)) {
-      const restored = t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: new Float32Array(r.vec || []).buffer })) : t === 'airuns' ? rows.map((r) => ({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? 'paused' : r.status })) : t === 'appconfig' ? rows.filter((r) => !String(r?.key || '').startsWith('ai.cred')) : rows
+      const restored = t === 'aikbvec' ? rows.map((r) => ({ ...r, vec: new Float32Array(r.vec || []).buffer })) : t === 'airuns' ? rows.map((r) => (recoverMemoryJob({ ...r, owner: null, leaseUntil: 0, status: r.status === 'running' ? (r.type==='memory-queue'?'interrupted':'paused') : r.status }))) : t === 'appconfig' ? rows.filter((r) => !String(r?.key || '').startsWith('ai.cred')) : rows
       if (restored.length) await db.table(t).bulkPut(restored)
     }
     if (assets.length) await db.assets.bulkPut(assets)
