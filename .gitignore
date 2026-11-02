@@ -19,3 +19,19 @@ tools/_*.json
 
 # 逆向工作区原始产物（第三方压缩代码，不入库）
 .rev-ashes
+
+# 验收脚本临时工作目录（fixture/断言现场/诊断脚本，不入库；每次运行都会重新生成）
+.tmp-*/
+
+# 插件构建输出（与 dist 同类，不入库）
+dist-plugin
+release-plugin
+
+# agent 会话产物（计划、运行快照，不入库）
+.zcode/
+.superpowers/
+.taste-skill/
+
+# 验收脚本子目录产物（tools/_*.png 只匹配直属文件，这里补齐子目录）
+tools/_writing-evidence/
+tools/_original-shelf/
