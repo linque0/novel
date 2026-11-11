@@ -1,0 +1,370 @@
+{
+  "01-shelf": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 1924488,
+    "skin": "crimson",
+    "tab": "shelf",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 0,
+      "broken": []
+    }
+  },
+  "02-editor": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 1129656,
+    "skin": "crimson",
+    "tab": "chapters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "03-editor-contextmenu": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 1062081,
+    "skin": "crimson",
+    "tab": "chapters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "04-outline-root": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 580548,
+    "skin": "crimson",
+    "tab": "outline",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "05-outline-container": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 589455,
+    "skin": "crimson",
+    "tab": "outline",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "06-outline-detail": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 616257,
+    "skin": "crimson",
+    "tab": "outline",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "07-outline-edge-menu": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 636291,
+    "skin": "crimson",
+    "tab": "outline",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "08-outline-node-menu": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 629871,
+    "skin": "crimson",
+    "tab": "outline",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "09-outline-text": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 752841,
+    "skin": "crimson",
+    "tab": "outline",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "10-character-graph": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 852591,
+    "skin": "crimson",
+    "tab": "characters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "11-character-list": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 995214,
+    "skin": "crimson",
+    "tab": "characters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "12-lore": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 752526,
+    "skin": "crimson",
+    "tab": "lore",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "14-snippet": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 1308597,
+    "skin": "crimson",
+    "tab": "snippets",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 2,
+      "broken": []
+    }
+  },
+  "15-search": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 1028757,
+    "skin": "crimson",
+    "tab": "snippets",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 2,
+      "broken": []
+    }
+  },
+  "16-stats": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 734805,
+    "skin": "crimson",
+    "tab": "snippets",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 2,
+      "broken": []
+    }
+  },
+  "17-import": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 995895,
+    "skin": "crimson",
+    "tab": "snippets",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 2,
+      "broken": []
+    }
+  },
+  "18-export": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 861117,
+    "skin": "crimson",
+    "tab": "chapters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "19-help": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 730671,
+    "skin": "crimson",
+    "tab": "chapters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "20-trash": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 871167,
+    "skin": "crimson",
+    "tab": "chapters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "21-panel-chapter": {
+    "size": {
+      "width": 1483,
+      "height": 980
+    },
+    "url": "app://local/index.html?panel=chapter%3A5db1dcda-6619-49b8-88e3-90cd651158be%3A934f149e-c580-4390-8046-d9e827a8fc62",
+    "bytes": 432198,
+    "skin": "crimson",
+    "tab": "chapters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "22-panel-characters": {
+    "size": {
+      "width": 1383,
+      "height": 930
+    },
+    "url": "app://local/index.html?panel=characters%3A5db1dcda-6619-49b8-88e3-90cd651158be%3A1d75a4a4-8190-433f-b121-2d6353979975",
+    "bytes": 415239,
+    "skin": "crimson",
+    "tab": "chapters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "23-settings": {
+    "size": {
+      "width": 1250,
+      "height": 880
+    },
+    "url": "app://local/index.html?panel=settings%3Aapp%3A",
+    "bytes": 713361,
+    "skin": "crimson",
+    "tab": "chapters",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 1,
+      "broken": []
+    }
+  },
+  "24-crimson-stage": {
+    "size": {
+      "width": 1733,
+      "height": 1054
+    },
+    "url": "app://local/index.html",
+    "bytes": 1919643,
+    "skin": "crimson",
+    "tab": "shelf",
+    "overflow": false,
+    "broken": [],
+    "settle": {
+      "images": 0,
+      "broken": []
+    }
+  }
+}

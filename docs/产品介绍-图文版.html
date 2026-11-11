@@ -252,24 +252,24 @@ kbd{
       输入即存，永不丢稿 —— 所有数据留在本机。
     </p>
     <div class="tags">
-      <span>自由模块画布</span>
-      <span>连线严格端口 · 全局最短绕行</span>
+      <span>分层自由画布</span>
+      <span>七类模块 · 四类语义连线</span>
       <span>人物关系图</span>
       <span>幕布式设定库</span>
-      <span>跨模块双链</span>
+      <span>跨模块关系链接</span>
       <span>拆窗多窗口</span>
-      <span>三套主题 · 中英文字体切换</span>
-      <span>色带书封封面</span>
+      <span>四套内置皮肤</span>
+      <span>赤月戏 · 折屏戏本</span>
     </div>
   </div>
 
   <div class="cover-hero">
-    <div class="frame"><img src="assets/06-outline-canvas-overview.png" alt="大纲自由画布" /></div>
+    <div class="frame"><img src="assets/crimson/04-outline-root.jpg" alt="赤月戏大纲分层画布" /></div>
   </div>
 
   <div class="cover-bot">
     <div>产品介绍 · 图文版<br />github.com/linque0/novel</div>
-    <div class="ver">v1.0.23</div>
+    <div class="ver">v1.2.0</div>
   </div>
 </section>
 
@@ -289,20 +289,20 @@ kbd{
   <div class="toc-list">
     <div class="toc-item"><span class="toc-num">01</span><span class="toc-t">产品概览</span><span class="toc-d"></span><span class="toc-p">03</span></div>
     <div class="toc-item"><span class="toc-num">02</span><span class="toc-t">正文 · 写作的主战场</span><span class="toc-d"></span><span class="toc-p">05</span></div>
-    <div class="toc-item"><span class="toc-num">03</span><span class="toc-t">大纲 · 自由模块画布</span><span class="toc-d"></span><span class="toc-p">07</span></div>
+    <div class="toc-item"><span class="toc-num">03</span><span class="toc-t">大纲 · 分层自由画布</span><span class="toc-d"></span><span class="toc-p">07</span></div>
     <div class="toc-item"><span class="toc-num">04</span><span class="toc-t">人物 · 人物卡与关系图</span><span class="toc-d"></span><span class="toc-p">12</span></div>
     <div class="toc-item"><span class="toc-num">05</span><span class="toc-t">设定 · 幕布式大纲树</span><span class="toc-d"></span><span class="toc-p">14</span></div>
     <div class="toc-item"><span class="toc-num">06</span><span class="toc-t">灵感 · 随手记</span><span class="toc-d"></span><span class="toc-p">15</span></div>
-    <div class="toc-item"><span class="toc-num">07</span><span class="toc-t">全局工具 · 搜索 / 统计 / 双链 / 导入导出</span><span class="toc-d"></span><span class="toc-p">16</span></div>
+    <div class="toc-item"><span class="toc-num">07</span><span class="toc-t">全局工具 · 搜索 / 统计 / 关系链接 / 导入导出</span><span class="toc-d"></span><span class="toc-p">16</span></div>
     <div class="toc-item"><span class="toc-num">08</span><span class="toc-t">多窗口 · 边看大纲边写正文</span><span class="toc-d"></span><span class="toc-p">19</span></div>
-    <div class="toc-item"><span class="toc-num">09</span><span class="toc-t">视觉与主题 · 色带书封 / 字体切换 / 设置面板</span><span class="toc-d"></span><span class="toc-p">21</span></div>
+    <div class="toc-item"><span class="toc-num">09</span><span class="toc-t">视觉与主题 · 四套皮肤 / 赤月戏 / 设置窗口</span><span class="toc-d"></span><span class="toc-p">21</span></div>
     <div class="toc-item"><span class="toc-num">10</span><span class="toc-t">内置帮助 · 数据安全</span><span class="toc-d"></span><span class="toc-p">23</span></div>
     <div class="toc-item"><span class="toc-num">11</span><span class="toc-t">安装运行 · 技术一览</span><span class="toc-d"></span><span class="toc-p">24</span></div>
   </div>
 
   <div class="toc-note">
-    <strong>阅读说明</strong>　本文档全部配图均为软件真实界面截图：工作台内各模块取自演示作品《星尘旅人》
-    （3 卷 9 章 · 6 人物 · 13 条设定 · 17 个画布模块），书架页为在架书目全览（15 本验证书 + 该演示作品），未做任何界面美化修饰。<br />
+    <strong>阅读说明</strong>　本文档全部配图均为软件真实界面截图，统一使用内置皮肤「赤月戏」拍摄：工作台内各模块取自演示作品《星尘旅人》
+    （3 卷 9 章 · 6 人物 · 13 条设定 · 19 个画布模块），书架页为 5 本演示书目，未做任何界面美化修饰。<br />
     相关文档：<code>docs/开发流程.md</code>（工程方法）· <code>docs/使用手册.md</code>（操作说明）· <code>CHANGELOG.md</code>（版本历史）
   </div>
 </section>
@@ -325,7 +325,7 @@ kbd{
     <strong>小说工坊</strong>把「正文 / 大纲 / 人物 / 设定 / 灵感」收进同一个工作台，
     并以<strong>输入即存</strong>作为第一原则：输入防抖 1 秒落盘、30 秒兜底、
     失焦与切章与关窗前强制保存，配合章节自动版本快照，尽力让每一句话都不丢。
-    所有数据存于本机，不联网、不上传、不登录。
+    作品数据全部存于本机；除你主动配置的 AI 服务外，不联网、不上传、不登录。
   </p>
 
   <p>它要解决的是长篇小说创作中最常见的三个断裂：</p>
@@ -335,11 +335,11 @@ kbd{
     <tbody>
       <tr>
         <td><strong>结构散失</strong><br /><span style="color:var(--muted);font-size:8.5pt">正文与大/小纲分离</span></td>
-        <td>大纲做成<strong>自由模块画布</strong>——事件、便签、引用卡自由摆位，用四类语义连线表达因果伏笔；正文可拆窗与大纲并排对照。</td>
+        <td>大纲做成分层自由画布——事件、便签、引用卡自由摆位，用四类语义连线表达因果伏笔；正文可拆窗与大纲并排对照。</td>
       </tr>
       <tr>
         <td><strong>资料割裂</strong><br /><span style="color:var(--muted);font-size:8.5pt">人物关系与设定散落多处</span></td>
-        <td>人物有<strong>关系图</strong>可视化，设定是<strong>无限嵌套的幕布树</strong>，两者都能与正文通过 <code>[[双链]]</code> 互相引用、悬停预览。</td>
+        <td>人物有<strong>关系图</strong>可视化，设定是<strong>无限嵌套的幕布树</strong>，两者都能与正文通过<strong>关系链接</strong>互相引用、悬停预览。</td>
       </tr>
       <tr>
         <td><strong>心血丢失</strong><br /><span style="color:var(--muted);font-size:8.5pt">版本混乱、误删难恢复</span></td>
@@ -350,9 +350,9 @@ kbd{
 
   <div class="stats">
     <div class="stat"><div class="n">5</div><div class="l">创作模块一体</div></div>
-    <div class="stat"><div class="n">3</div><div class="l">主题皮肤</div></div>
+    <div class="stat"><div class="n">4</div><div class="l">内置皮肤</div></div>
     <div class="stat"><div class="n">10<small>+</small></div><div class="l">导入导出格式</div></div>
-    <div class="stat"><div class="n">0</div><div class="l">网络请求</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">作品上传</div></div>
   </div>
 
   <div class="callout">
@@ -381,15 +381,15 @@ kbd{
   </div>
 
   <p>
-    入口是书架页：每部作品一张<strong>竖版书封</strong>——平涂单色 + 衬线书名 + 作者名圆印，
-    封面下方一行细信息呈现总字数与章节数，创作状态（构思 / 连载 / 完结）印在封底角落。
-    封面悬停出现编辑与删除（软删除，可回收站恢复）菜单。顶栏常驻本地搜索（书名 / 作者 / 类型）、
-    「⚙ 设置」面板与「＋ 新建作品」。
+    入口是赤月戏的<strong>书架舞台</strong>：76px 页头承载品牌、七模块导航、皮肤选择器与设置入口；
+    主舞台按作品切换布景，左侧竖排书名与简介，中央是生成式书封与「接续上次的故事」首章票根；
+    右侧 316px「未完的剧目」栏列出其余作品，显示字数、章数与上次打开时间。底部 40px 底栏汇总作品数并提供「重播演出」。
+    顶栏同时保留本地搜索（书名 / 作者 / 类型）与「＋ 新建作品」。
   </p>
 
   <figure>
-    <div class="frame"><img src="assets/01-shelf.png" alt="书架页" /></div>
-    <figcaption><b>图 1</b>　书架页。色带书封沿墙陈列，封面即进度——书名、规模与状态无需进书即可掌握。</figcaption>
+    <div class="frame"><img src="assets/crimson/01-shelf.jpg" alt="赤月戏书架页" /></div>
+    <figcaption><b>图 1</b>　赤月戏书架。《星尘旅人》与四本陪衬书目均为演示数据；书封、竖排题名与首章票根都来自真实作品信息。</figcaption>
   </figure>
 
   <div class="grid2">
@@ -430,14 +430,15 @@ kbd{
   </div>
 
   <p>
-    左侧是<strong>卷—章两级树</strong>：支持拖拽排序与按钮上下移动，行内显示每章字数，
-    顶部提供 ＋卷 / ＋章 / 改名 / 删除 一组快捷操作。
-    中间是富文本编辑区，右侧「本章大纲 / 本章出场人物 / 本章插图 / 本章信息」随当前章节实时联动。
+    赤月戏把正文拆成<strong>章节目录 + 稿本 + 页边札记</strong>三栏：248px 章节树按卷分组、可收到 56px；
+    296px 起的稿本包含居中章题、花饰、状态行与页脚 folio；252px 札记栏承载本章批注、资料、字数目标与恍然梦入口。
+    正文继续尊重你的中文字体与字号偏好。选中文字可添加<strong>批注</strong>与<strong>关系链接</strong>：
+    批注是带用途色的实线下划线，关系链接是点状下划线，两者可叠在同一段文字上；悬停关系链接会弹出可拖动的预览窗。
   </p>
 
   <figure>
-    <div class="frame"><img src="assets/02-chapter-editor.png" alt="正文编辑界面" /></div>
-    <figcaption><b>图 2</b>　正文工作台。顶栏常驻保存状态点（自动保存就绪 / 保存中… / 已保存时间）。</figcaption>
+    <div class="frame"><img src="assets/crimson/02-editor.jpg" alt="赤月戏正文工作台" /></div>
+    <figcaption><b>图 2</b>　赤月戏正文。左侧章节目录、中间稿本、右侧页边札记；顶栏常驻保存状态点（自动保存就绪 / 保存中… / 已保存时间）。</figcaption>
   </figure>
 
   <div class="grid2">
@@ -480,12 +481,12 @@ kbd{
   <p>
     在正文中右键会<strong>就地弹出快捷操作栏</strong>，把最常用的编辑动作一次摊开，
     免去来回移动鼠标到工具栏。含二级飞出菜单（标题 / 字号 / 字体颜色 / 突出显示 / 对齐），
-    以及「添加双链…」——把选中文字直接链到任意章节、人物或设定。
+    以及「添加批注」「添加关系链接」——把选中文字直接链到任意章节、人物或设定。
   </p>
 
   <figure>
-    <div class="frame"><img src="assets/03-chapter-contextmenu.png" alt="正文右键快捷操作栏" /></div>
-    <figcaption><b>图 3</b>　正文右键菜单。剪切/复制/粘贴为纯文本、格式化、列表引用、超链接、双链、撤销重做与清除格式。</figcaption>
+    <div class="frame"><img src="assets/crimson/03-editor-contextmenu.jpg" alt="正文右键快捷操作栏" /></div>
+    <figcaption><b>图 3</b>　正文右键菜单。剪切/复制/粘贴为纯文本、格式化、列表引用、超链接、批注、关系链接、撤销重做与清除格式。</figcaption>
   </figure>
 
   <ul class="feat">
@@ -509,35 +510,36 @@ kbd{
 
   <div class="sec-head">
     <div class="kicker">OUTLINE CANVAS</div>
-    <h2>大纲 · 自由模块画布</h2>
-    <div class="sub">流程图式白板：没有固定结构，你把想法摆到哪里，它就是哪里</div>
+    <h2>大纲 · 分层自由画布</h2>
+    <div class="sub">根层只显示直接子节点；容器可进入、可就地展开；面包屑返回上级并恢复各层相机</div>
     <div class="bar"></div>
   </div>
 
   <figure>
-    <div class="frame"><img src="assets/06-outline-canvas-overview.png" alt="大纲自由画布总览" /></div>
-    <figcaption><b>图 4</b>　大纲画布总览。左栏是模块清单与类型筛选，画布上是三幕式结构，事件模块由连线串联成主链。</figcaption>
+    <div class="frame"><img src="assets/crimson/04-outline-root.jpg" alt="赤月戏大纲根层" /></div>
+    <figcaption><b>图 4</b>　大纲根层。总览视角下可见 6 个事件、1 个容器、15 个模块与 11 条连线；容器卡停在画布左下，可直接进入或就地展开。</figcaption>
   </figure>
 
   <div class="grid2">
     <div class="card">
-      <h4>六类模块 · 四种形状</h4>
+      <h4>七类模块 · 四种形状</h4>
       <p><strong>事件</strong>（矩形 / 菱形 / 平行四边形 / 椭圆，SVG 真实描边）、
-        <strong>便签</strong>、<strong>引用卡</strong>（双链到设定 / 章节 / 人物）、
-        <strong>文本框</strong>（透明度可调）、<strong>容器</strong>（拖入归组 / 拖出回根级 / 可折叠）、
-        <strong>章节与卷锚点</strong>（点击跳回正文对应位置）。</p>
+        <strong>便签</strong>、<strong>引用</strong>（关系链接到设定 / 章节 / 人物）、
+        <strong>文本框</strong>（透明度可调）、<strong>锚点</strong>（绑定章节）、
+        <strong>卷</strong>（绑定分卷）、<strong>容器</strong>（归组 / 折叠 / 可进入 / 可就地展开）。</p>
     </div>
     <div class="card">
-      <h4>摆位与操作</h4>
-      <p>拖拽摆位（网格吸附、双密度切换、pin 固定、八向调整尺寸），双击行内编辑，
-        空白处右键新建，<kbd>Delete</kbd> 删除选中模块。侧栏点击定位、双向高亮。</p>
+      <h4>根层与容器</h4>
+      <p>根层只渲染直接子节点，容器以章节卡呈现（标题 / 摘要 / 章节 / 事件进度 / 嵌套数）。
+        点「进入容器」切换到次级画布；「就地展开」把容器展开为两列迷你卡（窄容器单列）。
+        容器八向缩放（宽 260–720），内容超出时迷你卡在内容区内部滚动，连线与端口跟随滚动。</p>
     </div>
   </div>
 
   <div class="callout">
-    <span class="t">断线检测</span>
-    画布底部常驻「烂尾情节 / 缺铺垫」提示——无出边的事件被标为烂尾，无入边的被标为缺铺垫，
-    结构漏洞一眼可见（图示作品当前为「断线 0 · 共 17 模块」）。
+    <span class="t">分层画布</span>
+    容器内部是独立的一层：只显示它的直接子节点，面包屑可逐级返回，并恢复离开时各层的相机位置。
+    工具条的「展开全部 / 收起全部」递归处理当前作用域的所有层级容器；「总览」会自动收起容器并适配全图。
   </div>
 
   <div class="p-foot">
@@ -560,8 +562,8 @@ kbd{
   </div>
 
   <figure>
-    <div class="frame"><img src="assets/07-outline-canvas-detail.png" alt="画布细节：模块形状与连线" /></div>
-    <figcaption><b>图 5</b>　放大后的画布。可见菱形与椭圆事件、带标签的连线（触发 / 发现 / 对抗），以及自动绕开节点的虚线。</figcaption>
+    <div class="frame"><img src="assets/crimson/06-outline-detail.jpg" alt="赤月戏画布细节" /></div>
+    <figcaption><b>图 5</b>　放大后的画布。事件卡显示标题、正文摘要与状态（已完成 / 正在写 / 待修改 / 待展开）；纸面纹理、折角与描边在缩放时保持铺满。</figcaption>
   </figure>
 
   <table class="tight">
@@ -600,14 +602,14 @@ kbd{
   </div>
 
   <p>
-    除了「模块 ↔ 模块」，还支持<strong>连线与连线互连</strong>：从模块锚点拖线，
-    若落点在既有连线上（12px 容差命中），会在落点自动创建一个<strong>连接点</strong>并完成接线。
-    连接点采用「连线寄生」模型——以路径参数挂在宿主连线上，节点怎么挪都<strong>钉在线上不脱线</strong>；
-    一条连线可建多个连接点、各自引出多条线。
+    除了「模块 ↔ 模块」，还支持<strong>连线与连线互连</strong>：右键连线 →「在此处创建连接点」，
+    连接点会直接钉在右键位置对应的连线路径上。连接点采用「连线寄生」模型——以路径参数挂在宿主连线上，
+    节点怎么挪都<strong>钉在线上不脱线</strong>；它既可作为模块拖线的终点，也可直接按住拖出连线作为起点；
+    一条连线可建多个连接点、各自引出多条连线，右键连接点可删除（接到它上面的、从它引出的连线一并删除）。
   </p>
 
   <figure>
-    <div class="frame"><img src="assets/08-outline-edge-menu.png" alt="右键连线编辑浮层" /></div>
+    <div class="frame"><img src="assets/crimson/07-outline-edge-menu.jpg" alt="右键连线编辑浮层" /></div>
     <figcaption><b>图 6</b>　右键连线打开编辑浮层：改标签、关系类型、线型、颜色、线宽与箭头大小，并可就地创建连接点。</figcaption>
   </figure>
 
@@ -642,28 +644,28 @@ kbd{
   </div>
 
   <figure>
-    <div class="frame"><img src="assets/09-outline-node-menu.png" alt="模块右键操作菜单" /></div>
-    <figcaption><b>图 7</b>　右键模块弹出统一操作菜单：切换形状、编辑内容、固定位置、删除。</figcaption>
+    <div class="frame"><img src="assets/crimson/08-outline-node-menu.jpg" alt="右键模块操作菜单" /></div>
+    <figcaption><b>图 7</b>　右键模块弹出统一操作菜单：设置 / 详情、切换形状、画布内编辑、固定位置、发送给恍然梦等。</figcaption>
   </figure>
 
   <div class="grid2">
     <div class="card">
       <h4>右键菜单项</h4>
-      <p>形状（矩形 → 平行四边形 → 菱形 → 椭圆 循环切换）、编辑内容、透明度滑杆（文本框）、
-        自定义类型、固定 / 取消固定、删除（红标）。容器另有七色调色板。</p>
+      <p>设置 / 详情、形状（矩形 → 平行四边形 → 菱形 → 椭圆循环切换）、画布内编辑、
+        透明度滑杆（文本框）、固定 / 取消固定、发送给恍然梦、删除（红标）。容器另有分支调色板。</p>
     </div>
     <div class="card">
       <h4>画布工具条</h4>
-      <p>吸附开关、双密度、贝塞尔 / 正交折线切换、全局线宽与箭头大小设置、
-        缩放（− / 百分比 / ＋）、适应视口、一键整理布局。</p>
+      <p>总览、展开全部 / 收起全部、整理布局、文本视图；画布透明度 20–100%、
+        连线粗细、箭头大小、卡片密度、曲线 / 折线切换、16px 网格吸附、缩放与适应。</p>
     </div>
   </div>
 
   <ul class="feat">
     <li><b>撤销重做</b>——画布编辑全量可撤销（<kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd>，或工具栏 ↶ ↷）。</li>
-    <li><b>自定义模块类型</b>——除内置六类外可自建类型并配色，用于区分「线索」「势力」等自有分类。</li>
-    <li><b>骨架模板</b>——空白画布提供三幕式 / 章级清单快速开始模板，一键铺出基础结构。</li>
-    <li><b>双链卫星</b>——引用卡在画布上显示卫星令牌，悬停预览目标内容，点击跳转。</li>
+    <li><b>关系投影</b>——收起的子节点投影到最近可见容器卡（淡线 + 空心落点）；层外端点收进「前接 / 后续」接续卡，同一对端点的同类关系合并为「类型 · N」。</li>
+    <li><b>多选封装</b>——工具条「多选」勾选当前层节点（含迷你卡），≥2 个时一次撤销内封装为新容器。</li>
+    <li><b>引用卫星</b>——引用卡在画布上显示卫星令牌，悬停预览目标内容，点击跳转。</li>
   </ul>
 
   <div class="p-foot">
@@ -688,12 +690,13 @@ kbd{
 
   <p>
     画布之外还有<strong>文本视图</strong>——把同一份大纲数据以缩进树呈现，适合快速罗列与调整层级。
-    两个视图共享同一份数据，右上角一键切换，改动即时互通。
+    两个视图共享同一份数据，右上角一键切换，改动即时互通；<kbd>Ctrl</kbd>+<kbd>K</kbd>
+    会搜索全部层级，自动进入目标父层并定位。
   </p>
 
   <figure>
-    <div class="frame"><img src="assets/10-outline-text.png" alt="大纲文本视图" /></div>
-    <figcaption><b>图 8</b>　文本视图。选中模块后可直接编辑标题与内容，并显示所属容器面包屑。</figcaption>
+    <div class="frame"><img src="assets/crimson/09-outline-text.jpg" alt="大纲文本视图" /></div>
+    <figcaption><b>图 8</b>　文本视图。选中模块后可直接编辑标题与正文，并显示所属容器与「未来大纲计划 / 尚未完成」状态。</figcaption>
   </figure>
 
   <div class="grid3">
@@ -702,8 +705,8 @@ kbd{
       <p>画布与文本不是两套数据，改一处另一处立即同步。</p>
     </div>
     <div class="card">
-      <h4>容器面包屑</h4>
-      <p>文本视图显示节点所属容器，归组结构不会在文字里迷路。</p>
+      <h4>状态与所属容器</h4>
+      <p>文本视图顶部显示条目性质与完成状态，节点仍保留所属容器的层级关系。</p>
     </div>
     <div class="card">
       <h4>侧栏层级树</h4>
@@ -738,8 +741,8 @@ kbd{
   </div>
 
   <figure>
-    <div class="frame"><img src="assets/11-character-graph.png" alt="人物关系图" /></div>
-    <figcaption><b>图 9</b>　关系图。六位人物的关系网：师徒、宿敌、青梅竹马、共生契约等一目了然，边上直接标注关系名。</figcaption>
+    <div class="frame"><img src="assets/crimson/10-character-graph.jpg" alt="赤月戏人物关系图" /></div>
+    <figcaption><b>图 9</b>　关系图。六位人物的关系网：师徒、宿敌、青梅竹马、共生契约等一目了然；赤月戏使用 118×196 的纸面人物卡，右侧为关系名册。</figcaption>
   </figure>
 
   <div class="grid2">
@@ -775,13 +778,13 @@ kbd{
 
   <div class="sec-head">
     <div class="kicker">CHARACTER SHEET</div>
-    <h2>人物卡：完整的人物档案</h2>
+    <h2>人物卷宗：完整的人物档案</h2>
     <div class="bar"></div>
   </div>
 
   <figure>
-    <div class="frame"><img src="assets/12-character-list.png" alt="人物卡详情" /></div>
-    <figcaption><b>图 10</b>　人物卡。角色定位、标签、自定义字段、头像、人物关系与小传同页管理。</figcaption>
+    <div class="frame"><img src="assets/crimson/11-character-list.jpg" alt="赤月戏人物卷宗" /></div>
+    <figcaption><b>图 10</b>　人物卷宗。330×420 拱顶肖像在左，档案纸在右；角色定位、标签、自定义字段、人物关系与小传同页管理。</figcaption>
   </figure>
 
   <table class="tight">
@@ -822,8 +825,8 @@ kbd{
   </div>
 
   <figure>
-    <div class="frame"><img src="assets/13-lore-mubu.png" alt="设定幕布树" /></div>
-    <figcaption><b>图 11</b>　设定幕布。左栏层级树与右侧编辑区双向同步，顶部为内联格式工具栏，底部常驻键位提示。</figcaption>
+    <div class="frame"><img src="assets/crimson/12-lore.jpg" alt="赤月戏设定幕布" /></div>
+    <figcaption><b>图 11</b>　赤月戏设定。左侧天象图布景列、中间纸面幕布树、右侧设定目录；图层级与编辑区双向同步，顶部为内联格式工具栏。</figcaption>
   </figure>
 
   <div class="grid2">
@@ -841,6 +844,7 @@ kbd{
 
   <ul class="feat">
     <li><b>侧边栏是同一棵树的镜像</b>——点击定位、逐级折叠展开，与编辑区双向同步。</li>
+    <li><b>设定详情页</b>——双击条目进入：面包屑路径、关联关系列表、可拖动关系图谱与子条目树；「幕布中定位」关闭详情并闪烁定位原条目。</li>
     <li><b>MD / TXT 导入</b>——标题层级自动转为节点层级，正文行转为子节点，旧笔记可直接迁入。</li>
     <li><b>旧数据无损迁移</b>——早期「分类 / 条目」结构首次打开时自动迁移，不丢内容。</li>
   </ul>
@@ -868,12 +872,13 @@ kbd{
   <p>
     灵感是一张随时可用的纸条：在输入框记下一句话，<kbd>Ctrl</kbd>+<kbd>Enter</kbd> 提交，
     列表按时间倒序排列。任何一条灵感都能<strong>一键转为章节或设定</strong>，
-    从「想到」到「落在结构里」只差一次点击。
+    从「想到」到「落在结构里」只差一次点击。赤月戏把它做成三栏：
+    220px 灯笼河布景、420px 手记墙与 1fr 阅读纸；手记卡错落排布，选中后在右侧阅读纸里继续编辑。
   </p>
 
   <figure>
-    <div class="frame"><img src="assets/14-snippet.png" alt="灵感收集" /></div>
-    <figcaption><b>图 12</b>　灵感列表。左侧输入框随手记，每条可转为章节 / 设定，也可编辑或删除。</figcaption>
+    <div class="frame"><img src="assets/crimson/14-snippet.jpg" alt="赤月戏灵感采集" /></div>
+    <figcaption><b>图 12</b>　灵感页。左侧布景、中间手记墙、右侧阅读纸；每条可转为章节 / 设定，也可编辑或删除。</figcaption>
   </figure>
 
   <div class="grid3">
@@ -892,8 +897,8 @@ kbd{
   </div>
 
   <div class="callout">
-    <span class="t">双链让灵感长在结构上</span>
-    灵感内容同样支持 <code>[[双链]]</code>——写「钟楼的第十二响」时把关键词链到设定节点，
+    <span class="t">关系链接让灵感长在结构上</span>
+    灵感内容同样支持<strong>关系链接</strong>——写「钟楼的第十二响」时把关键词链到设定节点，
     日后检索与追溯都能回到源头。
   </div>
 
@@ -903,7 +908,7 @@ kbd{
   </div>
 </section>
 
-<!-- ============================= 16 · 07 搜索统计双链 ============================= -->
+<!-- ============================= 16 · 07 搜索统计关系链接 ============================= -->
 <section class="page">
   <div class="p-head">
     <div class="brand"><b>小说工坊</b> Novel Studio</div>
@@ -912,14 +917,14 @@ kbd{
 
   <div class="sec-head">
     <div class="kicker">SEARCH &amp; STATS</div>
-    <h2>搜索 · 统计 · 双链</h2>
+    <h2>搜索 · 统计 · 关系链接</h2>
     <div class="bar"></div>
   </div>
 
   <div class="row">
     <div class="col">
       <figure class="mb0">
-        <div class="frame"><img src="assets/15-search.png" alt="全局搜索" /></div>
+        <div class="frame"><img src="assets/crimson/15-search.jpg" alt="全局搜索" /></div>
         <figcaption><b>图 13</b>　全局搜索。可勾选检索范围，命中高亮、点击跳转。</figcaption>
       </figure>
     </div>
@@ -930,18 +935,18 @@ kbd{
         <strong>正文 / 大纲 / 人物 / 设定 / 灵感</strong>五个模块检索，
         结果按模块分组并高亮命中片段，点击直接跳到对应位置。
       </p>
-      <h4 class="side-h4" style="margin-top:4.5mm">双链系统</h4>
+      <h4 class="side-h4" style="margin-top:4.5mm">关系链接</h4>
       <p class="side-p">
-        任意位置选中文字 → 右键「添加双链…」，或手输 <code>[[标题]]</code>，
-        把章节、人物、设定互相引用；悬停链接即可<strong>预览目标内容</strong>；
-        改名不断链（富文本区按 id 存储），并支持反向链接查询与引用统计。
+        任意位置选中文字 → 右键「添加关系链接…」，或手输 <code>[[标题]]</code>，
+        把章节、人物、设定互相引用；悬停链接即可<strong>预览目标内容</strong>，
+        预览窗可拖动钉住、原位换内容；改名不断链（富文本区按 id 存储），并支持反向链接查询与引用统计。
       </p>
     </div>
   </div>
 
   <figure style="margin-top:4.5mm">
-    <div class="frame"><img src="assets/05-stats.png" alt="写作统计" /></div>
-    <figcaption><b>图 14</b>　写作统计（暗夜书房主题）。四张指标卡 + 近 90 天每日新增柱状图 + 近 180 天写作热力图。</figcaption>
+    <div class="frame"><img src="assets/crimson/16-stats.jpg" alt="写作统计" /></div>
+    <figcaption><b>图 14</b>　赤月戏皮肤下的写作统计。四张指标卡 + 近 90 天每日新增柱状图 + 近 180 天写作热力图。</figcaption>
   </figure>
 
   <div class="p-foot">
@@ -965,8 +970,8 @@ kbd{
   </div>
 
   <figure>
-    <div class="frame"><img src="assets/17-import.png" alt="导入文件" /></div>
-    <figcaption><b>图 15</b>　导入弹窗，支持六类格式，导入前可预览分章结果。</figcaption>
+    <div class="frame"><img src="assets/crimson/17-import.jpg" alt="导入文件" /></div>
+    <figcaption><b>图 15</b>　赤月戏皮肤下的导入弹窗，支持六类格式，导入前可预览分章结果。</figcaption>
   </figure>
 
   <table class="tight">
@@ -1006,8 +1011,8 @@ kbd{
   </div>
 
   <figure>
-    <div class="frame"><img src="assets/16-export.png" alt="导出正文对话框" /></div>
-    <figcaption><b>图 16</b>　导出对话框。按卷分组勾选章节，底部选择格式；按钮文字随选中章数变化。</figcaption>
+    <div class="frame"><img src="assets/crimson/18-export.jpg" alt="导出正文对话框" /></div>
+    <figcaption><b>图 16</b>　赤月戏皮肤下的导出对话框。按卷分组勾选章节，底部选择格式；按钮文字随选中章数变化。</figcaption>
   </figure>
 
   <table class="tight">
@@ -1053,8 +1058,8 @@ kbd{
   </p>
 
   <figure>
-    <div class="frame"><img src="assets/20-panel-chapter.png" alt="正文面板窗口" /></div>
-    <figcaption><b>图 17</b>　拆出的正文面板窗口。顶部「保存并关闭」，左栏可自由切换任意章节。</figcaption>
+    <div class="frame"><img src="assets/crimson/21-panel-chapter.jpg" alt="赤月戏正文面板窗口" /></div>
+    <figcaption><b>图 17</b>　拆出的正文面板窗口。顶部「保存并关闭」，左栏可自由切换任意章节，正文、批注与字数目标完整保留。</figcaption>
   </figure>
 
   <div class="callout">
@@ -1085,35 +1090,28 @@ kbd{
   <div class="row">
     <div class="col">
       <figure class="mb0">
-        <div class="frame"><img src="assets/21-panel-outline.png" alt="大纲面板窗口" /></div>
-        <figcaption><b>图 18</b>　大纲面板窗口，完整保留画布与工具栏。</figcaption>
+        <div class="frame"><img src="assets/crimson/22-panel-characters.jpg" alt="赤月戏人物面板窗口" /></div>
+        <figcaption><b>图 18</b>　人物面板窗口完整保留列表、卷宗档案与关系入口；面板内可自由切换条目。</figcaption>
       </figure>
     </div>
     <div class="col">
-      <figure class="mb0">
-        <div class="frame"><img src="assets/22-main-readonly-placeholder.png" alt="主窗口只读占位" /></div>
-        <figcaption><b>图 19</b>　正文被面板占用时，主窗口对应章节显示只读占位与「前往窗口」。</figcaption>
-      </figure>
-    </div>
-  </div>
-
-  <p style="margin-top:4mm">
-    为防同一内容被两个窗口同时改写，软件内置<strong>实体锁</strong>：
-    面板占用的章节，主窗口该章转为<strong>只读占位</strong>并给出「前往窗口」按钮，
-    其余章节照常可写。面板内切换条目时，锁<strong>随选中自动迁移</strong>。
-  </p>
-
-  <div class="grid2">
-    <div class="card">
-      <h4>锁粒度跟随编辑面</h4>
-      <p>章节 / 人物 / 灵感用<strong>条目级锁</strong>（只有被占用的那条转只读）；
+      <h4 class="side-h4">实体锁</h4>
+      <p class="side-p">
+        为防同一内容被两个窗口同时改写，面板占用的章节 / 人物 / 灵感条目，
+        主窗口对应条目转为<strong>只读占位</strong>并给出「前往窗口」按钮，其余条目照常可写。
+        面板内切换条目时，锁<strong>随选中自动迁移</strong>。
+      </p>
+      <h4 class="side-h4" style="margin-top:4.5mm">锁粒度跟随编辑面</h4>
+      <p class="side-p">
+        章节 / 人物 / 灵感用<strong>条目级锁</strong>（只有被占用的那条转只读）；
         大纲 / 设定幕布是跨节点树编辑，用<strong>模块级锁</strong>（对应页签整体占位）——
-        避免「锁了半个模块」的假安全。</p>
-    </div>
-    <div class="card">
-      <h4>窗口生命周期</h4>
-      <p>面板按类型<strong>记忆窗口几何</strong>（并夹取到可见屏内）；关闭前优雅保存；
-        主窗口关闭时级联关闭全部面板。</p>
+        避免「锁了半个模块」的假安全。
+      </p>
+      <h4 class="side-h4" style="margin-top:4.5mm">窗口生命周期</h4>
+      <p class="side-p">
+        面板按类型<strong>记忆窗口几何</strong>（并夹取到可见屏内）；关闭前优雅保存；
+        主窗口关闭时级联关闭全部面板。
+      </p>
     </div>
   </div>
 
@@ -1137,35 +1135,35 @@ kbd{
   </div>
 
   <div class="sec-head">
-    <div class="kicker">THEMES</div>
-    <h2>三套主题 · 沉浸写作</h2>
+    <div class="kicker">SKINS</div>
+    <h2>四套皮肤 · 折屏戏台</h2>
     <div class="bar"></div>
   </div>
 
   <p>
-    提供<strong>宣纸</strong>（默认，暖米色纸纹）、<strong>羊皮纸</strong>、<strong>暗夜书房</strong>（深色）三套皮肤，
-    在顶栏「⚙ 设置」面板一键切换（导航底部 ☀/🌙 亦可快速昼夜切换）。
-    全局采用衬线排版与纸张纹理，配统一的图标体系与视觉令牌（圆角 / 间距 / 投影 / 动效时长），
-    并支持 <code>prefers-reduced-motion</code> 降级与键盘焦点环。
+    软件内置<strong>四套皮肤</strong>：原版工坊、引力书舱、琉光画境与赤月戏。皮肤覆盖书架、工作台与独立窗口，
+    在书架页头或设置窗口一键切换；切换皮肤不改变作品数据、功能与操作习惯。
+    赤月戏的设计语言是「<strong>金屏为台，折缝为幕，纸页为文，朱印为场，书签为序</strong>」：
+    深墨舞台承托暖纸页面，旧金细线分隔大栏，朱砂只用于印章、当前书签与主 CTA。
   </p>
 
   <figure>
-    <div class="frame"><img src="assets/04-theme-night.png" alt="暗夜书房主题" /></div>
-    <figcaption><b>图 20</b>　暗夜书房主题下的正文视图。深色纸底配金色强调，与封面墨黑款同一套对位逻辑。</figcaption>
+    <div class="frame"><img src="assets/crimson/24-crimson-stage.jpg" alt="赤月戏书架舞台" /></div>
+    <figcaption><b>图 20</b>　赤月戏书架舞台。同一套书架在《雾都来信》下换题名、换书封、换首章票根；布景、栏宽与版式保持一致。</figcaption>
   </figure>
 
   <div class="grid3">
     <div class="card">
-      <h4>宣纸</h4>
-      <p>暖米色纸纹底色，默认主题，长时间阅读最柔和。</p>
+      <h4>赤月戏</h4>
+      <p>墨纸旧金、折屏戏台与宋体竖题；76px 顶栏 + 86px 模块条 + 40px 底栏，正文 248 / 296 / 252 三栏。</p>
     </div>
     <div class="card">
-      <h4>羊皮纸</h4>
-      <p>偏暖黄的旧纸质感，适合偏好复古阅读感的作者。</p>
+      <h4>引力书舱 · 琉光画境</h4>
+      <p>深海蓝铜色轨道，或浅青玻璃叠册；两套都覆盖书架、工作台与独立窗口。</p>
     </div>
     <div class="card">
-      <h4>暗夜书房</h4>
-      <p>深色低亮配色，夜间写作减少屏幕刺激。</p>
+      <h4>原版工坊</h4>
+      <p>熟悉的书架与工作台，含宣纸 / 羊皮纸 / 暗夜书房三套主题与色带书封。</p>
     </div>
   </div>
 
@@ -1188,33 +1186,47 @@ kbd{
   </div>
 
   <div class="sec-head">
-    <div class="kicker">COVERS &amp; TYPE</div>
-    <h2>色带书封 · 六款封面 · 字体切换</h2>
+    <div class="kicker">CRIMSON STAGE</div>
+    <h2>赤月戏的布景 · 字体 · 设置窗口</h2>
     <div class="bar"></div>
   </div>
 
   <p>
-    书架封面采用<strong>「色带书封」</strong>体系：竖版 2:3 开本、平涂单色、左侧一道书脊装订带，
-    封面上只有书名、状态细线与作者名圆印三种元素——丛书墙逻辑，封面即全部。
-    六款配色（虚构 · 克莱因蓝 / 非虚构 · 象牙白 / 文集 · 松绿 / 诗辑 · 藤紫 / 别藏 · 绛红 / 特殊 · 墨黑）
-    同一构造仅换色，每款底色配一对冷暖对位的字色；新建或编辑作品时任选一款。
+    赤月戏为不同模块准备了独立布景：人物页的<strong>红月</strong>、设定页的<strong>天象图</strong>与灵感页的<strong>灯笼河</strong>；
+    正文、大纲与设置也各有自己的舞台。<strong>标题用京华老宋体，文学性文字用霞鹜文楷</strong>，
+    正文继续尊重你的中文字体与字号偏好；纸页带错位背纸、软影与折角，大栏之间用 11px 折缝分隔。
   </p>
 
   <figure>
-    <div class="frame" style="width:72%; margin:0 auto"><img src="assets/24-cover-styles.png" alt="六款封面同架" /></div>
-    <figcaption><b>图 21</b>　六款封面同架示范。书名竖排衬线、作者名钤于圆印、状态细线压底；封面书名跟随正文字体切换。</figcaption>
+    <div class="frame" style="width:72%; margin:0 auto"><img src="assets/crimson/23-settings.jpg" alt="赤月戏设置窗口" /></div>
+    <figcaption><b>图 21</b>　赤月戏设置窗口。左侧书签式分类、中间外观设置、右侧纸面排版预览；工坊皮肤与「原版配色主题」分开管理。</figcaption>
   </figure>
 
   <p>
     正文字体支持<strong>中 / 西文分离切换</strong>：中文六款（思源宋体 / 霞鹜文楷 / 京华老宋体 / 朝华标题 / 云游手书 / 系统黑体）、
     西文三款（跟随中文 / Playfair Display / Montenegrin Gothic One），全部为随包本地 OFL 字体、零网络请求；
-    书架封面书名与圆印同步跟随，正文字号 13–24px 无级调节。
+    赤月戏下标题自动使用京华老宋体，正文与字号仍按你的偏好渲染。
   </p>
 
-  <figure>
-    <div class="frame" style="width:72%; margin:0 auto"><img src="assets/23-settings-panel.png" alt="设置面板" /></div>
-    <figcaption><b>图 22</b>　「⚙ 设置」面板：主题 / 中英文字体 / 字号 / 数据 / 书签 / 统计 / 帮助收编于同一入口，纸感底板随三套主题自适应。</figcaption>
-  </figure>
+  <div class="grid3">
+    <div class="card">
+      <h4>人物 · 红月</h4>
+      <p>人物页整幅红月布景，330×420 拱顶肖像与竖排演员表。</p>
+    </div>
+    <div class="card">
+      <h4>设定 · 天象图</h4>
+      <p>左侧天象图布景列，中间纸面幕布树，右侧设定目录。</p>
+    </div>
+    <div class="card">
+      <h4>灵感 · 灯笼河</h4>
+      <p>220px 灯笼河布景 + 420px 手记墙 + 1fr 阅读纸。</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="t">原版工坊的色带书封</span>
+    竖版 2:3 开本、平涂单色、书脊装订带、书名与作者名圆印；六款配色冷暖对位，仍在原版工坊下可选。
+  </div>
 
   <div class="p-foot">
     <span>小说工坊 Novel Studio · 产品介绍</span>
@@ -1238,7 +1250,7 @@ kbd{
   <div class="row">
     <div class="col">
       <figure class="mb0">
-        <div class="frame"><img src="assets/18-help.png" alt="内置使用手册" /></div>
+        <div class="frame"><img src="assets/crimson/19-help.jpg" alt="内置使用手册" /></div>
         <figcaption><b>图 23</b>　内置使用手册，含功能详解、键位详解、导出行为表与 FAQ。</figcaption>
       </figure>
     </div>
@@ -1256,14 +1268,14 @@ kbd{
   </div>
 
   <figure style="margin-top:4.5mm">
-    <div class="frame"><img src="assets/19-trash.png" alt="回收站" /></div>
+    <div class="frame"><img src="assets/crimson/20-trash.jpg" alt="回收站" /></div>
     <figcaption><b>图 24</b>　回收站按正文 / 人物 / 设定 / 灵感分页，支持恢复与彻底删除。</figcaption>
   </figure>
 
   <div class="callout dark">
     <span class="t">数据与安全</span>
     <ul class="feat" style="margin:0">
-      <li style="color:#e8e0d2">全部数据存于本机（Electron 用户数据目录下的 IndexedDB），<strong>无任何网络请求</strong>，不登录、不上传</li>
+      <li style="color:#e8e0d2">全部数据存于本机（Electron 用户数据目录下的 IndexedDB），<strong>不登录、不上传</strong>；仅当你主动使用恍然梦 AI 助手时，才会按你配置的模型服务发起请求</li>
       <li style="color:#e8e0d2">「备份」导出 JSON 全库快照（含图片），「恢复」可整体还原</li>
       <li style="color:#e8e0d2">超链接仅接受公网 http/https 地址（拒绝本地 / 私有 / 保留 IP），交由系统默认浏览器打开</li>
     </ul>
@@ -1293,7 +1305,7 @@ kbd{
     <tbody>
       <tr>
         <td><strong>安装程序</strong></td>
-        <td><code>novel-studio-setup-1.0.23.exe</code><br /><span style="color:var(--muted);font-size:8.5pt">来自 GitHub Releases</span></td>
+        <td><code>novel-studio-setup-1.1.3.exe</code><br /><span style="color:var(--muted);font-size:8.5pt">来自 GitHub Releases</span></td>
         <td>Windows x64，NSIS 向导式（可选安装路径、创建桌面与开始菜单快捷方式）</td>
       </tr>
       <tr>
@@ -1336,8 +1348,8 @@ kbd{
       <tr><td><strong>存储</strong></td><td>Dexie / IndexedDB，Repository 层隔离（后续可平滑迁移 SQLite）</td></tr>
       <tr><td><strong>图表</strong></td><td>ECharts</td></tr>
       <tr><td><strong>打包</strong></td><td>electron-builder（NSIS 安装程序 + 免安装目录，maximum 压缩）</td></tr>
-      <tr><td><strong>规模</strong></td><td>51 个源码文件（31 个 Vue 组件）· 约 1.54 万行源码</td></tr>
-      <tr><td><strong>质量</strong></td><td>17 套端到端验收脚本 · 179 项断言，随版本入库</td></tr>
+      <tr><td><strong>规模</strong></td><td>66 个 Vue 组件 · 约 4.6 万行 JS / Vue / CSS 源码</td></tr>
+      <tr><td><strong>质量</strong></td><td>60+ 套测试与验收脚本，覆盖画布、分层作用域、连线路由、皮肤接入与打包冒烟</td></tr>
     </tbody>
   </table>
 
@@ -1352,14 +1364,14 @@ kbd{
   <div class="mark">小说工坊</div>
   <div class="rule"></div>
   <div class="info">
-    <div><span class="k">版本</span>v1.0.23 · Windows x64</div>
+    <div><span class="k">版本</span>v1.2.0 · Windows x64</div>
     <div><span class="k">仓库</span>github.com/linque0/novel</div>
     <div><span class="k">下载</span>github.com/linque0/novel/releases</div>
     <div style="margin-top:6mm;font-size:9pt;color:var(--muted)">
       本地优先 · 输入即存 · 数据留在本机
     </div>
   </div>
-  <div class="foot">本文档配图均为软件真实界面截图，工作台取自演示作品《星尘旅人》</div>
+  <div class="foot">本文档配图均为赤月戏皮肤下的真实界面截图，作品数据取自演示书目</div>
 </section>
 
 </body>
