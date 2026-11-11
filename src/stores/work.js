@@ -16,8 +16,22 @@ import { chapterHash, plainChapter } from '../services/ai/contracts'
 import { primaryRole } from '../services/character-tags'
 import { readWritingPosition } from '../services/writing-position.js'
 import { resolveWritingChapter } from '../services/writing-position-core.js'
+import { lorePath, createLoreHistory, checkpointLore, stepLoreHistory } from '../services/lore-core.js'
 
 const urlCache = new Map()
+
+/* 人物关系图相机的最小归一：x/y 取有限数（缺省 0），z 必须为正（缺省 1）；非法输入返回 null。 */
+function normalizeCamera(cam) {
+  if (!cam || typeof cam !== 'object') return null
+  const x = Number(cam.x)
+  const y = Number(cam.y)
+  const z = Number(cam.z)
+  return {
+    x: Number.isFinite(x) ? x : 0,
+    y: Number.isFinite(y) ? y : 0,
+    z: Number.isFinite(z) && z > 0 ? z : 1
+  }
+}
 
 export const useWorkStore = defineStore('work', {
   state: () => ({
@@ -35,6 +49,8 @@ export const useWorkStore = defineStore('work', {
     assets: [],
     links: [],
     mubu: [],
+    mubuRevision: 0,
+    loreHistories: {},
     mubuSetId: null, // 当前设定集（顶层 mubu 节点）id；appconfig mubucoll:<workId> 按作品记忆
     bookmarks: [],
     olnodes: [],
@@ -239,7 +255,9 @@ export const useWorkStore = defineStore('work', {
     async closeWork() {
       useAiStore().switchWork(null)
       await autosave.flushAll()
+      const histories = this.loreHistories
       this.$reset()
+      this.loreHistories = histories
       useUiStore().view = 'shelf'
       await useShelfStore().refresh()
     },
@@ -622,6 +640,25 @@ export const useWorkStore = defineStore('work', {
         .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
     },
 
+    mubuPath(id) { return lorePath(this.mubu, id) },
+    mubuHistory() {
+      const id = this.work?.id || ''
+      return this.loreHistories[id] || (this.loreHistories[id] = createLoreHistory())
+    },
+    mubuCheckpoint(group = null) {
+      const ui = useUiStore()
+      checkpointLore(this.mubuHistory(), this.mubu, { group, selection: { selectedId: ui.mubuSelectedId, location: ui.loreWorkId === this.work?.id ? ui.captureLoreLocation() : null } })
+    },
+    async mubuUndo(direction = 'undo') {
+      const ui = useUiStore(), state = stepLoreHistory(this.mubuHistory(), this.mubu, direction, { selectedId: ui.mubuSelectedId, location: ui.captureLoreLocation() })
+      if (!state) return false
+      await this.mubuSyncTree(state.nodes)
+      if (state.selection?.location) ui.applyLoreLocation(state.selection.location)
+      const selectedId = typeof state.selection === 'string' ? state.selection : state.selection?.selectedId
+      if (selectedId && this.mubu.some(n => n.id === selectedId && !n.deletedAt)) ui.mubuSelectedId = selectedId
+      return true
+    },
+
     mubuChildren(parentId) {
       return this.liveMubu().filter((n) => (n.parentId || null) === (parentId || null))
     },
@@ -749,6 +786,7 @@ export const useWorkStore = defineStore('work', {
       if (!n) return
       n.text = text
       if (html !== undefined) n.html = html
+      this.mubuRevision++
       autosave.mark('mubu', n)
     },
 
@@ -756,6 +794,7 @@ export const useWorkStore = defineStore('work', {
     mubuSetTags(id, tags) {
       const n = this.mubu.find((x) => x.id === id)
       if (!n) return
+      this.mubuCheckpoint()
       n.tags = [...new Set(
         (Array.isArray(tags) ? tags : [])
           .map((t) => String(t ?? '').trim().slice(0, 20))
@@ -896,6 +935,7 @@ export const useWorkStore = defineStore('work', {
           await db.mubu.put(JSON.parse(JSON.stringify(cur)))
         }
       }
+      this.mubuRevision++; this.ensureMubuSet()
     },
 
     /* ---------- 大纲节点树（8.8 思维导图方向） ---------- */
@@ -1023,6 +1063,7 @@ export const useWorkStore = defineStore('work', {
       if (!n) return
       n.text = text
       if (html !== undefined) n.html = html
+      this.mubuRevision++
       autosave.mark('olnodes', n)
     },
 
@@ -1097,6 +1138,12 @@ export const useWorkStore = defineStore('work', {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n) return
       n.shape = shape
+      /* 换形状就换几何：没手动定过的边交回 effSize 按形状设计尺寸出盒（矩形以外的形状有各自的
+       * 设计比例，钉死旧宽高会把纸面拉扁、正文内距也错位）；manualW/manualH 的边保留，不能静默丢掉作者拖过的尺寸。 */
+      if (n.kind === 'event') {
+        if (!n.manualW) n.w = null
+        if (!n.manualH) n.h = null
+      }
       autosave.mark('olnodes', n)
     },
 
@@ -1386,6 +1433,38 @@ export const useWorkStore = defineStore('work', {
       await db.appconfig.put({ key: 'charGraph:' + this.work.id, value: JSON.parse(JSON.stringify(layout)) })
     },
 
+    /* 相机单独存一个按作品的 key（charCamera:<workId>）：人物视图的每档相机
+       （key = 'scope:layout'，如 'local:wide'）与节点坐标无关，也不覆盖旧皮肤仍在用的
+       charGraph:<workId> 平铺坐标文档，旧皮肤的读写语义完全不变。 */
+    /** 读某一档的相机；没记录返回 null */
+    async loadCharCamera(key) {
+      if (!key || !this.work) return null
+      try {
+        const row = await db.appconfig.get('charCamera:' + this.work.id)
+        const doc = row?.value && typeof row.value === 'object' ? row.value : {}
+        return normalizeCamera(doc[key])
+      } catch { return null }
+    },
+    /** 存某一档的相机；cam 传 null 表示清掉这一档（其余档位不动） */
+    async saveCharCamera(key, cam) {
+      if (!this.work || !key) return
+      let doc = {}
+      try {
+        const row = await db.appconfig.get('charCamera:' + this.work.id)
+        if (row?.value && typeof row.value === 'object') doc = { ...row.value }
+      } catch { /* 读不到就当作没有记录，下面整份写回 */ }
+      const next = normalizeCamera(cam)
+      if (next) doc[key] = next
+      else delete doc[key]
+      await db.appconfig.put({ key: 'charCamera:' + this.work.id, value: JSON.parse(JSON.stringify(doc)) })
+    },
+
+    /* 人物视图切换：值域固定 'list' | 'graph'（services/doublelinks.js:255 依赖它）。
+       人物外壳与 D2/D3/D4 一律走这里，避免写入非法值把关系剧场视图锁死。 */
+    setCharView(next) {
+      this.charView = next === 'graph' ? 'graph' : 'list'
+    },
+
     /** 关系链接引用卡点选人物 → 跳人物模块并定位关系图 */
     jumpToCharGraph(charId) {
       const c = this.characters.find((x) => x.id === charId && !x.deletedAt)
@@ -1410,8 +1489,9 @@ export const useWorkStore = defineStore('work', {
       return row
     },
 
-    /** 拖拽重挂接（8.8 专业导图交互）：把节点移动到目标父级下（afterId 为null时追加到末尾） */
-    olnodeMoveTo(id, targetParentId, afterId = null) {
+    /** 拖拽重挂接（8.8 专业导图交互）：把节点移动到目标父级下（afterId 为 null 时追加到末尾；
+     *  beforeId 用于插到指定兄弟之前——容器内迷你卡拖动排序需要插到第一位）。 */
+    olnodeMoveTo(id, targetParentId, afterId = null, beforeId = null) {
       const n = this.olnodes.find((x) => x.id === id)
       if (!n || id === targetParentId) return false
       this.olnodePushUndo(true)
@@ -1423,6 +1503,10 @@ export const useWorkStore = defineStore('work', {
       if (afterId) {
         const i = sibs.findIndex((s) => s.id === afterId)
         n.sortOrder = i >= 0 ? sibs[i].sortOrder + 500 : sibs.length * 1000
+      } else if (beforeId) {
+        const i = sibs.findIndex((s) => s.id === beforeId)
+        if (i > 0) n.sortOrder = ((sibs[i - 1].sortOrder || 0) + (sibs[i].sortOrder || 0)) / 2
+        else n.sortOrder = i === 0 ? (sibs[0].sortOrder || 0) - 1000 : sibs.length * 1000
       } else {
         n.sortOrder = sibs.reduce((m, s) => Math.max(m, s.sortOrder || 0), -1000) + 1000
       }

@@ -4,12 +4,13 @@ const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { ref } from 'vue'
 import { NSelect, useMessage } from 'naive-ui'
 import { useUiStore } from '../stores/ui'
-import { SKINS } from '../skins/registry'
+import { visibleSkinsForBuild } from '../skins/registry'
 
 const ui = useUiStore()
 const message = useMessage()
 const saving = ref(false)
-const options = SKINS.map(s => ({ label: s.label, value: s.id }))
+/* 桌面构建只列 desktop 皮肤；插件构建只列 dsh（皮肤由 installDshSkin() 强制） */
+const options = visibleSkinsForBuild().map(s => ({ label: s.label, value: s.id }))
 async function select(value) {
   saving.value = true
   try { await ui.setSkin(value) }

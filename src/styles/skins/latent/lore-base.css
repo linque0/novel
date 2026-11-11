@@ -1,0 +1,1131 @@
+/* 隐现皮肤 · 设定（lore）基础层。
+ * 本文件是机械迁移产物：由脚本从插件版 app/src/styles/themes.css 中抽取全部
+ * .lore-* / .ob-* / .mubu-* 规则（含 @media 包裹与 @keyframes），逐条加
+ * html body[data-skin='dsh'] 前缀而来；不要手改，改请改迁移脚本或插件源。
+ * 作用域限定隐现皮肤，不触及四套旧皮肤（详见 latent/index.js 的导入顺序说明）。
+ */
+
+/* 自定义属性：被下列规则引用、桌面版任何样式表都未定义者，取自源文件 6517 行的 :root 块。 */
+html body[data-skin='dsh'] {
+  --lore-line: rgb(255 255 255 / .07);
+  --lore-line-2: rgb(255 255 255 / .09);
+  --lore-ink: #e2d8e9;
+  --lore-ink-strong: #f2ecf6;
+  --lore-dim: #bbaac8;
+  --lore-dim-2: #a998ba;
+  --lore-dot: #9e8bad;
+  --lore-eyebrow: #a99bb8;
+  --lore-pane: rgb(39 31 49 / .62);
+  --lore-reader: rgb(33 29 43 / .45);
+  --lore-pane-line: rgb(255 255 255 / .17);
+  --lore-tag: #cfbfdc;
+  --lore-tag-bg: rgb(255 255 255 / .035);
+  --lore-tag-line: rgb(255 255 255 / .12);
+  --lore-tag-on: #d0e9df;
+  --lore-btn-bg: rgb(255 255 255 / .045);
+  --lore-btn-line: rgb(255 255 255 / .17);
+  --lore-btn-hover: rgb(255 255 255 / .1);
+  --lore-primary-bg: #f3f0f5;
+  --lore-primary-ink: #302837;
+  --lore-primary-hover: #fff;
+  --lore-switch-line: rgb(255 255 255 / .14);
+  --lore-switch-bg: rgb(25 20 34 / .25);
+  --lore-switch-ink: #c8b8d6;
+  --lore-switch-on-bg: #f3eff5;
+  --lore-switch-on-ink: #33283b;
+  --lore-select-bg: rgb(205 220 210 / .08);
+  --lore-select-bar: #b0d2c2;
+  --lore-hover: rgb(255 255 255 / .04);
+  --lore-modes-bg: rgb(37 29 48 / .25);
+  --lore-modes-on: rgb(255 255 255 / .13);
+  --lore-grid-dot: rgb(232 222 246 / .14);
+  --lore-zoom-bg: rgb(24 20 32 / .25);
+  --lore-card-bg: #efebe3;
+  --lore-card-bg-center: #f6f2e9;
+  --lore-card-bg-set: #dfe6dd;
+  --lore-card-ink: #514750;
+  --lore-card-set-ink: #4a6152;
+  --lore-card-muted: #928690;
+  --lore-card-line: #d8cfd8;
+  --lore-fold-bg: #d2e2d5;
+  --lore-fold-bg-off: #e8eee4;
+  --lore-fold-line: #819a8e;
+  --lore-fold-ink: #486752;
+  --lore-ring: #afd5c7;
+  --lore-edge: #b7a5c6;
+  --lore-edge-label-bg: #3b3247;
+  --lore-edge-label-ink: #e1d2ec;
+  --lore-child-no: #877991;
+  --lore-shell-bg: rgb(30 25 40 / .48);
+  --lore-nav-bg: rgb(27 25 36 / .65);
+  --lore-detail-bg: rgb(27 25 36 / .65);
+  --lore-toolbar-bg: rgb(30 24 40 / .2);
+  --lore-toolbar-ink: #d6c9e1;
+  --lore-toolbar-sep: rgb(255 255 255 / .13);
+  --lore-toolbar-hover: rgb(255 255 255 / .07);
+  --lore-accent-soft: rgb(158 195 172 / .18);
+  --lore-accent-ink: #dbeadf;
+  --lore-set-head-a: rgb(34 29 44 / .995);
+  --lore-set-head-b: rgb(34 29 44 / .965);
+  --lore-set-head-shadow: rgb(9 5 17 / .55);
+}
+
+/* ============ 幕布式大纲编辑器（设定模块） ============ */
+/* ==================== 设定 ==================== */
+html body[data-skin='dsh'] .ob-wrap {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* 工具条（设计稿 fusion.css .mubu-toolbar）：42px 高、按钮 25×26、i.tb-sep 分组、span.tb-gap 顶开 + small.ob-count */
+html body[data-skin='dsh'] .ob-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  height: 42px;
+  padding: 0 28px;
+  border: none;
+  border-top: 1px solid var(--lore-line-2);
+  border-bottom: 1px solid var(--lore-line);
+  border-radius: 0;
+  background: var(--lore-toolbar-bg);
+  color: var(--lore-toolbar-ink);
+}
+
+html body[data-skin='dsh'] .ob-toolbar .tb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 25px;
+  min-height: 26px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 11px;
+  padding: 4px 7px;
+  font-family: inherit;
+}
+
+html body[data-skin='dsh'] .ob-toolbar .tb:hover{background:var(--lore-toolbar-hover);}
+
+html body[data-skin='dsh'] .ob-toolbar .tb:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+html body[data-skin='dsh'] .ob-toolbar > .tb-sep {
+  width: 1px;
+  height: 16px;
+  margin: 0 5px;
+  flex: none;
+  background: var(--lore-toolbar-sep);
+}
+
+html body[data-skin='dsh'] .ob-toolbar > .tb-gap{flex:1;}
+
+html body[data-skin='dsh'] .ob-toolbar .ob-count {
+  margin-left: 7px;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+  color: var(--lore-dim);
+}
+
+html body[data-skin='dsh'] .ob-swatches {
+  display: grid;
+  grid-template-columns: repeat(4, 24px);
+  gap: 6px;
+  padding: 4px;
+}
+
+html body[data-skin='dsh'] .ob-editor .ob-ctx {
+  position: fixed;
+  z-index: 3000;
+  min-width: 190px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: var(--shadow);
+  padding: 5px;
+  user-select: none;
+}
+
+html body[data-skin='dsh'] .ob-ctx .ctx-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+html body[data-skin='dsh'] .ob-ctx .ctx-item:hover{background:var(--bg-hover);}
+
+html body[data-skin='dsh'] .ob-ctx .ctx-item.disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+html body[data-skin='dsh'] .ob-ctx .ctx-item.disabled:hover{background:transparent;}
+
+html body[data-skin='dsh'] .ob-ctx .ctx-item .hint {
+  margin-left: auto;
+  color: var(--text-dim);
+  font-size: 11px;
+}
+
+html body[data-skin='dsh'] .ob-ctx .ctx-sep {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 6px;
+}
+
+html body[data-skin='dsh'] .ob-ctx-colors {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+}
+
+html body[data-skin='dsh'] .ob-editor {
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0 0 30px;
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+html body[data-skin='dsh'] .ob-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 1px 6px 1px 2px;
+  border-radius: 6px;
+  position: relative;
+  min-height: 30px;
+}
+
+html body[data-skin='dsh'] .ob-row:hover{background:color-mix(in srgb, var(--accent) 6%, transparent);}
+
+html body[data-skin='dsh'] .ob-row.drop-before::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+
+html body[data-skin='dsh'] .ob-row.drop-after::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--accent);
+}
+
+html body[data-skin='dsh'] .ob-row.drop-inside{box-shadow:inset 0 0 0 1px var(--accent);}
+
+html body[data-skin='dsh'] .ob-guide {
+  flex: none;
+  width: 20px;
+  align-self: stretch;
+  border-left: 1px solid color-mix(in srgb, var(--border) 90%, transparent);
+  margin-left: 2px;
+}
+
+html body[data-skin='dsh'] .ob-bullet {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 7px 8px 0 4px;
+  border-radius: 50%;
+  border: 2px solid var(--text-dim);
+  background: transparent;
+  cursor: grab;
+  padding: 0;
+  position: relative;
+}
+
+html body[data-skin='dsh'] .ob-bullet:active{cursor:grabbing;}
+
+html body[data-skin='dsh'] .ob-bullet.has-children{border-color:var(--accent);}
+
+html body[data-skin='dsh'] .ob-bullet.folded {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+html body[data-skin='dsh'] .ob-bullet.folded::after {
+  content: '▸';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 9px;
+  line-height: 1;
+}
+
+/* 设定树行首几何（拖动柄 / 折叠键 / 圆点）：折叠与展开共用同一套盒宽与基线。
+ * 圆点只用 ::before 绝对居中，::after 一律 content:none —— 折叠箭头归 .ob-fold-toggle 的 caret。
+ * 特异性 (0,6,1)（html + 5 类 + [data-module]）：压过 lore-free-tree.css 最高的
+ * `.lore-shell[data-view] .lore-main .ob-row .ob-bullet.has-children::after`（0,6,0），不赌文件顺序。 */
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-fold-toggle {
+  flex: none; box-sizing: border-box; width: 16px; min-width: 16px; height: 27px; margin: 0; padding: 0;
+  border: 0; background: transparent; display: grid; place-items: center; color: inherit; opacity: .75; cursor: pointer;
+}
+
+/* 叶子行保留占位（visibility 而非 display:none，否则后面的圆点整体左移） */
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-fold-toggle.empty{ visibility: hidden; }
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-fold-toggle > svg{ width: 12px; height: 12px; transform: rotate(90deg); transition: transform .15s; }
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-fold-toggle.folded > svg{ transform: none; }
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-bullet {
+  flex: none; box-sizing: border-box; width: 21px; min-width: 21px; height: 27px; margin: 0; padding: 0;
+  border: 0; background: transparent; position: relative; cursor: pointer;
+}
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-bullet::before {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 5px; height: 5px;
+  margin: 0; transform: translate(-50%, -50%); border-radius: 50%; background: #c5b5d2;
+  transition: width .12s ease, height .12s ease, background .12s ease;
+}
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-bullet.has-children::before {
+  width: 7px; height: 7px; background: #c9b9d7; box-shadow: 0 0 0 3px rgb(255 255 255 / .10);
+}
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-bullet::after{ content: none; }
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-bullet.folded::before{ display: block; }
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-bullet.folded::after{ content: none; }
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-drag-handle {
+  position: absolute; left: calc(min(var(--depth) * 22px, 154px) + 2px); top: 6px; width: 12px; height: 25px; padding: 0;
+  border: 0; background: transparent; opacity: 0; color: inherit; cursor: grab;
+}
+
+html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row:is(:hover, :focus-within) > .ob-drag-handle{ opacity: .75; }
+
+@media (max-width: 559px) {
+  html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-bullet {
+      width: 28px; min-width: 28px; height: 34px;
+    }
+  html body[data-skin='dsh'] .workbench-shell[data-module=lore] .lore-main .lore-surface .ob-row > .ob-fold-toggle {
+      width: 13px; min-width: 13px; height: 34px;
+    }
+}
+
+html body[data-skin='dsh'] .ob-text {
+  flex: 1;
+  outline: none;
+  min-height: 28px;
+  padding: 3px 4px;
+  line-height: 1.8;
+  font-size: 14.5px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-family: var(--editor-font);
+  color: var(--text);
+}
+
+html body[data-skin='dsh'] .ob-text:empty::before {
+  content: attr(data-ph);
+  color: var(--text-dim);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+html body[data-skin='dsh'] .ob-ops {
+  display: none;
+  flex: none;
+  margin-left: 6px;
+  margin-top: 4px;
+  gap: 2px;
+}
+
+/* 幕布行尾标签卡片（设定标签；点击卡片按标签筛选） */
+html body[data-skin='dsh'] .ob-tags {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  margin-top: 4px;
+  max-width: 42%;
+  overflow: hidden;
+}
+
+html body[data-skin='dsh'] .ob-tag {
+  flex: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  line-height: 16px;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+html body[data-skin='dsh'] .ob-tag:hover{filter:brightness(1.18);}
+
+html body[data-skin='dsh'] .ob-row:hover .ob-ops{display:inline-flex;}
+
+html body[data-skin='dsh'] .ob-op {
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  padding: 0;
+}
+
+html body[data-skin='dsh'] .ob-op:hover {
+  background: var(--bg-hover);
+  color: var(--accent);
+}
+
+html body[data-skin='dsh'] .ob-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+html body[data-skin='dsh'] .ob-tip {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+html body[data-skin='dsh'] .ob-flash{animation:obflash 1.6s ease;}
+
+@keyframes obflash {
+/* ==================== 其它组件 ==================== */
+0%,
+  55%{background:color-mix(in srgb, var(--accent) 24%, transparent);}
+100%{background:transparent;}
+}
+
+/* ==================== 设定 ==================== */
+html body[data-skin='dsh'] .ob-appear{animation:obappear 0.28s ease;}
+
+@keyframes obappear {
+/* ==================== 其它组件 ==================== */
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ==================== 设定 ==================== */
+html body[data-skin='dsh'] .ob-row{transition:background 0.15s;}
+
+html body[data-skin='dsh'] .ob-dot {
+  flex: none;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 2px solid var(--text-dim);
+  margin-right: 8px;
+  margin-top: 5px;
+}
+
+html body[data-skin='dsh'] .ob-dot.folded {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+html body[data-skin='dsh'] .ob-arrow {
+  flex: none;
+  width: 16px;
+  height: 20px;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0;
+  margin-top: 4px;
+  margin-right: 2px;
+  line-height: 20px;
+  text-align: center;
+}
+
+html body[data-skin='dsh'] .ob-arrow:hover{color:var(--accent);}
+
+html body[data-skin='dsh'] .ob-arrow.folded {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+html body[data-skin='dsh'] .ob-arrow-leaf {
+  cursor: default;
+  opacity: 0.5;
+}
+
+html body[data-skin='dsh'] .ob-kind {
+  flex: none;
+  margin-left: 8px;
+  margin-top: 6px;
+  font-size: 10px;
+  padding: 0 6px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+}
+
+html body[data-skin='dsh'] .ob-kind.folder {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* ==================== 设定 ==================== */
+html body[data-skin='dsh'] .ob-links {
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  margin-left:6px;
+  margin-top:4px;
+}
+
+html body[data-skin='dsh'] .ob-relchip {
+  flex:none;
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  border:1px solid transparent;
+  border-radius:4px;
+  padding:0 6px;
+  font-size:10.5px;
+  line-height:17px;
+  cursor:pointer;
+  font-family:inherit;
+  white-space:nowrap;
+}
+
+html body[data-skin='dsh'] .ob-relchip:hover{filter:brightness(1.18);}
+
+html body[data-skin='dsh'] .ob-relchip .oicon{vertical-align:-.12em;}
+
+html body[data-skin='dsh'] .ob-relpop {
+  position:fixed;
+  z-index:3450;
+  min-width:280px;
+  max-width:380px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:var(--bg-panel);
+  box-shadow:var(--shadow-pop);
+  padding:8px;
+}
+
+html body[data-skin='dsh'] .ob-relpop.flip{transform:translateY(-100%);}
+
+html body[data-skin='dsh'] .ob-relpop-head {
+  font-size:11px;
+  color:var(--text-dim);
+  padding:0 4px 6px;
+  border-bottom:1px dashed var(--border);
+  margin-bottom:4px;
+}
+
+html body[data-skin='dsh'] .lg-empty > button,
+html body[data-skin='dsh'] .lg-empty > .lore-btn{ pointer-events:auto; }
+
+/* ==================== 大纲 ==================== */
+html body[data-skin='dsh'] .outline-body,
+html body[data-skin='dsh'] .outline-main,
+html body[data-skin='dsh'] .outline-text-body,
+html body[data-skin='dsh'] .lore-paper-col {
+  flex:1;
+  min-height:0;
+  display:flex;
+  flex-direction:column;
+}
+
+/* 设定窄档的头部/写区重排已并入文件末尾的 @media(max-width:1099px) 与 @media(max-width:559px)：
+   断点只保留 1099 / 559 两档，旧的 900px 规则（含 .lore-detail-tools / .lore-detail-scroll 两个已废弃类）删除。 */
+html body[data-skin='dsh'] .ob-row[data-depth="0"] .ob-text {
+  font-size:15.5px;
+  font-weight:500;
+}
+
+html body[data-skin='dsh'] .ob-row[data-depth="1"] .ob-text{font-size:14.5px;}
+
+html body[data-skin='dsh'] .ob-row[data-depth="2"] .ob-text,
+html body[data-skin='dsh'] .ob-row[data-depth="3"] .ob-text,
+html body[data-skin='dsh'] .ob-row[data-depth="4"] .ob-text,
+html body[data-skin='dsh'] .ob-row[data-depth="5"] .ob-text {
+  font-size:14px;
+  opacity:.94;
+}
+
+html body[data-skin='dsh'] .ob-guide{border-left-color:color-mix(in srgb,var(--text-dim) 30%,transparent);}
+
+/* 外壳：设计稿的头部（crumbs / h1 / eyebrow / 动作 / 视图切换器）占满中央 pane 顶部 */
+/* ==================== 设定 ==================== */
+html body[data-skin='dsh'] .lore-workspace{ flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+html body[data-skin='dsh'] .lore-views{ flex: 1; min-height: 0; display: flex; flex-direction: column; }
+
+html body[data-skin='dsh'] .lore-surface{ flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 0 26px; }
+
+html body[data-skin='dsh'] .lore-head{ display: flex; align-items: center; gap: 16px; flex: none; min-height: 105px; padding: 21px 27px; border-bottom: 1px solid var(--lore-line); }
+
+html body[data-skin='dsh'] .lore-head-main{ flex: 1; min-width: 0; }
+
+html body[data-skin='dsh'] .lore-crumbs{ display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--lore-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+html body[data-skin='dsh'] .lore-crumbs i{ font-style: normal; opacity: .5; }
+
+html body[data-skin='dsh'] .lore-h1{ margin: 9px 0 0; font: 500 24px/1.5 var(--lore-serif); letter-spacing: .03em; color: var(--lore-ink-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+html body[data-skin='dsh'] .lore-meta{ margin-top: 6px; display: flex; align-items: center; font-size: 10px; letter-spacing: .07em; color: var(--lore-eyebrow); white-space: nowrap; overflow: hidden; }
+
+html body[data-skin='dsh'] .lore-meta i{ font-style: normal; display: inline-block; margin: 0 6px; opacity: .45; }
+
+html body[data-skin='dsh'] .lore-filter{ display: inline-flex; align-items: center; gap: 6px; color: var(--accent); letter-spacing: 0; }
+
+html body[data-skin='dsh'] .lore-filter button{ border: none; background: none; color: inherit; font: inherit; cursor: pointer; padding: 0; text-decoration: underline; }
+
+html body[data-skin='dsh'] .lore-head-actions{ display: flex; align-items: center; gap: 10px; flex: none; }
+
+/* 视图切换器（原型 .view-switch：胶囊分段，当前项反白） */
+html body[data-skin='dsh'] .lore-switch{ display: flex; gap: 3px; padding: 4px; flex: none; border: 1px solid var(--lore-switch-line); border-radius: 999px; background: var(--lore-switch-bg); }
+
+html body[data-skin='dsh'] .lore-switch button{ border: 0; border-radius: 999px; padding: 7px 11px; font-family: inherit; font-size: 11px; line-height: 1.5; white-space: nowrap; color: var(--lore-switch-ink); background: none; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-switch button:hover{color:var(--lore-ink-strong);}
+
+html body[data-skin='dsh'] .lore-switch button.on{ background: var(--lore-switch-on-bg); color: var(--lore-switch-on-ink); }
+
+/* 集头：吸顶、可折叠、可改名、可定位（A 视图；滚动口 = .ob-editor 顶边，验收按 ±1.5px 判定） */
+html body[data-skin='dsh'] .lore-set-head { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 9px; margin: 16px 0 2px; padding: 9px 10px 9px 6px; border-radius: 8px;
+  background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(10px);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 45%, transparent); }
+
+html body[data-skin='dsh'] .lore-set-head:first-child{margin-top:10px;}
+
+html body[data-skin='dsh'] .lore-set-head .ls-fold{ width: 16px; height: 16px; flex: none; padding: 0; position: relative; cursor: pointer; border: 1px solid color-mix(in srgb, var(--text-dim) 45%, transparent); border-radius: 5px; background: transparent; }
+
+/* ==================== 设定 ==================== */
+html body[data-skin='dsh'] .lore-set-head:hover .ls-ops,
+html body[data-skin='dsh'] .lore-set-head:focus-within .ls-ops{opacity:1;}
+
+/* ===== B 设定详情（原型 list-pane + archive-pane） ===== */
+/* ==================== 设定 ==================== */
+html body[data-skin='dsh'] .lore-detail{ flex: 1; min-height: 0; min-width: 0; display: flex; overflow: hidden; }
+
+/* 同级条目列：宽度与边框交给外壳的 pane（.lore-pane[data-pane='list']），这里只做列内容 */
+html body[data-skin='dsh'] .lore-detail-list{ flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+
+html body[data-skin='dsh'] .lore-detail-list-head{ flex: none; padding: 23px 20px 17px; border-bottom: 1px solid var(--lore-line); }
+
+html body[data-skin='dsh'] .lore-detail-context{ display: flex; align-items: center; gap: 9px; color: var(--lore-dim); font-size: 11px; min-width: 0; }
+
+html body[data-skin='dsh'] .lore-detail-dot{ width: 4px; height: 4px; border-radius: 50%; background: var(--lore-dot); flex: none; }
+
+html body[data-skin='dsh'] .lore-detail-list-title{ display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+
+html body[data-skin='dsh'] .lore-detail-list-title h2{ margin: 0; flex: 1; min-width: 0; font: 500 22px/1.5 var(--lore-serif); color: var(--lore-ink-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+html body[data-skin='dsh'] .lore-detail-filter{ display: flex; gap: 6px; align-items: center; margin-top: 17px; font-size: 10px; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-detail-filter select{ background: none; border: 0; color: var(--lore-ink); min-width: 0; width: 100%; padding: 0; font: inherit; }
+
+html body[data-skin='dsh'] .lore-detail-entries{ flex: 1; min-height: 0; overflow: auto; }
+
+html body[data-skin='dsh'] .lore-detail-entry{ display: block; width: 100%; padding: 21px 20px; text-align: left; position: relative; background: none; border: 0; border-bottom: 1px solid var(--lore-line); color: inherit; font: inherit; cursor: pointer; transition: background .15s; }
+
+html body[data-skin='dsh'] .lore-detail-entry:hover{background:var(--lore-hover);}
+
+html body[data-skin='dsh'] .lore-detail-entry.selected{background:var(--lore-select-bg);}
+
+html body[data-skin='dsh'] .lore-detail-entry.selected::before{ content: ''; position: absolute; top: 24px; left: 0; bottom: 24px; width: 2px; background: var(--lore-select-bar); }
+
+html body[data-skin='dsh'] .lore-detail-entry-head{ display: flex; align-items: center; gap: 8px; }
+
+html body[data-skin='dsh'] .lore-detail-entry h3{ margin: 0; flex: 1; font: 500 17px/1.6 var(--lore-serif); color: var(--lore-ink-strong); overflow-wrap: anywhere; }
+
+html body[data-skin='dsh'] .lore-detail-desc{ display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin: 10px 0 12px; font-size: 11px; line-height: 1.9; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-detail-entry-meta{ display: flex; gap: 6px; align-items: center; font-size: 10px; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-detail-entry-meta span:last-child{margin-left:auto;}
+
+html body[data-skin='dsh'] .lore-detail-tagchip{ border: 1px solid var(--lore-tag-line); border-radius: 5px; padding: 0 5px; font-size: 9px; line-height: 19px; color: var(--lore-tag); background: var(--lore-tag-bg); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+
+html body[data-skin='dsh'] .lore-detail-list-bottom{ flex: none; padding: 16px 20px; border-top: 1px solid var(--lore-line); }
+
+/* 按钮（原型 .btn / .btn.primary / .btn.quiet / .icon-button） */
+html body[data-skin='dsh'] .lore-btn{ display: inline-flex; justify-content: center; align-items: center; gap: 7px; min-height: 32px; padding: 7px 12px; font-family: inherit; font-size: 11px; border: 1px solid var(--lore-btn-line); border-radius: 999px; white-space: nowrap; background: var(--lore-btn-bg); color: inherit; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-btn:hover{background:var(--lore-btn-hover);}
+
+html body[data-skin='dsh'] .lore-btn.primary{ background: var(--lore-primary-bg); color: var(--lore-primary-ink); border-color: transparent; font-weight: 600; }
+
+html body[data-skin='dsh'] .lore-btn.primary:hover{background:var(--lore-primary-hover);}
+
+html body[data-skin='dsh'] .lore-btn.quiet{ border-color: transparent; background: none; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-btn.block{width:100%;}
+
+html body[data-skin='dsh'] .lore-icon{ display: grid; place-items: center; min-width: 26px; min-height: 26px; padding: 4px; border: 0; border-radius: 6px; background: none; color: var(--lore-dim); font-family: inherit; font-size: 12px; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-icon:hover{ background: var(--lore-hover); color: var(--lore-ink-strong); }
+
+/* 阅读区（原型 return-tools → archive-reader → archive-article → archive-footer） */
+html body[data-skin='dsh'] .lore-detail-main{ flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+
+html body[data-skin='dsh'] .lore-detail-return{ display: flex; align-items: center; gap: 6px; flex: none; min-height: 37px; padding: 0 24px 13px; border-bottom: 1px solid var(--lore-line); }
+
+html body[data-skin='dsh'] .lore-detail-return .lore-detail-context{ flex: 1; font-size: 10px; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+html body[data-skin='dsh'] .lore-detail-return .lore-btn{ font-size: 10px; min-height: 24px; padding: 3px 8px; }
+
+html body[data-skin='dsh'] .lore-detail-reader{ flex: 1; min-height: 0; overflow: auto; padding: 31px 42px; background: var(--lore-reader); }
+
+html body[data-skin='dsh'] .lore-detail-article{ max-width: 690px; margin: auto; }
+
+html body[data-skin='dsh'] .lore-detail-menu{ display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+html body[data-skin='dsh'] .lore-detail-menu-actions{ display: flex; gap: 4px; }
+
+html body[data-skin='dsh'] .lore-detail-menu-actions .lore-icon > svg{ width: 13px; height: 13px; flex: none; }
+
+html body[data-skin='dsh'] .lore-detail-title{ margin: 15px 0 18px; font: 500 32px/1.5 var(--lore-serif); letter-spacing: .03em; color: var(--lore-ink-strong); overflow-wrap: anywhere; }
+
+html body[data-skin='dsh'] .lore-detail-tags{ display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 28px; }
+
+html body[data-skin='dsh'] .lore-detail-tag{ border: 1px solid var(--lore-tag-line); border-radius: 5px; padding: 1px 8px; font-family: inherit; font-size: 10px; line-height: 19px; color: var(--lore-tag); background: var(--lore-tag-bg); white-space: nowrap; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-detail-tag:hover{ border-color: var(--lore-fold-line); color: var(--lore-tag-on); }
+
+html body[data-skin='dsh'] .lore-detail-childprose{ position: relative; margin-bottom: 17px; padding-right: 13px; }
+
+html body[data-skin='dsh'] .lore-detail-body{ margin: 0; font-size: 14px; line-height: 2.05; color: var(--lore-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+html body[data-skin='dsh'] .lore-detail-section{margin-top:30px;}
+
+html body[data-skin='dsh'] .lore-detail-section-head{ display: flex; align-items: center; gap: 8px; margin: 0 0 9px; font-size: 12px; font-weight: 500; color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-detail-section-head small{ font-size: 10px; font-weight: 400; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-detail-section-head .lore-icon{margin-left:auto;}
+
+html body[data-skin='dsh'] .lore-detail-tiny{ margin: 0; font-size: 11px; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-detail-graph{ height: 340px; border: 1px solid var(--lore-line-2); border-radius: 12px; overflow: hidden; background: color-mix(in srgb, var(--bg) 30%, transparent); }
+
+html body[data-skin='dsh'] .lore-detail-graph .lg-wrap{ height: 100%; padding: 6px 8px 8px; }
+
+html body[data-skin='dsh'] .lore-detail-relgrid .rel-rows{ display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; }
+
+html body[data-skin='dsh'] .lore-detail-relgrid .rel-row{ font-size: 12px; padding: 10px 0; color: var(--lore-ink); }
+
+html body[data-skin='dsh'] .lore-detail-relgrid .rel-row small{ min-width: 42px; font-size: 10px; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-detail-relgrid .rel-row strong{ font-size: 13px; color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-detail-child{ display: flex; gap: 12px; align-items: flex-start; padding: 13px 0; border-bottom: 1px solid var(--lore-line); }
+
+html body[data-skin='dsh'] .lore-detail-child-no{ flex: none; font: 12px/1.8 var(--lore-serif); color: var(--lore-child-no); }
+
+html body[data-skin='dsh'] .lore-detail-child > button{ flex: 1; min-width: 0; padding: 0; text-align: left; background: none; border: 0; color: inherit; font: inherit; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-detail-child strong{ display: block; margin-bottom: 4px; font: 500 15px/1.7 var(--lore-serif); color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-detail-child p{ margin: 0; font-size: 12px; line-height: 1.9; color: var(--lore-dim); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+html body[data-skin='dsh'] .lore-detail-footer{ flex: none; height: 55px; display: flex; align-items: center; justify-content: space-between; padding: 0 26px; border-top: 1px solid var(--lore-line-2); font-size: 10px; color: var(--lore-dim-2); }
+
+html body[data-skin='dsh'] .lore-detail-footer .lore-detail-context{ max-width: 75%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+
+html body[data-skin='dsh'] .lore-detail-footer .lore-btn{ font-size: 10px; min-height: 28px; padding: 4px 10px; }
+
+/* ===== C 视觉导图（原型 map-subbar + map-stage + graph-footer + inspector） ===== */
+/* 视觉导图：图区就住在主 pane 里（pane 卡由外壳提供，这里不再套第二层边框） */
+html body[data-skin='dsh'] .lore-map-view{ flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+html body[data-skin='dsh'] .lore-map-subbar{ display: flex; gap: 12px; align-items: center; padding: 0 25px 15px; min-height: 47px; flex: none; border-bottom: 1px solid var(--lore-line); }
+
+html body[data-skin='dsh'] .lore-map-modes{ display: flex; gap: 3px; padding: 3px; border-radius: 8px; border: 1px solid var(--lore-tag-line); background: var(--lore-modes-bg); flex: none; }
+
+html body[data-skin='dsh'] .lore-map-modes button{ font-family: inherit; font-size: 10px; color: var(--lore-dim); padding: 5px 10px; border: 0; border-radius: 5px; background: none; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-map-modes button.on{ background: var(--lore-modes-on); color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-map-context{ flex: 1; min-width: 0; font-size: 10px; color: var(--lore-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+html body[data-skin='dsh'] .lore-map-stage { position: relative; flex: 1; min-height: 0; overflow: hidden; cursor: grab; touch-action: none; outline: none;
+  background-image: radial-gradient(var(--lore-grid-dot) .6px, transparent .6px); background-size: 22px 22px; background-position: 11px 11px; }
+
+html body[data-skin='dsh'] .lore-map-stage:active{cursor:grabbing;}
+
+html body[data-skin='dsh'] .lore-map-graph{ position: absolute; inset: 0; }
+
+html body[data-skin='dsh'] .lore-map-foot{ height: 65px; flex: none; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 18px; }
+
+html body[data-skin='dsh'] .lore-map-legend{ display: flex; gap: 12px; align-items: center; font-size: 10px; color: var(--lore-dim); white-space: nowrap; }
+
+html body[data-skin='dsh'] .lore-map-legend i{ display: inline-block; width: 17px; height: 1px; background: var(--lore-dim); margin-right: 5px; vertical-align: middle; }
+
+html body[data-skin='dsh'] .lore-zoom{ display: flex; align-items: center; gap: 1px; flex: none; padding: 3px; border: 1px solid var(--lore-btn-line); border-radius: 999px; background: var(--lore-zoom-bg); }
+
+html body[data-skin='dsh'] .lore-zoom button{ padding: 5px 9px; min-height: 26px; font-family: inherit; font-size: 11px; border: 0; border-radius: 999px; background: none; color: inherit; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-zoom button:hover{background:var(--lore-btn-hover);}
+
+html body[data-skin='dsh'] .lore-zoom button:nth-child(2){min-width:46px;}
+
+html body[data-skin='dsh'] .lore-zoom i{ height: 15px; width: 1px; background: var(--lore-btn-line); margin: 0 3px; }
+
+/* 右条目摘要（原型 .inspector：panel-title / panel-scroll / panel-foot） */
+/* 条目摘要列：宽度与边框交给外壳的 pane（.lore-pane[data-pane='detail']） */
+html body[data-skin='dsh'] .lore-map-insp{ flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+html body[data-skin='dsh'] .lore-map-insp-head{ flex: none; display: flex; align-items: center; gap: 9px; padding: 20px 22px; border-bottom: 1px solid var(--lore-line-2); font-size: 12px; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-map-insp-head span:first-of-type{ flex: 1; color: var(--lore-ink); }
+
+html body[data-skin='dsh'] .lore-map-insp-close{ display: grid; place-items: center; min-width: 26px; min-height: 26px; padding: 4px; border: 0; border-radius: 6px; background: none; color: var(--lore-dim); font-family: inherit; font-size: 13px; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-map-insp-close:hover{ background: var(--lore-hover); color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-map-insp-scroll{ flex: 1; min-height: 0; overflow: auto; padding: 24px 25px; }
+
+html body[data-skin='dsh'] .lore-map-insp-crumbs{ font-size: 11px; color: var(--lore-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+html body[data-skin='dsh'] .lore-map-insp-title{ margin: 11px 0 16px; font: 500 26px/1.5 var(--lore-serif); color: var(--lore-ink-strong); overflow-wrap: anywhere; }
+
+html body[data-skin='dsh'] .lore-map-insp-tags{ display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 23px; }
+
+html body[data-skin='dsh'] .lore-map-insp-p{ margin: 0 0 12px; font-size: 12px; line-height: 1.95; color: var(--lore-ink); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+html body[data-skin='dsh'] .lore-map-insp-sec{margin-top:26px;}
+
+html body[data-skin='dsh'] .lore-map-insp-sec h3{ display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: 12px; font-weight: 500; color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-map-insp-sec h3 small{ font-size: 10px; font-weight: 400; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-map-insp-sec .rel-rows .rel-row{ font-size: 11px; padding: 8px 0; color: var(--lore-ink); }
+
+html body[data-skin='dsh'] .lore-map-insp-sec .rel-rows .rel-row small{ min-width: 43px; font-size: 10px; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-map-insp-sec .rel-rows .rel-row strong{ font-size: 12px; color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-map-insp-sec .rel-rows .rel-mark{display:none;}
+
+html body[data-skin='dsh'] .lore-map-insp-child{ display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%; padding: 9px 0; text-align: left; border: 0; background: none; color: var(--lore-dim); font-family: inherit; font-size: 11px; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-map-insp-child:hover{color:var(--lore-tag-on);}
+
+html body[data-skin='dsh'] .lore-map-insp-empty{ margin: 0; padding: 24px 25px; font-size: 11px; color: var(--lore-dim); }
+
+html body[data-skin='dsh'] .lore-map-insp-foot{ flex: none; display: flex; align-items: center; gap: 6px; padding: 17px 20px; border-top: 1px solid var(--lore-line-2); }
+
+html body[data-skin='dsh'] .lore-map-insp-foot .lore-btn:first-child{ flex: 1; font-size: 11px; }
+
+/* C · 层级导图（原型 .map-node / .tree-node / .root / .selected / .map-fold / .map-edge） */
+html body[data-skin='dsh'] .lore-tm-wrap{ position: absolute; inset: 0; overflow: hidden; cursor: grab; }
+
+html body[data-skin='dsh'] .lore-tm-wrap:active{cursor:grabbing;}
+
+html body[data-skin='dsh'] .lore-tm-inner{ position: absolute; left: 0; top: 0; }
+
+html body[data-skin='dsh'] .lore-tm-edges{ position: absolute; overflow: visible; pointer-events: none; }
+
+html body[data-skin='dsh'] .lore-tm-edge{ fill: none; stroke: var(--lore-edge); stroke-width: 1.3; opacity: .85; }
+
+html body[data-skin='dsh'] .lore-tm-node{ position: absolute; display: flex; flex-direction: column; justify-content: center; box-sizing: border-box; overflow: visible; padding: 7px 12px; border: 1px solid var(--lore-card-line); border-radius: 9px; background: var(--lore-card-bg); color: var(--lore-card-ink); box-shadow: 0 5px 15px #0b061c1c; cursor: grab; outline: none; }
+
+html body[data-skin='dsh'] .lore-tm-node.set{ background: var(--lore-card-bg-set); color: var(--lore-card-set-ink); }
+
+html body[data-skin='dsh'] .lore-tm-node.on{ outline: 2px solid var(--lore-ring); outline-offset: 5px; }
+
+html body[data-skin='dsh'] .lore-tm-kind{ display: flex; align-items: center; gap: 5px; font-size: 9px; line-height: 11px; color: var(--lore-card-muted); }
+
+html body[data-skin='dsh'] .lore-tm-kind svg{ width: 10px; height: 10px; flex: none; }
+
+html body[data-skin='dsh'] .lore-tm-title{ margin-top: 2px; font: 500 14px/1.4 var(--lore-serif); color: inherit; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; max-height: 40px; }
+
+html body[data-skin='dsh'] .lore-tm-fold{ position: absolute; right: -12px; top: calc(50% - 11px); width: 22px; height: 22px; padding: 0; display: grid; place-items: center; z-index: 3; border: 1px solid var(--lore-fold-line); border-radius: 50%; background: var(--lore-fold-bg); color: var(--lore-fold-ink); font-family: inherit; font-size: 12px; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-tm-fold.collapsed{background:var(--lore-fold-bg-off);}
+
+html body[data-skin='dsh'] .lore-tm-empty{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); margin: 0; font-size: 12px; color: var(--lore-dim); }
+
+/* 关系网络（复用 LoreGraph，在导图里换成设计稿的纸片卡与胶囊标签；详情页保持原样） */
+/* ==================== 大纲 ==================== */
+html body[data-skin='dsh'] .lore-map-graph .om-toolbar{display:none;}
+
+/* ==================== 设定 ==================== */
+html body[data-skin='dsh'] .lore-map-graph .lg-wrap{height:100%;}
+
+html body[data-skin='dsh'] .lore-map-graph .lg-node{ border: 1px solid var(--lore-card-line); border-radius: 11px; background: var(--lore-card-bg); color: var(--lore-card-ink); box-shadow: 0 5px 15px #0b061c1c; }
+
+html body[data-skin='dsh'] .lore-map-graph .lg-node.center{background:var(--lore-card-bg-center);}
+
+html body[data-skin='dsh'] .lore-map-graph .lg-node.char{ border-radius: 999px; background: var(--lore-card-bg-set); color: var(--lore-card-set-ink); }
+
+html body[data-skin='dsh'] .lore-map-graph .lg-title{ font: 500 14px/1.4 var(--lore-serif); white-space: normal; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+html body[data-skin='dsh'] .lore-map-graph .lg-node.center .lg-title{font-size:17px;}
+
+html body[data-skin='dsh'] .lore-map-graph .lg-badge{ background: var(--lore-fold-bg); color: var(--lore-fold-ink); border-color: var(--lore-fold-line); }
+
+html body[data-skin='dsh'] .lore-map-graph .lg-elabel{ padding: 2px 8px; border: 1px solid var(--lore-tag-line); border-radius: 999px; background: var(--lore-edge-label-bg); color: var(--lore-edge-label-ink); font-size: 10px; }
+
+html body[data-skin='dsh'] .lore-map-graph .lg-edges path[fill='none']{ stroke-width: 1.3; opacity: .85; }
+
+/* ===== 面板矩阵外壳（三单共用）：nav | 16 分隔 | [list | 16] main [16 | detail] =====
+   设计稿 studio.css 的 .workspace / .pane / .divider / .nav-rail，fusion.css 的 .fusion-head / .view-switch。
+   三列宽度由 lore-layout.js 写成 --lore-nav-w / --lore-list-w / --lore-detail-w（收起态 = 40px），
+   列间距全部由 16px 分隔列承担（grid gap 恒为 0）。 */
+html body[data-skin='dsh'] .lore-shell { flex: 1; min-height: 0; min-width: 0; position: relative; display: grid; gap: 0;
+  grid-template-columns: var(--lore-nav-w, 220px) 16px minmax(480px, 1fr); }
+
+html body[data-skin='dsh'] .lore-shell[data-view='detail']{ grid-template-columns: var(--lore-nav-w, 220px) 16px var(--lore-list-w, 300px) 16px minmax(480px, 1fr); }
+
+html body[data-skin='dsh'] .lore-shell[data-view='map']{ grid-template-columns: var(--lore-nav-w, 220px) 16px minmax(480px, 1fr) 16px var(--lore-detail-w, 348px); }
+
+/* pane 卡：1px 亮线 + 20px 圆角 + 玻璃；三列各自的底色（main / nav / detail / list） */
+html body[data-skin='dsh'] .lore-pane { box-sizing: border-box; display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden;
+  border: 1px solid var(--lore-pane-line); border-radius: 20px; background: var(--lore-nav-bg);
+  -webkit-backdrop-filter: blur(24px) saturate(1.25); backdrop-filter: blur(24px) saturate(1.25); }
+
+html body[data-skin='dsh'] .lore-pane[data-pane='main']{ background: var(--lore-shell-bg); }
+
+html body[data-skin='dsh'] .lore-pane[data-pane='list']{ background: var(--lore-pane); }
+
+html body[data-skin='dsh'] .lore-pane[data-pane='detail']{ background: var(--lore-detail-bg); }
+
+html body[data-skin='dsh'] .lore-pane[data-pane='nav'] > .nav-pane{ flex: 1; min-width: 0; min-height: 0; }
+
+@media (min-width: 1100px) {
+  html body[data-skin='dsh'] .lore-rail{ display: none; }
+  html body[data-skin='dsh'] .lore-pane[data-closed] .lore-rail{ display: flex; }
+  html body[data-skin='dsh'] .lore-pane[data-closed] > :not(.lore-rail):not(.nav-pane){ display: none; }
+  html body[data-skin='dsh'] .lore-pane[data-pane='nav'] > .nav-pane{ flex: 1; min-width: 0; min-height: 0; }
+  html body[data-skin='dsh'] .lore-pane[data-pane='nav'] .lore-rail{ display: none; }
+  html body[data-skin='dsh'] .lore-pane[data-pane='nav'][data-closed] > .nav-pane{ display: flex; }
+  html body[data-skin='dsh'] .lore-pane[data-pane='nav'][data-closed] .lore-rail{ display: flex; }
+  html body[data-skin='dsh'] .lore-pane[data-pane='nav'][data-closed] > .nav-pane > :not(.lore-rail){ display: none; }
+}
+
+/* 细轨（原型 .nav-rail）：40px、整列高、竖排文案 */
+html body[data-skin='dsh'] .lore-rail { display: none; width: 40px; flex: 1; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  padding: 0; border: 0; background: transparent; color: var(--lore-dim); font-family: inherit; font-size: 11px; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-rail:hover{ background: var(--lore-hover); color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-rail span{ writing-mode: vertical-rl; letter-spacing: .22em; }
+
+/* 分隔条（原型 .divider）：16px 网格列、透明；悬停/聚焦时正中露出 4×48 抓手 */
+html body[data-skin='dsh'] .lore-divider{ position: relative; width: 16px; background: transparent; cursor: col-resize; touch-action: none; outline: none; }
+
+html body[data-skin='dsh'] .lore-divider::after{ content: ''; position: absolute; top: calc(50% - 24px); left: 6px; width: 4px; height: 48px; border-radius: 5px; background: transparent; }
+
+html body[data-skin='dsh'] .lore-divider:is(:hover, :focus-visible)::after{ background: #b7d9d0; }
+
+/* 抽屉遮罩：只在 ≤1099 出现（见下方窄档） */
+html body[data-skin='dsh'] .lore-scrim{ display: none; }
+
+/* 页头里的面包屑按钮与范围胶囊（原型 .crumbs button / .scope-toggle） */
+/* 面包屑里的「世界设定」按钮：可见胶囊（原型 .crumbs button），图标 12px */
+html body[data-skin='dsh'] .lore-crumb-nav { display: inline-flex; align-items: center; gap: 5px; min-height: 22px; padding: 2px 9px;
+border: 1px solid var(--lore-btn-line); border-radius: 999px; background: transparent; color: inherit;
+font: inherit; line-height: 1.4; white-space: nowrap; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-crumb-nav:hover{ background: var(--lore-btn-hover); color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-crumb-nav svg{ width: 12px; height: 12px; }
+
+html body[data-skin='dsh'] .lore-scope { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 6px 12px; font-family: inherit; font-size: 11px; white-space: nowrap;
+  border: 1px solid var(--lore-btn-line); border-radius: 999px; background: var(--lore-btn-bg); color: var(--lore-dim); cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-scope:hover{ background: var(--lore-btn-hover); color: var(--lore-ink-strong); }
+
+html body[data-skin='dsh'] .lore-scope[aria-pressed='true']{ border-color: var(--lore-fold-line); background: var(--lore-select-bg); color: var(--lore-tag-on); }
+
+/* ==================== 设定 · 面板矩阵补完 ====================
+   设计稿 docs/前端美化/设定-融合总稿-20261105/：studio.css 的 .workspace / .pane / .divider / .nav-rail / .nav-*，
+   fusion.css 的 .mubu-toolbar / .mubu-set-head / .write-surface / .scope-toggle。
+   三套网格模板与 pane 卡在上面的「面板矩阵外壳」段，这里补宽档基线与列内内容；窄档两屏见 @media(max-width:1099px)。 */
+html body[data-skin='dsh'] .lore-shell{ padding: 24px 28px 30px; }
+
+html body[data-skin='dsh'] .lore-pane{ position: relative; border-radius: 20px; }
+
+/* 窄档两屏的「返回上一屏」（宽档不出现）：B 阅读区 → 条目列表 / C 导图 → 摘要 / C 摘要 → 导图 */
+html body[data-skin='dsh'] .lore-mobile-back { display: none; align-items: center; gap: 6px; flex: none; min-height: 24px; padding: 3px 9px;
+  border: 1px solid var(--lore-btn-line); border-radius: 999px; background: var(--lore-btn-bg); color: inherit;
+  font-family: inherit; font-size: 10px; white-space: nowrap; cursor: pointer; }
+
+html body[data-skin='dsh'] .lore-mobile-back:hover{ background: var(--lore-btn-hover); color: var(--lore-ink-strong); }
+
+/* 范围胶囊（原型 .scope-toggle）：aria-pressed=true 时 accent-soft 底 + #dbeadf 字 */
+html body[data-skin='dsh'] .lore-scope[aria-pressed='true'] { border-color: color-mix(in srgb, var(--accent) 42%, transparent);
+  background: var(--lore-accent-soft); color: var(--lore-accent-ink); }
+
+/* 细轨（原型 .nav-rail）：宽 40px（夹在 pane 的 1px 边线内）、整列高、纵向居中、gap 18px；图标 17px */
+html body[data-skin='dsh'] .lore-rail{ max-width: 100%; }
+
+html body[data-skin='dsh'] .lore-rail svg{ width: 17px; height: 17px; }
+
+/* ===== A 条目编写：工具条 → 滚动写区（.ob-editor）→ 集头 + 行 ===== */
+html body[data-skin='dsh'] .lore-surface{ padding: 0; }
+
+html body[data-skin='dsh'] .ob-toolbar{ flex: none; }
+
+html body[data-skin='dsh'] .ob-editor{ --lore-pad-x: 34px; padding: 0 var(--lore-pad-x) 44px; scrollbar-gutter: stable; }
+
+/* 集头（原型 .mubu-set-head）：吸顶、横贯写区（负 margin 抵消 .ob-editor 的横向内距 --lore-pad-x，随滚动条沟槽保持稳定）、悬停才显操作 */
+html body[data-skin='dsh'] .mubu-set-head { position: sticky; top: 0; z-index: 3; display: flex; align-items: center; gap: 9px;
+  margin: 0 calc(-1 * var(--lore-pad-x)) 10px; padding: 11px var(--lore-pad-x); border-radius: 0;
+  background: linear-gradient(var(--lore-set-head-a), var(--lore-set-head-b));
+  -webkit-backdrop-filter: blur(16px) saturate(1.1); backdrop-filter: blur(16px) saturate(1.1);
+  box-shadow: 0 8px 16px -12px var(--lore-set-head-shadow); border-bottom: 1px solid var(--lore-line-2); }
+
+html body[data-skin='dsh'] .mubu-set-head:first-child{ margin-top: 0; }
+
+html body[data-skin='dsh'] .mubu-set-head .ls-icon{ flex: none; color: var(--accent); }
+
+html body[data-skin='dsh'] .mubu-set-head > svg.ls-icon{ width: 15px; height: 15px; }
+
+html body[data-skin='dsh'] .mubu-set-head .ls-fold { position: relative; width: 14px; height: 14px; flex: none; padding: 0; border: 0; border-radius: 0;
+  background: transparent; cursor: pointer; }
+
+html body[data-skin='dsh'] .mubu-set-head .ls-fold::after { content: ''; position: absolute; left: 3px; top: 4px; width: 5px; height: 5px;
+  border-right: 1.4px solid var(--lore-dim); border-bottom: 1.4px solid var(--lore-dim); transform: rotate(45deg); transition: transform .15s ease; }
+
+html body[data-skin='dsh'] .mubu-set-head .ls-fold.folded::after{ left: 4px; transform: rotate(-45deg); }
+
+html body[data-skin='dsh'] .mubu-set-head h2 { flex: 1; min-width: 0; max-width: 100%; margin: 0; font: 500 15px/1.4 var(--lore-serif); letter-spacing: .015em;
+  color: var(--lore-ink-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+html body[data-skin='dsh'] .mubu-set-head small{ flex: none; font-size: 10px; color: var(--lore-dim); font-variant-numeric: tabular-nums; }
+
+html body[data-skin='dsh'] .mubu-set-head .icon-button { display: grid; place-items: center; min-width: 22px; min-height: 22px; padding: 3px;
+  border: 0; border-radius: 6px; background: none; color: var(--lore-dim); font-family: inherit; font-size: 10px;
+  opacity: 0; transition: opacity .15s; cursor: pointer; }
+
+html body[data-skin='dsh'] .mubu-set-head:is(:hover, :focus-within) .icon-button{ opacity: 1; }
+
+html body[data-skin='dsh'] .mubu-set-head .icon-button:hover{ background: var(--lore-btn-hover); color: var(--lore-ink-strong); }
+
+/* ===== B / C：同层列与摘要列都是 pane 的内层（宽 100%）；导图区填满主 pane ===== */
+html body[data-skin='dsh'] .lore-detail-list,
+html body[data-skin='dsh'] .lore-map-insp{ width: 100%; }
+
+@media (max-width: 1099px) {
+  /* 窄档横排：[40px 细轨][main 或两屏之一] */
+  html body[data-skin='dsh'] .lore-shell{ display: flex; flex-direction: row; padding: 12px 20px 20px; }
+  html body[data-skin='dsh'] .lore-divider{ display: none; }
+  html body[data-skin='dsh'] .lore-mobile-back{ display: inline-flex; }
+  html body[data-skin='dsh'] .lore-pane[data-pane='main']{ flex: 1; width: 100%; min-width: 0; }
+  html body[data-skin='dsh'] .lore-pane[data-pane='list'],
+  html body[data-skin='dsh'] .lore-pane[data-pane='detail']{ display: none; width: 100%; flex: 1; min-height: 0; }
+  html body[data-skin='dsh'] .lore-shell[data-screen='list'] .lore-pane[data-pane='list']{ display: flex; }
+  html body[data-skin='dsh'] .lore-shell[data-screen='list'] .lore-pane[data-pane='main']{ display: none; }
+  html body[data-skin='dsh'] .lore-shell[data-screen='insp'] .lore-pane[data-pane='detail']{ display: flex; }
+  html body[data-skin='dsh'] .lore-shell[data-screen='insp'] .lore-pane[data-pane='main']{ display: none; }
+  /* 细轨常驻：窄档 nav 列 = 40px 细轨，只有抽屉态才展开成 270px 覆盖层。
+       细轨显隐键在 [data-narrow]：窄档点细轨时 MubuTree 会把 loreNavClosed 置 false，data-closed 会消失。 */
+  html body[data-skin='dsh'] .lore-pane[data-pane='nav']{ display: flex; width: 40px; flex: none; min-height: 0; }
+  html body[data-skin='dsh'] .lore-rail{ display: flex; }
+  html body[data-skin='dsh'] .lore-shell[data-narrow] .lore-pane[data-pane='nav'] .lore-rail{ display: flex; }
+  /* 非抽屉态只留细轨：:not(.lore-rail) 的隐藏只在非抽屉态生效，抽屉里其余内容重新显示 */
+  html body[data-skin='dsh'] .lore-shell[data-narrow]:not([data-drawer='nav']) .lore-pane[data-pane='nav'] .nav-pane > :not(.lore-rail){ display: none; }
+  /* 抽屉态：覆盖层 270px + 遮罩；细轨让位——它的基线是 flex:1，与目录树同列会把树挤扁 */
+  html body[data-skin='dsh'] .lore-shell[data-drawer='nav'] .lore-pane[data-pane='nav'] { position: absolute; left: 16px; top: 8px; bottom: 20px;
+      width: 270px; max-width: calc(100% - 32px); z-index: 31; background: #292334; border-radius: 20px; }
+  html body[data-skin='dsh'] .lore-shell[data-drawer='nav'] .lore-pane[data-pane='nav'] .lore-rail{ display: none; }
+  html body[data-skin='dsh'] .lore-scrim { display: block; position: absolute; inset: 0; z-index: 30; background: rgb(12 8 22 / .53);
+      border: 0; padding: 0; }
+  /* 头部与写区在窄档的重排（原 @media(max-width:900px) 的规则按新结构调整后并入本档） */
+  html body[data-skin='dsh'] .lore-head{ padding: 20px 25px; min-height: 99px; gap: 12px; }
+  html body[data-skin='dsh'] .ob-toolbar{ padding: 0 23px; }
+  html body[data-skin='dsh'] .ob-editor{ --lore-pad-x: 20px; padding: 0 var(--lore-pad-x) 34px; }
+  html body[data-skin='dsh'] .mubu-set-head{ padding: 10px var(--lore-pad-x); }
+  html body[data-skin='dsh'] .lore-detail-reader{ padding: 27px 30px; }
+}
+
+@media (max-width: 559px) {
+  html body[data-skin='dsh'] .lore-switch{ order: 3; width: 100%; margin-left: 0; justify-content: space-between; padding: 3px; }
+  html body[data-skin='dsh'] .lore-switch button{ flex: 1; padding: 6px 4px; font-size: 10px; }
+  html body[data-skin='dsh'] .lore-head{padding:16px 17px;}
+  html body[data-skin='dsh'] .lore-h1{font-size:22px;}
+  html body[data-skin='dsh'] .lore-map-modes button{padding:5px 7px;}
+  html body[data-skin='dsh'] .lore-map-foot{ height: 70px; padding: 0 12px; }
+  html body[data-skin='dsh'] .lore-pane{ border-radius: 16px; }
+  html body[data-skin='dsh'] .lore-shell{ padding: 7px 12px 12px; }
+  html body[data-skin='dsh'] .lore-head{ flex-wrap: wrap; gap: 10px; }
+  html body[data-skin='dsh'] .lore-head-actions{ width: 100%; flex-wrap: wrap; }
+  html body[data-skin='dsh'] .lore-mobile-back{ min-height: 22px; padding: 2px 7px; font-size: 9px; }
+  html body[data-skin='dsh'] .ob-toolbar{ height: auto; min-height: 38px; flex-wrap: wrap; padding: 0 10px; gap: 1px; }
+  html body[data-skin='dsh'] .ob-toolbar .tb{ min-width: 20px; padding: 4px 5px; font-size: 10px; }
+  html body[data-skin='dsh'] .ob-toolbar > .tb-sep{ margin: 0 2px; }
+  html body[data-skin='dsh'] .ob-editor{ --lore-pad-x: 14px; padding: 0 var(--lore-pad-x) 30px; }
+  html body[data-skin='dsh'] .mubu-set-head{ margin-bottom: 8px; padding: 9px var(--lore-pad-x); }
+  html body[data-skin='dsh'] .lore-detail-reader{ padding: 24px 23px; }
+  html body[data-skin='dsh'] .lore-detail-return{ flex-wrap: wrap; gap: 4px; }
+  html body[data-skin='dsh'] .lore-detail-relgrid .rel-rows{ grid-template-columns: 1fr; }
+}
+
+/* ===== 窄档列表屏顶部那份紧凑页头（LoreHead 的 .lore-head--compact）：宽档不出现该变体，故不包 media ===== */
+html body[data-skin='dsh'] .lore-head--compact{ padding: 16px 18px 12px; min-height: 0; border-bottom: 1px solid var(--lore-line); }
+
+html body[data-skin='dsh'] .lore-head--compact .lore-h1{ font-size: 20px; margin-top: 6px; }
+
+html body[data-skin='dsh'] .lore-head--compact .lore-meta{ display: none; }
+
+html body[data-skin='dsh'] .lore-head--compact .lore-head-actions{ width: 100%; }
+
+/* ==================== 设定 ====================
+   设定写区（MubuView 的 .lore-surface）空态主按钮：原 .btn-primary 的 naive 蓝与设定模块的浅色胶囊不一致，
+   这里换成设计稿主按钮观感（同 .lore-btn.primary 的取色）。只作用于设定写区，其它模块的 .btn-primary 不动；
+   空态里的次级按钮只有 .btn-primary，没有 .btn-ghost，无需为其增设规则。 */
+html body[data-skin='dsh'] [data-module=lore] .lore-surface .btn-primary {
+  border-color: transparent;
+  border-radius: 999px;
+  min-height: 32px;
+  padding: 7px 14px;
+  font-size: 11px;
+  background: var(--lore-primary-bg);
+  color: var(--lore-primary-ink);
+}
+
+html body[data-skin='dsh'] [data-module=lore] .lore-surface .btn-primary:hover {
+  background: var(--lore-primary-hover);
+  filter: none;
+}

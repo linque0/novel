@@ -13,6 +13,11 @@ import { h, ref, onMounted, watch, computed } from 'vue'
 import { NButton, NSelect, NTag, NCheckbox, NSwitch } from 'naive-ui'
 import OIcon from './OIcon.vue'
 import SkinPicker from './SkinPicker.vue'
+/* 隐现（dsh）皮肤的整套设置：玻璃侧栏 + 搜索 + 五页分组 + 外观预览。
+ * 其中 appearance / data / about 三页按插件版界面移植；
+ * ai / knowledge 两页沿用桌面现有 AiSettings / KnowledgeModelSettings（用户决定后续专项适配）。 */
+import SettingsWorkspace from './skins/latent/settings/SettingsWorkspace.vue'
+import { isLatentSkin } from '../skins/registry'
 import WritingPaperPicker from './WritingPaperPicker.vue'
 import WritingPaperPreview from './WritingPaperPreview.vue'
 import AiSettings from './ai/AiSettings.vue'
@@ -31,6 +36,8 @@ import GlazeArtwork from './GlazeArtwork.vue'
 import GlazeLightingToggle from './GlazeLightingToggle.vue'
 
 const ui = useUiStore()
+/* 插件构建没有恍然梦：模型/知识库两个分区整段不出现（导航与 @go-ai 两条入口都在下面被收掉）。 */
+const nsPlugin = __NS_PLUGIN__
 
 const PAGES = [
   { key: 'appearance', icon: '外', label: '外观', desc: '主题 / 字体 / 字号' },
@@ -39,7 +46,11 @@ const PAGES = [
   { key: 'data', icon: '数', label: '数据', desc: '导入导出 / 备份 / 存储' },
   { key: 'about', icon: '关', label: '关于', desc: '统计 / 手册 / 标语' }
 ]
+/* 插件构建没有恍然梦：模型设置 / 知识库模型两个分区从导航里过滤掉（page 只由导航与 @go-ai 赋值，
+ * 两个入口都不在，内容区那两段本身不会渲染）。Vue 3 里 v-if 早于 v-for 求值，不能同元素直接判 p.key。 */
+const navPages = computed(() => nsPlugin ? PAGES.filter(p => p.key !== 'ai' && p.key !== 'knowledge') : PAGES)
 const page = ref('appearance')
+const originalSettings = computed(() => ui.skin === 'original' && ['appearance', 'data', 'about'].includes(page.value))
 const crimsonShellStyle = computed(() => ui.skin === 'crimson'
   ? {
       backgroundImage: `linear-gradient(#192b3c77, transparent 40%), url(${crimsonSettings})`,
@@ -212,8 +223,11 @@ async function clearStalePointer() {
 </script>
 
 <template>
-  <div class="sw-root" :class="{ 'is-crimson': ui.skin === 'crimson' }" :style="crimsonShellStyle">
-    <template v-if="ui.skin === 'crimson'">
+  <div class="sw-root" :class="{ 'is-crimson': ui.skin === 'crimson', 'original-settings': originalSettings }" :style="crimsonShellStyle">
+    <!-- 隐现（dsh）皮肤：整套设置交给隐现自己的五页工作区（玻璃侧栏 + 搜索 + 分组行 + 预览）。
+         其余皮肤保持下面的原有结构不变。 -->
+    <SettingsWorkspace v-if="isLatentSkin(ui.skin)" />
+    <template v-else-if="ui.skin === 'crimson'">
       <header class="crimson-settings-head">
         <span class="crimson-settings-brand">
           <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
@@ -236,14 +250,15 @@ async function clearStalePointer() {
     </div>
 
     <div class="sw-body">
-      <nav class="sw-nav">
+      <nav class="sw-nav" aria-label="设置分类">
         <GlazeArtwork v-if="ui.skin === 'glaze'" compact />
         <div v-if="ui.isStudioSkin && ui.skin !== 'glaze'" class="gravity-settings-intro"><span>偏好设置</span><h2>你的<br />创作手感。</h2></div>
         <button
-          v-for="p in PAGES"
+          v-for="p in navPages"
           :key="p.key"
           class="sw-nav-item"
           :class="{ on: page === p.key }"
+          :aria-current="page === p.key ? 'page' : undefined"
           type="button"
           @click="page = p.key"
         >
@@ -325,6 +340,8 @@ async function clearStalePointer() {
         <template v-else-if="page === 'data'">
           <h2 class="sw-h serif">数据</h2>
           <p class="sw-desc">导入导出、备份与本地存储，全部数据保存在本机</p>
+          <h3 v-if="originalSettings" class="sw-h2">文件与备份</h3>
+          <p v-if="originalSettings" class="sw-desc">正文导出适合阅读与分享；JSON 备份用于恢复完整创作资料。</p>
           <div class="sw-card">
             <button class="sw-item" type="button" @click="ui.importOpen = true">
               <OIcon name="download" :size="14" />
@@ -338,7 +355,7 @@ async function clearStalePointer() {
               <OIcon name="download" :size="14" />
               <span class="sw-row-main"><b>备份全部数据（JSON）</b><i>作品、章节、人物、大纲、设定、批注等全量快照</i></span>
             </button>
-            <button class="sw-item" type="button" @click="onRestore">
+            <button class="sw-item is-danger" type="button" @click="onRestore">
               <OIcon name="upload" :size="14" />
               <span class="sw-row-main"><b>恢复备份（JSON）…</b><i>以备份覆盖当前全部数据，恢复前自动保存并全窗口重载</i></span>
             </button>
@@ -366,7 +383,7 @@ async function clearStalePointer() {
                 <OIcon name="folder" :size="14" />
                 <span class="sw-row-main"><b>更改存储位置…</b><i>迁移前自动保存，应用关闭并自动重启后生效；原位置默认保留为副本</i></span>
               </button>
-              <button v-if="dataLoc?.isCustom" class="sw-item" type="button" @click="restoreDataDir">
+              <button v-if="dataLoc?.isCustom" class="sw-item is-danger" type="button" @click="restoreDataDir">
                 <OIcon name="back" :size="14" />
                 <span class="sw-row-main"><b>恢复默认存储位置</b><i>数据迁回默认位置，原自定义目录默认保留为副本</i></span>
               </button>
@@ -394,6 +411,7 @@ async function clearStalePointer() {
         <template v-else>
           <h2 class="sw-h serif">关于</h2>
           <p class="sw-desc">小说工坊 · 本地优先的写作工坊</p>
+          <h3 v-if="originalSettings" class="sw-h2">写作与帮助</h3>
           <div class="sw-card">
             <button class="sw-item" type="button" @click="ui.statsOpen = true">
               <OIcon name="stats" :size="14" />

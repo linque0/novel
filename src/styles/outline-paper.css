@@ -384,8 +384,27 @@
 }
 .oc-mini:hover { border-color: #a9bda4; box-shadow: 0 4px 12px #354c3812; }
 .oc-mini.sel { border-color: #6b8c77; box-shadow: 0 0 0 2px #7d9a7722, 0 4px 12px #354c3812; }
-.oc-mini.dragging { cursor: grabbing; }
+.oc-mini.dragging { cursor: grabbing; opacity: .38; }
 .oc-mini.flash { animation: oc-flash 1.5s ease; }
+/* 拖动迷你卡：容器内容区会裁剪，拖影必须挂到画布内层才能拖出容器 */
+.oc-mini-ghost {
+  position: absolute;
+  z-index: 30;
+  pointer-events: none;
+  padding: 9px 11px;
+  border: 1px dashed var(--accent, #55776a);
+  border-radius: 7px;
+  background: color-mix(in srgb, #fbfcf6 94%, transparent);
+  box-shadow: 0 12px 28px #354c3833;
+  opacity: .94;
+  overflow: hidden;
+  user-select: none;
+}
+.oc-mini-ghost .oc-mini-title { margin: 2px 0 0; }
+.oc-mini-ghost.oc-mini-note { background: color-mix(in srgb, #fff8db 94%, transparent); }
+.oc-mini-ghost.oc-mini-container { border-style: solid; border-left-width: 3px; border-left-color: var(--bc, #748b80); }
+.oc-node.drop-target,
+.oc-mini.drop-target { outline: 2px dashed var(--accent, #55776a); outline-offset: 2px; }
 .oc-mini-note { background-color: #fff8db; border-color: #e5d9ae; border-radius: 4px 4px 12px 4px; }
 .oc-mini-cite { border-color: #dedde0; }
 .oc-mini-anchor { border-color: #dfd7c6; border-left: 3px solid #b9927c; }
@@ -492,6 +511,12 @@
 .oc-mini .oc-apt { opacity: 0; }
 .oc-mini:hover .oc-apt,
 .oc-mini.sel .oc-apt { opacity: 1; }
+/* 迷你卡 overflow:hidden 会裁掉探出卡缘锚点的外半（整颗 9px 只剩内侧 ~3px 可点），
+   按住可见圆点拖线等于没有响应——收到边内保证整颗可点，连线几何仍取卡片边缘中点（v1.1.8） */
+.oc-mini .oc-apt[data-side='top'] { top: 0; }
+.oc-mini .oc-apt[data-side='bottom'] { bottom: 0; }
+.oc-mini .oc-apt[data-side='left'] { left: 0; }
+.oc-mini .oc-apt[data-side='right'] { right: 0; }
 
 /* ---------- 接续卡 / 选择条 / 关系组 ---------- */
 .oc-external-lane {

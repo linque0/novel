@@ -2,7 +2,11 @@ import Dexie from 'dexie'
 import { SOURCE_TABLES } from '../services/project/normalize.js'
 import { notifySourceChanged } from '../services/project/events.js'
 
-export const db = new Dexie('novel-studio')
+/* 插件版（DSH 宿主）跑在宿主源的 IndexedDB 里：必须换库名，
+ * 否则会和桌面版/其它插件在同一源内互踩。桌面版行为不变。 */
+const HOST_DB_NAME = typeof window !== 'undefined' && window.__NS_AGENT__ === 'dsh' ? 'novel-studio@dsh' : 'novel-studio'
+
+export const db = new Dexie(HOST_DB_NAME)
 
 db.version(1).stores({
   works: 'id, updatedAt, deletedAt',
@@ -178,6 +182,20 @@ db.version(11).stores({
 db.version(12).stores({ lorelinks: 'id, workId' })
 
 // Covers direct deletes/imports and all source writes, not just autosave's list.
+/* 写入出口（M3）：作品库同步层注册一个 tap，拿到每次事务提交后的变更集。
+ * 用 pauseWriteTap 包住"从库灌入 Dexie"的写入，避免回环。 */
+let writeTap = null
+let writeTapPaused = 0
+export function setWriteTap(fn) {
+  writeTap = fn
+}
+export function pauseWriteTap() {
+  writeTapPaused += 1
+}
+export function resumeWriteTap() {
+  writeTapPaused = Math.max(0, writeTapPaused - 1)
+}
+
 async function notifyCommitted(changes) {
   const works=new Map()
   for(const {table,row} of changes.values()) {
@@ -192,18 +210,25 @@ async function notifyCommitted(changes) {
     if(workId)works.set(workId,{table,row:{...row,workId}})
   }
   for(const {table,row} of works.values())notifySourceChanged(table,row)
+  if (writeTap && writeTapPaused === 0) {
+    try {
+      writeTap([...changes.values()])
+    } catch (error) {
+      console.warn('[library] 写入出口失败', error)
+    }
+  }
 }
-function trackSource(transaction,table,row) {
+function trackSource(transaction,table,row,kind='put') {
   if(!transaction._bookSourceChanges) {
     transaction._bookSourceChanges=new Map()
     transaction.on('complete',()=>notifyCommitted(transaction._bookSourceChanges).catch(console.error))
   }
-  transaction._bookSourceChanges.set(table+':'+row.id+':'+(row.workId||''),{table,row})
+  transaction._bookSourceChanges.set(table+':'+row.id+':'+(row.workId||''),{table,row,kind})
 }
 for (const table of SOURCE_TABLES) {
   db.table(table).hook('creating', function (_key, row, transaction) { this.onsuccess = () => trackSource(transaction,table,row) })
   db.table(table).hook('updating', function (changes, _key, row, transaction) { this.onsuccess = () => {trackSource(transaction,table,row);if(changes.workId&&changes.workId!==row.workId)trackSource(transaction,table,{...row,workId:changes.workId})} })
-  db.table(table).hook('deleting', function (_key, row, transaction) { this.onsuccess = () => trackSource(transaction,table,row) })
+  db.table(table).hook('deleting', function (_key, row, transaction) { this.onsuccess = () => trackSource(transaction,table,row,'delete') })
 }
 
 export const uid = () =>

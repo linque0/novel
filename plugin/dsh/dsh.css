@@ -1,0 +1,2959 @@
+/* DSH 插件版皮肤（M0 变量层 + M1-C1 外壳与书架）。
+ * 宿主令牌从 iframe 外部注入到文档根上的 --ns-*：--ns-bg / --ns-layer-1..3 / --ns-border-1..4 /
+ * --ns-label-1..3 / --ns-caption / --ns-hover / --ns-active / --ns-success / --ns-warn / --ns-error /
+ * --ns-accent / --ns-radius-sm|md|lg / --ns-font-size / --ns-scroll-thumb|thumb-hover|width。
+ * iframe 内不一定拿得到父窗口，所以每个 var() 都带回退（中性深色）。
+ * 本文件只在 plugin/dsh/dsh.css 里覆盖，不改原 CSS；选择器一律 body[data-skin='dsh'] 前缀，
+ * 多一层 .original-shelf / .app-topbar-shell 用来压过组件 scoped 规则（:deep() 后是 0,3,0 起）。 */
+
+/* ===== 1. 变量层：themes.css 那套变量全量映射到宿主令牌 =====
+ * 第二个选择器用于压过 .theme-xuan/.theme-parchment/.theme-night 在元素自身上的同名声明
+ * （主题类声明在元素上，光靠 body 继承压不住）；html 前缀保证同样能压住挂在 body 上的主题类。 */
+html body[data-skin='dsh'],
+body[data-skin='dsh'] :is(.theme-xuan, .theme-parchment, .theme-night) {
+  --bg: var(--ns-bg, #151517);
+  --bg-panel: var(--ns-layer-1, #232324);
+  --bg-editor: var(--ns-layer-1, #232324);
+  --bg-hover: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  --text: var(--ns-label-1, #f9fafb);
+  --text-dim: var(--ns-label-2, #cfd3d6);
+  --text-faint: var(--ns-caption, #81858c);
+  --card-ink: var(--ns-label-1, #f9fafb);
+  --border: var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  --border-strong: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  --accent: var(--ns-accent, #7aaaff);
+  --accent-soft: var(--ns-accent-soft, rgba(122, 170, 255, 0.16));
+  --accent-deep: var(--ns-accent, #7aaaff);
+  --danger: var(--ns-error, #f25a5a);
+  --danger-soft: var(--ns-error-soft, rgba(242, 90, 90, 0.14));
+  --success: var(--ns-success, #22c55e);
+  --warning: var(--ns-warn, #f59e0b);
+  --shadow: 0 2px 14px var(--ns-shadow, rgba(0, 0, 0, 0.5));
+  --shadow-pop: 0 8px 28px var(--ns-shadow, rgba(0, 0, 0, 0.55));
+  --shadow-node: 0 1px 3px var(--ns-shadow, rgba(0, 0, 0, 0.35));
+  --shadow-node-hover: 0 4px 12px var(--ns-shadow, rgba(0, 0, 0, 0.45));
+  --radius-sm: var(--ns-radius-sm, 8px);
+  --radius-md: var(--ns-radius-md, 12px);
+  --radius-lg: var(--ns-radius-lg, 16px);
+  --fs-xs: var(--ns-fs-xs, 11px);
+  --fs-sm: var(--ns-fs-sm, 13px);
+  --fs-md: var(--ns-fs-md, 14px);
+  --fs-lg: var(--ns-fs-lg, 16px);
+  --fs-title: var(--ns-fs-title, 18px);
+  --editor-font: var(--ns-font-family, 'Microsoft YaHei', system-ui, sans-serif);
+  /* 时长/缓动没有宿主令牌，用固定值；--ns-* 覆盖不了的部分留在这里一处 */
+  --ease: cubic-bezier(0.2, 0.6, 0.3, 1);
+  --dur-fast: 120ms;
+  --dur: 180ms;
+  --dur-slow: 250ms;
+}
+
+/* ===== 2. 外壳 ===== */
+
+/* 全局地面：body 背景/字色走宿主，滚动条统一到 --ns-scroll-thumb。 */
+html body[data-skin='dsh'] {
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+  font-size: var(--ns-font-size, 14px);
+  color-scheme: dark;
+  /* 顶栏高度契约：宿主没注入时按 36px（= 本皮肤里 .app-topbar 的实际高度）。
+     覆盖式抽屉 / 遮罩 / 关闭键都从这里起算，保证顶栏在抽屉打开时仍可见可点。 */
+  --ns-topbar-h: 36px;
+}
+body[data-skin='dsh'] ::-webkit-scrollbar {
+  width: var(--ns-scroll-width, 10px);
+  height: var(--ns-scroll-width, 10px);
+}
+body[data-skin='dsh'] ::-webkit-scrollbar-track { background: transparent; }
+body[data-skin='dsh'] ::-webkit-scrollbar-thumb {
+  background: var(--ns-scroll-thumb, rgba(255, 255, 255, 0.18));
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+body[data-skin='dsh'] ::-webkit-scrollbar-thumb:hover {
+  background: var(--ns-scroll-thumb-hover, rgba(255, 255, 255, 0.32));
+  background-clip: padding-box;
+}
+
+/* 顶栏：76/64/100px 三级高度、上/下装饰三角全部收成 36px 单行工具条。
+ * .original-shelf :deep(.app-topbar) 是 64px（0,3,0），所以统一挂 .original-shelf 前缀。 */
+body[data-skin='dsh'] .app-topbar-shell,
+body[data-skin='dsh'] .original-shelf .app-topbar-shell {
+  --topbar-bg: var(--ns-layer-1, #232324);
+  --topbar-text: var(--ns-label-1, #f9fafb);
+  --topbar-muted: var(--ns-label-2, #cfd3d6);
+  --topbar-accent: var(--ns-accent, #7aaaff);
+  --topbar-line: var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  --topbar-font: 'Microsoft YaHei', system-ui, sans-serif;
+  flex: none;
+  min-width: 0;
+}
+body[data-skin='dsh'] .app-topbar,
+body[data-skin='dsh'] .original-shelf .app-topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-1, #f9fafb);
+  border-bottom: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+}
+/* 去品牌画框与副标：只留 13px 文字，不再有 38px 方框和“DSH”小字。 */
+body[data-skin='dsh'] .app-topbar-shell .app-topbar .app-topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 6px 0 2px;
+  font: 500 13px/1 'Microsoft YaHei', system-ui, sans-serif;
+  letter-spacing: 0;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .app-topbar-shell .app-topbar .app-topbar-mark { display: none; }
+body[data-skin='dsh'] .app-topbar-shell .app-topbar .app-topbar-brand-text { letter-spacing: 0; }
+body[data-skin='dsh'] .app-topbar-shell .app-topbar .app-topbar-brand-text small { display: none; }
+
+body[data-skin='dsh'] .app-topbar .app-topnav,
+body[data-skin='dsh'] .original-shelf .app-topbar .app-topnav {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  gap: 2px;
+  height: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+body[data-skin='dsh'] .app-topbar .app-topnav::-webkit-scrollbar { display: none; }
+body[data-skin='dsh'] .app-topbar .app-topnav-item {
+  height: 24px;
+  padding: 0 8px;
+  min-width: 0;
+  border-radius: var(--ns-radius-sm, 8px);
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+  letter-spacing: 0;
+  transition: color var(--dur-fast, 120ms) var(--ease, ease),
+    background-color var(--dur-fast, 120ms) var(--ease, ease);
+}
+body[data-skin='dsh'] .app-topbar .app-topnav-item:is(:hover, .active) {
+  color: var(--ns-label-1, #f9fafb);
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .app-topbar .app-topnav-item.active { color: var(--ns-label-1, #f9fafb); }
+/* 原来的三角形指示块是装饰，去掉。 */
+body[data-skin='dsh'] .app-topbar .app-topnav-item.active::after { content: none; display: none; }
+body[data-skin='dsh'] .app-topbar .app-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+}
+/* 插件版皮肤固定为 dsh，皮肤选择器没有可选项，还会占 138px 把 36px 行撑断。 */
+body[data-skin='dsh'] .app-topbar .app-topbar-actions .skin-picker { display: none; }
+
+/* 不自造焦点环：回退到浏览器默认（宿主自己给焦点样式）。 */
+body[data-skin='dsh'] .app-topbar :is(button, [role='combobox']):focus-visible,
+body[data-skin='dsh'] .original-shelf :is(button, input, select):focus-visible {
+  outline: revert;
+  box-shadow: none;
+}
+
+/* ===== 3. 书架页（dsh 皮肤下 Bookshelf 渲染 OriginalShelf） ===== */
+
+body[data-skin='dsh'] .original-shelf {
+  --os-ink: var(--ns-label-1, #f9fafb);
+  --os-muted: var(--ns-label-2, #cfd3d6);
+  --os-teal: var(--ns-accent, #7aaaff);
+  --os-serif: 'Microsoft YaHei', system-ui, sans-serif;
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+  color-scheme: dark;
+  font: var(--ns-font-size, 14px)/1.5 'Microsoft YaHei', system-ui, sans-serif;
+}
+body[data-skin='dsh'] .original-shelf .os-library { padding: 0 16px 12px; }
+body[data-skin='dsh'] .original-shelf .os-heading { padding: 10px 0 8px; gap: 12px; }
+body[data-skin='dsh'] .original-shelf .os-heading h1 {
+  font: 600 15px/20px 'Microsoft YaHei', system-ui, sans-serif;
+  letter-spacing: 0;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .original-shelf .os-heading h1 span {
+  margin-left: 8px;
+  font-size: 11px;
+  color: var(--ns-caption, #81858c);
+}
+body[data-skin='dsh'] .original-shelf .os-tools { gap: 12px; }
+body[data-skin='dsh'] .original-shelf .os-search {
+  gap: 6px;
+  padding: 4px 0;
+  border-bottom: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+}
+body[data-skin='dsh'] .original-shelf .os-search svg { stroke: var(--ns-label-3, #a3a7ad); }
+body[data-skin='dsh'] .original-shelf .os-search input {
+  font: 12px/1.4 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .original-shelf .os-search input::placeholder { color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .original-shelf .os-search button { color: var(--ns-label-2, #cfd3d6); }
+body[data-skin='dsh'] .original-shelf .os-new {
+  padding: 6px 12px;
+  min-height: 28px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .original-shelf .os-new:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); }
+
+body[data-skin='dsh'] .original-shelf .os-toolbar { padding-bottom: 8px; gap: 12px; }
+body[data-skin='dsh'] .original-shelf .os-filters { gap: 6px; }
+body[data-skin='dsh'] .original-shelf .os-filters button {
+  padding: 4px 8px;
+  min-height: 24px;
+  border: 0;
+  border-radius: var(--ns-radius-sm, 8px);
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+}
+body[data-skin='dsh'] .original-shelf .os-filters button[aria-pressed='true'] {
+  color: var(--ns-label-1, #f9fafb);
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  border-color: transparent;
+}
+body[data-skin='dsh'] .original-shelf .os-sort { font-size: 11px; color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .original-shelf .os-notice {
+  padding: 12px 4px;
+  font: 12px/1.5 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ns-label-2, #cfd3d6);
+}
+
+/* 地面：去掉米色纸面与上下硬边，用宿主 bg + 细边界。 */
+body[data-skin='dsh'] .original-shelf .os-list-region {
+  padding: 8px 0 10px;
+  background: var(--ns-bg, #151517);
+  border-top: 0;
+  border-bottom: 0;
+  scrollbar-color: var(--ns-scroll-thumb, rgba(255, 255, 255, 0.18)) transparent;
+}
+body[data-skin='dsh'] .original-shelf .os-list {
+  padding: 0;
+  gap: 8px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+}
+
+/* 卡片：layer-1 底 + 0.5px border-2 + radius-md，hover 抬到 layer-2。 */
+body[data-skin='dsh'] .original-shelf .os-list-item {
+  min-height: 0;
+  padding: 8px;
+  gap: 10px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-md, 12px);
+  background: var(--ns-layer-1, #232324);
+  box-sizing: border-box;
+  transition: background-color var(--dur-fast, 120ms) var(--ease, ease);
+}
+body[data-skin='dsh'] .original-shelf .os-list-item:hover { background: var(--ns-layer-2, #2c2c2e); }
+body[data-skin='dsh'] .original-shelf .os-list-item.is-selected {
+  border-color: var(--ns-accent, #7aaaff);
+}
+body[data-skin='dsh'] .original-shelf .os-list-item.is-selected::after {
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--ns-accent, #7aaaff);
+  opacity: 1;
+}
+body[data-skin='dsh'] .original-shelf .os-book-open {
+  gap: 10px;
+  padding: 0;
+  border-radius: inherit;
+  color: inherit;
+}
+body[data-skin='dsh'] .original-shelf .os-book-rest { width: auto; min-height: 0; perspective: none; }
+body[data-skin='dsh'] .original-shelf .os-list-info { gap: 1px; }
+body[data-skin='dsh'] .original-shelf .os-status {
+  font-size: 11px;
+  letter-spacing: 0;
+  color: var(--ns-caption, #81858c);
+}
+body[data-skin='dsh'] .original-shelf .os-list-info strong {
+  font: 500 13px/20px 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ns-label-1, #f9fafb);
+  -webkit-line-clamp: 1;
+}
+body[data-skin='dsh'] .original-shelf .os-author {
+  margin-top: 0;
+  font-size: 11px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .original-shelf .os-list-info small {
+  margin-top: 0;
+  font-size: 11px;
+  line-height: 16px;
+  color: var(--ns-caption, #81858c);
+}
+body[data-skin='dsh'] .original-shelf .os-list-info small span { margin-left: 8px; }
+body[data-skin='dsh'] .original-shelf .os-opened { font-size: 11px; color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .original-shelf .os-list-actions { gap: 2px; }
+body[data-skin='dsh'] .original-shelf .os-list-actions button,
+body[data-skin='dsh'] .original-shelf .os-more {
+  min-width: 24px;
+  min-height: 24px;
+  padding: 2px 4px;
+  border-radius: var(--ns-radius-sm, 8px);
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 11px;
+}
+body[data-skin='dsh'] .original-shelf .os-list-actions button:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+
+/* 底栏（当前作品）+ 分页：同色系，细边界。 */
+body[data-skin='dsh'] .original-shelf .os-reading {
+  min-height: 56px;
+  padding: 10px 16px;
+  gap: 16px;
+  background: var(--ns-layer-1, #232324);
+  border-top: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+}
+body[data-skin='dsh'] .original-shelf .os-kicker {
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ns-caption, #81858c);
+}
+body[data-skin='dsh'] .original-shelf .os-reading h2 {
+  margin: 0;
+  font: 500 13px/20px 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .original-shelf .os-progress {
+  border-left: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  padding-left: 16px;
+  gap: 2px;
+}
+body[data-skin='dsh'] .original-shelf .os-progress strong { font-size: 12px; color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .original-shelf .os-progress small { font-size: 11px; color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .original-shelf .os-reading-actions { gap: 8px; }
+body[data-skin='dsh'] .original-shelf .os-continue {
+  min-height: 28px;
+  padding: 5px 12px;
+  gap: 14px;
+  border: 0;
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-accent, #7aaaff);
+  color: var(--ns-bg, #151517);
+  font-size: 12px;
+}
+body[data-skin='dsh'] .original-shelf .os-continue:hover {
+  background: var(--ns-accent, #7aaaff);
+  filter: brightness(1.08);
+}
+body[data-skin='dsh'] .original-shelf .os-outline { border: 0; background: none; color: var(--ns-label-2, #cfd3d6); }
+
+body[data-skin='dsh'] .original-shelf .os-pagination {
+  min-height: 40px;
+  padding: 6px 0;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--ns-caption, #81858c);
+}
+body[data-skin='dsh'] .original-shelf .os-pagination select {
+  min-height: 26px;
+  padding: 2px 6px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-1, #f9fafb);
+  font: 11px/1.4 'Microsoft YaHei', system-ui, sans-serif;
+}
+body[data-skin='dsh'] .original-shelf .os-page-controls { gap: 2px; }
+body[data-skin='dsh'] .original-shelf .os-page-controls button {
+  width: 26px;
+  min-height: 26px;
+  border: 0.5px solid transparent;
+  border-radius: var(--ns-radius-sm, 8px);
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 16px;
+}
+body[data-skin='dsh'] .original-shelf .os-page-controls button:not(:disabled):hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--ns-border-2, rgba(255, 255, 255, 0.12));
+}
+
+body[data-skin='dsh'] .original-shelf .os-empty-mark {
+  font: 22px/1 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ns-label-3, #a3a7ad);
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  padding: 6px 12px;
+}
+body[data-skin='dsh'] .original-shelf .os-empty h2 {
+  margin: 14px 0 6px;
+  font: 500 15px/22px 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .original-shelf .os-empty p {
+  margin-bottom: 16px;
+  font-size: 12px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+
+/* 封面：撤掉 3D 书脊/书页/烫金纹理，改成小尺寸圆角缩略（封面上的艺术字一并撤掉，
+ * 书名在卡片文本列里以 13/20 呈现）。 */
+body[data-skin='dsh'] .original-shelf .ob-volume {
+  width: 44px;
+  height: 60px;
+  transform: none;
+  border-radius: var(--ns-radius-sm, 8px);
+  overflow: hidden;
+  color: var(--ns-label-1, #f9fafb);
+  transition: none;
+}
+body[data-skin='dsh'] .original-shelf .os-book-open:is(:hover, :focus-visible) .ob-volume { transform: none; }
+body[data-skin='dsh'] .original-shelf :is(.ob-back, .ob-page-block, .ob-page-edge, .ob-spine, .ob-ribbon) {
+  display: none;
+}
+body[data-skin='dsh'] .original-shelf .ob-cover {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transform: none;
+  border: 0.5px solid var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  border-radius: inherit;
+  background-color: var(--ns-layer-3, #2c2c2e);
+  background-image: none;
+  box-shadow: none;
+  box-sizing: border-box;
+}
+body[data-skin='dsh'] .original-shelf :is(.ob-edition, .ob-colophon) { display: none; }
+/* 缩略图不再是一块空灰：六种封面类各自叠一档 accent 极淡底（layer-3 为基），块内放书名首字。
+ * 首字不新增 DOM——1em 宽 + overflow:hidden 正好截出第一个字，竖排/断行等标题样式一并压平。 */
+body[data-skin='dsh'] .original-shelf .ob-volume.novel .ob-cover { background-color: color-mix(in srgb, var(--ns-accent, #7aaaff) 6%, var(--ns-layer-3, #333336)); }
+body[data-skin='dsh'] .original-shelf .ob-volume.note .ob-cover { background-color: color-mix(in srgb, var(--ns-accent, #7aaaff) 9%, var(--ns-layer-3, #333336)); }
+body[data-skin='dsh'] .original-shelf .ob-volume.cedar .ob-cover { background-color: color-mix(in srgb, var(--ns-accent, #7aaaff) 12%, var(--ns-layer-3, #333336)); }
+body[data-skin='dsh'] .original-shelf .ob-volume.violet .ob-cover { background-color: color-mix(in srgb, var(--ns-accent, #7aaaff) 15%, var(--ns-layer-3, #333336)); }
+body[data-skin='dsh'] .original-shelf .ob-volume.claret .ob-cover { background-color: color-mix(in srgb, var(--ns-accent, #7aaaff) 18%, var(--ns-layer-3, #333336)); }
+body[data-skin='dsh'] .original-shelf .ob-volume.ink .ob-cover { background-color: color-mix(in srgb, var(--ns-accent, #7aaaff) 21%, var(--ns-layer-3, #333336)); }
+body[data-skin='dsh'] .original-shelf .ob-title-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-height: 0;
+  padding: 0;
+}
+body[data-skin='dsh'] .original-shelf .ob-title {
+  display: block;
+  width: 1em;
+  height: 1.25em;
+  max-height: none;
+  overflow: hidden;
+  white-space: nowrap;
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  letter-spacing: 0;
+  font: 400 13px/1.25 'Microsoft YaHei', system-ui, sans-serif;
+  color: var(--ns-label-2, #cfd3d6);
+  text-align: center;
+}
+/* 自动隐藏开关的胶囊（AutoHideTopbar）跟着顶栏一起中性化，别在 36px 条下留一块亮色。 */
+body[data-skin='dsh'] .app-topbar-shell .wb-topbar-pin {
+  bottom: -14px;
+  height: 14px;
+  padding: 0 8px;
+  gap: 4px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-top: 0;
+  border-radius: 0 0 var(--ns-radius-sm, 8px) var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-caption, #81858c);
+  font: 10px/1 'Microsoft YaHei', system-ui, sans-serif;
+}
+body[data-skin='dsh'] .app-topbar-shell .wb-topbar-pin:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-2, #cfd3d6);
+}
+/* 卡片“收起顶栏”胶囊原来居中浮在顶栏下方，正好压住标题：改锚到右端（<560 整块隐藏，见窄栏）。 */
+body[data-skin='dsh'] .app-topbar-shell .wb-topbar-pin { left: auto; right: 12px; transform: none; }
+
+/* ⋯ 菜单（窄栏的导航出口）：弹层同样走宿主令牌，不留 naive 的浅色面板。 */
+body[data-skin='dsh'] .n-dropdown-menu {
+  padding: 4px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background-color: var(--ns-layer-2, #2c2c2e);
+  box-shadow: 0 8px 24px var(--ns-shadow, rgba(0, 0, 0, 0.55));
+}
+/* 浅色主题下 naive 把选项文字写死成 #333639，落在深色面板上等于看不见：连子元素一起改。 */
+body[data-skin='dsh'] :is(.n-dropdown-option-body, .n-dropdown-option-body__label, .n-dropdown-option-body__prefix, .n-dropdown-option-body__suffix) {
+  border-radius: 6px;
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 12px/1.4 'Microsoft YaHei', system-ui, sans-serif;
+}
+body[data-skin='dsh'] .n-dropdown-option-body { padding: 6px 10px; }
+body[data-skin='dsh'] .n-dropdown-option-body--disabled,
+body[data-skin='dsh'] .n-dropdown-option-body--disabled .n-dropdown-option-body__label { color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .n-dropdown-option-body:hover {
+  background-color: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+
+/* 保存点呼吸（未保存态）：只改透明度，不动布局；reduced-motion 下整条关掉 */
+@keyframes ns-save-breathe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+/* ===== 4. 窄栏（<560）：顶栏一条 36px = 作品名 + 当前页签 + ⋯，卡片压到 72px 一屏 6 张 ===== */
+@media (max-width: 559px) {
+  /* 书架里的顶栏被 .original-shelf 前缀压到 (0,4,1)，窄栏规则必须同样带上这一层。 */
+  body[data-skin='dsh'] .app-topbar,
+  body[data-skin='dsh'] .original-shelf .app-topbar {
+    gap: 8px;
+    padding: 0 8px;
+    height: 36px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+  }
+  /* 导航与动作全部收进 ⋯，不再挤成一行。 */
+  body[data-skin='dsh'] .app-topbar .app-topnav,
+  body[data-skin='dsh'] .original-shelf .app-topbar .app-topnav { display: none; }
+  body[data-skin='dsh'] .app-topbar-shell .app-topbar .app-topbar-brand-text { display: none; }
+  body[data-skin='dsh'] .app-topbar-shell .app-topbar .app-topbar-narrow-title {
+    display: block;
+    max-width: 8em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font: 500 13px/1 'Microsoft YaHei', system-ui, sans-serif;
+    color: var(--ns-label-1, #f9fafb);
+  }
+  body[data-skin='dsh'] .app-topbar .app-topbar-current {
+    display: block;
+    flex: none;
+    margin-left: auto;
+    color: var(--ns-label-2, #cfd3d6);
+    font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+    white-space: nowrap;
+  }
+  body[data-skin='dsh'] .app-topbar .app-topbar-more-wrap { display: flex; flex: none; }
+  body[data-skin='dsh'] .app-topbar .app-topbar-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: var(--ns-radius-sm, 8px);
+    background: transparent;
+    color: var(--ns-label-2, #cfd3d6);
+    font: 400 16px/1 'Microsoft YaHei', system-ui, sans-serif;
+    cursor: pointer;
+  }
+  body[data-skin='dsh'] .app-topbar .app-topbar-more:hover {
+    background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+    color: var(--ns-label-1, #f9fafb);
+  }
+  body[data-skin='dsh'] .app-topbar-shell .wb-topbar-pin { display: none; }
+  /* 顶栏动作（搜索 / 保存态 / 入梦 / 浅眠 / 更多）在 380 一律收进 ⋯：
+     动作等价项由 AppTopbar 的「动作」分区提供，顶栏只剩 作品名 + 页签 + ⋯ 三个可点元素。 */
+  body[data-skin='dsh'] .app-topbar .app-topbar-actions { display: none; }
+  /* 保存态：动作整条收进 ⋯ 后，⋯ 之前留一个非交互 6px 状态点（28×28 触控区，disabled、不吃点击）。
+     已保存=--ns-success / 保存中=--ns-warn / 未保存=--ns-warn + 1.2s 呼吸 / 失败=--ns-error。 */
+  body[data-skin='dsh'] .app-topbar .app-topbar-save {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 28px;
+    height: 28px;
+    pointer-events: none;
+  }
+  body[data-skin='dsh'] .app-topbar .app-topbar-save-dot {
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ns-success, #22c55e);
+  }
+  body[data-skin='dsh'] .app-topbar .app-topbar-save[data-save-state='saving'] .app-topbar-save-dot { background: var(--ns-warn, #f59e0b); }
+  body[data-skin='dsh'] .app-topbar .app-topbar-save[data-save-state='dirty'] .app-topbar-save-dot {
+    background: var(--ns-warn, #f59e0b);
+    animation: ns-save-breathe 1.2s ease-in-out infinite;
+  }
+  body[data-skin='dsh'] .app-topbar .app-topbar-save[data-save-state='error'] .app-topbar-save-dot { background: var(--ns-error, #f25a5a); }
+
+  /* 书架：缩略 36×48，标题一行 13/20，元信息一行 11/16，详情与 ⋯ 同行右对齐。 */
+  body[data-skin='dsh'] .original-shelf .os-library { padding: 0 12px 10px; }
+  body[data-skin='dsh'] .original-shelf .os-heading { padding: 8px 0 6px; gap: 10px; }
+  body[data-skin='dsh'] .original-shelf .os-heading h1 { font-size: 14px; }
+  body[data-skin='dsh'] .original-shelf .os-list { gap: 6px; }
+  body[data-skin='dsh'] .original-shelf .os-list-item { min-height: 72px; padding: 8px; gap: 6px; }
+  body[data-skin='dsh'] .original-shelf .os-book-open { gap: 8px; }
+  body[data-skin='dsh'] .original-shelf .ob-volume { width: 36px; height: 48px; }
+  body[data-skin='dsh'] .original-shelf :is(.os-status, .os-author, .os-opened) { display: none; }
+  body[data-skin='dsh'] .original-shelf .os-list-actions { flex-direction: row; gap: 2px; }
+  body[data-skin='dsh'] .original-shelf .os-list-actions button { min-width: 28px; min-height: 28px; padding: 2px 4px; }
+  body[data-skin='dsh'] .original-shelf .os-detail { font-size: 11px; }
+}
+
+
+/* ===== 5. 工作台 / 正文页（M1-C2）=====
+ * 纸面换成宿主底色（撤掉纸纹、装订、米色与阴影），正文 36em 居中、行高 1.9，
+ * 工具栏压到 34px 并中性化，章节栏行 34px / 圆角 12 / 选中 --ns-active，右资料栏去装饰。
+ * 一律 body[data-skin='dsh'] 前缀：themes.css 的 .rich-host .rich-inner .tiptap 是 (0,3,0)，
+ * writing-paper.css 的 .editor-wrap[data-writing-paper] :is(...) 也是 (0,3,0)，所以纸面规则
+ * 再挂一层 .workbench-shell 到 (0,3,1)，其余按同类叠加。 */
+
+/* 5.1 外壳地面 */
+body[data-skin='dsh'] .workbench-shell { background: var(--ns-bg, #151517); color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .workbench-shell .wb-body { background: var(--ns-bg, #151517); min-width: 0; }
+
+/* 5.2 纸面：background-image 必须是 none（验收点），米色/纸纹/装订/框阴影全部撤掉 */
+body[data-skin='dsh'] .workbench-shell :is(.center-pane, .rich-host, .writing-paper-surface, .editor-wrap) {
+  background: var(--ns-bg, #151517);
+  background-image: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .workbench-shell :is(.center-pane.paper-texture, .rich-host.paper-texture)::before {
+  display: none;
+  content: none;
+}
+body[data-skin='dsh'] .workbench-shell .rich-host { flex: 1; min-height: 0; overflow: auto; }
+
+/* 5.3 正文列：36em 居中（border-box，行宽不会超过 36em）、行高 1.9、字号跟宿主 */
+body[data-skin='dsh'] .rich-host .rich-inner .tiptap {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 36em;
+  margin: 0 auto;
+  padding: 28px clamp(16px, 4vw, 40px) 26vh;
+  font-family: var(--editor-font);
+  font-size: var(--ns-font-size, 14px);
+  line-height: 1.9;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .workbench-shell .rich-host .tiptap p { margin: 0 0 1em; }
+body[data-skin='dsh'] .workbench-shell .rich-host .tiptap :is(h1, h2, h3) { color: var(--ns-label-1, #f9fafb); line-height: 1.5; }
+body[data-skin='dsh'] .workbench-shell .rich-host .tiptap blockquote {
+  margin: 0 0 1em;
+  padding-left: 12px;
+  border-left: 2px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  color: var(--ns-label-3, #81858c);
+}
+
+/* 5.4 工具栏：34px 一条、图标按钮中性化、装饰分隔与渐变去掉 */
+body[data-skin='dsh'] .workbench-shell .editor-toolbar,
+body[data-skin='dsh'] .editor-toolbar {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  padding: 0 6px;
+  gap: 1px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 0;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 0;
+  background: var(--ns-layer-1, #232324);
+  background-image: none;
+  box-shadow: none;
+  scrollbar-width: none;
+}
+body[data-skin='dsh'] .editor-toolbar::-webkit-scrollbar { display: none; }
+body[data-skin='dsh'] .editor-toolbar .tb {
+  height: 26px;
+  min-width: 24px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+}
+body[data-skin='dsh'] .editor-toolbar .tb:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .editor-toolbar .tb.on {
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+body[data-skin='dsh'] .editor-toolbar .tb-sep { display: none; }
+body[data-skin='dsh'] .editor-toolbar .editor-bar-status { gap: 6px; margin-left: auto; flex: none; }
+
+/* 5.5 章节栏（左栏）：行 34px、圆角 12、选中 --ns-active */
+body[data-skin='dsh'] .workbench-shell .side-panel {
+  background: var(--ns-layer-1, #232324);
+  border: 0;
+  border-right: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 0;
+  box-shadow: none;
+}
+body[data-skin='dsh'] .workbench-shell .side-panel :is(.side-head, .side-foot) {
+  padding: 6px;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+}
+body[data-skin='dsh'] .workbench-shell .side-panel .side-list { padding: 2px 4px 6px; }
+body[data-skin='dsh'] .workbench-shell .side-panel .n-tree .n-tree-node {
+  min-height: 34px;
+  margin: 1px 0;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: none;
+}
+body[data-skin='dsh'] .workbench-shell .side-panel .n-tree .n-tree-node-content {
+  min-height: 32px;
+  align-items: center;
+  font-size: 13px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .workbench-shell .side-panel .n-tree .n-tree-node:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); }
+body[data-skin='dsh'] .workbench-shell .side-panel .n-tree .n-tree-node.n-tree-node--selected {
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  box-shadow: none;
+}
+body[data-skin='dsh'] .workbench-shell .side-panel .n-tree .n-tree-node.n-tree-node--selected .n-tree-node-content { color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .workbench-shell .side-panel :is(.gravity-sidebar-title, .side-head .n-button) { color: var(--ns-label-2, #cfd3d6); }
+body[data-skin='dsh'] .workbench-shell .side-panel .gravity-sidebar-title { font: 500 13px/1.6 var(--editor-font); padding: 2px 6px 6px; }
+
+/* 5.6 左缘细轨（章节栏收起后）：22px 竖排，无装饰边 */
+body[data-skin='dsh'] :is(.workbench-shell, .panel-host) .ol-side-rail {
+  width: 22px;
+  padding: 10px 0;
+  border: 0;
+  border-right: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-3, #81858c);
+}
+body[data-skin='dsh'] :is(.workbench-shell, .panel-host) .ol-side-rail:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .workbench-shell .ol-side-rail .rail-text { font-size: 11px; letter-spacing: 3px; }
+body[data-skin='dsh'] .workbench-shell .side-resizer { width: 4px; border: 0; background: transparent; }
+body[data-skin='dsh'] .workbench-shell .side-resizer:hover { background: var(--ns-border-2, rgba(255, 255, 255, 0.12)); }
+
+/* 5.7 右资料栏：0.5px 边界、无装饰分割与阴影 */
+body[data-skin='dsh'] .workbench-shell .right-panel {
+  border: 0;
+  border-left: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+  box-shadow: none;
+}
+body[data-skin='dsh'] .workbench-shell .right-panel :is(.rp-head, .rp-tabs, .rp-section, .rp-materials, .rp-fold) {
+  border-color: var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: transparent;
+  box-shadow: none;
+}
+body[data-skin='dsh'] .workbench-shell .right-panel :is(.rp-title, .rp-cap) { color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .workbench-shell .right-panel .note-item {
+  border: 0;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 0;
+  background: transparent;
+}
+
+/* 5.8 字数目标底栏（Teleport 到 #app）：同色系细边界 */
+body[data-skin='dsh'] .editor-foot {
+  border-top: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-3, #81858c);
+  font-size: 11px;
+}
+body[data-skin='dsh'] .editor-foot .wg-track { background: var(--ns-border-1, rgba(255, 255, 255, 0.06)); }
+body[data-skin='dsh'] .editor-foot .wg-fill { background: var(--ns-accent, #7aaaff); }
+
+/* 5.9 窄栏（<560）：章节树默认收起后只留 22px 细轨；批注栏在此宽度不占正文 */
+@media (max-width: 559px) {
+  body[data-skin='dsh'] .workbench-shell .app-topbar,
+  body[data-skin='dsh'] .app-topbar-shell .app-topbar { height: 36px; padding: 0 8px; gap: 8px; }
+  body[data-skin='dsh'] .app-topbar .app-topbar-create {
+    display: flex;
+    align-items: center;
+    flex: none;
+    height: 24px;
+    padding: 0 8px;
+    border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: var(--ns-radius-sm, 8px);
+    background: transparent;
+    color: var(--ns-label-2, #cfd3d6);
+    font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  body[data-skin='dsh'] .app-topbar .app-topbar-create:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); color: var(--ns-label-1, #f9fafb); }
+  body[data-skin='dsh'] .workbench-shell .rich-host .rich-inner .tiptap { padding: 16px 14px 26vh; }
+  /* 380 下右批注栏不占正文：入口是 ⋯「动作 → 批注」，打开后为覆盖式抽屉（宽 300，从右滑出，
+     0.5px 左边界，遮罩 / × / Esc 都能关）；≥560 回到 5.7 的常驻三栏（宽 272）。 */
+  body[data-skin='dsh'] .workbench-shell .right-panel { display: none; }
+  body[data-skin='dsh'] .workbench-shell .rp-rail { display: none; }
+  body[data-skin='dsh'] .workbench-shell .right-panel.ns-notes-drawer {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: var(--ns-topbar-h, 36px);
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    box-sizing: border-box;
+    width: 300px;
+    max-width: 100%;
+    border: 0;
+    border-left: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: 0;
+    background: var(--ns-layer-1, #232324);
+    box-shadow: none;
+    animation: ns-notes-slide 0.18s ease-out;
+  }
+  body[data-skin='dsh'] .workbench-shell .right-panel.ns-notes-drawer .rp-fold { display: none; }
+  body[data-skin='dsh'] .workbench-shell .ns-notes-scrim {
+    position: fixed;
+    top: var(--ns-topbar-h, 36px);
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 55;
+    border: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 0.45);
+    cursor: default;
+  }
+  body[data-skin='dsh'] .workbench-shell .ns-notes-close {
+    position: fixed;
+    top: calc(var(--ns-topbar-h, 36px) + 4px);
+    right: 6px;
+    z-index: 61;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--ns-radius-sm, 8px);
+    background: transparent;
+    color: var(--ns-label-2, #cfd3d6);
+    font: 400 16px/1 'Microsoft YaHei', system-ui, sans-serif;
+    cursor: pointer;
+  }
+  body[data-skin='dsh'] .workbench-shell .ns-notes-close:hover {
+    background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+    color: var(--ns-label-1, #f9fafb);
+  }
+  body[data-skin='dsh'] .workbench-shell .editor-toolbar { padding: 0 4px; }
+  body[data-skin='dsh'] .workbench-shell .side-panel { border-right: 0; }
+  body[data-skin='dsh'] .workbench-shell .ol-side-rail { padding: 8px 0; }
+  /* 章标题：18 → 16，行高 1.35，最多两行（ChapterTitleField 会按 scrollHeight 写内联高度，
+     所以用 max-height 兜住第 3 行）。 */
+  body[data-skin='dsh'] .workbench-shell .editor-head .title-input {
+    font-size: 16px;
+    line-height: 1.35;
+    max-height: 2.7em;
+    overflow: hidden;
+  }
+}
+
+/* 顶栏「＋新书上架」只在窄栏出现：宽屏走书架页自己的标题行按钮。
+ * 用 min-width 包住而不是裸写 display:none —— 同特异度下后写的规则会压掉窄栏那段。 */
+@media (min-width: 560px) {
+  body[data-skin='dsh'] .app-topbar .app-topbar-create { display: none; }
+}
+
+/* 工具栏子项不参与收缩：窄栏里文字不许在按钮内部折行，超出部分横向滚动（.editor-toolbar 已有 overflow-x:auto）。 */
+body[data-skin='dsh'] .editor-toolbar > * { flex: none; }
+body[data-skin='dsh'] .editor-toolbar :is(.tb, button, .n-button, .n-select, .n-base-selection) { white-space: nowrap; }
+
+/* 详情弹窗（书架 → 详情）：正文分隔线原本是米色 #d4d2c4、按钮是深绿底 #284f48，都拉回中性。 */
+body[data-skin='dsh'] .os-detail-content { color: var(--ns-label-2, #cfd3d6); }
+body[data-skin='dsh'] .os-detail-content .os-detail-intro {
+  border-block: 1px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .os-modal-open {
+  border: 0;
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-accent, #7aaaff);
+  color: var(--ns-bg, #151517);
+  font-weight: 600;
+}
+body[data-skin='dsh'] .os-modal-open:hover { filter: brightness(1.08); }
+
+/* 抽屉滑出（只在入场上播放一次；闭合靠 v-if 卸载，不做出场动画） */
+@keyframes ns-notes-slide {
+  from { transform: translateX(24px); opacity: 0.4; }
+  to { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* 呼吸规则带 [data-save-state='dirty']（0,5,1），这里必须同样带属性选择器才压得住 */
+  body[data-skin='dsh'] .app-topbar .app-topbar-save[data-save-state] .app-topbar-save-dot { animation: none; }
+  body[data-skin='dsh'] .workbench-shell .right-panel.ns-notes-drawer { animation: none; }
+}
+
+/* ===== 6. 人物页（M2a）=====
+ * 去装饰：卡片 = --ns-layer-1 + 0.5px --ns-border-2 + 圆角 12；人物列表行 34px、选中 --ns-active；
+ * 头像 / 立绘容器改中性底 + 0.5px 描边（图片与首字兜底同一层，不加花纹）；
+ * 字段表用 0.5px 分隔线；人物页按钮统一 28（tiny/small）/ 34（medium 及以上）高。
+ * 统一挂 .workbench-shell 一层，压过 themes.css 的 .rp-* / .side-item 单类规则。 */
+body[data-skin='dsh'] .workbench-shell .character-surface {
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .workbench-shell .character-surface .dossier-body {
+  box-sizing: border-box;
+  padding: 16px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+}
+
+/* 头像 / 立绘：中性容器 + 0.5px 描边，内部图片只负责裁切 */
+body[data-skin='dsh'] .workbench-shell .character-surface .character-portrait {
+  box-sizing: border-box;
+  padding: 4px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-2, #2c2c2e);
+}
+body[data-skin='dsh'] .workbench-shell .character-surface .character-portrait .avatar-lg {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--ns-layer-2, #2c2c2e);
+  object-fit: cover;
+}
+body[data-skin='dsh'] .workbench-shell .character-surface .character-initial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ns-label-3, #a3a7ad);
+  font: 500 28px/1 'Microsoft YaHei', system-ui, sans-serif;
+}
+
+/* 角色定位胶囊：中性描边，选中 --ns-active（与列表行一致） */
+body[data-skin='dsh'] .workbench-shell .character-surface .role-chips { gap: 6px; }
+body[data-skin='dsh'] .workbench-shell .character-surface .role-chip {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+  line-height: 1;
+}
+body[data-skin='dsh'] .workbench-shell .character-surface .role-chip:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .workbench-shell .character-surface .role-chip.on {
+  border-color: transparent;
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+
+/* 表单控件：中性底 + 0.5px 描边 */
+body[data-skin='dsh'] .workbench-shell .character-surface :is(.rp-input, .rp-textarea) {
+  box-sizing: border-box;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .workbench-shell .character-surface :is(.rp-input, .rp-textarea):focus {
+  border-color: var(--ns-accent, #7aaaff);
+}
+
+/* 字段表 / 关系表：行与行之间 0.5px 分隔线，区块标题用 caption 色 */
+body[data-skin='dsh'] .workbench-shell .character-surface .divider {
+  height: 0;
+  margin: 14px 0 8px;
+  border: 0;
+  border-top: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: none;
+}
+body[data-skin='dsh'] .workbench-shell .character-surface .rp-title {
+  margin-bottom: 4px;
+  color: var(--ns-label-3, #a3a7ad);
+  font-size: 12px;
+}
+body[data-skin='dsh'] .workbench-shell .character-surface .field-row {
+  box-sizing: border-box;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 0;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+
+/* 按钮统一 28 / 34 高（tiny、small 与 medium 以上） */
+body[data-skin='dsh'] .workbench-shell .character-surface .n-button {
+  height: 28px;
+  min-height: 28px;
+}
+body[data-skin='dsh'] .workbench-shell .character-surface .n-button:is(.n-button--medium-type, .n-button--large-type) {
+  height: 34px;
+  min-height: 34px;
+}
+
+/* 人物列表（左栏）：行 34px、圆角 12、选中 --ns-active */
+body[data-skin='dsh'] .workbench-shell[data-module='characters'] .side-panel .character-list-head {
+  padding: 6px;
+  gap: 6px;
+  border: 0;
+  background: transparent;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='characters'] .side-panel .char-viewtoggle button {
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .workbench-shell[data-module='characters'] .side-panel .side-list { padding: 2px 4px 6px; }
+body[data-skin='dsh'] .workbench-shell[data-module='characters'] .side-panel .side-item {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  margin: 1px 0;
+  padding: 0 8px;
+  border-radius: 12px;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .workbench-shell[data-module='characters'] .side-panel .side-item:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .workbench-shell[data-module='characters'] .side-panel .side-item.active {
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+
+/* 6.1 窄栏人物页：立绘与身份行改为上下排，姓名/角色/别名/字段行允许换行——
+ * 380 下原来的单行 flex（姓名 flex:1 + 170px 角色输入）会把卡片顶出视口横向滚动。 */
+@media (max-width: 559px) {
+  body[data-skin='dsh'] .workbench-shell .character-surface .character-identity {
+    flex-direction: column;
+    gap: 10px;
+  }
+  body[data-skin='dsh'] .workbench-shell .character-surface .character-name-row,
+  body[data-skin='dsh'] .workbench-shell .character-surface .character-alias-row,
+  body[data-skin='dsh'] .workbench-shell .character-surface .field-row {
+    flex-wrap: wrap;
+  }
+  body[data-skin='dsh'] .workbench-shell .character-surface .character-portrait .avatar-lg {
+    width: 56px;
+    height: 56px;
+  }
+}
+
+/* ===== 7. 设定页（M2b）：左节点层级树 + 幕布树 + 详情页 + 关联关系面板 =====
+ * 去装饰：树行 34px / 圆角 12 / hover --ns-hover / 选中 --ns-active；节点圆点与折叠三角中性化；
+ * 详情面板 --ns-layer-1 + 0.5px --ns-border-2；标签 pill 28 / 圆角 8；工具栏与行内按钮 28 高 ghost。
+ * 一律带 [data-module='lore']：themes.css 的 .ob-row / .ob-toolbar / .side-item 都是单类（0,1,0）。 */
+
+/* 7.0 「恍然梦 · 模块助手」条：插件版没有恍然梦，整条不参与布局（MubuView/OutlineCenter 的
+ * TaskLauncher 不像正文/人物页那样带 !nsPlugin，这里统一收掉）。 */
+body[data-skin='dsh'] .module-agent { display: none; }
+
+body[data-skin='dsh'] [data-module='lore'] .lore-surface {
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+}
+/* 380 下「设定」标题被挤压成两行：标题块不参与收缩、副标允许换行（内联样式只管字号，不管 flex）。 */
+body[data-skin='dsh'] [data-module='lore'] .module-heading { flex-wrap: wrap; }
+body[data-skin='dsh'] [data-module='lore'] .module-heading > :first-child { flex: none; }
+
+/* 7.1 幕布工具栏：34px 一条、按钮 ghost 28、装饰分隔线去掉 */
+body[data-skin='dsh'] [data-module='lore'] .ob-toolbar {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  padding: 0 4px;
+  gap: 1px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 0;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 0;
+  background: var(--ns-layer-1, #232324);
+  box-shadow: none;
+  scrollbar-width: none;
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-toolbar::-webkit-scrollbar { display: none; }
+body[data-skin='dsh'] [data-module='lore'] .ob-toolbar .tb {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+  white-space: nowrap;
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-toolbar .tb:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-toolbar .tb:disabled { opacity: 0.35; background: transparent; }
+body[data-skin='dsh'] [data-module='lore'] .ob-toolbar .tb-sep { display: none; }
+body[data-skin='dsh'] [data-module='lore'] .ob-toolbar .ob-count {
+  margin-left: auto;
+  padding: 0 4px;
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* 7.2 幕布树容器（面板）：--ns-layer-1 + 0.5px --ns-border-2 + 圆角 12 */
+body[data-skin='dsh'] [data-module='lore'] .ob-editor {
+  margin-top: 6px;
+  padding: 6px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+  background-image: none;
+  box-shadow: none;
+}
+
+/* 7.3 树行：34px / 圆角 12 / hover --ns-hover / 选中 --ns-active */
+body[data-skin='dsh'] [data-module='lore'] .ob-row {
+  box-sizing: border-box;
+  min-height: 34px;
+  align-items: center;
+  margin: 0;
+  padding: 0 6px 0 2px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-row:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); }
+body[data-skin='dsh'] [data-module='lore'] .ob-row.ns-row-on { background: var(--ns-active, rgba(255, 255, 255, 0.1)); }
+body[data-skin='dsh'] [data-module='lore'] .ob-row.ns-row-on .ob-text { color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-guide {
+  border-left: 1px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-text {
+  min-height: 0;
+  padding: 2px 4px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-text:empty::before {
+  color: var(--ns-caption, #81858c);
+  opacity: 0.7;
+}
+/* 圆点（= 折叠三角的载体）中性化：不再用 --accent 高亮出层级 */
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-bullet {
+  width: 12px;
+  height: 12px;
+  margin: 0 8px 0 4px;
+  border: 1px solid var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  background: transparent;
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-bullet.has-children { border-color: var(--ns-label-3, #a3a7ad); }
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-bullet.folded {
+  border-color: var(--ns-label-3, #a3a7ad);
+  background: transparent;
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-bullet.folded::after {
+  color: var(--ns-label-3, #a3a7ad);
+  font-size: 8px;
+}
+/* 行尾标签 pill：28 高、圆角 8（每行标签自己的色相由行内样式决定，这里只改形状） */
+body[data-skin='dsh'] [data-module='lore'] .ob-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border-width: 0.5px;
+  border-style: solid;
+  border-radius: 8px;
+  font-size: 11px;
+  line-height: 1;
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-tags { margin-top: 0; }
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-ops { margin-top: 0; gap: 0; }
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-op {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-3, #a3a7ad);
+  font-size: 12px;
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-row .ob-op:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-relchip,
+body[data-skin='dsh'] [data-module='lore'] .ob-tip {
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+}
+
+/* 7.4 左栏「节点层级」树（MubuTree）：行 34 / 圆角 12 / 选中 --ns-active */
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel .side-list { padding: 2px 4px 6px; }
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel .side-item {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  margin: 1px 0;
+  padding: 0 8px;
+  gap: 6px;
+  border-radius: 12px;
+  font-size: 13px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel .side-item:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel .side-item.active {
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel :is(.ob-arrow, .side-empty) {
+  color: var(--ns-caption, #81858c);
+}
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel .side-search {
+  padding: 4px 0;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel .side-search .rp-input {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-1, #f9fafb);
+  font-size: 12px;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel .btn-ghost {
+  height: 28px;
+  min-width: 28px;
+  border: 0;
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .workbench-shell[data-module='lore'] .side-panel .btn-ghost:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+
+/* 7.5 右键菜单 / 关系浮层：沿用正文右键的深色令牌，再补 0.5px 边界与 28 行高 */
+body[data-skin='dsh'] :is([data-module='lore'], .om-wrap) .ob-ctx,
+body[data-skin='dsh'] .om-wrap .oc-ctx {
+  padding: 4px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--ns-layer-2, #2c2c2e);
+  box-shadow: 0 8px 24px var(--ns-shadow, rgba(0, 0, 0, 0.55));
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] :is([data-module='lore'], .om-wrap) .ob-ctx .ctx-item,
+body[data-skin='dsh'] .om-wrap .oc-ctx .oc-ctx-item {
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] :is([data-module='lore'], .om-wrap) .ob-ctx .ctx-item:hover,
+body[data-skin='dsh'] .om-wrap .oc-ctx .oc-ctx-item:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-ctx .ctx-item.disabled { opacity: 0.4; }
+body[data-skin='dsh'] [data-module='lore'] .ob-ctx .ctx-item .hint { color: var(--ns-caption, #81858c); font-size: 11px; }
+body[data-skin='dsh'] [data-module='lore'] .ob-ctx .ctx-sep {
+  height: 0;
+  margin: 4px 6px;
+  border-top: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: none;
+}
+body[data-skin='dsh'] [data-module='lore'] .ob-relpop {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 10px;
+  background: var(--ns-layer-2, #2c2c2e);
+  box-shadow: 0 8px 24px var(--ns-shadow, rgba(0, 0, 0, 0.55));
+}
+
+/* 7.6 设定详情页（LoreDetail 全屏页）：面板 = --ns-layer-1 + 0.5px --ns-border-2 + 圆角 12 */
+body[data-skin='dsh'] .ldt-page {
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .ldt-page .ldt-top {
+  height: 36px;
+  padding: 0 12px;
+  gap: 8px;
+  border-bottom: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  background: var(--ns-layer-1, #232324);
+}
+body[data-skin='dsh'] .ldt-page .ldt-back {
+  height: 28px;
+  padding: 0 10px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+}
+body[data-skin='dsh'] .ldt-page .ldt-back:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .ldt-page .ldt-crumb { color: var(--ns-label-3, #a3a7ad); font-size: 12px; }
+body[data-skin='dsh'] .ldt-page .ldt-crumb.cur { color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .ldt-page .ldt-body {
+  box-sizing: border-box;
+  margin: 10px auto;
+  padding: 18px 22px 40px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+}
+body[data-skin='dsh'] .ldt-page .ldt-title { color: var(--ns-label-1, #f9fafb); font-size: 22px; }
+body[data-skin='dsh'] .ldt-page :is(.ldt-sec-title) { color: var(--ns-label-2, #cfd3d6); font-size: 12px; }
+body[data-skin='dsh'] .ldt-page :is(.ldt-sec-sub, .ldt-empty) { color: var(--ns-caption, #81858c); font-size: 11px; }
+body[data-skin='dsh'] .ldt-page .ldt-sec-head { border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06)); padding-bottom: 6px; }
+body[data-skin='dsh'] .ldt-page .ldt-kid {
+  box-sizing: border-box;
+  min-height: 34px;
+  align-items: center;
+  border-radius: 12px;
+}
+body[data-skin='dsh'] .ldt-page .ldt-kid:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); }
+body[data-skin='dsh'] .ldt-page .ldt-kid-dot { background: var(--ns-border-3, rgba(255, 255, 255, 0.16)); }
+body[data-skin='dsh'] .ldt-page .ldt-kid-dot.has-children { background: var(--ns-label-3, #a3a7ad); }
+body[data-skin='dsh'] .ldt-page .n-button { height: 28px; min-height: 28px; }
+
+/* 7.7 关联关系面板（LoreRelationPanel，右下浮动）：12 圆角 + 0.5px，胶囊 28 / 8 */
+body[data-skin='dsh'] .lrp-panel {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+  box-shadow: 0 8px 28px var(--ns-shadow, rgba(0, 0, 0, 0.55));
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .lrp-panel .lrp-head {
+  padding: 6px 8px;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .lrp-panel .lrp-title { color: var(--ns-label-1, #f9fafb); font-size: 12px; }
+body[data-skin='dsh'] .lrp-panel .lrp-close {
+  border-radius: 6px;
+  color: var(--ns-label-3, #a3a7ad);
+}
+body[data-skin='dsh'] .lrp-panel .lrp-close:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .lrp-panel .lrp-label {
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+}
+body[data-skin='dsh'] .lrp-panel .lrp-box {
+  border: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  background: var(--ns-layer-2, #2c2c2e);
+}
+body[data-skin='dsh'] .lrp-panel .lrp-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+  line-height: 1;
+}
+body[data-skin='dsh'] .lrp-panel .lrp-chip:hover {
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .lrp-panel .lrp-chip.on {
+  border-color: transparent;
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+body[data-skin='dsh'] .lrp-panel :is(.n-input, .n-base-selection) { height: 28px; }
+
+/* 7.8 窄栏（<560）设定页：详情页留白收紧，幕布树行文本允许换行后仍保持 34 起 */
+@media (max-width: 559px) {
+  body[data-skin='dsh'] .ldt-page .ldt-body { padding: 14px 14px 30px; margin: 8px; }
+  body[data-skin='dsh'] .ldt-page .ldt-title { font-size: 18px; }
+  body[data-skin='dsh'] [data-module='lore'] .module-heading > span:nth-child(2) { display: none; }
+}
+
+/* ===== 8. 大纲页（M2b）：画布外壳与配色 + 左故事结构栏 + 文本视图 =====
+ * 只改外壳与配色，拖拽/缩放/连线/命中几何的代码与尺寸一行不动。
+ * outline-workbench.css 用 .app-root[data-skin] [data-module='outline'] :is(...) 把整块模块的
+ * 令牌换成纸面浅色（0,4,0 起），所以这里先重声明令牌，再用同长度前缀压字面色。
+ * 前缀 html body[data-skin='dsh'] :is(.workbench-shell,.panel-host) [data-module='outline']
+ * = 4 类 + 2 元素；再叠 .om-wrap 等目标类后始终不低于对方，用不到强制声明。 */
+
+/* 8.1 令牌回流：纸面绿 → 宿主中性令牌（含纸纹、容器色洗） */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] :is(.om-wrap, .ol-paper-sidebar, .outline-surface) {
+  --bg: var(--ns-bg, #151517);
+  --bg-panel: var(--ns-layer-1, #232324);
+  --bg-editor: var(--ns-bg, #151517);
+  --bg-hover: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  --text: var(--ns-label-1, #f9fafb);
+  --text-dim: var(--ns-label-2, #cfd3d6);
+  --text-faint: var(--ns-caption, #81858c);
+  --border: var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  --border-strong: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  --accent: var(--ns-accent, #7aaaff);
+  --shadow: 0 2px 14px var(--ns-shadow, rgba(0, 0, 0, 0.5));
+  --shadow-pop: 0 8px 28px var(--ns-shadow, rgba(0, 0, 0, 0.55));
+  --oc-paper: var(--ns-layer-1, #232324);
+  --oc-paper-ink: var(--ns-label-1, #f9fafb);
+  --oc-paper-muted: var(--ns-caption, #81858c);
+  --oc-line: var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  --oc-sage: var(--ns-label-3, #a3a7ad);
+  --oc-green: var(--ns-label-2, #cfd3d6);
+  --oc-soft: var(--ns-layer-2, #2c2c2e);
+  --oc-canvas-color: var(--ns-bg, #151517);
+  --oc-canvas-dot: var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  --oc-container-wash: 0%;
+  --oc-paper-opacity: 1;
+  --oc-paper-blend: normal;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .outline-surface {
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap {
+  overflow: hidden;
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .module-heading {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .module-heading > :first-child { flex: none; }
+
+/* 8.2 左栏「故事结构」：行 34 / 圆角 12 / 分组标题 11 caption / 状态点语义色 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .side-panel {
+  background: var(--ns-layer-1, #232324);
+  border: 0;
+  border-right: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .side-resizer {
+  width: 4px;
+  background: transparent;
+  border: 0;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .side-resizer:hover {
+  background: var(--ns-border-2, rgba(255, 255, 255, 0.12));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-paper-sidebar {
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-side-scroll {
+  padding: 10px 8px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ns-scroll-thumb, rgba(255, 255, 255, 0.18)) transparent;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-side-head { padding: 0 0 8px; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-book-root {
+  gap: 8px;
+  padding: 0 4px 10px;
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-book-mark {
+  width: 28px;
+  height: 36px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-2, #2c2c2e);
+  box-shadow: none;
+  color: var(--ns-label-3, #a3a7ad);
+  font: 500 13px/1 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-book-text strong {
+  color: var(--ns-label-1, #f9fafb);
+  font: 500 13px/1.4 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-book-text small {
+  margin-top: 2px;
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-side-section {
+  margin: 10px 0 6px;
+  padding: 0 4px;
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-side-section > span + span {
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-search {
+  margin: 0 0 6px;
+  padding: 0;
+  border-bottom: 0;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-search {
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-3, #a3a7ad);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-search input {
+  color: var(--ns-label-1, #f9fafb);
+  font: 400 12px/1.5 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-search input::placeholder { color: var(--ns-caption, #81858c); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-search button { color: var(--ns-label-3, #a3a7ad); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] :is(.ol-typefilter, .om-chip) {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 11px;
+  line-height: 1;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] :is(.ol-typefilter, .om-chip).on {
+  border-color: transparent;
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-tree { gap: 0; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-row {
+  box-sizing: border-box;
+  min-height: 34px;
+  height: 34px;
+  margin: 1px 0;
+  padding: 0 6px 0 4px;
+  border-radius: 12px;
+  gap: 4px;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 13px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-row:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-row.active,
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-story-row.current {
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  box-shadow: none;
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-tree-name {
+  font: 400 12px/1.6 'Microsoft YaHei', system-ui, sans-serif;
+  color: inherit;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] :is(.ol-tree-toggle, .ol-tree-more, .ol-side-toggle) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ns-label-3, #a3a7ad);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-tree-dot { background: var(--ns-border-4, rgba(255, 255, 255, 0.2)); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-tree-count {
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-tree-state { background: var(--ns-border-3, rgba(255, 255, 255, 0.16)); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-tree-state.done { background: var(--ns-success, #22c55e); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-tree-state.writing { background: var(--ns-warn, #f59e0b); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-tree-state.revise { background: var(--ns-error, #f25a5a); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-paper-side-footer {
+  padding: 8px 8px;
+  border-top: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  color: var(--ns-caption, #81858c);
+  font: 400 11px/1.6 'Microsoft YaHei', system-ui, sans-serif;
+}
+/* 底部「PAPER STORIES」印章是纯装饰的纸面标记，插件版不保留 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-paper-stamp { display: none; }
+
+/* 8.3 画布外壳：底 --ns-bg、无点阵、0.5px 边界、圆角 12 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-canvas {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-bg, #151517);
+  background-image: none;
+  box-shadow: none;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-canvas-surface {
+  background-color: var(--ns-bg, #151517);
+  background-image: none;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-workspace-head {
+  min-height: 0;
+  padding: 10px 16px;
+  gap: 12px;
+  align-items: center;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: var(--ns-bg, #151517);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-eyebrow {
+  margin-bottom: 2px;
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+  letter-spacing: 0.6px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-workspace-head h1 {
+  margin: 0;
+  color: var(--ns-label-1, #f9fafb);
+  font: 600 15px/1.4 'Microsoft YaHei', system-ui, sans-serif;
+  letter-spacing: 0;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-workspace-head h1 small {
+  margin-left: 8px;
+  padding-left: 8px;
+  border-left: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  color: var(--ns-caption, #81858c);
+  font: 400 11px/1.4 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-workspace-head p {
+  margin: 3px 0 0;
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-head-actions button {
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+  white-space: nowrap;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-head-actions button:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-scopebar {
+  min-height: 0;
+  padding: 4px 16px;
+  gap: 8px;
+  border: 0;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: var(--ns-bg, #151517);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-crumbs button {
+  height: 24px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--ns-label-3, #a3a7ad);
+  font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-crumbs button[aria-current='page'] {
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-crumbs i { color: var(--ns-caption, #81858c); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-search {
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-3, #a3a7ad);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-search input {
+  color: var(--ns-label-1, #f9fafb);
+  font-size: 12px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-search kbd {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ns-caption, #81858c);
+  font-size: 10px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-search-results {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-2, #2c2c2e);
+  box-shadow: 0 8px 24px var(--ns-shadow, rgba(0, 0, 0, 0.55));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-search-item {
+  border-radius: 6px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-search-item:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+
+/* 8.4 工具条：一条 34px、按钮 28、装饰分隔去掉、窄栏可横滚不裁切 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar {
+  min-height: 34px;
+  margin: 0;
+  padding: 3px 12px;
+  gap: 6px;
+  flex-wrap: wrap;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: var(--ns-layer-1, #232324);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar :is(button, .om-btn, .oc-chip) {
+  box-sizing: border-box;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+  white-space: nowrap;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar :is(button, .om-btn, .oc-chip):hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar .om-btn { width: 28px; min-width: 28px; padding: 0; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar .om-btn.text { width: auto; min-width: 44px; padding: 0 8px; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar .oc-chip.on,
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar button[aria-pressed='true'] {
+  border-color: transparent;
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-count {
+  color: var(--ns-caption, #81858c);
+  font-size: 11px;
+}
+/* 连线样式分段（流畅曲线 / 圆角折线）的浅色底与描边一起去掉，只留两个 28 高的按钮 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar .oc-line-modes {
+  padding: 0;
+  gap: 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+/* 模块四周的连接点（hover 显形的小圆）：中性底色 + 中性描边，不再用纸面色/主题绿 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-apt {
+  background: var(--ns-layer-1, #232324);
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap :is(.oc-zoom, .oc-zoom-controls) { color: var(--ns-label-2, #cfd3d6); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-zoom {
+  height: 28px;
+  min-width: 48px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-zoom-controls {
+  gap: 4px;
+  padding: 4px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-md, 12px);
+  background: var(--ns-layer-1, #232324);
+  box-shadow: 0 4px 14px var(--ns-shadow, rgba(0, 0, 0, 0.45));
+}
+
+/* 8.5 节点卡：--ns-layer-1 + 0.5px --ns-border-2 + 圆角 12（文字只换色，字号字体不动） */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node { border-radius: 12px; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-paper {
+  border-radius: 12px;
+  background-color: var(--ns-layer-1, #232324);
+  background-image: none;
+  box-shadow: inset 0 0 0 0.5px var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  opacity: 1;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node.oc-container {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+  box-shadow: none;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node.oc-textbox { color: var(--ns-label-2, #cfd3d6); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-label { color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node :is(.om-sub, .oc-fulltext) { color: var(--ns-label-2, #cfd3d6); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node :is(.oc-kicker, .oc-index, .oc-status-text) {
+  color: var(--ns-caption, #81858c);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .gv-more { color: var(--ns-caption, #81858c); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node.sel { box-shadow: 0 0 0 1px var(--ns-accent, #7aaaff); }
+/* 容器卡（.oc-container）走的是 oc-cmeta / oc-chead / oc-ctitle / oc-csummary / oc-cprogress 这套，
+ * 不是 .oc-label：标题、摘要、进度、脚注按钮一并中性化。 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-cmeta {
+  color: var(--ns-caption, #81858c);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-ctitle {
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-csummary {
+  color: var(--ns-label-2, #cfd3d6);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-cprogress {
+  color: var(--ns-label-3, #a3a7ad);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-cprogress .bar {
+  background: var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-cprogress .bar i {
+  background: var(--ns-accent, #7aaaff);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-cprogress .done {
+  color: var(--ns-caption, #81858c);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-cfoot button,
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-inline-toggle {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-cfoot button:hover,
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-inline-toggle:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-caret {
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ns-label-3, #a3a7ad);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-node .oc-shape polygon {
+  fill: transparent;
+  stroke: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-state-dot { box-shadow: none; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-inline-edit {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-1, #f9fafb);
+}
+
+/* 8.6 连线：不再覆盖 stroke / 箭头 fill —— 颜色是关系类型的信息编码，由组件按 rel 写死；
+ * 深色中性界面里靠整层降饱和压住（saturate .55 + brightness .95），保留色相区分。
+ * 选中/悬停仍走 --ns-accent；blocked 虚线来自组件的 stroke-dasharray。 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-edges {
+  filter: saturate(0.55) brightness(0.95);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-edge:is(.selected, :hover) .oc-edge-visible {
+  stroke: var(--ns-accent, #7aaaff);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-junc-dot {
+  fill: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-elabel {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  background: var(--ns-layer-1, #232324);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-sat {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+}
+
+/* 8.7 容器内的迷你卡（就地展开时的子模块）：同样的中性卡片 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-mini {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-2, #cfd3d6);
+  box-shadow: none;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-mini :is(.oc-mini-title) { color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-mini :is(.oc-mini-body, .oc-mini-kind, .oc-mini-state) {
+  color: var(--ns-label-2, #cfd3d6);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-mini .oc-paper {
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-mini-actions button {
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 11px/1 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-mini-actions button:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-mini-inline {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-1, #f9fafb);
+}
+
+/* 8.8 文本视图（窄栏默认看的是它）：条目卡片与工具栏回到中性，去掉纸面纹理 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .outline-text-body {
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-meta { font-size: 11px; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] :is(.ol-meta-tag, .ol-meta-state) {
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 8px;
+  margin-right: 6px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 11px;
+  line-height: 1;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-toolbar {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  padding: 0 4px;
+  gap: 1px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 0;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: var(--ns-layer-1, #232324);
+  scrollbar-width: none;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-toolbar::-webkit-scrollbar { display: none; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-toolbar .ol-tb {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  height: 28px;
+  min-width: 28px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-toolbar .ol-tb:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-toolbar .tb-sep { display: none; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-toolbar .ol-tb-hint { color: var(--ns-caption, #81858c); font-size: 11px; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-title-input {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-1, #f9fafb);
+  font-size: 13px;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-title-static { color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-editor {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+  background-image: none;
+  box-shadow: none;
+  color: var(--ns-label-1, #f9fafb);
+  padding: 12px 14px;
+  line-height: 1.8;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-kid {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-kid:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-kid :is(.ol-kid-label) { color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-kid :is(.ol-kid-type, .ol-kid-text) {
+  color: var(--ns-caption, #81858c);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-crumb { color: var(--ns-caption, #81858c); font-size: 11px; }
+/* 视图切换分段控件：选中态从亮蓝填充改 --ns-active（与树行/胶囊一致），整体不超过容器宽度 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-viewtoggle {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 2px;
+  gap: 2px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-1, #232324);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-viewtoggle button {
+  height: 24px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font: 400 12px/1 'Microsoft YaHei', system-ui, sans-serif;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-viewtoggle button.on {
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .module-heading .om-btn {
+  width: 28px;
+  height: 28px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .module-heading .om-btn:disabled { opacity: 0.35; }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-type-row { color: var(--ns-label-2, #cfd3d6); }
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-type-manage .rp-input,
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-size-input {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: var(--ns-radius-sm, 8px);
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-1, #f9fafb);
+}
+
+/* 8.9 窄栏（<560）大纲页：侧栏收窄到 168px（宽度是拖拽内联的，只能压 max-width），
+ * 副标与长提示隐藏，工具条可横滚兜底，画布保持可拖但不再被外框裁字。 */
+@media (max-width: 559px) {
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .side-panel {
+    max-width: 168px;
+    min-width: 0;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .module-heading > span:nth-child(2) { display: none; }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 3px 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ns-scroll-thumb, rgba(255, 255, 255, 0.18)) transparent;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-toolbar > * { flex: none; }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap :is(.oc-count, .oc-line-modes) { display: none; }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-workspace-head {
+    flex-wrap: wrap;
+    padding: 8px 12px;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-eyebrow { display: none; }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap .oc-zoom-controls { left: 8px; bottom: 8px; }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-side-scroll { padding: 8px 6px 6px; }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-toolbar .ol-tb-hint { display: none; }
+  /* 空态（未选中条目）在 211px 的正文宽度里不再被右侧裁掉：字号收小、允许换行 */
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .outline-text-body .empty-shelf {
+    max-width: 100%;
+    padding-left: 10px;
+    padding-right: 10px;
+    box-sizing: border-box;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .outline-text-body .empty-shelf .big {
+    font-size: 20px;
+    line-height: 1.5;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .outline-text-body .empty-shelf p {
+    max-width: 100%;
+    font-size: 12px;
+    white-space: normal;
+    word-break: break-word;
+  }
+}
+
+/* ===== 9. 人物关系图工具条（M2b）：<560 不再贴边裁切 =====
+ * 实测 380 下 .rg-toolbar（.om-toolbar + flex-wrap:wrap）本来就不溢出
+ * （scrollWidth == clientWidth == 358），问题是左右 0 留白让按钮贴着视口边、
+ * 且 24px 方块按钮与 28px 体系不一致。这里选「可横滚兜底」这一条：
+ * 保留换行（不隐藏任何功能），再补 overflow-x:auto + 左右留白 + 28px 控件；
+ * 真出现超宽时横向滚动而不是被裁掉。没有把缩放/适应/筛选收进 ⋯（无溢出可收）。 */
+@media (max-width: 559px) {
+  body[data-skin='dsh'] .rg-main .rg-toolbar {
+    box-sizing: border-box;
+    gap: 4px;
+    padding: 4px 8px 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--ns-scroll-thumb, rgba(255, 255, 255, 0.18)) transparent;
+  }
+  body[data-skin='dsh'] .rg-main .rg-toolbar > * { flex: 0 0 auto; min-width: 0; }
+  body[data-skin='dsh'] .rg-main .rg-toolbar .oc-chip {
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 8px;
+    border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: var(--ns-radius-sm, 8px);
+    background: transparent;
+    color: var(--ns-label-2, #cfd3d6);
+    font-size: 12px;
+    line-height: 1;
+  }
+  body[data-skin='dsh'] .rg-main .rg-toolbar .oc-chip.on {
+    border-color: transparent;
+    background: var(--ns-active, rgba(255, 255, 255, 0.1));
+    color: var(--ns-label-1, #f9fafb);
+    font-weight: 600;
+  }
+  body[data-skin='dsh'] .rg-main .rg-toolbar .oc-count {
+    color: var(--ns-caption, #81858c);
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  body[data-skin='dsh'] .rg-main .rg-toolbar .rg-tagselect {
+    box-sizing: border-box;
+    width: 88px;
+    height: 28px;
+    padding: 0 4px;
+    border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: var(--ns-radius-sm, 8px);
+    background: var(--ns-layer-1, #232324);
+    color: var(--ns-label-2, #cfd3d6);
+    font-size: 11px;
+  }
+  body[data-skin='dsh'] .rg-main .rg-toolbar .om-btn {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: var(--ns-radius-sm, 8px);
+    background: transparent;
+    color: var(--ns-label-2, #cfd3d6);
+  }
+  body[data-skin='dsh'] .rg-main .rg-toolbar .om-btn.text { width: auto; min-width: 44px; padding: 0 8px; }
+  body[data-skin='dsh'] .rg-main .rg-toolbar .om-btn:hover {
+    background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+    color: var(--ns-label-1, #f9fafb);
+  }
+}
+
+
+
+/* ===== 9. M2c：设定详情让出顶栏 / 连线类型色 / 断线标 / 灵感页 / 四个弹窗 ===== */
+
+/* 9.1 设定详情全屏页（LoreDetail）：themes.css 的 .ldt-page 是 position:fixed + inset:0 + z-index:2500，
+ * 会把 36px 顶栏整条盖掉。这里只把 top 让到顶栏下沿，left/right/bottom 与 z-index 不动。 */
+body[data-skin='dsh'] .ldt-page { top: var(--ns-topbar-h, 36px); }
+
+/* 9.2 大纲侧栏「断线 N」：跟脚注同一档 --ns-caption（outline-workbench.css 给的是偏绿的 #647b5e）。 */
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-paper-side-footer button,
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-paper-side-footer button.on {
+  margin-left: auto;
+  padding: 3px 0;
+  border: 0;
+  background: none;
+  color: var(--ns-caption, #81858c);
+  font: 400 11px/1.5 'Microsoft YaHei', system-ui, sans-serif;
+  cursor: pointer;
+}
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .ol-paper-side-footer button:hover {
+  color: var(--ns-label-2, #cfd3d6);
+}
+
+/* 9.3 灵感页（SnippetList + SnippetCenter）：列表 = layer-1 + 0.5px + 圆角 12、行 34；
+ * 阅读区底 --ns-bg、按钮 28、标签 pill 28/8、空态中性。 */
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .snippet-surface {
+  background: var(--ns-bg, #151517);
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .side-list {
+  box-sizing: border-box;
+  padding: 6px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+  overflow: auto;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .side-item {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  margin: 0;
+  padding: 0 8px;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .side-item:last-child { border-bottom: 0; }
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .side-item:hover {
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .side-item.active {
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .side-item .dim { color: var(--ns-caption, #81858c); font-size: 11px; }
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .side-head .n-input { font-size: 12px; }
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .side-head .n-button,
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .snippet-actions .n-button {
+  height: 28px;
+  min-height: 28px;
+  font-size: 12px;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .snippet-surface .n-input {
+  background: var(--ns-layer-1, #232324);
+  border-radius: 12px;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .snippet-surface .n-input .n-input__textarea-el {
+  color: var(--ns-label-1, #f9fafb);
+  font-size: 14px;
+  line-height: 1.75;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .n-tag,
+body[data-skin='dsh'] .n-modal .n-tag {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 11px;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .empty-shelf .big {
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 15px;
+  font-weight: 600;
+}
+body[data-skin='dsh'] .workbench-shell[data-module='snippets'] .empty-shelf p {
+  color: var(--ns-caption, #81858c);
+  font-size: 12px;
+}
+
+/* 9.4 统计 / 回收站 / 导入 / 导出四个弹窗：底 --ns-layer-2、圆角 16、0.5px 边、标题 16、
+ * 分组标题 11 caption、表行 34 + 0.5px 分隔线、数字 --ns-label-1、危险操作只红文字不红底。 */
+body[data-skin='dsh'] :is(.n-modal.n-card, .n-modal .n-card) {
+  box-sizing: border-box;
+  background: var(--ns-layer-2, #2c2c2e);
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  color: var(--ns-label-2, #cfd3d6);
+  /* 弹窗宽度是组件内联的 860/720/640/520，窄栏里要跟着栏宽收 */
+  max-width: calc(100vw - 24px);
+}
+body[data-skin='dsh'] .n-modal .n-card-header {
+  padding: 16px 18px 8px;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .n-modal .n-card-header__main {
+  color: var(--ns-label-1, #f9fafb);
+  font-size: 16px;
+  font-weight: 600;
+}
+body[data-skin='dsh'] .n-modal .n-card__content { padding: 12px 18px 18px; }
+/* 分组标题：回收站页签 / 弹窗内小标题一律 11 --ns-caption */
+body[data-skin='dsh'] .n-modal .n-tabs-tab {
+  height: 34px;
+  font-size: 11px;
+  color: var(--ns-caption, #81858c);
+}
+body[data-skin='dsh'] .n-modal .n-tabs-tab.n-tabs-tab--active {
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+body[data-skin='dsh'] .n-modal .n-tabs-rail { height: 0.5px; background: var(--ns-border-1, rgba(255, 255, 255, 0.06)); }
+/* 统计四张数卡：layer-1 + 0.5px + 圆角 12，数字 --ns-label-1 */
+body[data-skin='dsh'] .n-modal .stat-card {
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+}
+body[data-skin='dsh'] .n-modal .stat-card .num {
+  color: var(--ns-label-1, #f9fafb);
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+body[data-skin='dsh'] .n-modal .stat-card .lbl { color: var(--ns-caption, #81858c); font-size: 11px; }
+/* 回收站行：34 高 + 0.5px 分隔线 */
+body[data-skin='dsh'] .n-modal .trash-row {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 4px;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 13px;
+}
+body[data-skin='dsh'] .n-modal .trash-row .dim { color: var(--ns-caption, #81858c); font-size: 11px; }
+/* 危险操作：只把文字改红，不给整块红底 */
+body[data-skin='dsh'] .n-modal .n-button.n-button--error-type {
+  --n-text-color: var(--ns-error, #f25a5a);
+  --n-text-color-hover: var(--ns-error, #f25a5a);
+  --n-text-color-pressed: var(--ns-error, #f25a5a);
+  color: var(--ns-error, #f25a5a);
+  background: transparent;
+}
+body[data-skin='dsh'] .n-modal .n-button.n-button--error-type:hover {
+  color: var(--ns-error, #f25a5a);
+  background: var(--ns-hover, rgba(255, 255, 255, 0.06));
+}
+/* 导入：选择文件区（本版没有拖拽落点，见报告；类名钩子加在 ImportDialog.vue） */
+body[data-skin='dsh'] .n-modal .ns-import-pick {
+  border: 0.5px dashed var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+}
+body[data-skin='dsh'] .n-modal .ns-import-pick p { color: var(--ns-caption, #81858c); font-size: 11px; line-height: 1.8; }
+
+/* ===== 10. M2d：设置页（SettingsWindow，面板窗口 / 全屏容器）=====
+ * 容器 = --ns-layer-2 + 圆角 16 + 0.5px；左导航行 34 / 圆角 12 / 选中 --ns-active；
+ * 右侧内容 = --ns-layer-1 + 0.5px；分组标题 11 caption；输入 28 高；危险操作只红文字不红底。
+ * 开关 / 复选 / 单选 / 下拉菜单走 theme.js 的 Switch|Checkbox|Radio|Select overrides（本批未加键）。 */
+body[data-skin='dsh'] .sw-root {
+  box-sizing: border-box;
+  background: var(--ns-layer-2, #2c2c2e);
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 16px;
+  color: var(--ns-label-2, #cfd3d6);
+  /* 圆角容器里子块各自铺底色，裁掉四角才不露直角 */
+  overflow: hidden;
+}
+body[data-skin='dsh'] .sw-root .sw-head {
+  box-sizing: border-box;
+  padding: 8px 16px;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: transparent;
+}
+body[data-skin='dsh'] .sw-root .sw-title { font-size: 16px; line-height: 24px; color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .sw-sub { font-size: 11px; letter-spacing: 0.18em; color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .sw-root .sw-body { background: transparent; }
+
+/* 10.1 左侧分区导航：行 34 / 圆角 12 / hover --ns-hover / 选中 --ns-active */
+body[data-skin='dsh'] .sw-root .sw-nav {
+  box-sizing: border-box;
+  padding: 8px;
+  gap: 2px;
+  border-right: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: transparent;
+}
+body[data-skin='dsh'] .sw-root .sw-nav-item {
+  box-sizing: border-box;
+  height: 34px;
+  min-height: 34px;
+  padding: 0 8px;
+  gap: 8px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .sw-root .sw-nav-item:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); }
+body[data-skin='dsh'] .sw-root .sw-nav-item.on { background: var(--ns-active, rgba(255, 255, 255, 0.1)); }
+body[data-skin='dsh'] .sw-root .sw-nav-ico {
+  width: 22px;
+  height: 22px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 11px;
+}
+body[data-skin='dsh'] .sw-root .sw-nav-item.on .sw-nav-ico {
+  background: transparent;
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .sw-root .sw-nav-text b { font-size: 13px; line-height: 16px; font-weight: 600; color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .sw-nav-text i { font-size: 10.5px; line-height: 14px; color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .sw-root .sw-nav-item.on .sw-nav-text b { color: var(--ns-label-1, #f9fafb); }
+
+/* 10.2 右侧内容区：--ns-layer-1 + 0.5px + 圆角 12 */
+body[data-skin='dsh'] .sw-root .sw-content {
+  box-sizing: border-box;
+  margin: 8px 8px 8px 0;
+  padding: 14px 16px 20px;
+  border: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+}
+body[data-skin='dsh'] .sw-root .sw-h { font-size: 16px; line-height: 24px; font-weight: 600; color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .sw-h2 {
+  margin: 16px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--ns-caption, #81858c);
+}
+body[data-skin='dsh'] .sw-root .sw-desc { font-size: 12px; color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .sw-root .sw-card {
+  border: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
+  background: transparent;
+}
+body[data-skin='dsh'] .sw-root .sw-row { min-height: 34px; padding: 8px 12px; gap: 12px; }
+body[data-skin='dsh'] .sw-root :is(.sw-row + .sw-row, .sw-item + .sw-item) {
+  border-top: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+}
+body[data-skin='dsh'] .sw-root .sw-row-main b { font-size: 13px; color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .sw-row-main i { font-size: 11px; color: var(--ns-caption, #81858c); }
+body[data-skin='dsh'] .sw-root .sw-item {
+  box-sizing: border-box;
+  min-height: 34px;
+  padding: 8px 12px;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .sw-root .sw-item:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); }
+body[data-skin='dsh'] .sw-root .sw-item:hover .sw-row-main b { color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .sw-item svg { color: var(--ns-caption, #81858c); }
+
+/* 10.3 危险操作（恢复备份 / 恢复默认存储位置）：纯 --ns-error 文字，不给红底 */
+body[data-skin='dsh'] .sw-root .sw-item.is-danger,
+body[data-skin='dsh'] .sw-root .sw-item.is-danger:hover,
+body[data-skin='dsh'] .sw-root .sw-item.is-danger .sw-row-main b,
+body[data-skin='dsh'] .sw-root .sw-item.is-danger:hover .sw-row-main b,
+body[data-skin='dsh'] .sw-root .sw-item.is-danger svg { color: var(--ns-error, #f25a5a); }
+body[data-skin='dsh'] .sw-root .sw-item.is-danger:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); }
+
+/* 10.4 输入 / 下拉 / 按钮 / 胶囊：28 高、0.5px 边、底 --ns-layer-1 */
+body[data-skin='dsh'] .sw-root :is(.n-input, .n-base-selection) {
+  box-sizing: border-box;
+  height: 28px;
+  min-height: 28px;
+  border-radius: 8px;
+  background: var(--ns-layer-1, #232324);
+  box-shadow: inset 0 0 0 0.5px var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  font-size: 13px;
+}
+body[data-skin='dsh'] .sw-root :is(.n-input, .n-base-selection) :is(.n-input__input-el, .n-base-selection-label, .n-base-selection-input) {
+  font-size: 13px;
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .sw-root .n-button {
+  height: 28px;
+  min-height: 28px;
+  border-radius: 8px;
+  font-size: 13px;
+}
+body[data-skin='dsh'] .sw-root .chips { gap: 6px; }
+body[data-skin='dsh'] .sw-root .chip {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 12px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+}
+body[data-skin='dsh'] .sw-root .chip:hover { border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16)); color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .chip.on {
+  border-color: transparent;
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+  font-weight: 600;
+}
+body[data-skin='dsh'] .sw-root .fs b { font-size: 13px; color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .sw-warn {
+  margin: 8px 12px;
+  padding: 6px 10px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ns-warn, #f59e0b);
+  font-size: 11px;
+}
+body[data-skin='dsh'] .sw-root .sw-warn.hot { color: var(--ns-label-2, #cfd3d6); }
+body[data-skin='dsh'] .sw-root .sw-foot { font-size: 10.5px; color: var(--ns-caption, #81858c); }
+
+/* 10.5 窄栏（<560）：198px 的导航挤掉全部内容，收窄后只留行名 */
+@media (max-width: 559px) {
+  body[data-skin='dsh'] .sw-root .sw-nav { width: 124px; flex: none; }
+  body[data-skin='dsh'] .sw-root .sw-nav-text i { display: none; }
+  body[data-skin='dsh'] .sw-root .sw-content { margin: 6px 6px 6px 0; padding: 12px; }
+  body[data-skin='dsh'] .sw-root .sw-row,
+  body[data-skin='dsh'] .sw-root .sw-item { padding: 8px 10px; }
+  body[data-skin='dsh'] .sw-root .sw-row-main i { word-break: break-word; }
+  /* 380 下「工坊皮肤」这一行的下拉占满行宽，把标签挤成一字一行（实测 40px 宽）：
+   * 窄栏里行改上下排，控件独占第二行并靠右，标签拿回整行。 */
+  body[data-skin='dsh'] .sw-root .sw-row { flex-wrap: wrap; row-gap: 6px; }
+  body[data-skin='dsh'] .sw-root .sw-row .sw-row-main { flex: 1 1 100%; }
+  body[data-skin='dsh'] .sw-root .sw-row > :not(.sw-row-main) { margin-left: auto; }
+  body[data-skin='dsh'] .sw-root :is(.n-select, .n-base-selection) { max-width: 100%; }
+}
+
+/* ===== 11. M2d：人物关系图谱（CharacterGraph 整页视图）=====
+ * 只换皮：画布 --ns-bg 且无点阵、节点卡 layer-1 + 0.5px + 圆角 12、工具条 34 / 按钮 28 / chip 28+8；
+ * 连线不覆盖 stroke —— 颜色是关系类型编码，整层 saturate(.55) 压住（与 8.6 大纲画布同一条）。
+ * 渲染 / 拖拽 / 缩放逻辑未动一行。 */
+html body[data-skin='dsh'] .rg-main { background: var(--ns-bg, #151517); }
+html body[data-skin='dsh'] .rg-main .rg-canvas {
+  box-sizing: border-box;
+  background-color: var(--ns-bg, #151517);
+  background-image: none;
+  border: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
+  box-shadow: none;
+}
+html body[data-skin='dsh'] .rg-main .rg-edges { filter: saturate(0.55) brightness(0.95); }
+html body[data-skin='dsh'] .rg-main .rg-node {
+  box-sizing: border-box;
+  background: var(--ns-layer-1, #232324);
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  box-shadow: none;
+}
+html body[data-skin='dsh'] .rg-main .rg-node:hover { background: var(--ns-layer-2, #2c2c2e); box-shadow: none; }
+html body[data-skin='dsh'] .rg-main .rg-node.sel {
+  border-color: var(--ns-accent, #7aaaff);
+  box-shadow: 0 0 0 1px var(--ns-accent, #7aaaff);
+}
+html body[data-skin='dsh'] .rg-main .rg-node .rg-name { color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] .rg-main .rg-node .rg-avatar {
+  border: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-caption, #81858c);
+  object-fit: cover;
+}
+html body[data-skin='dsh'] .rg-main .rg-node .rg-role {
+  height: 18px;
+  padding: 0 6px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  background: transparent;
+  font-size: 11px;
+  line-height: 17px;
+}
+html body[data-skin='dsh'] .rg-main .rg-elabel {
+  box-sizing: border-box;
+  padding: 0 5px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 11px;
+}
+html body[data-skin='dsh'] .rg-main :is(.rg-relinput, .rg-eedit, .rg-ctx) {
+  box-sizing: border-box;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-2, #2c2c2e);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.55);
+  color: var(--ns-label-2, #cfd3d6);
+}
+html body[data-skin='dsh'] .rg-main :is(.rg-relinput, .rg-eedit) input {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-1, #f9fafb);
+  font-size: 13px;
+}
+html body[data-skin='dsh'] .rg-main .rg-ctx button {
+  min-height: 28px;
+  padding: 0 10px;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 13px;
+}
+html body[data-skin='dsh'] .rg-main .rg-ctx button:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] .rg-main .rg-heading h1 { font-size: 16px; line-height: 24px; color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] .rg-main .rg-heading span { color: var(--ns-caption, #81858c); font-size: 11px; }
+html body[data-skin='dsh'] .rg-main .rg-head-action {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+}
+html body[data-skin='dsh'] .rg-main .rg-head-action:hover:not(:disabled) { color: var(--ns-label-1, #f9fafb); background: var(--ns-hover, rgba(255, 255, 255, 0.06)); }
+html body[data-skin='dsh'] .rg-main .rg-hint { color: var(--ns-caption, #81858c); font-size: 11px; }
+html body[data-skin='dsh'] .rg-main .rg-open-person {
+  box-sizing: border-box;
+  height: 28px;
+  padding: 0 10px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-1, #f9fafb);
+  font-size: 12px;
+}
+html body[data-skin='dsh'] .rg-main .oc-quick {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+}
+html body[data-skin='dsh'] .rg-main .oc-quick .big { color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] .rg-main .oc-quick p { color: var(--ns-caption, #81858c); font-size: 11px; }
+html body[data-skin='dsh'] .rg-main .oc-quick-btns button {
+  height: 28px;
+  padding: 0 10px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+}
+/* 宽屏工具条：一条 34px、按钮 28、筛选 chip 28/8（<560 由第 9 节接管，故只用 min-width 断点） */
+@media (min-width: 560px) {
+  html body[data-skin='dsh'] .rg-main .rg-toolbar {
+    box-sizing: border-box;
+    min-height: 34px;
+    gap: 6px;
+    /* 右端 84px 留给顶栏下沿那枚「收起顶栏」胶囊（14px 高、right:12px），否则它会压住「适应」 */
+    padding: 3px 84px 3px 8px;
+    flex-wrap: wrap;
+    border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+    background: transparent;
+  }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar .oc-chip {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 10px;
+    border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ns-label-2, #cfd3d6);
+    font-size: 12px;
+    line-height: 1;
+  }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar .oc-chip.on {
+    border-color: transparent;
+    background: var(--ns-active, rgba(255, 255, 255, 0.1));
+    color: var(--ns-label-1, #f9fafb);
+    font-weight: 600;
+  }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar .oc-chip.oc-warn { color: var(--ns-warn, #f59e0b); }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar .oc-count { color: var(--ns-caption, #81858c); font-size: 11px; }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar .om-btn {
+    box-sizing: border-box;
+    height: 28px;
+    min-height: 28px;
+    padding: 0 8px;
+    border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: 8px;
+    background: transparent;
+    color: var(--ns-label-2, #cfd3d6);
+    font-size: 12px;
+    line-height: 1;
+  }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar .om-btn.text { padding: 0 10px; }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar .om-btn:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); color: var(--ns-label-1, #f9fafb); }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar :is(.rg-tagpick, .rg-tagselect) { min-width: 96px; }
+  html body[data-skin='dsh'] .rg-main .rg-toolbar .n-base-selection {
+    height: 28px;
+    min-height: 28px;
+    border-radius: 8px;
+    background: var(--ns-layer-1, #232324);
+    box-shadow: inset 0 0 0 0.5px var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  }
+}
+
+/* ===== 12. M2d：设定图谱（LoreGraph 嵌在设定详情页里，不是独立视图）=====
+ * 同一套处理：画布 --ns-bg 无点阵、节点卡 layer-1 + 0.5px + 圆角 12、连线整层 saturate(.55)。 */
+html body[data-skin='dsh'] .lg-wrap .lg-canvas {
+  box-sizing: border-box;
+  background-color: var(--ns-bg, #151517);
+  background-image: none;
+  border: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 12px;
+  box-shadow: none;
+}
+html body[data-skin='dsh'] .lg-wrap .lg-toolbar {
+  box-sizing: border-box;
+  min-height: 34px;
+  gap: 6px;
+  padding: 3px 8px;
+  border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  background: transparent;
+}
+html body[data-skin='dsh'] .lg-wrap .lg-toolbar .oc-count { color: var(--ns-caption, #81858c); font-size: 11px; }
+html body[data-skin='dsh'] .lg-wrap .lg-toolbar .om-btn {
+  box-sizing: border-box;
+  height: 28px;
+  min-height: 28px;
+  padding: 0 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+  line-height: 1;
+}
+html body[data-skin='dsh'] .lg-wrap .lg-toolbar :is(.om-btn.text, .om-btn) { padding: 0 8px; }
+html body[data-skin='dsh'] .lg-wrap .lg-toolbar .om-btn:hover { background: var(--ns-hover, rgba(255, 255, 255, 0.06)); color: var(--ns-label-1, #f9fafb); }
+html body[data-skin='dsh'] .lg-wrap .lg-edges { filter: saturate(0.55) brightness(0.95); }
+html body[data-skin='dsh'] .lg-wrap .lg-node {
+  box-sizing: border-box;
+  min-height: 28px;
+  padding: 4px 8px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+  color: var(--ns-label-2, #cfd3d6);
+  font-size: 12px;
+  box-shadow: none;
+}
+html body[data-skin='dsh'] .lg-wrap .lg-node.center {
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] .lg-wrap .lg-node .lg-title { color: inherit; }
+html body[data-skin='dsh'] .lg-wrap .lg-node .lg-badge {
+  border-radius: 6px;
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+  color: var(--ns-label-1, #f9fafb);
+}
+html body[data-skin='dsh'] .lg-wrap .lg-elabel {
+  box-sizing: border-box;
+  padding: 0 4px;
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  background: var(--ns-layer-1, #232324);
+  font-size: 11px;
+}
+html body[data-skin='dsh'] .lg-wrap .lg-empty { color: var(--ns-caption, #81858c); font-size: 11px; }
+/* 10.6 正文纸面装帧选项与排版预览：正文纸面在 dsh 下已中性化（5.2），设置里这两块跟着中性——
+ * 缩略图只留一块中性纸的轮廓，深色设置页里不再出现三张米色卡与一页米色预览。 */
+body[data-skin='dsh'] .sw-root .writing-paper-options { gap: 6px; }
+body[data-skin='dsh'] .sw-root .writing-paper-options > button {
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-radius: 8px;
+  background: var(--ns-layer-2, #2c2c2e);
+  color: var(--ns-label-1, #f9fafb);
+}
+body[data-skin='dsh'] .sw-root .writing-paper-options > button[aria-pressed='true'] {
+  border-color: var(--ns-border-3, rgba(255, 255, 255, 0.16));
+  background: var(--ns-active, rgba(255, 255, 255, 0.1));
+}
+body[data-skin='dsh'] .sw-root .writing-paper-options .paper-option-copy strong { color: var(--ns-label-1, #f9fafb); font-size: 13px; }
+body[data-skin='dsh'] .sw-root .writing-paper-options .paper-option-copy small { color: var(--ns-caption, #81858c); font-size: 11px; }
+body[data-skin='dsh'] .sw-root .writing-paper-options .paper-check { color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .writing-paper-options .writing-paper-swatch {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 6px;
+  background: var(--ns-layer-1, #232324);
+  background-image: none;
+  box-shadow: none;
+}
+body[data-skin='dsh'] .sw-root .writing-paper-options .writing-paper-swatch i {
+  background: var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  border-color: var(--ns-border-2, rgba(255, 255, 255, 0.12));
+}
+body[data-skin='dsh'] .sw-root .writing-paper-preview { background: transparent; }
+body[data-skin='dsh'] .sw-root .writing-paper-preview .writing-paper-surface.paper-preview-page {
+  border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: var(--ns-layer-1, #232324);
+  background-image: none;
+  box-shadow: none;
+  color: var(--ns-label-2, #cfd3d6);
+}
+body[data-skin='dsh'] .sw-root .writing-paper-preview .paper-preview-page :is(h2, p, footer) { color: var(--ns-label-2, #cfd3d6); }
+body[data-skin='dsh'] .sw-root .writing-paper-preview .paper-preview-page h2 { color: var(--ns-label-1, #f9fafb); }
+body[data-skin='dsh'] .sw-root .writing-paper-preview .paper-preview-running { color: var(--ns-caption, #81858c); font-size: 11px; }
+/* 开关旋钮：上批 theme.js 把 Switch 旋钮写死成 --ns-label-1（白点），是深色设置页里唯一一块浅色。
+ * 这里只在 dsh 皮肤内把旋钮改成中性灰 + 0.5px 外环；轨道色与选中色仍走 theme.js（未改键）。 */
+body[data-skin='dsh'] .n-switch .n-switch__button {
+  background-color: var(--ns-caption, #81858c);
+  box-shadow: inset 0 0 0 0.5px var(--ns-border-3, rgba(255, 255, 255, 0.16));
+}
+
+/* ======================================================================
+   9. 窄栏（<560）收口：M3 矩阵 380 的三处叠压
+   —— 追加在文件末尾，靠选择器特异性取胜，全部为普通声明
+   ====================================================================== */
+
+/* 9.1 设定 / 人物 / 灵感 / 大纲：380 下侧栏（JS 内联钳到 168）仍会把主栏压到 159。
+ * 列方向上内联 width 依旧生效，但 min-width 在层叠上高于 width，
+ * 用它把侧栏拉满一行、主栏拿到整幅宽度，无需加权重、不改 store。
+ * 大纲的侧栏在 8.9 里另有 max-width:168，这里用一条同权重、位置更靠后的规则解掉。 */
+@media (max-width: 559px) {
+  html body[data-skin='dsh'] .workbench-shell:is([data-module='lore'], [data-module='characters'], [data-module='snippets'], [data-module='outline']) .wb-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  html body[data-skin='dsh'] .workbench-shell:is([data-module='lore'], [data-module='characters'], [data-module='snippets'], [data-module='outline']) .wb-body > .side-panel {
+    flex: 0 0 auto;
+    min-width: 100%;
+    max-height: 42%;
+    border-right: 0;
+    border-bottom: 0.5px solid var(--ns-border-1, rgba(255, 255, 255, 0.06));
+  }
+  html body[data-skin='dsh'] .workbench-shell:is([data-module='lore'], [data-module='characters'], [data-module='snippets'], [data-module='outline']) .wb-body > .side-resizer {
+    display: none;
+  }
+  html body[data-skin='dsh'] .workbench-shell:is([data-module='lore'], [data-module='characters'], [data-module='snippets'], [data-module='outline']) .wb-body > .center-pane {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+  }
+  html body[data-skin='dsh'] .workbench-shell[data-module='outline'] .wb-body > .side-panel {
+    max-width: none;
+  }
+}
+
+/* 9.2 大纲：空画布的两块空态（.oc-quick 快速开始挂在 .om-wrap 上，
+ * .oc-scope-empty「当前层还没有模块」挂在 .oc-canvas 里）都是绝对定位，
+ * 380 下两者都垂直居中，正好叠在一起。不改容器 display（实测把 .om-wrap
+ * 改成 flex 会把页头、工具条挤出可视区），只把画布空态钉到画布底部：
+ * 快速开始留在画布上段的空档里，两块上下各占一行、不再相交；
+ * 快速开始内部按钮改纵向、28 高、nowrap（原来被挤成竖排）。 */
+@media (max-width: 559px) {
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .oc-canvas .oc-scope-empty {
+    top: auto;
+    bottom: 8px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    padding: 8px 12px;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .oc-quick .big {
+    font-size: 15px;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .oc-quick > p {
+    font-size: 12.5px;
+    margin: 0;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .oc-quick .oc-quick-btns {
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 0;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .oc-quick .oc-quick-btns button {
+    box-sizing: border-box;
+    width: 100%;
+    height: 28px;
+    min-height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .oc-quick .oc-quick-tip {
+    margin-top: 0;
+    font-size: 11px;
+  }
+}
+
+/* 9.3 人物图谱筛选行 + 左缘细轨：筛选行是同一排（DOM 只有 1 个 .rg-toolbar、子项 rect 无交叠），
+ * 叠字来自 gap 4 的零间隙 + .rg-tagselect 与角色 chip 同款外观，同一句「配角」看起来像双影；
+ * 细轨只有 22px，「目录」两字竖排会被裁。给工具栏松一点、给 tagselect 独立外观、窄栏隐掉细轨文字。 */
+@media (max-width: 559px) {
+  html body[data-skin='dsh'] .workbench-shell .rg-toolbar {
+    gap: 6px;
+    padding: 4px 8px;
+    align-items: center;
+  }
+  html body[data-skin='dsh'] .workbench-shell .rg-toolbar .oc-chip {
+    flex: none;
+    padding: 0 8px;
+    white-space: nowrap;
+  }
+  html body[data-skin='dsh'] .workbench-shell .rg-tagselect {
+    flex: none;
+    max-width: 132px;
+    height: 28px;
+    padding: 0 6px;
+    border: 0.5px solid var(--ns-border-2, rgba(255, 255, 255, 0.12));
+    border-radius: var(--ns-radius-sm, 8px);
+    background: var(--ns-layer-2, #2c2c2e);
+    color: var(--ns-label-2, #cfd3d6);
+    font-size: 12px;
+  }
+  html body[data-skin='dsh'] .workbench-shell .ol-side-rail .rail-text {
+    display: none;
+  }
+}
+
+/* 9.4 大纲空画布（≤560）：收掉画布里的虚线占位 .oc-scope-empty。
+ * 空画布时两块空态同时存在——.oc-quick（快速开始，挂在 .om-wrap 上，普通流）
+ * 与 .oc-scope-empty（虚线占位，绝对定位 + z-index:7，画布内）。9.2 只把它钉到
+ * 画布底部，底部那一块仍然压在快速开始的提示行上。快速开始本身已经说明了
+ * 「当前层还没有模块」，所以这里用 :has 判断 .oc-quick 存在后直接收掉占位；
+ * 画布非空时 :has 不成立，占位照旧显示，其余判断全部保留。 */
+@media (max-width: 560px) {
+  html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-module='outline'] .om-wrap:has(.oc-quick) .oc-canvas .oc-scope-empty {
+    display: none;
+  }
+}
+
+

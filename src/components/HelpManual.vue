@@ -3,6 +3,8 @@
 <script setup>
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
+import { useOriginalAppearance } from '../composables/useOriginalAppearance.js'
+const { originalOverlayClass } = useOriginalAppearance()
 import { computed } from 'vue'
 import { NModal, NButton } from 'naive-ui'
 import { useUiStore } from '../stores/ui'
@@ -14,7 +16,7 @@ const html = computed(() => marked.parse(manual, { async: false }))
 </script>
 
 <template>
-  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" :show="ui.helpOpen" preset="card" class="help-modal" style="width: 780px; max-width: 92vw" @update:show="(v) => (ui.helpOpen = v)">
+  <NModal :class="[museumPopoverClass, originalOverlayClass]" :data-glaze-light="museumLight" :show="ui.helpOpen" preset="card" class="help-modal" style="width: 780px; max-width: 92vw" @update:show="(v) => (ui.helpOpen = v)">
     <template #header>
       <div class="m-head">
         <span class="cn">使用手册</span>

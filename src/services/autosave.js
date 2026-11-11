@@ -38,6 +38,7 @@ async function doFlush() {
 }
 async function flushBatch() {
   if (!pending.size) return
+  ui().autosave.error = null
   ui().autosave.saving = true
   const items = [...pending.values()]
   items.forEach((it) => flushing.add(`${it.table}:${it.row.id}`))
@@ -75,6 +76,7 @@ async function flushBatch() {
     ui().autosave.lastSavedAt = Date.now()
   } catch (err) {
     console.error('[autosave] 保存失败，已重新排队', err)
+    ui().autosave.error = String(err?.message || '保存失败，请重试')
     for (const it of items) {
       const key=`${it.table}:${it.row.id}`
       pending.set(key, mergeMemoryIntent(it,pending.get(key)||{}))
@@ -123,6 +125,7 @@ export const autosave = {
   discardPending() {
     clearTimeout(flushTimer)
     pending.clear()
+    ui().autosave.error = null
     ui().autosave.pending = 0
     discardWritingPositions()
   }

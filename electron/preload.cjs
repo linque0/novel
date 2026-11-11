@@ -19,6 +19,20 @@ contextBridge.exposeInMainWorld('native', {
   cleanOldLocation: (index, mode) => ipcRenderer.invoke('data:cleanOld', { index, mode }),
   openOldFolder: (index) => ipcRenderer.invoke('data:openOld', { index }),
   clearDataPointer: () => ipcRenderer.invoke('data:clearPointer'),
+  /* 作品库（M2）：与 DSH 插件共用同一份文件库（packages/novel-core） */
+  libraryPointer: () => ipcRenderer.invoke('library:pointer'),
+  libraryStatus: (opts) => ipcRenderer.invoke('library:status', opts),
+  librarySnapshot: (opts) => ipcRenderer.invoke('library:snapshot', opts),
+  librarySubmit: (payload) => ipcRenderer.invoke('library:submit', payload),
+  libraryPull: (payload) => ipcRenderer.invoke('library:pull', payload),
+  libraryImport: (payload) => ipcRenderer.invoke('library:import', payload),
+  libraryVerify: (opts) => ipcRenderer.invoke('library:verify', opts),
+  /* 作品库存储位置：查询 / 逐级浏览 / 原生选目录 / 迁移 / 打开目录（迁移后无需重启） */
+  libraryLocation: () => ipcRenderer.invoke('library:location'),
+  libraryBrowse: (dir) => ipcRenderer.invoke('library:browse', { dir: dir || '' }),
+  pickLibraryDir: () => ipcRenderer.invoke('library:pickDir'),
+  libraryRelocate: (dir) => ipcRenderer.invoke('library:relocate', { dir: dir || '' }),
+  revealLibraryFolder: () => ipcRenderer.invoke('library:reveal'),
   /* 功能面板多窗口（9.2-W5） */
   panelOpen: (spec) => ipcRenderer.invoke('panel:open', spec),
   panelReady: () => ipcRenderer.invoke('panel:ready'),

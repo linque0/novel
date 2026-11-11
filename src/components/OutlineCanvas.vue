@@ -271,7 +271,7 @@ const edges = computed(() => {
     const trim = 7 * relArrowScale(rel) * Math.cos(.42) + relEdgeWidth(rel) * .4
     const displayLabel = group.relations.length > 1 ? `${group.kind} · ${group.relations.length}` : group.label
     const width = Math.max(52, Math.min(160, (displayLabel || '').length * 12 + 20))
-    const mid = labelPoint(g, [...edgeObstacles(group.from, group.to), ...labels], width, 22)
+    const mid = labelPoint(g, [...obstacleRects.value, ...labels], width, 22)
     if (displayLabel) labels.push({ x: mid.x - width / 2, y: mid.y - 28, w: width, h: 22 })
     const dashed = only ? dashOf(only.rel.style, only.rel.kind) : (relDashed(group.kind) ? '5 4' : null)
     out.push({
@@ -496,7 +496,9 @@ function containerSummary(n) {
   const first = String(n.text || '').split('\n').find((x) => x.trim())
   if (first) return first.trim()
   const s = nodeStats(live.value, n.id)
-  return s.total ? `${s.total} 个事件 · 已完成 ${s.done}/${s.total}` : '还没有内容，进入后继续添加'
+  if (s.total) return `${s.total} 个事件 · 已完成 ${s.done}/${s.total}`
+  const inside = descendantsOf(live.value, n.id).length
+  return inside ? `已收纳 ${inside} 个模块` : '还没有内容，进入后继续添加'
 }
 function containerProgress(n) {
   const s = nodeStats(live.value, n.id)
@@ -591,6 +593,142 @@ function selectMini(n) {
 function onMiniDbl(item) {
   if (item.node.kind === 'container') drawerId.value = item.node.id
   else startInlineEdit(item.node)
+}
+
+/* ---------- 容器内迷你卡拖动（v1.1.8）：容器内重排 / 拖出回当前层 / 拖入其它容器 ----------
+ * 迷你卡位于滚动内容区里，拖影挂到画布内层，拖出容器时不会被内容区裁剪。 */
+const miniDrag = ref(null)
+function miniDropTarget(node, pt) {
+  const desc = new Set(work.olnodeDescendants(node.id).map((d) => d.id))
+  let best = null
+  for (const id of containerIds.value) {
+    if (id === node.id || desc.has(id)) continue
+    const c = nodeById(id)
+    const r = c ? rectOf(c) : null
+    if (!r) continue
+    if (pt.x < r.x || pt.x > r.x + r.w || pt.y < r.y || pt.y > r.y + r.h) continue
+    const area = r.w * r.h
+    if (!best || area < best.area) best = { id, area }
+  }
+  return best
+}
+function miniLayerRects(excludeId) {
+  const out = []
+  for (const n of visNodes.value) if (n.id !== excludeId) { const r = rectOf(n); if (r) out.push(r) }
+  for (const it of miniItems.value) if (it.node.id !== excludeId) { const r = rectOf(it.node); if (r) out.push(r) }
+  return out
+}
+/* 落点坐标：回到当前层时按鼠标落点放置；移入其它容器时按该容器既有子模块范围追加。 */
+function miniPlacement(node, targetParentId, dropPoint) {
+  const size = effSize(node, cardDensity.value)
+  if ((targetParentId || null) === scopeId.value && dropPoint) {
+    /* 拖出容器时以落点为中心放置（只做真实重叠避让，不做大间距平移——
+     * 旧口径 24px 余量会把卡片推离鼠标几百像素）。 */
+    const start = { x: snap(dropPoint.x - size.w / 2), y: snap(dropPoint.y - size.h / 2) }
+    const occupied = miniLayerRects(node.id)
+    const clash = occupied.some((r) => start.x < r.x + r.w && start.x + size.w > r.x && start.y < r.y + r.h && start.y + size.h > r.y)
+    const spot = clash ? freeSpotFor(occupied, size, start.x, start.y) : start
+    return { x: Math.round(spot.x), y: Math.round(spot.y) }
+  }
+  const kids = work.olnodeChildren(targetParentId).filter((k) => k.id !== node.id)
+  const rects = kids.map((k) => ({ x: Number(k.canvasX) || 0, y: Number(k.canvasY) || 0, ...effSize(k, cardDensity.value) }))
+  const startX = rects.length ? Math.min(...rects.map((r) => r.x)) : 40
+  const startY = rects.length ? Math.max(...rects.map((r) => r.y + r.h)) + 40 : 40
+  const spot = freeSpotFor(rects, size, startX, startY)
+  return { x: Math.round(spot.x), y: Math.round(spot.y) }
+}
+/* 容器内重排：按落点命中最近的兄弟卡，插到它前面（第一位则用 beforeId）。 */
+function reorderMini(node, parentId, dropPoint) {
+  const sibs = work.olnodeChildren(parentId)
+    .filter((s) => s.id !== node.id)
+    .map((s) => ({ s, r: rectOf(s) }))
+    .filter((x) => x.r)
+    .sort((a, b) => a.r.y - b.r.y || a.r.x - b.r.x)
+  if (!sibs.length) return
+  let anchor = null
+  for (const it of sibs) {
+    if (dropPoint.y < it.r.y) break
+    if (dropPoint.y > it.r.y + it.r.h) { anchor = it.s.id; continue }
+    if (dropPoint.x > it.r.x + it.r.w / 2) anchor = it.s.id
+    break
+  }
+  if (anchor) work.olnodeMoveTo(node.id, parentId, anchor)
+  else work.olnodeMoveTo(node.id, parentId, null, sibs[0].s.id)
+}
+function moveMiniTo(node, targetParentId, dropPoint) {
+  const from = node.parentId || null
+  const to = targetParentId || null
+  if (to === from) {
+    /* 同一容器内的自由落点不改变父级，仅按落点重排。 */
+    if (dropPoint) { const p = miniPlacement(node, to, dropPoint); if (p) work.olnodeSetCanvas(node.id, p.x, p.y) }
+    return
+  }
+  if (!work.olnodeMoveTo(node.id, to)) return
+  const p = miniPlacement(node, to, dropPoint)
+  if (p) work.olnodeSetCanvas(node.id, p.x, p.y)
+  work.selOlnodeId = node.id
+  if (to) {
+    flashIds.add(to)
+    setTimeout(() => flashIds.delete(to), 1600)
+    window.$msg?.success(`已归入「${labelOf(nodeById(to))}」`)
+  } else {
+    window.$msg?.success('已移出容器')
+  }
+}
+function applyMiniDrop(node, item, drop) {
+  const parentId = node.parentId || null
+  const hit = miniDropTarget(node, drop)
+  if (hit) {
+    if (hit.id === parentId) reorderMini(node, parentId, drop)
+    else moveMiniTo(node, hit.id, null)
+    return
+  }
+  const clip = item.clipId && nodeById(item.clipId)
+  const clipRect = clip ? rectOf(clip) : null
+  const insideClip = clipRect && drop.x >= clipRect.x && drop.x <= clipRect.x + clipRect.w && drop.y >= clipRect.y && drop.y <= clipRect.y + clipRect.h
+  if (parentId && !insideClip) {
+    /* 拖出整块展开容器 → 回到当前层（落点即新位置）。 */
+    moveMiniTo(node, scopeId.value, drop)
+    return
+  }
+  if (parentId && clip && parentId !== clip.id) {
+    /* 拖出嵌套迷你容器、但仍在外层容器内 → 上移一层。 */
+    moveMiniTo(node, nodeById(parentId)?.parentId || scopeId.value, null)
+    return
+  }
+  reorderMini(node, parentId, drop)
+}
+function onMiniDown(e, item) {
+  if (e.button !== 0) return
+  /* 多选模式下点击用于勾选，不启动拖动。 */
+  if (viewMulti.value) return
+  /* 按钮/输入框/拖线锚点走各自交互，不启动拖动。 */
+  if (e.target.closest?.('button, input, textarea, a, .oc-apt')) return
+  const n = item.node
+  const r = rectOf(n)
+  if (!r) return
+  e.stopPropagation()
+  e.preventDefault()
+  work.selOlnodeId = n.id
+  selectedEdgeKey.value = null
+  drawerId.value = null
+  const start = { mx: e.clientX, my: e.clientY }
+  miniDrag.value = { id: n.id, node: n, w: r.w, h: r.h, ghostX: r.x, ghostY: r.y, moved: false, targetId: null }
+  const state = miniDrag.value
+  pointerGesture(e, (ev) => {
+    state.ghostX = r.x + (ev.clientX - start.mx) / zoom.value
+    state.ghostY = r.y + (ev.clientY - start.my) / zoom.value
+    state.moved = true
+    const hit = miniDropTarget(n, { x: state.ghostX + r.w / 2, y: state.ghostY + r.h / 2 })
+    state.targetId = hit?.id || null
+  }, (ev, moved) => {
+    const drop = { x: state.ghostX + r.w / 2, y: state.ghostY + r.h / 2 }
+    miniDrag.value = null
+    /* 松手在画布外（侧栏/工具栏）视为取消，避免模块落到视口外的坐标。 */
+    const box = canvasEl.value?.getBoundingClientRect()
+    const outside = box && (ev.clientX < box.left || ev.clientX > box.right || ev.clientY < box.top || ev.clientY > box.bottom)
+    if (moved && !outside) applyMiniDrop(n, item, drop)
+  }, () => { miniDrag.value = null })
 }
 function patchGroup(field, value) {
   const edge = selectedEdge.value
@@ -1376,9 +1514,10 @@ function snapEndpoint(pt,exclude) {
   }
   for(const edge of edges.value) {
     if(edge.group) continue
-    if(edge.status==='blocked'||!hostAllowed({relId:edge.key},exclude)) continue
+    /* edge.key 是分组键（from|to|kind），store 命令只认真实 rel.id——v1.1.8 修复 */
+    if(edge.status==='blocked'||!hostAllowed({relId:edge.rel.id},exclude)) continue
     const proj=projectOnRoute(pt,edge)
-    if(proj.dist<=10/zoom.value&&(!best||proj.dist<best.dist)) best={ownerId:edge.ownerId,relId:edge.key,t:proj.t,point:proj.point,dist:proj.dist}
+    if(proj.dist<=10/zoom.value&&(!best||proj.dist<best.dist)) best={ownerId:edge.ownerId,relId:edge.rel.id,t:proj.t,point:proj.point,dist:proj.dist}
   }
   return best
 }
@@ -1395,14 +1534,16 @@ function beginConnection(e,source,edge=null,end='target') {
   flowMode.value=edge?'reconnect':'create'
   const finish=()=>{connecting.value=null;flowMode.value=selectedEdgeKey.value?'selected':'idle'}
   pointerGesture(e,ev=>{
-    const point=canvasPt(ev),candidate=snapEndpoint(point,edge?.key)
+    const point=canvasPt(ev),candidate=snapEndpoint(point,edge?.rel?.id)
     connecting.value={...connecting.value,point,candidate}
   },(ev,moved)=>{
     const st=connecting.value
     const preview=connGeometry.value
-    if(moved&&st?.candidate&&preview?.status==='ok') {
+    /* 有候选落点即建线：路径受阻（blocked）只说明现布局下要绕行/穿卡，
+       拒绝建线会让用户拖了半天毫无反应——建成的受阻连线会以虚线+「路径受阻」呈现（v1.1.8） */
+    if(moved&&st?.candidate&&preview) {
       const endpoint=endpointData(st.candidate)
-      const command=edge?{type:'reconnect',ownerId:edge.ownerId,relId:edge.key,end,endpoint}:{type:'connect',source:st.source,target:endpoint}
+      const command=edge?{type:'reconnect',ownerId:edge.ownerId,relId:edge.rel.id,end,endpoint}:{type:'connect',source:st.source,target:endpoint}
       const result=work.olnodeRelGesture(command)
       if(result.ok) {
         work.selOlnodeId=null
@@ -1458,14 +1599,14 @@ function startRouteAdjust(event,handle) {
     }
     routeDraft.value={key:edge.key,routing:{version:1,waypoints}}
   },(ev,moved)=>{
-    if(moved&&routeDraft.value) work.olnodeRelGesture({type:'patch',ownerId:edge.ownerId,relId:edge.key,patch:{routing:routeDraft.value.routing,custom:null}})
+    if(moved&&routeDraft.value) work.olnodeRelGesture({type:'patch',ownerId:edge.ownerId,relId:edge.rel.id,patch:{routing:routeDraft.value.routing,custom:null}})
     finish()
   },finish)
 }
 function resetRoute(edge=selectedEdge.value) {
   if(!edge||edge.group||edge.projected) return
   routeCache.entries.delete(edge.key)
-  work.olnodeRelGesture({type:'patch',ownerId:edge.ownerId,relId:edge.key,patch:{routing:null,custom:null}})
+  work.olnodeRelGesture({type:'patch',ownerId:edge.ownerId,relId:edge.rel.id,patch:{routing:null,custom:null}})
 }
 function deleteSelectedEdge() {
   const edge=selectedEdge.value
@@ -1475,7 +1616,9 @@ function deleteSelectedEdge() {
     for(const {owner,rel} of edge.relations) work.olnodeRelRemove(owner.id,rel.id)
     if(work.olUndo.length>start+1) work.olUndo.splice(start+1)
   } else {
-    work.olnodeRelRemove(edge.ownerId,edge.key)
+    /* edge.key 是投影分组键（from|to|kind），删除必须用真实 rel.id——否则 relationTransaction
+       按 relId 找不到连线、静默失败（Delete 键与工具条「删除」全部无效，v1.1.8 修复） */
+    work.olnodeRelRemove(edge.ownerId,edge.rel.id)
   }
   selectedEdgeKey.value=null;flowMode.value='idle';closeFloaters()
 }
@@ -1958,7 +2101,7 @@ onBeforeUnmount(() => {
           :key="n.id"
           class="oc-node"
           :data-node-id="n.id"
-          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'oc-small-card': n.kind !== 'container' && rectOf(n).h < 92, 'resize-smooth': resizeSmooth && resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId }]"
+          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'oc-small-card': n.kind !== 'container' && rectOf(n).h < 92, 'resize-smooth': resizeSmooth && resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId, 'drop-target': miniDrag && miniDrag.moved && miniDrag.targetId === n.id }]"
           :style="nodeStyle(n)"
           :data-dl-target="n.kind === 'cite' && n.refId ? n.refId : null"
           :data-dl-title="n.kind === 'cite' ? labelOf(n) : null"
@@ -2065,7 +2208,9 @@ onBeforeUnmount(() => {
                   flash: flashIds.has(item.node.id),
                   editing: editText && editText.id === item.node.id,
                   'oc-mini-event': item.node.kind === 'event',
-                  'oc-mini-container': item.node.kind === 'container'
+                  'oc-mini-container': item.node.kind === 'container',
+                  dragging: miniDrag && miniDrag.moved && miniDrag.id === item.node.id,
+                  'drop-target': miniDrag && miniDrag.moved && miniDrag.targetId === item.node.id
                 }
               ]"
               :style="miniStyle(item, group)"
@@ -2073,7 +2218,7 @@ onBeforeUnmount(() => {
               :data-mini-id="item.node.id"
               :data-dl-target="item.node.kind === 'cite' && item.node.refId ? item.node.refId : null"
               :data-dl-title="item.node.kind === 'cite' ? labelOf(item.node) : null"
-              @mousedown.stop
+              @mousedown="onMiniDown($event, item)"
               @click.stop="selectMini(item.node)"
               @dblclick.stop="onMiniDbl(item)"
               @contextmenu.prevent="onNodeCtx($event, item.node)"
@@ -2122,6 +2267,19 @@ onBeforeUnmount(() => {
               <span v-for="sd in ['top', 'right', 'bottom', 'left']" :key="sd" class="oc-apt" :data-side="sd" title="拖到目标模块或连接点建立连线" @mousedown.stop="startConnect($event, item.node)" />
             </div>
           </div>
+        </div>
+
+        <!-- 迷你卡拖影：挂在画布内层，拖出容器内容区时不裁剪 -->
+        <div
+          v-if="miniDrag && miniDrag.moved"
+          class="oc-mini-ghost"
+          :class="'oc-mini-' + miniDrag.node.kind"
+          :style="{ left: miniDrag.ghostX + 'px', top: miniDrag.ghostY + 'px', width: miniDrag.w + 'px', height: miniDrag.h + 'px' }"
+        >
+          <div class="oc-mini-top">
+            <span class="oc-mini-kind">{{ KIND_LABEL_DESIGN[miniDrag.node.kind] || '模块' }}</span>
+          </div>
+          <h3 class="oc-mini-title">{{ labelOf(miniDrag.node) }}</h3>
         </div>
 
         <template v-if="selectedEdge && !connecting && !selectedEdge.group && !selectedEdge.projected">

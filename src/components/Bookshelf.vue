@@ -7,9 +7,12 @@ import SkinPicker from './SkinPicker.vue'
 import AppTopbar from './AppTopbar.vue'
 import DreamLaunchDialog from './agent/DreamLaunchDialog.vue'
 import { WORK_NAVIGATION } from './app-navigation'
+import OriginalShelf from './OriginalShelf.vue'
 import GravityShelf from './GravityShelf.vue'
 import GlazeShelf from './GlazeShelf.vue'
 import CrimsonShelf from './CrimsonShelf.vue'
+import LatentShelf from './skins/latent/LatentShelf.vue'
+import { isLatentSkin } from '../skins/registry'
 import { useShelfStore } from '../stores/shelf'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
@@ -55,11 +58,12 @@ const openText = (w) => formatShelfOpenTime(shelf.openStats[w.id]?.lastOpenedAt)
 /* 接续卡与开书使用同一位置解析；没有位置记录时回退首章。 */
 const firstChapter = ref(null)
 const glazeSelectedId = ref(null)
-const resumeWorkId = computed(() => ui.skin === 'glaze' && filtered.value.some(book => book.id === glazeSelectedId.value)
+const originalSelectedId = ref(null)
+const resumeWorkId = computed(() => ui.skin === 'original' && filtered.value.some(book => book.id === originalSelectedId.value) ? originalSelectedId.value : ui.skin === 'glaze' && filtered.value.some(book => book.id === glazeSelectedId.value)
   ? glazeSelectedId.value : filtered.value[0]?.id)
 watch([resumeWorkId, () => ui.skin], ([id, skin], _previous, onCleanup) => {
   firstChapter.value = null
-  if (!id || !['glaze', 'crimson'].includes(skin)) return
+  if (!id || !['glaze', 'crimson', 'original'].includes(skin)) return
   const subscription = liveQuery(() => resumeChapterOf(id)).subscribe({
     next(chapter) { if (resumeWorkId.value === id && ui.skin === skin) firstChapter.value = chapter },
     error() { if (resumeWorkId.value === id && ui.skin === skin) firstChapter.value = null }
@@ -163,61 +167,11 @@ async function onCardMenu(key, w) {
 
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
-    <GravityShelf v-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <LatentShelf v-if="isLatentSkin(ui.skin)" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :first-chapter="firstChapter" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <GravityShelf v-else-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <GlazeShelf @select-work="glazeSelectedId = $event" v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <CrimsonShelf v-else-if="ui.skin === 'crimson'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
-    <template v-else>
-    <AppTopbar active="shelf" :busy="opening || shelf.loading" :has-work="!!filtered[0]" :target-title="filtered[0]?.title" @navigate="key => key === 'settings' ? openSettings() : key !== 'shelf' && filtered[0] ? openWorkAt(filtered[0], key) : undefined">
-      <template #actions><SkinPicker /></template>
-    </AppTopbar>
-    <div class="shelf-toolbar">
-      <h1>我的作品 <small>{{ shelf.works.length }}</small></h1>
-      <div class="shelf-search">
-        <NInput v-model:value="q" size="small" placeholder="搜索作品、作者、类型…" clearable>
-          <template #prefix><OIcon name="search" :size="13" /></template>
-        </NInput>
-      </div>
-      <NButton size="small" type="primary" @click="openCreate">＋ 新建作品</NButton>
-    </div>
-
-    <div class="shelf-body">
-      <NSpin :show="shelf.loading">
-        <div v-if="filtered.length" class="shelf-grid">
-          <div
-            v-for="w in filtered"
-            :key="w.id"
-            class="book-card"
-            role="button"
-            tabindex="0"
-            @click="onWorkClick(w)"
-            @keydown.enter="onWorkClick(w)"
-          >
-            <div class="book-cover" :class="['k-' + (w.kind || 'novel'), ttCls(w.title)]">
-              <span class="cover-tt">{{ w.title }}</span>
-              <span class="cover-sub">{{ w.status || '连载中' }}</span>
-              <span v-if="sealLines(w.author).length" class="cover-seal"><template v-for="(ln, i) in sealLines(w.author)" :key="i">{{ ln }}<br v-if="i < sealLines(w.author).length - 1" /></template></span>
-              <div class="cover-menu" @click.stop @keydown.stop>
-                <NDropdown :options="cardMenu(w)" @select="(k) => onCardMenu(k, w)" trigger="click">
-                  <NButton size="tiny" quaternary>⋯</NButton>
-                </NDropdown>
-              </div>
-            </div>
-            <div class="book-info">
-              <span class="book-title">{{ w.title }}</span>
-              <span class="book-meta">{{ fmtWords(w.totalWords) }} · {{ w.chapterCount }} 章</span>
-            </div>
-            <div class="book-openat">上次打开 {{ openText(w) }}</div>
-          </div>
-        </div>
-        <div v-else class="empty-shelf">
-          <div class="big">开卷有益</div>
-          <p v-if="shelf.works.length">没有匹配「{{ q }}」的作品 —— 换个关键词试试。</p>
-          <p v-else>书架还是空的 —— 点击右上角「新建作品」开始写作，<br />或在工作台里导入 TXT / Word / PDF / EPUB 旧稿。</p>
-        </div>
-      </NSpin>
-    </div>
-
-    </template>
+    <OriginalShelf v-else :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :first-chapter="firstChapter" :menu-options="cardMenu" @select-work="originalSelectedId = $event" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <DreamLaunchDialog />
     <NModal v-model:show="showCreate" preset="card" :title="editing ? '编辑作品信息' : '新建作品'" style="width: 460px">
       <div style="display: flex; flex-direction: column; gap: 12px">

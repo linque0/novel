@@ -164,6 +164,7 @@ function toLore() {
       </section>
     </template>
     <template v-else>
+    <header v-if="ui.skin === 'original'" class="ow-record-heading"><div><p>灵感 / {{ ideaDate }}</p><h1>{{ ideaTitle }}</h1></div><NButton size="small" @click="popSnippet">独立窗口 ↗</NButton></header>
     <header v-if="ui.isStudioSkin" class="gravity-snippet-heading"><span>{{ new Date(s.createdAt).toLocaleString('zh-CN', { month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' }) }} / 灵感记录</span><h1>{{ (s.content || '未命名灵感').split('\n')[0] }}</h1></header>
     <div class="snippet-actions" style="display: flex; gap: 8px; margin-bottom: 12px; align-items: center">
       <span style="font-size: 12px; color: var(--text-dim)">灵感记录 · 自动保存</span>
@@ -179,9 +180,11 @@ function toLore() {
     </div>
     <NInput
       :value="s.content"
+      class="ow-snippet-editor"
+      aria-label="灵感内容"
       type="textarea"
       style="flex: 1"
-      :autosize="ui.isStudioSkin ? false : { minRows: 18, maxRows: 40 }"
+      :autosize="ui.isStudioSkin || ui.skin === 'original' ? false : { minRows: 18, maxRows: 40 }"
       placeholder="记录灵感、桥段、对话片段……"
       data-dl-token
       @update:value="(v) => work.updateSnippet(s.id, { content: v })"

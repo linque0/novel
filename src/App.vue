@@ -1,8 +1,10 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NButton, zhCN, dateZhCN, darkTheme } from 'naive-ui'
+import { useDshOverrides } from '../plugin/dsh/theme.js'
 import { useUiStore } from './stores/ui'
 import { startAutosave } from './services/autosave'
+import { installLibrarySync } from './services/library-sync'
 import { openDbWithRetry } from './db/database'
 import Bookshelf from './components/Bookshelf.vue'
 import StudioWorkspace from './components/StudioWorkspace.vue'
@@ -13,6 +15,8 @@ import HelpManual from './components/HelpManual.vue'
 import RevisionsModal from './components/RevisionsModal.vue'
 import TrashModal from './components/TrashModal.vue'
 import StatsModal from './components/StatsModal.vue'
+/* 隐现皮肤专用写作统计对话框（速览 + 完整分析），与 StatsModal 二选一挂载 */
+import WritingStatsDialog from './components/skins/latent/stats/WritingStatsDialog.vue'
 import MubuTagPanel from './components/MubuTagPanel.vue'
 import LoreRelationPanel from './components/LoreRelationPanel.vue'
 import LoreDetail from './components/LoreDetail.vue'
@@ -22,7 +26,8 @@ import { installAppBus } from './services/appbus'
 import { useShelfStore } from './stores/shelf'
 import { installAiRuntime } from './services/ai/runtime'
 import { useAiStore } from './stores/ai'
-import { resolveSkin } from './skins/registry'
+import { resolveSkin, isLatentSkin } from './skins/registry'
+import { useLatentTheme } from './skins/theme-latent.js'
 import { useGlazeMuseum } from './composables/useGlazeMuseum'
 import './styles/skins/gravity.css'
 import './styles/skins/gravity-workbench.css'
@@ -32,6 +37,9 @@ import './styles/skins/crimson-workbench.css'
 import './styles/skins/crimson-v3.css'
 import './styles/skins/glaze-museum.css'
 import './styles/skins/glaze-museum-workbench.css'
+import './styles/original-workspace.css'
+import './styles/original-records.css'
+import './styles/original-dialogs.css'
 
 const ui = useUiStore()
 const { museumActive } = useGlazeMuseum()
@@ -45,9 +53,21 @@ const panelMode = new URLSearchParams(location.search).has('panel')
 const settingsPanel = new URLSearchParams(location.search).get('panel')?.split(':')[0] === 'settings'
 const prefsReady = ref(false)
 
-const activeSkin = computed(() => resolveSkin(ui.skin, panelMode ? 'panel' : ui.view))
-const naiveTheme = computed(() => activeSkin.value.id === 'glaze' ? null : (activeSkin.value.id === 'gravity' || activeSkin.value.id === 'crimson' || ui.theme === 'night' ? darkTheme : null))
+/* 设置页在主窗里是 ui.view='settings'，但注册表只认 shelf/work/panel 三种 surface；
+ * 直接传 'settings' 会回落 original，导致设置窗丢掉当前皮肤的样式。
+ * 设置是主窗内的一屏，按 work surface 处理（与插件版同样的映射）。 */
+const surfaceOf = (view) => (view === 'settings' ? 'work' : view)
+const activeSkin = computed(() => resolveSkin(ui.skin, panelMode ? 'panel' : surfaceOf(ui.view)))
+/* 隐现（dsh）皮肤：主题与覆盖色统一由 theme-latent.js 提供，明暗跟着 ui.theme 走 */
+const latentTheme = useLatentTheme(ui)
+const latent = computed(() => isLatentSkin(ui.skin))
+const naiveTheme = computed(() => {
+  if (latent.value) return latentTheme.value.dark ? darkTheme : null
+  return activeSkin.value.id === 'glaze' ? null : (activeSkin.value.id === 'gravity' || activeSkin.value.id === 'crimson' || ui.theme === 'night' ? darkTheme : null)
+})
 const overrides = computed(() => {
+  /* 隐现皮肤优先：它的覆盖表与自身的 CSS 令牌同源 */
+  if (latent.value) return latentTheme.value.overrides
   if (museumActive.value) return {
     common: { primaryColor:'#536b4d', primaryColorHover:'#657c5b', primaryColorPressed:'#3d5339', primaryColorSuppl:'#536b4d', textColor1:'#344f42', textColor2:'#4b604b', textColor3:'#69745e', bodyColor:'#dce4d2', cardColor:'#faf7ed', modalColor:'#faf7ed', popoverColor:'#faf7ed', inputColor:'#f7f4e8', borderColor:'#b7b99c', borderRadius:'2px' },
     Tree: { nodeColorActive:'#e8ebda', nodeColorHover:'#eef0e2', nodeColorPressed:'#dce4d2' }
@@ -76,7 +96,24 @@ const overrides = computed(() => {
   const accent = { xuan: '#8c6f4e', parchment: '#a0642f', night: '#d4a95c' }[ui.theme] || '#8c6f4e'
   return { common: { primaryColor: accent, primaryColorHover: accent, primaryColorPressed: accent, primaryColorSuppl: accent } }
 })
+/* M1-C2：插件构建下 naive 主题跟 iframe 根上的 data-ns-dark 走（预览窗口与宿主同亮暗）；
+ * 桌面版 __NS_PLUGIN__ 为 false，两个表达式原样落回 naiveTheme / overrides。 */
+const nsPlugin = __NS_PLUGIN__
+const dshThemeState = nsPlugin ? useDshOverrides() : null
+const dshNaiveTheme = computed(() => (dshThemeState && dshThemeState.value.dark ? darkTheme : null))
+const dshOverrides = computed(() => (dshThemeState ? dshThemeState.value.overrides : {}))
+
 watch(activeSkin, skin => { document.body.dataset.skin = skin.id }, { immediate: true })
+
+/* 暗色令牌分支由 <html> 上的 data-ns-dark 触发：插件构建里宿主 shim 写在 iframe 根上，
+ * 桌面版没人写，language/dsh 的令牌层就一直落回浅色分支（玻璃发白、墨色近黑）；
+ * 所以隐现皮肤在这里自己挂，切到旧四套皮肤时移除。暗色选择器只有
+ * html[data-ns-dark] body[data-skin='dsh'] 这一组，均被属性的有无双重限定。 */
+watch(latent, on => {
+  if (nsPlugin) return
+  if (on) document.documentElement.setAttribute('data-ns-dark', '1')
+  else document.documentElement.removeAttribute('data-ns-dark')
+}, { immediate: true })
 
 /* 主题类镜像到 body：naive 的 popover/modal 等浮层 teleport 到 body 下，
    继承不到 .app-root 上的主题变量——var(--bg-panel) 等会整条声明失效
@@ -110,6 +147,12 @@ async function boot() {
   prefsReady.value = true
   revealSettings()
   startAutosave()
+  /* 作品库同步（M3）：主进程有通道才启用；hydrate 失败不影响本地可用 */
+  try {
+    await installLibrarySync()
+  } catch (error) {
+    console.warn('[library] 同步层未启用', error)
+  }
   installAiRuntime()
   await useAiStore().loadSettings()
   if (panelMode) return
@@ -134,7 +177,7 @@ async function seedDevVerifyBooks() {
 </script>
 
 <template>
-  <NConfigProvider :theme="naiveTheme" :theme-overrides="overrides" :locale="zhCN" :date-locale="dateZhCN">
+  <NConfigProvider :theme="nsPlugin ? dshNaiveTheme : naiveTheme" :theme-overrides="nsPlugin ? dshOverrides : overrides" :locale="zhCN" :date-locale="dateZhCN">
     <NMessageProvider>
       <NDialogProvider>
         <PrefBridge />
@@ -157,7 +200,10 @@ async function seedDevVerifyBooks() {
             <HelpManual />
             <RevisionsModal />
             <TrashModal />
-            <StatsModal />
+            <!-- 写作统计：旧皮肤渲染原 StatsModal，隐现只渲染一个 WritingStatsDialog。
+                 两者读同一份 wordlog 与同一套字数算法，不同时挂载，避免双计数或双弹窗。 -->
+            <WritingStatsDialog v-if="latent" />
+            <StatsModal v-else />
             <MubuTagPanel />
             <LoreRelationPanel />
             <LoreDetail />

@@ -1,20 +1,67 @@
 <script setup>
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, useSlots, watch } from 'vue'
+import { NDropdown } from 'naive-ui'
 import AutoHideTopbar from './AutoHideTopbar.vue'
 import { useUiStore } from '../stores/ui'
-import { SKINS } from '../skins/registry'
+import { SKINS, isLatentSkin } from '../skins/registry'
 import { APP_NAVIGATION } from './app-navigation'
 import DreamModeEntries from './agent/DreamModeEntries.vue'
+/* 隐现皮肤顶栏右簇的统计圆钮（与插件版同一个组件） */
+import WritingStatsEntry from './skins/latent/stats/WritingStatsEntry.vue'
 
 const props = defineProps({
   active: { type: String, default: 'shelf' },
   busy: Boolean,
   hasWork: Boolean,
-  targetTitle: { type: String, default: '' }
+  targetTitle: { type: String, default: '' },
+  actions: { type: Array, default: () => [] },
+  /* 窄栏保存态（<560）：顶栏动作整条隐藏后，只剩这个非交互状态点告诉作者存没存 */
+  saveState: { type: String, default: 'saved' }
 })
-const emit = defineEmits(['navigate'])
+const emit = defineEmits(['navigate', 'create', 'action'])
 const ui = useUiStore()
+const nsPlugin = __NS_PLUGIN__
 const skinLabel = computed(() => SKINS.find(skin => skin.id === ui.skin)?.label || '原版工坊')
+/* 隐现（dsh）皮肤用插件版顶栏：品牌文字 + 绝对居中的六项胶囊导航（设置改由齿轮圆钮承担）
+ * + 右簇圆钮（已保存 / 搜索 / 统计 / 设置 / 锁定）。四套旧皮肤保持桌面原有顶栏结构。 */
+const latent = computed(() => isLatentSkin(ui.skin))
+/* 品牌小字：隐现照插件版显示固定字标 LATENT（皮肤名退场），四套旧皮肤仍显示皮肤名 */
+const brandSuffix = computed(() => (isLatentSkin(ui.skin) ? 'LATENT' : skinLabel.value))
+const navItems = computed(() => (latent.value
+  ? APP_NAVIGATION.filter(item => item.key !== 'settings')
+  : APP_NAVIGATION))
+/* 顶栏锁定键：锁定＝常驻；解锁＝自动隐藏，鼠标移到顶部再展开 */
+const pinLabel = computed(() => (ui.topbarAutoHide ? '锁定顶栏（始终显示）' : '解除顶栏锁定（自动隐藏）'))
+function togglePin() { ui.setPref('topbarAutoHide', !ui.topbarAutoHide) }
+/* 搜索圆钮：有搜索槽位（书架）时展开槽位输入框，没有槽位时打开全局搜索浮层 */
+const searchOpen = ref(false)
+const slots = useSlots()
+function toggleSearch() {
+  if (!slots.search) { ui.searchOpen = true; return }
+  searchOpen.value = !searchOpen.value
+}
+/* 窄栏（<560，由 dsh 皮肤 CSS 打开）只留作品名 + 当前页签 + ⋯；导航与动作收进下拉。 */
+const currentLabel = computed(() => APP_NAVIGATION.find(item => item.key === props.active)?.label || '')
+const narrowTitle = computed(() => (props.hasWork && props.targetTitle) ? props.targetTitle : '小说工坊')
+const SAVE_LABEL = { saved: '已保存', saving: '保存中', dirty: '未保存', error: '保存失败' }
+const saveLabel = computed(() => SAVE_LABEL[props.saveState] || SAVE_LABEL.saved)
+/* ⋯ 菜单分两区：「动作」由工作台注入（窄栏把顶栏按钮收进来），「模块」才是 APP_NAVIGATION。
+ * 两区都带前缀键，select 时按前缀分发，路由与动作互不污染。 */
+const moreOptions = computed(() => [
+  ...(props.actions.length ? [{ type: 'group', label: '动作', key: 'group-actions', children: props.actions }] : []),
+  {
+    type: 'group',
+    label: '模块',
+    key: 'group-nav',
+    children: APP_NAVIGATION
+      .filter(item => item.key !== props.active)
+      .map(item => ({ label: item.label, key: 'nav:' + item.key, disabled: disabled(item.key) }))
+  }
+])
+function onSelect(key) {
+  if (typeof key === 'string' && key.startsWith('nav:')) return navigate(key.slice(4))
+  emit('action', key)
+}
 const nav = ref(null)
 const disabled = key => props.busy || (!props.hasWork && !['shelf', 'settings'].includes(key))
 function navigate(key) {
@@ -38,12 +85,41 @@ watch(() => [props.active, ui.skin], async () => {
           <svg v-if="ui.skin === 'crimson'" viewBox="0 0 44 44"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
           <template v-else>坊</template>
         </span>
-        <span class="app-topbar-brand-text">小说工坊<small>{{ skinLabel }}</small></span>
+        <span class="app-topbar-brand-text">小说工坊<small>{{ brandSuffix }}</small></span>
+        <span class="app-topbar-narrow-title" :title="narrowTitle">{{ narrowTitle }}</span>
       </button>
       <nav ref="nav" class="app-topnav" aria-label="功能模块">
-        <button v-for="item in APP_NAVIGATION" :key="item.key" type="button" class="app-topnav-item" :data-nav="item.key" :class="{ active: active === item.key }" :aria-current="active === item.key ? 'page' : undefined" :disabled="disabled(item.key)" :title="title(item)" @click="navigate(item.key)">{{ item.label }}</button>
+        <button v-for="item in navItems" :key="item.key" type="button" class="app-topnav-item" :data-nav="item.key" :class="{ active: active === item.key }" :aria-current="active === item.key ? 'page' : undefined" :disabled="disabled(item.key)" :title="title(item)" @click="navigate(item.key)">{{ item.label }}</button>
       </nav>
-      <div class="app-topbar-actions"><DreamModeEntries v-if="active==='shelf'" shelf :disabled="busy" @dream="ui.dreamLauncherOpen=true" /><slot name="actions" /></div>
+      <span class="app-topbar-current" aria-hidden="true">{{ currentLabel }}</span>
+      <button v-if="nsPlugin && active === 'shelf'" type="button" class="app-topbar-create" aria-label="新书上架" @click="emit('create')">＋新书上架</button>
+      <!-- 隐现（dsh）：右簇圆钮组，与插件版一致（已保存 + 搜索 + 统计 + 设置 + 锁定） -->
+      <div v-if="latent" class="app-topbar-cluster">
+        <span class="app-topbar-save" :data-save-state="saveState" role="img" :aria-label="saveLabel" :title="saveLabel">
+          <svg class="app-topbar-save-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
+          <span class="app-topbar-save-text">{{ saveLabel }}</span>
+        </span>
+        <div class="app-topbar-search-wrap" :class="{ 'is-open': searchOpen }">
+          <button type="button" class="app-topbar-round app-topbar-search-toggle" aria-label="搜索" title="搜索" :aria-expanded="slots.search ? (searchOpen ? 'true' : 'false') : undefined" @click="toggleSearch">
+            <svg class="app-topbar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
+          </button>
+          <div v-if="slots.search" class="app-topbar-search" data-topbar-search><slot name="search" /></div>
+        </div>
+        <WritingStatsEntry class="app-topbar-round" :library="active==='shelf'" :disabled="busy" />
+        <button type="button" class="app-topbar-round app-topbar-settings" aria-label="设置" title="设置" @click="navigate('settings')">
+          <svg class="app-topbar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="3" /><path d="m10 3 4 0 .6 3 2 .9 2.8-1 2 3.4-2.2 2v2.4l2.2 2-2 3.4-2.8-1-2 .9-.6 3h-4l-.6-3-2-.9-2.8 1-2-3.4 2.2-2v-2.4L2.6 9.3l2-3.4 2.8 1 2-.9z" /></svg>
+        </button>
+        <button type="button" class="app-topbar-round app-topbar-pin" :aria-pressed="!ui.topbarAutoHide" :aria-label="pinLabel" :title="pinLabel" @click="togglePin">
+          <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+            <rect x="3.6" y="7.4" width="8.8" height="6.2" rx="1.7" />
+            <path v-if="!ui.topbarAutoHide" d="M5.8 7.4V5.6a2.2 2.2 0 0 1 4.4 0v1.8" />
+            <path v-else d="M5.8 7.4V5.6a2.2 2.2 0 0 1 4.4 0" />
+          </svg>
+        </button>
+      </div>
+      <span v-else class="app-topbar-save" :data-save-state="saveState" role="img" :aria-label="saveLabel" :title="saveLabel" aria-disabled="true"><span class="app-topbar-save-dot"></span></span>
+      <span class="app-topbar-more-wrap"><NDropdown trigger="click" placement="bottom-end" :options="moreOptions" @select="onSelect"><button type="button" class="app-topbar-more" aria-label="更多模块" :title="'更多模块（当前：' + currentLabel + '）'">⋯</button></NDropdown></span>
+      <div class="app-topbar-actions"><DreamModeEntries v-if="!nsPlugin && active==='shelf'" shelf :disabled="busy" @dream="ui.dreamLauncherOpen=true" /><slot name="actions" /></div>
     </header>
   </AutoHideTopbar>
 </template>
@@ -87,6 +163,8 @@ body[data-skin] .app-topbar .app-topnav-item:is(:hover,.active) { color:var(--to
 body[data-skin] .app-topbar button:disabled { opacity:.4; cursor:default; }
 .app-topbar :is(button,[role='combobox']):focus-visible { outline:2px solid var(--topbar-accent); outline-offset:-3px; }
 .app-topbar-actions { display:flex; align-items:center; gap:6px; flex:none; min-width:0; white-space:nowrap; }
+/* 窄栏三件套默认不出现，只由 dsh 皮肤在 <560 打开（桌面版皮肤维持原有多行顶栏）。 */
+.app-topbar-narrow-title, .app-topbar-current, .app-topbar-more-wrap, .app-topbar-save { display:none; }
 .app-topbar-actions .save-badge { margin:0; color:var(--topbar-muted); }
 .app-topbar-actions .skin-picker { width:138px; }
 .app-topbar #studio-task-actions .module-agent { border:0; padding:0; }

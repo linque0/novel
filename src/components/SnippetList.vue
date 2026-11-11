@@ -48,6 +48,7 @@ const fmt = (t) => {
 <template>
   <div class="snippet-catalog" style="display: flex; flex-direction: column; height: 100%">
     <header v-if="ui.isStudioSkin && !bare" class="gravity-inspiration-heading"><h1>灵感画布</h1><p>{{ list.length }} 条灵感</p></header>
+    <div v-if="ui.skin === 'original' && !bare" class="side-head"><h2 class="ow-list-title">灵感</h2><span class="ow-list-count">{{ list.length }} 条记录</span></div>
     <div v-if="!bare" class="side-head" style="flex-direction: column; align-items: stretch">
       <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" v-if="ui.skin === 'gravity'" :show="quickOpen" trigger="click" placement="bottom-start" :show-arrow="false" class="gravity-quick-popover" style="width:350px;max-width:calc(100vw - 64px)" @update:show="showQuick">
         <template #trigger><NButton ref="quickTrigger" class="gravity-quick-trigger" type="primary"><OIcon name="plus" :size="14" /> 记录灵感</NButton></template>
@@ -64,11 +65,12 @@ const fmt = (t) => {
         @keydown="(e) => e.ctrlKey && e.key === 'Enter' && addQuick()"
       />
       <div style="display: flex; gap: 6px; margin-top: 6px; align-items: center">
-        <NButton size="tiny" type="primary" @click="addQuick"><OIcon name="plus" :size="11" /> 记录</NButton>
+        <NButton size="tiny" type="primary" :disabled="ui.skin === 'original' && !quick.trim()" @click="addQuick"><OIcon name="plus" :size="11" /> 记录</NButton>
         <span style="font-size: 12px; color: var(--text-dim)">{{ list.length }} 条</span>
       </div>
       </template>
     </div>
+    <div v-if="ui.skin === 'original' && !bare" class="side-search ow-list-search"><input v-model="ui.snippetQuery" class="rp-input" type="search" placeholder="搜索灵感内容" aria-label="搜索灵感" /><button v-if="ui.snippetQuery" class="side-search-clear" type="button" aria-label="清除灵感搜索" @click="ui.snippetQuery = ''">×</button></div>
     <div class="side-list">
       <div
         v-for="s in list"
@@ -81,9 +83,10 @@ const fmt = (t) => {
         @keydown.enter="work.selSnippetId = s.id"
       >
         <template v-if="ui.isStudioSkin"><span class="gravity-snippet-date">{{ fmt(s.createdAt) }}</span><h3>{{ (s.content || '（空白）').split('\n')[0] }}</h3><p>{{ (s.content || '').split('\n').slice(1).join('\n') }}</p><span class="gravity-snippet-open">打开记录 ↗</span></template>
+        <template v-else-if="ui.skin === 'original'"><strong class="ow-snippet-title">{{ (s.content || '（空白）').split('\n')[0] }}</strong><p class="ow-snippet-summary">{{ (s.content || '').split('\n').slice(1).join(' ') || '打开后继续记录…' }}</p><time class="ow-snippet-date">{{ fmt(s.createdAt) }}</time></template>
         <template v-else><span style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap">{{ (s.content || '（空白）').slice(0, 24) }}</span><span class="dim">{{ fmt(s.createdAt) }}</span></template>
       </div>
-      <p v-if="!list.length" style="font-size: 12px; color: var(--text-dim); padding: 10px">灵感库为空。想到什么记什么，之后可一键转为章节或设定。</p>
+      <p v-if="!list.length" style="font-size: 12px; color: var(--text-dim); padding: 10px">{{ ui.skin === 'original' && ui.snippetQuery ? '没有匹配的灵感，试试其他关键词。' : '灵感库为空。想到什么记什么，之后可一键转为章节或设定。' }}</p>
     </div>
   </div>
 </template>

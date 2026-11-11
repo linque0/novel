@@ -6,6 +6,7 @@ export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)), // cwd 句柄失效时 npm/vite 找不到入口，显式锚定项目根
   base: './',
   plugins: [vue()],
+  define: { __NS_PLUGIN__: JSON.stringify(false) },
   build: {
     outDir: 'dist',
     chunkSizeWarningLimit: 4096

@@ -10,16 +10,25 @@ import './styles/outline-glaze.css'
 import './styles/outline-crimson.css'
 import './assets/fonts/fonts.css'
 import './assets/fonts/fonts-user.css'
+/* 隐现（dsh）皮肤样式层：规则全部以 body[data-skin='dsh'] 或唯一根类为作用域，
+ * 未切到该皮肤时不产生任何视觉效果，也不影响四套旧皮肤。 */
+import './styles/skins/latent/index.js'
 
 import { decodeText, splitTxtChapters, splitMarkdown, htmlToMd, parseMubuMd } from './services/importers'
 import { countWords } from './services/wordcount'
 import { db, uid, now } from './db/database'
 import { useWorkStore } from './stores/work'
+import * as library from './services/library'
 
 const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
 app.use(naive)
+
+/* DSH 插件构建：加载插件专属层并强制 dsh 皮肤（桌面版构建 __NS_PLUGIN__ 为 false，此段被裁掉） */
+if (__NS_PLUGIN__) {
+  import('./../plugin/dsh/index.js').then(({ installDshSkin }) => installDshSkin(pinia))
+}
 
 // 供自动化测试 / 控制台调试使用的钩子
 window.__ns = {
@@ -32,7 +41,9 @@ window.__ns = {
   db,
   uid,
   now,
-  getWork: () => useWorkStore(pinia)
+  getWork: () => useWorkStore(pinia),
+  /* 作品库（M2）：控制台里可直接 window.__ns.library.status() / .migrate() */
+  library
 }
 
 app.mount('#app')

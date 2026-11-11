@@ -1,8 +1,10 @@
 <script setup>
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
+import { useOriginalAppearance } from '../composables/useOriginalAppearance.js'
+const { originalOverlayClass } = useOriginalAppearance()
 import { ref, watch, onBeforeUnmount, nextTick } from 'vue'
-import { NModal } from 'naive-ui'
+import { NModal, NAlert, NButton } from 'naive-ui'
 import * as echarts from 'echarts'
 import { useUiStore } from '../stores/ui'
 import { useWorkStore } from '../stores/work'
@@ -18,6 +20,8 @@ const heatEl = ref(null)
 let barChart = null
 let heatChart = null
 const cards = ref({ total: 0, chapters: 0, week: 0, days: 0 })
+const loading = ref(false)
+const error = ref('')
 
 const dateStr = (d) => {
   const p = (n) => String(n).padStart(2, '0')
@@ -25,7 +29,8 @@ const dateStr = (d) => {
 }
 
 function cssVar(name, fallback) {
-  const v = getComputedStyle(document.querySelector('.app-root') || document.body).getPropertyValue(name).trim()
+  const source = originalOverlayClass.value ? barEl.value?.closest('.original-overlay') : null
+  const v = getComputedStyle(source || document.querySelector('.app-root') || document.body).getPropertyValue(name).trim()
   return v || fallback
 }
 
@@ -55,10 +60,9 @@ async function render() {
     days: [...daily.values()].filter((v) => v > 0).length
   }
 
-  const textColor = cssVar('--text', '#3c3427')
-  const dimColor = cssVar('--text-dim', '#8d8271')
-  const accent = cssVar('--accent', '#8c6f4e')
-  const splitColor = cssVar('--border', '#e0d6bf')
+  const dimColor = cssVar(originalOverlayClass.value ? '--ow-muted' : '--text-dim', '#8d8271')
+  const accent = cssVar(originalOverlayClass.value ? '--ow-accent' : '--accent', '#8c6f4e')
+  const splitColor = cssVar(originalOverlayClass.value ? '--ow-line' : '--border', '#e0d6bf')
 
   if (barEl.value) {
     barChart?.dispose()
@@ -107,19 +111,33 @@ function onResize() {
   barChart?.resize()
   heatChart?.resize()
 }
+async function refreshStats() {
+  loading.value = true
+  error.value = ''
+  barChart?.clear()
+  heatChart?.clear()
+  try {
+    await nextTick()
+    await render()
+  } catch (e) {
+    error.value = '统计读取失败：' + (e?.message || e)
+  } finally {
+    loading.value = false
+  }
+}
 
 watch(
   () => ui.statsOpen,
   async (open) => {
     if (open) {
-      await nextTick()
-      await render()
-      window.addEventListener('resize', onResize)
+      await refreshStats()
+      if (ui.statsOpen) window.addEventListener('resize', onResize)
     } else {
       window.removeEventListener('resize', onResize)
     }
   }
 )
+watch(() => ui.theme, () => { if (ui.statsOpen) refreshStats() })
 onBeforeUnmount(() => {
   barChart?.dispose()
   heatChart?.dispose()
@@ -128,22 +146,25 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="ui.statsOpen" preset="card" :title="work.loaded ? `写作统计 · ${work.work?.title}` : '写作统计（全部作品）'" style="width: 860px">
+  <NModal :class="[museumPopoverClass, originalOverlayClass]" :data-glaze-light="museumLight" v-model:show="ui.statsOpen" preset="card" :title="work.loaded ? `写作统计 · ${work.work?.title}` : '写作统计（全部作品）'" style="width: 860px">
+    <p v-if="originalOverlayClass" class="original-dialog-note">{{ work.loaded ? '当前作品' : '全部作品' }} · 总字数来自作品正文；每日新增来自保存记录，按每日正向净增字数展示。</p>
+    <p v-if="loading" role="status" class="original-dialog-note">正在读取写作记录…</p>
+    <NAlert v-if="error" type="error" style="margin-bottom: 12px">{{ error }} <NButton size="tiny" @click="refreshStats">重试</NButton></NAlert>
     <div class="stat-cards">
       <div class="stat-card">
-        <div class="num">{{ cards.total.toLocaleString() }}</div>
+        <div class="num">{{ loading || error ? '—' : cards.total.toLocaleString() }}</div>
         <div class="lbl">总字数</div>
       </div>
       <div class="stat-card">
-        <div class="num">{{ cards.chapters }}</div>
+        <div class="num">{{ loading || error ? '—' : cards.chapters }}</div>
         <div class="lbl">章节数</div>
       </div>
       <div class="stat-card">
-        <div class="num">{{ cards.week.toLocaleString() }}</div>
+        <div class="num">{{ loading || error ? '—' : cards.week.toLocaleString() }}</div>
         <div class="lbl">近 7 日新增</div>
       </div>
       <div class="stat-card">
-        <div class="num">{{ cards.days }}</div>
+        <div class="num">{{ loading || error ? '—' : cards.days }}</div>
         <div class="lbl">累计写作天数</div>
       </div>
     </div>
@@ -151,7 +172,7 @@ onBeforeUnmount(() => {
     <div ref="barEl" style="height: 240px"></div>
     <div style="font-size: 12px; color: var(--text-dim); margin: 8px 0 4px">近 180 天写作热力图</div>
     <div ref="heatEl" style="height: 190px"></div>
-    <p v-if="!cards.days" style="font-size: 12px; color: var(--text-dim)">
+    <p v-if="!loading && !error && !cards.days" style="font-size: 12px; color: var(--text-dim)">
       还没有码字记录 —— 在正文里写点什么，统计会在自动保存后出现。
     </p>
   </NModal>

@@ -1,9 +1,11 @@
 <script setup>
+const nsPlugin = __NS_PLUGIN__
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import TaskLauncher from './ai/TaskLauncher.vue'
 import WritingPaperPicker from './WritingPaperPicker.vue'
 import ChapterTitleField from './ChapterTitleField.vue'
+import { isLatentSkin } from '../skins/registry'
 import '../styles/writing-paper.css'
 import '../styles/studio-writing.css'
 import { ref, shallowRef, computed, watch, nextTick, onBeforeUnmount, onMounted } from 'vue'
@@ -40,6 +42,19 @@ import { registerWritingCapture, queueWritingPosition, flushWritingPositions } f
 
 const work = useWorkStore()
 const ui = useUiStore()
+/* 隐现（dsh）皮肤：标题区按插件版版式（大标题 + 拉丁章号副标题 + 朱线 + 字数目标行），设计里没有章序号轨 */
+const latentSkin = computed(() => isLatentSkin(ui.skin))
+/* 写作头顶的拉丁章号：第 N 章 → CHAPTER ONE…；超过 20 章退回 CHAPTER {N}（只读展示，不可编辑） */
+const LATIN_ORDINALS = ['ONE','TWO','THREE','FOUR','FIVE','SIX','SEVEN','EIGHT','NINE','TEN','ELEVEN','TWELVE','THIRTEEN','FOURTEEN','FIFTEEN','SIXTEEN','SEVENTEEN','EIGHTEEN','NINETEEN','TWENTY']
+const headLatin = computed(() => {
+  const n = work.activeChapter ? work.chapterOrdinal(work.activeChapter.id) : null
+  return n ? `CHAPTER ${LATIN_ORDINALS[n - 1] || n}` : ''
+})
+/* 隐现章头字数（设计 .ed-goal > .goal-text）：有每章目标则「N / M 字」，否则只显示本章字数（口径同 goalProgress） */
+const headWords = computed(() => {
+  const p = work.goalProgress
+  return p.goal > 0 ? `${fmtNum(p.current)} / ${fmtNum(p.goal)} 字` : `${fmtNum(p.current)} 字`
+})
 const editor = shallowRef(null)
 const ctxMenu = ref(null)
 const readDrawer = ref(false) // 阅读模式：章节抽屉开合
@@ -287,8 +302,7 @@ function mountEditor() {
       },
       handleKeyDown: (_view, e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
-          autosave.flushAll()
-          window.$msg?.success('已保存')
+          if(ui.skin==='original'&&ui.workbenchMode!=='agent'){autosave.flushAll().then(()=>{if(ui.autosave.error||ui.autosave.pending)window.$msg?.error('仍有内容未保存，请重试保存');else window.$msg?.success('已保存')}).catch(e=>window.$msg?.error('保存失败：'+e.message))}else{autosave.flushAll();window.$msg?.success('已保存')}
           return true
         }
         return false
@@ -388,9 +402,57 @@ async function clearGoal() {
 </script>
 
 <template>
-  <TaskLauncher v-if="!ui.isStudioSkin && !ui.readMode" module="chapters" />
+  <!-- 旧皮肤：模块助手条留在宿主第一个子节点，布局一字不动（隐现搬进稿纸列，见下） -->
+  <TaskLauncher v-if="!nsPlugin && !ui.isStudioSkin && !ui.readMode && !latentSkin" module="chapters" />
   <div class="editor-wrap" :data-writing-paper="ui.writingPaperStyle" :data-paper-skin="ui.skin" :data-paper-theme="ui.theme" :data-paper-quiet="ui.readMode || ui.focusMode" :class="{ 'read-mode': ui.readMode, 'rail-collapsed': ui.skin === 'crimson' && railCollapsed }">
+    <!-- 隐现：模块助手条挂在宿主上会撑满整窗（x=0）并被浮起的章节目录压住，只剩句尾可见；
+         搬进 .editor-wrap 顶部后它和章头/工具栏同一个包含块，共用 --ls-page-w 的左线与宽度。 -->
+    <TaskLauncher v-if="latentSkin && !nsPlugin && !ui.readMode" module="chapters" />
     <div class="editor-head" v-if="work.activeChapter && !ui.readMode && !ui.isStudioSkin">
+      <!-- 隐现皮肤：标题区按插件版版式——大标题 + 拉丁章号副标题 + 朱线 + 字数目标行；
+           状态下拉与历史收进工具栏「更多格式」弹层（见下方 #more-end）。旧皮肤保持原有横排。 -->
+      <div v-if="latentSkin" class="ed-head-latent">
+        <div class="ed-head-main">
+          <ChapterTitleField
+            :key="work.activeChapter.id"
+            class="title-input"
+            :value="work.activeChapter.title"
+            :chapter-id="work.activeChapter.id"
+            :work-id="work.work.id"
+            :layout-key="[ui.skin,ui.editorFont,ui.editorLatin,ui.fontSize].join(':')"
+            :readonly="chapterPopped"
+            @commit="onTitle"
+          />
+          <div v-if="headLatin" class="ed-latin" aria-hidden="true">{{ headLatin }}</div>
+          <div class="ed-rule" aria-hidden="true"></div>
+          <div class="ed-goal">
+            <span class="goal-track" aria-hidden="true"><i :style="{ width: goalFill }"></i></span>
+            <NPopover :show="goalShow" trigger="click" :show-arrow="false" placement="bottom-start" @update:show="toggleGoal">
+              <template #trigger>
+                <button class="goal-text" type="button" :title="work.wordGoal > 0 ? '修改每章字数目标' : '设定每章字数目标'">{{ headWords }}</button>
+              </template>
+              <div class="wg-goal-pop">
+                <div class="wg-goal-title">每章字数目标</div>
+                <NInputNumber
+                  v-model:value="goalInput"
+                  size="small"
+                  :min="0"
+                  :max="2000000"
+                  :step="500"
+                  placeholder="如 3000；0 或留空 = 取消"
+                  style="width: 200px"
+                  @keydown.enter="saveGoal"
+                />
+                <div class="wg-goal-actions">
+                  <NButton v-if="work.wordGoal > 0" size="tiny" quaternary type="error" @click="clearGoal">取消目标</NButton>
+                  <NButton size="tiny" type="primary" :disabled="!(Number(goalInput) > 0)" @click="saveGoal">保存</NButton>
+                </div>
+              </div>
+            </NPopover>
+          </div>
+        </div>
+      </div>
+      <template v-else>
       <ChapterTitleField
         :key="work.activeChapter.id"
         class="title-input"
@@ -413,6 +475,7 @@ async function clearGoal() {
         {{ work.activeChapter.wordCount || 0 }} 字
       </NTag>
       <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
+      </template>
     </div>
     <template v-if="!work.activeChapter">
       <div v-if="ui.skin==='crimson' && !ui.readMode" class="crimson-editor-stage">
@@ -474,6 +537,13 @@ async function clearGoal() {
               <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
             </div>
           </template>
+          <!-- 隐现：主行只留格式与发送，章节状态与历史收进「更多格式」弹层 -->
+          <template v-if="latentSkin" #more-end>
+            <div class="editor-bar-status" @click.stop @mousedown.stop>
+              <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" placeholder="章节状态" style="width:84px" @click.stop @mousedown.stop @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
+              <NButton size="tiny" quaternary @click.stop="openHistory" @mousedown.stop>历史</NButton>
+            </div>
+          </template>
         </EditorToolbar>
         <div v-show="!chapterPopped" class="rich-host paper-texture writing-paper-surface" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
           <div class="ed-read-col">
@@ -502,9 +572,10 @@ async function clearGoal() {
         <span>「{{ work.activeChapter.title }}」已在独立窗口编辑，本窗口此章暂为只读</span>
         <NButton size="small" type="primary" @click="focusPopped(work, 'chapter', work.activeChapter.id)">前往窗口</NButton>
       </div>
-      <!-- 正文字数目标底栏（v1.0.27）：本章字数 / 进度条 / 目标对照；点击右侧设定每章目标，即时持久化 -->
+      <!-- 正文字数目标底栏（v1.0.27）：本章字数 / 进度条 / 目标对照；点击右侧设定每章目标，即时持久化。
+           隐现的字数目标已在章头 .ed-goal 里，底栏不再出现。 -->
       <Teleport defer :to="ui.skin === 'crimson' && !ui.readMode ? '#crimson-margin-foot' : '#app'" :disabled="ui.skin !== 'crimson' || ui.readMode">
-        <div v-if="work.activeChapter && !ui.readMode" class="editor-foot">
+        <div v-if="work.activeChapter && !ui.readMode && !latentSkin" class="editor-foot">
         <span class="wg-num">本章 <b>{{ fmtNum(work.activeChapter.wordCount || 0) }}</b> 字</span>
         <div class="wg-track" :class="{ done: work.goalProgress.done }" aria-hidden="true">
           <div class="wg-fill" :style="{ width: goalFill }"></div>

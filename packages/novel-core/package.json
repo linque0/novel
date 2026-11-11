@@ -1,0 +1,12 @@
+{
+  "name": "@novel-studio/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "小说工坊作品库核心：文件存储 + 索引 + 日志 + CAS + 幂等 + 快照",
+  "main": "./library.js",
+  "exports": {
+    ".": "./library.js",
+    "./library": "./library.js"
+  }
+}

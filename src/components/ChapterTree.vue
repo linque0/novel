@@ -1,4 +1,6 @@
 <script setup>
+import { useOriginalAppearance } from '../composables/useOriginalAppearance'
+const { originalOverlayClass,originalActive }=useOriginalAppearance()
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { computed, h, ref, watch } from 'vue'
@@ -7,12 +9,16 @@ import OIcon from './OIcon.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { autosave } from '../services/autosave'
+import { isLatentSkin } from '../skins/registry'
 
+const chapterQuery=ref('')
 const work = useWorkStore()
 const ui = useUiStore()
 const props=defineProps({inPanel:Boolean,navigationOnly:Boolean})
-const emit=defineEmits(['read','window'])
+const emit=defineEmits(['read','window','collapse'])
+const canCollapse=computed(()=>!props.inPanel&&!props.navigationOnly)
 const scene=computed(()=>!props.navigationOnly&&(ui.skin==='gravity'||ui.skin==='glaze'))
+const latent=computed(()=>isLatentSkin(ui.skin))
 const deleteConfirm=ref(false)
 const deleteTarget=ref(null)
 const totalWords = computed(() => work.liveChapters.reduce((sum, c) => sum + (c.wordCount || 0), 0))
@@ -32,6 +38,21 @@ const treeData = computed(() => {
       label: (marked(c.key) ? '★ ' : '') + c.label
     }))
   }))
+})
+
+/* 隐现查找：只过滤喂给 NTree 的数据，key 不变，拖拽 / 右键 / 定位语义照旧。
+   卷名命中就整卷保留，否则只留命中的章；两样都不中的卷整卷收起。 */
+const hitKw = (text) => String(text || '').toLowerCase().includes(chapterQuery.value.trim().toLowerCase())
+const filteredTree = computed(() => {
+  if (!chapterQuery.value.trim()) return treeData.value
+  const out = []
+  for (const v of treeData.value) {
+    const volumeHit = hitKw(v.label)
+    const children = volumeHit ? (v.children || []) : (v.children || []).filter((c) => hitKw(c.label))
+    if (!volumeHit && !children.length) continue
+    out.push({ ...v, children })
+  }
+  return out
 })
 
 const selectedKeys = computed(() => {
@@ -105,7 +126,9 @@ function onDrop({ node, dragNode, dropPosition }) {
 }
 
 const renderSuffix = ({ option }) =>
-  h('span', { class: 'chapter-count', style: { color:'var(--text-dim)', fontSize:'11px', marginLeft:'6px', display:ui.isStudioSkin ? 'none' : undefined } }, option.suffix || '')
+  latent.value
+    ? h('span', { class: 'chapter-count', 'data-suffix': option.type === 'volume' ? 'volume' : 'chapter' }, option.suffix || '')
+    : h('span', { class: 'chapter-count', style: { color:'var(--text-dim)', fontSize:'11px', marginLeft:'6px', display:ui.isStudioSkin ? 'none' : undefined } }, option.suffix || '')
 function renderLabel({ option }) {
   if(scene.value){
     const chapter=option.type==='chapter',id=option.key.slice(2)
@@ -125,6 +148,11 @@ function renderLabel({ option }) {
         onClick:e=>{e.stopPropagation();openRenameById({type:'volume',id})}
       },[h(OIcon,{name:'edit',size:14})])]:[])
     ])
+  }
+  if (latent.value) {
+    return option.type === 'volume'
+      ? h('span', { class: 'ct-vol', 'data-kind': 'volume', title: option.label }, option.label)
+      : h('span', { class: 'ct-label', 'data-kind': 'chapter', title: option.label }, option.label)
   }
   if (!ui.isStudioSkin || option.type !== 'chapter') return h('span', option.label)
   const index = work.chapterOrdinal(option.key.slice(2)) || 0
@@ -165,6 +193,22 @@ function openRenameById(s) {
 }
 function openRename() {
   openRenameById(selNode.value)
+}
+/* 章节栏头部的 ⋯ 菜单已整块换成「书签章节」下拉：上移/下移/重命名/删除与章节右键菜单重复，
+ * 排序另有拖拽这条正式路径，因此不再保留第二份入口（功能去重）。
+ * 书签下拉直接从 work.liveBookmarks 取，与齿轮菜单「章节书签」同源，不另建一份状态。 */
+const bookmarkOptions = computed(() => {
+  const list = work.liveBookmarks
+  if (!list.length) return [{ label: '暂无书签：右键章节或工具栏 ☆ 可添加', key: 'none', disabled: true }]
+  return list.map((b) => ({ label: b.title || '（未命名章节）', key: 'bm:' + b.targetId }))
+})
+function openBookmark(key) {
+  if (key === 'none') return
+  const id = key.slice(3)
+  const c = work.chapters.find((x) => x.id === id)
+  if (!c || c.deletedAt) return
+  work.selChapterId = id
+  if (c.volumeId) work.selVolumeId = c.volumeId
 }
 const manageOptions=computed(()=>[
   {label:'上移',key:'up',disabled:selNode.value?.type!=='chapter'},
@@ -224,7 +268,7 @@ const ctx = ref({ show: false, x: 0, y: 0, kind: null, id: null, bookmarked: fal
 
 function nodeProps({ option }) {
   return {
-    ...(scene.value?{'data-chapter-id':option.type==='chapter'?option.key.slice(2):undefined,'data-volume-id':option.type==='volume'?option.key.slice(2):undefined}:{}),
+    ...((scene.value||originalActive.value)?{'data-chapter-id':option.type==='chapter'?option.key.slice(2):undefined,'data-volume-id':option.type==='volume'?option.key.slice(2):undefined}:{}),
     onContextmenu: (e) => {
       e.preventDefault()
       const id = option.key.slice(2)
@@ -273,7 +317,9 @@ const renameSaving=ref(false),renameComposing=ref(false)
 </script>
 
 <template>
-  <div :class="scene?'chapter-catalog':null" :data-catalog-skin="scene?ui.skin:undefined" style="display: flex; flex-direction: column; height: 100%">
+  <div :class="[scene?'chapter-catalog':null,latent?'ct-root':null,canCollapse?'collapsible':null]" :data-catalog-skin="scene?ui.skin:undefined" style="display: flex; flex-direction: column; height: 100%; position: relative">
+    <button v-if="canCollapse && scene" type="button" class="chapter-collapse" title="收起章节栏" aria-label="收起章节栏" aria-controls="glaze-writing-directory" aria-expanded="true" @click="emit('collapse')"><OIcon name="back" :size="13" /></button>
+    <template v-if="!latent">
     <template v-if="scene">
       <header class="catalog-masthead">
         <div class="catalog-art" aria-hidden="true"></div>
@@ -284,17 +330,18 @@ const renameSaving=ref(false),renameComposing=ref(false)
       <div class="catalog-controls">
         <NButton type="primary" size="small" data-action="new-chapter" @click="addCh"><OIcon name="plus" :size="14" />新建章节</NButton>
         <NButton size="small" data-action="new-volume" :disabled="renameSaving" @click="openNewVolume">新建卷</NButton>
-        <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :options="manageOptions" @select="manage"><NButton size="small" aria-label="目录管理" title="排序、重命名与删除">···</NButton></NDropdown>
+        <NDropdown :class="[museumPopoverClass,originalOverlayClass]" :data-glaze-light="museumLight" trigger="click" :options="manageOptions" @select="manage"><NButton size="small" aria-label="目录管理" title="排序、重命名与删除">···</NButton></NDropdown>
       </div>
     </template>
     <h2 v-else-if="ui.isStudioSkin" class="gravity-sidebar-title">章节</h2>
-    <div v-if="!scene" class="side-head">
+    <div v-if="originalActive" class="ow-chapter-head"><div><h2>章节目录</h2><span>{{work.liveChapters.length}} 章</span></div><label class="ow-chapter-search"><NInput v-model:value="chapterQuery" clearable size="small" placeholder="搜索章节或卷名" aria-label="搜索章节或卷名" /></label><div class="ow-chapter-actions"><NButton type="primary" size="small" @click="addCh">新建章节</NButton><NButton size="small" @click="openNewVolume">新建卷</NButton><NDropdown :class="originalOverlayClass" trigger="click" :options="manageOptions" @select="manage"><NButton size="small" aria-label="目录管理">···</NButton></NDropdown></div></div>
+    <div v-if="!scene && !originalActive" class="side-head">
       <NButton size="tiny" @click="addVol">＋卷</NButton>
       <NButton size="tiny" type="primary" @click="addCh">＋章</NButton>
       <NButton size="tiny" :disabled="!selNode" @click="moveSel(-1)">↑</NButton>
       <NButton size="tiny" :disabled="!selNode" @click="moveSel(1)">↓</NButton>
       <NButton size="tiny" :disabled="!selNode" @click="openRename">改名</NButton>
-      <NPopconfirm :class="museumPopoverClass" :data-glaze-light="museumLight" @positive-click="delSel">
+      <NPopconfirm :class="[museumPopoverClass,originalOverlayClass]" :data-glaze-light="museumLight" @positive-click="delSel">
         <template #trigger>
           <NButton size="tiny" :disabled="!selNode" quaternary style="color: #c2564a">删除</NButton>
         </template>
@@ -304,6 +351,8 @@ const renameSaving=ref(false),renameComposing=ref(false)
     <div class="side-list">
       <NTree
         :data="treeData"
+        :pattern="originalActive ? chapterQuery : ''"
+        :show-irrelevant-nodes="!originalActive"
         block-line
         draggable
         default-expand-all
@@ -328,8 +377,53 @@ const renameSaving=ref(false),renameComposing=ref(false)
       <div class="catalog-total"><span><b>{{work.liveChapters.length}}</b> 章</span><span>{{totalWords.toLocaleString()}} 字</span></div>
     </footer>
     <div v-else-if="ui.isStudioSkin" class="gravity-catalog-footer"><b>{{ work.liveChapters.length }}</b> 章 / {{ totalWords.toLocaleString() }} 字</div>
+    <div v-if="!scene && !ui.isStudioSkin && canCollapse" class="side-foot">
+      <button type="button" class="side-collapse" title="收起章节栏（更多菜单亦可切回）" aria-label="收起章节栏" aria-controls="glaze-writing-directory" aria-expanded="true" @click="emit('collapse')"><OIcon name="back" :size="12" /><span>收起章节栏</span></button>
+    </div>
 
-    <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight"
+    </template>
+
+    <template v-else>
+      <div class="side-head">
+        <span class="ct-search">
+          <OIcon name="search" :size="12" aria-hidden="true" />
+          <input v-model="chapterQuery" type="search" placeholder="查找章节…" aria-label="查找章节" />
+          <button v-if="chapterQuery" type="button" title="清除查找" aria-label="清除查找" @click="chapterQuery = ''">×</button>
+        </span>
+        <span class="ct-tools">
+          <NDropdown trigger="click" :options="bookmarkOptions" @select="openBookmark">
+            <button type="button" class="side-more side-bookmarks" :title="'书签章节：' + work.liveBookmarks.length + ' 个，点击跳转'" aria-label="书签章节">
+              <OIcon name="star" :size="13" />
+            </button>
+          </NDropdown>
+          <button v-if="canCollapse" type="button" class="side-fold" title="收起章节栏" aria-label="收起章节栏" aria-controls="glaze-writing-directory" aria-expanded="true" @click="emit('collapse')"><OIcon name="caret-right" :size="13" style="transform:rotate(180deg)" /></button>
+        </span>
+      </div>
+      <div class="side-list">
+        <NTree
+          :data="filteredTree"
+          block-line
+          draggable
+          default-expand-all
+          :selected-keys="selectedKeys"
+          :allow-drop="allowDrop"
+          :render-suffix="renderSuffix"
+          :render-label="renderLabel"
+          :node-props="nodeProps"
+          @update:selected-keys="onSelect"
+          @dragstart="({node})=>dragging=node"
+          @dragend="dragging=null"
+          @drop="onDrop"
+        />
+      </div>
+      <p v-if="chapterQuery && !filteredTree.length" class="ct-empty">没有匹配的章节。</p>
+      <div class="side-foot">
+        <NButton class="sp-new" size="small" @click="addCh">＋ 新建章</NButton>
+        <button class="sp-ghost" type="button" @click="addVol">新建卷</button>
+      </div>
+    </template>
+
+    <NDropdown :class="[museumPopoverClass,originalOverlayClass]" :data-glaze-light="museumLight"
       trigger="manual"
       :show="ctx.show"
       :x="ctx.x"
@@ -340,10 +434,10 @@ const renameSaving=ref(false),renameComposing=ref(false)
       @clickoutside="closeCtx"
     />
 
-    <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="deleteConfirm" preset="dialog" title="确认删除" positive-text="删除" negative-text="取消" @positive-click="confirmDelete">
+    <NModal :class="[museumPopoverClass,originalOverlayClass]" :data-glaze-light="museumLight" v-model:show="deleteConfirm" preset="dialog" title="确认删除" positive-text="删除" negative-text="取消" @positive-click="confirmDelete">
       {{deleteTarget?.type==='volume'?'将删除本卷及其中章节，删除后可在回收站恢复。':'删除后可在回收站恢复。'}}
     </NModal>
-    <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" v-model:show="rename.show" preset="dialog" :title="rename.create ? '新建卷' : rename.kind === 'volume' ? '重命名卷' : '重命名章节'">
+    <NModal :class="[museumPopoverClass,originalOverlayClass]" :data-glaze-light="museumLight" v-model:show="rename.show" preset="dialog" :title="rename.create ? '新建卷' : rename.kind === 'volume' ? '重命名卷' : '重命名章节'">
       <NInput v-model:value="rename.value" :aria-label="rename.kind === 'volume' ? '卷名' : '名称'" :placeholder="rename.kind === 'volume' ? '请输入卷名' : '名称'" :disabled="renameSaving" @keydown.enter="submitRename" @compositionstart="renameComposing=true" @compositionend="renameComposing=false" />
       <template #action>
         <NButton :disabled="renameSaving" @click="rename.show = false">取消</NButton>
@@ -352,3 +446,13 @@ const renameSaving=ref(false),renameComposing=ref(false)
     </NModal>
   </div>
 </template>
+
+<style scoped>
+/* 收起章节栏：固定在面板右上角，悬停才实化；上方行留出 30px，按钮不与新建/删除按钮抢位。 */
+.chapter-collapse{position:absolute;top:8px;right:6px;z-index:4;display:grid;place-items:center;width:24px;height:24px;padding:0;border:1px solid transparent;border-radius:4px;background:transparent;color:inherit;opacity:.42;cursor:pointer;transition:opacity .16s,background .16s,border-color .16s}
+.chapter-collapse:hover,.chapter-collapse:focus-visible{opacity:1;border-color:color-mix(in srgb,currentColor 30%,transparent);background:var(--scene-hover,rgba(140,111,78,.12))}
+.collapsible .catalog-masthead{padding-right:34px}
+.side-foot{flex:none;display:flex;justify-content:flex-end;padding:6px 10px 8px}
+.side-collapse{display:inline-flex;flex:none;align-items:center;gap:5px;height:24px;padding:0 8px;border:1px solid color-mix(in srgb,currentColor 26%,transparent);border-radius:4px;background:transparent;color:inherit;font:12px/1 inherit;opacity:.62;cursor:pointer;transition:opacity .16s,background .16s}
+.side-collapse:hover,.side-collapse:focus-visible{opacity:1;background:color-mix(in srgb,currentColor 10%,transparent)}
+</style>

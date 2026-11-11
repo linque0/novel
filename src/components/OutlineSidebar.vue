@@ -190,6 +190,7 @@ onMounted(() => {
 <template>
   <div class="ol-side-root ol-paper-sidebar">
     <div class="ol-side-scroll">
+      <p v-if="ui.skin === 'original'" class="ow-directory-label">大纲 · 故事结构</p>
       <div class="ol-side-head">
         <button class="ol-book-root" type="button" title="返回全书画布" @click="home">
           <span class="ol-book-mark" aria-hidden="true"><span v-for="(c,i) in bookMark" :key="i">{{ c }}</span></span>

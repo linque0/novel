@@ -18,6 +18,18 @@ const work = useWorkStore()
 const ui = useUiStore()
 const editorEl = ref(null)
 const canvasRef = ref(null)
+const isNativePanel = new URLSearchParams(location.search).has('panel')
+const panelQuery = ref('')
+const panelMatches = computed(() => {
+  const q = panelQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return work.liveOlnodes().filter(n => [n.title, n.text, n.kind === 'anchor' ? work.chapters.find(c => c.id === n.refId)?.title : ''].filter(Boolean).join(' ').toLowerCase().includes(q))
+})
+function pickPanelNode(id) {
+  work.selOlnodeId = id
+  work.canvasFocusTick++
+  panelQuery.value = ''
+}
 /* 赤月戏：模块条上的「整理」走画布已有动作与数据 */
 function tidyCanvas() {
   canvasRef.value?.tidyAll?.()
@@ -114,7 +126,9 @@ function onCtx(e) {
 <template>
   <TaskLauncher v-if="!ui.isStudioSkin && work.outlineView !== 'canvas'" module="outline" />
   <div class="outline-surface" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
-    <div v-if="work.outlineView !== 'canvas'" class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+    <header v-if="ui.skin === 'original' && work.outlineView !== 'canvas'" class="ow-record-heading"><div><p>大纲 / {{ work.outlineView === 'canvas' ? '自由画布' : '文本视图' }}</p><h1>{{ titleValue || '故事大纲' }}</h1></div><div class="ow-record-actions"><button class="om-btn" type="button" title="撤销" :disabled="!work.olUndo.length" @click="work.olnodeUndo()">↶</button><button class="om-btn" type="button" title="重做" :disabled="!work.olRedo.length" @click="work.olnodeRedo()">↷</button><div class="ol-viewtoggle"><button type="button" :class="{ on: work.outlineView === 'text' }" @click="work.outlineView = 'text'">文本</button><button type="button" :class="{ on: work.outlineView === 'canvas' }" @click="work.outlineView = 'canvas'">画布</button></div><button class="om-btn" type="button" @click="popOutline">独立窗口 ↗</button></div></header>
+    <div v-if="ui.skin === 'original' && isNativePanel && work.outlineView !== 'canvas'" class="ow-panel-search"><input v-model="panelQuery" class="rp-input" type="search" placeholder="查找大纲模块" aria-label="查找大纲模块" /><div v-if="panelQuery.trim()" class="ow-search-results"><button v-for="n in panelMatches" :key="n.id" type="button" @click="pickPanelNode(n.id)">{{ n.title || n.text || '未命名模块' }}</button><p v-if="!panelMatches.length">没有匹配的模块</p></div></div>
+    <div v-if="work.outlineView !== 'canvas' && ui.skin !== 'original'" class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">大纲</span>
       <span style="font-size: 12px; color: var(--text-dim)">自由模块画布 · 关系链接联动 · 文本与画布双视图</span>
       <button class="om-btn" title="撤销" :disabled="!work.olUndo.length" @click="work.olnodeUndo()">↶</button>

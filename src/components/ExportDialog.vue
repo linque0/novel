@@ -3,6 +3,8 @@
 <script setup>
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
+import { useOriginalAppearance } from '../composables/useOriginalAppearance.js'
+const { originalOverlayClass } = useOriginalAppearance()
 import { computed, ref, watch } from 'vue'
 import { NModal, NButton, NCheckbox, NInputNumber } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -98,54 +100,61 @@ async function doExport() {
     return
   }
   const rows = pickedRows.value
+  if (isBulk.value && !batchMode.value) {
+    msg.warning(`选中章节数超过阈值（${threshold.value} 章），请先选择批量导出方式（合并单文件 或 按章打包 zip）`)
+    return
+  }
   busy.value = true
+  let completed = false
   try {
-    /* 大批量（超过阈值）：必须先选批量模式 */
-    if (isBulk.value && !batchMode.value) {
-      msg.warning(`选中章节数超过阈值（${threshold.value} 章），请先选择批量导出方式（合并单文件 或 按章打包 zip）`)
-      return
-    }
     if (rows.length === 1 && !isBulk.value) {
       /* 单章：以章节名导出 */
       const r = await exportSingleChapter(work.work, work.volumes, rows[0].ch, fmt.value)
+      completed = !r?.canceled
       if (!r?.canceled) msg.success(`已导出「${rows[0].ch.title || '未命名章节'}」`)
     } else if (!isBulk.value) {
       /* 多章（小批量）：按选中顺序逐章分批导出 */
       const r = await exportChapterRowsSequential(work.work, work.volumes, work.chapters, rows, fmt.value)
-      if (r.canceledAt) msg.warning(`已导出 ${r.exported} 章，在「${r.canceledAt}」处取消`)
+      completed = r.exported === rows.length && !r.canceledAt
+      if (!completed) msg.warning(`已导出 ${r.exported} 章，在「${r.canceledAt || '未命名章节'}」处取消`)
       else msg.success(`已导出 ${r.exported} 章至 ${r.dir || '所选目录'}（${fmt.value.toUpperCase()}）`)
     } else if (batchMode.value === 'merge') {
       /* 大批量合并单文件（书名命名） */
       const r = await exportBookWithFilter(work.work, work.volumes, work.chapters, fmt.value, new Set(picked.value))
+      completed = !r?.canceled
       if (!r?.canceled) msg.success(`已合并导出 ${rows.length} 章（${fmt.value.toUpperCase()}）`)
     } else {
       /* 按章逐一 + zip */
       const r = await exportRowsAsZip(work.work, rows, fmt.value)
+      completed = !r?.canceled
       if (!r?.canceled) msg.success(`已导出 zip 压缩包（${rows.length} 章 · ${fmt.value.toUpperCase()}）`)
     }
   } catch (e) {
     msg.error('导出失败：' + (e.message || e))
   } finally {
     busy.value = false
-    ui.exportOpen = false
+    if (completed) ui.exportOpen = false
   }
 }
 </script>
 
 <template>
-  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight" :show="ui.exportOpen" preset="card" title="导出正文" style="width: 520px" @update:show="(v) => (ui.exportOpen = v)">
+  <NModal :class="[museumPopoverClass, originalOverlayClass]" :data-glaze-light="museumLight" :show="ui.exportOpen" :mask-closable="!busy" :close-on-esc="!busy" :closable="!busy" preset="card" title="导出正文" style="width: 520px" @update:show="(v) => (ui.exportOpen = v)">
+    <p v-if="originalOverlayClass" class="original-dialog-note">选择需要导出的章节，按卷序与章序生成文件。已选 {{ pickedRows.length }} / {{ allIds.length }} 章。</p>
+    <fieldset class="original-export-options" :disabled="busy" style="border: 0; padding: 0; margin: 0; min-width: 0">
     <div class="exp-tree">
       <label class="exp-all">
-        <NCheckbox :checked="allOn" @update:checked="toggleAll">全选章节（{{ allIds.length }}）</NCheckbox>
+        <NCheckbox :checked="allOn" :disabled="busy" :indeterminate="picked.length > 0 && !allOn" @update:checked="toggleAll">全选章节（{{ allIds.length }}）</NCheckbox>
       </label>
       <div v-for="g in groups" :key="g.id" class="exp-group">
-        <label class="exp-vol" @click.prevent="toggleGroup(g)">
-          <NCheckbox :checked="groupOn(g)" /> {{ g.label }}（{{ g.chapters.length }}）
+        <label class="exp-vol">
+          <NCheckbox :checked="groupOn(g)" :disabled="busy" :indeterminate="!groupOn(g) && g.chapters.some(c => picked.includes(c.id))" @update:checked="toggleGroup(g)" /> {{ g.label }}（{{ g.chapters.length }}）
         </label>
         <div class="exp-chs">
           <label v-for="c in g.chapters" :key="c.id" class="exp-ch">
             <NCheckbox
               :checked="picked.includes(c.id)"
+              :disabled="busy"
               :checked-value="true"
               :unchecked-value="false"
               @update:checked="(v) => toggleCh(c.id, v)"
@@ -156,11 +165,11 @@ async function doExport() {
     </div>
     <div class="exp-fmt">
       <span class="exp-fmt-label">格式</span>
-      <span v-for="f in [
+      <button type="button" v-for="f in [
         { k: 'txt', label: 'TXT 纯文本' },
         { k: 'md', label: 'Markdown' },
         { k: 'docx', label: 'Word (docx)' }
-      ]" :key="f.k" class="om-chip" :class="{ on: fmt === f.k }" @click="fmt = f.k">{{ f.label }}</span>
+      ]" :key="f.k" class="om-chip" :class="{ on: fmt === f.k }" :aria-pressed="fmt === f.k" @click="fmt = f.k">{{ f.label }}</button>
     </div>
     <!-- 大批量导出方式（选中章节数超过阈值时出现） -->
     <div v-if="isBulk" class="exp-bulk">
@@ -168,24 +177,27 @@ async function doExport() {
         已选 {{ pickedRows.length }} 章，超过大批量阈值 {{ threshold }} 章——请选择导出方式：
       </div>
       <div class="exp-bulk-opts">
-        <div class="exp-bulk-opt" :class="{ on: batchMode === 'merge' }" @click="batchMode = 'merge'">
+        <button type="button" class="exp-bulk-opt" :class="{ on: batchMode === 'merge' }" :aria-pressed="batchMode === 'merge'" @click="batchMode = 'merge'">
           <div class="exp-bulk-name">合并为单个文件</div>
           <div class="exp-bulk-desc">全部选中章节按顺序合并为一个 {{ fmt.toUpperCase() }} 文件（书名命名）</div>
-        </div>
-        <div class="exp-bulk-opt" :class="{ on: batchMode === 'zip' }" @click="batchMode = 'zip'">
+        </button>
+        <button type="button" class="exp-bulk-opt" :class="{ on: batchMode === 'zip' }" :aria-pressed="batchMode === 'zip'" @click="batchMode = 'zip'">
           <div class="exp-bulk-name">按章打包 zip</div>
           <div class="exp-bulk-desc">每章一个 {{ fmt.toUpperCase() }} 文件（序号-章节名，按卷分目录），压缩为一个 zip</div>
-        </div>
+        </button>
       </div>
       <div class="exp-bulk-th">
         <span>大批量判定阈值</span>
-        <NInputNumber v-model:value="threshold" size="tiny" :min="2" :max="500" :step="1" style="width: 90px" @update:value="saveThreshold" />
+        <NInputNumber v-model:value="threshold" :disabled="busy" size="tiny" :min="2" :max="500" :step="1" style="width: 90px" @update:value="saveThreshold" />
         <span>章（超过即提示选择导出方式，改动即保存）</span>
       </div>
     </div>
+    </fieldset>
+    <p v-if="!allIds.length" class="original-dialog-note" role="status">当前作品没有可导出的正文，请先打开作品并创建章节。</p>
     <template #footer>
-      <div style="display: flex; justify-content: flex-end; gap: 8px">
-        <NButton size="small" @click="ui.exportOpen = false">取消</NButton>
+      <div class="original-dialog-actions" style="display: flex; justify-content: flex-end; gap: 8px">
+        <span v-if="busy" class="original-dialog-note" role="status" aria-live="polite">正在准备并导出 {{ pickedRows.length }} 章，请完成文件保存…</span>
+        <NButton size="small" :disabled="busy" @click="ui.exportOpen = false">取消</NButton>
         <NButton size="small" type="primary" :loading="busy" :disabled="!picked.length" @click="doExport">
           {{ isBulk ? (batchMode === 'zip' ? `打包 ${pickedRows.length} 章 (zip)` : batchMode === 'merge' ? `合并导出 ${pickedRows.length} 章` : `选择导出方式…`) : pickedRows.length === 1 ? `导出「${(pickedRows[0].ch.title || '未命名章节').slice(0, 10)}」` : `逐章导出 ${pickedRows.length} 章` }}
         </NButton>
@@ -243,6 +255,7 @@ async function doExport() {
   font-size: var(--fs-sm);
   color: var(--text-dim);
 }
+.exp-fmt .om-chip { background: transparent; font-family: inherit; }
 </style>
 
 <style scoped>
@@ -262,6 +275,10 @@ async function doExport() {
   gap: var(--space-2);
 }
 .exp-bulk-opt {
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  font: inherit;
   flex: 1;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);

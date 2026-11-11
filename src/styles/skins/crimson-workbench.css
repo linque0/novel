@@ -793,7 +793,8 @@ body[data-skin='crimson'] [data-module='outline'] .outline-surface > * { min-wid
 body[data-skin='crimson'] [data-module='outline'] .om-wrap { background: transparent; padding: 0 32px 18px; }
 body[data-skin='crimson'] [data-module='outline'] .oc-toolbar {
   height: 38px;
-  margin: 0 0 10px;
+  /* 工具条与画布之间不留缝：margin 露出的 10px 会透出页面底层的鎏金花纹，像一道破空隙（v1.1.8） */
+  margin: 0;
   padding: 0 10px;
   border: 1px solid #b99e614f;
   border-radius: 3px;
@@ -827,7 +828,8 @@ body[data-skin='crimson'] [data-module='outline'] .oc-note { background: #e4cba5
 body[data-skin='crimson'] [data-module='outline'] .oc-cite { background: #dce4d4; }
 body[data-skin='crimson'] [data-module='outline'] .oc-anchor { background: #eee2d9; }
 body[data-skin='crimson'] [data-module='outline'] .oc-container {
-  background: color-mix(in srgb, var(--bc, #9a8252) 6%, transparent);
+  /* 不透明纸面：容器的连线与点阵不得透出来（透明底会让穿过卡片的连线/标签看起来像显示漏洞） */
+  background: color-mix(in srgb, var(--bc, #9a8252) 6%, var(--oc-paper, #f2ead8));
   border: 1px solid var(--bc, #9a8252);
   border-radius: 12px;
   box-shadow: none;
@@ -835,7 +837,8 @@ body[data-skin='crimson'] [data-module='outline'] .oc-container {
 body[data-skin='crimson'] [data-module='outline'] .oc-textbox .oc-fulltext { color: #146878; }
 body[data-skin='crimson'] [data-module='outline'] .gv-kindrow { color: #766247; }
 body[data-skin='crimson'] [data-module='outline'] .oc-elabel { background: none; border: 0; color: #6b5a38; font-size: 12px; }
-body[data-skin='crimson'] [data-module='outline'] .om-edges path:not(.oc-edge-hit) { stroke: #956654; }
+/* 连线颜色由 rel.color / 关系类型配色决定（SVG stroke 属性），皮肤不再统一覆盖：
+   旧规则 `.om-edges path { stroke }` 会盖掉自定义色与箭头配色，导致「连线无法换色」 */
 body[data-skin='crimson'] [data-module='outline'] .oc-quick { background: #1c2926ee; color: #e9dfc6; border-color: #b99e614f; }
 
 /* 文本视图：连续叙事稿本 */

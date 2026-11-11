@@ -1,0 +1,272 @@
+/* settings-desktop.css = 桌面版专属设置页（模型设置 / 知识库模型）的隐现语言适配层。
+ * 排在 settings-fusion.css 之后引入：先有骨架（.setting-group/.setting-row/.section-title 等），
+ * 再用本层把嵌入控件自带的旧皮肤类（ai-set-* / ai-mc-* / ai-tpl-* / ai-prov-* / ai-model-* / kb-*）
+ * 映射到同一套令牌与尺寸上。
+ *
+ * 作用域：每条规则都挂在 body[data-skin=dsh] 之下，且以 .settings-shell（页面内）或
+ * .n-modal/.n-popover（AiSettings 的弹窗与模板菜单 teleport 到 body，不在外壳 DOM 里）收口；
+ * 四套旧皮肤不进入这些分支，面板窗口 SettingsWindow.vue 一字未改。
+ *
+ * 尺寸口径沿用 settings-fusion.css：11/12/13px 字号、28/34px 控件高、0.5px 分隔、10/12px 圆角。
+ * 颜色只取 --set-* 私有令牌；令牌在外壳外不继承处用 var(令牌, 同值回退) 写出 fusion 里的原值。
+ */
+
+/* ---------- 设置外壳 · 面板窗口的高度链（.sw-root 由 SettingsWindow.vue 提供，模板一字不动） ----------
+ * 面板宿主给 .sw-root 100% 高度（SettingsWindow.vue:445 height:100%;flex-direction:column）。
+ * 旧窗口的 div.sw-body（SettingsWindow.vue:252，scoped 样式 flex:1;min-height:0）与隐现工作区是同一层的
+ * 两个 flex:1 兄弟：760px 被劈成 380/380，外壳只拿到 276，1273 高的内容在 .main-pane 里被裁掉。
+ * 隐现下旧 body 整段不参与布局——它既偷走了半扇窗，又把自己默认页（SettingsWindow.vue:52 page='appearance'）
+ * 里的 .writing-paper-preview（SettingsWindow.vue:318「第一章 · 初雪」那张卡）挂在旁边。
+ * 收掉之后 .sw-root 只剩一个 flex:1 子元素，外壳拿到整窗高度，溢出交给 fusion 里已有的
+ * .content-scroll{flex:1;min-height:0;overflow:auto} 承担；这里不给外壳加 overflow:hidden，
+ * 窄屏抽屉的 .side-pane/.scrim 是 shell 内的 absolute inset:0，需要壳外的可见区域不裁剪。 */
+html body[data-skin=dsh] .sw-root{display:flex;flex-direction:column;height:100%;min-height:0}
+html body[data-skin=dsh] .sw-root > .sw-body{display:none}
+html body[data-skin=dsh] .sw-root > .settings-workspace{flex:1 1 0%;min-height:0;min-width:0}
+html body[data-skin=dsh] .settings-shell{flex:1 1 0%;min-height:0}
+
+/* ---------- 模型设置 / 知识库模型 · 页面骨架（与 .appearance-layout / .data-layout 同一留白） ---------- */
+body[data-skin=dsh] .settings-shell .desktop-layout{display:flex;flex-direction:column;padding:33px 34px 32px;min-height:100%}
+body[data-skin=dsh] .settings-shell .desktop-embed-group{max-width:1080px}
+body[data-skin=dsh] .settings-shell .desktop-embed{margin-top:14px;min-width:0}
+body[data-skin=dsh] .settings-shell .desktop-intro-row{min-height:0;padding:16px 0;flex-wrap:wrap}
+/* 分类从三项变五项：窄高度窗口里让分类列自己滚动，页脚与搜索框位置不变（三项时无视觉差异） */
+body[data-skin=dsh] .settings-shell .side-pane .category-nav{flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#91819d55 transparent}
+
+/* ---------- 模型设置 · 左栏（供应商预设；总稿 .category/.category-nav 的窄栏版本） ---------- */
+body[data-skin=dsh] .settings-shell .ai-settings{display:grid;grid-template-columns:196px minmax(0,1fr);gap:18px;align-items:start;min-width:0}
+body[data-skin=dsh] .settings-shell .ai-prov-list{border:0.5px solid var(--set-line);border-radius:12px;background:var(--set-wash);overflow:hidden;display:flex;flex-direction:column;min-width:0}
+body[data-skin=dsh] .settings-shell .ai-prov-list-head{padding:11px 12px 9px;border-bottom:0.5px solid var(--set-line);font-size:11px;color:var(--set-faint);letter-spacing:.04em}
+body[data-skin=dsh] .settings-shell .ai-prov-items{display:flex;flex-direction:column;gap:2px;padding:6px}
+body[data-skin=dsh] .settings-shell .ai-prov-item{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:7px 8px;border:0.5px solid transparent;border-radius:10px;text-align:left;font-size:13px;color:var(--set-ink)}
+body[data-skin=dsh] .settings-shell .ai-prov-item:hover{background:#ffffff08}
+body[data-skin=dsh] .settings-shell .ai-prov-item.on{background:#e6d9ef19;border-color:#ffffff12}
+body[data-skin=dsh] .settings-shell .ai-prov-item.off{color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-prov-dot{width:6px;height:6px;border-radius:50%;background:var(--set-accent);flex:none}
+body[data-skin=dsh] .settings-shell .ai-prov-item.off .ai-prov-dot{background:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-prov-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:400}
+body[data-skin=dsh] .settings-shell .ai-prov-add{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:28px;margin:6px;padding:4px 10px;border:0.5px solid #ffffff28;border-radius:999px;font-size:11px;color:var(--set-muted)}
+body[data-skin=dsh] .settings-shell .ai-prov-add:hover{background:#ffffff17}
+body[data-skin=dsh] .settings-shell .ai-prov-none,
+body[data-skin=dsh] .settings-shell .ai-prov-empty{padding:10px 12px;font-size:12px;line-height:1.85;color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-prov-empty :is(.n-button,.btn){margin-top:12px;min-height:28px;font-size:11px}
+
+/* ---------- 模型设置 · 右栏（当前预设：连接、模型列表、参数） ---------- */
+body[data-skin=dsh] .settings-shell .ai-prov-detail{display:flex;flex-direction:column;min-width:0}
+body[data-skin=dsh] .settings-shell .ai-detail-head{display:flex;align-items:center;gap:8px;padding:0 0 14px;border-bottom:0.5px solid var(--set-line)}
+body[data-skin=dsh] .settings-shell .ai-prov-ico{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:var(--set-wash);color:var(--set-muted);flex:none}
+body[data-skin=dsh] .settings-shell .ai-name-input{width:200px;flex:none}
+body[data-skin=dsh] .settings-shell .ai-name-input .n-input__input-el{font-size:13px}
+body[data-skin=dsh] .settings-shell .ai-prov-detail :is(.n-input,.n-input-number,.n-base-selection){--n-height:28px}
+body[data-skin=dsh] .settings-shell .ai-set-row{display:flex;align-items:center;gap:14px;min-height:58px;padding:12px 0;border-bottom:0.5px solid #ffffff10}
+body[data-skin=dsh] .settings-shell .ai-set-row:last-child{border-bottom:0}
+body[data-skin=dsh] .settings-shell .ai-set-row .lb{flex:none;width:84px;font-size:12px;color:var(--set-muted)}
+body[data-skin=dsh] .settings-shell .ai-set-row>.n-input,
+body[data-skin=dsh] .settings-shell .ai-set-row>.n-base-selection,
+body[data-skin=dsh] .settings-shell .ai-set-row>.n-input-number{flex:1;min-width:0}
+body[data-skin=dsh] .settings-shell .ai-set-hint{flex:none;font-size:11px;line-height:1.7;color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-set-note{padding:10px 0 0;font-size:11px;line-height:1.85;color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-models-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:20px 0 9px;font-size:13px;font-weight:500;color:var(--set-ink)}
+body[data-skin=dsh] .settings-shell .ai-models-head .lb{font-size:13px;font-weight:500;color:var(--set-ink)}
+body[data-skin=dsh] .settings-shell .ai-models-actions{display:flex;align-items:center;gap:6px;flex:none}
+body[data-skin=dsh] .settings-shell .ai-models-actions .n-button{--n-height:26px;font-size:11px}
+body[data-skin=dsh] .settings-shell .ai-params-head{padding:22px 0 6px;border-top:0.5px solid #ffffff10;margin-top:16px;font:500 13px/1.6 var(--set-serif);color:var(--set-ink)}
+body[data-skin=dsh] .settings-shell .ai-models-tip{padding-bottom:6px;font-size:11px;line-height:1.85;color:var(--set-faint)}
+
+/* ---------- 模型设置 · 模型列表（点行选用 / 开关启停 / 逐模型编辑） ---------- */
+body[data-skin=dsh] .settings-shell .ai-model-list{display:flex;flex-direction:column;border:0.5px solid var(--set-line);border-radius:12px;background:var(--set-wash);overflow:hidden}
+body[data-skin=dsh] .settings-shell .ai-model-row{display:flex;align-items:center;gap:10px;min-height:34px;padding:8px 11px;font-size:13px;border-bottom:0.5px solid #ffffff10}
+body[data-skin=dsh] .settings-shell .ai-model-row:last-child{border-bottom:0}
+body[data-skin=dsh] .settings-shell .ai-model-row:hover{background:#ffffff08}
+body[data-skin=dsh] .settings-shell .ai-model-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+body[data-skin=dsh] .settings-shell .ai-model-ctx{flex:none;font-size:11px;color:var(--set-faint);font-variant-numeric:tabular-nums}
+body[data-skin=dsh] .settings-shell :is(.ai-model-toggle,.ai-model-edit,.ai-model-del){display:inline-flex;align-items:center;justify-content:center;flex:none;width:26px;height:26px;border-radius:8px;color:var(--set-muted)}
+body[data-skin=dsh] .settings-shell :is(.ai-model-toggle,.ai-model-edit,.ai-model-del):hover{background:#ffffff14}
+body[data-skin=dsh] .settings-shell .ai-model-add{display:inline-flex;align-items:center;gap:6px;min-height:28px;font-size:11px;color:var(--set-muted)}
+body[data-skin=dsh] .settings-shell .ai-model-empty{padding:9px 11px;font-size:12px;color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-set-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:8px;padding:16px 0 4px;border-top:0.5px solid #ffffff10}
+body[data-skin=dsh] .settings-shell .ai-set-actions .n-button{--n-height:28px;font-size:11px}
+body[data-skin=dsh] .settings-shell .ai-test-result{margin-top:9px;font-size:11px;line-height:1.7;color:var(--set-muted)}
+body[data-skin=dsh] .settings-shell .ai-test-result.ok{color:var(--set-accent)}
+body[data-skin=dsh] .settings-shell .ai-test-result.fail{color:#ffbdc6}
+
+/* ---------- 模型设置 · 密钥与拉取模型（旧 .form-field 的位置） ---------- */
+body[data-skin=dsh] .settings-shell .ai-key-zone{display:flex;align-items:center;gap:8px;margin-top:12px;min-width:0}
+body[data-skin=dsh] .settings-shell .ai-key-zone :is(.n-input,.n-input-wrapper){flex:1;min-width:0}
+body[data-skin=dsh] .settings-shell .ai-key-input .n-input__input-el{font-size:12px;font-family:'Cascadia Mono',var(--set-serif),monospace}
+body[data-skin=dsh] .settings-shell .ai-fetch-title{padding-top:12px;font-size:12px;color:var(--set-muted)}
+body[data-skin=dsh] .settings-shell .ai-fetch-list{margin-top:10px;border:0.5px solid var(--set-line);border-radius:12px;background:var(--set-wash);overflow:hidden}
+body[data-skin=dsh] .settings-shell .ai-fetch-row{display:flex;align-items:center;gap:8px;min-height:34px;padding:8px 11px;font-size:12px;border-bottom:0.5px solid #ffffff10}
+body[data-skin=dsh] .settings-shell .ai-fetch-row:last-child{border-bottom:0}
+body[data-skin=dsh] .settings-shell .ai-fetch-msg{font-size:11px;color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-fetch-id{flex:none;font-size:11px;color:var(--set-faint);font-variant-numeric:tabular-nums}
+
+/* ---------- 模型设置 · 供应商模板菜单（NPopover teleport 到 body，用 .n-popover 收口） ---------- */
+body[data-skin=dsh] .n-popover .ai-tpl-menu{display:flex;flex-direction:column;gap:2px;padding:6px;min-width:230px}
+body[data-skin=dsh] .n-popover .ai-tpl-item{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;padding:8px 10px;border:0.5px solid transparent;border-radius:10px;text-align:left}
+body[data-skin=dsh] .n-popover .ai-tpl-item:hover{background:#ffffff14}
+body[data-skin=dsh] .n-popover .ai-tpl-name{font-size:12px;font-weight:400;color:var(--set-ink, #f4eef7)}
+body[data-skin=dsh] .n-popover .ai-tpl-sub{font-size:11px;line-height:1.7;color:var(--set-faint, #b5a7c2);word-break:break-all}
+
+/* ---------- 模型设置 · 逐模型编辑弹窗（NModal teleport 到 body，用 .n-modal 收口） ---------- */
+body[data-skin=dsh] .n-modal .ai-mc{display:flex;flex-direction:column;min-width:0}
+body[data-skin=dsh] .n-modal .ai-mc-name{padding-bottom:10px;font:500 13px/1.6 var(--set-serif, 'Noto Serif SC', serif);color:var(--set-ink, #f4eef7)}
+body[data-skin=dsh] .n-modal .ai-mc-prefill{margin:-4px 0 8px;font-size:11px;line-height:1.7;color:var(--set-faint, #b5a7c2)}
+body[data-skin=dsh] .n-modal .ai-mc-row{display:grid;grid-template-columns:96px minmax(0,1fr);align-items:center;gap:12px;min-height:44px;padding:7px 0;border-bottom:0.5px solid #ffffff10}
+body[data-skin=dsh] .n-modal .ai-mc-row:last-of-type{border-bottom:0}
+body[data-skin=dsh] .n-modal .ai-mc-lb{font-size:12px;color:var(--set-muted, #c9bed3)}
+body[data-skin=dsh] .n-modal .ai-mc-row :is(.n-input,.n-input-number,.n-base-selection){--n-height:28px}
+body[data-skin=dsh] .n-modal .ai-mc-hint{margin-top:10px;font-size:11px;line-height:1.85;color:var(--set-faint, #b5a7c2)}
+body[data-skin=dsh] .n-modal .ai-mc-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+body[data-skin=dsh] .n-modal .ai-mc-foot .n-button{--n-height:28px;font-size:11px}
+
+/* ---------- 知识库模型 · 跟随预设的摘要与两行设置 ---------- */
+body[data-skin=dsh] .settings-shell .kb-model{display:flex;flex-direction:column;font-size:13px;color:var(--set-ink)}
+body[data-skin=dsh] .settings-shell .kb-summary{display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:11px 13px;border:0.5px solid var(--set-line);border-radius:12px;background:var(--set-wash)}
+body[data-skin=dsh] .settings-shell .kb-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--set-muted)}
+body[data-skin=dsh] .settings-shell .kb-summary strong{font-size:13px;font-weight:500;color:var(--set-ink)}
+body[data-skin=dsh] .settings-shell .kb-summary small{flex-basis:100%;font-size:11px;line-height:1.7;color:var(--set-faint);word-break:break-all}
+body[data-skin=dsh] .settings-shell .kb-row{display:flex;align-items:center;gap:14px;min-height:58px;padding:12px 0;border-bottom:0.5px solid #ffffff10}
+body[data-skin=dsh] .settings-shell .kb-row:last-of-type{border-bottom:0}
+body[data-skin=dsh] .settings-shell .kb-lb{flex:none;width:84px;font-size:12px;color:var(--set-muted)}
+body[data-skin=dsh] .settings-shell .kb-row>:not(.kb-lb):not(.kb-hint){flex:1;min-width:0}
+body[data-skin=dsh] .settings-shell .kb-row>.n-switch{flex:none;--n-height:22px}
+body[data-skin=dsh] .settings-shell .kb-row :is(.n-input,.n-base-selection){--n-height:28px}
+body[data-skin=dsh] .settings-shell .kb-hint{flex:none;font-size:11px;line-height:1.7;color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .kb-note{margin-top:10px;font-size:11px;line-height:1.85;color:var(--set-faint);padding-left:0}
+body[data-skin=dsh] .settings-shell .kb-empty{display:flex;flex-direction:column;align-items:flex-start;gap:12px;padding:8px 0;font-size:12px;line-height:1.85;color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .kb-empty p{margin:0}
+body[data-skin=dsh] .settings-shell .kb-empty .n-button{--n-height:28px;font-size:11px}
+
+/* ---------- 窄屏（与 fusion 的 1099px 断点一致）：模型设置左栏收到上方一行 ---------- */
+/* ================= 嵌入控件 · naive-ui 的隐现化 =================
+ * components/ai/* 里的控件是 naive-ui 的 NInput / NInputNumber / NSelect / NButton / NSwitch / NTag。
+ * 它们把主题变量写成**内联 style**（naive-ui 2.45.3，es/input/src/Input.mjs:920 `style: normalizeStyle(this.cssVars)`，
+ * NConfigProvider 未开 inline-theme-disabled 时如此），所以这里重写同名变量必须带 !important——
+ * 内联声明没有 !important，作者样式的 !important 才压得住它。变量名逐个取自各自的 cssr：
+ * es/input/src/styles/input.cssr.mjs、es/_internal/selection/src/styles/index.cssr.mjs、
+ * es/button/src/styles/index.cssr.mjs、es/switch/src/styles/index.cssr.mjs、es/tag/src/styles/index.cssr.mjs。
+ * 作用域：.desktop-embed（模型设置 / 知识库模型两页）与 :has() 认出的 teleport 弹层（模板菜单 / 逐模型编辑）。
+ * 书架、正文、大纲、人物等其他隐现模块里的 naive 控件一律不受影响。
+ * 取色只用 settings-fusion.css 的 --set-* 令牌；个别必须写死的地方（#ffffff16 的开关底槽、#eee9f2 的主按钮、
+ * #2c2539 的浮层底）都是 fusion 里已有的同一批值，不是新颜色。 */
+
+/* ---- 文本 / 数字输入：玻璃底 + 0.5px 线，聚焦只换 accent 线，不出现系统蓝 ---- */
+body[data-skin=dsh] .settings-shell .desktop-embed .n-input,
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-input{
+  --n-color:var(--set-wash)!important;--n-color-focus:var(--set-wash)!important;--n-color-hover:var(--set-wash)!important;
+  --n-color-disabled:transparent!important;
+  --n-text-color:var(--set-ink)!important;--n-text-color-disabled:var(--set-faint)!important;
+  --n-placeholder-color:var(--set-faint)!important;--n-caret-color:var(--set-accent)!important;
+  --n-border:0.5px solid var(--set-line)!important;--n-border-hover:0.5px solid #ffffff28!important;
+  --n-border-focus:0.5px solid var(--set-accent)!important;--n-border-disabled:0.5px solid var(--set-line)!important;
+  --n-box-shadow-focus:none!important;
+  --n-border-radius:8px!important;--n-height:28px!important;--n-font-size:13px!important;
+  --n-padding-left:10px!important;--n-padding-right:10px!important;
+  --n-count-text-color:var(--set-faint)!important;--n-suffix-text-color:var(--set-faint)!important;
+}
+body[data-skin=dsh] .settings-shell .desktop-embed .n-input .n-input__input-el,
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-input .n-input__input-el{font-size:13px}
+body[data-skin=dsh] .settings-shell .desktop-embed :is(.n-input-number,.n-input-number .n-input),
+body[data-skin=dsh] .n-modal:has(.ai-mc) :is(.n-input-number,.n-input-number .n-input){--n-height:28px!important;--n-font-size:13px!important}
+
+/* ---- 下拉选择（API 格式 / 供应商连接） ---- */
+body[data-skin=dsh] .settings-shell .desktop-embed .n-base-selection,
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-base-selection{
+  --n-color:var(--set-wash)!important;--n-color-active:var(--set-wash)!important;
+  --n-text-color:var(--set-ink)!important;--n-placeholder-color:var(--set-faint)!important;
+  --n-border:0.5px solid var(--set-line)!important;--n-border-hover:0.5px solid #ffffff28!important;
+  --n-border-active:0.5px solid var(--set-accent)!important;--n-border-focus:0.5px solid var(--set-accent)!important;
+  --n-box-shadow-hover:none!important;--n-box-shadow-active:none!important;--n-box-shadow-focus:none!important;
+  --n-border-radius:8px!important;--n-height:28px!important;--n-font-size:13px!important;
+  --n-arrow-color:var(--set-muted)!important;--n-caret-color:var(--set-accent)!important;
+}
+body[data-skin=dsh] .settings-shell .desktop-embed .n-base-selection .n-base-selection-label{font-size:13px}
+
+/* ---- 开关：沿用 fusion 里 .switch 的 40×22 药丸、accent 开启态 ---- */
+body[data-skin=dsh] .settings-shell .desktop-embed .n-switch,
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-switch{
+  --n-rail-color:#ffffff16!important;--n-rail-color-active:var(--set-accent)!important;
+  --n-button-color:#e5dae9!important;--n-box-shadow-focus:none!important;
+  --n-rail-height:22px!important;--n-rail-width:40px!important;
+  --n-button-height:16px!important;--n-button-width:16px!important;--n-offset:3px!important;
+  --n-rail-border-radius:999px!important;--n-button-border-radius:50%!important;
+  --n-text-color:var(--set-muted)!important;
+}
+
+/* ---- 按钮：默认描边药丸；quaternary/text（复制·删除图标）改无框圆角方块；primary 用 fusion 的 .btn.primary ---- */
+body[data-skin=dsh] .settings-shell .desktop-embed .n-button,
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-button{
+  --n-height:28px!important;--n-font-size:11px!important;--n-border-radius:999px!important;
+  --n-color:var(--set-wash)!important;--n-color-hover:#ffffff14!important;--n-color-pressed:#ffffff1f!important;--n-color-focus:var(--set-wash)!important;
+  --n-text-color:var(--set-muted)!important;--n-text-color-hover:var(--set-ink)!important;--n-text-color-pressed:var(--set-ink)!important;--n-text-color-focus:var(--set-ink)!important;
+  --n-border:0.5px solid #ffffff28!important;--n-border-hover:0.5px solid #ffffff3a!important;
+  --n-border-pressed:0.5px solid #ffffff3a!important;--n-border-focus:0.5px solid #ffffff3a!important;
+  --n-box-shadow-focus:none!important;--n-ripple-color:transparent!important;
+}
+body[data-skin=dsh] .settings-shell .desktop-embed .n-button:is(.n-button--quaternary-type,.n-button--text-type),
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-button:is(.n-button--quaternary-type,.n-button--text-type){
+  --n-height:26px!important;--n-border-radius:8px!important;
+  --n-color:transparent!important;--n-color-hover:#ffffff14!important;--n-color-pressed:#ffffff1f!important;--n-color-focus:transparent!important;
+  --n-border:0 solid transparent!important;--n-border-hover:0 solid transparent!important;
+  --n-border-pressed:0 solid transparent!important;--n-border-focus:0 solid transparent!important;
+}
+body[data-skin=dsh] .settings-shell .desktop-embed .n-button:is(.n-button--primary-type),
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-button:is(.n-button--primary-type){
+  --n-color:#eee9f2!important;--n-color-hover:#fff!important;--n-color-pressed:#fff!important;--n-color-focus:#eee9f2!important;
+  --n-text-color:#302638!important;--n-text-color-hover:#302638!important;--n-text-color-pressed:#2c2539!important;--n-text-color-focus:#302638!important;
+  --n-border:0.5px solid #eee9f2!important;--n-border-hover:0.5px solid #fff!important;
+  --n-border-pressed:0.5px solid #fff!important;--n-border-focus:0.5px solid #eee9f2!important;
+}
+
+/* ---- 标签（已就绪 / 已停用）：11px 药丸，与 .kb-badge 同级 ---- */
+body[data-skin=dsh] .settings-shell .desktop-embed .n-tag,
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-tag{
+  --n-color:var(--set-wash)!important;--n-text-color:var(--set-muted)!important;
+  --n-border:0.5px solid var(--set-line)!important;--n-border-radius:999px!important;
+  --n-height:20px!important;--n-font-size:11px!important;--n-padding:0 8px!important;
+}
+
+/* ---- 旧布局残留：62/72px 左缩进、1px 实框与 accent 悬停，统一改成 latent 的 0.5px 分隔 ---- */
+body[data-skin=dsh] .settings-shell .ai-models{margin:0;padding:0;border:0;background:none;border-radius:0}
+body[data-skin=dsh] .settings-shell .ai-params-head{margin:16px 0 0}
+body[data-skin=dsh] .settings-shell .ai-model-list{gap:0}
+body[data-skin=dsh] .settings-shell .ai-model-row{border:0;border-bottom:0.5px solid #ffffff10;border-radius:0}
+body[data-skin=dsh] .settings-shell .ai-model-row.on{background:#e6d9ef19;border-bottom-color:#ffffff12}
+body[data-skin=dsh] .settings-shell .ai-model-row.on .ai-model-name{color:var(--set-ink);font-weight:500}
+body[data-skin=dsh] .settings-shell .ai-model-row.off .ai-model-name{color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-model-row :is(.ai-model-edit,.ai-model-del):hover{color:var(--set-ink)}
+body[data-skin=dsh] .settings-shell .ai-model-del:hover{color:#ffbdc6}
+body[data-skin=dsh] .settings-shell .ai-model-empty{border:0.5px dashed var(--set-line);border-radius:10px;padding:10px 11px}
+body[data-skin=dsh] .settings-shell .ai-prov-add:hover{color:var(--set-ink);border-color:#ffffff3a}
+body[data-skin=dsh] .settings-shell .ai-prov-item.on .ai-prov-nm{color:var(--set-ink);font-weight:500}
+body[data-skin=dsh] .settings-shell .ai-prov-item.off .ai-prov-nm{color:var(--set-faint)}
+body[data-skin=dsh] .settings-shell .ai-fetch-title{background:none}
+body[data-skin=dsh] .settings-shell .ai-fetch-row+.ai-fetch-row{border-top:0.5px solid #ffffff10}
+body[data-skin=dsh] .settings-shell .ai-fetch-msg{padding:7px 11px;border:0.5px solid var(--set-line);border-radius:8px;background:var(--set-wash);font-size:11px}
+body[data-skin=dsh] .settings-shell .ai-fetch-msg.ok{color:var(--set-accent)}
+body[data-skin=dsh] .settings-shell .ai-fetch-msg.fail{color:#ffbdc6}
+body[data-skin=dsh] .settings-shell .ai-test-result{padding:0;border:0;border-radius:0;background:none}
+
+/* ---- teleport 弹层：供应商模板菜单（NPopover）与逐模型编辑（NModal），用 :has() 认准是这两个 ---- */
+body[data-skin=dsh] .n-popover:has(.ai-tpl-menu){
+  --n-color:#2c2539f5!important;--n-text-color:var(--set-ink)!important;--n-border-radius:12px!important;
+}
+body[data-skin=dsh] .n-popover:has(.ai-tpl-menu) .ai-tpl-name{color:var(--set-ink)}
+body[data-skin=dsh] .n-modal:has(.ai-mc) :is(.n-card,.n-modal){
+  --n-color:#2c2539!important;--n-text-color:var(--set-ink)!important;--n-border-radius:12px!important;
+}
+body[data-skin=dsh] .n-modal:has(.ai-mc) .n-modal .ai-mc-hint,
+body[data-skin=dsh] .n-modal:has(.ai-mc) .ai-mc-hint{padding:8px 0 0;background:none;border-radius:0;color:var(--set-faint)}
+
+/* ---------- 窄屏（与 fusion 的 1099px 断点一致）：模型设置左栏收到上方一行 ---------- */
+@media(max-width:1099px){
+body[data-skin=dsh] .settings-shell .desktop-layout{padding:24px 22px 26px}
+body[data-skin=dsh] .settings-shell .ai-settings{grid-template-columns:minmax(0,1fr);gap:12px}
+body[data-skin=dsh] .settings-shell .ai-prov-items{flex-direction:row;flex-wrap:wrap}
+body[data-skin=dsh] .settings-shell .ai-prov-item{width:auto}
+body[data-skin=dsh] .settings-shell .ai-set-row{gap:10px;flex-wrap:wrap}
+body[data-skin=dsh] .settings-shell .ai-set-row .lb{width:72px}
+body[data-skin=dsh] .settings-shell .ai-set-hint{flex-basis:100%}
+body[data-skin=dsh] .n-modal .ai-mc-row{grid-template-columns:84px minmax(0,1fr)}
+}

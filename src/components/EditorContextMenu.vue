@@ -8,6 +8,7 @@ import { uid } from '../db/database'
 import { useWritingStore } from '../stores/writing.js'
 import DLinkPicker from './DLinkPicker.vue'
 
+const nsPlugin = __NS_PLUGIN__
 const props = defineProps({ editor: { type: Object, required: true } })
 const work = useWorkStore()
 const ai = useAiStore()
@@ -526,12 +527,15 @@ defineExpose({ open, close })
       <div v-if="act.dl" class="ctx-item" @click="jumpDl"><span>跳转到关系链接目标</span></div>
       <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除关系链接</span></div>
 
-      <div class="ctx-sep" />
-      <div class="ctx-item" @click="writingTask('insert')"><span>恍然梦 · 在此续写剧情</span></div>
-      <div v-if="!selEmpty()||st.savedFrom!=null" class="ctx-item" @click="writingTask('replace')"><span>恍然梦 · 改写选段</span></div>
-      <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? '发送给恍然梦（锚点为当前章节）' : AI_UNSET_HINT" @click="ai.ready && aiPlotBranch()">
-        <span>发送给恍然梦</span><span class="hint">梦</span>
-      </div>
+      <!-- 插件构建：AI 由 DSH 会话承担，这三个入口整组不渲染（组件本体保留）。 -->
+      <template v-if="!nsPlugin">
+        <div class="ctx-sep" />
+        <div class="ctx-item" @click="writingTask('insert')"><span>恍然梦 · 在此续写剧情</span></div>
+        <div v-if="!selEmpty()||st.savedFrom!=null" class="ctx-item" @click="writingTask('replace')"><span>恍然梦 · 改写选段</span></div>
+        <div class="ctx-item" :class="{ disabled: !ai.ready }" :title="ai.ready ? '发送给恍然梦（锚点为当前章节）' : AI_UNSET_HINT" @click="ai.ready && aiPlotBranch()">
+          <span>发送给恍然梦</span><span class="hint">梦</span>
+        </div>
+      </template>
 
       <div class="ctx-sep" />
       <div class="ctx-item" @click="run(() => chain().undo().run())"><span>撤销</span><span class="hint">Ctrl+Z</span></div>

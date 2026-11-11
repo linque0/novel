@@ -36,6 +36,18 @@ const focusNode = computed(() => (props.focusNodeId ? work.mubu.find((n) => n.id
 const contentRoot = computed(() => focusNode.value || work.currentMubuRoot())
 const contentRootId = computed(() => contentRoot.value?.id || null)
 const titleText = computed(() => contentRoot.value?.text || '未命名设定集')
+const isNativePanel = new URLSearchParams(location.search).has('panel')
+const panelMatches = computed(() => {
+  const q = String(ui.mubuQuery || '').trim().toLowerCase()
+  return q ? work.liveMubu().filter(n => [n.text, ...(n.tags || [])].join(' ').toLowerCase().includes(q)) : []
+})
+function pickPanelNode(node) {
+  const root = work.mubuRootOf(node.id)
+  if (root && root.id !== work.mubuSetId) work.setMubuSet(root.id)
+  ui.mubuSelectedId = node.id
+  ui.loreFocusId = node.id
+  ui.mubuQuery = ''
+}
 /* 赤月戏：模块条上的「独立窗口」与「更多 → 拆窗」同一动作 */
 function popLore() {
   popOut(work, 'lore', '', `${work.work?.title || ''} · 设定`)
@@ -913,7 +925,7 @@ onBeforeUnmount(() => {
 <template>
   <TaskLauncher v-if="!ui.isStudioSkin" module="lore" />
   <div ref="rootEl" class="lore-surface" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
-    <div class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
+    <div v-if="ui.skin !== 'original'" class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">设定</span>
       <span style="font-size: 12px; color: var(--text-dim)">幕布式自由大纲 · 所有内容皆节点</span>
       <div style="flex: 1"></div>
@@ -921,6 +933,8 @@ onBeforeUnmount(() => {
       <NButton size="tiny" @click="work.mubuFoldAll(false); ver++">全部展开</NButton>
     </div>
 
+    <header v-if="ui.skin === 'original'" class="ow-record-heading"><div><p>设定 / {{ focusNodeId ? '节点详情' : '设定集' }}</p><h1>{{ titleText }}</h1></div><div class="ow-record-actions"><NButton size="small" @click="work.mubuFoldAll(true); ver++">全部折叠</NButton><NButton size="small" @click="work.mubuFoldAll(false); ver++">全部展开</NButton><NButton size="small" @click="popLore">独立窗口 ↗</NButton></div></header>
+    <div v-if="ui.skin === 'original' && isNativePanel" class="ow-panel-search"><input v-model="ui.mubuQuery" class="rp-input" type="search" placeholder="搜索设定内容或标签" aria-label="搜索设定内容或标签" /><div v-if="ui.mubuQuery.trim()" class="ow-search-results"><button v-for="n in panelMatches" :key="n.id" type="button" @click="pickPanelNode(n)">{{ n.text || '空节点' }}</button><p v-if="!panelMatches.length">没有匹配的节点</p></div></div>
     <!-- 赤月戏：设计稿三栏——设定集目录 + 纸面树 + 悬停目录 -->
     <LoreSetRail v-if="ui.skin === 'crimson'" />
     <Teleport defer :to="barTarget" :disabled="ui.skin !== 'crimson'">
@@ -946,6 +960,7 @@ onBeforeUnmount(() => {
           <span>{{ nodeCount }} 条</span>
         </div>
       </template>
+      <div v-if="ui.skin === 'original' && contentRootId" class="ow-document-title"><label for="ow-lore-title">{{ focusNodeId ? '节点名称' : '设定集名称' }}</label><input id="ow-lore-title" class="rp-input" :value="titleText" @change="renameTitle" /><span>{{ nodeCount }} 个节点</span></div>
       <div class="ob-toolbar">
       <button class="tb" title="撤销 (Ctrl+Z)" :disabled="!undoStack.length" @click="undo()">↶</button>
       <button class="tb" title="重做 (Ctrl+Y)" :disabled="!redoStack.length" @click="redo()">↷</button>
@@ -988,6 +1003,7 @@ onBeforeUnmount(() => {
         :data-depth="row.depth"
         :data-node="row.node.key"
         :class="{
+          'ns-row-on': ui.mubuSelectedId === row.node.id,
           'drop-before': drag.hintKey === row.node.key && drag.zone === 'before',
           'drop-after': drag.hintKey === row.node.key && drag.zone === 'after',
           'drop-inside': drag.hintKey === row.node.key && drag.zone === 'inside'

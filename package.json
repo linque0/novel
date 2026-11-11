@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "concurrently -k -s first \"vite --host 127.0.0.1 --port 5173 --strictPort\" \"wait-on tcp:127.0.0.1:5173 && cross-env NOVEL_STUDIO_DEV=1 electron . --profile=dev --remote-debugging-port=9222\"",
     "build": "vite build",
+    "build:plugin": "vite build --config vite.config.plugin.mjs",
     "start": "electron .",
     "stop": "node tools/stop.mjs",
     "web": "node server.mjs --open",
@@ -29,6 +30,7 @@
     "files": [
       "dist/**/*",
       "electron/**/*",
+    "packages/novel-core/**",
       "package.json",
       "!node_modules/**",
       "node_modules/@xmldom/xmldom/**",

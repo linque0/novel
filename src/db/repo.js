@@ -4,6 +4,8 @@ import { htmlToMd, htmlToPlain } from '../services/importers'
 import { suspendProjection, resumeProjection } from './project-repo.js'
 import { readWritingPosition } from '../services/writing-position.js'
 import { resolveWritingChapter } from '../services/writing-position-core.js'
+/* 写作统计的纯计算口径（隐现皮肤用；旧皮肤 StatsModal 不受影响） */
+import { STATS_TABLES, buildWritingStats, statsDates } from '../services/writing-stats-core.js'
 
 /**
  * Repository 层：所有 Dexie 访问集中在此。
@@ -151,6 +153,61 @@ export async function addWordLog(workId, chapterId, delta) {
 
 export async function getWordLogs(workId) {
   return workId ? db.wordlog.where('workId').equals(workId).toArray() : db.wordlog.toArray()
+}
+
+/* ---------- 写作统计（隐现皮肤）：一次只读事务，按作品范围取数 ----------
+ * 概览不加载历史正文——只取 revisions 的元信息（id/归属/时间），
+ * 点开某个版本明细时才用 readWritingStatsRevision 二次校验归属并读 content。
+ * 历史日志最多回看 90 个本地日期，与 buildWritingStats 的口径一致。 */
+export async function readWritingStats(workId, days = 30) {
+  const today = todayStr()
+  const start = statsDates(today, 90)[0]
+  const source = await db.transaction('r', [...STATS_TABLES.map((name) => db.table(name)), db.revisions], async () => {
+    const works = (await db.works.toArray()).filter((w) => !w.deletedAt)
+    const selected = works.filter((w) => workId == null || w.id === workId).map((w) => w.id)
+    const tables = STATS_TABLES.filter((name) => !['works', 'wordlog'].includes(name))
+    const rows = await Promise.all(
+      tables.map((name) => (selected.length ? db.table(name).where('workId').anyOf(selected).toArray() : []))
+    )
+    const workIds = new Set(selected)
+    const wordlog = selected.length
+      ? await db.wordlog.where('date').between(start, today, true, true).filter((row) => workIds.has(row.workId)).toArray()
+      : []
+    const data = Object.fromEntries(tables.map((name, i) => [name, rows[i]]))
+    /* 版本只取归属与时间，不取 content */
+    const chapterOwners = new Map((data.chapters || []).filter((c) => !c.deletedAt).map((c) => [c.id, c.workId]))
+    const revisions = []
+    await db.revisions.where('createdAt').aboveOrEqual(new Date(start + 'T00:00:00').getTime()).each((r) => {
+      if (r.entityType === 'chapter' && chapterOwners.has(r.entityId)) {
+        revisions.push({ id: r.id, entityType: r.entityType, entityId: r.entityId, workId: chapterOwners.get(r.entityId), createdAt: r.createdAt })
+      }
+    })
+    return { works, wordlog, revisions, ...data }
+  })
+  return {
+    choices: source.works.map((w) => ({ id: w.id, label: w.title || '未命名作品' })),
+    stats: buildWritingStats(source, { workId, days, today })
+  }
+}
+
+/** 版本明细：展开时才读正文；再校验一次作品与章节归属，防止跨作品读到别人的历史 */
+export async function readWritingStatsRevision(id, workId, chapterId) {
+  return db.transaction('r', db.chapters, db.revisions, async () => {
+    const chapter = await db.chapters.get(chapterId)
+    const revision = await db.revisions.get(id)
+    if (
+      !chapter || chapter.deletedAt || chapter.workId !== workId ||
+      !revision || revision.entityType !== 'chapter' || revision.entityId !== chapterId
+    ) {
+      throw new Error('此版本已不存在或不属于当前章节')
+    }
+    return {
+      id: revision.id,
+      createdAt: revision.createdAt,
+      content: revision.content || '',
+      fmt: ['html', 'text'].includes(revision.fmt) ? revision.fmt : null
+    }
+  })
 }
 
 /* ---- 版本快照 ---- */

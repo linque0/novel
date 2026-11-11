@@ -285,6 +285,11 @@ export function planOrthogonal(a,fromSide,b,toSide,obstacles,stub,margin,context
   const ds=normal(fromSide),de=normal(toSide),obs=obstacles||[]
   if(obs.some(o=>inside(a,o)||inside(b,o))) return {pts:[a,b],status:'blocked',resolvedWaypoints:[]}
   const wanted=context.waypoints||[],resolvedWaypoints=resolvePreferences(wanted,obs,margin)
+  /* 桩段出线检验与 A* 同口径：按包围盒 +2px 皮肤（skinOf），桩端所在的卡豁免（自身端口必然贴着自身包围盒）。
+     此前只按多边形/矩形本体检验：平行四边形/菱形的斜边判定会让 18px 桩端落进邻卡包围盒皮肤里，
+     A* 起点四向全堵 → 容器迷你网格（12px 间距）所有侧向连线一律 blocked（v1.1.8 容器内外无法连线） */
+  const onStubOwner=(pt,o)=>pt.x>=o.x-EPS&&pt.x<=o.x+o.w+EPS&&pt.y>=o.y-EPS&&pt.y<=o.y+o.h+EPS
+  const skinOf=o=>({x:o.x-2,y:o.y-2,w:o.w+4,h:o.h+4})
   const stubAt=(p,d,preferred)=>{
     let n=Math.min(Math.max(stub,2),Math.max(2,dist(a,b)/3))
     if(preferred) {
@@ -292,7 +297,7 @@ export function planOrthogonal(a,fromSide,b,toSide,obstacles,stub,margin,context
       const across=(preferred.x-p.x)*d.y-(preferred.y-p.y)*d.x
       if(along>EPS&&Math.abs(across)<EPS) n=Math.min(n,along)
     }
-    while(n>.3&&!clearPath([p,{x:p.x+d.x*n,y:p.y+d.y*n}],obs)) n/=2
+    while(n>.3&&!obs.every(o=>onStubOwner(p,o)||!lineHitsObstacle(p,{x:p.x+d.x*n,y:p.y+d.y*n},skinOf(o)))) n/=2
     return n
   }
   const s=stubAt(a,ds,resolvedWaypoints[0]),e=stubAt(b,de,resolvedWaypoints.at(-1))

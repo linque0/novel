@@ -21,6 +21,7 @@ tools/_*.json
 .rev-ashes
 
 # 验收脚本临时工作目录（fixture/断言现场/诊断脚本，不入库；每次运行都会重新生成）
+# 归属：插件版（dsh）的验证产物一律落在 ../dsh-novel-studio/.tmp/novel-studio-scratch/，本目录不再留存
 .tmp-*/
 
 # 插件构建输出（与 dist 同类，不入库）

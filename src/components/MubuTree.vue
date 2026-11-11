@@ -89,15 +89,15 @@ function foldAll(v) {
 </script>
 
 <template>
-  <div style="display: flex; flex-direction: column; height: 100%">
+  <div class="mubu-catalog" style="display: flex; flex-direction: column; height: 100%">
     <div class="side-head">
-      <h2 v-if="ui.isStudioSkin" class="gravity-sidebar-title">节点层级</h2><span v-else style="font-size: 12px; color: var(--text-dim)">节点层级 · 点击定位 · 双击详情 · 右键设标签</span>
+      <h2 v-if="ui.skin === 'original'" class="ow-list-title">设定</h2><h2 v-if="ui.isStudioSkin" class="gravity-sidebar-title">节点层级</h2><span v-else-if="ui.skin !== 'original'" style="font-size: 12px; color: var(--text-dim)">节点层级 · 点击定位 · 双击详情 · 右键设标签</span>
       <div style="flex: 1"></div>
       <button class="btn-ghost" style="font-size: 11px; padding: 1px 6px" title="全部折叠" @click="foldAll(true)">▾</button>
       <button class="btn-ghost" style="font-size: 11px; padding: 1px 6px" title="全部展开" @click="foldAll(false)">▸</button>
     </div>
     <div class="side-search">
-      <input v-model="ui.mubuQuery" class="rp-input" type="text" placeholder="搜索内容或标签…" spellcheck="false" />
+      <input v-model="ui.mubuQuery" class="rp-input" type="text" placeholder="搜索内容或标签…" aria-label="搜索设定内容或标签" spellcheck="false" />
       <button v-if="q" class="side-search-clear" type="button" title="清除搜索" @click="clearQuery">×</button>
     </div>
     <div class="side-list">
@@ -165,5 +165,6 @@ function foldAll(v) {
         </p>
       </template>
     </div>
+    <p v-if="ui.skin === 'original'" class="ow-tree-help">点击定位 · 双击详情 · 右键设标签</p>
   </div>
 </template>

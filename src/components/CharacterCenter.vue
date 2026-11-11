@@ -20,6 +20,8 @@ import { rolesOf, primaryRole, aliasesOf, aliasTagEntries, splitTagString, uniqT
 const work = useWorkStore()
 const ui = useUiStore()
 const ai = useAiStore()
+/* 插件版（dsh 皮肤）没有恍然梦，人物页里的「丰富」入口一起收掉 */
+const nsPlugin = __NS_PLUGIN__
 const c = computed(() => work.activeCharacter)
 const dlMenu = ref(null)
 /* 赤月戏：档案分页与角色/别名标签编辑 */
@@ -270,7 +272,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <TaskLauncher v-if="!ui.isStudioSkin" module="characters" />
+  <TaskLauncher v-if="!ui.isStudioSkin && !nsPlugin" module="characters" />
   <!-- 赤月戏模块条：列表与关系图两种视图共用，因此放在视图分支之外 -->
   <Teleport defer to="#crimson-bar-tools" :disabled="ui.skin !== 'crimson'">
     <div v-if="ui.skin === 'crimson'" class="crimson-bar-group">
@@ -306,6 +308,8 @@ onMounted(() => {
       <p class="crimson-portrait-note"><span>{{ primaryRoleText }}</span><small>点演员表切换人物；档案、关系与字段都是真实数据。</small></p>
     </aside>
     <div v-if="c" ref="dossierEl" class="dossier-body" :class="{ 'crimson-dossier': ui.skin === 'crimson' }">
+    <header v-if="ui.skin === 'original'" class="ow-record-heading"><div><p>人物 / 人物档案</p><h1>{{ c.name || '未命名人物' }}</h1></div><div class="ow-record-actions"><NButton size="small" @click="work.sendCharToOutline(c.id)">发送为大纲引用卡</NButton><NButton size="small" @click="popCharacter">独立窗口 ↗</NButton></div></header>
+    <h2 v-if="ui.skin === 'original'" class="ow-section-label">基本信息</h2>
     <header v-if="ui.skin === 'crimson'" class="crimson-dossier-head">
       <div>
         <span>人物卷宗 / {{ String((work.liveCharacters.findIndex(x => x.id === c.id) + 1) || 1).padStart(2, '0') }}</span>
@@ -322,7 +326,7 @@ onMounted(() => {
         <h1>人物档案</h1><span>人物塑造 · 资料与关系</span>
         <div class="gravity-dossier-actions">
           <NButton size="small" @click="work.sendCharToOutline(c.id)">发送为大纲引用卡</NButton>
-          <NButton size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">✦ 丰富</NButton>
+          <NButton v-if="!nsPlugin" size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">✦ 丰富</NButton>
           <NButton size="small" quaternary type="error" @click="work.deleteCharacter(c.id)">删除</NButton>
         </div>
       </template>
@@ -338,10 +342,10 @@ onMounted(() => {
       </div>
       <div style="flex: 1; display: flex; flex-direction: column; gap: 8px">
         <div class="character-name-row" style="display: flex; gap: 8px">
-          <label v-if="ui.isStudioSkin && ui.skin !== 'crimson'" class="gravity-field-label">姓名</label>
+          <label v-if="(ui.isStudioSkin && ui.skin !== 'crimson') || ui.skin === 'original'" class="gravity-field-label">姓名</label>
           <NInput class="rp-input" :value="c.name" placeholder="姓名" style="flex: 1; font-size: 16px; font-weight: 700" @update:value="(v) => work.updateCharacter(c.id, { name: v })" />
           <template v-if="ui.skin !== 'crimson'">
-            <label v-if="ui.isStudioSkin" class="gravity-field-label">角色定位</label><NInput class="rp-input character-role" :value="c.role" placeholder="角色定位（可自定义）" style="width: 170px" @update:value="(v) => work.updateCharacter(c.id, { role: v })" />
+            <label v-if="ui.isStudioSkin || ui.skin === 'original'" class="gravity-field-label">角色定位</label><NInput class="rp-input character-role" :value="c.role" placeholder="角色定位（可自定义）" style="width: 170px" @update:value="(v) => work.updateCharacter(c.id, { role: v })" />
           </template>
         </div>
         <template v-if="ui.skin === 'crimson'">
@@ -402,7 +406,7 @@ onMounted(() => {
             >{{ r }}</span>
           </div>
           <div v-if="ui.skin === 'gravity'" class="character-alias-row gravity-character-meta-row">
-            <label v-if="ui.isStudioSkin" class="gravity-field-label">别名</label>
+            <label v-if="ui.isStudioSkin || ui.skin === 'original'" class="gravity-field-label">别名</label>
             <NInput class="rp-input" :value="c.aliases" placeholder="别名（用 / 分隔）" style="flex: 1" @update:value="(v) => work.updateCharacter(c.id, { aliases: v })" />
             <label class="gravity-field-label">标签</label>
             <div class="gravity-character-tags" aria-label="人物标签">
@@ -425,12 +429,13 @@ onMounted(() => {
             </div>
           </div>
           <div v-else class="character-alias-row" style="display: flex; gap: 8px">
-            <label v-if="ui.isStudioSkin" class="gravity-field-label">别名</label>
+            <label v-if="ui.isStudioSkin || ui.skin === 'original'" class="gravity-field-label">别名</label>
             <NInput class="rp-input" :value="c.aliases" placeholder="别名（用 / 分隔）" style="flex: 1" @update:value="(v) => work.updateCharacter(c.id, { aliases: v })" />
             <NButton size="small" @click="changeAvatar">{{ avatarUrl ? '换头像' : '设头像' }}</NButton>
-            <NButton size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">恍然梦：丰富</NButton>
+            <NButton v-if="!nsPlugin" size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">恍然梦：丰富</NButton>
             <NButton size="small" quaternary type="error" @click="work.deleteCharacter(c.id)">删除</NButton>
           </div>
+          <label v-if="ui.skin === 'original'" class="ow-field-caption">标签</label>
           <NSelect :menu-props="{ class: museumPopoverClass }"
             v-if="ui.skin !== 'gravity'"
             class="character-tag-select"
@@ -466,8 +471,8 @@ onMounted(() => {
     <div v-if="ui.skin === 'gravity'" class="gravity-section-head"><div class="rp-title">自定义字段</div><NButton size="tiny" @click="addField"><OIcon name="plus" :size="11" /> 字段</NButton></div>
     <div v-else class="rp-title">自定义字段</div>
     <div v-for="[k, v] in fieldsRows" :key="k" class="field-row">
-      <input class="rp-input" :value="k" style="width: 120px" title="点击修改字段名（失焦或回车提交）" @change="setFieldKey(k, $event.target.value.trim())" @keyup.enter="$event.target.blur()" />
-      <NInput class="rp-input" :value="v" style="flex: 1" @update:value="(v2) => setFieldValue(k, v2)" />
+      <input class="rp-input" :value="k" style="width: 120px" aria-label="自定义字段名称" title="点击修改字段名（失焦或回车提交）" @change="setFieldKey(k, $event.target.value.trim())" @keyup.enter="$event.target.blur()" />
+      <NInput class="rp-input" :value="v" :aria-label="k" style="flex: 1" @update:value="(v2) => setFieldValue(k, v2)" />
       <NButton size="tiny" quaternary @click="removeField(k)"><OIcon name="close" :size="11" /></NButton>
     </div>
     <NButton v-if="ui.skin !== 'gravity'" size="tiny" @click="addField"><OIcon name="plus" :size="11" /> 字段</NButton>
@@ -504,6 +509,8 @@ onMounted(() => {
     <div v-else class="rp-title"><template v-if="ui.isStudioSkin">人物小传 <small class="gravity-section-caption">外貌 / 性格 / 背景 / 动机</small></template><template v-else>人物小传（外貌 / 性格 / 背景 / 动机……）</template></div>
     <textarea
       class="rp-textarea"
+      aria-label="人物小传"
+      :placeholder="ui.skin === 'original' ? '写下人物的经历、性格、动机与变化…' : undefined"
       style="min-height: 220px; font-size: 14px; line-height: 1.9"
       :value="c.content"
       data-dl-token

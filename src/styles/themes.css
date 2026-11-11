@@ -3212,7 +3212,8 @@ body,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  z-index: 4;
+  /* 连线标签压在模块卡之下：穿入容器/卡片的标签不再浮在卡面上（v1.1.8） */
+  z-index: 0;
   box-shadow: var(--shadow);
 }
 .oc-eedit {

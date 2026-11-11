@@ -496,6 +496,15 @@ function cleanLocation(dir, mode) {
   return { ok: failed === 0, freed: Math.max(0, before - after), removed, failed, removedDir }
 }
 
+/* 作品库 IPC（M2）：与 DSH 插件共用 packages/novel-core 的存储语义 */
+try {
+  const { registerLibraryIpc } = require('./library-ipc')
+  const channels = registerLibraryIpc({ ipcMain, dialog, shell })
+  console.log('[library] 已注册通道：' + channels.join(', '))
+} catch (error) {
+  console.warn('[library] 作品库 IPC 注册失败：', (error && error.message) || error)
+}
+
 ipcMain.handle('data:location', () => {
   const current = app.getPath('userData')
   /* 记录里的旧位置：剔除已消失或与当前重合的条目并回写，避免记录越积越多 */

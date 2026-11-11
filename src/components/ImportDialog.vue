@@ -1,6 +1,8 @@
 <script setup>
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
+import { useOriginalAppearance } from '../composables/useOriginalAppearance.js'
+const { originalOverlayClass } = useOriginalAppearance()
 import { ref, computed } from 'vue'
 import { NModal, NButton, NInput, NRadioGroup, NRadio, NCheckbox, NTag, NAlert, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
@@ -57,6 +59,7 @@ async function choose() {
     msg.error('解析失败：' + (e?.message || e))
   } finally {
     busy.value = false
+    progress.value = ''
   }
 }
 
@@ -71,6 +74,7 @@ async function appendSections(sections) {
 async function confirmImport() {
   if (!plan.value) return
   busy.value = true
+  progress.value = '正在导入，请稍候…'
   try {
     let sections
     if (mergeOne.value) {
@@ -119,6 +123,7 @@ async function confirmImport() {
     msg.error('导入失败：' + (e?.message || e))
   } finally {
     busy.value = false
+    progress.value = ''
   }
 }
 
@@ -132,19 +137,24 @@ async function pdfToImages(d) {
     const imgs = await pdfPagesToImages(d.raw, 30, (i, n) => (progress.value = `渲染 ${i}/${n} 页`))
     for (const it of imgs) await work.addAssetBlob(it.blob, it.name)
     msg.success(`已转存 ${imgs.length} 页为图片素材`)
+  } catch (e) {
+    msg.error('转存失败：' + (e?.message || e))
   } finally {
     busy.value = false
+    progress.value = ''
   }
 }
 
 function reset() {
   plan.value = null
   mergeOne.value = false
+  progress.value = ''
 }
 </script>
 
 <template>
-  <NModal :class="museumPopoverClass" :data-glaze-light="museumLight"
+  <NModal :class="[museumPopoverClass, originalOverlayClass]" :data-glaze-light="museumLight"
+    :mask-closable="!busy" :close-on-esc="!busy" :closable="!busy"
     :show="ui.importOpen"
     preset="card"
     title="导入文件"
@@ -152,7 +162,7 @@ function reset() {
     @update:show="(v) => { ui.importOpen = v; if (!v) reset() }"
   >
     <template v-if="!plan">
-      <div style="text-align: center; padding: 18px 0">
+      <div class="ns-import-pick" style="text-align: center; padding: 18px 0">
         <NButton size="large" type="primary" :loading="busy" @click="choose">选择文件…</NButton>
         <p style="margin-top: 14px; font-size: 12px; color: var(--text-dim); line-height: 2">
           支持 TXT / Markdown / Word(.docx) / PDF / EPUB / 常见图片格式<br />
@@ -163,15 +173,16 @@ function reset() {
     </template>
 
     <template v-else>
+      <p v-if="originalOverlayClass" class="original-dialog-note">导入预览 · {{ plan.docs.length }} 个文档 / {{ flatSections.length }} 章 / {{ plan.images.length }} 张图片。确认目标后开始导入。</p>
       <div v-for="d in plan.docs" :key="d.file" style="margin-bottom: 12px">
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px">
+        <div class="original-import-file" style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px">
           <b>{{ d.file }}</b>
           <NTag size="tiny" :bordered="false">编码 {{ d.encoding }}</NTag>
           <NTag size="tiny" :bordered="false">{{ d.sections?.length || 0 }} 章</NTag>
         </div>
         <NAlert v-if="d.scanned && !d.sections?.length" type="warning" style="margin-bottom: 8px">
           该 PDF 未检测到文字层（可能是扫描件）。可转存为图片素材，OCR 识别将在后续版本提供。
-          <NButton size="tiny" style="margin-left: 8px" :disabled="!work.loaded" @click="pdfToImages(d)">按页转存为图片</NButton>
+          <NButton size="tiny" style="margin-left: 8px" :disabled="!work.loaded || busy" @click="pdfToImages(d)">按页转存为图片</NButton>
         </NAlert>
       </div>
 
@@ -195,16 +206,19 @@ function reset() {
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px">
-        <NRadioGroup v-model:value="target">
-          <NRadio v-for="o in targetOptions" :key="o.value" :value="o.value" :disabled="o.disabled">{{ o.label }}</NRadio>
+        <NRadioGroup v-model:value="target" :disabled="busy" class="original-import-target">
+          <NRadio v-for="o in targetOptions" :key="o.value" :value="o.value" :disabled="busy || o.disabled">{{ o.label }}</NRadio>
         </NRadioGroup>
-        <NInput v-if="target === 'new'" v-model:value="newTitle" placeholder="新书名" style="width: 300px" />
-        <NCheckbox v-model:checked="mergeOne" size="small">合并为单章（每个文件一章）</NCheckbox>
+        <NInput v-if="target === 'new'" v-model:value="newTitle" :disabled="busy" placeholder="新书名" aria-label="导入的新作品名称" style="width: 300px; max-width: 100%" />
+        <NCheckbox v-model:checked="mergeOne" :disabled="busy" size="small">合并为单章（每个文件一章）</NCheckbox>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 8px">
+    </template>
+    <template #footer>
+      <div v-if="plan || busy" class="original-dialog-actions" style="display: flex; justify-content: flex-end; gap: 8px">
+        <span v-if="progress" class="original-dialog-note" role="status" aria-live="polite">{{ progress }}</span>
         <NButton :disabled="busy" @click="reset">重新选择</NButton>
-        <NButton type="primary" :loading="busy" @click="confirmImport">确认导入</NButton>
+        <NButton type="primary" :loading="busy" :disabled="!plan" @click="confirmImport">确认导入</NButton>
       </div>
     </template>
   </NModal>
