@@ -2,12 +2,16 @@
 /* 外观页（总稿 app.mjs:39 appearance()）：两组设置 + 右侧预览。
  * 所有改动只走 ui.applyPref——它先写内存再落库，写库失败也保住当前选择（setPref 会 reject）。 */
 import { useUiStore } from '../../../../stores/ui'
+import { selectableSkins } from '../../../../skins/registry'
 import { CJK_FONTS, LATIN_FONTS } from './settings-prefs.js'
 import SettingsPreview from './SettingsPreview.vue'
 
 const ui = useUiStore()
 const MIN_SIZE = 13
 const MAX_SIZE = 24
+/* 皮肤选择：与顶栏 SkinPicker 同源（selectableSkins 已剔除 selector:false 的引力/琉光）。
+ * 切走即离开隐现设置页，故用 ui.setSkin——它会顺带把 settingsPage 收回默认页。 */
+const skinOptions = selectableSkins()
 
 function pick(key, value) {
   ui.applyPref(key, value)
@@ -25,11 +29,32 @@ function onRange(event) {
 function toggleTopbar() {
   ui.applyPref('topbarAutoHide', !ui.topbarAutoHide)
 }
+/* 隐现只有亮/暗两档：暗由 ui.theme === 'night' 触发（theme-latent.js 的 useLatentTheme）。
+ * 写回时保持原值口径——亮色落 'xuan'，与原版工坊等皮肤共用的 theme 键不回退成空。 */
+function toggleDark() {
+  ui.applyPref('theme', ui.theme === 'night' ? 'xuan' : 'night')
+}
 </script>
 
 <template>
   <div class="appearance-layout">
     <div class="appearance-controls">
+      <section class="setting-group">
+        <div class="section-title">
+          <h2>界面皮肤</h2>
+          <small>整个工作台的外观</small>
+        </div>
+        <div class="setting-row" data-setting="skin">
+          <div class="setting-copy">
+            <label for="setting-skin">皮肤</label>
+            <p>切换后书架、工作台与独立窗口一并生效</p>
+          </div>
+          <select id="setting-skin" class="select" data-pref="skin" aria-label="界面皮肤" :value="ui.skin" @change="ui.setSkin($event.target.value)">
+            <option v-for="skin in skinOptions" :key="skin.id" :value="skin.id">{{ skin.label }}</option>
+          </select>
+        </div>
+      </section>
+
       <section class="setting-group">
         <div class="section-title">
           <h2>文字与排版</h2>
@@ -81,6 +106,15 @@ function toggleTopbar() {
       <section class="setting-group">
         <div class="section-title">
           <h2>写作空间</h2>
+        </div>
+        <div class="setting-row" data-setting="darkMode">
+          <div class="setting-copy">
+            <strong id="darkmode-label">暗色界面</strong>
+            <p>隐现的深色外观，关闭即浅色</p>
+          </div>
+          <button type="button" class="switch" id="darkmode-switch" role="switch" aria-labelledby="darkmode-label" :aria-checked="ui.theme === 'night'" data-act="toggle-dark" @click="toggleDark">
+            <i></i>
+          </button>
         </div>
         <div class="setting-row" data-setting="topbarAutoHide">
           <div class="setting-copy">

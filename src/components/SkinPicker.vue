@@ -4,13 +4,14 @@ const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { ref } from 'vue'
 import { NSelect, useMessage } from 'naive-ui'
 import { useUiStore } from '../stores/ui'
-import { visibleSkinsForBuild } from '../skins/registry'
+import { selectableSkins } from '../skins/registry'
 
 const ui = useUiStore()
 const message = useMessage()
 const saving = ref(false)
-/* 桌面构建只列 desktop 皮肤；插件构建只列 dsh（皮肤由 installDshSkin() 强制） */
-const options = visibleSkinsForBuild().map(s => ({ label: s.label, value: s.id }))
+/* 桌面构建只列 desktop 皮肤；插件构建只列 dsh（皮肤由 installDshSkin() 强制）。
+ * 引力书舱与琉光画境以 selector:false 注册，不在选择器里露出。 */
+const options = selectableSkins().map(s => ({ label: s.label, value: s.id }))
 async function select(value) {
   saving.value = true
   try { await ui.setSkin(value) }

@@ -19,6 +19,7 @@ export const SETTINGS_PAGES = [
 export const SETTINGS_PAGE_KEYS = ['appearance', 'ai', 'knowledge', 'data', 'about']
 
 export const SETTINGS_CATALOG = [
+  { id: 'skin', page: 'appearance', title: '界面皮肤', desc: '切换书架、工作台与独立窗口的外观', terms: '皮肤 主题 外观 隐现 原版工坊 赤月戏 skin theme' },
   { id: 'editorFont', page: 'appearance', title: '中文正文字体', desc: '选择正文中的中文字形', terms: '思源宋体 文楷 京华老宋 朝华 云游 黑体 字体 font' },
   { id: 'editorLatin', page: 'appearance', title: '西文字体', desc: '英文与数字的字形搭配', terms: '英文 拉丁 Playfair Gothic 字体' },
   { id: 'fontSize', page: 'appearance', title: '正文字号', desc: '在13–24px之间调整阅读与编辑字号', terms: '大小 排版 字号 缩放' },

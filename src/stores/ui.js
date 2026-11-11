@@ -104,7 +104,7 @@ export const useUiStore = defineStore('ui', {
     agentPage: 'create',
     agentCandidateId: null,
     theme: 'xuan', // xuan 宣纸 | parchment 羊皮纸 | night 暗夜书房
-    skin: 'original',
+    skin: 'dsh', // 默认皮肤：隐现（新装首屏即见，见 skins/registry.js 的 DEFAULT_SKIN）
     glazePainting: 'sunrise', // 琉光书架首屏背景画作（gallery-art.js 的 id；默认印象·日出）
     glazeLighting: 'day', // 琉光美术馆当次会话的照明方式
     editorFont: 'song', // 中文正文（CJK_FONTS key）

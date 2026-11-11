@@ -36,15 +36,40 @@ check('registry 导出 isLatentSkin 且只认 dsh', () => {
   assert.match(registrySrc, /return value === 'dsh'/, 'isLatentSkin 判断不是 dsh')
 })
 
-check('四套旧皮肤仍在且默认回落 original', () => {
+check('四套旧皮肤仍在，默认回落隐现（dsh）', () => {
   for (const id of ['original', 'gravity', 'glaze', 'crimson']) {
     assert.ok(registrySrc.includes(`id: '${id}'`), '缺少旧皮肤 ' + id)
   }
-  /* normalizeSkin 用的是三元表达式：匹配到 'original' 这条兜底即可 */
-  assert.match(registrySrc, /normalizeSkin[\s\S]{0,200}'original'/, 'normalizeSkin 未回落 original')
+  /* 默认皮肤已改为隐现：回落值走 DEFAULT_SKIN 常量，不再字面量写 'original'。 */
+  assert.match(registrySrc, /DEFAULT_SKIN = 'dsh'/, 'DEFAULT_SKIN 不是 dsh')
+  assert.match(registrySrc, /normalizeSkin[\s\S]{0,200}: DEFAULT_SKIN/, 'normalizeSkin 未回落 DEFAULT_SKIN')
+  /* 引力书舱与琉光画境保留注册但不出现在选择器里（老存档仍可选中它们）。 */
+  for (const id of ['gravity', 'glaze']) {
+    const line = registrySrc.split('\n').find((l) => l.includes(`id: '${id}'`))
+    assert.ok(line, '缺少注册 ' + id)
+    assert.ok(line.includes('selector: false'), id + ' 应标注 selector: false')
+  }
 })
 
 /* ── 2. 主题 ── */
+check('皮肤选择器：引力/琉光隐藏，外观页提供皮肤选择', async () => {
+  /* 用真实模块判定，避免只比对源码字符串而漏掉 filter 写错的情况 */
+  const { selectableSkins } = await import('../src/skins/registry.js')
+  const ids = selectableSkins('desktop').map((s) => s.id)
+  assert.ok(ids.includes('dsh'), '选择器缺少隐现')
+  assert.ok(!ids.includes('gravity'), '引力书舱不应出现在选择器中')
+  assert.ok(!ids.includes('glaze'), '琉光画境不应出现在选择器中')
+
+  const appearance = read('src/components/skins/latent/settings/SettingsAppearance.vue')
+  assert.match(appearance, /selectableSkins/, '外观页未用 selectableSkins 取皮肤')
+  assert.match(appearance, /id="setting-skin"/, '外观页缺少皮肤选择器')
+  assert.match(appearance, /data-setting="skin"/, '外观页皮肤行缺少 data-setting')
+
+  /* 设置检索目录也要能搜到，否则用户找不到 */
+  const { searchSettings } = await import('../src/components/skins/latent/settings/settings-catalog.js')
+  assert.ok(searchSettings('皮肤').some((c) => c.id === 'skin'), '设置检索搜不到「皮肤」')
+})
+
 check('theme-latent.js 存在且导出 useLatentTheme', () => {
   assert.ok(exists('src/skins/theme-latent.js'), '缺少 theme-latent.js')
   const src = read('src/skins/theme-latent.js')
