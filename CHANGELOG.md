@@ -1,5 +1,17 @@
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-11 · 画布缺陷修复与作品库底座阶段
+
+### 大纲画布缺陷修复：容器内拖动 / 连线换色 / 显示透出（2026-11-03）
+
+- **连线无法换色**：赤月戏皮肤 `.om-edges path:not(.oc-edge-hit){stroke:#956654}` 以 CSS 覆盖 SVG `stroke` 表现属性（CSS 优先），所有连线被强制染成同一红褐色，色板自定义色、关系类型配色与箭头配色全部失效；移除该规则，连线回到 `rel.color` → `relColor(kind)` 口径，主题色复位也恢复可用。
+- **连线不能删除 / 恢复自动路径 / 塑形 / 重连 / 线连线全部静默失效**：`deleteSelectedEdge`、`resetRoute`、`startRouteAdjust`、重连命令与 `snapEndpoint` 的落线候选都把投影**分组键**（`from|to|kind`）当真实 `relId` 传给 store，`relationTransaction` 按 `rel.id` 查不到即静默失败；统一改传 `edge.rel.id`。Delete 键与工具条「删除」实测恢复。
+- **容器内外模块无法互连（路由器级）**：容器迷你网格 12px 间距下，`planOrthogonal` 的出线桩按**多边形**判定避让——平行四边形/菱形的斜边让 18px 桩端落进邻卡包围盒的 2px 皮肤里，而 A* 按**包围盒皮肤**判定、起点四向全堵 → 路由必 `blocked`；`beginConnection` 又要求 `status==='ok'` 才落库，松手后毫无反应。修复：桩段检验与 A* 同口径按包围盒皮肤（桩端所在的卡豁免），并向 12px 网格缝里穿线；同时「有候选落点即建线」——受阻连线以虚线+「路径受阻」呈现，不再静默丢弃。迷你卡 `overflow:hidden` 还裁掉了探出卡缘的锚点外半（9px 只剩 ~3px 可点），锚点收到边内整颗可点。
+- **工具条与画布之间的不自然空隙**：赤月戏 `.oc-toolbar` 的 `margin-bottom:10px` 露出页面底层鎏金花纹（workbench 里一条前缀重复的规则使 `margin:0` 从未生效）；去掉 margin，工具条与画布贴合。
+- **容器内模块无法拖动**：就地展开的迷你卡此前只有 `mousedown.stop`，没有任何拖动实现（CSS 却已给出 `cursor:grab`）。新增迷你卡拖动状态机 + 画布内层拖影（不被容器内容区裁剪）：容器内按落点重排、拖出整块展开容器回当前层（落点即新位置，只做真实重叠避让）、拖到其它容器卡/迷你容器上换组、嵌套迷你容器可上移一层；`olnodeMoveTo` 增加 `beforeId` 以支持插到第一位。双击行内编辑、编辑按钮、右键菜单、端口拖线保持原行为。
+- **显示漏洞**：赤月戏容器底色以 `transparent` 为混色基底，卡片近乎透明，穿过的连线、标签、点阵直接透出卡面；改为不透明纸面。连线标签 `z-index:4` 会浮在容器/模块卡上（如「铜印伏笔」压在容器标题与摘要上），降为 `0`，使标签与卡片重叠时被遮住、空处仍可读；标签避障改用全部卡片矩形。容器仅含便签等非事件子项时摘要误报「还没有内容」，改为「已收纳 N 个模块」。
+- **验证**：`tools/outline-mini-drag-verify.mjs` **27/27**（拖出回层/跨容器换组/嵌套上移/容器内重排/换色与主题色复位/容器不透明/摘要文案/工具条贴合/Delete 键与按钮删线/迷你卡锚点整颗可点/容器内外双向建线/行内编辑与抽屉不回归）；`outline-skin-integration-verify` 61/61、既有容器拖动回归 10/10；`canvas-routing` 57、`canvas-model` 48、`canvas-relations` 11、`outline-scope` 39、`outline-paper-size` 5、`canvas-appearance` 12；`npm run build` 通过。
+
 ### 作品库底座（M2 第一批）：主进程 IPC + 核心共享（2026-11-02）
 
 - **新增 `packages/novel-core/`**（规范源）：作品库文件存储——索引 + 实体文件 + 操作日志（journal）+ `requestId` 幂等 + `baseRevision` 前置 CAS + 跨进程短锁 + 快照/导入，零外部依赖。DSH 插件 `dsh-novel-studio` 的 `src/core/library.js` 由 `scripts/sync-core.mjs` 从这份规范源生成，两侧共用同一套存储语义。
