@@ -11,10 +11,7 @@
  *
  * 外观四项的改动一律走 ui.applyPref：先写内存、失败留 pending/dirty，可重试。 */
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
-import AppTopbar from '../../../AppTopbar.vue'
 import { useUiStore } from '../../../../stores/ui'
-import { useWorkStore } from '../../../../stores/work'
-import { WORK_NAVIGATION } from '../../../app-navigation'
 import { leaveSettings } from '../../../../services/settings-entry.js'
 import { mountFlowBackdrop } from '../../../../services/latent/flow.js'
 import { SETTINGS_PAGES, SETTINGS_PAGE_KEYS, searchSettings } from './settings-catalog.js'
@@ -35,7 +32,6 @@ const TARGET_MS = 1200
 const SCROLL_SAVE_MS = 250
 
 const ui = useUiStore()
-const work = useWorkStore()
 
 const { message, undoVisible, show: showToast, runUndo } = useSettingsToast()
 provide(SETTINGS_TOAST_KEY, { show: showToast, message, undoVisible, runUndo })
@@ -67,7 +63,6 @@ const PAGE_FOOT = {
 const breadcrumb = computed(() => (query.value ? '搜索' : PAGE_LABELS[page.value] || '关于'))
 const headTitle = computed(() => (query.value ? '搜索设置' : pageMeta.value.title))
 const footRight = computed(() => (query.value ? '快速定位工坊偏好' : PAGE_FOOT[page.value] || '小说工坊 · LATENT'))
-const saveState = computed(() => (ui.prefsSave.error ? 'error' : ui.prefsSave.pending ? 'dirty' : 'saved'))
 
 /* ---------- 界面键写回（防抖：滚动与分类切换都是高频动作） ---------- */
 let uiSaveTimer = null
@@ -212,19 +207,11 @@ async function saveNow() {
   showToast(ui.prefsSave.error || '偏好已保存')
 }
 
-/* ---------- 顶栏导航 ---------- */
-function onTopbarNavigate(key) {
-  if (key === 'settings') return
-  const navKey = WORK_NAVIGATION.some((item) => item.key === key) ? key : null
-  if (navKey && work.work) {
-    leaveSettings(ui)
-    ui.view = 'work'
-    work.tab = navKey
-    return
-  }
+/* ---------- 退出 ---------- */
+/* 设置是全屏接管：不提供书架/正文那类模块导航，退出只走右上角 × 或 Esc。
+ * 两者都交给 leaveSettings —— 它按宿主决定关面板窗口还是回主窗口原视图。 */
+function exitSettings() {
   leaveSettings(ui)
-  /* 无作品时模块键无处可去：leaveSettings 的来处可能是工作台，兜住别落在空工作台上 */
-  if (navKey && !work.work) ui.view = 'shelf'
 }
 
 /* ---------- 键盘 ---------- */
@@ -272,10 +259,16 @@ function onKeydown(event) {
   if (event.key === 'Tab' && trapActive.value && !modal) trapTab(event)
 }
 
-/* ---------- 窗口尺寸 ---------- */
+/* ---------- 窗口尺寸 ----------
+ * 宽屏下分类栏常驻展开（CSS 的 side-pane 默认可见），只有窄于 NARROW_MAX 才转成抽屉。
+ * 因此 drawer 只表示「窄屏下抽屉被手动打开」，宽屏必须让它保持 false：
+ * 否则用户把窗口拉宽后，抽屉态会残留并把 scrim 压在内容上。 */
 function onResize() {
-  narrow.value = window.innerWidth < NARROW_MAX
-  drawer.value = false
+  const nextNarrow = window.innerWidth < NARROW_MAX
+  if (nextNarrow !== narrow.value) {
+    narrow.value = nextNarrow
+    drawer.value = false
+  }
 }
 
 /* ---------- 流动背板 ----------
@@ -372,15 +365,6 @@ watch(query, () => scheduleSaveUi())
     <div class="st-layer grain"></div>
   </div>
 
-  <AppTopbar
-    active="settings"
-    :has-work="!!work.work"
-    :target-title="work.work?.title || ''"
-    :save-state="saveState"
-    :busy="false"
-    @navigate="onTopbarNavigate"
-  />
-
   <div ref="shell" class="settings-shell" :data-drawer="drawer ? 'open' : null" :data-preview="preview ? 'open' : null">
     <SettingsSidebar
       :page="page"
@@ -422,6 +406,9 @@ watch(query, () => scheduleSaveUi())
             </button>
             <button type="button" class="btn soft" data-act="reset-appearance" @click="resetOpen = true">恢复默认</button>
           </template>
+          <button type="button" class="close-settings" data-act="close-settings" title="关闭设置（Esc）" aria-label="关闭设置" @click="exitSettings">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12" /></svg>
+          </button>
         </div>
       </header>
 

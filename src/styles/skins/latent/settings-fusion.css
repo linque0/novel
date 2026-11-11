@@ -12,7 +12,12 @@ body[data-skin=dsh] .settings-shell{--set-ink:#f4eef7;--set-muted:#c9bed3;--set-
 
 /* ---------- 设置工作区 · 外壳（总稿 html,body 重置 + .workspace） ---------- */
 body[data-skin=dsh] .settings-workspace{display:flex;flex:1;flex-direction:column;min-height:0;min-width:0}
-body[data-skin=dsh] .settings-shell{position:relative;z-index:20;flex:1;min-height:0;min-width:0;margin:16px 28px 24px;display:grid;grid-template-columns:236px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:16px;color-scheme:dark;font:14px/1.65 'Microsoft YaHei','PingFang SC',sans-serif;color:var(--set-ink);-webkit-font-smoothing:antialiased}
+/* 顶栏移除后设置自成整屏：上边距比原先（16px）略放宽，避免内容顶到窗口边缘。 */
+body[data-skin=dsh] .settings-shell{position:relative;z-index:20;flex:1;min-height:0;min-width:0;margin:28px 28px 24px;display:grid;grid-template-columns:236px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:16px;color-scheme:dark;font:14px/1.65 'Microsoft YaHei','PingFang SC',sans-serif;color:var(--set-ink);-webkit-font-smoothing:antialiased}
+/* 设置不再借用应用顶栏：外壳自带右侧 × 作为与 Esc 并列的退出入口。 */
+body[data-skin=dsh] .settings-shell .close-settings{display:grid;place-items:center;flex:none;width:36px;height:36px;margin-left:6px;border:1px solid var(--set-line);border-radius:10px;color:var(--set-muted);background:transparent;cursor:pointer;transition:color .15s,background .15s,border-color .15s}
+body[data-skin=dsh] .settings-shell .close-settings:hover{color:var(--set-ink);background:var(--set-wash);border-color:rgb(255 255 255/.28)}
+body[data-skin=dsh] .settings-shell .close-settings:focus-visible{outline:2px solid var(--set-accent);outline-offset:2px}
 body[data-skin=dsh] .settings-shell,body[data-skin=dsh] .settings-shell *{box-sizing:border-box}
 body[data-skin=dsh] .settings-shell :is(button,input,select,textarea){font:inherit;color:inherit}
 body[data-skin=dsh] .settings-shell button{cursor:pointer;background:none;border:0;transition:background .16s,border-color .16s,color .16s}
@@ -272,7 +277,7 @@ body[data-skin=dsh] .settings-shell .action-row .btn{min-width:67px;padding:5px 
 /* ---------- 设置工作区 · 断点 ≤1099（总稿 @media(max-width:1099px)：外壳转 flex，分类栏成抽屉） ---------- */
 @media(max-width:1099px){
 body[data-skin=dsh] .settings-shell .page-head .breadcrumbs{display:none}
-body[data-skin=dsh] .settings-shell{margin:12px 20px 20px;display:flex;gap:0}
+body[data-skin=dsh] .settings-shell{margin:20px 18px 16px;display:flex;gap:0}
 body[data-skin=dsh] .settings-shell .main-pane{flex:1}
 body[data-skin=dsh] .settings-shell .side-pane{display:none;position:absolute;inset:0 auto 0 0;width:min(300px,100%);z-index:40;background:#2c2539f5}
 body[data-skin=dsh] .settings-shell .nav-head .icon-btn{display:inline-flex}
@@ -280,6 +285,8 @@ body[data-skin=dsh] .settings-shell[data-drawer=open] .side-pane{display:flex}
 body[data-skin=dsh] .settings-shell[data-drawer=open] .scrim{display:block;position:absolute;inset:0;z-index:30;border-radius:18px;background:#100a1e99;backdrop-filter:blur(3px)}
 body[data-skin=dsh] .settings-shell .mobile-tools{display:flex;align-items:center;gap:8px;min-width:0}
 body[data-skin=dsh] .settings-shell .mobile-tools>button{display:grid;place-items:center;flex:none;width:44px;height:44px;border:1px solid var(--set-line);border-radius:10px;color:var(--set-muted)}
+/* 窄屏下 × 跟 page-head 内的按钮统一到 44px 触达尺寸 */
+body[data-skin=dsh] .settings-shell .close-settings{width:44px;height:44px}
 body[data-skin=dsh] .settings-shell .mobile-tools>button:hover{background:var(--set-wash)}
 body[data-skin=dsh] .settings-shell .mobile-tools h1{min-width:0;overflow-wrap:anywhere}
 body[data-skin=dsh] .settings-shell .mobile-tools>button:last-child{margin-left:auto}

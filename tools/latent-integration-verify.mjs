@@ -202,6 +202,37 @@ check('迁入模块全部在位', () => {
   for (const d of dirs) assert.ok(exists(d), '缺少 ' + d)
 })
 
+check('设置界面：无应用顶栏、有 × 退出、分类栏宽屏常驻', () => {
+  const src = read('src/components/skins/latent/settings/SettingsWorkspace.vue')
+
+  /* 设置是全屏接管，不该再借用书架/正文那根顶栏 */
+  assert.ok(!/<AppTopbar/.test(src), '设置界面仍在渲染 AppTopbar')
+  assert.ok(!/onTopbarNavigate/.test(src), '仍残留顶栏导航处理')
+
+  /* 除 Esc 之外的直观退出方式 */
+  assert.match(src, /data-act="close-settings"/, '缺少右上角 × 关闭按钮')
+  assert.match(src, /function exitSettings/, '缺少 exitSettings')
+  assert.match(src, /leaveSettings\(ui\)/, '× 未走 leaveSettings')
+
+  /* 分类栏：抽屉态只在窄屏成立，宽屏必须复位，否则拉宽后遮罩残留 */
+  assert.match(src, /if \(nextNarrow !== narrow\.value\)/, 'onResize 未按断点变化复位抽屉')
+
+  /* 外观页要能切皮肤与暗色 */
+  const appearance = read('src/components/skins/latent/settings/SettingsAppearance.vue')
+  assert.match(appearance, /id="setting-skin"/, '外观页缺皮肤选择')
+})
+
+/* 插件版与桌面版共用同一套设置界面：构建配置只切 __NS_PLUGIN__ 与产物目录，
+ * 因此两版行为一致；这里守住「两版都真的产出」这一条，避免只打了一版。 */
+check('桌面版与插件版构建目标都在', () => {
+  const pkg = JSON.parse(read('package.json'))
+  assert.ok(pkg.scripts.build, '缺桌面版 build')
+  assert.ok(pkg.scripts['build:plugin'], '缺插件版 build:plugin')
+  const pluginCfg = read('vite.config.plugin.mjs')
+  assert.match(pluginCfg, /__NS_PLUGIN__/, '插件构建未定义 __NS_PLUGIN__')
+  assert.match(pluginCfg, /outDir: 'dist-plugin'/, '插件产物目录不是 dist-plugin')
+})
+
 /* ── 输出 ── */
 let failed = 0
 for (const c of checks) {
