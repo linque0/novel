@@ -1,7 +1,12 @@
+/* 【已停用 · 2026-11-12】验收页面 docs/outline-calibration-validation/ 已归档，本脚本不再运行。
+   验收结论：通过。索引见 docs/验收记录.md。
+   复跑方法：git checkout pre-cleanup-20261112 -- docs/outline-calibration-validation
+            然后从仓库根运行本脚本（依赖 ../_cdp-lib.mjs）。 */
+
 /* 大纲容器拖动回归：拖动容器时，容器本体与内部迷你卡必须按同一屏幕位移实时移动。
    连接 CDP（默认 9333）到 docs/outline-calibration-validation/ 内存页，不打开用户作品。 */
 import { mkdir, writeFile } from 'node:fs/promises'
-import { connect } from './_cdp-lib.mjs'
+import { connect } from '../_cdp-lib.mjs'
 
 const PORT = process.env.CDP_PORT || '9333'
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:5173'

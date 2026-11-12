@@ -1,6 +1,11 @@
+/* 【已停用 · 2026-11-12】验收页面 docs/outline-calibration-validation/ 已归档，本脚本不再运行。
+   验收结论：通过。索引见 docs/验收记录.md。
+   复跑方法：git checkout pre-cleanup-20261112 -- docs/outline-calibration-validation
+            然后从仓库根运行本脚本（依赖 ../_cdp-lib.mjs）。 */
+
 /* 四款皮肤共享应用顶栏：七项导航、选中、模块切换与窄窗布局回归。 */
 import { mkdir, writeFile } from 'node:fs/promises'
-import { connect } from './_cdp-lib.mjs'
+import { connect } from '../_cdp-lib.mjs'
 
 const PORT = process.env.CDP_PORT || '9333'
 const BASE = process.env.BASE_URL || 'http://127.0.0.1:5173'
