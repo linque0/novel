@@ -211,11 +211,3 @@ export async function installLibrarySync() {
   log('同步层已启用（本地写 → 库；库 → Dexie 每 ' + PULL_MS + 'ms）')
   return { enabled: true, pending: pending.length, seq: lastSeq }
 }
-
-export function librarySyncState() {
-  return { installed, seq: lastSeq, pending: pending.length, revisions: revisions.size }
-}
-
-export async function flushLibraryNow() {
-  await flush()
-}

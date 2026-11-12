@@ -54,9 +54,3 @@ export function leaveSettings(ui) {
   returnView = null
   if (ui) ui.view = target
 }
-
-/* 面板窗口的宿主关闭按钮也走 leaveSettings，把「关窗」这一件事收在一处 */
-export function resetSettingsEntry() {
-  returnView = null
-  hostBlocked = null
-}

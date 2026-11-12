@@ -6,10 +6,6 @@ export function lorePath(nodes, id) {
   while (n && !seen.has(n.id)) { seen.add(n.id); result.unshift(n); n = byId.get(n.parentId) }
   return result
 }
-export function validLoreMove(nodes, id, targetId, workId) {
-  const a = nodes.find(n => n.id === id && !n.deletedAt), b = nodes.find(n => n.id === targetId && !n.deletedAt)
-  return !!a && !!b && id !== targetId && a.workId === b.workId && (!workId || a.workId === workId) && !lorePath(nodes, targetId).some(n => n.id === id)
-}
 export function resolveLoreFocus(nodes, id, ancestors = [], workId) {
   if (!id) return null
   const live = new Set(nodes.filter(n => !n.deletedAt && (!workId || n.workId === workId)).map(n => n.id))
