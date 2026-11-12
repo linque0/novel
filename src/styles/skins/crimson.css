@@ -1,5 +1,7 @@
 /* 赤月戏（金屏夜梅）· 令牌、外壳与书架
-   视觉基线：docs/前端美化/oil-ui-v3-功能对齐/赤月剧场-书架方向对比/完整设计稿/金屏夜梅-完整设计稿
+   视觉基线：金屏夜梅-完整设计稿（原 docs/前端美化/oil-ui-v3-功能对齐/，已归档；
+   需要原稿时 git checkout pre-cleanup-20261112 -- "docs/前端美化/oil-ui-v3-功能对齐"，
+   验收结论见 docs/验收记录.md）
    书架的纸色/黛青属于「书架页」的一套纸面令牌；工作台用的是墨色 + 旧金（见 crimson-workbench.css）。 */
 
 body[data-skin='crimson'],
