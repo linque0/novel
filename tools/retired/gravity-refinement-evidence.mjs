@@ -1,3 +1,9 @@
+/* 【已停用 · 2026-11-12】依赖的验收目录已归档，脚本不再运行。
+   原因：输出到 docs/前端美化/引力书舱-优化验收/，并引用 docs/前端美化/oil-ui-v3-功能对齐/gallery/a/。
+   验收结论：通过。索引见 docs/验收记录.md。
+   复跑方法：git checkout pre-cleanup-20261112 -- "docs/前端美化/引力书舱-优化验收"
+            再把本脚本移回 tools/ 并还原相对导入路径。 */
+
 /* Local-only evidence for the gravity refinement. Run after verification. */
 import { readFileSync,writeFileSync,readdirSync,mkdirSync,copyFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'

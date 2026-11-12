@@ -1,7 +1,13 @@
+/* 【已停用 · 2026-11-12】依赖的验收目录已归档，脚本不再运行。
+   原因：输出到 docs/outline-routing-validation/（截图为校验页产物）。
+   验收结论：通过。索引见 docs/验收记录.md。
+   复跑方法：git checkout pre-cleanup-20261112 -- docs/outline-routing-validation
+            再把本脚本移回 tools/ 并还原相对导入路径。 */
+
 import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
-import { connect } from './_cdp-lib.mjs'
-import { buildSeedExpr } from './verify-seeds.mjs'
+import { connect } from '../_cdp-lib.mjs'
+import { buildSeedExpr } from '../verify-seeds.mjs'
 const c=await connect()
 const win=await c.send('Browser.getWindowForTarget')
 if(win?.windowId) await c.send('Browser.setWindowBounds',{windowId:win.windowId,bounds:{windowState:'normal'}})

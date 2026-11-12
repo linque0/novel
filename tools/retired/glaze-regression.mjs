@@ -1,3 +1,9 @@
+/* 【已停用 · 2026-11-12】依赖的验收目录已归档，脚本不再运行。
+   原因：读写 docs/前端美化/琉光画境-验收/logs/。
+   验收结论：通过。索引见 docs/验收记录.md。
+   复跑方法：git checkout pre-cleanup-20261112 -- "docs/前端美化/琉光画境-验收"
+            再把本脚本移回 tools/ 并还原相对导入路径。 */
+
 /* Start the isolated Electron profiles described in the acceptance notes first.
  * Runs only existing scoped checks; never builds/packages the app. */
 import { spawnSync } from 'node:child_process'
