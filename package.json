@@ -62,6 +62,7 @@
     ],
     "win": {
       "icon": "build/icon.ico",
+      "extraResources": [{ "from": "build/icon.ico", "to": "icon.ico" }],
       "artifactName": "novel-studio-setup-${version}.${ext}",
       "target": [
         {
@@ -79,6 +80,8 @@
       ]
     },
     "nsis": {
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "allowElevation": true,

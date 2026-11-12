@@ -9,6 +9,10 @@ import { formatShelfOpenTime } from '../../../services/shelf-sort'
 import { createCoverPainter, latentContexts } from '../../../services/latent/latent-gl.js'
 import { accentOf, cssGradientOf, hashString, paletteOf } from '../../../services/latent/palette.js'
 import { mountFlowBackdrop } from '../../../services/latent/flow.js'
+import { flowPaletteKey, resolveFlowPalette } from '../../../services/latent/flow-palette.js'
+import { useUiStore } from '../../../stores/ui'
+
+const ui = useUiStore()
 
 const props = defineProps({
   works: { type: Array, default: () => [] },
@@ -145,8 +149,9 @@ const openedText = computed(() => {
 })
 
 /* ---------- 背景：GPU 优先、退化走 CPU 底；引擎在 flow.js，主窗口各页共用同一份 ---------- */
-const reduceMotion = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-  && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+const motionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+  ? window.matchMedia('(prefers-reduced-motion: reduce)')
+  : null
 const canvasEl = ref(null)
 const flatCovers = ref(false)
 let backdrop = null
@@ -155,17 +160,15 @@ let painter = null
 function simWidth() {
   return viewWidth.value < 560 ? 320 : viewWidth.value < 900 ? 480 : 640
 }
-function paintPalette() {
-  const work = focused.value
-  if (!work) return
-  backdrop?.setPalette?.(paletteOf(work), { duration: 300, seed: (hashString(work.id) % 997) / 997 })
-  backdrop?.pulse?.(0.9)
+function onMotionChange(event) {
+  backdrop?.setReducedMotion?.(event.matches)
 }
 /* 切页回来重挂时引擎自己换画布：碰过 WebGL 的画布取不到 2D 上下文。 */
 function buildBackdrop() {
   backdrop?.dispose?.()
   backdrop = mountFlowBackdrop(canvasEl.value, {
-    reducedMotion: reduceMotion,
+    palette: resolveFlowPalette(ui.flowBackground, focused.value),
+    reducedMotion: Boolean(motionQuery?.matches),
     simWidth: simWidth(),
     maxEdge: viewWidth.value < 900 ? 1280 : 1600
   })
@@ -270,9 +273,13 @@ function latentStats() {
 watch(() => focused.value?.id, (id) => {
   emit('select-work', id ?? null)
   watchChapters(id)
-  paintPalette()
+  if (id && ui.flowBackground.mode === 'cover') backdrop?.pulse?.(0.9)
   paintCovers()
 }, { immediate: true })
+
+watch(() => flowPaletteKey(ui.flowBackground, focused.value), () => {
+  backdrop?.setPalette?.(resolveFlowPalette(ui.flowBackground, focused.value), { duration: 300 })
+})
 
 watch(() => list.value.map((w) => w.id).join('|'), () => {
   /* 离场作品的封面位图没有复用机会，跟着列表一起清掉。 */
@@ -284,10 +291,11 @@ watch(() => list.value.map((w) => w.id).join('|'), () => {
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)
   window.addEventListener('resize', onResize)
+  motionQuery?.addEventListener?.('change', onMotionChange)
   buildBackdrop()
   painter = createCoverPainter()
   flatCovers.value = !painter?.supported
-  paintPalette()
+  if (focused.value && ui.flowBackground.mode === 'cover') backdrop?.pulse?.(0.9)
   paintCovers()
   /* 首帧里玻璃牌/卡片可能还没量到最终宽度，下一帧再补一遍（命中缓存，几乎无成本）。 */
   requestAnimationFrame(() => paintCovers())
@@ -298,6 +306,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKeydown)
   window.removeEventListener('resize', onResize)
+  motionQuery?.removeEventListener?.('change', onMotionChange)
   /* 只撤自己那面旗：切到主窗口时钩子已被 Workbench 接管 */
   if (window.__nsFlowBackdrop === latentStats) delete window.__nsFlowBackdrop
   if (window.__nsLatentStats === latentStats) delete window.__nsLatentStats

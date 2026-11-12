@@ -9,11 +9,12 @@
  * 跨窗口 prefs-changed 时 installAppBus 会整体 loadPrefs（含 settings:* 四个键），
  * 若不这样，另一个窗口存过一次分类就会把本窗口的页面顶走。
  *
- * 外观四项的改动一律走 ui.applyPref：先写内存、失败留 pending/dirty，可重试。 */
+ * 外观改动一律走 ui.applyPref：先写内存、失败留 pending/dirty，可重试。 */
 import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import { useUiStore } from '../../../../stores/ui'
 import { leaveSettings } from '../../../../services/settings-entry.js'
 import { mountFlowBackdrop } from '../../../../services/latent/flow.js'
+import { flowPaletteKey, resolveFlowPalette } from '../../../../services/latent/flow-palette.js'
 import { SETTINGS_PAGES, SETTINGS_PAGE_KEYS, searchSettings } from './settings-catalog.js'
 import { SETTINGS_SAVE_ERROR, createSettingsHistory, resetAppearancePrefs } from './settings-prefs.js'
 import { SETTINGS_TOAST_KEY, useSettingsToast } from './settings-toast.js'
@@ -26,7 +27,7 @@ import SettingsDataPage from './SettingsDataPage.vue'
 import SettingsAboutPage from './SettingsAboutPage.vue'
 import SettingsDialog from './SettingsDialog.vue'
 
-const APPEARANCE_KEYS = ['editorFont', 'editorLatin', 'fontSize', 'topbarAutoHide']
+const APPEARANCE_KEYS = Object.keys(resetAppearancePrefs())
 const NARROW_MAX = 1100
 const TARGET_MS = 1200
 const SCROLL_SAVE_MS = 250
@@ -166,11 +167,11 @@ function togglePreview() {
 
 /* 恢复默认要二次确认（总稿 app.mjs:80-81）：点「恢复默认」只开弹窗，
  * 确认才 checkpoint + 写默认值——否则一次误点就把作者的字形字号全换掉。
- * 撤销窗口交给 toast：快照只存外观四项，撤销也只回写这四项，不碰作品数据。 */
+ * 撤销窗口交给 toast：只回写本次恢复默认涉及的偏好。 */
 const history = createSettingsHistory()
 const resetOpen = ref(false)
 function currentAppearance() {
-  return { editorFont: ui.editorFont, editorLatin: ui.editorLatin, fontSize: ui.fontSize, topbarAutoHide: ui.topbarAutoHide }
+  return Object.fromEntries(APPEARANCE_KEYS.map(key => [key, ui[key]]))
 }
 function resetAppearance() {
   history.checkpoint(currentAppearance())
@@ -184,8 +185,13 @@ function resetAppearance() {
         showToast('暂无可撤销的操作。')
         return
       }
-      for (const key of APPEARANCE_KEYS) if (previous[key] !== undefined) ui.applyPref(key, previous[key])
-      showToast('已撤销上一步操作。')
+      const paletteChanged = ui.flowBackground.mode !== defaults.flowBackground.mode
+        || ui.flowBackground.colors.some((color, i) => color !== defaults.flowBackground.colors[i])
+      for (const key of APPEARANCE_KEYS) {
+        if (key === 'flowBackground' && paletteChanged) continue
+        if (previous[key] !== undefined) ui.applyPref(key, previous[key])
+      }
+      showToast(paletteChanged ? '已撤销其余外观改动，保留新配色。' : '已撤销上一步操作。')
     }
   })
 }
@@ -233,7 +239,7 @@ function trapTab(event) {
   }
 }
 function onKeydown(event) {
-  if (event.isComposing || ui.statsOpen) return
+  if (event.isComposing || ui.statsOpen || ui.helpOpen) return
   const modal = dialogOpen()
   if (event.key === 'Escape' && !modal) {
     if (drawer.value) {
@@ -291,6 +297,9 @@ function flowStats() {
 function onMotionChange(event) {
   flowApi?.setReducedMotion?.(Boolean(event.matches))
 }
+watch(() => flowPaletteKey(ui.flowBackground), () => {
+  flowApi?.setPalette?.(resolveFlowPalette(ui.flowBackground), { duration: 300 })
+})
 function mountFlow() {
   const canvas = flowCanvas.value
   if (!canvas) return
@@ -298,6 +307,7 @@ function mountFlow() {
   /* 引擎起不来不该拖垮整页（PanelHost 同款兜底）：拿不到实例就保持没有底的纯平底 */
   try {
     flowApi = mountFlowBackdrop(canvas, {
+      palette: resolveFlowPalette(ui.flowBackground),
       reducedMotion: Boolean(motionQuery?.matches),
       simWidth: width < 560 ? 320 : width < 900 ? 480 : 640,
       maxEdge: width < 900 ? 1280 : 1600
@@ -434,7 +444,7 @@ watch(query, () => scheduleSaveUi())
       <!-- 弹窗挂在 main.pane 内（不是 .settings-shell 的直接子元素）：既让 .settings-shell dialog 选择器命中，
            原生 dialog 在 top-layer，不占用内容区高度。 -->
       <SettingsDialog v-model:open="resetOpen" title="恢复默认外观">
-        <p>恢复为思源宋体、跟随中文的西文字体和 17 px 字号，并关闭默认隐藏顶栏。</p>
+        <p>恢复为思源宋体、跟随中文的西文字体和 17 px 字号，关闭默认隐藏顶栏，并重置流动背景配色。</p>
         <p class="dialog-note">正文内容与作品数据会保留。</p>
         <template #footer>
           <button type="button" class="btn" data-act="dialog-close" @click="resetOpen = false">取消</button>

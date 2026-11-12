@@ -5,6 +5,7 @@ import { useUiStore } from '../../../../stores/ui'
 import { selectableSkins } from '../../../../skins/registry'
 import { CJK_FONTS, LATIN_FONTS } from './settings-prefs.js'
 import SettingsPreview from './SettingsPreview.vue'
+import SettingsFlowBackground from './SettingsFlowBackground.vue'
 
 const ui = useUiStore()
 const MIN_SIZE = 13
@@ -54,6 +55,8 @@ function toggleDark() {
           </select>
         </div>
       </section>
+
+      <SettingsFlowBackground />
 
       <section class="setting-group">
         <div class="section-title">

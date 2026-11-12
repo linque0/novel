@@ -4,6 +4,7 @@ const sharp=require('C:/Users/linque/.cache/codex-runtimes/codex-primary-runtime
 const root=path.resolve(__dirname,'..');
 async function main(){
  const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
+ for(const n of ['color','mono'])await sharp(path.join(root,`six-faction-crests-${n}.svg`)).png().toFile(path.join(root,`six-faction-crests-${n}.png`));
  const tiles=[];
  for(const s of manifest.styles){
   const dir=path.join(root,s.id);

@@ -1,12 +1,12 @@
 from pathlib import Path
 import os,sys,math,json,html
-sys.path.insert(0,str(Path(os.environ['TEMP'])/'novel-logo-fonttools'))
+sys.path.insert(0, str(Path('C:/Users/linque/.codex/visualizations/2026/10/15/01a13f94-e805-7912-835f-91fa68da993f/logo-recovery-runtime')))
 from fontTools.ttLib import TTFont
 from fontTools.pens.svgPathPen import SVGPathPen
 ROOT=Path(__file__).resolve().parents[1]
 ROOT.mkdir(parents=True,exist_ok=True)
 FONTS={
- 'song':TTFont(str(ROOT.parent/'fiction-books-v3/work/fonts/old-song.ttf')),
+ 'song':TTFont(str(ROOT/'work/fonts/old-song.ttf')),
  'sans':TTFont('C:/Windows/Fonts/msyhbd.ttc',fontNumber=0),
  'ui':TTFont('C:/Windows/Fonts/msyh.ttc',fontNumber=0),
  'roman':TTFont('C:/Windows/Fonts/times.ttf'),
@@ -45,7 +45,6 @@ def world_tree(p,detail=True):
  if detail:
   b+=L(arc(256,251,185,202,339),1.6,gold,.8)
   b+=L(arc(256,251,196,219,316),.8,green,.7)
- # Different paths on either side make the crown botanical, not heraldic wings.
  b+=P('M241 378 C255 329 243 279 213 244 C190 220 168 207 154 187 C183 196 208 216 227 226 C204 196 197 164 204 138 C213 175 232 204 250 221 C244 185 250 158 270 134 C257 179 264 213 271 244 C283 217 305 198 329 181 L349 174 C315 204 299 235 283 270 C270 299 273 341 279 378 Z M253 253 C245 278 249 305 256 326 C262 300 267 274 253 253 Z',gold)
  b+=P('M210 243 C164 253 108 229 82 194 C112 211 142 219 177 218 C143 202 121 169 121 141 C138 174 164 190 190 194 L219 223 Z',gold)
  b+=P('M281 250 C318 252 362 229 380 202 C350 219 328 222 312 218 C338 194 352 161 350 139 C342 174 319 191 298 203 Z',gold)
@@ -63,17 +62,14 @@ def world_tree(p,detail=True):
 def sealed_codex(p,detail=True):
  ivory,red,gold=p
  b=''
- # A closed volume in oblique view: no open wings or central spear.
  b+=P('M139 128 L185 145 L185 414 L139 394 Z',gold)
  b+=P('M194 144 L368 91 L368 365 L194 420 Z M226 324 L226 234 C226 208 255 181 280 164 C305 165 335 181 335 205 L335 292 L280 349 Z M208 165 L354 121 L354 353 L208 400 Z M218 174 L218 386 L344 346 L344 135 Z',red)
  b+=P('M139 117 L313 62 L368 81 L188 135 Z',ivory)
  b+=P('M199 431 L373 376 L373 389 L199 444 L139 419 L139 407 L188 427 Z',ivory)
- # The gate is cut from the cover; its thin architecture belongs to the cover.
  b+=L('M213 169 L350 127 L350 350 L213 393 Z',2.6,gold)
  b+=L('M239 309 L239 236 C239 214 260 193 280 179 C300 181 321 194 321 214 L321 281',2.7,gold)
  b+=P('M270 220 L291 214 L291 295 L280 317 L270 302 Z M279 238 L279 276 L283 274 L283 237 Z',ivory)
  b+=P('M139 188 L184 205 L184 223 L139 206 Z M139 328 L184 345 L184 363 L139 346 Z',ivory)
- # A long asymmetric bookmark and a circular seal identify the object as a codex.
  b+=P('M306 391 L329 384 L329 466 L317 452 L306 472 Z',red)
  if detail:
   b+=L('M113 166 L113 385 L128 398',1.5,gold,.8)
@@ -90,7 +86,6 @@ def sealed_codex(p,detail=True):
 def steel_nib(p,detail=True):
  silver,cyan,blue=p
  b=''
- # The dominant object is a fountain-pen nib, inside interrupted calibration rings.
  for r,a,z,w,col in [(181,-155,-53,4,silver),(181,-23,78,4,cyan),(181,112,203,4,silver),(197,-145,-57,1.2,blue),(197,16,68,1.2,blue),(162,129,194,1.5,cyan)]:
   if detail or w>=4:b+=L(arc(256,253,r,a,z),w,col)
  b+=P('M212 110 L300 110 L341 202 L256 427 L171 202 Z M256 186 A17 17 0 1 1 256 220 A17 17 0 1 1 256 186 Z M252 223 L260 223 L260 355 L256 389 L252 355 Z',silver)
@@ -117,7 +112,6 @@ def floating_pages(p,detail=True):
  if detail:
   b+=f'<ellipse cx="256" cy="253" rx="221" ry="99" transform="rotate(-29 256 253)" fill="none" stroke="{rose}" stroke-width="2.3"/>'
   b+=f'<ellipse cx="256" cy="253" rx="138" ry="178" transform="rotate(29 256 253)" fill="none" stroke="{violet}" stroke-width="1"/>'
- # A substantial open book floats with separated leaves above it.
  left='M115 208 C164 190 204 199 244 226 L244 321 C204 295 163 287 115 303 Z'
  if detail:left+=' M140 231 C172 225 199 231 222 244 L222 252 C196 240 171 235 140 240 Z M140 257 C172 251 199 257 222 270 L222 278 C196 266 171 261 140 266 Z'
  b+=P(left,ivory)
@@ -137,16 +131,13 @@ def floating_pages(p,detail=True):
 
 def ember_quill(p,detail=True):
  ivory,ember,crimson=p
- # A single large diagonal plume, drawn as a continuous serrated silhouette.
  vane='M129 335 C145 246 200 155 294 95 C337 68 375 50 417 27 C406 78 393 115 365 148 L394 132 C375 176 348 201 313 223 L338 211 C316 253 283 276 247 291 L264 287 C223 318 184 332 149 343 Z'
  if detail:
   vane+=' M173 286 C224 240 281 202 338 151 C287 213 231 263 173 295 Z M204 221 C242 187 288 156 330 124 C287 169 246 202 204 230 Z M251 163 C281 138 319 114 354 92 C322 124 290 148 251 172 Z'
  b=P(vane,ember)
  b+=P('M129 335 C145 247 197 157 288 99 C259 143 228 196 204 246 C183 288 170 316 149 343 Z',crimson)
- # A fine light shaft separates the red inner vane and gold outer vane.
  b+=P('M63 454 C143 348 244 232 380 79 C283 230 185 354 79 462 Z M111 407 L123 398 L301 191 L283 209 Z',ivory)
  b+=P('M63 454 L79 462 L54 486 Z',ember)
- # One sweeping ink stroke replaces a circular or symmetrical frame.
  b+=P('M96 359 C56 389 70 427 111 435 C154 444 180 415 209 406 C248 392 282 406 289 431 C296 456 270 472 251 459 C240 451 245 437 256 438 C246 452 268 458 273 443 C282 418 249 406 223 418 C192 432 158 467 112 455 C53 443 35 392 96 359 Z',crimson)
  if detail:
   b+=L('M168 361 C213 330 265 311 310 300',1.6,ember)
@@ -158,14 +149,11 @@ def ember_quill(p,detail=True):
 def crystal_tree(p,detail=True):
  ice,blue,lilac=p
  b=''
- # A tall, asymmetrical faceted crown, with suspended angular roots.
  if detail:
   b+=L('M256 26 L413 183 L354 371 L256 487 L98 329 L102 182 Z',1.3,blue)
   b+=L('M256 44 L390 182 L336 361 L256 463',1,ice,.6)
- # Branches have hard orthogonal joints, unlike the organic world-tree.
  b+=P('M243 307 L243 224 L196 187 L168 132 L183 121 L209 175 L256 207 L298 157 L342 144 L350 159 L313 171 L270 229 L270 307 Z',ice)
  b+=P('M243 255 L195 252 L143 211 L152 196 L201 233 L243 235 Z M270 270 L306 229 L349 214 L360 226 L316 244 L270 295 Z',blue)
- # Separate crystal leaves make a stepped triangular canopy.
  crystals=[(169,97,56,18,-24),(203,134,49,17,23),(246,86,74,21,6),(294,116,65,18,37),(346,103,72,21,47),(380,167,58,19,64),(134,183,62,20,-43),(192,211,43,15,-29),(319,199,50,17,37)]
  for i,(x,y,h,w,a) in enumerate(crystals):
   if not detail and i in [1,7,8]:continue
@@ -233,11 +221,11 @@ def board(mono=False):
  return SVG(b,2400,1940,'小说工坊 · 六版'+('单色' if mono else '彩色')+'势力徽记')
 (ROOT/'six-faction-crests-color.svg').write_text(board(),encoding='utf8')
 (ROOT/'six-faction-crests-mono.svg').write_text(board(True),encoding='utf8')
-manifest={'styles':[{k:v for k,v in s.items() if k!='fn'} for s in STYLES],'assets':assets,'method':'Original SVG paths; outlined lettering; flat color; no embedded rasters.'}
+manifest={'styles':[{k:v for k,v in s.items() if k!='fn'} for s in STYLES],'assets':assets,'method':'Restored from the chat source: original SVG paths; outlined lettering; flat color; no embedded rasters.'}
 (ROOT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf8')
-(ROOT/'设计说明.md').write_text('''# 小说工坊 · 六种势力徽记 V5
+(ROOT/'设计说明.md').write_text('''# 小说工坊 · 六种势力徽记 V5（恢复版）
 
-本轮重新设计相似的前两版，并将方案拓展为六种。以树、书、笔各两个方向分配主体，每个方案保持一种明确的主要意象。名称仅用于区分设计方向，正式品牌仍为「小说工坊」。
+恢复日期：2026-11-05。根据本聊天保留的最终源稿恢复六版彩色徽记，保留原有图形路径、配色、字体版本与排版。
 
 | 方案 | 核心元素 | 轮廓与构图 | 配色 |
 | --- | --- | --- | --- |
@@ -248,8 +236,10 @@ manifest={'styles':[{k:v for k,v in s.items() if k!='fn'} for s in STYLES],'asse
 | 赤翎裁序 | 笔 | 单支斜向羽笔、长弧墨迹 | 赤金、胭脂红、纸白 |
 | 悬根之树 | 树 | 硬折晶体树冠、下垂悬根、菱形框架 | 冰白、靛蓝、丁香紫 |
 
-每套提供彩色、单白、单黑与简化徽记，中文组合 Logo、满版与圆角应用图标及简化图标。所有 SVG 为真实可编辑路径，文字均已转曲；未使用位图嵌入或自动描摹。配色使用纯色填充。完整徽记用于较大尺寸的品牌展示，极小尺寸图标可在选定方向后继续提炼。
+每套提供彩色、单白、单黑与简化徽记，中文组合 Logo、满版与圆角应用图标及简化图标。所有 SVG 为可编辑矢量路径，文字均已转曲；未嵌入位图。字体文件不属于素材包的必要依赖，SVG 无需安装字体即可显示。
 
-将 SVG 拖入 Figma 即可编辑。PNG 为透明徽记或应用预览；ICO 内含多档尺寸。源脚本位于 work/，字体不随压缩包分发。彩色与单色总览用于检查轮廓差异，单色版保留相同构图。
+将 SVG 拖入 Figma 即可编辑。PNG 提供透明徽记和应用图标；ICO 包含 16、24、32、48、64、128、256px 七档尺寸。完整徽记适合较大尺寸展示，极小尺寸图标可在选定方向后继续提炼。
+
+work/ 内保留恢复后的生成、导出和打包脚本。恢复字体为作者站点提供的京華老宋体 v3.0，版本与旧源稿一致；来源记录位于 work/fonts/source.json。设计名称仅用于区分方案，正式品牌名仍为「小说工坊」。
 ''',encoding='utf8')
 print(json.dumps({'root':str(ROOT),'svg_assets':len(assets),'styles':len(STYLES)},ensure_ascii=False))

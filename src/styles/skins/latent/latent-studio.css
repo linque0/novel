@@ -177,8 +177,8 @@ html body[data-skin='dsh'] .latent-studio .app-topbar .app-topbar-brand-text sma
   opacity: .7;
   color: var(--ls-ink-3);
 }
-.latent-studio .app-topbar .app-topbar-mark,
-html body[data-skin='dsh'] .latent-studio .app-topbar .app-topbar-mark {
+.latent-studio .app-topbar .app-topbar-mark:not(.desktop-brand-mark),
+html body[data-skin='dsh'] .latent-studio .app-topbar .app-topbar-mark:not(.desktop-brand-mark) {
   display: none;
 }
 

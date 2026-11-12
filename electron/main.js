@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, protocol, shell, clipboard, safeSto
 const path = require('path')
 const fs = require('fs')
 const panels = require('./panels')
+const { windowIconPath } = require('./window-icon.cjs')
 
 const isDev = !!process.env.NOVEL_STUDIO_DEV || process.argv.includes('--dev')
 
@@ -197,6 +198,7 @@ function createWindow() {
     height: 880,
     minWidth: 1080,
     minHeight: 680,
+    icon: windowIconPath(),
     backgroundColor: '#f6f2e7',
     title: '小说工坊' + (profileName ? ' · ' + profileName : ''),
     autoHideMenuBar: true,

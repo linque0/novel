@@ -5,6 +5,7 @@ import AutoHideTopbar from './AutoHideTopbar.vue'
 import { useUiStore } from '../stores/ui'
 import { SKINS, isLatentSkin } from '../skins/registry'
 import { APP_NAVIGATION } from './app-navigation'
+import { desktopSmallIcon } from '../services/desktop-brand.js'
 import DreamModeEntries from './agent/DreamModeEntries.vue'
 /* 隐现皮肤顶栏右簇的统计圆钮（与插件版同一个组件） */
 import WritingStatsEntry from './skins/latent/stats/WritingStatsEntry.vue'
@@ -81,8 +82,9 @@ watch(() => [props.active, ui.skin], async () => {
   <AutoHideTopbar class="app-topbar-shell" :auto-hide="ui.topbarAutoHide" @update:auto-hide="value => ui.setPref('topbarAutoHide', value)">
     <header class="app-topbar">
       <button type="button" class="app-topbar-brand" title="返回书架" aria-label="小说工坊，返回书架" :disabled="busy" @click="navigate('shelf')">
-        <span class="app-topbar-mark" aria-hidden="true">
+        <span class="app-topbar-mark" :class="{ 'desktop-brand-mark': !nsPlugin && ui.skin !== 'crimson' }" aria-hidden="true">
           <svg v-if="ui.skin === 'crimson'" viewBox="0 0 44 44"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
+          <img v-else-if="!nsPlugin" :src="desktopSmallIcon" width="36" height="36" alt="" />
           <template v-else>坊</template>
         </span>
         <span class="app-topbar-brand-text">小说工坊<small>{{ brandSuffix }}</small></span>
@@ -149,6 +151,7 @@ body[data-skin] .app-topbar .app-topbar-brand {
 }
 .app-topbar-mark { display:grid; place-items:center; width:38px; height:38px; border:1px solid var(--topbar-line); border-radius:10px; color:var(--topbar-accent); font:24px var(--topbar-font); }
 .app-topbar-mark svg { width:38px; height:38px; fill:none; stroke:currentColor; stroke-width:1.1; }
+.app-topbar-mark img { display:block; width:100%; height:100%; object-fit:contain; }
 body[data-skin='crimson'] .app-topbar-mark { border:0; }
 .app-topbar-brand-text { letter-spacing:2px; }
 body[data-skin] .app-topbar-brand-text small { display:block; margin-top:5px; color:var(--topbar-muted); font:11px/1 var(--topbar-font); letter-spacing:2px; }

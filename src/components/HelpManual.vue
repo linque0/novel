@@ -9,6 +9,7 @@ import { computed } from 'vue'
 import { NModal, NButton } from 'naive-ui'
 import { useUiStore } from '../stores/ui'
 import { marked } from 'marked'
+import { APP_VERSION } from './skins/latent/settings/settings-version.js'
 import manual from '../../docs/使用手册.md?raw'
 
 const ui = useUiStore()
@@ -19,14 +20,14 @@ const html = computed(() => marked.parse(manual, { async: false }))
   <NModal :class="[museumPopoverClass, originalOverlayClass]" :data-glaze-light="museumLight" :show="ui.helpOpen" preset="card" class="help-modal" style="width: 780px; max-width: 92vw" @update:show="(v) => (ui.helpOpen = v)">
     <template #header>
       <div class="m-head">
-        <span class="cn">使用手册</span>
+        <span class="cn">小说工坊桌面版使用手册</span>
         <span class="en">Manual&nbsp;·&nbsp;Novel&nbsp;Studio</span>
       </div>
     </template>
     <div class="help-body" v-html="html"></div>
     <template #footer>
       <div class="m-foot">
-        <span class="colophon">小说工坊 · 本地优先 · 手册与源码同源打包</span>
+        <span class="colophon">小说工坊桌面版 · v{{ APP_VERSION }}</span>
         <NButton size="small" @click="ui.helpOpen = false">关闭</NButton>
       </div>
     </template>
