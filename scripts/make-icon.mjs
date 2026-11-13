@@ -1,5 +1,5 @@
 /* 同步品牌图标：把设计稿 docs/logo/faction-v5-six/02-sealed-codex 的成品
- * 复制成 electron-builder 读取的 build/icon.ico 与 build/icon.png。
+ * 复制透明底徽记为 electron-builder 读取的 build/icon.ico 与 build/icon.png。
  *
  * 历史上这里是用代码现画一个开卷占位图，成品视觉与品牌稿对不上；
  * 现改为以设计稿为唯一来源——别再改回画图，改图请改设计稿再跑本脚本。 */
@@ -13,8 +13,8 @@ const srcDir = join(root, 'docs/logo/faction-v5-six/02-sealed-codex')
 const outDir = join(root, 'build')
 
 const SOURCES = [
-  ['app-icon.ico', 'icon.ico'], // electron-builder win.icon（含 16–256 七档尺寸）
-  ['app-icon-1024.png', 'icon.png'], // 备用/其他打包目标
+  ['emblem-color.ico', 'icon.ico'], // 透明底 Windows 图标（含 16–256 七档尺寸）
+  ['emblem-color-1024.png', 'icon.png'], // 关于页及其他打包目标
 ]
 
 mkdirSync(outDir, { recursive: true })

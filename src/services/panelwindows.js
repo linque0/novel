@@ -16,7 +16,7 @@ const ownSpec = (() => {
   const [type = '', workId = '', entityId = ''] = raw.split(':')
   return type && workId ? { type, workId, entityId } : null
 })()
-let ownKey = ownSpec ? keyOf(ownSpec.workId, ownSpec.type, ownSpec.entityId) : null
+const ownKey = ref(ownSpec ? keyOf(ownSpec.workId, ownSpec.type, ownSpec.entityId) : null)
 
 function ensureListen() {
   if (listening || !window.native?.panelOnEvent) return
@@ -46,7 +46,7 @@ export function isPopped(work, type, entityId) {
   if (!work?.work) return false
   ensureListen()
   const k = keyOf(work.work.id, type, entityId)
-  if (k === ownKey || `${work.work.id}:${type}:*` === ownKey) return false
+  if (k === ownKey.value || `${work.work.id}:${type}:*` === ownKey.value) return false
   const m = popped.value
   if (m.has(k)) return true
   // 模块级面板（entityId 为空）覆盖该模块全部实体
@@ -60,7 +60,7 @@ export function isPopped(work, type, entityId) {
 export async function panelSetEntity(work, type, entityId) {
   if (!ownSpec || !window.native?.panelSetEntity) return { ok: false }
   const r = await window.native.panelSetEntity(entityId || '')
-  if (r?.ok && work?.work) ownKey = keyOf(work.work.id, type, entityId)
+  if (r?.ok && work?.work) ownKey.value = keyOf(work.work.id, type, entityId)
   return r
 }
 

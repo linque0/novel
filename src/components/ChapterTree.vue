@@ -10,10 +10,13 @@ import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { autosave } from '../services/autosave'
 import { isLatentSkin } from '../skins/registry'
+import { useChapterSort } from '../composables/useChapterSort'
 
 const chapterQuery=ref('')
 const work = useWorkStore()
 const ui = useUiStore()
+const chapterList = ref(null)
+const chapterSort = useChapterSort(chapterList, work, chapterQuery)
 const props=defineProps({inPanel:Boolean,navigationOnly:Boolean})
 const emit=defineEmits(['read','window','collapse'])
 const canCollapse=computed(()=>!props.inPanel&&!props.navigationOnly)
@@ -55,6 +58,26 @@ const filteredTree = computed(() => {
   return out
 })
 
+// NTree 的 default-expand-all 会随 data 重算，显式保留用户折叠的卷。
+const collapsedVolumes = ref(new Set())
+const searchExpandedKeys = ref(null)
+const expandedKeys = computed(() => {
+  const keys = treeData.value.map((volume) => volume.key)
+  if (chapterQuery.value.trim()) return searchExpandedKeys.value ?? keys
+  return keys.filter((key) => !collapsedVolumes.value.has(key))
+})
+watch(chapterQuery, () => { searchExpandedKeys.value = null }, { flush: 'sync' })
+watch(() => work.work?.id, () => { collapsedVolumes.value = new Set() })
+function onExpanded(keys, _options, { node, action }) {
+  if (chapterQuery.value.trim()) {
+    searchExpandedKeys.value = keys
+  } else if (action === 'collapse') {
+    collapsedVolumes.value.add(node.key)
+  } else if (action === 'expand') {
+    collapsedVolumes.value.delete(node.key)
+  }
+}
+
 const selectedKeys = computed(() => {
   const keys = []
   if (work.selChapterId) keys.push('c:' + work.selChapterId)
@@ -89,40 +112,25 @@ const allowDrop = ({ dragNode, node, dropPosition }) => {
   // Naive UI's allowDrop callback supplies the target, not the drag source.
   const source=dragNode||dragging.value
   if(!source)return false
-  if (source.type === 'volume') return node.type === 'volume' && dropPosition !== 'inside' && !!node.id /* 「未分卷」伪节点无 id，不参与卷排序 */
-  return dropPosition === 'inside' ? node.type === 'volume' : true
+  return source.type === 'volume' && node.type === 'volume' && dropPosition !== 'inside' && !!node.id
 }
 
 function onDrop({ node, dragNode, dropPosition }) {
-  if (!dragNode) return
-  if (dragNode.type === 'volume') {
-    if (node.type !== 'volume' || dropPosition === 'inside' || !node.id) return
-    const ids = work.liveVolumes.map((v) => v.id)
-    const from = ids.indexOf(dragNode.id)
-    if (from < 0) return
-    ids.splice(from, 1)
-    let to = ids.indexOf(node.id)
-    if (dropPosition === 'after') to += 1
-    ids.splice(to, 0, dragNode.id)
-    ids.forEach((id, i) => {
-      const v = work.volumes.find((x) => x.id === id)
-      if (v && v.sortOrder !== i * 1000) {
-        v.sortOrder = i * 1000
-        autosave.mark('volumes', v)
-      }
-    })
-    return
-  }
-  const cid = dragNode.id
-  if (dropPosition === 'inside') {
-    /* 「未分卷」伪节点无 id → 按 orphans 语义移入未分卷 */
-    work.moveChapterTo(cid, node.id ?? 'orphans', 'inside')
-  } else if (node.type === 'chapter') {
-    const target = work.chapters.find((c) => c.id === node.id)
-    work.moveChapterTo(cid, target?.volumeId ?? null, dropPosition, node.id)
-  } else {
-    work.moveChapterTo(cid, node.id, 'inside')
-  }
+  if (dragNode?.type !== 'volume' || node.type !== 'volume' || dropPosition === 'inside' || !node.id) return
+  const ids = work.liveVolumes.map((v) => v.id)
+  const from = ids.indexOf(dragNode.id)
+  if (from < 0) return
+  ids.splice(from, 1)
+  let to = ids.indexOf(node.id)
+  if (dropPosition === 'after') to += 1
+  ids.splice(to, 0, dragNode.id)
+  ids.forEach((id, i) => {
+    const v = work.volumes.find((x) => x.id === id)
+    if (v && v.sortOrder !== i * 1000) {
+      v.sortOrder = i * 1000
+      autosave.mark('volumes', v)
+    }
+  })
 }
 
 const renderSuffix = ({ option }) =>
@@ -268,6 +276,8 @@ const ctx = ref({ show: false, x: 0, y: 0, kind: null, id: null, bookmarked: fal
 
 function nodeProps({ option }) {
   return {
+    'data-chapter-sort-chapter': option.type === 'chapter' ? option.id : undefined,
+    'data-chapter-sort-volume': option.type === 'volume' ? option.id ?? 'orphans' : undefined,
     ...((scene.value||originalActive.value)?{'data-chapter-id':option.type==='chapter'?option.key.slice(2):undefined,'data-volume-id':option.type==='volume'?option.key.slice(2):undefined}:{}),
     onContextmenu: (e) => {
       e.preventDefault()
@@ -348,20 +358,21 @@ const renameSaving=ref(false),renameComposing=ref(false)
         删除后可在回收站恢复
       </NPopconfirm>
     </div>
-    <div class="side-list">
+    <div ref="chapterList" class="side-list" @pointerdown="chapterSort.pointerDown" @dragstart.capture="chapterSort.nativeDrag" @click.capture="chapterSort.click">
       <NTree
         :data="treeData"
         :pattern="originalActive ? chapterQuery : ''"
         :show-irrelevant-nodes="!originalActive"
         block-line
         draggable
-        default-expand-all
+        :expanded-keys="expandedKeys"
         :selected-keys="selectedKeys"
         :allow-drop="allowDrop"
         :render-suffix="renderSuffix"
         :render-label="renderLabel"
         :node-props="nodeProps"
         @update:selected-keys="onSelect"
+        @update:expanded-keys="onExpanded"
         @dragstart="({node})=>dragging=node"
         @dragend="dragging=null"
         @drop="onDrop"
@@ -399,18 +410,19 @@ const renameSaving=ref(false),renameComposing=ref(false)
           <button v-if="canCollapse" type="button" class="side-fold" title="收起章节栏" aria-label="收起章节栏" aria-controls="glaze-writing-directory" aria-expanded="true" @click="emit('collapse')"><OIcon name="caret-right" :size="13" style="transform:rotate(180deg)" /></button>
         </span>
       </div>
-      <div class="side-list">
+      <div ref="chapterList" class="side-list" @pointerdown="chapterSort.pointerDown" @dragstart.capture="chapterSort.nativeDrag" @click.capture="chapterSort.click">
         <NTree
           :data="filteredTree"
           block-line
           draggable
-          default-expand-all
+          :expanded-keys="expandedKeys"
           :selected-keys="selectedKeys"
           :allow-drop="allowDrop"
           :render-suffix="renderSuffix"
           :render-label="renderLabel"
           :node-props="nodeProps"
           @update:selected-keys="onSelect"
+          @update:expanded-keys="onExpanded"
           @dragstart="({node})=>dragging=node"
           @dragend="dragging=null"
           @drop="onDrop"

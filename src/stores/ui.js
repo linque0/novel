@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { db } from '../db/database'
 import { broadcastAppEvent } from '../services/appbus'
 import { normalizeSkin, isStudioSkin } from '../skins/registry'
+import { normalizeFlowBackground } from '../services/latent/flow-palette.js'
 import {normalizeWritingPaper,saveWritingPaperPreference} from '../services/writing-paper.js'
 import { paintingById } from '../services/gallery-art.js'
 import { createGlazePaintingPreference } from '../services/glaze-painting-preference.js'
@@ -63,6 +64,7 @@ function snippetsFor(store) {
    也永远对不上自己写下的那条。统一改用稳定的 store.$id。 */
 const paintingManagers = new Map()
 const preferenceLoads = new Map()
+const flowPreferenceWrites = new WeakMap()
 const pendingPaintingReloads = new Set()
 function paintingManager(ui) {
   const storeId=ui.$id
@@ -114,6 +116,7 @@ export const useUiStore = defineStore('ui', {
     writingPaperSaving: false,
     sideWidth: 252, // 侧栏宽度（180–480，右缘拖拽调节，appconfig 记忆）
     topbarAutoHide: false, // 顶栏默认隐藏（跨窗口持久化，悬停临时展开）
+    flowBackground: normalizeFlowBackground(),
     outlineLeftWidth: 220, // 隐现大纲左栏宽度（故事结构）
     outlineRightWidth: 318, // 隐现大纲右栏宽度（节点详情）
     outlineDetailOpen: true, // 隐现大纲节点详情开合
@@ -228,6 +231,7 @@ export const useUiStore = defineStore('ui', {
       preferenceLoads.set(storeId, load)
       const manager = paintingManager(this)
       const paintingRevision = manager.revision
+      const flowBackgroundAtLoad = this.flowBackground
       try {
         const rows = await db.appconfig.toArray()
         if (preferenceLoads.get(storeId) !== load) return
@@ -242,6 +246,9 @@ export const useUiStore = defineStore('ui', {
         this.writingPaperStyle = normalizeWritingPaper(map.writingPaperStyle)
         if (map.sideWidth) this.sideWidth = Math.min(480, Math.max(180, Number(map.sideWidth) || 252))
         if (map.topbarAutoHide !== undefined) this.topbarAutoHide = map.topbarAutoHide === true
+        if (!flowPreferenceWrites.has(this.$state) && !this.prefsDirty.flowBackground && this.flowBackground === flowBackgroundAtLoad) {
+          this.flowBackground = normalizeFlowBackground(map.flowBackground)
+        }
         this.outlineLeftWidth = normalizeOutlineWidth('left', map.outlineLeftWidth)
         this.outlineRightWidth = normalizeOutlineWidth('right', map.outlineRightWidth)
         if (map.outlineDetailOpen !== undefined) this.outlineDetailOpen = !!map.outlineDetailOpen
@@ -475,19 +482,32 @@ export const useUiStore = defineStore('ui', {
        写不进库也要保住当前选择并给出一条能重试的说明。所以这里先写内存再落库，
        失败不抛出、也不广播——广播会让其他窗口采纳一个根本没进库的值。 */
     async applyPref(key, value) {
+      const isFlow = key === 'flowBackground'
+      if (isFlow) value = normalizeFlowBackground(value)
       this[key] = value
+      const current = this[key]
+      // 自身也会收到偏好广播。在写入或等待重试期间，旧库值不能覆盖正在预览的颜色。
+      if (isFlow) {
+        flowPreferenceWrites.set(this.$state, current)
+        delete this.prefsDirty[key]
+      }
       try {
         await db.appconfig.put({ key, value: plainPref(value) })
       } catch {
+        if (isFlow && this[key] !== current) return false
         this.prefsSave.pending = true
         this.prefsSave.error = SETTINGS_SAVE_ERROR
         this.prefsDirty[key] = value
         return false
+      } finally {
+        if (isFlow && flowPreferenceWrites.get(this.$state) === current) flowPreferenceWrites.delete(this.$state)
       }
-      this.prefsSave.pending = false
-      this.prefsSave.error = ''
+      if (!isFlow || this[key] === current) delete this.prefsDirty[key]
+      if (!Object.keys(this.prefsDirty).length) {
+        this.prefsSave.pending = false
+        this.prefsSave.error = ''
+      }
       this.prefsSave.at = Date.now()
-      delete this.prefsDirty[key]
       broadcastAppEvent('prefs-changed')
       return true
     },
@@ -495,23 +515,22 @@ export const useUiStore = defineStore('ui', {
     async retryPrefs() {
       const keys = Object.keys(this.prefsDirty)
       if (!keys.length) return !this.prefsSave.pending
-      let recovered = true
+      let wrote = false
       for (const key of keys) {
+        if (!Object.hasOwn(this.prefsDirty, key)) continue
+        const pending = this.prefsDirty[key]
         try {
-          await db.appconfig.put({ key, value: plainPref(this.prefsDirty[key]) })
-          delete this.prefsDirty[key]
-        } catch {
-          recovered = false
-        }
+          await db.appconfig.put({ key, value: plainPref(pending) })
+          wrote = true
+          if (this.prefsDirty[key] === pending) delete this.prefsDirty[key]
+        } catch { /* 当前值仍在 dirty 中；被新改动替换的旧值无需再重试。 */ }
       }
-      if (recovered) {
-        this.prefsSave.pending = false
-        this.prefsSave.error = ''
+      const recovered = !Object.keys(this.prefsDirty).length
+      this.prefsSave.pending = !recovered
+      this.prefsSave.error = recovered ? '' : SETTINGS_SAVE_ERROR
+      if (wrote) {
         this.prefsSave.at = Date.now()
         broadcastAppEvent('prefs-changed')
-      } else {
-        this.prefsSave.pending = true
-        this.prefsSave.error = SETTINGS_SAVE_ERROR
       }
       return recovered
     },

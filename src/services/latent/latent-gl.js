@@ -3,6 +3,8 @@
    Paper 原版用 #version 300 es，这里改写成 GLSL 100 以兼容 WebGL1/2；控制点轨迹、distortion、
    swirl、1/d^3.5 权重、Bayer 表与像素化保持原样。 */
 
+import { DEFAULT_FLOW_PALETTE } from './flow-palette.js'
+
 const VERT = [
   'attribute vec2 aPos;',
   'varying vec2 v_uv;',
@@ -296,9 +298,8 @@ export function createLatentBackdrop(canvas, options = {}) {
     return { supported: false, reason: 'shader-error', shaderLog }
   }
 
-  const DEFAULT_PALETTE = { a: [0.18, 0.22, 0.5], b: [0.85, 0.4, 0.35], c: [0.06, 0.07, 0.16] }
-  let from = { ...DEFAULT_PALETTE }
-  let to = { ...DEFAULT_PALETTE }
+  let from = DEFAULT_FLOW_PALETTE
+  let to = DEFAULT_FLOW_PALETTE
   let blendStart = 0
   let blendDuration = 0
   let energy = 0
@@ -343,7 +344,9 @@ export function createLatentBackdrop(canvas, options = {}) {
       gl.viewport(0, 0, width, height)
       ensureTarget(gl, state, width, height)
       gl.bindFramebuffer(gl.FRAMEBUFFER, null)
+      return true
     }
+    return false
   }
 
   function draw(now) {
@@ -351,13 +354,15 @@ export function createLatentBackdrop(canvas, options = {}) {
     const dt = Math.min(64, now - lastFrame)
     lastFrame = now
 
-    frameTimes.push(dt)
-    if (frameTimes.length > 60) frameTimes.shift()
-    if (frameTimes.length === 60) {
-      const average = frameTimes.reduce((sum, value) => sum + value, 0) / 60
-      avgFrameMs = Number(average.toFixed(2))
-      if (average > 22 && scaleIndex < settings.scales.length - 1) { scaleIndex += 1; frameTimes = []; resize() }
-      else if (average < 12 && scaleIndex > 0) { scaleIndex -= 1; frameTimes = []; resize() }
+    if (running) {
+      frameTimes.push(dt)
+      if (frameTimes.length > 60) frameTimes.shift()
+      if (frameTimes.length === 60) {
+        const average = frameTimes.reduce((sum, value) => sum + value, 0) / 60
+        avgFrameMs = Number(average.toFixed(2))
+        if (average > 22 && scaleIndex < settings.scales.length - 1) { scaleIndex += 1; frameTimes = []; resize() }
+        else if (average < 12 && scaleIndex > 0) { scaleIndex -= 1; frameTimes = []; resize() }
+      }
     }
 
     if (!reducedMotion) time += dt / 1000
@@ -410,13 +415,13 @@ export function createLatentBackdrop(canvas, options = {}) {
     gl.uniform1f(du('u_mix'), pixelMix * 0.62)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
 
-    raf = requestAnimationFrame(draw)
+    if (running) raf = requestAnimationFrame(draw)
   }
 
-  function start() { if (running || disposed || contextLost) return; running = true; lastFrame = performance.now(); raf = requestAnimationFrame(draw) }
+  function start() { if (running || disposed || contextLost || reducedMotion || document.hidden) return; running = true; lastFrame = performance.now(); raf = requestAnimationFrame(draw) }
   function stop() { running = false; cancelAnimationFrame(raf) }
 
-  const onResize = () => resize()
+  const onResize = () => { if (resize() && !running) draw(performance.now()) }
   /* 三档栏宽切换与窗口高度变化都绕不过父容器，只挂 window resize 会漏掉容器自身的变化。 */
   const parent = canvas.parentElement
   const observer = typeof ResizeObserver === 'function' && parent ? new ResizeObserver(onResize) : null
@@ -434,7 +439,8 @@ export function createLatentBackdrop(canvas, options = {}) {
   canvas.addEventListener('webglcontextlost', onContextLost, false)
 
   resize()
-  if (!reducedMotion) start(); else draw(performance.now())
+  start()
+  if (!running) draw(performance.now())
 
   return {
     supported: true,
@@ -451,14 +457,23 @@ export function createLatentBackdrop(canvas, options = {}) {
       }
       to = { a: [...palette.a], b: [...palette.b], c: [...palette.c] }
       /* 相位保持不变：跳相位会让整屏图案"闪"一下 */
-      blendDuration = Math.max(0, opts.duration ?? 750)
+      blendDuration = running ? Math.max(0, opts.duration ?? 750) : 0
       blendStart = now
       if (!running) draw(blendStart)
     },
     pulse(strength = 1) { energyTarget = Math.max(energyTarget, Math.min(1, strength)) },
     setPixelMix(value) { pixelMix = Math.min(1, Math.max(0, Number(value) || 0)) },
-    setReducedMotion(value) { reducedMotion = Boolean(value); if (reducedMotion) stop(); else start() },
-    resize,
+    setReducedMotion(value) {
+      const next = Boolean(value)
+      if (next === reducedMotion) return
+      reducedMotion = next
+      if (reducedMotion) {
+        stop()
+        blendDuration = 0
+        draw(performance.now())
+      } else start()
+    },
+    resize: onResize,
     stats() {
       return {
         backend: 'gpu',

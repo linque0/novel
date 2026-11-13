@@ -7,6 +7,7 @@
 const { BrowserWindow, ipcMain, screen, app } = require('electron')
 const path = require('path')
 const fs = require('fs')
+const { windowIconPath } = require('./window-icon.cjs')
 const {panelLockKey,panelLocksConflict}=require('./panel-locks.cjs')
 
 const isDev = !!process.env.NOVEL_STUDIO_DEV || process.argv.includes('--dev')
@@ -115,6 +116,7 @@ function openPanel(spec) {
     minHeight: meta.minH || 500,
     frame: meta.frame !== false,
     show: spec.type !== 'settings',
+    icon: windowIconPath(),
     backgroundColor: '#f6f2e7',
     title: spec.title || `小说工坊 · ${meta.label}`,
     autoHideMenuBar: true,

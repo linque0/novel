@@ -27,6 +27,8 @@ import ExportDialog from './ExportDialog.vue'
 import TrashModal from './TrashModal.vue'
 import StatsModal from './StatsModal.vue'
 import HelpManual from './HelpManual.vue'
+import { APP_VERSION } from './skins/latent/settings/settings-version.js'
+import { desktopAppIcon } from '../services/desktop-brand.js'
 import { useUiStore, FONT_MAP, LATIN_MAP } from '../stores/ui'
 import { backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles, getDataLocation, pickDataDir, openDataFolder, moveDataDir, cleanOldLocation, openOldFolder, clearDataPointer } from '../services/fileio'
@@ -409,8 +411,13 @@ async function clearStalePointer() {
 
         <!-- 关于 -->
         <template v-else>
-          <h2 class="sw-h serif">关于</h2>
-          <p class="sw-desc">小说工坊 · 本地优先的写作工坊</p>
+          <div class="sw-about-brand">
+            <img :src="desktopAppIcon" width="56" height="56" alt="" />
+            <div>
+              <h2 class="sw-h serif">小说工坊桌面版</h2>
+              <p class="sw-desc">v{{ APP_VERSION }}</p>
+            </div>
+          </div>
           <h3 v-if="originalSettings" class="sw-h2">写作与帮助</h3>
           <div class="sw-card">
             <button class="sw-item" type="button" @click="ui.statsOpen = true">
@@ -442,6 +449,8 @@ async function clearStalePointer() {
 </template>
 
 <style scoped>
+.sw-about-brand { display: flex; align-items: center; gap: 14px; }
+.sw-about-brand img { flex: none; object-fit: contain; }
 .sw-root {
   height: 100%;
   display: flex;

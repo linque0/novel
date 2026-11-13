@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { parse, compileScript, compileTemplate, compileStyle } from '@vue/compiler-sfc'
-const files=['App','components/Workbench','components/PanelHost','components/SettingsWindow','components/ChapterTree','components/CharacterCenter','components/CharacterList','components/EditorPane','components/RightPanel','components/OutlineCenter','components/OutlineSidebar','components/MubuView','components/MubuTree','components/SnippetCenter','components/SnippetList','components/LoreDetail','components/InspirationPrompt','components/OutlineCanvas','components/GlazeShelf','components/GlazeCover','components/Bookshelf','components/CharacterGraph','components/OIcon','components/ai/TaskLauncher']
+const files=['App','components/Workbench','components/PanelHost','components/SettingsWindow','components/ChapterTree','components/CharacterCenter','components/CharacterList','components/EditorPane','components/RightPanel','components/OutlineCenter','components/OutlineSidebar','components/MubuView','components/MubuTree','components/SnippetCenter','components/SnippetList','components/LoreDetail','components/InspirationPrompt','components/OutlineCanvas','components/GlazeShelf','components/Bookshelf','components/CharacterGraph','components/OIcon','components/ai/TaskLauncher']
 for(const file of files){
   const filename='src/'+file+'.vue', {descriptor,errors}=parse(readFileSync(filename,'utf8'),{filename})
   if(errors.length)throw new Error(JSON.stringify(errors))

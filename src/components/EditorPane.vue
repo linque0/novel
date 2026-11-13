@@ -16,7 +16,6 @@ import Link from '@tiptap/extension-link'
 import TextStyle from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
 import TextAlign from '@tiptap/extension-text-align'
-import Highlight from '@tiptap/extension-highlight'
 import Placeholder from '@tiptap/extension-placeholder'
 import { marked } from 'marked'
 import { NButton, NDrawer, NDrawerContent, NInputNumber, NPopover, NSelect, NTag } from 'naive-ui'
@@ -25,7 +24,7 @@ import { useUiStore } from '../stores/ui'
 import { autosave } from '../services/autosave'
 import { db } from '../db/database.js'
 import { fmtNum } from '../services/wordcount'
-import { FontSize } from '../services/richtext'
+import { FontSize, MarkHighlight } from '../services/richtext'
 import { isImageExt } from '../services/fileio'
 import { DlLinkMark } from '../services/doublelinks'
 import { AnnotationMark, setActiveEditor } from '../services/annotations'
@@ -234,7 +233,7 @@ const extensions = [
   TextStyle,
   FontSize,
   Color,
-  Highlight,
+  MarkHighlight,
   DlLinkMark,
   AnnotationMark,
   Link.configure({ openOnClick: false, autolink: true }),
@@ -410,7 +409,7 @@ async function clearGoal() {
     <TaskLauncher v-if="latentSkin && !nsPlugin && !ui.readMode" module="chapters" />
     <div class="editor-head" v-if="work.activeChapter && !ui.readMode && !ui.isStudioSkin">
       <!-- 隐现皮肤：标题区按插件版版式——大标题 + 拉丁章号副标题 + 朱线 + 字数目标行；
-           状态下拉与历史收进工具栏「更多格式」弹层（见下方 #more-end）。旧皮肤保持原有横排。 -->
+           状态下拉与历史收进工具栏「更多功能」弹层（见下方 #more-end）。旧皮肤保持原有横排。 -->
       <div v-if="latentSkin" class="ed-head-latent">
         <div class="ed-head-main">
           <ChapterTitleField
@@ -537,7 +536,7 @@ async function clearGoal() {
               <NButton size="tiny" quaternary @click="openHistory">历史</NButton>
             </div>
           </template>
-          <!-- 隐现：主行只留格式与发送，章节状态与历史收进「更多格式」弹层 -->
+          <!-- 隐现：主行只留格式与发送，章节状态与历史收进「更多功能」弹层 -->
           <template v-if="latentSkin" #more-end>
             <div class="editor-bar-status" @click.stop @mousedown.stop>
               <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" placeholder="章节状态" style="width:84px" @click.stop @mousedown.stop @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />

@@ -5,16 +5,15 @@ import Link from '@tiptap/extension-link'
 import TextStyle from '@tiptap/extension-text-style'
 import Color from '@tiptap/extension-color'
 import TextAlign from '@tiptap/extension-text-align'
-import Highlight from '@tiptap/extension-highlight'
 import DOMPurify from 'dompurify'
-import {FontSize} from './richtext.js'
+import {FontSize,MarkHighlight} from './richtext.js'
 import {DlLinkMark} from './doublelinks.js'
 import {AnnotationMark} from './annotations.js'
 import {normalizeText} from './project/text.js'
 import {storyHtml} from './ai/story-core.js'
 
 // Same content schema as the formal editor. No model-provided HTML is interpreted.
-export function storyExtensions(){return [StarterKit.configure({heading:{levels:[1,2,3]}}),Underline,TextStyle,FontSize,Color,Highlight,DlLinkMark,AnnotationMark,Link.configure({openOnClick:false,autolink:true}),TextAlign.configure({types:['heading','paragraph']})]}
+export function storyExtensions(){return [StarterKit.configure({heading:{levels:[1,2,3]}}),Underline,TextStyle,FontSize,Color,MarkHighlight,DlLinkMark,AnnotationMark,Link.configure({openOnClick:false,autolink:true}),TextAlign.configure({types:['heading','paragraph']})]}
 function create(html){return new Editor({extensions:storyExtensions(),content:DOMPurify.sanitize(html),editable:false})}
 export function normalizeStoryHTML(html){const e=create(html);try{return e.getHTML()}finally{e.destroy()}}
 

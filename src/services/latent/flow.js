@@ -12,6 +12,7 @@ function reusableCanvas(root) {
   if (!current.__nsFlowUsed) return current
   const fresh = document.createElement('canvas')
   fresh.className = current.className
+  fresh.style.cssText = current.style.cssText
   fresh.__nsFlowUsed = true
   current.replaceWith(fresh)
   root.__nsFlowLive = fresh
@@ -64,7 +65,7 @@ export function mountFlowBackdrop(canvas, options = {}) {
     get backend() { return backend && backend.backend === 'gpu' ? 'gpu' : 'cpu' },
     setPalette(next, opts = {}) {
       palette = next || null
-      backend?.setPalette?.(next, opts)
+      backend?.setPalette?.(next, settings.reducedMotion ? { ...opts, duration: 0 } : opts)
     },
     pulse(strength) { backend?.pulse?.(strength) },
     setReducedMotion(value) {

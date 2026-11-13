@@ -39,7 +39,7 @@
 
 
 /* The host stays mounted while the analysis and quick surfaces open above it. */.writing-stats-fusion .editor-strip{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--border);color:var(--muted);font-size:12px}.writing-stats-fusion .editor-strip span{display:flex;align-items:center;gap:7px}.writing-stats-fusion .editor-strip small{font-size:11px}
-.writing-stats-full{position:fixed;inset:0;margin:0;width:100%;max-width:none;height:100dvh;max-height:none;overflow:hidden;border:0;border-radius:0;padding:0;box-shadow:none;background:linear-gradient(180deg,#2a193d40,#21182dde 76%),url("../assets/writing-stats-backdrop.webp") center 34%/cover no-repeat,#22192d}
+.writing-stats-full{position:fixed;inset:0;margin:0;width:100%;max-width:none;height:100dvh;max-height:none;overflow:hidden;border:0;border-radius:0;padding:0;box-shadow:none;background:linear-gradient(180deg,#2a193d40,#21182dde 76%),url("../../../assets/latent/writing-stats-backdrop.webp") center 34%/cover no-repeat,#22192d}
 .writing-stats-full::backdrop{background:#1a1327d9;backdrop-filter:none}
 .writing-stats-full[open]{animation:writing-analysis-in .2s ease-out both}@keyframes writing-analysis-in{from{opacity:.65}to{opacity:1}}
 .writing-stats-scroll{overflow:auto;height:100%;scrollbar-color:#7e6a87 #2b2238;overscroll-behavior:contain}.writing-stats-fusion .analysis-bar{position:sticky;top:0;z-index:4;background:#271d34ec}.writing-stats-fusion .analysis-main .mast{margin:25px 0 18px}.writing-stats-fusion .analysis-main .mast h1{font-size:clamp(37px,4vw,55px)}.writing-stats-fusion .analysis-main .mast .edition{color:#efdeef}.writing-stats-fusion .analysis-main .mast p{color:#e9dbed}.writing-stats-fusion .mode-rail{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:13px;padding-bottom:11px;border-bottom:1px solid var(--border)}.writing-stats-fusion .mode-rail>span{font-size:12px;color:#e0d3e5}.writing-stats-fusion .mode-rail .period button{font-size:13px;padding-inline:13px}.writing-stats-fusion .analysis-main .inspector-inline,.writing-stats-fusion .analysis-main .volume-rail{top:79px}.writing-stats-fusion .analysis-main .inspector-inline{max-height:calc(100dvh - 97px);overflow:auto}.writing-stats-fusion .analysis-main .metric>span{font-size:12px}
@@ -144,7 +144,7 @@
 
 /* Native dialogs share the approved surfaces; only this subtree receives the design rules. */
 .writing-stats-fusion{box-sizing:border-box;font:14px/1.55 var(--sans);color:var(--text);color-scheme:dark;--serif:var(--nsx-serif,'Noto Serif SC',SimSun,serif);--sans:var(--nsx-sans,'Microsoft YaHei',system-ui,sans-serif)}
-.writing-stats-full{background:linear-gradient(180deg,#2a193d40,#21182dde 76%),url('../assets/writing-stats-backdrop.webp') center 34%/cover no-repeat,#22192d}
+.writing-stats-full{background:linear-gradient(180deg,#2a193d40,#21182dde 76%),url('../../../assets/latent/writing-stats-backdrop.webp') center 34%/cover no-repeat,#22192d}
 .writing-stats-full .writing-stats-scroll{overflow:auto;height:100%;position:relative;z-index:1;scrollbar-color:#7e6a87 #2b2238;overscroll-behavior:contain}
 .writing-stats-quick{z-index:10000}
 html.writing-analysis-open{overflow:hidden}

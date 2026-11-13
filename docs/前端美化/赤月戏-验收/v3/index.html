@@ -3,70 +3,81 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>赤月戏 v3 接入验收</title>
+<title>赤月戏 v3 接入验收（已归档）</title>
 <style>
 :root{--ink:#151918;--paper:#eee5cc;--gold:#cfb06b;--gold-paper:#7a5f2c;--seal:#a84135}
 *{box-sizing:border-box}
 body{margin:0;background:var(--ink);color:#e9dfc6;font:14px/1.8 "Microsoft YaHei",sans-serif}
-main{max-width:1500px;margin:auto;padding:44px 28px 70px}
-header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;border-bottom:1px solid #cfb06b40;padding-bottom:22px;margin-bottom:30px}
+main{max-width:1100px;margin:auto;padding:44px 28px 70px}
+header{border-bottom:1px solid #cfb06b40;padding-bottom:22px;margin-bottom:26px}
 h1{margin:0;font:400 38px/1.2 "STSong","SimSun",serif;letter-spacing:6px;color:#f4ecd9}
 .eyebrow{font-size:11px;letter-spacing:4px;color:var(--gold)}
 p{color:#c9bea6;margin:8px 0}
 a{color:#e3c98f;text-decoration:none}
 a:hover{text-decoration:underline}
-nav{display:flex;gap:18px;flex-wrap:wrap;font-size:12px}
+nav{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;margin-top:14px}
 h2{margin:34px 0 14px;font:400 24px "STSong","SimSun",serif;letter-spacing:3px;color:#f1e8d3}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
-figure{margin:0;background:#1b211e;border-top:1px solid #cfb06b40}
-figure img{display:block;width:100%;height:auto;background:#0c1210}
-figcaption{padding:10px 12px;font-size:12px;color:#c9bea6}
-figcaption b{color:#f1e8d3;font-weight:400;margin-right:10px}
+.archived{background:#2a2118;border:1px solid #cfb06b66;padding:16px 20px;margin:0 0 26px;color:#e3c98f}
+.archived b{color:#f4ecd9}
+.pass{display:inline-block;color:#9ed6a8;border:1px solid #9ed6a855;border-radius:3px;padding:1px 8px;font-size:11px;letter-spacing:2px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{border-bottom:1px solid #cfb06b26;padding:9px 8px;text-align:left;vertical-align:top}
+th{color:var(--gold);font-weight:400;letter-spacing:2px;white-space:nowrap}
+td:first-child{color:#f1e8d3;white-space:nowrap}
 small{color:#9f957d}
+code{background:#0c1210;padding:2px 6px;border-radius:3px;color:#cfb06b}
 footer{margin-top:44px;border-top:1px solid #cfb06b30;padding-top:18px;font-size:12px;color:#9f957d}
-@media(max-width:900px){.grid{grid-template-columns:1fr}header{display:block}h1{font-size:30px}}
 </style>
 </head>
 <body><main>
 <header>
-  <div>
-    <div class="eyebrow">赤月戏 · 应用接入验收 · 2026-10-18</div>
-    <h1>折屏戏本 v3</h1>
-    <p>真实应用 10 屏 + 1080×680 窄窗 + 设置窗口；人物 / 设定 / 灵感已换新背景。</p>
-  </div>
+  <div class="eyebrow">赤月戏 · 应用接入验收 · 2026-10-18</div>
+  <h1>折屏戏本 v3</h1>
+  <p>真实应用 10 屏 + 1080×680 窄窗 + 设置窗口；人物 / 设定 / 灵感已换新背景。<span class="pass">整体 PASS</span></p>
   <nav>
     <a href="../../赤月戏-v3接入记录.md">接入记录 ↗</a>
-    <a href="../../oil-ui-v3-功能对齐/赤月剧场-书架方向对比/完整设计稿/金屏夜梅-重排设计稿-v3/index.html">v3 设计稿 ↗</a>
-    <a href="capture-report.json">验收报告 ↗</a>
+    <a href="capture-report.json">验收报告原始数据 ↗</a>
+    <a href="../../../验收记录.md">验收总记录 ↗</a>
   </nav>
 </header>
 
-<h2>1440 × 900</h2>
-<section class="grid">
-  <figure><a href="shelf.png"><img src="shelf.png" alt="书架"></a><figcaption><b>01 书架</b>76px 顶栏 · 七模块 · 316 剧目栏 · 票根首章</figcaption></figure>
-  <figure><a href="editor.png"><img src="editor.png" alt="正文"></a><figcaption><b>02 正文</b>248 章节目录 · 296 稿本 · 252 札记</figcaption></figure>
-  <figure><a href="outline.png"><img src="outline.png" alt="大纲画布"></a><figcaption><b>03 大纲 · 自由画布</b>240 目录 · 纸片节点 · 胶带与切角</figcaption></figure>
-  <figure><a href="outline-text.png"><img src="outline-text.png" alt="大纲文本"></a><figcaption><b>04 大纲 · 文本</b>连续稿本 · 240 目录</figcaption></figure>
-  <figure><a href="world.png"><img src="world.png" alt="世界设定"></a><figcaption><b>05 设定 · 幕布</b>220 布景 · 纸面树 · 240 目录</figcaption></figure>
-  <figure><a href="world-detail.png"><img src="world-detail.png" alt="设定详情"></a><figcaption><b>06 设定 · 详情</b>200 布景 · 纸面 · 340 关系折景</figcaption></figure>
-  <figure><a href="characters.png"><img src="characters.png" alt="人物档案"></a><figcaption><b>07 人物</b>330×420 拱顶肖像 · 竖排演员表 · 卷宗纸</figcaption></figure>
-  <figure><a href="characters-graph.png"><img src="characters-graph.png" alt="人物关系图"></a><figcaption><b>08 关系图</b>浅纸画布 · 260 深色名册 · 装裱节点</figcaption></figure>
-  <figure><a href="inspiration.png"><img src="inspiration.png" alt="灵感"></a><figcaption><b>09 灵感</b>220 灯河布景 · 420 手记墙 · 阅读纸</figcaption></figure>
-  <figure><a href="settings.png"><img src="settings.png" alt="设置"></a><figcaption><b>10 设置</b>1000×700 · 书签分类 · 朱印场签 · 260 预览</figcaption></figure>
-</section>
+<div class="archived">
+  <b>本验收页已归档。</b>原 16 张真机截图已移出仓库，本页不再内嵌图片；验收结论与比对要点完整保留在下方。需要原图时执行
+  <code>git checkout pre-cleanup-20261112 -- docs/前端美化/赤月戏-验收</code>。
+</div>
 
-<h2>1080 × 680</h2>
-<section class="grid">
-  <figure><a href="narrow-shelf.png"><img src="narrow-shelf.png" alt="书架 1080"></a><figcaption><b>书架</b>280 剧目栏 · 无横向溢出</figcaption></figure>
-  <figure><a href="narrow-editor.png"><img src="narrow-editor.png" alt="正文 1080"></a><figcaption><b>正文</b>216 / 248 / 210</figcaption></figure>
-  <figure><a href="narrow-outline.png"><img src="narrow-outline.png" alt="大纲 1080"></a><figcaption><b>大纲</b>216 目录 · 画布收缩</figcaption></figure>
-  <figure><a href="narrow-world.png"><img src="narrow-world.png" alt="设定 1080"></a><figcaption><b>设定</b>190 / 180</figcaption></figure>
-  <figure><a href="narrow-characters.png"><img src="narrow-characters.png" alt="人物 1080"></a><figcaption><b>人物</b>300×380 · 卷宗左 362</figcaption></figure>
-  <figure><a href="narrow-inspiration.png"><img src="narrow-inspiration.png" alt="灵感 1080"></a><figcaption><b>灵感</b>190 / 360 · 标题完整</figcaption></figure>
-</section>
+<h2>1440 × 900</h2>
+<table>
+  <thead><tr><th>屏</th><th>结论</th><th>版式要点</th></tr></thead>
+  <tbody>
+    <tr><td>01 书架</td><td><span class="pass">通过</span></td><td>76px 顶栏 · 七模块 · 316 剧目栏 · 票根首章</td></tr>
+    <tr><td>02 正文</td><td><span class="pass">通过</span></td><td>248 章节目录 · 296 稿本 · 252 札记</td></tr>
+    <tr><td>03 大纲 · 自由画布</td><td><span class="pass">通过</span></td><td>240 目录 · 纸片节点 · 胶带与切角</td></tr>
+    <tr><td>04 大纲 · 文本</td><td><span class="pass">通过</span></td><td>连续稿本 · 240 目录</td></tr>
+    <tr><td>05 设定 · 幕布</td><td><span class="pass">通过</span></td><td>220 布景 · 纸面树 · 240 目录</td></tr>
+    <tr><td>06 设定 · 详情</td><td><span class="pass">通过</span></td><td>200 布景 · 纸面 · 340 关系折景</td></tr>
+    <tr><td>07 人物</td><td><span class="pass">通过</span></td><td>330×420 拱顶肖像 · 竖排演员表 · 卷宗纸</td></tr>
+    <tr><td>08 关系图</td><td><span class="pass">通过</span></td><td>浅纸画布 · 260 深色名册 · 装裱节点</td></tr>
+    <tr><td>09 灵感</td><td><span class="pass">通过</span></td><td>220 灯河布景 · 420 手记墙 · 阅读纸</td></tr>
+    <tr><td>10 设置</td><td><span class="pass">通过</span></td><td>1000×700 · 书签分类 · 朱印场签 · 260 预览</td></tr>
+  </tbody>
+</table>
+
+<h2>1080 × 680 窄窗</h2>
+<table>
+  <thead><tr><th>屏</th><th>结论</th><th>版式要点</th></tr></thead>
+  <tbody>
+    <tr><td>书架</td><td><span class="pass">通过</span></td><td>280 剧目栏 · 无横向溢出</td></tr>
+    <tr><td>正文</td><td><span class="pass">通过</span></td><td>216 / 248 / 210</td></tr>
+    <tr><td>大纲</td><td><span class="pass">通过</span></td><td>216 目录 · 画布收缩</td></tr>
+    <tr><td>设定</td><td><span class="pass">通过</span></td><td>190 / 180</td></tr>
+    <tr><td>人物</td><td><span class="pass">通过</span></td><td>300×380 · 卷宗左 362</td></tr>
+    <tr><td>灵感</td><td><span class="pass">通过</span></td><td>190 / 360 · 标题完整</td></tr>
+  </tbody>
+</table>
 
 <footer>
-  验收命令：<code>node tools/crimson-v3-verify.mjs</code>（需 Vite 5173） · 结果 PASS，fail: []，页面错误 0。<br>
+  验收命令：<code>node tools/crimson-v3-verify.mjs</code>（需 Vite 5173） · 结果 PASS，fail: []，页面错误 0（原始数据见 <code>capture-report.json</code>）。<br>
   设计稿与 v1/v2/v3/v4 目录未改动；本次只接 crimson 皮肤。
 </footer>
 </main></body></html>

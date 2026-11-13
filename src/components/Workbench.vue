@@ -36,7 +36,7 @@ import SnippetsWorkspace from './skins/latent/snippets/SnippetsWorkspace.vue'
 import { isLatentSkin } from '../skins/registry'
 /* 隐现皮肤的流动背板（正文/大纲/设定/人物/灵感共用同一个 flow 引擎） */
 import { mountFlowBackdrop } from '../services/latent/flow.js'
-import { hashString, paletteOf } from '../services/latent/palette.js'
+import { flowPaletteKey, resolveFlowPalette } from '../services/latent/flow-palette.js'
 import RightPanel from './RightPanel.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
 const nsPlugin = __NS_PLUGIN__
@@ -363,11 +363,12 @@ let flowRippleAt = 0
 const reduceMotionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
   ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
 
-/* 调色只跟作品 id：同一本书在任何页、任何顺序下都是同一套色板 */
 function applyFlowPalette() {
-  const target = work.work
-  if (!flowApi || !target) return
-  flowApi.setPalette(paletteOf(target), { duration: 600, seed: (hashString(target.id) % 997) / 997 })
+  flowApi?.setPalette(resolveFlowPalette(ui.flowBackground, work.work), { duration: 600 })
+}
+
+function onFlowMotionChange(event) {
+  flowApi?.setReducedMotion(event.matches)
 }
 
 function destroyFlow() {
@@ -386,7 +387,7 @@ function mountFlow() {
   if (!canvas) return
   const width = window.innerWidth
   flowApi = mountFlowBackdrop(canvas, {
-    palette: work.work ? paletteOf(work.work) : null,
+    palette: resolveFlowPalette(ui.flowBackground, work.work),
     reducedMotion: Boolean(reduceMotionQuery?.matches),
     simWidth: width < 560 ? 320 : width < 900 ? 480 : 640,
     maxEdge: width < 900 ? 1280 : 1600
@@ -406,11 +407,13 @@ function onStudioInput(event) {
 
 function mountStudioBackdrop() {
   shell.value?.addEventListener('input', onStudioInput, true)
+  reduceMotionQuery?.addEventListener?.('change', onFlowMotionChange)
   mountFlow()
 }
 
 function unmountStudioBackdrop() {
   shell.value?.removeEventListener('input', onStudioInput, true)
+  reduceMotionQuery?.removeEventListener?.('change', onFlowMotionChange)
   destroyFlow()
 }
 
@@ -418,7 +421,7 @@ function unmountStudioBackdrop() {
 watch(() => work.tab, () => { mountFlow() }, { flush: 'post' })
 watch(() => ui.workbenchMode, () => { mountFlow() }, { flush: 'post' })
 watch(() => ui.skin, () => { mountFlow() }, { flush: 'post' })
-watch(() => work.work?.id, () => { applyFlowPalette() })
+watch(() => flowPaletteKey(ui.flowBackground, work.work), applyFlowPalette)
 
 onMounted(() => {
   window.addEventListener('keydown', onKeydown)

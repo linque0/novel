@@ -1,8 +1,9 @@
 <script setup>
-/* 赤月戏 v3 的左侧章节目录：只读 work store 的真实章节/卷数据，切章与新建走现有 action。 */
+/* 赤月戏 v3 左侧章节目录，切章、新建和排序共用 work store。 */
 import { computed, ref, nextTick } from 'vue'
 import { NModal, NInput, NButton } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
+import { useChapterSort } from '../composables/useChapterSort'
 import OIcon from './OIcon.vue'
 
 const props = defineProps({
@@ -13,6 +14,7 @@ const emit = defineEmits(['update:collapsed','bookmark','read','window','search'
 const work = useWorkStore()
 const query = ref('')
 const catalog=ref(null)
+const chapterSort = useChapterSort(catalog, work, query, () => !props.collapsed)
 const volumeForm=ref({show:false,id:null,workId:null,value:''})
 const volumeSaving=ref(false),volumeComposing=ref(false)
 const fmt = (n) => Number(n || 0).toLocaleString('zh-CN')
@@ -137,9 +139,9 @@ function submitVolume(event){
       <button type="button" data-action="search" title="查找作品全文" aria-label="查找作品全文" @click="emit('search')">全文</button>
     </label>
 
-    <nav ref="catalog" class="crimson-rail-chapters" aria-label="章节列表">
+    <nav ref="catalog" class="crimson-rail-chapters" aria-label="章节列表" @pointerdown="chapterSort.pointerDown" @click.capture="chapterSort.click">
       <template v-for="group in visibleGroups" :key="group.id">
-        <div class="crimson-rail-volume-row" :data-volume-id="group.id" :class="{ selected:group.id===work.selVolumeId }">
+        <div class="crimson-rail-volume-row" :data-volume-id="group.id" :data-chapter-sort-volume="group.id === 'orphan' ? 'orphans' : group.id" :class="{ selected:group.id===work.selVolumeId }">
           <button v-if="group.id!=='orphan'" class="crimson-volume-pick" type="button" data-action="select-volume" :aria-pressed="group.id===work.selVolumeId" :title="group.title" @click="selectVolume(group.id)">{{ group.title }}</button>
           <span v-else>{{group.title}}</span>
           <button v-if="group.id!=='orphan'" class="crimson-volume-edit" type="button" data-action="rename-volume" :data-volume-target="group.id" title="编辑卷名" :aria-label="'编辑卷名：'+group.title" @click.stop="openVolume(group.id)"><OIcon name="edit" :size="14" /></button>
@@ -150,6 +152,7 @@ function submitVolume(event){
           :key="c.id"
           type="button"
           class="crimson-rail-chapter"
+          :data-chapter-sort-chapter="c.id"
           :class="{ current: c.id === work.selChapterId }"
           :aria-current="c.id === work.selChapterId ? 'page' : undefined"
           :title="c.title"

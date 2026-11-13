@@ -14,7 +14,8 @@ const { chromium } = require(require.resolve('playwright', {
 }))
 const root = new URL('..', import.meta.url)
 const refined = process.argv.includes('--refined')
-const out = new URL('docs/前端美化/赤月戏-360典藏-20261026/', root)
+/* 输出到 docs/archive/：验证录屏与中间 PNG 已移出仓库跟踪（见 docs/验收记录.md） */
+const out = new URL('docs/archive/赤月戏-360典藏-20261026/', root)
 mkdirSync(out, { recursive: true })
 const baseline = process.argv.includes('--baseline')
 const browser = await chromium.launch({ channel: 'msedge', headless: true })

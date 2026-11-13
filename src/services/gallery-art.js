@@ -51,7 +51,6 @@ export const PAINTING_GROUPS = Object.freeze([
   { id: 'studio', label: '工坊印象', note: 'STUDIO IMPRESSIONS', items: STUDIO_PAINTINGS }
 ])
 
-export const DEFAULT_PAINTING_ID = 'sunrise'
 const ALL_PAINTINGS = [...WORLD_PAINTINGS, ...STUDIO_PAINTINGS]
 
 export function paintingById(id) {
@@ -65,8 +64,4 @@ export function paintingDimensions(id) {
   const sizes = { sunrise:[3200,2482], poppy:[3200,2440], starry:[3200,2534], wave:[3200,2190], temeraire:[3200,2378], delft:[3000,2492] }
   const [width,height] = sizes[id] || [1086,1448]
   return { width,height }
-}
-
-export function studioPaintingForKind(kind) {
-  return STUDIO_PAINTINGS.find(painting => painting.kind === kind) || STUDIO_PAINTINGS[0]
 }

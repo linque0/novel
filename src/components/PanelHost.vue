@@ -32,6 +32,11 @@ import { isLatentSkin } from '../skins/registry'
 import RightPanel from './RightPanel.vue'
 import DLinkPopover from './DLinkPopover.vue'
 import RevisionsModal from './RevisionsModal.vue'
+/* 正文导入/导出：工具栏「更多功能」直接置 ui.importOpen / ui.exportOpen，
+ * 拆出的章节独立窗口也必须挂这两个对话框，否则入口点了没反应。
+ * 设置窗口分支自带一份（SettingsWindow 内），不要在这里重复挂。 */
+import ImportDialog from './ImportDialog.vue'
+import ExportDialog from './ExportDialog.vue'
 import SettingsWindow from './SettingsWindow.vue'
 import MubuTagPanel from './MubuTagPanel.vue'
 import LoreRelationPanel from './LoreRelationPanel.vue'
@@ -267,6 +272,8 @@ onBeforeUnmount(() => autosave.flushAll())
         </div>
         <DLinkPopover />
         <RevisionsModal />
+        <ImportDialog />
+        <ExportDialog />
         <MubuTagPanel />
         <LoreRelationPanel />
         <LoreDetail />

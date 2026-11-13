@@ -1,6 +1,6 @@
 /* flow-shell.css — 流动背板的共用外壳（主窗口 + 拆窗面板）
  * 由 plugin/dsh/index.js 在 language.css 之后引入：同权重时后写为胜，用来压 dsh.css §5.1/5.2 的实底与玻璃。
- * 只在 [data-flow] 的窗口生效，没有流动底的窗口观感一律不变。
+ * 工作区规则只在 [data-flow] 下生效。正文导出弹窗传送到 body，单独加入侧栏材质选择器。
  * 选择器一律以 html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-flow] 起头 (0,4,x)：
  * 既高过 dsh.css 的 (0,3,1)（--ns-bg 实底、--nsx-glass-1 玻璃），也高过 latent-studio.css 材质表的 (0,3,2)，
  * 不依赖两份样式与插件谁先打包，免得覆盖关系随构建顺序漂移。 */
@@ -66,7 +66,8 @@ html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-flow] .st-lay
 }
 
 /* ---- 3. 玻璃：侧栏/批注栏 62%、主区 52%，都留得下流动底；--ns-layer-1 深色回退 #232324 ---- */
-html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-flow] :is(.side-panel, .right-panel) {
+html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-flow] :is(.side-panel, .right-panel),
+html body[data-skin='dsh'] .latent-export-dialog.n-modal.n-card {
   background-color: color-mix(in srgb, var(--ns-layer-1, #232324) 62%, transparent);
   /* 材质表还给侧栏铺了 --ls-glass-fill 渐变，留着会把 62% 又拉回实底 */
   background-image: none;

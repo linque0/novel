@@ -5,6 +5,8 @@
    本文件不得引入 pinia / db / vue，保持可直接被 node --test 加载。 */
 
 /* 素材：思源宋体/霞鹜文楷/京华老宋体/朝华标题/云游手书/Gothic One 均已本地化（src/assets/fonts） */
+import { normalizeFlowBackground } from '../../../../services/latent/flow-palette.js'
+
 export const CJK_FONTS = {
   song: { label: '思源宋体', stack: '"Noto Serif SC", "SimSun", serif' },
   kai: { label: '霞鹜文楷', stack: '"LXGW WenKai", "KaiTi", serif' },
@@ -69,7 +71,7 @@ export function createSettingsHistory({ limit = SETTINGS_HISTORY_LIMIT } = {}) {
   }
 }
 
-/* 恢复默认外观只动这四个键，作品数据与正文不受影响 */
+/* 恢复默认外观，不动作品数据与正文。 */
 export function resetAppearancePrefs() {
-  return { ...SETTINGS_DEFAULTS }
+  return { ...SETTINGS_DEFAULTS, flowBackground: normalizeFlowBackground() }
 }

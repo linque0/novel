@@ -36,3 +36,10 @@ release-plugin
 # 验收脚本子目录产物（tools/_*.png 只匹配直属文件，这里补齐子目录）
 tools/_writing-evidence/
 tools/_original-shelf/
+# 其余 _ 开头的验收工作目录（_original-booklist / _original-shelf-v2 / _original-workspace 等，每次运行重生成）
+tools/_*/
+# 脚本日志（_book-build.log、_book-electron-dev.log 等）
+tools/_book-*
+
+# 大体积设计母版与验收录屏归档：本地保留可查，不入库（需要历史版本见 tag pre-cleanup-20261112）
+docs/archive/

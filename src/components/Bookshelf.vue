@@ -1,10 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { liveQuery } from 'dexie'
-import { NButton, NModal, NInput, NSelect, NDropdown, NSpin, NCheckbox, useMessage } from 'naive-ui'
-import OIcon from './OIcon.vue'
-import SkinPicker from './SkinPicker.vue'
-import AppTopbar from './AppTopbar.vue'
+import { NButton, NModal, NInput, NSelect, NCheckbox, useMessage } from 'naive-ui'
 import DreamLaunchDialog from './agent/DreamLaunchDialog.vue'
 import { WORK_NAVIGATION } from './app-navigation'
 import OriginalShelf from './OriginalShelf.vue'

@@ -1,7 +1,10 @@
 /* CPU 兜底：没有 WebGL 时流动底也不能空着。域扭曲 + 三控制点权重 + Bayer 抖动，
    逐像素算在低分辨率画布上再由浏览器放大，采样损失被模糊掩盖。 */
 
+import { DEFAULT_FLOW_PALETTE } from './flow-palette.js'
+
 const BAYER = [[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]
+const copyPalette = ({ a, b, c }) => ({ a: [...a], b: [...b], c: [...c] })
 
 export function createCpuBackdrop(canvas, options = {}) {
   const settings = { simWidth: 640, ...options }
@@ -10,8 +13,8 @@ export function createCpuBackdrop(canvas, options = {}) {
 
   const simWidth = Math.max(32, Math.round(Number(settings.simWidth) || 640))
   let simHeight = Math.round(simWidth * 0.62)
-  let from = { a: [0.18, 0.22, 0.5], b: [0.85, 0.4, 0.35], c: [0.06, 0.07, 0.16] }
-  let to = { a: [...from.a], b: [...from.b], c: [...from.c] }
+  let from = copyPalette(DEFAULT_FLOW_PALETTE)
+  let to = copyPalette(DEFAULT_FLOW_PALETTE)
   let energy = 0
   let energyTarget = 0
   let simTime = 0
@@ -30,7 +33,7 @@ export function createCpuBackdrop(canvas, options = {}) {
     return [window.innerWidth || 1, window.innerHeight || 1]
   }
 
-  function resize() {
+  function resizeCanvas() {
     const [width, height] = canvasSize()
     const ratio = width / Math.max(1, height)
     const nextHeight = Math.max(1, Math.round(simWidth / ratio))
@@ -39,7 +42,13 @@ export function createCpuBackdrop(canvas, options = {}) {
       canvas.height = nextHeight
       simHeight = nextHeight
       frameData = ctx.createImageData(simWidth, simHeight)
+      return true
     }
+    return false
+  }
+
+  function resize() {
+    if (resizeCanvas() && frozen) draw(performance.now())
   }
 
   function draw(now) {
@@ -52,7 +61,7 @@ export function createCpuBackdrop(canvas, options = {}) {
     for (const k of ['a', 'b', 'c']) {
       for (let i = 0; i < 3; i += 1) from[k][i] += (to[k][i] - from[k][i]) * Math.min(1, dt / 300)
     }
-    resize()
+    resizeCanvas()
     /* resize 会换一张新的 ImageData，像素数组必须每帧重取 */
     const pixels = frameData.data
     const t = simTime * (0.09 + 0.22 * energy)
@@ -130,9 +139,9 @@ export function createCpuBackdrop(canvas, options = {}) {
     backend: 'cpu',
     supported: true,
     setPalette(palette, opts = {}) {
-      /* 从当前显示色起跳，连续换书时不会跳回上一次的目标色（与 GPU 版一致） */
-      for (const k of ['a', 'b', 'c']) from[k] = [...to[k]]
-      to = { a: [...palette.a], b: [...palette.b], c: [...palette.c] }
+      /* 保留当前显示色作为过渡起点；首帧和减少动态效果时直接落位。 */
+      to = copyPalette(palette)
+      if (frozen || opts.duration === 0) from = copyPalette(to)
       if (frozen) draw(performance.now())
     },
     pulse(strength = 1) { energyTarget = Math.max(energyTarget, Math.min(1, strength)) },
@@ -141,8 +150,11 @@ export function createCpuBackdrop(canvas, options = {}) {
       const next = Boolean(value)
       if (next === frozen) return
       frozen = next
-      if (frozen) cancelAnimationFrame(raf)
-      else start()
+      if (frozen) {
+        cancelAnimationFrame(raf)
+        from = copyPalette(to)
+        draw(performance.now())
+      } else start()
     },
     resize,
     stats() {

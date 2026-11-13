@@ -19,11 +19,6 @@ export function chapterWords(row) {
   return Number.isFinite(row.wordCount) && row.wordCount >= 0 ? Math.round(row.wordCount) : 0
 }
 
-export function chapterWordChange(previous, next) {
-  if (!next || next.deletedAt || previous?.deletedAt || (previous && previous.workId !== next.workId)) return 0
-  return chapterWords(next) - chapterWords(previous)
-}
-
 export function statsDates(today, days) {
   const date = new Date(today + 'T00:00:00Z')
   return Array.from({ length: days }, (_, i) => {
