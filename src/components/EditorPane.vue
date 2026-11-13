@@ -541,6 +541,7 @@ async function clearGoal() {
             <div class="editor-bar-status" @click.stop @mousedown.stop>
               <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" placeholder="章节状态" style="width:84px" @click.stop @mousedown.stop @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
               <NButton size="tiny" quaternary @click.stop="openHistory" @mousedown.stop>历史</NButton>
+              <NButton v-if="!ui.focusMode" size="tiny" quaternary @click.stop="ui.focusMode = true">沉浸写作</NButton>
             </div>
           </template>
         </EditorToolbar>

@@ -248,9 +248,18 @@ function init() {
   })
   /* 应用级事件广播（设置窗口等）：任一窗口请求 → app:event 发到全部窗口（含发送者自身，
    * 各处理端均为幂等操作：重读偏好 / 刷新书架 / 冲刷脏数据 / 整体重载） */
-  ipcMain.handle('app:broadcast', (_e, payload) => {
+  ipcMain.handle('app:broadcast', (e, payload) => {
     const kind = typeof payload?.kind === 'string' ? payload.kind.slice(0, 48) : ''
     if (!kind) return { ok: false, reason: 'bad-kind' }
+    if (kind === 'outline-citation-jump') {
+      const source = panels.find((panel) => !panel.win.isDestroyed() && panel.win.webContents === e.sender)
+      if (source?.spec.type !== 'outline' || source.spec.workId !== payload?.data?.workId ||
+        !mainWindow || mainWindow.isDestroyed()) return { ok: false }
+      mainWindow.webContents.send('app:event', { kind, data: payload.data })
+      if (mainWindow.isMinimized()) mainWindow.restore()
+      mainWindow.focus()
+      return { ok: true }
+    }
     broadcast('app:event', { kind, data: payload?.data ?? null })
     return { ok: true }
   })

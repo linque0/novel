@@ -28,7 +28,6 @@ import MubuTree from './MubuTree.vue'
 import SnippetCenter from './SnippetCenter.vue'
 /* 隐现（dsh）皮肤专用的完整工作区：自带面板矩阵 / 画布 / 详情，
  * 仅在 isLatentSkin 为真时渲染，四套旧皮肤仍走上面的 Center 组件。 */
-import LatentOutlineTopbar from './skins/latent/outline/OutlineTopbar.vue'
 import LatentOutlineCenter from './skins/latent/outline/OutlineCenter.vue'
 import CharactersWorkspace from './skins/latent/characters/CharactersWorkspace.vue'
 import LoreWorkspace from './skins/latent/lore/LoreWorkspace.vue'
@@ -166,18 +165,7 @@ const moreOptions = computed(() => [
   ...(work.tab === 'chapters' ? [{ label: ui.readMode ? '退出阅读' : '阅读模式', key: 'read' }] : []),
   ...(ui.skin !== 'original' ? [{ label: '切回原版皮肤', key: 'original' }] : [])
 ])
-/* 隐现皮肤的大纲页顶栏换成 LatentOutlineTopbar，页面上没有恍然梦胶囊，
-   这两项改走齿轮菜单：走与胶囊同一个 enterAiMode 路径。moreOptions 被其它页面的「更多」共用，不动它。 */
-const latentOutlineActions = computed(() => [
-  ...(!nsPlugin ? [
-    { label: '恍然梦 - 入梦', key: 'dream-entry', disabled: entryBusy.value },
-    { label: ui.aiDrawerOpen ? '恍然梦 - 浅眠（当前）' : '恍然梦 - 浅眠', key: 'light-entry', disabled: entryBusy.value }
-  ] : []),
-  ...moreOptions.value
-])
 function onMore(key) {
-  if (key === 'dream-entry') return enterAiMode('dream')
-  if (key === 'light-entry') return enterAiMode('light')
   if (key === 'assistant') return taskLauncher.value?.open()
   if (key.startsWith('split:')) return onSplit(key.slice(6))
   if (key.startsWith('bookmark:')) return onBookmarkSelect(key.slice(9))
@@ -189,9 +177,7 @@ function onMore(key) {
   if (key === 'settings') openSettings()
 }
 
-/* 窄栏（<560）顶栏动作全收进 ⋯：搜索 / 章节历史 / 批注 / 更多（子菜单复用工作台「更多」）。
- * 与 APP_NAVIGATION 分两区，模块导航不受影响。 */
-const narrowActions = computed(() => [
+const narrowActions = computed(() => latentSkin.value ? [] : [
   ...(original.value&&ui.autosave.error?[{label:'重试保存',key:'retry-save'}]:[]),
   { label: '搜索', key: 'search' },
   { label: '章节历史', key: 'history', disabled: !(work.tab === 'chapters' && work.activeChapter) },
@@ -451,9 +437,9 @@ onBeforeUnmount(() => {
          切模块时组件与 Teleport 同时移动会触发 Vue 的 patch/unmount 异常。 -->
     <TaskLauncher v-if="studio && !nsPlugin" ref="taskLauncher" :module="work.tab" />
 
-    <LatentOutlineTopbar v-if="latentSkin && work.tab === 'outline'" :actions="latentOutlineActions" @navigate="key => key === 'shelf' ? returnToShelf() : key === 'settings' ? openSettings() : selectTab(key)" @action="onMore" />
-    <AppTopbar v-else :inert="modalDrawer || owModal || undefined" :active="work.tab" :has-work="!!work.work" :target-title="work.work?.title" :save-state="saveState" @navigate="key => key === 'shelf' ? returnToShelf() : key === 'settings' ? openSettings() : selectTab(key)" :actions="narrowActions" @action="onTopbarAction">
+    <AppTopbar :inert="modalDrawer || owModal || undefined" :active="work.tab" :has-work="!!work.work" :target-title="work.work?.title" :save-state="saveState" @navigate="key => key === 'shelf' ? returnToShelf() : key === 'settings' ? openSettings() : selectTab(key)" :actions="narrowActions" @action="onTopbarAction">
       <template #actions>
+        <button v-if="latentSkin && ui.focusMode" type="button" class="app-topbar-round app-topbar-exit-focus" aria-label="退出沉浸" title="退出沉浸" @click="ui.focusMode = false">×</button>
         <!-- 隐现（dsh）皮肤：顶栏右簇已由 AppTopbar 的圆钮组承担（已保存 / 搜索 / 统计 / 设置 / 锁定），
              这里只保留用户要求保留的恍然梦入口，避免一套顶栏出现两套搜索、两套保存态、两套更多。
              四套旧皮肤保持原有这一整条不动。 -->

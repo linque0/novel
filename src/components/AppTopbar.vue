@@ -3,8 +3,10 @@ import { computed, nextTick, ref, useSlots, watch } from 'vue'
 import { NDropdown } from 'naive-ui'
 import AutoHideTopbar from './AutoHideTopbar.vue'
 import { useUiStore } from '../stores/ui'
+import { useWorkStore } from '../stores/work'
+import { popOut } from '../services/panelwindows'
 import { SKINS, isLatentSkin } from '../skins/registry'
-import { APP_NAVIGATION } from './app-navigation'
+import { APP_NAVIGATION, WORK_NAVIGATION } from './app-navigation'
 import { desktopSmallIcon } from '../services/desktop-brand.js'
 import DreamModeEntries from './agent/DreamModeEntries.vue'
 /* 隐现皮肤顶栏右簇的统计圆钮（与插件版同一个组件） */
@@ -15,16 +17,16 @@ const props = defineProps({
   busy: Boolean,
   hasWork: Boolean,
   targetTitle: { type: String, default: '' },
+  targetWorkId: { type: String, default: '' },
   actions: { type: Array, default: () => [] },
   /* 窄栏保存态（<560）：顶栏动作整条隐藏后，只剩这个非交互状态点告诉作者存没存 */
   saveState: { type: String, default: 'saved' }
 })
 const emit = defineEmits(['navigate', 'create', 'action'])
 const ui = useUiStore()
+const work = useWorkStore()
 const nsPlugin = __NS_PLUGIN__
 const skinLabel = computed(() => SKINS.find(skin => skin.id === ui.skin)?.label || '原版工坊')
-/* 隐现（dsh）皮肤用插件版顶栏：品牌文字 + 绝对居中的六项胶囊导航（设置改由齿轮圆钮承担）
- * + 右簇圆钮（已保存 / 搜索 / 统计 / 设置 / 锁定）。四套旧皮肤保持桌面原有顶栏结构。 */
 const latent = computed(() => isLatentSkin(ui.skin))
 /* 品牌小字：隐现照插件版显示固定字标 LATENT（皮肤名退场），四套旧皮肤仍显示皮肤名 */
 const brandSuffix = computed(() => (isLatentSkin(ui.skin) ? 'LATENT' : skinLabel.value))
@@ -40,8 +42,13 @@ const slots = useSlots()
 function toggleSearch() {
   if (!slots.search) { ui.searchOpen = true; return }
   searchOpen.value = !searchOpen.value
+  if (searchOpen.value) nextTick(() => searchPanel.value?.querySelector('input')?.focus())
 }
-/* 窄栏（<560，由 dsh 皮肤 CSS 打开）只留作品名 + 当前页签 + ⋯；导航与动作收进下拉。 */
+function closeSearch(event) {
+  searchOpen.value = false
+  event.target.blur()
+}
+const searchPanel = ref(null)
 const currentLabel = computed(() => APP_NAVIGATION.find(item => item.key === props.active)?.label || '')
 const narrowTitle = computed(() => (props.hasWork && props.targetTitle) ? props.targetTitle : '小说工坊')
 const SAVE_LABEL = { saved: '已保存', saving: '保存中', dirty: '未保存', error: '保存失败' }
@@ -49,6 +56,15 @@ const saveLabel = computed(() => SAVE_LABEL[props.saveState] || SAVE_LABEL.saved
 /* ⋯ 菜单分两区：「动作」由工作台注入（窄栏把顶栏按钮收进来），「模块」才是 APP_NAVIGATION。
  * 两区都带前缀键，select 时按前缀分发，路由与动作互不污染。 */
 const moreOptions = computed(() => [
+  ...(latent.value ? [{
+    type: 'group', label: '顶栏', key: 'group-topbar', children: [
+      { label: pinLabel.value, key: 'pin:toggle' },
+      ...(props.active === 'shelf' ? [
+        { label: '搜索作品', key: 'search:shelf' },
+        ...(!nsPlugin ? [{ label: '恍然梦-入梦', key: 'dream:shelf', disabled: props.busy }] : [])
+      ] : [])
+    ]
+  }] : []),
   ...(props.actions.length ? [{ type: 'group', label: '动作', key: 'group-actions', children: props.actions }] : []),
   {
     type: 'group',
@@ -60,6 +76,9 @@ const moreOptions = computed(() => [
   }
 ])
 function onSelect(key) {
+  if (key === 'pin:toggle') return togglePin()
+  if (key === 'search:shelf') return toggleSearch()
+  if (key === 'dream:shelf') return (ui.dreamLauncherOpen = true)
   if (typeof key === 'string' && key.startsWith('nav:')) return navigate(key.slice(4))
   emit('action', key)
 }
@@ -68,6 +87,38 @@ const disabled = key => props.busy || (!props.hasWork && !['shelf', 'settings'].
 function navigate(key) {
   if (!disabled(key)) emit('navigate', key)
 }
+const splitMenu = ref(null)
+const mainWindow = !new URLSearchParams(location.search).has('panel')
+function canSplit(key) {
+  return latent.value && mainWindow && !!window.native?.panelOpen && !disabled(key)
+    && !!(props.active === 'shelf' ? props.targetWorkId : work.work?.id)
+    && WORK_NAVIGATION.some(item => item.key === key)
+}
+function showSplitMenu(event, item) {
+  if (!canSplit(item.key)) return
+  event.preventDefault()
+  const button = event.currentTarget
+  const keyboard = event.type === 'keydown' || (!event.clientX && !event.clientY)
+  const bounds = button.getBoundingClientRect()
+  splitMenu.value = { item, x: keyboard ? bounds.left : event.clientX, y: keyboard ? bounds.bottom : event.clientY }
+}
+async function confirmSplit() {
+  const item = splitMenu.value?.item
+  splitMenu.value = null
+  if (!item || !canSplit(item.key)) return
+  const type = item.key === 'chapters' ? 'chapter' : item.key
+  const fromShelf = props.active === 'shelf'
+  const source = fromShelf ? { work: { id: props.targetWorkId, title: props.targetTitle } } : work
+  const entity = fromShelf ? '' : {
+    chapter: work.selChapterId,
+    characters: work.selCharacterId,
+    snippets: work.selSnippetId
+  }[type]
+  const opened = await popOut(source, type, entity, `${source.work.title} · ${item.label}`)
+  if (opened) window.$msg?.success('已在独立窗口打开')
+}
+watch(() => [props.active, props.targetWorkId], () => { splitMenu.value = null })
+
 function title(item) {
   if (props.active !== 'shelf' || ['shelf', 'settings'].includes(item.key)) return item.label
   return props.hasWork ? `打开《${props.targetTitle}》的${item.label}` : '请先创建或选择作品'
@@ -80,9 +131,9 @@ watch(() => [props.active, ui.skin], async () => {
 
 <template>
   <AutoHideTopbar class="app-topbar-shell" :auto-hide="ui.topbarAutoHide" @update:auto-hide="value => ui.setPref('topbarAutoHide', value)">
-    <header class="app-topbar">
+    <header class="app-topbar" :data-topbar-page="active">
       <button type="button" class="app-topbar-brand" title="返回书架" aria-label="小说工坊，返回书架" :disabled="busy" @click="navigate('shelf')">
-        <span class="app-topbar-mark" :class="{ 'desktop-brand-mark': !nsPlugin && ui.skin !== 'crimson' }" aria-hidden="true">
+        <span v-if="!latent" class="app-topbar-mark" :class="{ 'desktop-brand-mark': !nsPlugin && ui.skin !== 'crimson' }" aria-hidden="true">
           <svg v-if="ui.skin === 'crimson'" viewBox="0 0 44 44"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
           <img v-else-if="!nsPlugin" :src="desktopSmallIcon" width="36" height="36" alt="" />
           <template v-else>坊</template>
@@ -91,10 +142,15 @@ watch(() => [props.active, ui.skin], async () => {
         <span class="app-topbar-narrow-title" :title="narrowTitle">{{ narrowTitle }}</span>
       </button>
       <nav ref="nav" class="app-topnav" aria-label="功能模块">
-        <button v-for="item in navItems" :key="item.key" type="button" class="app-topnav-item" :data-nav="item.key" :class="{ active: active === item.key }" :aria-current="active === item.key ? 'page' : undefined" :disabled="disabled(item.key)" :title="title(item)" @click="navigate(item.key)">{{ item.label }}</button>
+        <button v-for="item in navItems" :key="item.key" type="button" class="app-topnav-item" :data-nav="item.key" :class="{ active: active === item.key }" :aria-current="active === item.key ? 'page' : undefined" :aria-haspopup="canSplit(item.key) ? 'menu' : undefined" :disabled="disabled(item.key)" :title="title(item) + (canSplit(item.key) ? '（右键拆窗）' : '')" @click="navigate(item.key)" @contextmenu="showSplitMenu($event, item)" @keydown.shift.f10="showSplitMenu($event, item)">{{ item.label }}</button>
       </nav>
+      <NDropdown v-if="latent && mainWindow" trigger="manual" placement="bottom-start"
+        :show="!!splitMenu" :x="splitMenu?.x ?? 0" :y="splitMenu?.y ?? 0"
+        :options="splitMenu ? [{ key: 'split', label: '在独立窗口打开' + splitMenu.item.label }] : []"
+        @select="confirmSplit" @clickoutside="splitMenu = null" @update:show="value => { if (!value) splitMenu = null }" />
       <span class="app-topbar-current" aria-hidden="true">{{ currentLabel }}</span>
       <button v-if="nsPlugin && active === 'shelf'" type="button" class="app-topbar-create" aria-label="新书上架" @click="emit('create')">＋新书上架</button>
+      <div class="app-topbar-controls">
       <!-- 隐现（dsh）：右簇圆钮组，与插件版一致（已保存 + 搜索 + 统计 + 设置 + 锁定） -->
       <div v-if="latent" class="app-topbar-cluster">
         <span class="app-topbar-save" :data-save-state="saveState" role="img" :aria-label="saveLabel" :title="saveLabel">
@@ -105,7 +161,6 @@ watch(() => [props.active, ui.skin], async () => {
           <button type="button" class="app-topbar-round app-topbar-search-toggle" aria-label="搜索" title="搜索" :aria-expanded="slots.search ? (searchOpen ? 'true' : 'false') : undefined" @click="toggleSearch">
             <svg class="app-topbar-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 4.5 4.5" /></svg>
           </button>
-          <div v-if="slots.search" class="app-topbar-search" data-topbar-search><slot name="search" /></div>
         </div>
         <WritingStatsEntry class="app-topbar-round" :library="active==='shelf'" :disabled="busy" />
         <button type="button" class="app-topbar-round app-topbar-settings" aria-label="设置" title="设置" @click="navigate('settings')">
@@ -120,13 +175,16 @@ watch(() => [props.active, ui.skin], async () => {
         </button>
       </div>
       <span v-else class="app-topbar-save" :data-save-state="saveState" role="img" :aria-label="saveLabel" :title="saveLabel" aria-disabled="true"><span class="app-topbar-save-dot"></span></span>
-      <span class="app-topbar-more-wrap"><NDropdown trigger="click" placement="bottom-end" :options="moreOptions" @select="onSelect"><button type="button" class="app-topbar-more" aria-label="更多模块" :title="'更多模块（当前：' + currentLabel + '）'">⋯</button></NDropdown></span>
+      <span v-if="!latent" class="app-topbar-more-wrap"><NDropdown trigger="click" placement="bottom-end" :scrollable="latent" :style="latent ? { maxHeight: 'calc(100dvh - 90px)' } : undefined" :options="moreOptions" @select="onSelect"><button type="button" class="app-topbar-more" aria-label="更多" :title="'更多（当前：' + currentLabel + '）'">⋯</button></NDropdown></span>
       <div class="app-topbar-actions"><DreamModeEntries v-if="!nsPlugin && active==='shelf'" shelf :disabled="busy" @dream="ui.dreamLauncherOpen=true" /><slot name="actions" /></div>
+      </div>
+      <div v-if="slots.search" ref="searchPanel" class="app-topbar-search app-topbar-search-panel" :class="{ 'is-open': searchOpen }" data-topbar-search @keydown.esc.stop="closeSearch"><slot name="search" /></div>
     </header>
   </AutoHideTopbar>
 </template>
 
 <style>
+.app-topbar-controls { display: contents; }
 .app-topbar-shell {
   --topbar-bg: var(--bg-panel);
   --topbar-text: var(--text);

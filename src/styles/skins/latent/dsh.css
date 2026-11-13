@@ -1578,7 +1578,6 @@ html body[data-skin=dsh] :is(.app-topbar,.original-shelf .app-topbar) .app-topna
   max-width:100%;
   padding:4px;
   border-radius:var(--nsx-pill);
-  background:var(--nsx-glass-2);
   overflow-x:auto;
   overflow-y:hidden;
   scrollbar-width:none;

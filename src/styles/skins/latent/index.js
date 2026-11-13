@@ -12,6 +12,7 @@
 import './dsh.css'
 import './language.css'
 import './flow-shell.css'
+import './topbar.css'
 import './outline-fusion.css'
 import './characters-fusion.css'
 import './settings-fusion.css'

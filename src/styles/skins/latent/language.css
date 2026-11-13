@@ -90,7 +90,6 @@ html body[data-skin='dsh'] :is(.app-topbar, .original-shelf .app-topbar) .app-to
   max-width: 100%;
   padding: 4px;
   border-radius: var(--nsx-pill);
-  background: var(--nsx-glass-2);
   /* 窄栏放不下时横向滚动，滚动条本身不要出现在胶囊里。 */
   overflow-x: auto;
   overflow-y: hidden;

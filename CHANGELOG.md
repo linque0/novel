@@ -1,5 +1,40 @@
 ## [Unreleased]
 
+## [1.3.0] - 2026-11-13 · 大纲放置预览、拖拽排序统一与仓库整理阶段
+
+### 仓库与工程（2026-11-12 ~ 11-13）
+
+- **文档资产清理**：删除 2008 项历史设计稿与旧原型页（`oil-ui-v2/v3/v4/v5` 四套设计稿、三代旧 logo、七套大纲原型页、旧整屏截图、过期方案文档）。保留 README 引用的 23 张 `assets/ui/*.jpg`、产品介绍配图与 `faction-v5-six` 现行品牌素材。
+- **死代码移除**：删除 5 个孤儿 Vue 组件（`GlazeEasel`/`GlazeMiniBook`/`GlazeCover`/`OriginalDust`/`OriginalShelfScene`）与 3 个配套模块，清理 7 处零调用导出、`Bookshelf.vue` 的 5 个无用 import。保留引力/琉光整套皮肤——它们只是 `selector:false` 隐藏，老存档仍会命中。
+- **资源路径修复**：`writing-stats-fusion.css` 与 `outline-fusion.css` 的相对路径解析到不存在的目录（运行时 404），改为正确层级；构建产物已确认变为哈希化引用。
+- **大素材归档**：`docs/archive/`（166 MB，已 gitignore）收纳六色封面设计母版、重复字体子集、3D 验证录屏、原始 TTF。`docs/` 不含归档由 304 MB 降到 159 MB，`src/` 由 72 MB 降到 54 MB。
+- **工具脚本整理**：10 个失效验收脚本移入 `tools/retired/`（4 个依赖已归档目录、6 个硬编码仓库外绝对路径），清理 98 个本地产物（27 MB），`tools/` 由 29 MB 降到 2.3 MB。
+- 建立 `pre-cleanup-20261112` tag 作为清理前的完整回溯锚点；新增 `docs/验收记录.md` 汇总 7 项已通过验收的结论、判据与原证据位置。
+
+### 大纲画布放置预览（2026-11-13）
+
+- 新增 `OutlinePlacementGhost.vue` + `useOutlinePlacement.js` + `card-layout.js`：从工具条或右键新建锚点/卷时先跟随指针显示落点预览，点击落定，避免盲放后反复拖动。`OutlineCardText.vue` 抽出卡片文本渲染，画布与迷你卡共用。
+- 事件卡关联统计重写：按 `relationEntries` 聚合章引用与关联数，`eventLinksById` 只遍历一次，容器摘要与连线标签口径一致。
+
+### 拖拽排序统一（2026-11-13）
+
+- 新增 `usePointerRowSort.js`：把章节拖拽的幽灵元素、位移测量、缓动与落点计算抽成通用实现，`useChapterSort.js` 与新增的 `useLoreSort.js` 共用，设定树与章节树行为一致。
+- 新增 `services/lore-move.js` 的 `planLoreMove`：在改动 store 与撤销栈之前先算出整棵树的目标形态，非法移动直接返回空计划，避免半途失败留下脏状态。
+
+### 双击链跨窗口跳转（2026-11-13）
+
+- 大纲面板里双击指向人物/节点的双链，主窗口会切到对应作品并跳到目标：`panels.js` 校验事件来自 outline 面板且 workId 匹配后转发 `outline-citation-jump`，`appbus.js` 接收后打开作品并调用新增的 `jumpToOutlineCitation`。面板窗口自身忽略该事件。
+
+### 顶栏与皮肤
+
+- 统一顶栏 `topbar.css` 抽出（123 行），`AppTopbar.vue` 与 `AutoHideTopbar.vue` 共用；顶栏搜索改为点击后自动聚焦输入框、`closeSearch` 统一收口。
+- 作品导航接入 `WORK_NAVIGATION`，`AppTopbar` 新增 `targetWorkId` prop 支持按作品上下文渲染。
+- 隐现皮肤 `chars-context` / `chars-shell` / `outline-fusion` / `latent-studio` 同步布局；赤月戏 `crimson-v3.css` 同步。
+
+### 验收
+
+- `npm run build` 通过。仓库整理阶段逐项验证：0 断链、0 死符号、构建产物资源引用正确。
+
 ## [1.2.0] - 2026-11-11 · 画布缺陷修复与作品库底座阶段
 
 ### 大纲画布缺陷修复：容器内拖动 / 连线换色 / 显示透出（2026-11-03）

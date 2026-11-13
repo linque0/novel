@@ -1,4 +1,5 @@
 <script setup>
+import { useLoreSort } from '../composables/useLoreSort.js'
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import TaskLauncher from './ai/TaskLauncher.vue'
@@ -29,6 +30,7 @@ const props = defineProps({
   barTarget: { type: String, default: '#crimson-bar-tools' }
 })
 const rootEl = ref(null)
+const loreEditor = ref(null)
 const ver = ref(0)
 const rows = ref([])
 /* 内容根：详情页 = 当前节点；列表页 = 当前设定集。标题单独显示，不再作为树行 */
@@ -53,15 +55,12 @@ function popLore() {
   popOut(work, 'lore', '', `${work.work?.title || ''} · 设定`)
 }
 const pending = reactive({ key: null, offset: 'end' })
-const drag = reactive({ key: null, hintKey: null, zone: null })
 const focusedId = ref(null)
 const ctx = reactive({ open: false, x: 0, y: 0, rowId: null, folded: false, hasChildren: false, linkSearch: false, linkSpan: null })
 const clip = ref(null)
 const undoStack = ref([])
 const redoStack = ref([])
 let lastSnap = 0
-let expandTimer = null
-let expandTarget = null
 
 const COLORS = ['#3c3427', '#8c6f4e', '#c0392b', '#d35400', '#27ae60', '#2980b9', '#8e44ad', '#7f8c8d']
 const HIGHLIGHTS = ['#fff3a3', '#ffd6a5', '#ffa8a8', '#b8f2c9', '#a8d8ff', '#e0c3fc']
@@ -531,66 +530,9 @@ function onBackspace(row) {
 }
 
 /* ---------- 拖拽（三区指示 + 悬停自动展开 + FLIP） ---------- */
-function onDragStart(row, e) {
-  drag.key = row.node.key
-  e.dataTransfer.effectAllowed = 'move'
-  e.dataTransfer.setData('text/plain', row.node.id)
-}
-function containsKey(node, key) {
-  if (node.key === key) return true
-  return node.children.some((c) => containsKey(c, key))
-}
-function onDragOver(row, e) {
-  if (!drag.key || drag.key === row.node.key) return
-  const src = visible.value.find((r) => r.node.key === drag.key)
-  if (!src || containsKey(src.node, row.node.key)) return
-  const r = e.currentTarget.getBoundingClientRect()
-  const y = (e.clientY - r.top) / Math.max(1, r.height)
-  drag.hintKey = row.node.key
-  drag.zone = y < 0.28 ? 'before' : y > 0.72 ? 'after' : 'inside'
-  if (row.node.fold && row.node.hasChildren) {
-    if (expandTarget !== row.node.key) {
-      clearTimeout(expandTimer)
-      expandTarget = row.node.key
-      expandTimer = setTimeout(() => {
-        if (drag.key && drag.hintKey === row.node.key) {
-          work.mubuToggleFold(row.node.id)
-          ver.value++
-        }
-      }, 600)
-    }
-  } else if (expandTarget) {
-    clearTimeout(expandTimer)
-    expandTarget = null
-  }
-}
-function onDrop(row) {
-  clearTimeout(expandTimer)
-  if (!drag.key || !drag.hintKey) return clearDrag()
-  const src = visible.value.find((r) => r.node.key === drag.key)
-  if (!src) return clearDrag()
-  pushUndo()
-  commit(() => work.mubuMove(src.node.id, row.node.id, drag.zone), src.node.key, 'end')
-  clearDrag()
-}
-function onDropRoot() {
-  clearTimeout(expandTimer)
-  if (!drag.key) return clearDrag()
-  const n = work.mubu.find((x) => x.id === drag.key.slice(2))
-  const rootId = contentRootId.value
-  if (!n || !rootId || n.id === rootId) return clearDrag()
-  pushUndo()
-  /* 拖到空白处 = 移到当前内容根的一级条目 */
-  work.mubuMove(n.id, rootId, 'inside')
-  ver.value++
-  nextTick(() => flashNode(n.id))
-  clearDrag()
-}
-function clearDrag() {
-  drag.key = null
-  drag.hintKey = null
-  drag.zone = null
-}
+const loreSort = useLoreSort(loreEditor, work, () => [
+  contentRootId.value, ui.mubuQuery, ui.loreScope, ui.loreRootId, ui.mubuSelectedId
+], () => ver.value++, pushUndo)
 
 /* ---------- 导入 MD / TXT ---------- */
 async function importMd() {
@@ -917,7 +859,6 @@ onBeforeUnmount(() => {
   window.removeEventListener('keydown', onWinKeyDown)
   window.removeEventListener('wheel', onWinWheel)
   window.removeEventListener('resize', closeCtx)
-  clearTimeout(expandTimer)
   clearTimeout(relPopTimer)
 })
 </script>
@@ -995,22 +936,17 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-if="ui.isStudioSkin" class="gravity-lore-title"><h2>{{ work.work?.title }}的世界</h2><span>{{ nodeCount }} 个节点</span></div>
-    <div class="ob-editor" @dragover.prevent @drop.prevent="onDropRoot">
+    <div ref="loreEditor" class="ob-editor" @pointerdown="loreSort.pointerDown" @dragstart.capture="loreSort.nativeDrag" @click.capture="loreSort.click">
       <div
         v-for="row in visible"
         :key="row.node.key"
         class="ob-row"
         :data-depth="row.depth"
         :data-node="row.node.key"
+        :data-lore-sort-row="row.node.id"
         :class="{
           'ns-row-on': ui.mubuSelectedId === row.node.id,
-          'drop-before': drag.hintKey === row.node.key && drag.zone === 'before',
-          'drop-after': drag.hintKey === row.node.key && drag.zone === 'after',
-          'drop-inside': drag.hintKey === row.node.key && drag.zone === 'inside'
         }"
-        @dragover.prevent="onDragOver(row, $event)"
-        @drop.prevent.stop="onDrop(row)"
-        @dragend="clearDrag"
         @dblclick="onRowDblClick(row, $event)"
         @contextmenu="onRowCtx(row, $event)"
       >
@@ -1018,10 +954,8 @@ onBeforeUnmount(() => {
         <button
           class="ob-bullet"
           :class="{ 'has-children': row.node.hasChildren, folded: row.node.fold }"
-          :draggable="true"
-          :title="row.node.hasChildren ? (row.node.fold ? '展开子节点' : '折叠子节点') : '拖拽移动节点'"
+          :title="row.node.hasChildren ? (row.node.fold ? '单击展开，按住拖动' : '单击折叠，按住拖动') : '拖拽移动节点'"
           @click="toggleFold(row)"
-          @dragstart="onDragStart(row, $event)"
         />
         <div
           class="ob-text"

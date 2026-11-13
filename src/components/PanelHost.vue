@@ -24,7 +24,7 @@ import CharacterCenter from './CharacterCenter.vue'
 import MubuView from './MubuView.vue'
 import SnippetCenter from './SnippetCenter.vue'
 /* 隐现（dsh）皮肤的内容窗：与主窗共用同一套完整工作区 */
-import OutlineWorkspace from './skins/latent/outline/OutlineWorkspace.vue'
+import LatentOutlineCenter from './skins/latent/outline/OutlineCenter.vue'
 import CharactersWorkspace from './skins/latent/characters/CharactersWorkspace.vue'
 import LoreWorkspace from './skins/latent/lore/LoreWorkspace.vue'
 import SnippetsWorkspace from './skins/latent/snippets/SnippetsWorkspace.vue'
@@ -258,7 +258,7 @@ onBeforeUnmount(() => autosave.flushAll())
             <EditorPane v-if="spec.type === 'chapter'" />
             <!-- 隐现（dsh）内容窗：四个模块走自带完整工作区，与主窗同一套实现 -->
             <template v-else-if="isLatentSkin(ui.skin)">
-              <OutlineWorkspace v-if="spec.type === 'outline'" style="flex: 1; min-height: 0" />
+              <LatentOutlineCenter v-if="spec.type === 'outline'" style="flex: 1; min-height: 0" />
               <CharactersWorkspace v-else-if="spec.type === 'characters'" style="flex: 1; min-height: 0" />
               <LoreWorkspace v-else-if="spec.type === 'lore'" style="flex: 1; min-height: 0" />
               <SnippetsWorkspace v-else-if="spec.type === 'snippets'" style="flex: 1; min-height: 0" />

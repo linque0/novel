@@ -5,9 +5,11 @@
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
-import { parseTarget, targetById, findByTitle, previewFor, jumpTo, KIND_LABEL, tokenAtPoint } from '../services/doublelinks'
+import { parseTarget, targetById, findByTitle, previewFor, jumpTo, jumpToOutlineCitation, KIND_LABEL, tokenAtPoint } from '../services/doublelinks'
+import { useWorkStore } from '../stores/work'
 
 const pop = ref(null)
+const work = useWorkStore()
 const st = reactive({ show: false, x: 0, y: 0, view: null, target: null, pinned: false, dragging: false })
 let curEl = null // 当前悬停的 .dl-link 元素
 let curHost = null // 当前悬停的 textarea
@@ -53,6 +55,7 @@ function resolveByEl(el) {
   const resolved = parsed ? targetById(parsed.kind, parsed.id) : null
   const title = el.getAttribute('data-dl-title') || resolved?.title || ''
   if (resolved) return { view: previewFor(resolved) || missingView(title, parsed.kind), target: resolved }
+  if (el.hasAttribute('data-outline-citation')) return { view: missingView(title, parsed?.kind), target: null }
   const byTitle = findByTitle(title)
   return byTitle ? { view: previewFor(byTitle), target: byTitle } : { view: missingView(title, parsed?.kind), target: null }
 }
@@ -149,7 +152,11 @@ function onMouseMove(e) {
     cancelHide() // 鼠标移入浮窗：保持显示
     return
   }
-  const linkEl = e.target?.closest?.('.dl-link')
+  const linkEl = e.target?.closest?.('.dl-link, [data-outline-citation]')
+  if (linkEl?.hasAttribute('data-outline-citation') && e.buttons) {
+    if (st.show) delayHide()
+    return
+  }
   if (linkEl) {
     cancelHide()
     if (linkEl === curEl && st.show) return
@@ -184,8 +191,25 @@ function onMouseMove(e) {
   if (st.show) delayHide()
 }
 
-function onJump() {
-  if (st.target) jumpTo(st.target)
+async function onJump() {
+  if (curEl?.hasAttribute('data-outline-citation')) {
+    const { view, target } = resolveByEl(curEl)
+    if (!target) {
+      st.view = view
+      st.target = null
+      return
+    }
+    const panel = new URLSearchParams(location.search).get('panel')
+    if (panel?.startsWith('outline:') && !['olnode', 'outline'].includes(target.kind) && window.native?.appBroadcast) {
+      const result = await window.native.appBroadcast({
+        kind: 'outline-citation-jump',
+        data: { workId: work.work?.id, kind: target.kind, id: target.id }
+      })
+      if (!result?.ok) return
+    } else {
+      jumpToOutlineCitation(target)
+    }
+  } else if (st.target) jumpTo(st.target)
   hide()
 }
 

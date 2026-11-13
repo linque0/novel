@@ -12,6 +12,8 @@ import { autosave } from './autosave'
 import { handleAiEvent } from './ai/runtime'
 import { useAiStore } from '../stores/ai'
 import { projectionRestoreBegin, projectionRestored } from './project/pipeline.js'
+import { useWorkStore } from '../stores/work'
+import { targetById, jumpToOutlineCitation } from './doublelinks'
 
 let installed = false
 
@@ -19,6 +21,16 @@ export function installAppBus() {
   if (installed || !window.native?.appOnEvent) return
   installed = true
   window.native.appOnEvent(({ kind, data }) => {
+    if (kind === 'outline-citation-jump') {
+      const work = useWorkStore()
+      if (!data?.workId || new URLSearchParams(location.search).has('panel')) return
+      const open = work.work?.id === data.workId ? Promise.resolve() : work.open(data.workId)
+      open.then(() => {
+        if (work.work?.id !== data.workId) return
+        jumpToOutlineCitation(targetById(data.kind, data.id))
+      }).catch(console.error)
+      return
+    }
     if (['story-document-changed','creative-workflow-changed','creative-workflow-request','creative-workflow-pause','memory-queue-ready','memory-queue-changed','book-source-changed', 'ai-preview-request','ai-presets-changed', 'ai-settings-changed', 'kb-changed', 'ai-kb-request', 'ai-source-changed'].includes(kind)) {
       handleAiEvent({ kind, data }).catch(console.error)
       return

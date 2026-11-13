@@ -685,6 +685,26 @@ body[data-skin='crimson'] [data-module='lore'] .lore-surface {
   gap: 24px;
   padding: 0 32px 25px !important;
 }
+body[data-skin='crimson'] .panel-host[data-module='lore'] .lore-surface {
+  grid-template-columns: minmax(104px, 20%) minmax(0, 1fr) 32px;
+  grid-template-rows: minmax(0, 1fr);
+  gap: 12px;
+  min-width: 0;
+  padding: 0 12px 12px !important;
+}
+body[data-skin='crimson'] .panel-host[data-module='lore'] .lore-surface > :is(.module-heading, .crimson-bar-group) {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+body[data-skin='crimson'] .panel-host[data-module='lore'] .lore-surface:has(> .crimson-bar-group) {
+  grid-template-rows: auto minmax(0, 1fr);
+}
+body[data-skin='crimson'] .panel-host[data-module='lore'] .lore-surface:has(> .crimson-bar-group) > :is(.lore-set-rail, .lore-paper-col, .lore-toc-rail) {
+  grid-row: 2;
+}
+body[data-skin='crimson'] .panel-host[data-module='lore'] .lore-surface > .lore-set-rail { grid-column: 1; }
+body[data-skin='crimson'] .panel-host[data-module='lore'] .lore-surface > .lore-paper-col { grid-column: 2; }
+body[data-skin='crimson'] .panel-host[data-module='lore'] .lore-surface > .lore-toc-rail { grid-column: 3; }
 body[data-skin='crimson'] [data-module='lore'] .crimson-art-pane,
 body[data-skin='crimson'] .ldt-crimson-layout .crimson-art-pane {
   border: 0 !important;

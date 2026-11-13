@@ -2,6 +2,9 @@
      四向锚点拖线（因果/伏笔/冲突/关联 + 箭头 + 标签）、贝塞尔/正交折线、网格吸附、双密度、断线检测、
      关系链接卫星与悬停预览（复用全局 DLinkPopover）、骨架模板快速开始；布局数学在 outline/canvas-model.js -->
 <script setup>
+import OutlinePlacementGhost from './outline/OutlinePlacementGhost.vue'
+import { useOutlinePlacement } from './outline/useOutlinePlacement.js'
+import OutlineCardText from './outline/OutlineCardText.vue'
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { normalizeCanvasOpacity } from '../services/canvas-appearance.js'
@@ -386,6 +389,7 @@ const searchResults = computed(() => {
 })
 const multiCount = computed(() => picked.size)
 function toggleMulti() {
+  placement.cancel()
   viewMulti.value = !viewMulti.value
   if (viewMulti.value) {
     drawerId.value = null
@@ -448,17 +452,12 @@ const volumeMenuOptions = computed(() => {
   }
   return out
 })
-function onAnchorSelect(key) {
-  if (key === 'anchor') return addNode('anchor')
-  if (String(key).startsWith('chapter:')) addAnchorFromChapter(String(key).slice(8))
-}
-function onVolumeSelect(key) {
-  if (key === 'volume') return addNode('volume')
-  if (String(key).startsWith('volume:')) addVolumeFromVolume(String(key).slice(7))
-}
 function onModuleSelect(kind, key) {
-  if (kind === 'anchor') return onAnchorSelect(key)
-  if (kind === 'volume') return onVolumeSelect(key)
+  if (kind === key) return startPlacement(kind)
+  const prefix = kind === 'anchor' ? 'chapter:' : 'volume:'
+  const entries = kind === 'anchor' ? work.liveChapters : work.liveVolumes
+  const target = key.startsWith(prefix) && entries.find(row => row.id === key.slice(prefix.length))
+  if (target) startPlacement(kind, { refId: target.id, title: target.title || '' })
 }
 const canvasOpacity = computed(() => normalizeCanvasOpacity(work.canvasPrefs.canvasOpacity))
 const canvasOpacityModel = computed({
@@ -1274,6 +1273,7 @@ function createAt(kind) {
 /* Delete 键删除选中模块（输入态不劫持） */
 function onKey(e) {
   if (e.key === 'Escape') {
+    placement.cancel()
     cancelGesture?.()
     selectedEdgeKey.value=null;flowMode.value='idle'
     ctxMenu.value = null
@@ -1747,6 +1747,25 @@ function onDblNode(n) {
   }
   drawerId.value = n.id
 }
+const eventLinksById = computed(() => {
+  const links = new Map(live.value.filter(n => n.kind === 'event').map(n => [n.id, { chapter: '', count: 0 }]))
+  const add = (id, otherId) => {
+    const entry = links.get(id)
+    if (!entry) return
+    const other = nodeById(otherId)
+    if (other?.kind === 'anchor') entry.chapter ||= chapterOf(other)?.title || ''
+    else entry.count++
+  }
+  for (const { owner, rel } of relationEntries.value) {
+    add(owner.id, rel.toId)
+    if (owner.id !== rel.toId) add(rel.toId, owner.id)
+  }
+  for (const [id, entry] of links) {
+    const title = entry.chapter || nodeById(id)?.chapter || ''
+    entry.chapter = /^(第\s*.+?章)/.exec(title)?.[1] || title || '未关联章节'
+  }
+  return links
+})
 const chapterOf = (n) => (n.kind === 'anchor' ? work.chapters.find((c) => c.id === n.refId && !c.deletedAt) : null)
 function labelOf(n) {
   if (n.kind === 'anchor') return chapterOf(n)?.title || n.title || '（已删章节）'
@@ -1774,12 +1793,9 @@ function subOf(n) {
   }
   return n.title ? (n.text || '').split('\n').find((x) => x.trim())?.trim().slice(0, 30) || '' : ''
 }
-function citeJump(n) {
-  const parsed = parseTarget(n.refId)
-  const t = parsed ? targetById(parsed.kind, parsed.id) : null
-  if (!t) return
-  if (parsed.kind === 'character') work.jumpToCharGraph(t.id)
-  else jumpTo(t)
+function chooseCitation(n) {
+  const rect = rectOf(n)
+  if (rect) citePick.value = { nodeId: n.id, x: rect.x, y: rect.y }
 }
 /* 放大模块（自定义高度超出默认 30px+）显示正文全文；文本框模块始终全文 */
 function showFullText(n) {
@@ -1845,8 +1861,48 @@ function shapePoly(n) {
 }
 
 /* ---------- 新建与骨架模板 ---------- */
+function newNodeSize(node) {
+  const size = node.kind === 'container'
+    ? { w: SCOPE_METRICS.cardW, h: SCOPE_METRICS.collapsedH }
+    : effSize(node, cardDensity.value)
+  return { w: size.w, h: Math.max(36, size.h) }
+}
+function newNodeFields(kind) {
+  return { kind, title: ({ event: '新事件', note: '新便签', container: '新容器' })[kind] || '' }
+}
+function createPlacedNode(node, rect) {
+  const entries = node.kind === 'anchor' ? work.liveChapters : work.liveVolumes
+  if (node.refId && !entries.some(row => row.id === node.refId)) {
+    window.$msg?.warning('关联的章节或卷已不存在，请重新选择')
+    return
+  }
+  const fields = node.kind === 'container' ? { ...node, w: rect.w, manualW: true } : node
+  const row = work.olnodeAdd(scopeId.value, { ...fields, canvasX: rect.x, canvasY: rect.y })
+  work.selOlnodeId = row.id
+  if (row.kind === 'cite') chooseCitation(row)
+}
+const placement = useOutlinePlacement({ canvasPoint: canvasPt, nodeSize: newNodeSize, snap, create: createPlacedNode })
+const { draft: placementDraft, ghost: placementGhost } = placement
+const placementTool = computed(() => ADD_TOOLS.find(tool => tool.kind === placementDraft.value?.kind))
+function startPlacement(kind, fields = {}) {
+  if (!work.work || !canvasEl.value) return
+  if (viewMulti.value) toggleMulti()
+  cancelGesture?.()
+  closeFloaters()
+  drawerId.value = null
+  ctxMenu.value = null
+  blankCtx.value = null
+  juncCtx.value = null
+  selectedEdgeKey.value = null
+  flowMode.value = 'idle'
+  placement.start({ ...newNodeFields(kind), ...fields })
+}
+watch([scopeId, () => work.work?.id], placement.cancel, { flush: 'sync' })
+function onCanvasDoubleClick() {
+  if (!placementDraft.value && !placement.consumePlacementDoubleClick()) addNode('event')
+}
 function addNodeAt(kind, pt, fields = {}) {
-  const s = kind === 'container' ? { w: SCOPE_METRICS.cardW, h: SCOPE_METRICS.collapsedH } : effSize({ kind }, cardDensity.value)
+  const s = newNodeSize({ kind })
   const spot = freeSpotFor(
     [...visNodes.value.map((n) => rectOf(n)).filter(Boolean), ...miniItems.value.map((i) => rectOf(i.node)).filter(Boolean)],
     s,
@@ -1872,16 +1928,6 @@ function addNode(kind, fields = {}) {
     if (p) citePick.value = { nodeId: row.id, x: p.x, y: p.y }
   }
   return row
-}
-function addAnchorFromChapter(chapterId) {
-  const c = work.liveChapters.find((x) => x.id === chapterId)
-  if (!c) return window.$msg?.warning('还没有章节可作锚点')
-  addNode('anchor', { refId: c.id, title: c.title || '' })
-}
-function addVolumeFromVolume(volumeId) {
-  const v = work.liveVolumes.find((x) => x.id === volumeId)
-  if (!v) return window.$msg?.warning('还没有分卷可添加')
-  addNode('volume', { refId: v.id, title: v.title || '' })
 }
 function onCitePick(t) {
   const st = citePick.value
@@ -2020,9 +2066,9 @@ onBeforeUnmount(() => {
       <div class="oc-module-tools">
         <template v-for="tool in ADD_TOOLS" :key="tool.kind">
           <NDropdown :class="museumPopoverClass" :data-glaze-light="museumLight" v-if="tool.kind === 'anchor' || tool.kind === 'volume'" trigger="click" :options="tool.kind === 'anchor' ? anchorMenuOptions : volumeMenuOptions" @select="onModuleSelect(tool.kind, $event)">
-            <button type="button" :title="'添加'+tool.label"><OIcon :name="tool.icon" :size="14" />{{ tool.label }}</button>
+            <button type="button" :title="'添加'+tool.label" :class="{ chosen: placementDraft?.kind === tool.kind, 'oc-placement-active': placementDraft?.kind === tool.kind }"><OIcon :name="tool.icon" :size="14" />{{ tool.label }}</button>
           </NDropdown>
-          <button v-else type="button" :title="'添加'+tool.label" @click="addNode(tool.kind)"><OIcon :name="tool.icon" :size="14" />{{ tool.label }}</button>
+          <button v-else type="button" :title="'添加'+tool.label" :aria-pressed="placementDraft?.kind === tool.kind" :class="{ chosen: placementDraft?.kind === tool.kind, 'oc-placement-active': placementDraft?.kind === tool.kind }" @click="startPlacement(tool.kind)"><OIcon :name="tool.icon" :size="14" />{{ tool.label }}</button>
         </template>
       </div>
       <button class="oc-chip" type="button" :class="{on:viewMulti}" :aria-pressed="viewMulti" @click="toggleMulti">多选</button>
@@ -2059,9 +2105,30 @@ onBeforeUnmount(() => {
       <button class="om-btn text" title="适应当前层" @click="fitView">适应</button></div>
     </div>
 
-    <div ref="canvasEl" class="om-canvas oc-canvas" :data-flow-state="flowMode" @mousedown="onPanStart" @wheel.prevent="onWheelC" @dblclick.self="addNode('event')" @contextmenu.prevent="onCanvasCtx">
+    <div ref="canvasEl" class="om-canvas oc-canvas" :data-flow-state="flowMode" @mousedown.capture="placement.onCanvasMouseDown" @mousedown="onPanStart" @wheel.prevent="onWheelC" @dblclick.self="onCanvasDoubleClick" @contextmenu.prevent="onCanvasCtx">
+      <div
+        v-if="placementDraft"
+        class="oc-placement-surface"
+        @pointerenter="placement.move"
+        @pointermove="placement.move"
+        @pointerleave="placement.leave"
+        @mousedown.stop.prevent
+        @click.stop="placement.confirm"
+        @contextmenu.stop.prevent="placement.cancel"
+      >
+        <span class="oc-placement-hint" role="status">点击画布放置 · Esc 取消</span>
+      </div>
       <div class="oc-canvas-surface" :style="{ opacity: canvasOpacity / 100 }" aria-hidden="true"></div>
       <div class="om-inner" :style="innerStyle">
+        <OutlinePlacementGhost
+          v-if="placementGhost"
+          :kind="placementGhost.node.kind"
+          :label="placementTool?.label"
+          :icon="placementTool?.icon"
+          :title="placementGhost.node.title"
+          :rect="placementGhost.rect"
+          :paper="paperFor(placementGhost.node)"
+        />
         <svg
           class="om-edges oc-edges"
           :style="{ left: svgBox.x + 'px', top: svgBox.y + 'px' }"
@@ -2101,13 +2168,14 @@ onBeforeUnmount(() => {
           :key="n.id"
           class="oc-node"
           :data-node-id="n.id"
-          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'oc-small-card': n.kind !== 'container' && rectOf(n).h < 92, 'resize-smooth': resizeSmooth && resizing === n.id, editing: editText && editText.id === n.id, 'dl-link': n.kind === 'cite' && n.refId, 'drop-target': miniDrag && miniDrag.moved && miniDrag.targetId === n.id }]"
+          :class="['oc-' + n.kind, 'sh-' + (n.shape || 'process'), { sel: work.selOlnodeId === n.id, flash: flashIds.has(n.id), pinned: n.pin, resizing: resizing === n.id, 'oc-small-card': n.kind !== 'container' && rectOf(n).h < 92, 'resize-smooth': resizeSmooth && resizing === n.id, editing: editText && editText.id === n.id, 'drop-target': miniDrag && miniDrag.moved && miniDrag.targetId === n.id }]"
           :style="nodeStyle(n)"
+          :data-outline-citation="n.kind === 'cite' && n.refId ? '' : null"
           :data-dl-target="n.kind === 'cite' && n.refId ? n.refId : null"
           :data-dl-title="n.kind === 'cite' ? labelOf(n) : null"
           @mousedown="onNodeDown($event, n)"
           @dblclick.stop="onDblNode(n)"
-          @click.stop="n.kind === 'cite' && n.refId && citeJump(n)"
+          @click.stop="n.kind === 'cite' && !viewMulti && selectMini(n)"
           @contextmenu.prevent="onNodeCtx($event, n)"
         >
           <template v-if="n.kind === 'container'">
@@ -2152,7 +2220,25 @@ onBeforeUnmount(() => {
               @keydown.esc.prevent="editText = null"
               @keydown.ctrl.enter.prevent="commitInline"
             ></textarea>
-            <button v-else-if="n.kind === 'cite' && !n.refId" class="oc-cite-add" title="选择引用目标" @click.stop="citePick = { nodeId: n.id, x: posOf(n).x, y: posOf(n).y }"><OIcon name="plus" :size="12" /> 选择目标</button>
+            <OutlineCardText
+              v-else-if="['cite', 'volume', 'event'].includes(n.kind)"
+              :kind="n.kind"
+              :shape="n.shape"
+              :rect="rectOf(n)"
+              :title="labelOf(n)"
+              :summary="n.kind === 'volume' ? subOf(n) : plainText(n).trim() || subOf(n)"
+              :status="n.kind === 'event' ? statusLabel(n) : ''"
+              :status-color="n.kind === 'event' ? statusColor(n) : ''"
+              :subtype="n.mtype"
+              :association="eventLinksById.get(n.id)?.chapter"
+              :relation-count="eventLinksById.get(n.id)?.count"
+              :needs-target="n.kind === 'cite' && !n.refId"
+              @choose-target="chooseCitation(n)"
+            >
+              <template #actions>
+                <button class="gv-more" title="模块操作（与右键菜单相同）" aria-label="模块操作" @mousedown.stop.prevent @click.stop="onNodeCtx($event, n)">⋯</button>
+              </template>
+            </OutlineCardText>
             <div v-else class="oc-body" :class="{ 'oc-textbody': n.kind === 'textbox' }">
               <div v-if="n.kind !== 'textbox' && showCardChrome(n)" class="oc-kicker">
                 <span>{{ KIND_LABEL_DESIGN[n.kind] || '模块' }}</span>
@@ -2216,6 +2302,7 @@ onBeforeUnmount(() => {
               :style="miniStyle(item, group)"
               :data-node-id="item.node.id"
               :data-mini-id="item.node.id"
+              :data-outline-citation="item.node.kind === 'cite' && item.node.refId ? '' : null"
               :data-dl-target="item.node.kind === 'cite' && item.node.refId ? item.node.refId : null"
               :data-dl-title="item.node.kind === 'cite' ? labelOf(item.node) : null"
               @mousedown="onMiniDown($event, item)"
@@ -2224,8 +2311,8 @@ onBeforeUnmount(() => {
               @contextmenu.prevent="onNodeCtx($event, item.node)"
             >
               <span v-if="paperFor(item.node)" class="oc-paper" :class="paperClass(item.node)" :style="paperFor(item.node)" aria-hidden="true" />
-              <div class="oc-mini-content">
-                <div class="oc-mini-top">
+              <div class="oc-mini-content" :class="{ 'oc-mini-fitted': ['cite', 'volume', 'event'].includes(item.node.kind) }">
+                <div v-if="!['cite', 'volume', 'event'].includes(item.node.kind)" class="oc-mini-top">
                   <span class="oc-mini-kind">{{ KIND_LABEL_DESIGN[item.node.kind] || '模块' }}</span>
                   <span class="oc-mini-state">
                     <i v-if="item.node.kind === 'event'" class="oc-state-dot" :style="{ '--state-color': statusColor(item.node) }" />
@@ -2254,13 +2341,32 @@ onBeforeUnmount(() => {
                     @keydown.esc.prevent="editText = null"
                     @keydown.ctrl.enter.prevent="commitInline"
                   ></textarea>
+                  <OutlineCardText
+                    v-else-if="['cite', 'volume', 'event'].includes(item.node.kind)"
+                    :kind="item.node.kind"
+                    :shape="item.node.shape"
+                    :rect="item.rect"
+                    :title="labelOf(item.node)"
+                    :summary="item.node.kind === 'volume' ? subOf(item.node) : plainText(item.node).trim() || subOf(item.node)"
+                    :status="item.node.kind === 'event' ? statusLabel(item.node) : ''"
+                    :status-color="item.node.kind === 'event' ? statusColor(item.node) : ''"
+                    :subtype="item.node.mtype"
+                    :association="eventLinksById.get(item.node.id)?.chapter"
+                    :relation-count="eventLinksById.get(item.node.id)?.count"
+                    :needs-target="item.node.kind === 'cite' && !item.node.refId"
+                    @choose-target="chooseCitation(item.node)"
+                  >
+                    <template v-if="item.node.kind === 'event'" #actions>
+                      <button class="gv-more" type="button" aria-label="模块操作" title="模块操作" @mousedown.stop.prevent @click.stop="onNodeCtx($event, item.node)">⋯</button>
+                    </template>
+                  </OutlineCardText>
                   <template v-else>
                     <h3 class="oc-mini-title">{{ labelOf(item.node) }}</h3>
                     <p v-if="item.node.kind !== 'textbox'" class="oc-mini-body">{{ plainText(item.node).split('\n')[0].slice(0, 70) || subOf(item.node) }}</p>
                   </template>
                   <div class="oc-mini-actions">
                     <button type="button" @click.stop="drawerId = item.node.id">编辑</button>
-                    <button class="more" type="button" @click.stop="onNodeCtx($event, item.node)">⋯</button>
+                    <button v-if="item.node.kind !== 'event'" class="more" type="button" @click.stop="onNodeCtx($event, item.node)">⋯</button>
                   </div>
                 </template>
               </div>
@@ -2464,9 +2570,9 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- 当前层空态 -->
-      <div v-if="!visNodes.length && !miniItems.length" class="oc-scope-empty">
+      <div v-if="!placementDraft && !visNodes.length && !miniItems.length" class="oc-scope-empty">
         <p>当前层还没有模块。</p>
-        <button class="oc-quiet primary" type="button" @click="addNode('event')">＋ 新建事件</button>
+        <button class="oc-quiet primary" type="button" @click="startPlacement('event')">＋ 新建事件</button>
         <span v-if="scopeId">也可以从上方面包屑返回上一层。</span>
       </div>
 
@@ -2550,13 +2656,13 @@ onBeforeUnmount(() => {
 
 
     <!-- 空画布快速开始 -->
-    <div v-if="!live.length" class="oc-quick">
+    <div v-if="!placementDraft && !live.length" class="oc-quick">
       <div class="big">谋篇布局 · 自由画布</div>
       <p>事件、便签、引用卡、容器是积木，连线是脉络——结构由你自由生长，没有固定框架。</p>
       <div class="oc-quick-btns">
         <button @click="applyTemplate(tplThreeAct(cardDensity))">三幕式模板</button>
         <button @click="applyTemplate(tplChapterList(work.liveChapters, cardDensity))">章级清单模板</button>
-        <button class="ghost" @click="addNode('event')">空白开始</button>
+        <button class="ghost" @click="startPlacement('event')">空白开始</button>
       </div>
       <p class="oc-quick-tip">拖节点四向锚点拉出连线 · 拖入容器即归组 · 双击模块行内编辑内容 · 拖边缘调整大小 · 空白处双击新建事件</p>
     </div>
