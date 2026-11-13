@@ -346,7 +346,7 @@ ipcMain.handle('docx:toHtml', async (_e, payload) => {
 ipcMain.handle('clip:readText', () => clipboard.readText())
 ipcMain.handle('clip:writeText', (_e, text) => clipboard.writeText(String(text ?? '')))
 
-ipcMain.handle('export:save', async (_e, payload) => {  /* v1.0.6：带 dirPath 时跳过对话框直接写入（逐章分批导出仅首次确认位置） */
+ipcMain.handle('export:save', async (e, payload) => {  /* v1.0.6：带 dirPath 时跳过对话框直接写入（逐章分批导出仅首次确认位置） */
   /* v1.0.22 路径加固：dirPath 必须是绝对路径且解析后不含 .. 逃逸；文件名取 basename 防拼接逃逸 */
   if (!payload || typeof payload.content !== 'string') return { canceled: true }
   let filePath

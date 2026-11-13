@@ -476,7 +476,7 @@ body[data-skin='crimson'] .crimson-type-tools {
   margin: 0 30px;
   border-bottom: 1px solid #aa94584d;
 }
-/* 设计稿的格式条只有 B/I/U；应用保留完整工具：核心单行 + 「更多格式」浮层 */
+/* 设计稿的格式条只有 B/I/U；应用保留完整工具：核心单行 + 「更多功能」浮层 */
 body[data-skin='crimson'] .crimson-type-tools .editor-toolbar { min-height: 43px; height: 43px; padding: 4px 0; flex-wrap: nowrap; overflow: visible; gap: 2px; }
 body[data-skin='crimson'] .crimson-type-tools .editor-toolbar .tb { min-width: 22px; height: 30px; padding: 0 5px; font-size: 12px; }
 body[data-skin='crimson'] .crimson-type-tools .editor-toolbar .tb-sep { margin: 0 2px; }
@@ -498,11 +498,13 @@ body[data-skin='crimson'] .crimson-type-tools .editor-bar-status {
 body[data-skin='crimson'] .crimson-type-tools .editor-bar-status .n-base-selection { background: #f2e9d5 !important; }
 body[data-skin='crimson'] .crimson-type-tools .editor-bar-status .n-base-selection-label { color: #403b30 !important; }
 body[data-skin='crimson'] .crimson-type-tools .editor-bar-status .n-tag { font-size: 11px; }
-body[data-skin='crimson'] .tb-more { display: flex; flex-wrap: wrap; gap: 3px; width: 268px; }
+body[data-skin='crimson'] .tb-more { display: flex; flex-direction: column; flex-wrap: nowrap; gap: 3px; width: 268px; }
 body[data-skin='crimson'] .tb-more .tb { color: #403b30; min-width: 24px; height: 28px; padding: 0 6px; }
 body[data-skin='crimson'] .tb-more .tb:hover { background: #b2904720; color: #634e27; }
 body[data-skin='crimson'] .tb-more .tb.on { background: #d4c18f; color: #33291d; }
-/* 工具栏弹层（更多格式/底色）：teleport 到 body 后默认是深色浮层，墨字按钮看不清——
+/* 「更多功能」已是单列动作列表（对齐/列表/引用/清除与右键重合，已删）：窄栏弹层里图标 + 文字左对齐 */
+body[data-skin='crimson'] .tb-more-features .tb { justify-content: flex-start; gap: 8px; padding: 0 10px; }
+/* 工具栏弹层（更多功能/底色）：teleport 到 body 后默认是深色浮层，墨字按钮看不清——
    含 .tb 墨字的浮层改为纸面小笺（字体颜色/超链接弹层无墨字按钮，保持深色浮层） */
 body[data-skin='crimson'] .n-popover:has(.tb) {
   background: linear-gradient(95deg, #ece1c4, #f4ecd9 8%, #f1e8d5 94%, #e3d7ba);

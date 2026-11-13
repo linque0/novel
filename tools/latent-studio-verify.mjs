@@ -106,14 +106,17 @@ check('背板依赖的服务与样式齐备', () => {
 })
 
 /* ── 6. 工具栏：隐现折叠布局 ── */
-check('工具栏在隐现下把格式控件收进「更多格式」弹层', () => {
+check('工具栏在隐现下把格式控件收进「更多功能」弹层', () => {
   const src = read('src/components/EditorToolbar.vue')
   assert.match(src, /const latent = computed\(\(\) => isLatentSkin\(ui\.skin\)\)/, '缺 latent 判断')
   /* 主行的字号/颜色/底色/链接被 !latent 包住 */
   assert.match(src, /<template v-if="!latent">/, '主行格式控件未被 !latent 包裹')
-  /* 隐现专属「更多格式」弹层存在，且含字号 */
-  assert.match(src, /v-if="latent"[^>]*trigger="click"/, '缺隐现专用更多格式弹层')
-  assert.match(src, /data-act="more-formats"/, '更多格式按钮缺 data-act')
+  /* 隐现专属「更多功能」弹层存在（格式类条目已按右键快捷栏去重，只留书签/阅读模式/导入导出/章节状态） */
+  assert.match(src, /v-if="latent"[^>]*trigger="click"/, '缺隐现专用更多功能弹层')
+  assert.match(src, /data-act="more-features"/, '更多功能按钮缺 data-act')
+  for (const act of ['bookmark', 'reading-mode', 'import', 'export']) {
+    assert.ok(src.includes(`data-act="${act}"`), '更多功能弹层缺 data-act=' + act)
+  }
 })
 
 check('工具栏按钮带 data-act（隐现 CSS 依赖这些属性）', () => {

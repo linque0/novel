@@ -1029,6 +1029,35 @@ body,
   flex: none;
 }
 
+/* 「更多功能」弹层的基础布局：单列动作列表。
+ * 弹层由 Naive UI teleport 到 body，不在 .editor-toolbar 作用域里，所以这条要独立成立；
+ * 隐现（latent-studio.css §43/§45）与赤月戏（crimson-workbench.css）各自有更高优先级的覆盖。
+ * 宽度不写死：flex 列 + align-items:stretch 已经让按钮铺满，写 width:100% 会顶掉既有的换行版式。 */
+.tb-more {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 196px;
+  padding: 6px;
+}
+.tb-more > .tb-sep {
+  height: 1px;
+  margin: 4px 0;
+}
+.tb-more .tb {
+  min-width: 0;
+  height: 30px;
+  justify-content: flex-start;
+  gap: 8px;
+  padding: 0 10px;
+  white-space: nowrap;
+}
+.tb-more .tb > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .rich-host {
   flex: 1;
   min-height: 0;
