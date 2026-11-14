@@ -1,6 +1,13 @@
 ## [Unreleased]
 
-## [1.3.0] - 2026-11-13 · 大纲放置预览、拖拽排序统一与仓库整理阶段
+## [1.2.2] - 2026-11-14 · 大纲放置预览、拖拽排序统一与仓库整理阶段
+
+### 画布点阵开关与工作区调整（2026-11-14）
+
+- **画布点阵可关**：新增 `canvasPrefs.showDots`（默认 `true`，按作品隔离存 appconfig），画布设置弹层加「显示点阵」开关；关闭后 `draft-canvas-dots` 不再渲染，密集节点下画面更干净。
+- **面板内大纲不再重复侧栏**：`PanelHost` 新增 `latentOutline` 判定，隐现皮肤在独立大纲面板里不再渲染自己的目录侧栏（改为 `.latent-outline-panel.outline-strict` 容器直接承载 `LatentOutlineCenter`），避免与工作区左栏重复。
+- **设定工作区导图换代**：关系网络由 `LoreGraph` 换成 `LoreGalaxy`（`planets/LoreGalaxy.vue`，3D 星系布局）；`loreView === 'map' && loreMapMode === 'relations'` 回落到 `write` 视图，`busiest()` 与 `hoverLink` 等旧逻辑随之移除。
+- **大纲工作区尺寸测量**：`OutlineWorkspace` 的 `ResizeObserver` 回调改为具名 `measureWorkspace`，并补 `window.resize` 监听与卸载清理，窗口尺寸变化后左栏宽度不再滞后。
 
 ### 仓库与工程（2026-11-12 ~ 11-13）
 

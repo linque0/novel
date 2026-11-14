@@ -65,6 +65,7 @@ watch(
 )
 
 const spec = ref(null) // { type, workId, entityId }
+const latentOutline = computed(() => isLatentSkin(ui.skin) && spec.value?.type === 'outline')
 const status = ref('loading') // loading | ready | error
 const errMsg = ref('')
 const original=computed(()=>ui.skin==='original'&&['chapter','outline','characters','lore','snippets'].includes(spec.value?.type))
@@ -232,7 +233,7 @@ onBeforeUnmount(() => autosave.flushAll())
         <div v-if="original && !ui.readMode && !ui.focusMode" class="ow-modulebar" :inert="owModal || undefined"><button v-if="owMode.directory" aria-controls="glaze-panel-directory" :aria-expanded="owDrawer==='directory'" @click="toggleOriginalPane('directory',$event)">目录与资料</button><h1>{{panelTitle}}</h1><button v-if="owMode.notes && spec.type==='chapter'" aria-controls="glaze-panel-notes" :aria-expanded="owDrawer==='notes'" @click="toggleOriginalPane('notes',$event)">批注与资料</button></div>
         <div v-if="spec.type !== 'ai'" class="panel-body"><button v-if="owModal" type="button" class="ow-scrim" aria-label="关闭资料面板" tabindex="-1" @click="closeOriginalPane()"></button>
           <button v-if="modalDrawer" type="button" class="glaze-drawer-scrim" aria-label="关闭侧栏" tabindex="-1" @click="closeDrawer()"></button>
-          <div v-if="ui.skin !== 'crimson'" id="glaze-panel-directory" v-show="original && owMode.directory || museumActive && narrow || (spec.type !== 'outline' || ui.outlineSideOpen) && (spec.type !== 'chapter' || (!ui.readMode && !ui.focusMode))" class="side-panel" :data-ow-pane="original ? 'directory' : undefined" :class="{ 'glaze-drawer-visible': drawer === 'directory' }" data-glaze-drawer="directory" :role="original && owMode.directory || museumActive && narrow ? 'dialog' : undefined" :aria-modal="owModal && owDrawer==='directory' || museumActive && narrow && drawer === 'directory' ? true : undefined" aria-label="目录与资料" :inert="original && owMode.directory && owDrawer!=='directory' || museumActive && narrow && drawer !== 'directory' || undefined" :style="{ width: ui.sideWidth + 'px', '--glaze-side-width': ui.sideWidth + 'px' }">
+          <div v-if="ui.skin !== 'crimson' && !latentOutline" id="glaze-panel-directory" v-show="original && owMode.directory || museumActive && narrow || (spec.type !== 'outline' || ui.outlineSideOpen) && (spec.type !== 'chapter' || (!ui.readMode && !ui.focusMode))" class="side-panel" :data-ow-pane="original ? 'directory' : undefined" :class="{ 'glaze-drawer-visible': drawer === 'directory' }" data-glaze-drawer="directory" :role="original && owMode.directory || museumActive && narrow ? 'dialog' : undefined" :aria-modal="owModal && owDrawer==='directory' || museumActive && narrow && drawer === 'directory' ? true : undefined" aria-label="目录与资料" :inert="original && owMode.directory && owDrawer!=='directory' || museumActive && narrow && drawer !== 'directory' || undefined" :style="{ width: ui.sideWidth + 'px', '--glaze-side-width': ui.sideWidth + 'px' }">
             <button v-if="original && owMode.directory" type="button" class="ow-pane-close" @click="closeOriginalPane()">关闭目录 ×</button>
             <button v-if="museumActive" type="button" class="glaze-drawer-close" aria-label="关闭目录与资料" @click="closeDrawer()">关闭 ×</button>
             <GlazeArtwork v-if="museumActive" compact />
@@ -242,9 +243,9 @@ onBeforeUnmount(() => autosave.flushAll())
             <MubuTree v-else-if="spec.type === 'lore'" />
             <SnippetList v-else-if="spec.type === 'snippets'" />
           </div>
-          <div v-if="ui.skin !== 'crimson'" v-show="(spec.type !== 'outline' || ui.outlineSideOpen) && (spec.type !== 'chapter' || (!ui.readMode && !ui.focusMode))" class="side-resizer" title="拖拽调整侧栏宽度（双击恢复默认）" @mousedown="startSideResize" @dblclick="ui.setPref('sideWidth', 252)"></div>
+          <div v-if="ui.skin !== 'crimson' && !latentOutline" v-show="(spec.type !== 'outline' || ui.outlineSideOpen) && (spec.type !== 'chapter' || (!ui.readMode && !ui.focusMode))" class="side-resizer" title="拖拽调整侧栏宽度（双击恢复默认）" @mousedown="startSideResize" @dblclick="ui.setPref('sideWidth', 252)"></div>
           <button
-            v-if="ui.skin !== 'crimson' && spec.type === 'outline' && !ui.outlineSideOpen"
+            v-if="ui.skin !== 'crimson' && !latentOutline && spec.type === 'outline' && !ui.outlineSideOpen"
             class="ol-side-rail"
             type="button"
             title="展开故事结构"
@@ -258,7 +259,9 @@ onBeforeUnmount(() => autosave.flushAll())
             <EditorPane v-if="spec.type === 'chapter'" />
             <!-- 隐现（dsh）内容窗：四个模块走自带完整工作区，与主窗同一套实现 -->
             <template v-else-if="isLatentSkin(ui.skin)">
-              <LatentOutlineCenter v-if="spec.type === 'outline'" style="flex: 1; min-height: 0" />
+              <div v-if="spec.type === 'outline'" class="latent-outline-panel outline-strict">
+                <LatentOutlineCenter />
+              </div>
               <CharactersWorkspace v-else-if="spec.type === 'characters'" style="flex: 1; min-height: 0" />
               <LoreWorkspace v-else-if="spec.type === 'lore'" style="flex: 1; min-height: 0" />
               <SnippetsWorkspace v-else-if="spec.type === 'snippets'" style="flex: 1; min-height: 0" />
