@@ -1,5 +1,19 @@
 ## [Unreleased]
 
+## [1.2.3] - 2026-11-14 · 关系星系轨道编辑与写作布局持久化
+
+### 关系星系：独立拖拽、重合并轨与星体速度面板（2026-11-14）
+
+- **独立拖拽与并轨**：创建时间用于生成默认轨道。拖动单条轨道时，其他轨道保持原位。靠近另一轨道时显示暖铜色合并提示，松手后，两组星体共用该轨道。自定义布局按作品和星系保存，可用「恢复默认轨道」回到初始布局。
+- **星体速度面板**：右键星体可在烟紫玻璃浮层内分别调整公转和自转速度，标签与百分比输入横向对齐。浮层适应画布边缘，速度仍按星体保存。
+- `planet-scene.js` 的 `tracks` / `settings.joins` 取代旧的单 anchor 半径推导；旧存档（`independent` 未置位且存有 `radii`/`pin`）走 `legacyOrbitRadii` 兼容路径。
+
+### 写作布局持久化（2026-11-14）
+
+- 新增 `components/writing-layout/` 模块：`layout.mjs` 负责归一化，`WritingSidePanels.vue` / `WritingLayoutHandle.vue` / `useWritingPaperLayout.js` 提供侧栏与稿面布局，`writing-layout.css` 承载样式。
+- `stores/ui.js` 新增 `latentWritingLayout` 与 `saveLatentWritingLayout(area, patch)`：单事务内合并，两个窗口分别保存不同区域不会互相覆盖。
+- 新增 `PanelBackdrop.vue`，`PanelHost` 的面板背景独立成组件。
+
 ## [1.2.2] - 2026-11-14 · 大纲放置预览、拖拽排序统一与仓库整理阶段
 
 ### 画布点阵开关与工作区调整（2026-11-14）

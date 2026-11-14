@@ -5,6 +5,9 @@ const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import TaskLauncher from './ai/TaskLauncher.vue'
 import WritingPaperPicker from './WritingPaperPicker.vue'
 import ChapterTitleField from './ChapterTitleField.vue'
+import WritingLayoutHandle from './writing-layout/WritingLayoutHandle.vue'
+import { useWritingPaperLayout } from './writing-layout/useWritingPaperLayout.js'
+import './writing-layout/writing-layout.css'
 import { isLatentSkin } from '../skins/registry'
 import '../styles/writing-paper.css'
 import '../styles/studio-writing.css'
@@ -136,6 +139,12 @@ async function bindWritingPosition(ed, chapter, position) {
 const handoffTokens=new Set(),handoffPending=ref(false)
 function prepareHandoff(e){if(e.detail?.pending)handoffTokens.add(e.detail.token);else handoffTokens.delete(e.detail?.token);handoffPending.value=handoffTokens.size>0}
 const chapterPopped = computed(() => !!work.activeChapter && isPopped(work, 'chapter', work.activeChapter.id))
+const paperEnabled = computed(() => latentSkin.value && !ui.readMode && !ui.focusMode && !chapterPopped.value && !!work.activeChapter)
+const {
+  editorWrap, paperFrame, actual: paperSize, minimum: paperMin, limits: paperLimits,
+  wrapStyle: paperWrapStyle, frameStyle: paperFrameStyle, begin: beginPaper,
+  move: movePaper, end: endPaper, cancel: cancelPaper, nudge: nudgePaper, reset: resetPaper
+} = useWritingPaperLayout(ui, paperEnabled)
 let refreshGeneration=0,refreshingEditor=false,remoteRefreshNeeded=false
 watch([chapterPopped, () => ui.readMode, handoffPending], async ([popped, reading, handing], [wasPopped, wasReading]) => {
   if(wasPopped&&!popped)remoteRefreshNeeded=true
@@ -403,7 +412,8 @@ async function clearGoal() {
 <template>
   <!-- 旧皮肤：模块助手条留在宿主第一个子节点，布局一字不动（隐现搬进稿纸列，见下） -->
   <TaskLauncher v-if="!nsPlugin && !ui.isStudioSkin && !ui.readMode && !latentSkin" module="chapters" />
-  <div class="editor-wrap" :data-writing-paper="ui.writingPaperStyle" :data-paper-skin="ui.skin" :data-paper-theme="ui.theme" :data-paper-quiet="ui.readMode || ui.focusMode" :class="{ 'read-mode': ui.readMode, 'rail-collapsed': ui.skin === 'crimson' && railCollapsed }">
+  <div ref="editorWrap" class="editor-wrap" :data-paper-adjustable="paperEnabled || undefined" :style="paperWrapStyle"
+    :data-writing-paper="ui.writingPaperStyle" :data-paper-skin="ui.skin" :data-paper-theme="ui.theme" :data-paper-quiet="ui.readMode || ui.focusMode" :class="{ 'read-mode': ui.readMode, 'rail-collapsed': ui.skin === 'crimson' && railCollapsed }">
     <!-- 隐现：模块助手条挂在宿主上会撑满整窗（x=0）并被浮起的章节目录压住，只剩句尾可见；
          搬进 .editor-wrap 顶部后它和章头/工具栏同一个包含块，共用 --ls-page-w 的左线与宽度。 -->
     <TaskLauncher v-if="latentSkin && !nsPlugin && !ui.readMode" module="chapters" />
@@ -538,6 +548,7 @@ async function clearGoal() {
           </template>
           <!-- 隐现：主行只留格式与发送，章节状态与历史收进「更多功能」弹层 -->
           <template v-if="latentSkin" #more-end>
+            <NButton size="tiny" quaternary @click.stop="ui.saveLatentWritingLayout()">恢复默认布局</NButton>
             <div class="editor-bar-status" @click.stop @mousedown.stop>
               <NSelect size="tiny" :value="work.activeChapter.status" :options="STATUS_OPTS" :disabled="chapterPopped" placeholder="章节状态" style="width:84px" @click.stop @mousedown.stop @update:value="v => work.setChapterStatus(work.activeChapter.id, v)" />
               <NButton size="tiny" quaternary @click.stop="openHistory" @mousedown.stop>历史</NButton>
@@ -545,7 +556,8 @@ async function clearGoal() {
             </div>
           </template>
         </EditorToolbar>
-        <div v-show="!chapterPopped" class="rich-host paper-texture writing-paper-surface" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
+        <div ref="paperFrame" v-show="!chapterPopped" class="writing-paper-frame" :data-custom-height="paperFrameStyle ? true : undefined" :style="paperFrameStyle">
+        <div class="rich-host paper-texture writing-paper-surface" @mousedown.capture="onMouseDownCapture" @contextmenu.capture="onContextMenu">
           <div class="ed-read-col">
             <header v-if="ui.isStudioSkin && !ui.readMode" class="gravity-manuscript-head">
               <div class="gravity-manuscript-location"><span>{{ work.liveVolumes.find(v => v.id === work.activeChapter.volumeId)?.title || '未分卷' }}</span><b>{{ chapterNo }}</b></div>
@@ -561,6 +573,14 @@ async function clearGoal() {
             </header>
             <div id="regular-writing-editor" style="display:contents"></div>
           </div>
+        </div>
+          <WritingLayoutHandle v-for="axis in paperEnabled ? ['x', 'y'] : []" :key="axis" :axis="axis"
+            :label="axis === 'x' ? '调整正文写作面宽度' : '调整正文写作面高度'"
+            :value="axis === 'x' ? paperSize.w : paperSize.h"
+            :min="axis === 'x' ? Math.min(paperMin.w, paperSize.w) : Math.min(paperMin.h, paperSize.h)"
+            :max="axis === 'x' ? Math.max(0, paperLimits.w - 24) : paperLimits.h"
+            @start="beginPaper(axis)" @move="movePaper" @end="endPaper" @cancel="cancelPaper"
+            @nudge="nudgePaper(axis, $event)" @reset="resetPaper(axis)" />
         </div>
       </template>
       <!-- Keep one EditorContent alive when a skin or reading layout moves it.

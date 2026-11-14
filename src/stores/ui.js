@@ -4,6 +4,7 @@ import { broadcastAppEvent } from '../services/appbus'
 import { normalizeSkin, isStudioSkin } from '../skins/registry'
 import { normalizeFlowBackground } from '../services/latent/flow-palette.js'
 import {normalizeWritingPaper,saveWritingPaperPreference} from '../services/writing-paper.js'
+import { normalizeWritingLayout } from '../components/writing-layout/layout.mjs'
 import { paintingById } from '../services/gallery-art.js'
 import { createGlazePaintingPreference } from '../services/glaze-painting-preference.js'
 import { normalizeOutlineWidth } from '../components/skins/latent/outline/outline-layout.js'
@@ -113,6 +114,7 @@ export const useUiStore = defineStore('ui', {
     editorLatin: 'none', // 西文正文（LATIN_FONTS key）
     fontSize: 17,
     writingPaperStyle: 'booklet',
+    latentWritingLayout: {},
     writingPaperSaving: false,
     sideWidth: 252, // 侧栏宽度（180–480，右缘拖拽调节，appconfig 记忆）
     topbarAutoHide: false, // 顶栏默认隐藏（跨窗口持久化，悬停临时展开）
@@ -244,6 +246,7 @@ export const useUiStore = defineStore('ui', {
         if (map.editorLatin) this.editorLatin = map.editorLatin
         if (map.fontSize) this.fontSize = Number(map.fontSize) || 17
         this.writingPaperStyle = normalizeWritingPaper(map.writingPaperStyle)
+        this.latentWritingLayout = normalizeWritingLayout(map.latentWritingLayout)
         if (map.sideWidth) this.sideWidth = Math.min(480, Math.max(180, Number(map.sideWidth) || 252))
         if (map.topbarAutoHide !== undefined) this.topbarAutoHide = map.topbarAutoHide === true
         if (!flowPreferenceWrites.has(this.$state) && !this.prefsDirty.flowBackground && this.flowBackground === flowBackgroundAtLoad) {
@@ -454,6 +457,24 @@ export const useUiStore = defineStore('ui', {
       await db.appconfig.put({ key, value: plainPref(value) })
       /* 跨窗口同步：其余窗口重载偏好（主题/字体等即时生效；处理端幂等，自身收到无副作用） */
       broadcastAppEvent('prefs-changed')
+    },
+    async saveLatentWritingLayout(area, patch) {
+      // Merge inside one transaction so two windows can save different areas safely.
+      try {
+        const layout = await db.transaction('rw', db.appconfig, async () => {
+          const key = 'latentWritingLayout'
+          const saved = (await db.appconfig.get(key))?.value || {}
+          const value = normalizeWritingLayout(area ? { ...saved, [area]: { ...saved[area], ...patch } } : {})
+          await db.appconfig.put({ key, value })
+          return value
+        })
+        this.latentWritingLayout = layout
+        broadcastAppEvent('prefs-changed')
+      } catch (error) {
+        console.warn('Cannot save writing layout', error)
+        return false
+      }
+      return true
     },
     async setWritingPaperStyle(value) {
       return saveWritingPaperPreference(this,value,{

@@ -37,6 +37,7 @@ import { isLatentSkin } from '../skins/registry'
 import { mountFlowBackdrop } from '../services/latent/flow.js'
 import { flowPaletteKey, resolveFlowPalette } from '../services/latent/flow-palette.js'
 import RightPanel from './RightPanel.vue'
+import WritingSidePanels from './writing-layout/WritingSidePanels.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
 const nsPlugin = __NS_PLUGIN__
 import DLinkPopover from './DLinkPopover.vue'
@@ -65,6 +66,7 @@ const { narrow, drawer, modalDrawer, closeDrawer, toggleDrawer } = useGlazeDrawe
 /* 隐现皮肤下，设定/人物/灵感三个工作区自带左侧矩阵列（nav/roster/列表），
    外置目录栏必须让位，否则会出现双层目录。旧皮肤保持原有判断。 */
 const latentSkin = computed(() => isLatentSkin(ui.skin))
+const writingLayout = computed(() => latentSkin.value && work.tab === 'chapters')
 const latentSidebarOwned = computed(() => latentSkin.value && ['lore', 'characters', 'snippets'].includes(work.tab))
 const showDirectory = computed(() => !latentSidebarOwned.value && !ui.focusMode && !ui.readMode && !modulePopped.value && !(crimson.value && ['chapters','outline','lore','characters','snippets'].includes(work.tab)) && !(latentSkin.value && work.tab === 'outline'))
 /* 隐现大纲以画布进入：store 的 outlineView 默认 'text' 被旧皮肤组件共用，不能改；
@@ -202,6 +204,7 @@ let narrowMq = null
 const chapterNotes = computed(() => (work.activeChapter ? work.annotationsForChapter(work.activeChapter.id) : []))
 function openNotesDrawer() {
   if (!chapterNotes.value.length) return
+  if (writingLayout.value) return ui.setPref('rightPanelOpen', true)
   /* 宽屏没有抽屉：同一入口退回「展开常驻批注栏」，不让这个菜单项在桌面版变成死键 */
   if (!window.matchMedia('(max-width: 559px)').matches) return ui.setPref('rightPanelOpen', true)
   narrowNotesOpen.value = true
@@ -481,10 +484,19 @@ onBeforeUnmount(() => {
       <button v-if="owMode.notes && showNotes" type="button" aria-controls="glaze-writing-notes" :aria-expanded="owDrawer==='notes'" @click="toggleOriginalPane('notes',$event)">批注与资料</button>
       <OriginalSaveStatus class="ow-module-save"/>
     </div>
-    <div class="wb-body">
+    <div class="wb-body" :class="{ 'writing-layout-host': writingLayout }">
+      <WritingSidePanels v-if="writingLayout && (showDirectory || showNotes)" :directory="showDirectory" :notes="showNotes"
+        directory-id="glaze-writing-directory" notes-id="glaze-writing-notes">
+        <template #directory>
+          <div class="side-panel" aria-label="章节栏">
+            <ChapterTree @read="onMore('read')" @window="onSplit('chapter')" @collapse="closeDirectory()" />
+          </div>
+        </template>
+        <template #notes><RightPanel aria-label="批注与资料" /></template>
+      </WritingSidePanels>
       <button v-if="owModal" type="button" class="ow-scrim" aria-label="关闭资料面板" tabindex="-1" @click="closeOriginalPane()"></button>
       <button v-if="modalDrawer" type="button" class="glaze-drawer-scrim" aria-label="关闭侧栏" tabindex="-1" @click="closeDrawer()"></button>
-      <div v-if="showDirectory && (dirVisible || original && owMode.directory)" id="glaze-writing-directory" v-show="original && owMode.directory || museum && narrow || work.tab !== 'outline' || ui.outlineSideOpen" class="side-panel" :data-ow-pane="original ? 'directory' : undefined" :class="{ 'glaze-drawer-visible': drawer === 'directory' }" data-glaze-drawer="directory" :role="original && owMode.directory || museum && narrow ? 'dialog' : undefined" :aria-modal="owModal && owDrawer==='directory' || museum && narrow && drawer === 'directory' ? true : undefined" aria-label="目录与资料" :inert="original && owMode.directory && owDrawer!=='directory' || museum && narrow && drawer !== 'directory' || undefined" :style="{ width: ((nsPlugin && narrow) ? Math.min(ui.sideWidth, 168) : ui.sideWidth) + 'px', '--glaze-side-width': ((nsPlugin && narrow) ? Math.min(ui.sideWidth, 168) : ui.sideWidth) + 'px' }">
+      <div v-if="!writingLayout && showDirectory && (dirVisible || original && owMode.directory)" id="glaze-writing-directory" v-show="original && owMode.directory || museum && narrow || work.tab !== 'outline' || ui.outlineSideOpen" class="side-panel" :data-ow-pane="original ? 'directory' : undefined" :class="{ 'glaze-drawer-visible': drawer === 'directory' }" data-glaze-drawer="directory" :role="original && owMode.directory || museum && narrow ? 'dialog' : undefined" :aria-modal="owModal && owDrawer==='directory' || museum && narrow && drawer === 'directory' ? true : undefined" aria-label="目录与资料" :inert="original && owMode.directory && owDrawer!=='directory' || museum && narrow && drawer !== 'directory' || undefined" :style="{ width: ((nsPlugin && narrow) ? Math.min(ui.sideWidth, 168) : ui.sideWidth) + 'px', '--glaze-side-width': ((nsPlugin && narrow) ? Math.min(ui.sideWidth, 168) : ui.sideWidth) + 'px' }">
         <button v-if="original && owMode.directory" type="button" class="ow-pane-close" @click="closeOriginalPane()">关闭目录 ×</button>
         <button v-if="museum" type="button" class="glaze-drawer-close" aria-label="关闭目录与资料" @click="closeDrawer()">关闭 ×</button>
         <GlazeArtwork v-if="museum" compact />
@@ -495,7 +507,7 @@ onBeforeUnmount(() => {
         <SnippetList v-else-if="work.tab === 'snippets'" />
       </div>
       <div
-        v-if="!ui.focusMode && !ui.readMode && !modulePopped && dirVisible && !(crimson && ['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(work.tab))"
+        v-if="!writingLayout && !ui.focusMode && !ui.readMode && !modulePopped && dirVisible && !(crimson && ['chapters', 'outline', 'lore', 'characters', 'snippets'].includes(work.tab))"
         v-show="work.tab !== 'outline' || ui.outlineSideOpen"
         class="side-resizer"
         title="拖拽调整侧栏宽度（双击恢复默认）"
@@ -504,7 +516,7 @@ onBeforeUnmount(() => {
       ></div>
 
       <button
-        v-if="showDirectory && !dirVisible && work.tab !== 'outline' && !(museum && narrow) && !ui.focusMode && !ui.readMode"
+        v-if="!writingLayout && showDirectory && !dirVisible && work.tab !== 'outline' && !(museum && narrow) && !ui.focusMode && !ui.readMode"
         class="ol-side-rail"
         type="button"
         title="展开目录栏"
@@ -569,7 +581,7 @@ onBeforeUnmount(() => {
 
       <!-- 批注栏收起后的右缘细轨：点击重新展开（仅正文页显示，与批注栏同条件） -->
       <button
-        v-if="!ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && !ui.rightPanelOpen && !(original && owMode.notes)"
+        v-if="!writingLayout && !ui.focusMode && !ui.readMode && !modulePopped && work.tab === 'chapters' && !ui.rightPanelOpen && !(original && owMode.notes)"
         class="rp-rail"
         title="展开批注栏"
         @click="ui.setPref('rightPanelOpen', true)"
@@ -579,7 +591,7 @@ onBeforeUnmount(() => {
       </button>
 
       <button v-if="narrowNotesOpen" type="button" class="ns-notes-scrim" aria-label="关闭批注栏" tabindex="-1" @click="narrowNotesOpen = false"></button>
-      <RightPanel v-if="showNotes && (ui.rightPanelOpen || museum || narrowNotesOpen || original && owMode.notes)" v-show="ui.rightPanelOpen || museum && narrow || narrowNotesOpen || original && owMode.notes" id="glaze-writing-notes" :data-ow-pane="original ? 'notes' : undefined" :original-drawer="original && owMode.notes" @original-close="closeOriginalPane()" :class="{ 'glaze-drawer-visible': drawer === 'notes', 'ns-notes-drawer': narrowNotesOpen }" data-glaze-drawer="notes" :role="original && owMode.notes || museum && narrow ? 'dialog' : undefined" :aria-modal="owModal && owDrawer==='notes' || museum && narrow && drawer === 'notes' ? true : undefined" aria-label="批注与资料" :inert="original && owMode.notes && owDrawer!=='notes' || museum && narrow && drawer !== 'notes' || undefined" @glaze-close="closeDrawer()" />
+      <RightPanel v-if="!writingLayout && showNotes && (ui.rightPanelOpen || museum || narrowNotesOpen || original && owMode.notes)" v-show="ui.rightPanelOpen || museum && narrow || narrowNotesOpen || original && owMode.notes" id="glaze-writing-notes" :data-ow-pane="original ? 'notes' : undefined" :original-drawer="original && owMode.notes" @original-close="closeOriginalPane()" :class="{ 'glaze-drawer-visible': drawer === 'notes', 'ns-notes-drawer': narrowNotesOpen }" data-glaze-drawer="notes" :role="original && owMode.notes || museum && narrow ? 'dialog' : undefined" :aria-modal="owModal && owDrawer==='notes' || museum && narrow && drawer === 'notes' ? true : undefined" aria-label="批注与资料" :inert="original && owMode.notes && owDrawer!=='notes' || museum && narrow && drawer !== 'notes' || undefined" @glaze-close="closeDrawer()" />
 
       <!-- 窄栏批注抽屉的关闭键：不能进 RightPanel（那里只加条件类名不改结构），锚在抽屉右上角 -->
       <button v-if="narrowNotesOpen" type="button" class="ns-notes-close" aria-label="关闭批注栏" title="关闭批注栏" @click="narrowNotesOpen = false">×</button>
