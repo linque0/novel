@@ -1,7 +1,7 @@
 {
   "name": "novel-studio",
   "productName": "小说工坊",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "本地优先的小说创作软件：正文/大纲/人物/设定一站式管理，即时自动保存",
   "private": true,
   "main": "electron/main.js",
@@ -13,7 +13,7 @@
     "stop": "node tools/stop.mjs",
     "web": "node server.mjs --open",
     "icon": "node scripts/make-icon.mjs",
-    "dist": "vite build && electron-builder --win"
+    "dist": "vite build && electron-builder --win --publish never"
   },
   "build": {
     "appId": "com.novelstudio.app",
@@ -27,14 +27,34 @@
     "directories": {
       "output": "release2"
     },
+    "publish": {
+      "provider": "github",
+      "owner": "linque0",
+      "repo": "novel"
+    },
     "files": [
       "dist/**/*",
       "electron/**/*",
     "packages/novel-core/**",
       "package.json",
       "!node_modules/**",
-      "node_modules/@xmldom/xmldom/**",
       "node_modules/argparse/**",
+      "node_modules/builder-util-runtime/**",
+      "node_modules/debug/**",
+      "node_modules/electron-updater/**",
+      "node_modules/fs-extra/**",
+      "node_modules/graceful-fs/**",
+      "node_modules/js-yaml/**",
+      "node_modules/jsonfile/**",
+      "node_modules/lazy-val/**",
+      "node_modules/lodash.escaperegexp/**",
+      "node_modules/lodash.isequal/**",
+      "node_modules/ms/**",
+      "node_modules/sax/**",
+      "node_modules/semver/**",
+      "node_modules/tiny-typed-emitter/**",
+      "node_modules/universalify/**",
+      "node_modules/@xmldom/xmldom/**",
       "node_modules/base64-js/**",
       "node_modules/bluebird/**",
       "node_modules/core-util-is/**",
@@ -80,6 +100,7 @@
       ]
     },
     "nsis": {
+      "include": "build/installer-update.nsh",
       "installerIcon": "build/icon.ico",
       "uninstallerIcon": "build/icon.ico",
       "oneClick": false,
@@ -103,6 +124,7 @@
     "dexie": "^4.0.11",
     "dompurify": "^3.4.17",
     "droll": "^0.2.1",
+    "electron-updater": "6.3.9",
     "echarts": "^5.6.0",
     "jszip": "^3.10.1",
     "mammoth": "^1.9.0",
@@ -112,6 +134,7 @@
     "pdfjs-dist": "^4.10.38",
     "pinia": "^2.3.0",
     "seedrandom": "^3.0.5",
+    "semver": "^7.7.0",
     "three": "0.186.1",
     "vue": "^3.5.13"
   },

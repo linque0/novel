@@ -2,7 +2,6 @@
 import { computed, ref, watch, nextTick } from 'vue'
 import { NDropdown, NModal } from 'naive-ui'
 import AppTopbar from './AppTopbar.vue'
-import SkinPicker from './SkinPicker.vue'
 import OriginalBook from './OriginalBook.vue'
 import { formatShelfOpenTime } from '../services/shelf-sort'
 import { booklistPage } from '../services/original-booklist.mjs'
@@ -59,7 +58,7 @@ function move(event) {
 
 <template>
   <section ref="bookcase" class="original-shelf">
-    <AppTopbar active="shelf" :busy="busy||loading" :has-work="!!selected" :target-title="selected?.title" @navigate="navigate" @create="emit('create')"><template #actions><SkinPicker /></template></AppTopbar>
+    <AppTopbar active="shelf" :busy="busy||loading" :has-work="!!selected" :target-title="selected?.title" @navigate="navigate" @create="emit('create')"></AppTopbar>
     <div class="os-library">
       <header class="os-heading">
         <h1>我的藏书<span>{{ total }} 部作品</span></h1>

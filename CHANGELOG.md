@@ -1,5 +1,36 @@
 ## [Unreleased]
 
+## [1.2.4] - 2026-11-17 · 应用内自动更新、单皮肤收敛与幻流流场
+
+### 应用内自动更新（2026-11-17）
+
+- 新增 `electron/updates.cjs` + `electron/update-ipc.cjs`：从 GitHub Releases 读取 `latest.yml`，按 semver 过滤 draft/prerelease 与不高于当前版本的行，下载后做 sha512 校验（`timingSafeEqual`）再交给安装器。
+- 新增 `build/installer-update.nsh`（NSIS 自定义宏），打包时随 `package.json` 的 `nsis.include` 一起生效。
+- 渲染层新增 `src/services/desktop-updates.js` 与 `src/components/AppUpdateControls.vue`：`onMounted` 订阅、`onBeforeUnmount` 退订并按引用计数管理监听，设置窗口与「关于」页共用同一状态。
+
+### 皮肤收敛为单一「幻流」（2026-11-17）
+
+- `src/skins/registry.js` 收敛：`visibleSkins()` 只返回 `DEFAULT_SKIN`，`selectableSkins()` 移除；`dsh` 的标签由「隐现」改为**幻流**。
+- 删除 `src/components/SkinPicker.vue`；`OriginalShelf` / `GravityShelf` / `GlazeShelf` / `CrimsonShelf` 的分支保留但不再可达，`Bookshelf` 统一走隐现书架。
+- 外观页 `SettingsAppearance.vue` 去掉皮肤选择器，改为流背景与动效设置。
+
+### 幻流流场（2026-11-17）
+
+- 新增 `flow-shaders.js`（WebGL 着色器，`public/paper-shaders-LICENSE.txt` / `NOTICE.txt` 为对应许可）、`flow-color-stops.js`（配色停靠点）、`flow-motion.js`（运动参数）。
+- 新增 `settings/FlowSpeedSetting.vue`：流背景速度可调；`cpu-backdrop.js` / `latent-gl.js` / `palette.js` 同步走新的色彩与运动口径。
+- 新增 `src/styles/skins/latent/panel-material.css` 承载面板材质。
+
+### 关系星系与设定
+
+- `planets/` 新增 `center-glow.js` 与 `entry-circles.js`：中心光晕与入口环独立成模块，`draw-planets.js` 与 `LorePlanetNetwork.vue` 共用。
+- `lore-planet-data.js` / `planet-network.css` 同步布局调整；`LoreHead` / `LoreNavNode` / `LoreWorkspace` / `MubuTree` 与 `lore-core.js` 跟随。
+
+### 文档与工程
+
+- README 新增 [交互式产品介绍与操作指南](docs/showcase/index.html)（含《雾港纪年》试写演示与 `guide.html#versions` 版本说明）。
+- 删除已被 showcase 取代的 `产品介绍.md` / `产品介绍-图文版.html` / `产品介绍-图文版.pdf` 与 7 份 Agent 方案文档；README 文档表同步，0 断链。
+- 4 个皮肤验收脚本（`latent-*`、`skin-unit`）跟随单皮肤收敛更新断言。
+
 ## [1.2.3] - 2026-11-14 · 关系星系轨道编辑与写作布局持久化
 
 ### 关系星系：独立拖拽、重合并轨与星体速度面板（2026-11-14）

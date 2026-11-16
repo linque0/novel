@@ -1,10 +1,14 @@
-/* 隐现（dsh）皮肤接线验证：纯 Node，读源码做静态断言。
+/* 幻流（dsh）皮肤接线验证：纯 Node，读源码做静态断言。
  * 不启动 Electron——它证明的是「接线存在且形态正确」，不证明视觉正确。
  * 用法：node tools/latent-integration-verify.mjs（目标根下）
  */
 import fs from 'node:fs'
 import path from 'node:path'
 import assert from 'node:assert/strict'
+import { resolveLoreGalaxy } from '../src/services/lore-core.js'
+import { networkModel, spacePlanets } from '../src/components/skins/latent/lore/planets/planet-scene.js'
+import { entryCircleGlyphs, entryCircleRadius, entryRadiusLimit, layoutEntryCircleText } from '../src/components/skins/latent/lore/planets/entry-circles.js'
+import { advanceCenterGlow, CENTER_GLOW_EFFECTS, centerGlowEdge, centerGlowPulse, centerGlowSample, centerGlowWave, DEFAULT_CENTER_GLOW, hasCenterColorModes, normalizeCenterGlow } from '../src/components/skins/latent/lore/planets/center-glow.js'
 
 const ROOT = process.cwd()
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
@@ -21,14 +25,14 @@ const check = (name, fn) => {
 }
 
 /* ── 1. 注册层 ── */
-check('registry：dsh 对桌面可见，label 为「隐现」', async () => {})
+check('registry：dsh 对桌面可见，label 为「幻流」', async () => {})
 const registrySrc = read('src/skins/registry.js')
 check('registry 含 dsh 条目且 audience 为 desktop', () => {
   assert.match(registrySrc, /id:\s*'dsh'/, '缺少 dsh 条目')
   const dshLine = registrySrc.split('\n').find((l) => l.includes("id: 'dsh'"))
   assert.ok(dshLine, '找不到 dsh 行')
   assert.match(dshLine, /audience:\s*'desktop'/, 'dsh 未对桌面开放：' + dshLine.trim())
-  assert.match(dshLine, /label:\s*'隐现'/, 'dsh 的 label 不是「隐现」：' + dshLine.trim())
+  assert.match(dshLine, /label:\s*'幻流'/, 'dsh 的 label 不是「幻流」：' + dshLine.trim())
 })
 
 check('registry 导出 isLatentSkin 且只认 dsh', () => {
@@ -36,13 +40,13 @@ check('registry 导出 isLatentSkin 且只认 dsh', () => {
   assert.match(registrySrc, /return value === 'dsh'/, 'isLatentSkin 判断不是 dsh')
 })
 
-check('四套旧皮肤仍在，默认回落隐现（dsh）', () => {
+check('四套旧皮肤仍在，默认回落幻流（dsh）', () => {
   for (const id of ['original', 'gravity', 'glaze', 'crimson']) {
     assert.ok(registrySrc.includes(`id: '${id}'`), '缺少旧皮肤 ' + id)
   }
-  /* 默认皮肤已改为隐现：回落值走 DEFAULT_SKIN 常量，不再字面量写 'original'。 */
+  /* 默认皮肤已改为幻流：回落值走 DEFAULT_SKIN 常量，不再字面量写 'original'。 */
   assert.match(registrySrc, /DEFAULT_SKIN = 'dsh'/, 'DEFAULT_SKIN 不是 dsh')
-  assert.match(registrySrc, /normalizeSkin[\s\S]{0,200}: DEFAULT_SKIN/, 'normalizeSkin 未回落 DEFAULT_SKIN')
+  assert.match(registrySrc, /normalizeSkin[\s\S]{0,100}return DEFAULT_SKIN/, 'normalizeSkin 未回落 DEFAULT_SKIN')
   /* 引力书舱与琉光画境保留注册但不出现在选择器里（老存档仍可选中它们）。 */
   for (const id of ['gravity', 'glaze']) {
     const line = registrySrc.split('\n').find((l) => l.includes(`id: '${id}'`))
@@ -52,22 +56,14 @@ check('四套旧皮肤仍在，默认回落隐现（dsh）', () => {
 })
 
 /* ── 2. 主题 ── */
-check('皮肤选择器：引力/琉光隐藏，外观页提供皮肤选择', async () => {
-  /* 用真实模块判定，避免只比对源码字符串而漏掉 filter 写错的情况 */
-  const { selectableSkins } = await import('../src/skins/registry.js')
-  const ids = selectableSkins('desktop').map((s) => s.id)
-  assert.ok(ids.includes('dsh'), '选择器缺少隐现')
-  assert.ok(!ids.includes('gravity'), '引力书舱不应出现在选择器中')
-  assert.ok(!ids.includes('glaze'), '琉光画境不应出现在选择器中')
-
+check('仅启用幻流，外观页不提供皮肤切换', async () => {
+  const { visibleSkins, normalizeSkin } = await import('../src/skins/registry.js')
+  assert.deepEqual(visibleSkins('desktop').map(skin => skin.id), ['dsh'])
+  for (const old of ['original', 'gravity', 'glaze', 'crimson']) assert.equal(normalizeSkin(old), 'dsh')
   const appearance = read('src/components/skins/latent/settings/SettingsAppearance.vue')
-  assert.match(appearance, /selectableSkins/, '外观页未用 selectableSkins 取皮肤')
-  assert.match(appearance, /id="setting-skin"/, '外观页缺少皮肤选择器')
-  assert.match(appearance, /data-setting="skin"/, '外观页皮肤行缺少 data-setting')
-
-  /* 设置检索目录也要能搜到，否则用户找不到 */
+  assert.doesNotMatch(appearance, /setting-skin|ui\.setSkin/)
   const { searchSettings } = await import('../src/components/skins/latent/settings/settings-catalog.js')
-  assert.ok(searchSettings('皮肤').some((c) => c.id === 'skin'), '设置检索搜不到「皮肤」')
+  assert.ok(!searchSettings('皮肤').some(entry => entry.id === 'skin'))
 })
 
 check('theme-latent.js 存在且导出 useLatentTheme', () => {
@@ -83,7 +79,7 @@ check('theme-latent.js 存在且导出 useLatentTheme', () => {
   assert.ok(!code.includes('data-ns-dark'), '仍在读插件宿主的 data-ns-dark')
 })
 
-check('App.vue 接入隐现主题与 settings→work 的 surface 映射', () => {
+check('App.vue 接入幻流主题与 settings→work 的 surface 映射', () => {
   const src = read('src/App.vue')
   assert.match(src, /useLatentTheme/, 'App.vue 未使用 useLatentTheme')
   assert.match(src, /isLatentSkin/, 'App.vue 未使用 isLatentSkin')
@@ -101,7 +97,7 @@ check('Bookshelf 按 isLatentSkin 渲染 LatentShelf', () => {
   }
 })
 
-check('Workbench 在隐现下渲染四个完整工作区，旧皮肤仍走 Center', () => {
+check('Workbench 在幻流下渲染四个完整工作区，旧皮肤仍走 Center', () => {
   const src = read('src/components/Workbench.vue')
   for (const c of ['LatentOutlineCenter', 'CharactersWorkspace', 'LoreWorkspace', 'SnippetsWorkspace']) {
     assert.ok(src.includes(c), 'Workbench 缺少 ' + c)
@@ -112,7 +108,7 @@ check('Workbench 在隐现下渲染四个完整工作区，旧皮肤仍走 Cente
   assert.match(src, /isLatentSkin\(ui\.skin\)/, 'Workbench 未按 isLatentSkin 分派')
 })
 
-check('Workbench 隐现下让位外置目录栏（避免双层目录）', () => {
+check('Workbench 幻流下让位外置目录栏（避免双层目录）', () => {
   const src = read('src/components/Workbench.vue')
   assert.match(src, /latentSidebarOwned/, '缺少 latentSidebarOwned 判断')
   assert.match(src, /\['lore', 'characters', 'snippets'\]/, '未排除自带侧栏的三个模块')
@@ -121,7 +117,8 @@ check('Workbench 隐现下让位外置目录栏（避免双层目录）', () => 
 check('PanelHost 内容窗同样按 isLatentSkin 分派', () => {
   const src = read('src/components/PanelHost.vue')
   assert.match(src, /isLatentSkin/, 'PanelHost 未引入 isLatentSkin')
-  for (const c of ['OutlineWorkspace', 'CharactersWorkspace', 'LoreWorkspace', 'SnippetsWorkspace']) {
+  assert.match(src, /<PanelBackdrop v-if="latentContent"/, '幻流独立面板未挂载共享背板')
+  for (const c of ['LatentOutlineCenter', 'CharactersWorkspace', 'LoreWorkspace', 'SnippetsWorkspace']) {
     assert.ok(src.includes(c), 'PanelHost 缺少 ' + c)
   }
 })
@@ -137,10 +134,10 @@ check('latent 样式索引存在且按插件版顺序导入', () => {
     assert.ok(at > last, '样式顺序错误：' + item)
     last = at
   }
-  assert.ok(read('src/main.js').includes('styles/skins/latent/index.js'), 'main.js 未导入隐现样式')
+  assert.ok(read('src/main.js').includes('styles/skins/latent/index.js'), 'main.js 未导入幻流样式')
 })
 
-check('隐现样式里不存在隐藏模块助手的规则', () => {
+check('幻流样式里不存在隐藏模块助手的规则', () => {
   const dir = path.join(ROOT, 'src/styles/skins/latent')
   for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.css'))) {
     const raw = fs.readFileSync(path.join(dir, f), 'utf8')
@@ -177,7 +174,7 @@ check('未注入 window.__NS_AGENT__，未把 nsPlugin 写死为 true', () => {
 })
 
 /* ── 6. 数据服务 ── */
-check('doublelinks 已合并隐现需要的身份引用接口', () => {
+check('doublelinks 已合并幻流需要的身份引用接口', () => {
   const src = read('src/services/doublelinks.js')
   for (const fn of ['referenceSources', 'findReferences', 'findOutgoingReferences']) {
     assert.match(src, new RegExp('export function ' + fn), '缺少导出 ' + fn)
@@ -219,7 +216,7 @@ check('设置界面：无应用顶栏、有 × 退出、分类栏宽屏常驻', 
 
   /* 外观页要能切皮肤与暗色 */
   const appearance = read('src/components/skins/latent/settings/SettingsAppearance.vue')
-  assert.match(appearance, /id="setting-skin"/, '外观页缺皮肤选择')
+  assert.doesNotMatch(appearance, /id="setting-skin"/)
 })
 
 /* 插件版与桌面版共用同一套设置界面：构建配置只切 __NS_PLUGIN__ 与产物目录，
@@ -231,6 +228,89 @@ check('桌面版与插件版构建目标都在', () => {
   const pluginCfg = read('vite.config.plugin.mjs')
   assert.match(pluginCfg, /__NS_PLUGIN__/, '插件构建未定义 __NS_PLUGIN__')
   assert.match(pluginCfg, /outDir: 'dist-plugin'/, '插件产物目录不是 dist-plugin')
+})
+
+check('关系星图：条目定位、移动和缺失节点回退', () => {
+  const nodes = [{ id: 'set' }, { id: 'other' }, { id: 'branch', parentId: 'set' }, { id: 'leaf', parentId: 'branch' }]
+  const location = resolveLoreGalaxy(nodes, { rootId: 'branch', activeId: 'leaf' })
+  assert.deepEqual(location, { rootId: 'branch', rootPath: ['set', 'branch'], activeId: 'leaf', selectedId: 'leaf', scope: 'set' })
+  const moved = nodes.map(node => node.id === 'leaf' ? { ...node, parentId: 'other' } : node)
+  assert.equal(resolveLoreGalaxy(moved, location).rootId, 'other')
+  const deleted = nodes.map(node => ['branch', 'leaf'].includes(node.id) ? { ...node, deletedAt: 1 } : node)
+  assert.equal(resolveLoreGalaxy(deleted, location).activeId, 'set')
+  assert.equal(resolveLoreGalaxy([], location).scope, 'all')
+})
+
+check('关系星图：跨集关系与集内路线保留', () => {
+  const graph = networkModel([{ id: 'set' }, { id: 'other' }], [
+    { id: 'branch', setId: 'set', parentId: 'set' }, { id: 'leaf', setId: 'set', parentId: 'branch' }
+  ], [{ id: 'local', from: 'branch', to: 'leaf' }, { id: 'cross', from: 'leaf', to: 'other' }])
+  assert.equal(graph.system('branch').routes[0].id, 'local')
+  assert.equal(graph.system('').bridges[0].links[0].id, 'cross')
+  assert.equal(graph.byBody.get('leaf').links.length, 2)
+  const merged = spacePlanets(graph.system('').planets, {}, 100, { joins: { other: 'set' }, independent: true })
+  assert.deepEqual(merged.map(body => body.orbitId), ['set', 'set'])
+  assert.equal(merged[0].orbitRadius, merged[1].orbitRadius)
+})
+
+check('关系星图：中心动效默认值、范围与连续相位', () => {
+  assert.deepEqual(normalizeCenterGlow(), DEFAULT_CENTER_GLOW)
+  assert.deepEqual(normalizeCenterGlow({ color: '#33BBCC', brightness: 500, speed: -1, effect: 'bad' }), {
+    color: '#33bbcc', brightness: 150, speed: 0, effect: 'ripple', colorMode: 'solid'
+  })
+  assert.deepEqual(normalizeCenterGlow({ color: '#349abc', brightness: 65, speed: 75, effect: 'twinkle' }), {
+    color: '#349abc', brightness: 65, speed: 75, effect: 'pulse', colorMode: 'solid'
+  })
+  assert.equal(normalizeCenterGlow({ colorMode: 'zones' }).colorMode, 'zones')
+  assert.equal(normalizeCenterGlow({ colorMode: 'invalid' }).colorMode, 'solid')
+  assert.equal(Object.keys(CENTER_GLOW_EFFECTS).length, 5)
+  assert.equal(CENTER_GLOW_EFFECTS.ripple, '波纹')
+  assert.deepEqual(Object.keys(CENTER_GLOW_EFFECTS).filter(hasCenterColorModes), ['breathe', 'pulse'])
+  assert.equal(advanceCenterGlow(420, 32, 0), 420)
+  assert.equal(advanceCenterGlow(420, 32, 200), 484)
+  assert.equal(advanceCenterGlow(420, 2000, 100), 460)
+  for (const effect of ['ripple', 'sweep', 'rainbow']) {
+    const edge = centerGlowEdge(effect, -.8 / 7, 1.8)
+    assert.ok(edge >= 0 && edge <= 1)
+    assert.notEqual(edge, centerGlowEdge(effect, -.8 / 7, 0))
+  }
+})
+
+check('关系星图：逐色交接、分区相位与脉动扩散包络', () => {
+  for (const [effect, period] of [['breathe', 3.6], ['pulse', 2.6]]) {
+    const sample = (turn, mode = 'cycle', angle = 0) => centerGlowSample(effect, mode, period * turn, angle)
+    assert.equal(sample(.5).hueOffset, 0)
+    assert.ok(sample(.9).hueOffset > 0 && sample(.9).hueOffset < 60)
+    assert.equal(sample(1).hueOffset, 60)
+    assert.ok(sample(5.99).hueOffset > 359)
+    assert.deepEqual(sample(6), sample(0))
+    assert.equal(sample(.5, 'solid').hueOffset, 0)
+    const [first, second] = [0, Math.PI / 3].map(angle => sample(.5, 'zones', angle))
+    assert.equal(first.phase, .5)
+    assert.ok(Math.abs(second.phase - 1 / 3) < 1e-9)
+    assert.equal(second.hueOffset, 60)
+  }
+  assert.ok(centerGlowPulse(.5) > centerGlowPulse(0))
+  assert.equal(centerGlowWave(0), 0)
+  assert.ok(centerGlowWave(.4) > 0)
+  assert.equal(centerGlowWave(.85), 0)
+})
+
+check('关系星图：条目字数定径及手动扩容', () => {
+  const text = entryCircleGlyphs('  星图观测记录\n' + '界'.repeat(70) + '  ')
+  assert.equal(text.join('').startsWith('星图观测记录 '), true)
+  assert.ok(entryCircleRadius(10, 1) < entryCircleRadius(10, 15))
+  assert.ok(entryCircleRadius(10, 15) < entryCircleRadius(10, 70))
+  assert.equal(entryRadiusLimit(900, 120), 56)
+  const measure = str => Array.from(str).length * 8
+  const auto = layoutEntryCircleText(measure, text, 30, false, 10)
+  assert.equal(auto.length, 3)
+  assert.ok(Array.from(auto.join('')).length <= 15)
+  assert.ok(auto.join('').endsWith('…'))
+  const resized = layoutEntryCircleText(measure, text, 55, true, 10)
+  assert.ok(resized.length > 3)
+  assert.ok(Array.from(resized.join('')).length > 15)
+  assert.equal(layoutEntryCircleText(measure, entryCircleGlyphs('银湾'), 18, false, 10).join(''), '银湾')
 })
 
 /* ── 输出 ── */

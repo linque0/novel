@@ -352,20 +352,21 @@ body[data-skin='dsh'] .n-modal-container:has(.latent-export-dialog) > .n-modal-m
 }
 
 body[data-skin='dsh'] .latent-export-dialog.n-modal.n-card {
-  --export-list: rgb(10 11 15 / .19);
-  --export-list-head: rgb(30 28 27 / .58);
-  --export-wash: rgb(255 249 240 / .07);
-  --export-line: rgb(255 249 240 / .15);
-  --export-control-line: rgb(244 239 230 / .54);
-  --export-scroll: rgb(224 212 196 / .42);
-  --export-ink: var(--ns-label-1, #f9fafb);
-  --export-quiet: #d9d2c6;
-  --export-accent: #bdd8c8;
-  --export-accent-wash: rgb(189 216 200 / .15);
-  --export-check: #bdd8c8;
-  --export-check-mark: #24362f;
-  --export-primary: #eee6da;
-  --export-on-primary: #262321;
+  transition-property: opacity, transform, box-shadow;
+  --export-list: var(--panel-hover);
+  --export-list-head: var(--panel-base);
+  --export-wash: var(--panel-hover);
+  --export-line: var(--panel-line);
+  --export-control-line: var(--panel-control);
+  --export-scroll: var(--panel-control);
+  --export-ink: var(--panel-ink);
+  --export-quiet: var(--panel-quiet);
+  --export-accent: var(--panel-accent);
+  --export-accent-wash: var(--panel-active);
+  --export-check: var(--panel-accent);
+  --export-check-mark: var(--panel-base);
+  --export-primary: var(--panel-accent);
+  --export-on-primary: var(--panel-base);
   --n-close-icon-color: var(--export-quiet) !important;
   --n-close-icon-color-hover: var(--export-ink) !important;
   --n-close-icon-color-pressed: var(--export-ink) !important;

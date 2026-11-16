@@ -3,25 +3,18 @@ import assert from 'node:assert/strict'
 import { normalizeSkin, resolveSkin, SKINS, isStudioSkin } from '../src/skins/registry.js'
 import { characterGeometry, projectCharacterPoint } from '../src/skins/graph-presentation.js'
 
-for (const value of [undefined, null, '', 'future-skin', '__proto__', 'constructor']) {
-  assert.equal(normalizeSkin(value), 'original', `invalid preference ${String(value)}`)
+for (const value of [undefined, null, '', 'future-skin', '__proto__', 'constructor', 'original', 'gravity', 'glaze', 'crimson', 'dsh']) {
+  assert.equal(normalizeSkin(value), 'dsh', `skin preference ${String(value)}`)
 }
-assert.equal(normalizeSkin('gravity'), 'gravity')
-assert.equal(normalizeSkin('glaze'), 'glaze')
-for (const surface of ['shelf', 'work', 'panel']) assert.equal(resolveSkin('glaze', surface).id, 'glaze')
+for (const surface of ['shelf', 'work', 'panel', 'unknown', undefined]) {
+  const skin = resolveSkin('glaze', surface)
+  assert.equal(skin.id, 'dsh')
+  assert.equal(skin.label, '幻流')
+}
 for (const value of ['gravity', 'glaze']) assert.equal(isStudioSkin(value), true)
-for (const value of ['original', 'future', null]) assert.equal(isStudioSkin(value), false)
-assert.equal(resolveSkin('gravity', 'shelf').id, 'gravity')
-for (const surface of ['work', 'panel']) {
-  assert.equal(resolveSkin('gravity', surface).id, 'gravity', `gravity supports ${surface}`)
-}
-for (const surface of ['unknown', undefined]) {
-  assert.equal(resolveSkin('gravity', surface).id, 'original', `unknown surface ${surface}`)
-}
-assert.equal(resolveSkin('missing', 'shelf').id, 'original')
-assert.equal(resolveSkin('original', 'shelf').id, 'original')
+for (const value of ['dsh', 'original', 'future', null]) assert.equal(isStudioSkin(value), false)
 assert.equal(new Set(SKINS.map(s => s.id)).size, SKINS.length)
-console.log('PASS skin fallback, supported surfaces, registry identifiers')
+console.log('PASS 幻流唯一皮肤、旧偏好回落与注册标识')
 for (const skin of ['original', 'gravity', 'glaze']) {
   const geometry = characterGeometry(skin)
   for (const point of [{x:0,y:0},{x:-203,y:79},{x:31.25,y:-0.5}]) {

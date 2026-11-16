@@ -12,7 +12,6 @@ const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { h, ref, onMounted, watch, computed } from 'vue'
 import { NButton, NSelect, NTag, NCheckbox, NSwitch } from 'naive-ui'
 import OIcon from './OIcon.vue'
-import SkinPicker from './SkinPicker.vue'
 /* 隐现（dsh）皮肤的整套设置：玻璃侧栏 + 搜索 + 五页分组 + 外观预览。
  * 其中 appearance / data / about 三页按插件版界面移植；
  * ai / knowledge 两页沿用桌面现有 AiSettings / KnowledgeModelSettings（用户决定后续专项适配）。 */
@@ -28,6 +27,7 @@ import TrashModal from './TrashModal.vue'
 import StatsModal from './StatsModal.vue'
 import HelpManual from './HelpManual.vue'
 import { APP_VERSION } from './skins/latent/settings/settings-version.js'
+import AppUpdateControls from './AppUpdateControls.vue'
 import { desktopAppIcon } from '../services/desktop-brand.js'
 import { useUiStore, FONT_MAP, LATIN_MAP } from '../stores/ui'
 import { backupAll, restoreBackup } from '../services/exporter'
@@ -279,12 +279,8 @@ async function clearStalePointer() {
           <div class="sw-appearance-controls">
           <h2 class="sw-h serif">外观</h2>
           <NButton v-if="ui.skin!=='crimson'" size="small" quaternary :disabled="ui.writingPaperSaving" @click="resetAppearance">恢复默认</NButton>
-          <p class="sw-desc">皮肤、主题、字体与字号，改动即时生效并同步到全部窗口</p>
+          <p class="sw-desc">主题、字体与字号，改动即时生效并同步到全部窗口</p>
           <div class="sw-card">
-            <div class="sw-row">
-              <div class="sw-row-main"><b>工坊皮肤</b><i>书架、创作工作台与独立窗口统一切换</i></div>
-              <SkinPicker />
-            </div>
             <div class="sw-row sw-paper-row">
               <div class="sw-row-main"><b>正文纸面装帧</b><i>跟随皮肤明暗，切换不改变文字排版</i></div>
               <WritingPaperPicker settings />
@@ -418,6 +414,7 @@ async function clearStalePointer() {
               <p class="sw-desc">v{{ APP_VERSION }}</p>
             </div>
           </div>
+          <AppUpdateControls />
           <h3 v-if="originalSettings" class="sw-h2">写作与帮助</h3>
           <div class="sw-card">
             <button class="sw-item" type="button" @click="ui.statsOpen = true">

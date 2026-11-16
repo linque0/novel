@@ -181,7 +181,7 @@ function openPanel(spec) {
 }
 
 /* ---------- IPC ---------- */
-function init() {
+function init({ blockOpening = () => false } = {}) {
   ipcMain.handle('panel:ready', (e) => {
     const p = panels.find(p => !p.win.isDestroyed() && p.win.webContents === e.sender)
     if (!p || p.spec.type !== 'settings') return { ok: false }
@@ -192,6 +192,7 @@ function init() {
     return { ok: true }
   })
   ipcMain.handle('panel:open', async (_e, spec) => {
+    if (blockOpening()) return { ok: false, reason: 'update-installing' }
     if (!spec || typeof spec !== 'object') return { ok: false, reason: 'bad-spec' }
     const prepared=[],token=String(++preparationSequence)
     const finishPreparation=()=>Promise.all(prepared.filter(w=>!w.isDestroyed()).map(w=>w.webContents.executeJavaScript(`window.dispatchEvent(new CustomEvent('chapter-edit-handoff',{detail:{token:${JSON.stringify(token)},pending:false}}))`).catch(()=>{})))
@@ -205,7 +206,9 @@ function init() {
         }))
       }catch{await finishPreparation();return {ok:false,reason:'save-failed'}}
     }
-    try{return openPanel({
+    try{
+      if (blockOpening()) return { ok: false, reason: 'update-installing' }
+      return openPanel({
       type: String(spec.type || ''),
       workId: String(spec.workId || ''),
       entityId: spec.entityId ? String(spec.entityId) : '',

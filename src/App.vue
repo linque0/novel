@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { NConfigProvider, NMessageProvider, NDialogProvider, NButton, zhCN, dateZhCN, darkTheme } from 'naive-ui'
+import AppUpdateControls from './components/AppUpdateControls.vue'
 import { useDshOverrides } from '../plugin/dsh/theme.js'
 import { useUiStore } from './stores/ui'
 import { startAutosave } from './services/autosave'
@@ -105,14 +106,15 @@ const dshOverrides = computed(() => (dshThemeState ? dshThemeState.value.overrid
 
 watch(activeSkin, skin => { document.body.dataset.skin = skin.id }, { immediate: true })
 
-/* 暗色令牌分支由 <html> 上的 data-ns-dark 触发：插件构建里宿主 shim 写在 iframe 根上，
- * 桌面版没人写，language/dsh 的令牌层就一直落回浅色分支（玻璃发白、墨色近黑）；
- * 所以隐现皮肤在这里自己挂，切到旧四套皮肤时移除。暗色选择器只有
- * html[data-ns-dark] body[data-skin='dsh'] 这一组，均被属性的有无双重限定。 */
-watch(latent, on => {
-  if (nsPlugin) return
-  if (on) document.documentElement.setAttribute('data-ns-dark', '1')
-  else document.documentElement.removeAttribute('data-ns-dark')
+/* Body also supplies the effective appearance to teleported dialogs. */
+watch([latent, () => ui.theme, dshNaiveTheme], ([enabled, theme, hostDark]) => {
+  if (!enabled) {
+    delete document.body.dataset.nsPanelTheme
+    delete document.body.dataset.nsPanelSource
+    return
+  }
+  document.body.dataset.nsPanelTheme = (nsPlugin ? Boolean(hostDark) : theme === 'night') ? 'dark' : 'light'
+  document.body.dataset.nsPanelSource = nsPlugin ? 'host' : 'local'
 }, { immediate: true })
 
 /* 主题类镜像到 body：naive 的 popover/modal 等浮层 teleport 到 body 下，
@@ -132,6 +134,26 @@ async function revealSettings() {
   // Let PanelHost mount and commit its themed layout before showing the native window.
   await nextTick()
   requestAnimationFrame(() => requestAnimationFrame(() => window.native?.panelReady?.()))
+}
+
+let restoreEditing
+if (window.native?.updates) {
+  window.__updateSaveBarrier = async action => {
+    if (action === 'resume') {
+      restoreEditing?.()
+      restoreEditing = undefined
+      return true
+    }
+    if (action !== 'prepare' || !prefsReady.value || !window.__flushNow) return false
+    if (!restoreEditing) {
+      const previous = document.body.inert
+      document.body.inert = true
+      restoreEditing = () => { document.body.inert = previous }
+    }
+    await window.__flushNow()
+    const preferencesSaved = await ui.retryPrefs()
+    return preferencesSaved && !ui.autosave.pending && !ui.autosave.saving && !ui.autosave.error
+  }
 }
 
 async function boot() {
@@ -181,6 +203,7 @@ async function seedDevVerifyBooks() {
     <NMessageProvider>
       <NDialogProvider>
         <PrefBridge />
+        <AppUpdateControls v-if="!nsPlugin && !panelMode && prefsReady" startup />
         <PanelHost v-if="panelMode && prefsReady" />
         <div v-else-if="!panelMode || ui.dbError" class="app-root" :class="'theme-' + ui.theme" :data-skin="activeSkin.id" :style="ui.rootStyle">
           <div v-if="ui.dbError" class="empty-shelf" style="padding-top: 16vh">

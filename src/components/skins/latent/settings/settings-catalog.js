@@ -19,8 +19,8 @@ export const SETTINGS_PAGES = [
 export const SETTINGS_PAGE_KEYS = ['appearance', 'ai', 'knowledge', 'data', 'about']
 
 export const SETTINGS_CATALOG = [
-  { id: 'skin', page: 'appearance', title: '界面皮肤', desc: '切换书架、工作台与独立窗口的外观', terms: '皮肤 主题 外观 隐现 原版工坊 赤月戏 skin theme' },
   { id: 'flowBackground', page: 'appearance', title: '流动背景', desc: '跟随作品封面或自定义两色', terms: '背景 配色 RGB 色板 颜色 推荐 封面' },
+  { id: 'flowSpeed', page: 'appearance', title: '流动速度', desc: '调节背景动画速度', terms: '背景 动画 速度 静止' },
   { id: 'editorFont', page: 'appearance', title: '中文正文字体', desc: '选择正文中的中文字形', terms: '思源宋体 文楷 京华老宋 朝华 云游 黑体 字体 font' },
   { id: 'editorLatin', page: 'appearance', title: '西文字体', desc: '英文与数字的字形搭配', terms: '英文 拉丁 Playfair Gothic 字体' },
   { id: 'fontSize', page: 'appearance', title: '正文字号', desc: '在13–24px之间调整阅读与编辑字号', terms: '大小 排版 字号 缩放' },
@@ -35,7 +35,7 @@ export const SETTINGS_CATALOG = [
   { id: 'trash', page: 'data', title: '回收站', desc: '找回删除的条目，或彻底移除', terms: '恢复 删除 还原 清理' },
   { id: 'help', page: 'about', title: '帮助与快捷键', desc: '了解常用操作与键盘入口', terms: '手册 使用 操作 Escape Tab Ctrl S' },
   { id: 'stats', page: 'about', title: '写作概览', desc: '查看作品、章节与正文的规模', terms: '统计 字数 数据' },
-  { id: 'version', page: 'about', title: '关于小说工坊', desc: '版本与本地优先的创作方式', terms: '版本 关于 LATENT DSH' }
+  { id: 'version', page: 'about', title: '关于小说工坊', desc: '当前版本、项目仓库与软件更新', terms: '版本 更新 升级 检查 GitHub 关于 幻流 DSH' }
 ]
 
 /* 检索口径同总稿 model.mjs:18：trim + 小写，命中 title/desc/terms 任一段即算；空查询不返回全表。 */

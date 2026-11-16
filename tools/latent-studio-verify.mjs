@@ -4,6 +4,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import assert from 'node:assert/strict'
+import { isStudioSkin } from '../src/skins/registry.js'
 
 const ROOT = process.cwd()
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
@@ -33,13 +34,12 @@ check('latent-studio.css 不再由全局 index.js 导入（避免被后续样式
 })
 
 /* ── 2. 流动背板 ── */
-check('Workbench 渲染流动背板的四层结构', () => {
+check('Workbench 渲染流动背板并保留可读性遮罩', () => {
   const wb = read('src/components/Workbench.vue')
   assert.match(wb, /class="st-backdrop-wrap"/, '缺背板容器')
   assert.match(wb, /class="st-backdrop" ref="flowCanvas"/, '缺 flowCanvas 画布')
-  for (const layer of ['dots', 'vignette', 'grain']) {
-    assert.ok(wb.includes('st-layer ' + layer), '缺背板图层 ' + layer)
-  }
+  assert.match(wb, /st-layer vignette/, '缺可读性遮罩')
+  assert.doesNotMatch(wb, /st-layer (dots|grain)/, '背板重复叠加点阵或噪点')
 })
 
 check('背板在隐现皮肤下才挂载，并随皮肤/模块/模式重建', () => {
@@ -82,12 +82,8 @@ check('正文样式依赖的 DOM 类名在组件中存在', () => {
 
 /* ── 4. 皮肤判断不误伤 ── */
 check('isStudioSkin 未把 dsh 算进去（旧皮肤路径不受影响）', () => {
-  const reg = read('src/skins/registry.js')
-  const fn = /export function isStudioSkin[\s\S]{0,200}/.exec(reg)?.[0] ?? ''
-  assert.ok(!fn.includes("'dsh'"), 'isStudioSkin 不应包含 dsh')
-  assert.match(fn, /gravity/, 'isStudioSkin 丢了 gravity')
-  assert.match(fn, /glaze/, 'isStudioSkin 丢了 glaze')
-  assert.match(fn, /crimson/, 'isStudioSkin 丢了 crimson')
+  assert.equal(isStudioSkin('dsh'), false)
+  for (const skin of ['gravity', 'glaze', 'crimson']) assert.equal(isStudioSkin(skin), true)
 })
 
 check('正文容器的显隐在隐现下只保留正文页', () => {

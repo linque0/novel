@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { DEFAULT_FLOW_SPEED, normalizeFlowSpeed } from '../services/latent/flow-motion.js'
 import { db } from '../db/database'
 import { broadcastAppEvent } from '../services/appbus'
 import { normalizeSkin, isStudioSkin } from '../skins/registry'
@@ -11,7 +12,7 @@ import { normalizeOutlineWidth } from '../components/skins/latent/outline/outlin
 import { clampWidth as clampLoreWidth } from '../components/skins/latent/lore/lore-layout.js'
 import { normalizeCharPrefs, normalizeCharState } from '../components/skins/latent/characters/char-layout.js'
 import { useWorkStore } from './work'
-import { resolveLoreFocus } from '../services/lore-core.js'
+import { resolveLoreFocus, resolveLoreGalaxy } from '../services/lore-core.js'
 import { createSnippetPersistence } from '../services/snippet-persistence.js'
 import { registerFlushHook } from '../services/autosave.js'
 import { SETTINGS_SAVE_ERROR } from '../components/skins/latent/settings/settings-prefs.js'
@@ -19,6 +20,8 @@ import { SETTINGS_PAGE_KEYS } from '../components/skins/latent/settings/settings
 
 /* 人物会话状态的写入防抖（250ms）：拖宽 / 筛选 / 滚动都会频繁调 saveCharState，
    合并成一次 appconfig 写入；写失败静默（下一次改动会再试）。 */
+const speedWrites = new WeakMap()
+
 let charStateTimer = null
 let charStatePending = null
 
@@ -117,6 +120,8 @@ export const useUiStore = defineStore('ui', {
     latentWritingLayout: {},
     writingPaperSaving: false,
     sideWidth: 252, // 侧栏宽度（180–480，右缘拖拽调节，appconfig 记忆）
+    flowSpeed: DEFAULT_FLOW_SPEED,
+    flowSpeedPreview: null,
     topbarAutoHide: false, // 顶栏默认隐藏（跨窗口持久化，悬停临时展开）
     flowBackground: normalizeFlowBackground(),
     outlineLeftWidth: 220, // 隐现大纲左栏宽度（故事结构）
@@ -216,6 +221,7 @@ export const useUiStore = defineStore('ui', {
     lastBackupAt: 0 // 最近一次备份真正写盘成功的时间戳（来自 appconfig['settings:lastBackupAt']）
   }),
   getters: {
+    effectiveFlowSpeed: state => state.flowSpeedPreview ?? state.flowSpeed,
     isStudioSkin: (state) => isStudioSkin(state.skin),
     rootStyle(state) {
       const latin = (LATIN_FONTS[state.editorLatin] || LATIN_FONTS.none).stack
@@ -228,6 +234,7 @@ export const useUiStore = defineStore('ui', {
   },
   actions: {
     async loadPrefs() {
+      const speedWriteAtLoad = speedWrites.get(this.$state)
       const storeId=this.$id
       const load = (preferenceLoads.get(storeId) || 0) + 1
       preferenceLoads.set(storeId, load)
@@ -248,6 +255,10 @@ export const useUiStore = defineStore('ui', {
         this.writingPaperStyle = normalizeWritingPaper(map.writingPaperStyle)
         this.latentWritingLayout = normalizeWritingLayout(map.latentWritingLayout)
         if (map.sideWidth) this.sideWidth = Math.min(480, Math.max(180, Number(map.sideWidth) || 252))
+        const speedWrite = speedWrites.get(this.$state)
+        if (speedWrite === speedWriteAtLoad && !speedWrite?.pending && !Object.hasOwn(this.prefsDirty, 'flowSpeed')) {
+          this.flowSpeed = normalizeFlowSpeed(map.flowSpeed)
+        }
         if (map.topbarAutoHide !== undefined) this.topbarAutoHide = map.topbarAutoHide === true
         if (!flowPreferenceWrites.has(this.$state) && !this.prefsDirty.flowBackground && this.flowBackground === flowBackgroundAtLoad) {
           this.flowBackground = normalizeFlowBackground(map.flowBackground)
@@ -296,7 +307,9 @@ export const useUiStore = defineStore('ui', {
     },
     applyLoreLocation(v) {
       const work = useWorkStore()
-      if (work.work?.id) {
+      if (work.work?.id && v.view === 'map' && v.mapMode === 'relations') {
+        v = { ...v, ...resolveLoreGalaxy(work.mubu, v, work.work.id) }
+      } else if (work.work?.id) {
         const rootId = resolveLoreFocus(work.mubu, v.rootId, v.rootPath || [], work.work.id)
         const live = id => work.mubu.some(n => n.id === id && !n.deletedAt && n.workId === work.work.id)
         v = { ...v, rootId, rootPath: work.mubuPath(rootId).map(n => n.id), activeId: live(v.activeId) ? v.activeId : rootId, selectedId: live(v.selectedId) ? v.selectedId : rootId, ...(v.rootId && !rootId ? { scope: 'all' } : {}) }
@@ -503,6 +516,12 @@ export const useUiStore = defineStore('ui', {
        写不进库也要保住当前选择并给出一条能重试的说明。所以这里先写内存再落库，
        失败不抛出、也不广播——广播会让其他窗口采纳一个根本没进库的值。 */
     async applyPref(key, value) {
+      const speedWrite = key === 'flowSpeed' ? { pending: true } : null
+      if (speedWrite) {
+        value = normalizeFlowSpeed(value)
+        speedWrites.set(this.$state, speedWrite)
+        delete this.prefsDirty[key]
+      }
       const isFlow = key === 'flowBackground'
       if (isFlow) value = normalizeFlowBackground(value)
       this[key] = value
@@ -515,14 +534,17 @@ export const useUiStore = defineStore('ui', {
       try {
         await db.appconfig.put({ key, value: plainPref(value) })
       } catch {
+        if (speedWrite && speedWrites.get(this.$state) !== speedWrite) return false
         if (isFlow && this[key] !== current) return false
         this.prefsSave.pending = true
         this.prefsSave.error = SETTINGS_SAVE_ERROR
         this.prefsDirty[key] = value
         return false
       } finally {
+        if (speedWrite) speedWrite.pending = false
         if (isFlow && flowPreferenceWrites.get(this.$state) === current) flowPreferenceWrites.delete(this.$state)
       }
+      if (speedWrite && speedWrites.get(this.$state) !== speedWrite) return true
       if (!isFlow || this[key] === current) delete this.prefsDirty[key]
       if (!Object.keys(this.prefsDirty).length) {
         this.prefsSave.pending = false

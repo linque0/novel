@@ -23,7 +23,7 @@ export const LATIN_FONTS = {
 export const FONT_MAP = CJK_FONTS
 export const LATIN_MAP = LATIN_FONTS
 
-export const SETTINGS_DEFAULTS = { editorFont: 'song', editorLatin: 'none', fontSize: 17, topbarAutoHide: false }
+export const SETTINGS_DEFAULTS = { editorFont: 'song', editorLatin: 'none', fontSize: 17, topbarAutoHide: false, flowSpeed: 1 }
 
 /* 总稿 model.mjs:7 的 13–24px 区间与 12 步撤销窗口 */
 const FONT_SIZE_MIN = 13

@@ -2,7 +2,6 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { NButton, NDropdown, NInput, NSpin } from 'naive-ui'
 import OIcon from './OIcon.vue'
-import SkinPicker from './SkinPicker.vue'
 import AppTopbar from './AppTopbar.vue'
 import GlazeArtwork from './GlazeArtwork.vue'
 import GlazeLightingToggle from './GlazeLightingToggle.vue'
@@ -76,7 +75,7 @@ function rowKeydown(event, book) {
 <template>
   <section class="glaze-shelf glaze-museum" :data-glaze-light="ui.glazeLighting">
     <AppTopbar active="shelf" :busy="disabled" :has-work="!!active" :target-title="active?.title" @navigate="navigate">
-      <template #actions><GlazeLightingToggle /><SkinPicker /></template>
+      <template #actions><GlazeLightingToggle /></template>
     </AppTopbar>
     <div class="gm-cornice" aria-hidden="true"><span></span><i></i><span></span></div>
     <main class="glaze-shelf-scroll gg-scroll">

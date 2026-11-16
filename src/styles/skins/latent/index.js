@@ -31,6 +31,7 @@ import './snippets-fusion.css'
 import './writing-stats.css'
 import './writing-stats-fusion.css'
 import './latent-shelf.css'
+import './panel-material.css'
 /* latent-studio.css（正文 · 伏案静水）不在这里导入：
  * 插件版把它作为 <style src> 挂在 Workbench 组件上，组件级样式在构建后排在全局样式之后，
  * 才压得住 themes.css 的 .center-pane / .editor-head 实底。见 Workbench.vue 末尾。 */

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="以《雾港纪年》为例，动手体验写作、大纲、关系引用和审稿。">
+  <title>互动演示 · 小说工坊</title>
+  <link rel="stylesheet" href="site.css">
+  <script src="demo.js" defer></script>
+</head>
+<body class="demo">
+<a class="skip" href="#content">跳到正文</a>
+<header class="top"><div class="top-inner">
+  <a class="brand" href="index.html"><span class="mark" aria-hidden="true"></span><span>小说工坊<small>Novel Studio</small></span></a>
+  <nav aria-label="主导航">
+    <a href="index.html">产品介绍</a>
+    <a href="guide.html">操作指南</a>
+    <a href="demo.html" aria-current="page">互动演示</a>
+  </nav>
+  <a class="top-download" href="https://github.com/linque0/novel/releases/latest">下载桌面版 <span aria-hidden="true">↗</span></a>
+</div></header>
+<main id="content" class="paper demo-main">
+  <div class="frame demo-head">
+    <div><h1>在雾港试写</h1><p>用虚构作品《雾港纪年》练习四段操作。演示仅在当前页面运行，刷新即可回到样稿。</p></div>
+    <button type="button" class="button soft" id="reset-scenario">重置当前演示</button>
+  </div>
+  <div class="frame">
+    <nav class="scenario-nav" aria-label="演示流程">
+      <a href="#open">从书架开始写作</a><a href="#outline">搭建故事大纲</a><a href="#links">让设定进入正文</a><a href="#review">审阅 AI 候选稿</a>
+    </nav>
+    <p id="demo-status" role="status" class="demo-status">选择一个流程开始。</p>
+    <noscript><p>启用 JavaScript 即可操作演示。也可以先阅读<a href="guide.html">操作指南</a>。</p></noscript>
+    <div class="demo-panels">
+      <section id="open" class="scenario" aria-labelledby="open-title">
+        <div class="scenario-header"><div><h2 id="open-title">从书架开始写作</h2><p>打开试写章节，改一两句话，再回到历史稿。</p></div><a href="guide.html#writing">正文操作指南 ↗</a></div>
+        <div class="studio">
+          <aside class="demo-sidebar" aria-label="演示书架和章节">
+            <div class="demo-book"><span>雾港<br>纪年</span><small>演示作品</small></div>
+            <button type="button" data-action="open-chapter">打开 第一章 · 雾钟</button>
+          </aside>
+          <div class="demo-work">
+            <div id="chapter-empty"><h3>第一章 · 雾钟</h3><p>从侧栏打开章节，进入正文稿面。</p></div>
+            <div id="chapter-work" hidden>
+              <h3>第一章 · 雾钟</h3>
+              <label for="draft">试写正文</label><textarea id="draft" rows="5"></textarea>
+              <div class="demo-controls"><button type="button" data-action="show-history" aria-controls="history" aria-expanded="false">查看历史</button><span id="draft-state">演示稿已打开</span></div>
+              <div class="subpanel" id="history" hidden><strong>原始样稿</strong><p id="history-draft"></p><button type="button" data-action="restore-draft">恢复这一版</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section id="outline" class="scenario" aria-labelledby="outline-title">
+        <div class="scenario-header"><div><h2 id="outline-title">搭建故事大纲</h2><p>移动卡片，连接两件事，再进入第二卷的容器。</p></div><a href="guide.html#outline">大纲操作指南 ↗</a></div>
+        <div class="studio canvas-studio">
+          <div class="demo-controls outline-controls">
+            <button type="button" data-action="toggle-outline" aria-controls="outline-board outline-list" aria-pressed="false">切换到文本大纲</button>
+            <button type="button" data-action="connect-nodes" aria-pressed="false">连接两张事件卡</button>
+            <button type="button" data-action="move-node">向右移动「雾钟失声」</button>
+            <button type="button" data-action="toggle-container" aria-pressed="false">进入「第二卷」容器</button>
+          </div>
+          <p class="canvas-hint" id="canvas-help">支持拖动；聚焦事件卡后也可用方向键移动。</p>
+          <div id="outline-board" class="outline-board" aria-describedby="canvas-help">
+            <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><line id="event-edge" x1="32" y1="31" x2="73" y2="68" vector-effect="non-scaling-stroke" visibility="hidden"/></svg>
+            <button class="node" type="button" id="first-node"><small>事件 · 第一卷</small><strong>雾钟失声</strong></button>
+            <div class="node static-node" id="second-node"><small>事件 · 第一卷</small><strong>翻阅航海日志</strong></div>
+          </div>
+          <div id="outline-list" class="subpanel" hidden><h3>文本大纲</h3><ol id="outline-steps"></ol></div>
+          <div id="outline-container" class="subpanel" hidden><h3>第二卷 · 航灯旧事</h3><ol><li>循光进入旧档案室</li><li>核对失踪灯号</li></ol></div>
+        </div>
+      </section>
+      <section id="links" class="scenario" aria-labelledby="links-title">
+        <div class="scenario-header"><div><h2 id="links-title">让设定进入正文</h2><p>读一条设定或人物资料，把它连回稿件。</p></div><a href="guide.html#links">关系链接指南 ↗</a></div>
+        <div class="studio">
+          <aside class="demo-sidebar" aria-label="演示资料">
+            <h3>资料</h3>
+            <button type="button" data-action="source" data-id="fog">设定 · 雾钟</button>
+            <button type="button" data-action="source" data-id="lin">人物 · 林澜</button>
+          </aside>
+          <div class="demo-work"><h3>第一章 · 雾钟</h3><p class="demo-prose">海雾越过防波堤，值夜人抬头听了两遍。<span id="references"></span></p>
+            <div class="subpanel" id="source-detail" hidden><h4 id="source-title" tabindex="-1"></h4><p id="source-note"></p><button type="button" data-action="add-reference">插入当前条目的引用</button></div>
+          </div>
+        </div>
+      </section>
+      <section id="review" class="scenario" aria-labelledby="review-title">
+        <div class="scenario-header"><div><h2 id="review-title">审阅 AI 候选稿</h2><p>候选段落已预置。对照两版，再决定怎么处理。</p></div><a href="guide.html#dream">恍然梦操作指南 ↗</a></div>
+        <div class="studio compare-studio">
+          <div class="compare">
+            <article><h3>原文</h3><p id="review-original">雾钟没响。林澜走到窗边，海上什么都看不见。</p></article>
+            <article><h3>候选稿</h3><p id="review-candidate">雾钟迟迟没有响。林澜推开窗，只看见潮气在玻璃上凝成水线，旧航灯的方向已经没有光。</p></article>
+          </div>
+          <div class="demo-controls"><button type="button" class="strong" data-action="accept">接受候选稿</button><button type="button" data-action="discard">舍弃候选稿</button></div>
+          <div class="subpanel"><h3>当前稿面</h3><p id="review-result"></p></div>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+<footer class="footer"><div class="frame footer-inner"><a class="brand" href="index.html"><span class="mark" aria-hidden="true"></span><span>小说工坊<small>Novel Studio</small></span></a><div><a href="guide.html">操作指南</a><a href="https://github.com/linque0/novel/blob/main/CHANGELOG.md">更新记录</a><a href="https://github.com/linque0/novel">GitHub ↗</a></div></div></footer>
+</body>
+</html>

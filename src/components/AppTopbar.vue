@@ -26,10 +26,8 @@ const emit = defineEmits(['navigate', 'create', 'action'])
 const ui = useUiStore()
 const work = useWorkStore()
 const nsPlugin = __NS_PLUGIN__
-const skinLabel = computed(() => SKINS.find(skin => skin.id === ui.skin)?.label || '原版工坊')
 const latent = computed(() => isLatentSkin(ui.skin))
-/* 品牌小字：隐现照插件版显示固定字标 LATENT（皮肤名退场），四套旧皮肤仍显示皮肤名 */
-const brandSuffix = computed(() => (isLatentSkin(ui.skin) ? 'LATENT' : skinLabel.value))
+const brandSuffix = computed(() => SKINS.find(skin => skin.id === ui.skin)?.label || '幻流')
 const navItems = computed(() => (latent.value
   ? APP_NAVIGATION.filter(item => item.key !== 'settings')
   : APP_NAVIGATION))

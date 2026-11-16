@@ -164,8 +164,7 @@ const moreOptions = computed(() => [
   { label: dirVisible.value ? '收起目录栏' : '展开目录栏', key: 'dir' },
   { label: ui.focusMode ? '退出沉浸' : '沉浸写作', key: 'focus' },
   ...(ui.skin === 'crimson' ? [{ label: '重播开场', key: 'replay' }] : []),
-  ...(work.tab === 'chapters' ? [{ label: ui.readMode ? '退出阅读' : '阅读模式', key: 'read' }] : []),
-  ...(ui.skin !== 'original' ? [{ label: '切回原版皮肤', key: 'original' }] : [])
+  ...(work.tab === 'chapters' ? [{ label: ui.readMode ? '退出阅读' : '阅读模式', key: 'read' }] : [])
 ])
 function onMore(key) {
   if (key === 'assistant') return taskLauncher.value?.open()
@@ -175,7 +174,6 @@ function onMore(key) {
   if (key === 'focus') ui.focusMode = !ui.focusMode
   if (key === 'replay') return playStage()
   if (key === 'read') ui.readMode = !ui.readMode
-  if (key === 'original') ui.setSkin('original')
   if (key === 'settings') openSettings()
 }
 
@@ -348,7 +346,6 @@ function resetAiWidth() {
 /* ---------- 隐现皮肤的主窗口流动背板：只做挂载与销毁，不含业务逻辑 ---------- */
 const flowCanvas = ref(null)
 let flowApi = null
-let flowRippleAt = 0
 const reduceMotionQuery = typeof window !== 'undefined' && typeof window.matchMedia === 'function'
   ? window.matchMedia('(prefers-reduced-motion: reduce)') : null
 
@@ -365,6 +362,7 @@ function destroyFlow() {
   flowApi = null
 }
 
+watch(() => ui.effectiveFlowSpeed, speed => flowApi?.setSpeed(speed))
 function mountFlow() {
   destroyFlow()
   /* 非隐现皮肤不挂背板：四套旧皮肤各有自己的背景，不能多跑一套引擎 */
@@ -376,32 +374,19 @@ function mountFlow() {
   if (!canvas) return
   const width = window.innerWidth
   flowApi = mountFlowBackdrop(canvas, {
+    speed: ui.effectiveFlowSpeed,
     palette: resolveFlowPalette(ui.flowBackground, work.work),
     reducedMotion: Boolean(reduceMotionQuery?.matches),
-    simWidth: width < 560 ? 320 : width < 900 ? 480 : 640,
-    maxEdge: width < 900 ? 1280 : 1600
+    simWidth: width < 560 ? 320 : width < 900 ? 480 : 640
   })
 }
 
-/* 打字涟漪：编辑器（ProseMirror 根 .tiptap）输入时 80ms 节流推一次 */
-function onStudioInput(event) {
-  if (!isLatentSkin(ui.skin) || work.tab !== 'chapters') return
-  const target = event.target
-  if (!target || typeof target.closest !== 'function' || !target.closest('#tiptap, .tiptap')) return
-  const now = performance.now()
-  if (now - flowRippleAt < 80) return
-  flowRippleAt = now
-  try { flowApi?.pulse?.(0.05) } catch { /* 背板已销毁 */ }
-}
-
 function mountStudioBackdrop() {
-  shell.value?.addEventListener('input', onStudioInput, true)
   reduceMotionQuery?.addEventListener?.('change', onFlowMotionChange)
   mountFlow()
 }
 
 function unmountStudioBackdrop() {
-  shell.value?.removeEventListener('input', onStudioInput, true)
   reduceMotionQuery?.removeEventListener?.('change', onFlowMotionChange)
   destroyFlow()
 }
@@ -428,7 +413,7 @@ onBeforeUnmount(() => {
 <template>
   <div ref="shell" class="workbench-shell" :data-ow-directory-overlay="original && owMode.directory || undefined" :data-ow-notes-overlay="original && owMode.notes || undefined" :data-ow-open="original ? owDrawer : undefined" :class="{ 'original-workspace':original, 'is-focus': ui.focusMode, 'is-reading': ui.readMode, 'is-crimson': crimson, 'glaze-museum': museum, 'glaze-drawer-open': modalDrawer, 'latent-studio': latentSkin && work.tab === 'chapters', 'outline-strict': latentSkin && work.tab === 'outline' }" :data-glaze-light="museum ? ui.glazeLighting : undefined" :data-module="work.tab" :data-flow="latentSkin ? 'on' : undefined" style="display: flex; flex-direction: column; height: 100%">
     <!-- 隐现皮肤的主窗口流动背板：dots / vignette / grain 三层叠在 canvas 上 -->
-    <div v-if="latentSkin" class="st-backdrop-wrap" aria-hidden="true"><canvas class="st-backdrop" ref="flowCanvas"></canvas><div class="st-layer dots"></div><div class="st-layer vignette"></div><div class="st-layer grain"></div></div>
+    <div v-if="latentSkin" class="st-backdrop-wrap" aria-hidden="true"><canvas class="st-backdrop" ref="flowCanvas"></canvas><div class="st-layer vignette"></div></div>
     <div v-if="museum" class="gm-cornice" aria-hidden="true"><span></span><i></i><span></span></div>
     <!-- 赤月戏：布景层（按模块换图）+ 顶部压暗渐变，内容始终在布景之上 -->
     <template v-if="crimson">

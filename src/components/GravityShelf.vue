@@ -2,7 +2,6 @@
 import { computed, ref, watch } from 'vue'
 import { NButton, NInput, NSpin, NDropdown } from 'naive-ui'
 import OIcon from './OIcon.vue'
-import SkinPicker from './SkinPicker.vue'
 import AppTopbar from './AppTopbar.vue'
 import GravityBook from './GravityBook.vue'
 import GravityCover from './GravityCover.vue'
@@ -116,7 +115,7 @@ function words(n) { return (Number(n) || 0).toLocaleString('zh-CN') }
 <template>
   <section class="gravity-shelf" aria-label="引力书舱">
     <AppTopbar active="shelf" :busy="busy || loading" :has-work="!!activeBook" :target-title="activeBook?.title" @navigate="navigate">
-      <template #actions><SkinPicker /></template>
+
     </AppTopbar>
 
     <main class="gravity-scroll">

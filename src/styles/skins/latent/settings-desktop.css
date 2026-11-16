@@ -39,14 +39,14 @@ body[data-skin=dsh] .settings-shell .ai-prov-list{border:0.5px solid var(--set-l
 body[data-skin=dsh] .settings-shell .ai-prov-list-head{padding:11px 12px 9px;border-bottom:0.5px solid var(--set-line);font-size:11px;color:var(--set-faint);letter-spacing:.04em}
 body[data-skin=dsh] .settings-shell .ai-prov-items{display:flex;flex-direction:column;gap:2px;padding:6px}
 body[data-skin=dsh] .settings-shell .ai-prov-item{display:flex;align-items:center;gap:8px;width:100%;min-height:34px;padding:7px 8px;border:0.5px solid transparent;border-radius:10px;text-align:left;font-size:13px;color:var(--set-ink)}
-body[data-skin=dsh] .settings-shell .ai-prov-item:hover{background:#ffffff08}
-body[data-skin=dsh] .settings-shell .ai-prov-item.on{background:#e6d9ef19;border-color:#ffffff12}
+body[data-skin=dsh] .settings-shell .ai-prov-item:hover{background:var(--panel-hover)}
+body[data-skin=dsh] .settings-shell .ai-prov-item.on{background:var(--panel-active);border-color:#ffffff12}
 body[data-skin=dsh] .settings-shell .ai-prov-item.off{color:var(--set-faint)}
 body[data-skin=dsh] .settings-shell .ai-prov-dot{width:6px;height:6px;border-radius:50%;background:var(--set-accent);flex:none}
 body[data-skin=dsh] .settings-shell .ai-prov-item.off .ai-prov-dot{background:var(--set-faint)}
 body[data-skin=dsh] .settings-shell .ai-prov-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:400}
 body[data-skin=dsh] .settings-shell .ai-prov-add{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:28px;margin:6px;padding:4px 10px;border:0.5px solid #ffffff28;border-radius:999px;font-size:11px;color:var(--set-muted)}
-body[data-skin=dsh] .settings-shell .ai-prov-add:hover{background:#ffffff17}
+body[data-skin=dsh] .settings-shell .ai-prov-add:hover{background:var(--panel-hover)}
 body[data-skin=dsh] .settings-shell .ai-prov-none,
 body[data-skin=dsh] .settings-shell .ai-prov-empty{padding:10px 12px;font-size:12px;line-height:1.85;color:var(--set-faint)}
 body[data-skin=dsh] .settings-shell .ai-prov-empty :is(.n-button,.btn){margin-top:12px;min-height:28px;font-size:11px}
@@ -77,18 +77,18 @@ body[data-skin=dsh] .settings-shell .ai-models-tip{padding-bottom:6px;font-size:
 body[data-skin=dsh] .settings-shell .ai-model-list{display:flex;flex-direction:column;border:0.5px solid var(--set-line);border-radius:12px;background:var(--set-wash);overflow:hidden}
 body[data-skin=dsh] .settings-shell .ai-model-row{display:flex;align-items:center;gap:10px;min-height:34px;padding:8px 11px;font-size:13px;border-bottom:0.5px solid #ffffff10}
 body[data-skin=dsh] .settings-shell .ai-model-row:last-child{border-bottom:0}
-body[data-skin=dsh] .settings-shell .ai-model-row:hover{background:#ffffff08}
+body[data-skin=dsh] .settings-shell .ai-model-row:hover{background:var(--panel-hover)}
 body[data-skin=dsh] .settings-shell .ai-model-name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
 body[data-skin=dsh] .settings-shell .ai-model-ctx{flex:none;font-size:11px;color:var(--set-faint);font-variant-numeric:tabular-nums}
 body[data-skin=dsh] .settings-shell :is(.ai-model-toggle,.ai-model-edit,.ai-model-del){display:inline-flex;align-items:center;justify-content:center;flex:none;width:26px;height:26px;border-radius:8px;color:var(--set-muted)}
-body[data-skin=dsh] .settings-shell :is(.ai-model-toggle,.ai-model-edit,.ai-model-del):hover{background:#ffffff14}
+body[data-skin=dsh] .settings-shell :is(.ai-model-toggle,.ai-model-edit,.ai-model-del):hover{background:var(--panel-hover)}
 body[data-skin=dsh] .settings-shell .ai-model-add{display:inline-flex;align-items:center;gap:6px;min-height:28px;font-size:11px;color:var(--set-muted)}
 body[data-skin=dsh] .settings-shell .ai-model-empty{padding:9px 11px;font-size:12px;color:var(--set-faint)}
 body[data-skin=dsh] .settings-shell .ai-set-actions{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:8px;padding:16px 0 4px;border-top:0.5px solid #ffffff10}
 body[data-skin=dsh] .settings-shell .ai-set-actions .n-button{--n-height:28px;font-size:11px}
 body[data-skin=dsh] .settings-shell .ai-test-result{margin-top:9px;font-size:11px;line-height:1.7;color:var(--set-muted)}
 body[data-skin=dsh] .settings-shell .ai-test-result.ok{color:var(--set-accent)}
-body[data-skin=dsh] .settings-shell .ai-test-result.fail{color:#ffbdc6}
+body[data-skin=dsh] .settings-shell .ai-test-result.fail{color:var(--panel-danger)}
 
 /* ---------- 模型设置 · 密钥与拉取模型（旧 .form-field 的位置） ---------- */
 body[data-skin=dsh] .settings-shell .ai-key-zone{display:flex;align-items:center;gap:8px;margin-top:12px;min-width:0}
@@ -104,7 +104,7 @@ body[data-skin=dsh] .settings-shell .ai-fetch-id{flex:none;font-size:11px;color:
 /* ---------- 模型设置 · 供应商模板菜单（NPopover teleport 到 body，用 .n-popover 收口） ---------- */
 body[data-skin=dsh] .n-popover .ai-tpl-menu{display:flex;flex-direction:column;gap:2px;padding:6px;min-width:230px}
 body[data-skin=dsh] .n-popover .ai-tpl-item{display:flex;flex-direction:column;align-items:flex-start;gap:3px;width:100%;padding:8px 10px;border:0.5px solid transparent;border-radius:10px;text-align:left}
-body[data-skin=dsh] .n-popover .ai-tpl-item:hover{background:#ffffff14}
+body[data-skin=dsh] .n-popover .ai-tpl-item:hover{background:var(--panel-hover)}
 body[data-skin=dsh] .n-popover .ai-tpl-name{font-size:12px;font-weight:400;color:var(--set-ink, #f4eef7)}
 body[data-skin=dsh] .n-popover .ai-tpl-sub{font-size:11px;line-height:1.7;color:var(--set-faint, #b5a7c2);word-break:break-all}
 
@@ -198,7 +198,7 @@ body[data-skin=dsh] .n-modal:has(.ai-mc) .n-switch{
 body[data-skin=dsh] .settings-shell .desktop-embed .n-button,
 body[data-skin=dsh] .n-modal:has(.ai-mc) .n-button{
   --n-height:28px!important;--n-font-size:11px!important;--n-border-radius:999px!important;
-  --n-color:var(--set-wash)!important;--n-color-hover:#ffffff14!important;--n-color-pressed:#ffffff1f!important;--n-color-focus:var(--set-wash)!important;
+  --n-color:var(--set-wash)!important;--n-color-hover:var(--panel-hover)!important;--n-color-pressed:#ffffff1f!important;--n-color-focus:var(--set-wash)!important;
   --n-text-color:var(--set-muted)!important;--n-text-color-hover:var(--set-ink)!important;--n-text-color-pressed:var(--set-ink)!important;--n-text-color-focus:var(--set-ink)!important;
   --n-border:0.5px solid #ffffff28!important;--n-border-hover:0.5px solid #ffffff3a!important;
   --n-border-pressed:0.5px solid #ffffff3a!important;--n-border-focus:0.5px solid #ffffff3a!important;
@@ -207,7 +207,7 @@ body[data-skin=dsh] .n-modal:has(.ai-mc) .n-button{
 body[data-skin=dsh] .settings-shell .desktop-embed .n-button:is(.n-button--quaternary-type,.n-button--text-type),
 body[data-skin=dsh] .n-modal:has(.ai-mc) .n-button:is(.n-button--quaternary-type,.n-button--text-type){
   --n-height:26px!important;--n-border-radius:8px!important;
-  --n-color:transparent!important;--n-color-hover:#ffffff14!important;--n-color-pressed:#ffffff1f!important;--n-color-focus:transparent!important;
+  --n-color:transparent!important;--n-color-hover:var(--panel-hover)!important;--n-color-pressed:#ffffff1f!important;--n-color-focus:transparent!important;
   --n-border:0 solid transparent!important;--n-border-hover:0 solid transparent!important;
   --n-border-pressed:0 solid transparent!important;--n-border-focus:0 solid transparent!important;
 }
@@ -232,11 +232,11 @@ body[data-skin=dsh] .settings-shell .ai-models{margin:0;padding:0;border:0;backg
 body[data-skin=dsh] .settings-shell .ai-params-head{margin:16px 0 0}
 body[data-skin=dsh] .settings-shell .ai-model-list{gap:0}
 body[data-skin=dsh] .settings-shell .ai-model-row{border:0;border-bottom:0.5px solid #ffffff10;border-radius:0}
-body[data-skin=dsh] .settings-shell .ai-model-row.on{background:#e6d9ef19;border-bottom-color:#ffffff12}
+body[data-skin=dsh] .settings-shell .ai-model-row.on{background:var(--panel-active);border-bottom-color:#ffffff12}
 body[data-skin=dsh] .settings-shell .ai-model-row.on .ai-model-name{color:var(--set-ink);font-weight:500}
 body[data-skin=dsh] .settings-shell .ai-model-row.off .ai-model-name{color:var(--set-faint)}
 body[data-skin=dsh] .settings-shell .ai-model-row :is(.ai-model-edit,.ai-model-del):hover{color:var(--set-ink)}
-body[data-skin=dsh] .settings-shell .ai-model-del:hover{color:#ffbdc6}
+body[data-skin=dsh] .settings-shell .ai-model-del:hover{color:var(--panel-danger)}
 body[data-skin=dsh] .settings-shell .ai-model-empty{border:0.5px dashed var(--set-line);border-radius:10px;padding:10px 11px}
 body[data-skin=dsh] .settings-shell .ai-prov-add:hover{color:var(--set-ink);border-color:#ffffff3a}
 body[data-skin=dsh] .settings-shell .ai-prov-item.on .ai-prov-nm{color:var(--set-ink);font-weight:500}
@@ -245,16 +245,16 @@ body[data-skin=dsh] .settings-shell .ai-fetch-title{background:none}
 body[data-skin=dsh] .settings-shell .ai-fetch-row+.ai-fetch-row{border-top:0.5px solid #ffffff10}
 body[data-skin=dsh] .settings-shell .ai-fetch-msg{padding:7px 11px;border:0.5px solid var(--set-line);border-radius:8px;background:var(--set-wash);font-size:11px}
 body[data-skin=dsh] .settings-shell .ai-fetch-msg.ok{color:var(--set-accent)}
-body[data-skin=dsh] .settings-shell .ai-fetch-msg.fail{color:#ffbdc6}
+body[data-skin=dsh] .settings-shell .ai-fetch-msg.fail{color:var(--panel-danger)}
 body[data-skin=dsh] .settings-shell .ai-test-result{padding:0;border:0;border-radius:0;background:none}
 
 /* ---- teleport 弹层：供应商模板菜单（NPopover）与逐模型编辑（NModal），用 :has() 认准是这两个 ---- */
 body[data-skin=dsh] .n-popover:has(.ai-tpl-menu){
-  --n-color:#2c2539f5!important;--n-text-color:var(--set-ink)!important;--n-border-radius:12px!important;
+  --n-color:var(--panel-base)!important;--n-text-color:var(--set-ink)!important;--n-border-radius:12px!important;
 }
 body[data-skin=dsh] .n-popover:has(.ai-tpl-menu) .ai-tpl-name{color:var(--set-ink)}
 body[data-skin=dsh] .n-modal:has(.ai-mc) :is(.n-card,.n-modal){
-  --n-color:#2c2539!important;--n-text-color:var(--set-ink)!important;--n-border-radius:12px!important;
+  --n-color:var(--panel-base)!important;--n-text-color:var(--set-ink)!important;--n-border-radius:12px!important;
 }
 body[data-skin=dsh] .n-modal:has(.ai-mc) .n-modal .ai-mc-hint,
 body[data-skin=dsh] .n-modal:has(.ai-mc) .ai-mc-hint{padding:8px 0 0;background:none;border-radius:0;color:var(--set-faint)}

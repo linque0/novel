@@ -2,7 +2,6 @@
 import { computed, onMounted } from 'vue'
 import { NButton, NDropdown, NSpin } from 'naive-ui'
 import OIcon from './OIcon.vue'
-import SkinPicker from './SkinPicker.vue'
 import AppTopbar from './AppTopbar.vue'
 import CrimsonBookViewer from './CrimsonBookViewer.vue'
 import CrimsonBookThumbnail from './CrimsonBookThumbnail.vue'
@@ -64,7 +63,7 @@ onMounted(() => playStage())
 <template>
   <section class="crimson-shelf" :class="{ 'is-empty': !featured }">
     <AppTopbar active="shelf" :busy="busy || loading" :has-work="!!featured" :target-title="featured?.title" @navigate="navigate">
-      <template #actions><SkinPicker /></template>
+
     </AppTopbar>
 
     <main class="crimson-main">

@@ -15,15 +15,17 @@
 
 ## 文档
 
+**[交互式产品介绍与操作指南](docs/showcase/index.html)** · 按创作任务查找功能，在《雾港纪年》中试写、连线、引用资料和审阅候选稿。开发预览与正式下载的版本差异见[版本和适用端](docs/showcase/guide.html#versions)。
+
+本地可直接打开 `docs/showcase/index.html`，也可以用 `python -m http.server 4174 --bind 127.0.0.1 --directory docs/showcase` 运行静态站。
+
 | 文档 | 内容 |
 |---|---|
-| [恍然梦创作工作流实施说明](docs/恍然梦创作工作流实施说明-20261027.md) | 任务检索、章级与批量候选、独立审修、记忆更新、阶段模型与文本 Skill，以及验证边界 |
-| [docs/恍然梦书库读模型实施说明.md](docs/恍然梦书库读模型实施说明.md) | 全源投影、正文记忆、读取工具、任务上下文、迁移与验证；说明完整创作闭环的后续范围 |
-| [docs/产品介绍-图文版.html](docs/产品介绍-图文版.html) · [PDF](docs/产品介绍-图文版.pdf) | **图文版产品介绍（25 页 A4 排版，23 张赤月戏实机截图）**：封面 / 目录 / 11 个章节，专业排版可直接分发 |
-| [docs/产品介绍.md](docs/产品介绍.md) | 产品介绍（Markdown 版）：功能模块逐项讲解并配图，便于在 GitHub 上直接阅读 |
-| [docs/开发流程.md](docs/开发流程.md) | 开发流程：架构分层、版本与提交纪律、五步开发法、验证体系、打包发布流程、缺陷经验 |
-| [docs/使用手册.md](docs/使用手册.md) | 使用手册（应用内置同源）：功能详解、键位详解、导出行为表、FAQ |
+| [开发流程](docs/开发流程.md) | 开发流程：架构分层、版本与提交纪律、五步开发法、验证体系、打包发布流程、缺陷经验 |
+| [使用手册](docs/使用手册.md) | 使用手册（应用内置同源）：功能详解、键位详解、导出行为表、FAQ |
 | [CHANGELOG.md](CHANGELOG.md) | 逐版本变更历史（每版含验收数据） |
+
+> 产品介绍与图文说明已迁到 [docs/showcase/](docs/showcase/index.html)（交互式站点）。
 
 > 图文版重新生成：`node tools/html-to-pdf.mjs`（无头 Chrome 渲染 HTML → PDF，含图片完整性、页面溢出与破损图片自检）。
 
@@ -127,7 +129,7 @@
 
 ![设置：中/西文字体分离切换、字号无级调节与实时预览](docs/assets/ui/settings.jpg)
 
-> 逐模块更细的功能讲解、键位与导出行为见 [docs/产品介绍.md](docs/产品介绍.md) 与 [docs/使用手册.md](docs/使用手册.md)。
+> 逐模块更细的功能讲解、键位与导出行为见 [docs/showcase/](docs/showcase/index.html) 与 [docs/使用手册.md](docs/使用手册.md)。
 
 ## 快速开始
 

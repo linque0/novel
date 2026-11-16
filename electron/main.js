@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const panels = require('./panels')
 const { windowIconPath } = require('./window-icon.cjs')
+const { initUpdateIPC } = require('./update-ipc.cjs')
 
 const isDev = !!process.env.NOVEL_STUDIO_DEV || process.argv.includes('--dev')
 
@@ -156,6 +157,7 @@ app.setPath('userData', useCustomDir ? customDir : defaultUserData)
 
 /* 数据迁移期间挂起 window-all-closed 退出：迁移须在全部窗口关闭后继续拷贝/换位/写指针 */
 let dataMigrating = false
+let updateInstalling = () => false
 
 /** 仅放行公网 http/https 链接（拒绝本地/私有/保留地址），其余一律不在应用内打开 */
 function isPublicHttpUrl(url) {
@@ -282,7 +284,8 @@ function startMain() {
   if (!isDev) {
     protocol.handle('app', serveDist)
   }
-  panels.init()
+  panels.init({ blockOpening: () => updateInstalling() })
+  updateInstalling = initUpdateIPC({ isDev, getMainWindow: () => win, blocked: () => dataMigrating })
   createWindow()
   panels.setMainWindow(win)
 
@@ -565,6 +568,7 @@ ipcMain.handle('data:openOld', async (_e, payload) => {
 })
 
 ipcMain.handle('data:move', (_e, payload) => {
+  if (updateInstalling()) return { ok: false, error: '正在准备安装更新，请稍后重试。' }
   const current = app.getPath('userData')
   const wantDefault = !payload || typeof payload.dir !== 'string' || !payload.dir.trim()
   /* 旧位置处理：默认保留（记录位置供设置面板清理）；渲染层显式传 false 才当场清理 */

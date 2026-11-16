@@ -1,4 +1,5 @@
-import { paletteOf } from './palette.js'
+import { DEFAULT_FLOW_PALETTE, paletteOf } from './palette.js'
+export { DEFAULT_FLOW_PALETTE } from './palette.js'
 
 export const FLOW_PRESETS = [
   { name: '雾蓝暮紫', colors: ['#5267A8', '#9479B5'] },
@@ -8,7 +9,6 @@ export const FLOW_PRESETS = [
   { name: '玫瑰墨夜', colors: ['#4B3D72', '#B16D8E'] }
 ]
 
-export const DEFAULT_FLOW_PALETTE = { a: [0.18, 0.22, 0.5], b: [0.85, 0.4, 0.35], c: [0.06, 0.07, 0.16] }
 
 export function normalizeFlowBackground(value) {
   const colors = Array.isArray(value?.colors) ? value.colors : []

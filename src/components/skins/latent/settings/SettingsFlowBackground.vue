@@ -1,5 +1,6 @@
 <script setup>
 import { useUiStore } from '../../../../stores/ui'
+import FlowSpeedSetting from './FlowSpeedSetting.vue'
 import { FLOW_PRESETS, rgbFromHex } from '../../../../services/latent/flow-palette.js'
 
 const ui = useUiStore()
@@ -34,6 +35,7 @@ function changeChannel(index, channel, event) {
       <h2>流动背景</h2>
       <small>书架 · 工作台 · 设置</small>
     </div>
+    <FlowSpeedSetting />
     <div class="setting-row" data-setting="flowBackground">
       <div class="setting-copy">
         <label for="flow-background-mode">配色模式</label>

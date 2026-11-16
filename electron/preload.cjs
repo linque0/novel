@@ -2,6 +2,19 @@ const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('native', {
   isElectron: true,
+  updates: {
+    state: () => ipcRenderer.invoke('update:state'),
+    check: startup => ipcRenderer.invoke('update:check', startup === true),
+    dismiss: () => ipcRenderer.invoke('update:dismiss'),
+    download: () => ipcRenderer.invoke('update:download'),
+    install: () => ipcRenderer.invoke('update:install'),
+    open: kind => ipcRenderer.invoke('update:open', kind),
+    onState: callback => {
+      const handler = (_event, state) => callback(state)
+      ipcRenderer.on('update:state', handler)
+      return () => ipcRenderer.removeListener('update:state', handler)
+    }
+  },
   pickFiles: (opts) => ipcRenderer.invoke('import:pick', opts),
   docxToHtml: (arrayBuffer) => ipcRenderer.invoke('docx:toHtml', { data: arrayBuffer }),
   saveFile: (payload) => ipcRenderer.invoke('export:save', payload),

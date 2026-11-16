@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="小说工坊功能地图和操作指南，按任务查找实际入口。">
+  <title>操作指南 · 小说工坊</title>
+  <link rel="stylesheet" href="site.css">
+  <script src="guide.js" defer></script>
+</head>
+<body class="guide">
+<a class="skip" href="#content">跳到正文</a>
+<header class="top"><div class="top-inner">
+  <a class="brand" href="index.html"><span class="mark" aria-hidden="true"></span><span>小说工坊<small>Novel Studio</small></span></a>
+  <nav aria-label="主导航">
+    <a href="index.html">产品介绍</a>
+    <a href="guide.html" aria-current="page">操作指南</a>
+    <a href="demo.html">互动演示</a>
+  </nav>
+  <a class="top-download" href="https://github.com/linque0/novel/releases/latest">下载桌面版 <span aria-hidden="true">↗</span></a>
+</div></header>
+<main id="content" class="paper guide-main">
+  <div class="frame guide-title">
+    <h1>操作指南</h1>
+    <p>从要做的事出发，找到工坊里的入口和下一步。</p>
+    <div class="find"><label for="find-guide">搜索操作</label><input type="search" id="find-guide" autocomplete="off" placeholder="例如 批注、关系星系、备份" aria-controls="search-results"><kbd aria-hidden="true">Ctrl K</kbd></div>
+    <noscript><p>可使用浏览器的页内查找搜索操作。</p></noscript>
+    <div class="search-panel" id="search-results" hidden><p id="search-status" role="status"></p><ul></ul></div>
+  </div>
+  <div class="frame guide-grid">
+    <nav class="guide-nav" aria-label="指南目录"><h2>指南目录</h2><a href="#start">快速开始</a><a href="#shelf">书架与作品</a><a href="#writing">正文与卷章</a><a href="#outline">文本大纲与分层画布</a><a href="#characters">人物卷宗与关系图</a><a href="#world">设定树与关系星系</a><a href="#links">关系链接与独立窗口</a><a href="#ideas">灵感手记</a><a href="#dream">恍然梦与知识检索</a><a href="#tools">全局搜索与写作统计</a><a href="#data">导入、交稿与备份</a><a href="#appearance">皮肤、排版与流动背景</a><a href="#versions">版本和适用端</a></nav>
+    <article class="guide-article" aria-label="操作章节">
+<section class="guide-section" id="start" data-keywords="安装 下载 新手 快速入门" aria-labelledby="start-title">
+  <h2 id="start-title">快速开始</h2><p class="section-summary">从书架进入同一部作品的正文、大纲、人物、设定和灵感。</p>
+  <h3 id="start-step-1">安装桌面版</h3><p>从 GitHub Releases 下载安装程序并打开小说工坊。安装后的首屏是书架。</p>
+  <h3 id="start-step-2">建立第一部作品</h3><p>在书架点右下角「＋」，填写书名和题材。选中新书，点「继续写作」进入正文，或点「打开工作台」查看项目。</p>
+  <h3 id="start-step-3">切换模块</h3><p>用顶栏的书架、正文、大纲、设定、人物和灵感切换工作区。齿轮打开设置。</p>
+  
+  
+</section>
+<section class="guide-section" id="shelf" data-keywords="作品 新建 项目 搜索 筛选 封面" aria-labelledby="shelf-title">
+  <h2 id="shelf-title">书架与作品</h2><p class="section-summary">管理多部作品，接续上次写作的位置。</p>
+  <h3 id="shelf-step-1">新建或修改作品</h3><p>在书架点「＋」建书。选中书封后，用更多菜单编辑作品信息或删除。误删可去回收站检查。</p>
+  <h3 id="shelf-step-2">筛选与搜索</h3><p>点书架上方的状态计数按创作状态筛选。用搜索定位书名或作者，选中结果后进入作品。</p>
+  <h3 id="shelf-step-3">接续写作</h3><p>选中一本书查看作者、章节和字数，点「继续写作」回到记住的写作位置。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/shelf.webp" width="1440" height="810" loading="lazy" alt="书架实机画面">
+  <button type="button" class="hotspot" style="--x:50%;--y:12%" aria-label="显示状态筛选提示" aria-expanded="false" aria-controls="hint-shelf">+</button>
+  </div><figcaption>书架实机画面。示例皮肤和菜单位置会随版本变化。 <span class="hotspot-hint" id="hint-shelf">创作状态与数量入口。</span></figcaption>
+</figure>
+  <a class="trail" href="demo.html#open">动手试试：从书架开始写作 →</a>
+</section>
+<section class="guide-section" id="writing" data-keywords="正文 分卷 排序 书签 字数 保存 历史 批注 阅读 富文本 编辑" aria-labelledby="writing-title">
+  <h2 id="writing-title">正文与卷章</h2><p class="section-summary">从卷章目录进入编辑，写作、回看和校稿都围绕同一个稿面。</p>
+  <h3 id="writing-step-1">新建和整理卷章</h3><p>在正文左侧目录新建卷或章节。通过目录入口重命名、拖动排序或移卷，点击章节即可编辑。</p>
+  <h3 id="writing-step-2">编辑与自动保存</h3><p>稿面输入文字，通过工具栏或「更多」设置标题、强调、列表、引用和对齐。观察顶栏保存状态，确认改动已写入。</p>
+  <h3 id="writing-step-3">批注与书签</h3><p>选中文字，右键选「添加批注」，填写意见并选用途色。点右栏批注返回原文。需要常查的章节可用书签收藏。</p>
+  <h3 id="writing-step-4">查看历史与阅读</h3><p>在正文的历史入口打开旧版本，核对内容后选择恢复。用阅读模式以只读排版查看稿件，退出后回到编辑。</p>
+  <h3 id="writing-step-5">布置写作空间</h3><p>按需收起左侧目录和右侧札记，拖动分隔线调整栏宽。当前开发预览会保存写作布局；阅读和专注时可通过界面按钮退出该模式。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/writing.webp" width="1440" height="810" loading="lazy" alt="正文实机画面">
+  <button type="button" class="hotspot" style="--x:9%;--y:37%" aria-label="显示卷章目录提示" aria-expanded="false" aria-controls="hint-writing">+</button>
+  </div><figcaption>正文实机画面。示例皮肤和菜单位置会随版本变化。 <span class="hotspot-hint" id="hint-writing">左栏用于定位分卷与章节。</span></figcaption>
+</figure>
+  <a class="trail" href="demo.html#open">动手试试：从书架开始写作 →</a>
+</section>
+<section class="guide-section" id="outline" data-keywords="幕布 画布 事件卡 连线 拖拽 节点 容器 伏笔 网格" aria-labelledby="outline-title">
+  <h2 id="outline-title">文本大纲与分层画布</h2><p class="section-summary">用幕布列出故事结构，用画布组织事件、分层和关系。</p>
+  <h3 id="outline-step-1">切换和编辑文本大纲</h3><p>打开「大纲」，从工作区的视图入口切到文本。用缩进、行内编辑和拖拽整理节点，也可从 Markdown 或 TXT 导入层级。</p>
+  <h3 id="outline-step-2">添加卡片与连线</h3><p>在画布工具条选事件、便签、引用、文本框、锚点、卷或容器。拖动卡片摆放，再从锚点拖到目标卡片。右键连线编辑语义、标签、线型或连接点。</p>
+  <h3 id="outline-step-3">整理故事层级</h3><p>把相关卡片拖进容器，按需展开、拖动重排或点「进入容器」下钻。通过面包屑返回，在结构树里点击目标回到相应位置。</p>
+  <h3 id="outline-step-4">审视结构</h3><p>用总览、适应和缩放检查全局。为事件标记状态，多选归组；选择画布设置调整点阵、连线、箭头或吸附。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/outline.webp" width="1440" height="810" loading="lazy" alt="大纲画布实机画面">
+  <button type="button" class="hotspot" style="--x:51%;--y:92%" aria-label="显示画布工具条提示" aria-expanded="false" aria-controls="hint-outline">+</button>
+  </div><figcaption>大纲画布实机画面。示例皮肤和菜单位置会随版本变化。 <span class="hotspot-hint" id="hint-outline">从底部工具条添加模块和调整视图。</span></figcaption>
+</figure>
+  <a class="trail" href="demo.html#outline">动手试试：搭建故事大纲 →</a>
+</section>
+<section class="guide-section" id="characters" data-keywords="人物 角色 小传 档案 标签 身份 图谱" aria-labelledby="characters-title">
+  <h2 id="characters-title">人物卷宗与关系图</h2><p class="section-summary">在角色名册中找人，在关系图中查看人物之间的联系。</p>
+  <h3 id="characters-step-1">建立人物卷宗</h3><p>进入「人物」，新建角色，填写角色定位、标签、小传和自定义字段。按定位或标签筛选以缩小名单。</p>
+  <h3 id="characters-step-2">画出人物关系</h3><p>切到关系图，从一个人物的锚点拖线到另一个人物，填写关系标签。点线调整样式，悬停看邻近关系。需要写进情节时，可将人物发送为大纲引用卡。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/characters.webp" width="1440" height="810" loading="lazy" alt="人物关系图实机画面">
+  
+  </div><figcaption>人物关系图实机画面。示例皮肤和菜单位置会随版本变化。</figcaption>
+</figure>
+  
+</section>
+<section class="guide-section" id="world" data-keywords="设定 世界观 幕布 星系 轨道 关系图谱" aria-labelledby="world-title">
+  <h2 id="world-title">设定树与关系星系</h2><p class="section-summary">把世界观拆成可查询的条目，沿关系观察人、地点与规则。</p>
+  <h3 id="world-step-1">整理设定树</h3><p>进入「设定」，在幕布中新建、缩进或拖动条目。双击条目看详情、子条目和关联项。</p>
+  <h3 id="world-step-2">建立条目级关联</h3><p>右键条目选择「设置关系」，搜索人物或设定，选关系类型并填写描述。从行尾关系卡片进入管理。</p>
+  <h3 id="world-step-3">查看关系星系</h3><p>在隐现的设定模块打开关系星系。点选星体查看关系摘要，拖动布局并用缩放和适应查看关联。当前开发预览包含轨道拖拽、并轨与星体运动设置。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/lore.webp" width="1440" height="810" loading="lazy" alt="设定工作区实机画面">
+  
+  </div><figcaption>设定工作区实机画面。示例皮肤和菜单位置会随版本变化。</figcaption>
+</figure>
+  <a class="trail" href="demo.html#links">动手试试：让设定进入正文 →</a>
+</section>
+<section class="guide-section" id="links" data-keywords="双链 引用 预览 拆窗 多窗口 跳转 查资料" aria-labelledby="links-title">
+  <h2 id="links-title">关系链接与独立窗口</h2><p class="section-summary">把稿件和资料连起来，写作时随手查证。</p>
+  <h3 id="links-step-1">添加文内关系链接</h3><p>从正文、幕布、人物小传或灵感中选中文字，右键「添加关系链接」，选目标。支持的编辑区也可输入 [[条目标题]]。</p>
+  <h3 id="links-step-2">预览与跳转</h3><p>悬停链接查看预览，拖动标题栏可钉住。使用跳转入口打开目标；在支持双击链定位的版本中可双击跳转，目标已拆窗时会定位到相应窗口。</p>
+  <h3 id="links-step-3">拆开工作区</h3><p>在桌面支持拆窗的模块使用「独立窗口」。例如保留正文主窗、在另一窗口查看大纲。同一条目被独立窗口占用时，其他窗口提示前往占用窗口。</p>
+  
+  <a class="trail" href="demo.html#links">动手试试：让设定进入正文 →</a>
+</section>
+<section class="guide-section" id="ideas" data-keywords="灵感 片段 随手记 札记 收藏" aria-labelledby="ideas-title">
+  <h2 id="ideas-title">灵感手记</h2><p class="section-summary">先收下素材，成形后再归档到结构里。</p>
+  <h3 id="ideas-step-1">记录和查找</h3><p>进入「灵感」，新建手记并填写内容。通过列表和搜索找回已经记录的片段。</p>
+  <h3 id="ideas-step-2">发展为结构</h3><p>用灵感条目的转换入口，将成熟片段加入设定或大纲，在目标模块继续整理。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/journal.webp" width="1440" height="810" loading="lazy" alt="灵感模块实机画面">
+  
+  </div><figcaption>灵感模块实机画面。示例皮肤和菜单位置会随版本变化。</figcaption>
+</figure>
+  
+</section>
+<section class="guide-section" id="dream" data-keywords="AI 浅眠 入梦 续写 审修 模型 供应商 语义检索 密钥" aria-labelledby="dream-title">
+  <h2 id="dream-title">恍然梦与知识检索</h2><p class="section-summary">作者控制稿件取舍，AI 在配置好模型后参与创作。</p>
+  <h3 id="dream-step-1">配置模型</h3><p>桌面端进入「设置 → 模型设置」，配置供应商预设、连接地址、密钥和模型，完成连接测试。按需在「知识库模型」启用语义检索并设置向量模型。</p>
+  <h3 id="dream-step-2">浅眠辅助写作</h3><p>在工坊进入「恍然梦－浅眠」，结合当前章节提出建议、请求续写或改写。读完候选稿后手动选择应用。</p>
+  <h3 id="dream-step-3">入梦共同创作</h3><p>从书架或作品的恍然梦入口进入「入梦」，选择作品或从空白开始。可继续写、一起推演，或切回工坊手动编辑。</p>
+  <h3 id="dream-step-4">审阅并确认</h3><p>对照原文与候选稿，检查人物、设定和伏笔。在线模型的请求会按配置发送到模型服务。网页演示使用预置候选，适合先了解操作。</p>
+  <h3 id="dream-step-5">在高级创作工具中处理多章</h3><p>在入梦里打开「高级创作工具」，按章节安排构思、起稿和审修。批量生成的方案逐项查看，确认稿件后再回到正文核对。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/dream.webp" width="1440" height="900" loading="lazy" alt="恍然梦界面实机画面，历史记录">
+  
+  </div><figcaption>恍然梦界面实机画面，历史记录。示例皮肤和菜单位置会随版本变化。</figcaption>
+</figure>
+  <a class="trail" href="demo.html#review">动手试试：审阅 AI 候选稿 →</a>
+</section>
+<section class="guide-section" id="tools" data-keywords="搜索 Ctrl K 统计 字数 热力图 写作记录" aria-labelledby="tools-title">
+  <h2 id="tools-title">全局搜索与写作统计</h2><p class="section-summary">在多模块之间定位内容，了解作品进度。</p>
+  <h3 id="tools-step-1">查找作品内容</h3><p>用顶栏搜索入口打开搜索面板，输入章节、人物、设定或灵感关键词，点结果回到对应模块和条目。</p>
+  <h3 id="tools-step-2">查看进展</h3><p>从顶栏统计入口打开写作统计，按项目和时间查看字数、章节结构、写作轨迹与修订。结合日期区间阅读数据。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/stats.webp" width="1440" height="810" loading="lazy" alt="写作统计实机画面">
+  
+  </div><figcaption>写作统计实机画面。示例皮肤和菜单位置会随版本变化。</figcaption>
+</figure>
+  
+</section>
+<section class="guide-section" id="data" data-keywords="导入 导出 Word DOCX EPUB PDF TXT Markdown ZIP 备份 JSON 恢复 回收站" aria-labelledby="data-title">
+  <h2 id="data-title">导入、交稿与备份</h2><p class="section-summary">导入已有稿件，按章节输出，再为整个工作区保存快照。</p>
+  <h3 id="data-step-1">导入作品</h3><p>打开「设置 → 备份与数据 → 导入文本作品」，选择 TXT、Markdown、Word、PDF 或 EPUB，确认预览和分章后导入。导入图片时先打开要接收素材的作品。</p>
+  <h3 id="data-step-2">导出正文</h3><p>在同一页面选择「导出正文」，选择作品、卷章和 TXT、Markdown 或 Word。大批量导出按界面提示选择合并或按章打包。</p>
+  <h3 id="data-step-3">备份与恢复</h3><p>选「备份全部数据」生成 JSON。恢复前先保留当前备份，检查即将替换的工作区及备份内容，再确认恢复。</p>
+  <h3 id="data-step-4">回收站与存储位置</h3><p>从「备份与数据」进入回收站，选择误删项恢复。桌面端的存放路径可在「作品数据存储位置」查看和调整。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/import.webp" width="1440" height="810" loading="lazy" alt="导入预览实机画面">
+  
+  </div><figcaption>导入预览实机画面。示例皮肤和菜单位置会随版本变化。</figcaption>
+</figure>
+  
+</section>
+<section class="guide-section" id="appearance" data-keywords="隐现 LATENT 原版工坊 赤月戏 外观 流动速度 配色 字体 阅读" aria-labelledby="appearance-title">
+  <h2 id="appearance-title">皮肤、排版与流动背景</h2><p class="section-summary">按写作环境调整外观、字体和动画。</p>
+  <h3 id="appearance-step-1">选择界面皮肤</h3><p>桌面端打开「设置 → 外观与排版 → 界面皮肤」。当前选择器提供隐现、原版工坊和赤月戏。原版工坊内可换主题。</p>
+  <h3 id="appearance-step-2">调整正文排版</h3><p>在外观与排版分别设置中文字体、西文字体和正文字号，并在预览中检查。</p>
+  <h3 id="appearance-step-3">调整流动背景</h3><p>在隐现的「外观与排版 → 流动背景」选择跟随作品封面或自定义两色。开发预览的速度滑杆支持 0–2×，0× 为静止。</p>
+  <figure class="guide-figure">
+  <div class="guide-image"><img src="media/settings.webp" width="1440" height="810" loading="lazy" alt="设置实机画面，选项以当前版本为准">
+  
+  </div><figcaption>设置实机画面，选项以当前版本为准。示例皮肤和菜单位置会随版本变化。</figcaption>
+</figure>
+  
+</section>
+<section class="guide-section" id="versions" data-keywords="版本 下载 桌面 Windows 网页 DSH 插件 宿主 Release" aria-labelledby="versions-title">
+  <h2 id="versions-title">版本和适用端</h2><p class="section-summary">先确认你正在使用哪个版本和宿主。</p>
+  <h3 id="versions-step-1">Windows 桌面</h3><p>本站以开发工作区 1.2.3 的可验证功能为基准。关系星系的轨道编辑、隐现背景速度和进一步的层次调整属于开发预览。正式安装包和发布内容以 GitHub Releases 为准。</p>
+  <h3 id="versions-step-2">网页版</h3><p>网页版使用浏览器自己的本地存储，桌面工作区的数据需要通过备份或导入导出迁移。系统窗口、安装升级与原生文件操作属于桌面环境。</p>
+  <h3 id="versions-step-3">DSH 插件</h3><p>插件在 DSH 宿主中运行并使用宿主存储与主题。桌面版的恍然梦和原生窗口入口按桌面说明使用，插件的助手与可用菜单以宿主为准。</p>
+  
+  
+</section>
+      <p class="guide-reference"><a href="https://github.com/linque0/novel/blob/main/docs/使用手册.md">查看仓库使用手册 ↗</a> · <a href="https://github.com/linque0/novel/releases/latest">查看正式发行版 ↗</a></p>
+    </article>
+  </div>
+</main>
+<footer class="footer"><div class="frame footer-inner"><a class="brand" href="index.html"><span class="mark" aria-hidden="true"></span><span>小说工坊<small>Novel Studio</small></span></a><div><a href="guide.html">操作指南</a><a href="https://github.com/linque0/novel/blob/main/CHANGELOG.md">更新记录</a><a href="https://github.com/linque0/novel">GitHub ↗</a></div></div></footer>
+</body>
+</html>

@@ -164,13 +164,14 @@ function onMotionChange(event) {
   backdrop?.setReducedMotion?.(event.matches)
 }
 /* 切页回来重挂时引擎自己换画布：碰过 WebGL 的画布取不到 2D 上下文。 */
+watch(() => ui.effectiveFlowSpeed, speed => backdrop?.setSpeed(speed))
 function buildBackdrop() {
   backdrop?.dispose?.()
   backdrop = mountFlowBackdrop(canvasEl.value, {
+    speed: ui.effectiveFlowSpeed,
     palette: resolveFlowPalette(ui.flowBackground, focused.value),
     reducedMotion: Boolean(motionQuery?.matches),
-    simWidth: simWidth(),
-    maxEdge: viewWidth.value < 900 ? 1280 : 1600
+    simWidth: simWidth()
   })
 }
 
@@ -273,7 +274,6 @@ function latentStats() {
 watch(() => focused.value?.id, (id) => {
   emit('select-work', id ?? null)
   watchChapters(id)
-  if (id && ui.flowBackground.mode === 'cover') backdrop?.pulse?.(0.9)
   paintCovers()
 }, { immediate: true })
 
@@ -295,7 +295,6 @@ onMounted(() => {
   buildBackdrop()
   painter = createCoverPainter()
   flatCovers.value = !painter?.supported
-  if (focused.value && ui.flowBackground.mode === 'cover') backdrop?.pulse?.(0.9)
   paintCovers()
   /* 首帧里玻璃牌/卡片可能还没量到最终宽度，下一帧再补一遍（命中缓存，几乎无成本）。 */
   requestAnimationFrame(() => paintCovers())
@@ -324,9 +323,7 @@ onBeforeUnmount(() => {
   <section class="latent-shelf">
     <div class="ls-backdrop-wrap" aria-hidden="true">
       <canvas ref="canvasEl" class="ls-backdrop"></canvas>
-      <div class="ls-layer dots"></div>
       <div class="ls-layer vignette"></div>
-      <div class="ls-layer grain"></div>
     </div>
 
     <AppTopbar active="shelf" :busy="busy || loading" :has-work="!!focused" :target-title="focused?.title" :target-work-id="focused?.id" @navigate="onTopbarNavigate" @create="emit('create')">
@@ -369,8 +366,6 @@ onBeforeUnmount(() => {
               <span class="ls-glyph-foot"><span class="ls-colophon"></span><span class="ls-colophon-char">记</span><span class="ls-rule"></span><span class="ls-glyph-author">{{ work.author || '未署名' }}</span></span>
             </span>
           </span>
-          <h3>{{ work.title }}</h3>
-          <p>{{ work.author || '未署名' }} · {{ captionCount(work) }} 章</p>
         </button>
       </div>
       <div v-else class="ls-empty">
