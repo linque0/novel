@@ -6,8 +6,11 @@ import fs from 'node:fs'
 import path from 'node:path'
 import assert from 'node:assert/strict'
 import { resolveLoreGalaxy } from '../src/services/lore-core.js'
-import { networkModel, spacePlanets } from '../src/components/skins/latent/lore/planets/planet-scene.js'
-import { entryCircleGlyphs, entryCircleRadius, entryRadiusLimit, layoutEntryCircleText } from '../src/components/skins/latent/lore/planets/entry-circles.js'
+import { characterBiographies, characterBiographyText, createCharacterDraft, characterDraftPatch } from '../src/services/character-biographies.js'
+import { fingerprint, matchesSnippetContent, snippetContentFingerprint } from '../src/services/snippet-history.js'
+import { networkModel, orbitPoint, rotation, scaleOrbitRadius, spacePlanets, TUNING, withOrbitSpacingReference } from '../src/components/skins/latent/lore/planets/planet-scene.js'
+import { paintNetwork } from '../src/components/skins/latent/lore/planets/draw-planets.js'
+import { entryCircleGlyphs, entryCircleScale, entryDisplayRadius, entryRadiusLimit, entryReferenceRadius, layoutEntryCircleText } from '../src/components/skins/latent/lore/planets/entry-circles.js'
 import { advanceCenterGlow, CENTER_GLOW_EFFECTS, centerGlowEdge, centerGlowPulse, centerGlowSample, centerGlowWave, DEFAULT_CENTER_GLOW, hasCenterColorModes, normalizeCenterGlow } from '../src/components/skins/latent/lore/planets/center-glow.js'
 
 const ROOT = process.cwd()
@@ -23,6 +26,62 @@ const check = (name, fn) => {
     checks.push({ name, ok: false, reason: error.message })
   }
 }
+
+check('灵感：编辑正文时修改标签和关联不触发正文冲突', () => {
+  const row = { id: 'snippet', content: '标题\n\n正文', tags: [], links: [], deletedAt: null }
+  const bases = [fingerprint(row), snippetContentFingerprint(row)]
+  for (const base of bases) {
+    assert.ok(matchesSnippetContent({ ...row, tags: ['标签'], links: [{ kind: 'mubu', id: 'note' }] }, base))
+    assert.equal(matchesSnippetContent({ ...row, content: '外部改写' }, base), false)
+    assert.equal(matchesSnippetContent({ ...row, deletedAt: 123 }, base), false)
+    assert.equal(matchesSnippetContent(null, base), false)
+  }
+})
+
+check('灵感：标题正文、标签和关联显示在同一详情面板', () => {
+  const panel = read('src/components/skins/latent/snippets/SnipInspector.vue')
+  assert.match(panel, /v-if="!note\.deletedAt"\s+class="snip-edit-form"/)
+  assert.doesNotMatch(panel, /!note\.deletedAt && !editing|编辑片段/)
+  assert.match(panel, /name="title"[\s\S]*name="body"[\s\S]*已有关联/)
+})
+
+check('写作分析：完整分析使用通用流动背景', () => {
+  const dialog = read('src/components/skins/latent/stats/WritingStatsDialog.vue')
+  const styles = read('src/styles/skins/latent/writing-stats-fusion.css')
+  assert.match(dialog, /<StatsFlowBackdrop v-if="expanded && ui\.statsOpen" :work-id="s\.work"/)
+  const backdrop = read('src/components/skins/latent/stats/StatsFlowBackdrop.vue')
+  assert.match(backdrop, /mountFlowBackdrop\(canvas\.value,/)
+  assert.match(backdrop, /effectiveFlowSpeed/)
+  assert.match(backdrop, /resolveFlowPalette/)
+  assert.doesNotMatch(styles, /writing-stats-backdrop\.webp|writing-stats-ambient/)
+})
+
+check('人物小传：兼容旧正文，独立标题及草稿确认', () => {
+  const legacy = { name: '旧姓名', content: '旧正文\n[[旧链接]]', fields: { 一句话: '原文' }, tags: ['旧标签'] }
+  const original = createCharacterDraft(legacy)
+  const draft = createCharacterDraft(legacy)
+  assert.equal(original.biographies[0].title, '人物小传')
+  draft.name = '新姓名'
+  draft.fields.一句话 = '修改'
+  draft.tags.push('新标签')
+  draft.biographies[0].title = '经历'
+  draft.biographies.push({ id: 'extra', title: ' 动机 ', content: '新增正文\n[[新链接]]' })
+  assert.equal(legacy.name, '旧姓名')
+  assert.deepEqual(legacy.tags, ['旧标签'])
+  assert.equal(legacy.fields.一句话, '原文')
+  assert.deepEqual(characterDraftPatch(original, createCharacterDraft(legacy)), {})
+  const saved = { ...legacy, ...characterDraftPatch(original, draft) }
+  assert.equal(saved.content, legacy.content)
+  assert.deepEqual(characterBiographies(saved).map(({ title, content }) => [title, content]),
+    [['经历', legacy.content], ['动机', '新增正文\n[[新链接]]']])
+  assert.ok(characterBiographyText(saved).includes('动机\n新增正文\n[[新链接]]'))
+  const reopened = createCharacterDraft(saved)
+  reopened.biographies.shift()
+  const promoted = characterDraftPatch(createCharacterDraft(saved), reopened)
+  assert.equal(promoted.content, '新增正文\n[[新链接]]')
+  assert.equal(promoted.biographyTitle, '动机')
+  assert.deepEqual(promoted.biographies, [])
+})
 
 /* ── 1. 注册层 ── */
 check('registry：dsh 对桌面可见，label 为「幻流」', async () => {})
@@ -253,6 +312,73 @@ check('关系星图：跨集关系与集内路线保留', () => {
   assert.equal(merged[0].orbitRadius, merged[1].orbitRadius)
 })
 
+check('关系星图：轨道间距直接调整自动轨道留白，保留手动半径和并轨', () => {
+  const sets = ['a', 'b', 'c', 'd'].map(id => ({ id, title: id }))
+  const entries = Array.from({ length: 20 }, (_, index) => ({ id: 'entry' + index, setId: 'b' }))
+  const { planets } = networkModel(sets, entries, []).system('')
+  for (const spacing of [0, 100, 250]) {
+    const layout = spacePlanets(planets, {}, spacing)
+    const gap = TUNING.orbitGap * spacing / 100
+    const [first] = layout
+    assert.ok(Math.abs(first.orbitRadius - first.shellRadius - TUNING.workRadius - TUNING.workClearance - gap) < 1e-9)
+    for (let i = 1; i < layout.length; i++) {
+      const a = layout[i - 1], b = layout[i]
+      assert.ok(Math.abs(b.orbitRadius - a.orbitRadius - a.shellRadius - b.shellRadius - gap) < 1e-9)
+    }
+    const edited = spacePlanets(planets, {}, spacing, { independent: true, radii: { b: 7 }, joins: { c: 'b' } })
+    assert.deepEqual(edited.slice(1, 3).map(body => [body.orbitId, body.orbitRadius]), [['b', 7], ['b', 7]])
+  }
+})
+
+check('关系星图：手动布局在原百分比保持原位，改变百分比后整组轨道伸缩', () => {
+  const sets = Array.from({ length: 10 }, (_, index) => ({ id: String(index), title: String(index) }))
+  const { planets } = networkModel(sets, [], []).system('')
+  const radii = Object.fromEntries(sets.slice(0, 9).map(({ id }, index) => [id, 2.8 + index * .62]))
+  const legacy = { independent: true, radii, joins: { 9: '8' } }
+  const settings = withOrbitSpacingReference(legacy, 268)
+  assert.equal(settings.spacingReference, 268)
+  assert.equal(withOrbitSpacingReference(settings, 450), settings)
+  const layout = spacing => spacePlanets(planets, {}, spacing, settings)
+  const [compact, original, loose] = [100, 268, 450].map(layout)
+  assert.deepEqual(original.slice(0, 9).map(body => body.orbitRadius), Object.values(radii))
+  assert.ok(original.every((body, index) => compact[index].orbitRadius < body.orbitRadius && loose[index].orbitRadius > body.orbitRadius))
+  for (const result of [compact, original, loose]) {
+    assert.equal(result[9].orbitId, '8')
+    assert.equal(result[8].orbitRadius, result[9].orbitRadius)
+    const firstGap = result[1].orbitRadius - result[0].orbitRadius
+    const outerGap = result[8].orbitRadius - result[7].orbitRadius
+    assert.ok(Math.abs(firstGap - outerGap) < 1e-9)
+  }
+  const editedRadius = loose[0].orbitRadius + .6
+  const edited = { ...settings, radii: { ...radii, 0: scaleOrbitRadius(editedRadius, 450, settings.spacingReference) } }
+  const reopened = spacePlanets(planets, {}, 450, edited)
+  assert.ok(Math.abs(reopened[0].orbitRadius - editedRadius) < 1e-9)
+  assert.equal(reopened[1].orbitRadius, loose[1].orbitRadius)
+})
+
+check('关系星图：紧凑和宽松改变屏幕上的轨道间距', () => {
+  const sets = Array.from({ length: 6 }, (_, index) => ({ id: String(index), title: String(index) }))
+  const system = networkModel(sets, [], []).system('')
+  const positions = {}
+  const layout = spacing => ({ ...system, planets: spacePlanets(system.planets, positions, spacing) })
+  const baseline = layout(100)
+  const scene = { view: rotation(0, 0), zoom: 1, time: 0 }
+  const canvas = new Proxy({
+    measureText: () => ({ width: 8 }),
+    createRadialGradient: () => ({ addColorStop() {} })
+  }, { get: (target, key) => target[key] ?? (() => {}) })
+  function gap(data) {
+    const frame = paintNetwork(canvas, { width: 960, height: 600 }, data, scene,
+      { names: new Map(), positions, framingPositions: positions, spacingFramingData: baseline, reduced: true })
+    const inner = frame.camera.project(orbitPoint(data.planets[0].orbitRadius, 0)).x
+    const outer = frame.camera.project(orbitPoint(data.planets.at(-1).orbitRadius, 0)).x
+    return outer - inner
+  }
+  const normal = gap(baseline)
+  assert.ok(gap(layout(0)) < normal * .86)
+  assert.ok(gap(layout(300)) > normal * 1.12)
+})
+
 check('关系星图：中心动效默认值、范围与连续相位', () => {
   assert.deepEqual(normalizeCenterGlow(), DEFAULT_CENTER_GLOW)
   assert.deepEqual(normalizeCenterGlow({ color: '#33BBCC', brightness: 500, speed: -1, effect: 'bad' }), {
@@ -296,21 +422,154 @@ check('关系星图：逐色交接、分区相位与脉动扩散包络', () => {
   assert.equal(centerGlowWave(.85), 0)
 })
 
-check('关系星图：条目字数定径及手动扩容', () => {
+check('关系星图：紧凑名称和手动扩容排版', () => {
   const text = entryCircleGlyphs('  星图观测记录\n' + '界'.repeat(70) + '  ')
   assert.equal(text.join('').startsWith('星图观测记录 '), true)
-  assert.ok(entryCircleRadius(10, 1) < entryCircleRadius(10, 15))
-  assert.ok(entryCircleRadius(10, 15) < entryCircleRadius(10, 70))
-  assert.equal(entryRadiusLimit(900, 120), 56)
+  assert.equal(entryRadiusLimit(900, 40), 16)
   const measure = str => Array.from(str).length * 8
   const auto = layoutEntryCircleText(measure, text, 30, false, 10)
-  assert.equal(auto.length, 3)
-  assert.ok(Array.from(auto.join('')).length <= 15)
+  assert.equal(auto.length, 1)
   assert.ok(auto.join('').endsWith('…'))
   const resized = layoutEntryCircleText(measure, text, 55, true, 10)
   assert.ok(resized.length > 3)
   assert.ok(Array.from(resized.join('')).length > 15)
   assert.equal(layoutEntryCircleText(measure, entryCircleGlyphs('银湾'), 18, false, 10).join(''), '银湾')
+})
+
+check('关系星图：自动圆上限、手动圆无上限及拖拽换算', () => {
+  const zooms = [3, 1.57, 1, .8, .65]
+  for (const overview of [false, true]) {
+    const capped = overview ? 9 : 17
+    const radii = zooms.map(zoom => entryRadiusLimit(900, 500, zoom, overview))
+    const expected = [1.5, 3.14 / 2.57, 1, .8 ** 1.5, .65 ** 1.5]
+    assert.ok(radii.every((radius, index) => Math.abs(radius - capped * expected[index]) < 1e-8))
+    for (const zoom of zooms) {
+      const scale = entryCircleScale(zoom)
+      for (const base of [1, 6, capped, 480]) {
+        const displayed = entryDisplayRadius(base, scale)
+        assert.equal(displayed, base * scale)
+        assert.ok(Math.abs(entryReferenceRadius(displayed, scale) - base) < 1e-8)
+      }
+    }
+  }
+  const measure = text => Array.from(text).length * 8
+  assert.deepEqual(layoutEntryCircleText(measure, entryCircleGlyphs('星图观测站'), 8, false, 9.6, 8), ['星'])
+  assert.deepEqual(layoutEntryCircleText(measure, entryCircleGlyphs('星图观测站'), 4, false, 9.6, 8), [])
+})
+
+check('关系星图：自动圆和手动圆随倍率缩小，小圆收起文字', () => {
+  const sets = [{ id: 'root', title: '设定', color: '#bcc7c5' }]
+  const canvas = new Proxy({
+    measureText: text => ({ width: Array.from(text).length * 8 }),
+    createRadialGradient: () => ({ addColorStop() {} })
+  }, { get: (target, key) => target[key] ?? (() => {}) })
+  function render(title, detail, zoom, entryRadii) {
+    const data = networkModel(sets, [{ id: 'node', setId: 'root', title, summary: title + '。' + '概要'.repeat(20) }], [])
+      .system(detail ? 'root' : '')
+    const names = new Map()
+    const painted = paintNetwork(canvas, { width: 960, height: 600 },
+      { ...data, planets: spacePlanets(data.planets, {}, 100, {}) },
+      { view: rotation(.24, -.15), zoom, time: 0 },
+      { positions: {}, framingPositions: {}, names, entryRadii, reduced: true, workTitle: '作品' })
+    const hit = painted.hits.find(item => item.id === 'node')
+    assert.ok(hit)
+    return { radius: hit.radius, lines: names.get('node').lines }
+  }
+  for (const detail of [false, true]) {
+    for (const entryRadii of [undefined, { node: 60 }]) {
+      const zooms = [3, 1.57, 1, .8, .65, 1]
+      const sequence = zooms.map(zoom => render('星图观测记录'.repeat(10), detail, zoom, entryRadii))
+      assert.ok(sequence.slice(1, 5).every((point, index) => point.radius < sequence[index].radius))
+      assert.equal(sequence[5].radius, sequence[2].radius)
+      assert.ok(sequence.every((point, index) => Math.abs(point.radius / sequence[2].radius - entryCircleScale(zooms[index])) < 1e-8))
+      assert.ok(sequence[4].lines.length <= 1)
+      assert.equal(render('星', detail, .65, entryRadii).radius, sequence[4].radius)
+      if (!detail && !entryRadii) {
+        assert.ok(sequence[1].radius >= 8 * entryCircleScale(1.57) - 1e-9)
+        assert.ok(sequence[1].radius * 2 <= 19.6)
+        assert.ok(sequence[1].radius < sequence[0].radius * .82)
+      }
+    }
+  }
+  assert.deepEqual(render('星', false, .65).lines, [])
+  for (const detail of [false, true]) {
+    assert.equal(render('星', detail, 1, { node: 480 }).radius, 480)
+    assert.equal(render('星', detail, 1, { node: 1 }).radius, 1)
+  }
+})
+
+check('关系星图：四个条目构成正四面体', () => {
+  const graph = networkModel([{ id: 'set' }], Array.from({ length: 4 }, (_, index) => ({
+    id: String(index), setId: 'set'
+  })), [])
+  const { entries, weave } = graph.bySet.get('set')
+  const expectedEdge = Math.sqrt(8 / 3)
+  assert.equal(weave.length, 6)
+  for (const [index, a] of entries.entries()) {
+    assert.ok(Math.abs(a.position.length() - 1) < 1e-10)
+    for (const b of entries.slice(index + 1)) {
+      assert.ok(Math.abs(a.position.distanceTo(b.position) - expectedEdge) < 1e-10)
+    }
+  }
+})
+
+check('关系星图：星体尺寸变化同步更新球面、命中和中心星体', () => {
+  const sets = [{ id: 'set', title: '设定' }]
+  const nodes = [{ id: 'entry', setId: 'set', title: '条目' }]
+  const graph = networkModel(sets, nodes, [])
+  const canvas = new Proxy({
+    measureText: () => ({ width: 8 }),
+    createRadialGradient: () => ({ addColorStop() {} })
+  }, { get: (target, key) => target[key] ?? (() => {}) })
+  function render(planetSizes, center = '', entryRadii) {
+    const system = graph.system(center)
+    const data = { ...system, planets: spacePlanets(system.planets, {}, 100, {}) }
+    return paintNetwork(canvas, { width: 960, height: 600 }, data,
+      { view: rotation(.24, -.15), zoom: 1, time: 0 },
+      { planetSizes, entryRadii, positions: {}, framingPositions: {}, names: new Map(), reduced: true })
+  }
+  const standard = render({})
+  const enlarged = render({ set: 175, '': 125 })
+  const current = enlarged.projected.get('entry')
+  const original = standard.projected.get('entry')
+  assert.equal(current.sphereRadius, original.sphereRadius * 1.75)
+  assert.ok(current.center.equals(original.center))
+  assert.ok(Math.abs(current.world.distanceTo(current.center) / original.world.distanceTo(original.center) - 1.75) < 1e-9)
+  assert.ok(enlarged.hits.find(hit => hit.kind === 'planet' && hit.radius).radius >
+    standard.hits.find(hit => hit.kind === 'planet' && hit.radius).radius)
+  assert.equal(enlarged.work.radius, standard.work.radius * 1.25)
+  const leaf = frame => frame.hits.find(hit => hit.id === 'entry' && hit.resizable)
+  assert.equal(leaf(render({ entry: 50 }, 'set')).radius, leaf(render({}, 'set')).radius / 2)
+  assert.equal(leaf(render({ entry: 50 }, 'set', { entry: 12 })).radius, 6)
+})
+
+check('关系星图：重叠时保留投影，按深度绘制和命中', () => {
+  const sets = [{ id: 'set', title: '设定' }]
+  const nodes = ['near', 'far'].map(id => ({ id, setId: 'set', title: id }))
+  const base = networkModel(sets, nodes, []).system('')
+  const data = { ...base, planets: spacePlanets(base.planets, {}, 100, {}) }
+  const scene = { view: rotation(0, 0), zoom: 1, time: 0 }
+  const canvas = new Proxy({
+    measureText: () => ({ width: 8 }),
+    createRadialGradient: () => ({ addColorStop() {} })
+  }, { get: (target, key) => target[key] ?? (() => {}) })
+  const render = (positions, nodeId) => paintNetwork(canvas, { width: 720, height: 420 }, data, scene,
+    { positions, framingPositions: {}, names: new Map(), reduced: true, nodeId })
+  const initial = render({})
+  const anchor = initial.bodyPoints.get('set')
+  const orientation = initial.projected.get('near').orientation.clone().invert()
+  const ray = initial.camera.unproject(anchor.x, anchor.y, anchor.z + 1).sub(anchor.world).normalize()
+  const local = ray.applyQuaternion(orientation).multiplyScalar(TUNING.detailRadius)
+  const positions = { set: { near: local.toArray(), far: local.clone().negate().toArray() } }
+  const frame = render(positions, 'far')
+  const hits = frame.hits.filter(hit => hit.kind === 'node')
+  assert.deepEqual(hits.map(hit => hit.id), ['far', 'near'])
+  assert.ok(Math.hypot(hits[0].x - hits[1].x, hits[0].y - hits[1].y) < 1e-8)
+  for (const hit of hits) {
+    const expected = frame.camera.project(frame.projected.get(hit.id).world)
+    assert.equal(hit.x, expected.x)
+    assert.equal(hit.y, expected.y)
+  }
 })
 
 /* ── 输出 ── */

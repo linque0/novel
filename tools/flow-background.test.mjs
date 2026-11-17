@@ -36,9 +36,13 @@ test('CPU backdrop repaints the chosen palette immediately and after a reduced-m
     putImageData: frame => frames.push(frame)
   }
   const canvas = { getContext: () => context, clientWidth: 40, clientHeight: 40 }
+  globalThis.window = new EventTarget()
+  globalThis.document = Object.assign(new EventTarget(), { hidden: false })
   globalThis.requestAnimationFrame = () => 1
   globalThis.cancelAnimationFrame = () => {}
   t.after(() => {
+    delete globalThis.window
+    delete globalThis.document
     delete globalThis.requestAnimationFrame
     delete globalThis.cancelAnimationFrame
   })
@@ -50,7 +54,8 @@ test('CPU backdrop repaints the chosen palette immediately and after a reduced-m
   canvas.clientHeight = 60
   cpu.resize()
   assert.equal(frames.length, afterColor + 1)
-  assert.equal(frames.at(-1).data.length, 32 * 48 * 4)
+  assert.deepEqual([canvas.width, canvas.height], [21, 32])
+  assert.equal(frames.at(-1).data.length, 21 * 32 * 4)
   assert.ok(frames.at(-1).data[0] > frames.at(-1).data[1] + 20)
   cpu.dispose()
 })

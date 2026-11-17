@@ -410,13 +410,10 @@ async function clearGoal() {
 </script>
 
 <template>
-  <!-- 旧皮肤：模块助手条留在宿主第一个子节点，布局一字不动（隐现搬进稿纸列，见下） -->
+  <!-- 旧皮肤沿用原有模块助手入口。 -->
   <TaskLauncher v-if="!nsPlugin && !ui.isStudioSkin && !ui.readMode && !latentSkin" module="chapters" />
   <div ref="editorWrap" class="editor-wrap" :data-paper-adjustable="paperEnabled || undefined" :style="paperWrapStyle"
     :data-writing-paper="ui.writingPaperStyle" :data-paper-skin="ui.skin" :data-paper-theme="ui.theme" :data-paper-quiet="ui.readMode || ui.focusMode" :class="{ 'read-mode': ui.readMode, 'rail-collapsed': ui.skin === 'crimson' && railCollapsed }">
-    <!-- 隐现：模块助手条挂在宿主上会撑满整窗（x=0）并被浮起的章节目录压住，只剩句尾可见；
-         搬进 .editor-wrap 顶部后它和章头/工具栏同一个包含块，共用 --ls-page-w 的左线与宽度。 -->
-    <TaskLauncher v-if="latentSkin && !nsPlugin && !ui.readMode" module="chapters" />
     <div class="editor-head" v-if="work.activeChapter && !ui.readMode && !ui.isStudioSkin">
       <!-- 隐现皮肤：标题区按插件版版式——大标题 + 拉丁章号副标题 + 朱线 + 字数目标行；
            状态下拉与历史收进工具栏「更多功能」弹层（见下方 #more-end）。旧皮肤保持原有横排。 -->

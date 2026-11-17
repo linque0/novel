@@ -3136,26 +3136,6 @@ html body[data-skin='dsh'] .editor-head .ed-head-main {
   gap: 6px;
 }
 
-/* ==== 43（桌面接入）· 恍然梦模块助手条落进稿纸列
- * 插件版没有恍然梦，这条原本由 TaskLauncher 直接挂在 .shared-editor-host 上：宽度撑满整窗
- * （实测 x=0），左半截被浮起的章节目录压住，只剩「……后保存」露出，还顶在正文列顶端。
- * 桌面版要求完整可见可点，所以搬进 .editor-wrap 顶部，并照抄章头/工具栏那条宽度口径——
- * 三者同一个包含块（.editor-wrap 内容框）+ --ls-page-w + auto 居中，窗口怎么缩都是同一条
- * 左线（实测标题/工具栏/本行都落在 273，宽 859），不必写死 46/211 这类实测数字。
- * 密度按隐现走：30px 高、11px 字、只用 --ls-* 令牌，没有底色块也没有分隔线。 */
-.latent-studio .editor-wrap .module-agent,
-html body[data-skin='dsh'] .editor-wrap .module-agent {
-  box-sizing: border-box;
-  flex: none;
-  width: var(--ls-page-w);
-  min-height: 30px;
-  margin: 0 auto;
-  padding: 0;
-  border-bottom: 0;
-  font-size: 11px;
-  color: var(--ls-ink-3);
-}
-
 /* ==== 44（桌面接入）· 品牌字面回到 sans
  * dsh.css 逐行照搬插件时把 --nsx-serif 写在品牌名上，桌面版「小说工坊」因此落到宋体，
  * 与插件版量到的 Inter 字面不符。§2 那条 --ls-sans 与 dsh.css 同权重（0,4,2），
