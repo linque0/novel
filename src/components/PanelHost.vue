@@ -211,7 +211,7 @@ onBeforeUnmount(() => autosave.flushAll())
       <template v-else>
         <TaskLauncher v-if="ui.isStudioSkin && spec.type !== 'ai'" :module="work.tab" />
         <PanelBackdrop v-if="latentContent" />
-        <div class="panel-topbar" :inert="modalDrawer || owModal || undefined">
+        <div v-if="!latentContent" class="panel-topbar" :inert="modalDrawer || owModal || undefined">
           <GlazeLightingToggle v-if="museumActive" />
           <div v-show="ui.isStudioSkin" id="studio-task-actions"></div>
           <span class="serif" style="font-weight: 700">{{ work.work?.title }} · {{ panelTitle }}</span>

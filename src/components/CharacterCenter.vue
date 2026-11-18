@@ -54,7 +54,7 @@ function addCharacterFromBar() {
   work.addCharacter()
 }
 /* 角色定位：自定义输入为主 + 常见故事定位快捷项（再点取消） */
-const ROLE_PRESETS = ['主角', '配角', '反派', '导师', '红颜', '盟友', '旁观者', '龙套']
+const ROLE_PRESETS = ['主角', '配角', '反派', '导师', '盟友', '旁观者', '龙套']
 const myRoles = computed(() => rolesOf(c.value))
 const aliasTags = computed(() => aliasTagEntries(c.value))
 const primaryRoleText = computed(() => primaryRole(c.value) || '人物')

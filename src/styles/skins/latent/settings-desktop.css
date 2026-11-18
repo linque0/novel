@@ -25,6 +25,20 @@ html body[data-skin=dsh] .sw-root > .sw-body{display:none}
 html body[data-skin=dsh] .sw-root > .settings-workspace{flex:1 1 0%;min-height:0;min-width:0}
 html body[data-skin=dsh] .settings-shell{flex:1 1 0%;min-height:0}
 
+/* 窗口上沿的留白和页眉都可拖动，控件与对话框仍使用普通点击。 */
+body[data-skin=dsh] .sw-root .settings-window-drag {
+  position: fixed;
+  inset: 0 0 auto;
+  height: var(--set-top-inset);
+}
+body[data-skin=dsh] .sw-root .settings-shell:not(:has(dialog[open])) > .settings-window-drag,
+body[data-skin=dsh] .sw-root .main-pane:not([inert], :has(dialog[open])) > .page-head {
+  -webkit-app-region: drag;
+}
+body[data-skin=dsh] .sw-root .page-head button {
+  -webkit-app-region: no-drag;
+}
+
 /* ---------- 模型设置 / 知识库模型 · 页面骨架（与 .appearance-layout / .data-layout 同一留白） ---------- */
 body[data-skin=dsh] .settings-shell .desktop-layout{display:flex;flex-direction:column;padding:33px 34px 32px;min-height:100%}
 body[data-skin=dsh] .settings-shell .desktop-embed-group{max-width:1080px}

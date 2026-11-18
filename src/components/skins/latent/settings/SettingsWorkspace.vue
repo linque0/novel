@@ -1,9 +1,7 @@
 <script setup>
 /* 设置工作区外壳（总稿 app.mjs:21-45 的 render/status/applyPreview 那一层）。
  *
- * 结构契约（settings-fusion.css 按此写死）：.settings-shell 的直接子元素只有
- * aside.pane.side-pane / main.pane.main-pane / button.scrim / div.toast，
- * 顶栏和外壳是兄弟，外壳在弹性列中跟随顶栏实际高度。
+ * 侧栏和主面板参与外壳布局，抽屉遮罩、提示与桌面窗口拖拽区单独定位。
  *
  * 界面键（分类/滚动/预览/抽屉）在本组件里另存一份 ref 作为渲染真源：
  * 跨窗口 prefs-changed 时 installAppBus 会整体 loadPrefs（含 settings:* 四个键），
@@ -375,6 +373,7 @@ watch(query, () => scheduleSaveUi())
   </div>
 
   <div ref="shell" class="settings-shell" :data-drawer="drawer ? 'open' : null" :data-preview="preview ? 'open' : null">
+    <div class="settings-window-drag" aria-hidden="true"></div>
     <SettingsSidebar
       :page="page"
       :query="query"

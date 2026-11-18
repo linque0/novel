@@ -8,6 +8,7 @@ import assert from 'node:assert/strict'
 import { resolveLoreGalaxy } from '../src/services/lore-core.js'
 import { characterBiographies, characterBiographyText, createCharacterDraft, characterDraftPatch } from '../src/services/character-biographies.js'
 import { fingerprint, matchesSnippetContent, snippetContentFingerprint } from '../src/services/snippet-history.js'
+import { moveBefore, normalizeSnipState, noteView, pickSnipCardColor, snippetDropPlacement, snippetNavGroups, tagsAfterGroupMove } from '../src/components/skins/latent/snippets/snippet-model.js'
 import { networkModel, orbitPoint, rotation, scaleOrbitRadius, spacePlanets, TUNING, withOrbitSpacingReference } from '../src/components/skins/latent/lore/planets/planet-scene.js'
 import { paintNetwork } from '../src/components/skins/latent/lore/planets/draw-planets.js'
 import { entryCircleGlyphs, entryCircleScale, entryDisplayRadius, entryRadiusLimit, entryReferenceRadius, layoutEntryCircleText } from '../src/components/skins/latent/lore/planets/entry-circles.js'
@@ -43,6 +44,69 @@ check('灵感：标题正文、标签和关联显示在同一详情面板', () =
   assert.match(panel, /v-if="!note\.deletedAt"\s+class="snip-edit-form"/)
   assert.doesNotMatch(panel, /!note\.deletedAt && !editing|编辑片段/)
   assert.match(panel, /name="title"[\s\S]*name="body"[\s\S]*已有关联/)
+})
+
+check('灵感：跨组移动只替换来源标签，兼容已有目标标签与未标记组', () => {
+  assert.deepEqual(tagsAfterGroupMove(['场景', '伏笔'], '场景', '对白'), ['对白', '伏笔'])
+  assert.deepEqual(tagsAfterGroupMove(['场景', '伏笔', '对白'], '场景', '对白'), ['伏笔', '对白'])
+  assert.deepEqual(tagsAfterGroupMove([], null, '对白'), ['对白'])
+  assert.deepEqual(tagsAfterGroupMove(['场景', '伏笔'], '场景', null), [])
+  assert.equal(tagsAfterGroupMove(['人物', '对白'], '场景', '对白'), null)
+  assert.equal(tagsAfterGroupMove(['人物'], null, '对白'), null)
+})
+
+check('灵感：拖拽插入线对应提交位置，跨组已有副本保留原位', () => {
+  const notes = ['source', 'first', 'last'].map(id => ({ id }))
+  const order = notes.map(note => note.id)
+  const before = snippetDropPlacement(notes, 'source', 'last', false, true)
+  assert.deepEqual(before, { beforeId: 'last', markerId: 'last', edge: 'before' })
+  assert.deepEqual(moveBefore(order, 'source', before.beforeId), ['first', 'source', 'last'])
+  const after = snippetDropPlacement(notes, 'source', 'last', true, true)
+  assert.deepEqual(after, { beforeId: '', markerId: 'last', edge: 'after' })
+  assert.deepEqual(moveBefore(order, 'source', after.beforeId), ['first', 'last', 'source'])
+  assert.deepEqual(snippetDropPlacement(notes, 'source', undefined, false, false), after)
+  assert.deepEqual(snippetDropPlacement([], 'source', undefined, false, false), { ...after, markerId: '' })
+  assert.equal(snippetDropPlacement(notes, 'source', 'source', false, true), null)
+  assert.equal(snippetDropPlacement(notes, 'source', 'first', false, true), null)
+  assert.equal(snippetDropPlacement(notes, 'last', undefined, false, true), null)
+  assert.deepEqual(snippetDropPlacement(notes, 'source', 'source', false, false), { ...after, markerId: 'source', edge: 'existing' })
+})
+
+check('灵感：旧手札设置仍保留筛选，异常的拼板显示设置回退到有效值', () => {
+  const legacy = normalizeSnipState({ view: 'journal', tag: '场景', sort: 'manual' })
+  assert.equal(legacy.tag, '场景')
+  assert.equal(legacy.sort, 'manual')
+  assert.equal(legacy.cardSize, 100)
+  assert.equal(legacy.sidebarWidth, 220)
+  assert.deepEqual(legacy.expandedGroups, [])
+  const saved = normalizeSnipState({ cardSize: 'large', sidebarWidth: 500, expandedGroups: ['all', 'all', null, 'tag:场景'] })
+  assert.equal(saved.cardSize, 125)
+  assert.equal(saved.sidebarWidth, 420)
+  assert.deepEqual(saved.expandedGroups, ['all', 'tag:场景'])
+  assert.equal(normalizeSnipState({ cardSize: 'small' }).cardSize, 80)
+  assert.equal(normalizeSnipState({ cardSize: 112 }).cardSize, 112)
+  assert.equal(normalizeSnipState({ cardSize: 0 }).cardSize, 80)
+  assert.equal(normalizeSnipState({ cardSize: 150 }).cardSize, 125)
+})
+
+check('灵感：分组目录列出全部未删除卡片，保留颜色与排序', () => {
+  const notes = [
+    noteView({ id: 'a', tags: ['场景', '对白'], createdAt: 2, cardColor: 'moss' }),
+    noteView({ id: 'b', createdAt: 1, cardColor: 'invalid' }),
+    noteView({ id: 'c', tags: ['场景'], deletedAt: 3 })
+  ]
+  const groups = snippetNavGroups(notes, ['对白', '场景'], 'old', [])
+  assert.deepEqual(groups.map(group => [group.id, group.notes.map(note => note.id)]), [
+    ['all', ['b', 'a']], ['untagged', ['b']], ['linked', []], ['tag:对白', ['a']], ['tag:场景', ['a']]
+  ])
+  assert.equal(groups[0].notes[0].cardColor, 'default')
+  assert.equal(groups[0].notes[1].cardColor, 'moss')
+})
+
+check('灵感：新建卡片随机取色，默认色留给已有卡片和手动设置', () => {
+  const colors = [0, 0.25, 0.5, 0.75, 0.99].map(pickSnipCardColor)
+  assert.deepEqual(colors, ['rose', 'amber', 'moss', 'blue', 'lilac'])
+  assert.equal(noteView({ id: 'legacy' }).cardColor, 'default')
 })
 
 check('写作分析：完整分析使用通用流动背景', () => {

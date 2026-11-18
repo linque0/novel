@@ -162,13 +162,12 @@ check('6 大纲拆窗 + 主窗口模块占位', pop3.ok && pop3.hasNote)
 await c.sleep(2500)
 
 /* ---------- 7. 大纲面板渲染画布 ---------- */
-const p3 = await connect('panel=')
+const p3 = await connect('panel=outline')
 await p3.sleep(2200)
 const ol = await p3.evalx(`(() => {
-  const host = document.querySelector('.panel-topbar')
   const canvas = document.querySelector('.oc-node') || document.querySelector('.oc-canvas') || document.querySelector('.oc-edges')
-  const side = document.querySelector('.side-panel')
-  return { title: host?.querySelector('.serif')?.textContent || '', hasCanvas: !!canvas, hasSide: !!side }
+  const side = document.querySelector('.latent-outline-panel .ol-side-root, .latent-outline-panel .draft-tree, .panel-body .side-panel')
+  return { title: document.title, hasCanvas: !!canvas, hasSide: !!side }
 })()`)
 check('7 大纲面板渲染画布', ol.hasCanvas && ol.hasSide && ol.title.includes('大纲'))
 

@@ -1,5 +1,30 @@
 ## [Unreleased]
 
+## [1.2.6] - 2026-11-18 · 灵感拼板重做与人物角色预设精简
+
+### 灵感：单一拼板与卡片拖拽（2026-11-18）
+
+- 移除「手札 / 拼板」双视图，灵感收敛为单一拼板：`SnipJournal.vue` 删除，`VIEWS` 常量下线，`snipView` 状态与 `Alt+1/2` 切换一并移除。
+- 卡片尺寸可调：新增 `SNIP_CARD_SIZE`（80 / 100 / 125）与旧档 `small/medium/large` 的映射，尺寸按会话持久化。
+- 卡片配色：新增 `SNIP_CARD_COLORS`（默认 / 玫瑰 / 琥珀 / 苔绿 / 雾蓝 / 藤紫）与 `pickSnipCardColor()`，新卡片随机取色。
+- 新增 `SnipCardMenu.vue` 与 `snippet-drag-motion.js`：卡片右键菜单独立成组件，拖拽位移与缓动抽成模块，`SnippetsWorkspace` 共用。
+- 侧栏宽度可拖拽（`SNIP_SIDEBAR`，184–420，默认 220）；分组展开状态持久化（`snipExpandedGroups`）。
+- `snippet-commands.js` 与 `ui.js` 的持久化键同步：去掉 `snipView` / `snipMoreTags`，新增 `cardSize` / `sidebarWidth` / `expandedGroups`。
+
+### 人物
+
+- 角色预设去掉「红颜」，保留主角 / 配角 / 反派 / 导师 / 盟友 / 旁观者 / 龙套；已存有该值的角色不受影响。
+
+### 面板与样式
+
+- `PanelHost` 与人物的 `CharDossier` / `CharGraphPane` / `CharRoster` / `CharactersWorkspace` 跟随布局调整。
+- `snippets-fusion.css`（+276 行）重写拼板网格与卡片样式；`chars-roster.css` / `settings-desktop.css` / `settings-fusion.css` 同步。
+- `OutlineSidebar` / `OutlineWorkspace` / `SettingsWorkspace` 微调。
+
+### 交付
+
+- 按本次要求跳过功能验收。构建 `npm run build` 通过。
+
 ## [1.2.5] - 2026-11-18 · 设定星系调节与人物档案更新
 
 - 设定星系提供星体大小、轨道间距和入口半径调节，并同步更新绘制与交互。

@@ -19,6 +19,7 @@ import { characterBiographyText } from '../services/character-biographies.js'
 import { readWritingPosition } from '../services/writing-position.js'
 import { resolveWritingChapter } from '../services/writing-position-core.js'
 import { lorePath, createLoreHistory, checkpointLore, stepLoreHistory } from '../services/lore-core.js'
+import { pickSnipCardColor } from '../components/skins/latent/snippets/snippet-model.js'
 
 const urlCache = new Map()
 
@@ -491,7 +492,7 @@ export const useWorkStore = defineStore('work', {
 
     /* ---------- 灵感 ---------- */
     addSnippet(content = '') {
-      const row = { id: uid(), workId: this.work.id, content, tags: [], createdAt: now(), updatedAt: now(), deletedAt: null }
+      const row = { id: uid(), workId: this.work.id, content, tags: [], cardColor: pickSnipCardColor(), createdAt: now(), updatedAt: now(), deletedAt: null }
       this.snippets.push(row)
       autosave.mark('snippets', row)
       this.tab = 'snippets'
