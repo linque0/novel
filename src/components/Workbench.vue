@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, provide, onMounted, onBeforeUnmount, watch } from 'vue'
+import { computed, nextTick, ref, provide, onMounted, onBeforeUnmount, watch } from 'vue'
 import { NButton, NDropdown, useMessage } from 'naive-ui'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
@@ -36,6 +36,7 @@ import { isLatentSkin } from '../skins/registry'
 /* 隐现皮肤的流动背板（正文/大纲/设定/人物/灵感共用同一个 flow 引擎） */
 import { mountFlowBackdrop } from '../services/latent/flow.js'
 import { flowPaletteKey, resolveFlowPalette } from '../services/latent/flow-palette.js'
+import { runFlowTransition } from '../services/latent/flow-transition.js'
 import RightPanel from './RightPanel.vue'
 import WritingSidePanels from './writing-layout/WritingSidePanels.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
@@ -97,7 +98,12 @@ const ai = useAiStore()
 async function returnToShelf(){
   if(new URLSearchParams(location.search).get('panel')?.startsWith('agent:'))return window.native?.panelCloseSelf()
   if(original.value){await autosave.flushAll();if(ui.autosave.pending||ui.autosave.error){msg.error('仍有内容未保存，请重试保存后再返回书单');return}}
-  return work.closeWork()
+  return runFlowTransition(() => work.closeWork(), {
+    skin: ui.skin,
+    flowBackground: ui.flowBackground,
+    work: work.work,
+    afterCommit: () => nextTick()
+  })
 }
 const inspirationPrompt = ref('把这条灵感扩展成一个场景，保留悬念。')
 provide('inspirationPrompt', inspirationPrompt)
@@ -132,8 +138,16 @@ function onBookmarkSelect(key) {
 
 const tabs = WORK_NAVIGATION
 function selectTab(key) {
-  ui.loreDetailId = null
-  work.tab = key
+  if (work.tab === key) return
+  void runFlowTransition(() => {
+    ui.loreDetailId = null
+    work.tab = key
+  }, {
+    skin: ui.skin,
+    flowBackground: ui.flowBackground,
+    work: work.work,
+    afterCommit: () => nextTick()
+  })
 }
 
 /* ── 赤月戏：顶部横向导航 + 86px 模块条 + 40px 底栏 + 按模块切换的布景（排布照设计稿） ── */

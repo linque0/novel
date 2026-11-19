@@ -1,5 +1,37 @@
 ## [Unreleased]
 
+## [1.2.7] - 2026-11-20 · 设定图片与地图编辑、流场转场与库冲突处理
+
+### 设定：图片与地图编辑（2026-11-20）
+
+- 新增 `LoreImageControls.vue` / `LoreImageHiddenNotice.vue` 与 `useLoreImages.js`：设定条目可挂图片，支持替换与隐藏提示；`lore-images.css` 承载样式，`main.js` 统一引入。
+- 新增 `LoreMapEditor.vue` + `lore-tree-layout.js`：设定关系图可在图画布上手动摆位，`LoreTreeMap.vue` 接入编辑器。
+- 新增 `lore-entries.js`：新作品自动播下六类条目种子（地理与场所 / 组织与势力 / 规则与禁忌 / 历史与纪年 / 物件与线索 / 民俗与信仰），`db/repo.js` 在创建工作区时调用。
+- 设定相关组件（`LoreDetail` / `LoreEntryList` / `LoreHead` / `LoreInspector` / `LoreLinkComposer` / `LoreNavNode` / `LoreWorkspace` / `MubuTree` / `MubuView`）与 `lore-free-tree.css` 同步。
+
+### 幻流转场（2026-11-20）
+
+- 新增 `flow-transition.js` 与 `FlowTransitionOverlay.vue`：模块切换时用幻流配色做覆盖/揭示（230ms / 310ms），尊重 `prefers-reduced-motion`；`Workbench.vue` 与 `App.vue` 接入。
+
+### 作品库（2026-11-20）
+
+- `services/library.js` 的提交路径改为识别版本冲突：返回体带 `conflict` 或 `revisions` 时抛 `code: 'CONFLICT'`，调用方据此提示重新拉取，不再静默覆盖。
+- `db/database.js` 的 `updating` 钩子修正：改为读取 dexie 回传的 `saved` 行，跨作品移动时先记录旧归属再记录新归属，避免索引漏记。
+
+### 写作统计
+
+- 新增 `WritingStatsSelect.vue`：统计页下拉统一成组件，`StatsChapterChart` / `WritingStatsDialog` 等复用；`writing-stats-fusion.css` 同步。
+
+### 其他
+
+- `electron/panel-locks.cjs` / `panels.js` / `preload.cjs` 面板锁与预加载接口调整。
+- `AppTopbar` / `Bookshelf` / `OIcon` / `shelf.js` / `ui.js` / `work.js` / `graphview.js` / `doublelinks.js` / `lore-editor-dom.js` / `lore-move.js` / `writing-stats-core.js` 跟随。
+- 新增 4 个单测：`flow-transition-unit-verify` / `lore-free-entries-unit-verify` / `lore-tree-layout-unit-verify` / `library-sync-unit-verify`（更新）。
+
+### 交付
+
+- 按本次要求跳过功能验收。构建 `npm run build` 通过。
+
 ## [1.2.6] - 2026-11-18 · 灵感拼板重做与人物角色预设精简
 
 ### 灵感：单一拼板与卡片拖拽（2026-11-18）

@@ -134,19 +134,3 @@ export function buildWritingStats(source, { workId = null, days = 30, today } = 
     }
   }
 }
-
-export function createStatsLoader(read) {
-  let version = 0
-  return {
-    invalidate() { version++ },
-    async read(...args) {
-      const request = ++version
-      try {
-        const value = await read(...args)
-        return request === version ? { value } : null
-      } catch (error) {
-        return request === version ? { error } : null
-      }
-    }
-  }
-}

@@ -1,5 +1,6 @@
 function panelLockKey(spec) {
   if(spec.type==='ai-presets')return '__global__:ai-presets:*'
+  if(spec.type==='writing-analysis')return 'app:writing-analysis:*'
   return `${spec.workId}:${spec.type==='agent'?'chapter':spec.type}:${spec.type==='agent'?'*':spec.entityId||'*'}`
 }
 function panelLocksConflict(a,b) {

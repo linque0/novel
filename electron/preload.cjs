@@ -52,6 +52,7 @@ contextBridge.exposeInMainWorld('native', {
   panelList: () => ipcRenderer.invoke('panel:list'),
   panelFocus: (key) => ipcRenderer.invoke('panel:focus', key),
   panelCloseSelf: () => ipcRenderer.invoke('panel:close-self'),
+  panelMinimizeSelf: () => ipcRenderer.invoke('panel:minimize-self'),
   panelSetEntity: (entityId) => ipcRenderer.invoke('panel:set-entity', entityId),
   panelOnEvent: (cb) => {
     const handler = (_e, payload) => cb(payload)

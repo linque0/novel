@@ -14,6 +14,7 @@ import WritingStatsEntry from './skins/latent/stats/WritingStatsEntry.vue'
 
 const props = defineProps({
   active: { type: String, default: 'shelf' },
+  navigationLabel: { type: String, default: '' },
   busy: Boolean,
   hasWork: Boolean,
   targetTitle: { type: String, default: '' },
@@ -128,9 +129,9 @@ watch(() => [props.active, ui.skin], async () => {
 </script>
 
 <template>
-  <AutoHideTopbar class="app-topbar-shell" :auto-hide="ui.topbarAutoHide" @update:auto-hide="value => ui.setPref('topbarAutoHide', value)">
+  <AutoHideTopbar class="app-topbar-shell" :class="{ 'is-auxiliary': navigationLabel }" :auto-hide="!navigationLabel && ui.topbarAutoHide" @update:auto-hide="value => ui.setPref('topbarAutoHide', value)">
     <header class="app-topbar" :data-topbar-page="active">
-      <button type="button" class="app-topbar-brand" title="返回书架" aria-label="小说工坊，返回书架" :disabled="busy" @click="navigate('shelf')">
+      <button type="button" class="app-topbar-brand" :title="navigationLabel ? '关闭写作分析' : '返回书架'" :aria-label="navigationLabel ? '小说工坊，关闭写作分析' : '小说工坊，返回书架'" :disabled="busy" @click="navigate('shelf')">
         <span v-if="!latent" class="app-topbar-mark" :class="{ 'desktop-brand-mark': !nsPlugin && ui.skin !== 'crimson' }" aria-hidden="true">
           <svg v-if="ui.skin === 'crimson'" viewBox="0 0 44 44"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
           <img v-else-if="!nsPlugin" :src="desktopSmallIcon" width="36" height="36" alt="" />
@@ -139,10 +140,12 @@ watch(() => [props.active, ui.skin], async () => {
         <span class="app-topbar-brand-text">小说工坊<small>{{ brandSuffix }}</small></span>
         <span class="app-topbar-narrow-title" :title="narrowTitle">{{ narrowTitle }}</span>
       </button>
-      <nav ref="nav" class="app-topnav" aria-label="功能模块">
+      <nav ref="nav" class="app-topnav" :role="navigationLabel ? 'tablist' : undefined" :aria-label="navigationLabel || '功能模块'">
+        <slot name="navigation">
         <button v-for="item in navItems" :key="item.key" type="button" class="app-topnav-item" :data-nav="item.key" :class="{ active: active === item.key }" :aria-current="active === item.key ? 'page' : undefined" :aria-haspopup="canSplit(item.key) ? 'menu' : undefined" :disabled="disabled(item.key)" :title="title(item) + (canSplit(item.key) ? '（右键拆窗）' : '')" @click="navigate(item.key)" @contextmenu="showSplitMenu($event, item)" @keydown.shift.f10="showSplitMenu($event, item)">{{ item.label }}</button>
+        </slot>
       </nav>
-      <NDropdown v-if="latent && mainWindow" trigger="manual" placement="bottom-start"
+      <NDropdown v-if="!navigationLabel && latent && mainWindow" trigger="manual" placement="bottom-start"
         :show="!!splitMenu" :x="splitMenu?.x ?? 0" :y="splitMenu?.y ?? 0"
         :options="splitMenu ? [{ key: 'split', label: '在独立窗口打开' + splitMenu.item.label }] : []"
         @select="confirmSplit" @clickoutside="splitMenu = null" @update:show="value => { if (!value) splitMenu = null }" />
@@ -150,7 +153,7 @@ watch(() => [props.active, ui.skin], async () => {
       <button v-if="nsPlugin && active === 'shelf'" type="button" class="app-topbar-create" aria-label="新书上架" @click="emit('create')">＋新书上架</button>
       <div class="app-topbar-controls">
       <!-- 隐现（dsh）：右簇圆钮组，与插件版一致（已保存 + 搜索 + 统计 + 设置 + 锁定） -->
-      <div v-if="latent" class="app-topbar-cluster">
+      <div v-if="latent && !navigationLabel" class="app-topbar-cluster">
         <span class="app-topbar-save" :data-save-state="saveState" role="img" :aria-label="saveLabel" :title="saveLabel">
           <svg class="app-topbar-save-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>
           <span class="app-topbar-save-text">{{ saveLabel }}</span>
@@ -172,9 +175,12 @@ watch(() => [props.active, ui.skin], async () => {
           </svg>
         </button>
       </div>
-      <span v-else class="app-topbar-save" :data-save-state="saveState" role="img" :aria-label="saveLabel" :title="saveLabel" aria-disabled="true"><span class="app-topbar-save-dot"></span></span>
-      <span v-if="!latent" class="app-topbar-more-wrap"><NDropdown trigger="click" placement="bottom-end" :scrollable="latent" :style="latent ? { maxHeight: 'calc(100dvh - 90px)' } : undefined" :options="moreOptions" @select="onSelect"><button type="button" class="app-topbar-more" aria-label="更多" :title="'更多（当前：' + currentLabel + '）'">⋯</button></NDropdown></span>
+      <span v-else-if="!navigationLabel" class="app-topbar-save" :data-save-state="saveState" role="img" :aria-label="saveLabel" :title="saveLabel" aria-disabled="true"><span class="app-topbar-save-dot"></span></span>
+      <span v-if="!latent && !navigationLabel" class="app-topbar-more-wrap"><NDropdown trigger="click" placement="bottom-end" :scrollable="latent" :style="latent ? { maxHeight: 'calc(100dvh - 90px)' } : undefined" :options="moreOptions" @select="onSelect"><button type="button" class="app-topbar-more" aria-label="更多" :title="'更多（当前：' + currentLabel + '）'">⋯</button></NDropdown></span>
       <div class="app-topbar-actions"><DreamModeEntries v-if="!nsPlugin && active==='shelf'" shelf :disabled="busy" @dream="ui.dreamLauncherOpen=true" /><slot name="actions" /></div>
+      <div v-if="$slots['window-controls']" class="app-topbar-window-controls">
+        <slot name="window-controls" />
+      </div>
       </div>
       <div v-if="slots.search" ref="searchPanel" class="app-topbar-search app-topbar-search-panel" :class="{ 'is-open': searchOpen }" data-topbar-search @keydown.esc.stop="closeSearch"><slot name="search" /></div>
     </header>
@@ -183,6 +189,8 @@ watch(() => [props.active, ui.skin], async () => {
 
 <style>
 .app-topbar-controls { display: contents; }
+.app-topbar-window-controls { display: flex; align-items: center; gap: 6px; flex: none; }
+.app-topbar-shell.is-auxiliary .wb-topbar-pin { display:none; }
 .app-topbar-shell {
   --topbar-bg: var(--bg-panel);
   --topbar-text: var(--text);

@@ -23,6 +23,7 @@ import LoreRelationPanel from './components/LoreRelationPanel.vue'
 import LoreDetail from './components/LoreDetail.vue'
 import PrefBridge from './components/PrefBridge.vue'
 import PanelHost from './components/PanelHost.vue'
+import FlowTransitionOverlay from './components/skins/latent/FlowTransitionOverlay.vue'
 import { installAppBus } from './services/appbus'
 import { useShelfStore } from './stores/shelf'
 import { installAiRuntime } from './services/ai/runtime'
@@ -50,8 +51,10 @@ const shelf = useShelfStore()
 installAppBus()
 
 /* 功能面板窗口（9.2-W5）：URL 带 ?panel=<type>:<workId>:<entityId> 时渲染精简面板布局 */
-const panelMode = new URLSearchParams(location.search).has('panel')
-const settingsPanel = new URLSearchParams(location.search).get('panel')?.split(':')[0] === 'settings'
+const panelSpec = new URLSearchParams(location.search).get('panel')?.split(':')
+const panelMode = !!panelSpec
+const analysisPanel = panelSpec?.[0] === 'writing-analysis'
+const waitsForPanel = analysisPanel || panelSpec?.[0] === 'settings'
 const prefsReady = ref(false)
 
 /* 设置页在主窗里是 ui.view='settings'，但注册表只认 shelf/work/panel 三种 surface；
@@ -129,9 +132,9 @@ watch(
   { immediate: true }
 )
 
-async function revealSettings() {
-  if (!settingsPanel) return
-  // Let PanelHost mount and commit its themed layout before showing the native window.
+async function revealPanel() {
+  if (!waitsForPanel) return
+  // Let the themed layout commit before showing the native window.
   await nextTick()
   requestAnimationFrame(() => requestAnimationFrame(() => window.native?.panelReady?.()))
 }
@@ -161,13 +164,13 @@ async function boot() {
   const ok = await openDbWithRetry()
   if (!ok) {
     ui.dbError = true
-    revealSettings()
+    revealPanel()
     return
   }
   // Appearance is required for the first panel frame; AI configuration is not.
   await ui.loadPrefs()
   prefsReady.value = true
-  revealSettings()
+  revealPanel()
   startAutosave()
   /* 作品库同步（M3）：主进程有通道才启用；hydrate 失败不影响本地可用 */
   try {
@@ -204,8 +207,8 @@ async function seedDevVerifyBooks() {
       <NDialogProvider>
         <PrefBridge />
         <AppUpdateControls v-if="!nsPlugin && !panelMode && prefsReady" startup />
-        <PanelHost v-if="panelMode && prefsReady" />
-        <div v-else-if="!panelMode || ui.dbError" class="app-root" :class="'theme-' + ui.theme" :data-skin="activeSkin.id" :style="ui.rootStyle">
+        <PanelHost v-if="panelMode && !analysisPanel && prefsReady" />
+        <div v-else-if="!panelMode || ui.dbError" class="app-root" :class="'theme-' + ui.theme" :data-skin="activeSkin.id" :style="ui.rootStyle" :inert="ui.statsAnalysisOpen">
           <div v-if="ui.dbError" class="empty-shelf" style="padding-top: 16vh">
             <div class="big">数据的另一扇门被占用了</div>
             <p>
@@ -223,15 +226,17 @@ async function seedDevVerifyBooks() {
             <HelpManual />
             <RevisionsModal />
             <TrashModal />
-            <!-- 写作统计：旧皮肤渲染原 StatsModal，隐现只渲染一个 WritingStatsDialog。
-                 两者读同一份 wordlog 与同一套字数算法，不同时挂载，避免双计数或双弹窗。 -->
-            <WritingStatsDialog v-if="latent" />
-            <StatsModal v-else />
+            <StatsModal v-if="!latent" />
             <MubuTagPanel />
             <LoreRelationPanel />
             <LoreDetail />
           </template>
         </div>
+        <WritingStatsDialog
+          v-if="analysisPanel ? prefsReady : latent && !panelMode"
+          :panel-entry="analysisPanel ? panelSpec[2] || '' : null"
+        />
+        <FlowTransitionOverlay v-if="latent && !panelMode" />
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>

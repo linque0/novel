@@ -109,15 +109,61 @@ check('灵感：新建卡片随机取色，默认色留给已有卡片和手动�
   assert.equal(noteView({ id: 'legacy' }).cardColor, 'default')
 })
 
-check('写作分析：完整分析使用通用流动背景', () => {
+check('写作分析：独立窗口复用通用顶栏和流动背景，筛选使用主题菜单', () => {
   const dialog = read('src/components/skins/latent/stats/WritingStatsDialog.vue')
   const styles = read('src/styles/skins/latent/writing-stats-fusion.css')
+  const app = read('src/App.vue')
+  const select = read('src/components/skins/latent/stats/WritingStatsSelect.vue')
+  const panels = read('electron/panels.js')
+  assert.match(app, /analysisPanel \? panelSpec\[2\] \|\| '' : null/)
+  assert.match(app, /:inert="ui\.statsAnalysisOpen"/)
+  assert.match(dialog, /<section\s+v-if="expanded"\s+ref="full"\s+class="writing-stats-full"/)
+  assert.match(dialog, /<AppTopbar active="writing-analysis"/)
+  assert.match(dialog, /panelOpen\(\{type:'writing-analysis',workId:'app',entityId:params\.toString\(\)/)
+  assert.match(panels, /'writing-analysis': \{ label: '写作分析'[^\n]+frame: false/)
+  assert.match(panels, /sendAnalysisEntry\(existed, spec\.entityId\)/)
+  assert.match(select, /<NSelect[\s\S]+stats-select-menu/)
+  assert.doesNotMatch(dialog, /<select\b/)
   assert.match(dialog, /<StatsFlowBackdrop v-if="expanded && ui\.statsOpen" :work-id="s\.work"/)
   const backdrop = read('src/components/skins/latent/stats/StatsFlowBackdrop.vue')
   assert.match(backdrop, /mountFlowBackdrop\(canvas\.value,/)
   assert.match(backdrop, /effectiveFlowSpeed/)
   assert.match(backdrop, /resolveFlowPalette/)
   assert.doesNotMatch(styles, /writing-stats-backdrop\.webp|writing-stats-ambient/)
+})
+
+check('写作分析：完整内容填满窗口，速览与明细保留弹窗尺寸', () => {
+  const styles = read('src/styles/skins/latent/writing-stats-fusion.css')
+  assert.doesNotMatch(styles, /(?:^|\n)\.writing-stats-fusion\s*\{[^}]*\bwidth:/)
+  assert.match(styles, /\.writing-stats-fusion:where\(dialog\)\s*\{\s*width:\s*min\(/)
+  assert.match(styles, /\.writing-stats-full\s*>\s*\.writing-stats-scroll\s*\{[^}]*flex:\s*1/)
+})
+
+check('写作分析：右侧滚动条默认透明，靠近边缘显示并保留滚动区域', () => {
+  const dialog = read('src/components/skins/latent/stats/WritingStatsDialog.vue')
+  const styles = read('src/styles/skins/latent/writing-stats-fusion.css')
+  assert.match(dialog, /@pointermove\.passive="updateScrollbarHover"/)
+  assert.match(dialog, /@pointerleave="clearScrollbarHover"/)
+  assert.match(styles, /\.writing-stats-scroll::-webkit-scrollbar-thumb:vertical\s*\{[^}]*background:\s*transparent/)
+  assert.match(styles, /\[data-scrollbar-visible\]::-webkit-scrollbar-thumb:vertical\s*\{[^}]*background-color:/)
+})
+
+check('写作分析：窗口操作使用通用顶栏的专用入口', () => {
+  const dialog = read('src/components/skins/latent/stats/WritingStatsDialog.vue')
+  const topbar = read('src/components/AppTopbar.vue')
+  assert.match(dialog, /<template #window-controls>[\s\S]+?@click="collapse"[\s\S]+?@click="close\(\)"/)
+  assert.match(topbar, /class="app-topbar-window-controls">\s*<slot name="window-controls"/)
+})
+
+check('写作分析：常驻速览和完整分析订阅提交，关闭或切换范围时取消订阅', () => {
+  const dialog = read('src/components/skins/latent/stats/WritingStatsDialog.vue')
+  const template = dialog.split('</script>')[1]
+  assert.match(dialog, /liveQuery\(async \(\) => readWritingStats\([^)]*\)\)\.subscribe\(/)
+  assert.match(dialog, /onCleanup\(\(\) => \{[\s\S]*?subscription\?\.unsubscribe\(\)/)
+  assert.match(dialog, /quick\.value\?\.show\(\)/)
+  assert.match(dialog, /if\(opened\?\.ok\)return/)
+  assert.doesNotMatch(dialog, /quick\.value\?\.showModal\(\)|addEventListener\('pointerdown',outside/)
+  assert.doesNotMatch(template, /stats-refresh|@click="refresh"|重试读取/)
 })
 
 check('人物小传：兼容旧正文，独立标题及草稿确认', () => {

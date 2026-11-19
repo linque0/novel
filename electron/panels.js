@@ -19,6 +19,7 @@ const PANEL_META = {
   lore: { label: '设定', w: 1080, h: 740 },
   snippets: { label: '灵感', w: 960, h: 660 },
   settings: { label: '设置', w: 1000, h: 700, frame: false },
+  'writing-analysis': { label: '写作分析', w: 1440, h: 880, frame: false, minW: 620 },
   'ai-presets': { label: '恍然梦预设', w: 1160, h: 800, minW: 950, minH: 650 },
   ai: { label: '恍然梦', w: 480, h: 780, minW: 380, minH: 520 },
   agent: { label: '恍然梦创作台', w: 1440, h: 900, minW: 1100, minH: 720 }
@@ -78,6 +79,14 @@ function panelUrl(spec) {
   return isDev ? `http://127.0.0.1:5173/?${q}` : `app://local/index.html?${q}`
 }
 
+function sendAnalysisEntry(record, entry) {
+  if (!record.ready) {
+    record.pendingAnalysisEntry = entry
+    return
+  }
+  record.win.webContents.send('panel:event', { kind: 'writing-analysis-entry', entry })
+}
+
 function openPanel(spec) {
   const meta = PANEL_META[spec.type]
   if (!meta || !spec.workId) return { ok: false, reason: 'bad-spec' }
@@ -85,6 +94,7 @@ function openPanel(spec) {
   const existed = panels.find((p) => p.key === key && !p.win.isDestroyed())
   if (existed) {
     if(existed.spec.type!==spec.type)return {ok:false,reason:'chapter-window-open'}
+    if (spec.type === 'writing-analysis') sendAnalysisEntry(existed, spec.entityId)
     if (!existed.ready) return { ok: true, pending: true }
     if (existed.win.isMinimized()) existed.win.restore()
     existed.win.focus()
@@ -110,12 +120,13 @@ function openPanel(spec) {
         })()
   const bounds = clampToScreen(base)
 
+  const waitForRenderer = meta.frame === false
   const win = new BrowserWindow({
     ...bounds,
     minWidth: meta.minW || 800,
     minHeight: meta.minH || 500,
     frame: meta.frame !== false,
-    show: spec.type !== 'settings',
+    show: !waitForRenderer,
     icon: windowIconPath(),
     backgroundColor: '#f6f2e7',
     title: spec.title || `小说工坊 · ${meta.label}`,
@@ -133,7 +144,7 @@ function openPanel(spec) {
     if (!message.includes('DevTools')) console.log(`[panel] ${message} (${source}:${line})`)
   })
 
-  const record = { win, key, spec, ready: spec.type !== 'settings' }
+  const record = { win, key, spec, ready: !waitForRenderer }
   panels.push(record)
   locks.set(key, key)
   broadcast('panel:event', { kind: 'opened', key, spec, locks: [...locks.keys()] })
@@ -184,9 +195,13 @@ function openPanel(spec) {
 function init({ blockOpening = () => false } = {}) {
   ipcMain.handle('panel:ready', (e) => {
     const p = panels.find(p => !p.win.isDestroyed() && p.win.webContents === e.sender)
-    if (!p || p.spec.type !== 'settings') return { ok: false }
+    if (!p || PANEL_META[p.spec.type]?.frame !== false) return { ok: false }
     if (!p.ready) {
       p.ready = true
+      if (p.pendingAnalysisEntry !== undefined) {
+        sendAnalysisEntry(p, p.pendingAnalysisEntry)
+        delete p.pendingAnalysisEntry
+      }
       p.win.show()
     }
     return { ok: true }
@@ -231,6 +246,11 @@ function init({ blockOpening = () => false } = {}) {
     const w = BrowserWindow.fromWebContents(e.sender)
     if (w && !w.isDestroyed()) w.close()
     return { ok: true }
+  })
+  ipcMain.handle('panel:minimize-self', (e) => {
+    const panel = panels.find(p => p.spec.type === 'writing-analysis' && !p.win.isDestroyed() && p.win.webContents === e.sender)
+    if (panel) panel.win.minimize()
+    return { ok: !!panel }
   })
   /* 实体锁随面板内选中迁移（章节/人物/灵感）：面板切选 → 旧锁释放、新锁登记并广播 */
   ipcMain.handle('panel:set-entity', (e, entityId) => {

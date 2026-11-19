@@ -1,15 +1,19 @@
 <script setup>
 import { useLoreSort } from '../composables/useLoreSort.js'
+import { useLoreImages } from '../composables/useLoreImages.js'
 import { useGlazeMuseum } from '../composables/useGlazeMuseum'
 const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import TaskLauncher from './ai/TaskLauncher.vue'
 import { ref, reactive, computed, watch, nextTick, onMounted, onUpdated, onBeforeUnmount } from 'vue'
 import { NButton, NPopover } from 'naive-ui'
 import OIcon from './OIcon.vue'
+import LoreImageControls from './LoreImageControls.vue'
+import LoreImageHiddenNotice from './LoreImageHiddenNotice.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import { pickFiles } from '../services/fileio'
+import { loreCaret, loreImageHtml } from '../services/lore-editor-dom'
 import { decodeText, parseMubuMd } from '../services/importers'
 import { tagColor } from '../services/tagcolors'
 import { relIconFor, relColor } from '../services/relation-kinds'
@@ -35,6 +39,7 @@ const ver = ref(0)
 const rows = ref([])
 /* 内容根：详情页 = 当前节点；列表页 = 当前设定集。标题单独显示，不再作为树行 */
 const focusNode = computed(() => (props.focusNodeId ? work.mubu.find((n) => n.id === props.focusNodeId && !n.deletedAt) || null : null))
+const focusImages = computed(() => loreImageHtml(focusNode.value?.html))
 const contentRoot = computed(() => focusNode.value || work.currentMubuRoot())
 const contentRootId = computed(() => contentRoot.value?.id || null)
 const titleText = computed(() => contentRoot.value?.text || '未命名设定集')
@@ -58,9 +63,8 @@ const pending = reactive({ key: null, offset: 'end' })
 const focusedId = ref(null)
 const ctx = reactive({ open: false, x: 0, y: 0, rowId: null, folded: false, hasChildren: false, linkSearch: false, linkSpan: null })
 const clip = ref(null)
-const undoStack = ref([])
-const redoStack = ref([])
-let lastSnap = 0
+const undoStack = computed(() => work.mubuHistory().past)
+const redoStack = computed(() => work.mubuHistory().future)
 
 const COLORS = ['#3c3427', '#8c6f4e', '#c0392b', '#d35400', '#27ae60', '#2980b9', '#8e44ad', '#7f8c8d']
 const HIGHLIGHTS = ['#fff3a3', '#ffd6a5', '#ffa8a8', '#b8f2c9', '#a8d8ff', '#e0c3fc']
@@ -97,6 +101,7 @@ function build() {
 watch(ver, build)
 watch(() => work.mubuSetId, () => ver.value++)
 watch(() => props.focusNodeId, () => ver.value++)
+watch(() => work.mubuRevision, () => ver.value++)
 watch(
   () => work.mubu.length,
   () => ver.value++
@@ -187,28 +192,19 @@ function createSet() {
 }
 
 /* ---------- 撤销 / 重做（快照 + 差异落库） ---------- */
-function snapshotFlat() {
-  return work.mubu.map((n) => ({
-    id: n.id, parentId: n.parentId, sortOrder: n.sortOrder,
-    text: n.text, html: n.html, fold: !!n.fold, deletedAt: n.deletedAt ?? null
-  }))
-}
 function pushUndo() {
-  undoStack.value.push(JSON.stringify(snapshotFlat()))
-  if (undoStack.value.length > 60) undoStack.value.shift()
-  redoStack.value = []
-  lastSnap = Date.now()
+  work.mubuCheckpoint()
 }
 async function undo() {
   if (!undoStack.value.length) return
-  redoStack.value.push(JSON.stringify(snapshotFlat()))
-  await work.mubuSyncTree(JSON.parse(undoStack.value.pop()))
+  if (loreEditor.value?.contains(document.activeElement)) document.activeElement.blur()
+  await work.mubuUndo()
   ver.value++
 }
 async function redo() {
   if (!redoStack.value.length) return
-  undoStack.value.push(JSON.stringify(snapshotFlat()))
-  await work.mubuSyncTree(JSON.parse(redoStack.value.pop()))
+  if (loreEditor.value?.contains(document.activeElement)) document.activeElement.blur()
+  await work.mubuUndo('redo')
   ver.value++
 }
 
@@ -308,16 +304,18 @@ const focusedRow = computed(() => visible.value.find((r) => r.node.key === focus
 
 /* ---------- 编辑操作 ---------- */
 function onInput(row, e) {
-  const now = Date.now()
-  if (now - lastSnap > 1200) pushUndo()
+  work.mubuCheckpoint('text:' + row.node.id)
   const el = e.currentTarget
   work.mubuSetText(row.node.id, el.textContent || '', el.innerHTML)
 }
-function onPaste(e) {
-  e.preventDefault()
-  const t = e.clipboardData?.getData('text/plain') || ''
-  if (t) document.execCommand('insertText', false, t)
-}
+const { imageInput, imageAccept, chooseImages, onImageFiles, onLorePaste, onLoreDragOver, onLoreDrop } = useLoreImages(loreEditor, {
+  work,
+  selectedId: () => ui.mubuSelectedId,
+  parentId: () => contentRootId.value,
+  checkpoint: pushUndo,
+  focusNew: id => nextTick(() => focusKeyFn('m:' + id)),
+  readText: row => row.textContent || ''
+})
 function syncFocusedRow() {
   const el = document.activeElement
   if (!el || !el.classList?.contains('ob-text')) return
@@ -475,7 +473,7 @@ function onKey(row, e) {
     e.shiftKey ? outdent(row) : indent(row)
     return
   }
-  if (e.key === 'Backspace' && caretOffsetFromStart(el) === 0) {
+  if (e.key === 'Backspace' && getSelection()?.isCollapsed && caretOffsetFromStart(el) === 0 && loreCaret(el) === 0) {
     e.preventDefault()
     onBackspace(row)
     return
@@ -866,6 +864,7 @@ onBeforeUnmount(() => {
 <template>
   <TaskLauncher v-if="!ui.isStudioSkin" module="lore" />
   <div ref="rootEl" class="lore-surface" style="flex: 1; display: flex; flex-direction: column; min-height: 0; padding: 16px 26px">
+    <LoreImageControls :surface="rootEl" />
     <div v-if="ui.skin !== 'original'" class="module-heading" style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px">
       <span class="serif" style="font-size: 18px; font-weight: 700">设定</span>
       <span style="font-size: 12px; color: var(--text-dim)">幕布式自由大纲 · 所有内容皆节点</span>
@@ -929,6 +928,7 @@ onBeforeUnmount(() => {
       <button class="tb" title="清除格式" @mousedown.prevent @click="fmt('removeFormat')">清除</button>
       <span class="tb-sep" />
       <button class="tb" title="导入 MD / TXT（标题层级自动转为节点层级）" @click="importMd"><OIcon name="upload" :size="12" /> 导入</button>
+      <button class="tb" type="button" title="插入图片" :disabled="!contentRootId" @mousedown.prevent @click="chooseImages"><OIcon name="image" :size="12" /> 图片</button>
       <span class="tb-sep" />
       <button class="tb" title="新建同级节点" :disabled="!focusedRow" @click="addSibling(focusedRow)"><OIcon name="plus" :size="11" /> 同级</button>
       <button class="tb" title="新建子节点（先点击选中一个节点）" :disabled="!focusedRow" @click="addChild(focusedRow)"><OIcon name="plus" :size="11" /> 子级</button>
@@ -936,7 +936,10 @@ onBeforeUnmount(() => {
     </div>
 
     <div v-if="ui.isStudioSkin" class="gravity-lore-title"><h2>{{ work.work?.title }}的世界</h2><span>{{ nodeCount }} 个节点</span></div>
-    <div ref="loreEditor" class="ob-editor" @pointerdown="loreSort.pointerDown" @dragstart.capture="loreSort.nativeDrag" @click.capture="loreSort.click">
+    <input ref="imageInput" type="file" :accept="imageAccept" multiple hidden @change="onImageFiles" />
+    <div ref="loreEditor" class="ob-editor" @pointerdown="loreSort.pointerDown" @dragstart.capture="loreSort.nativeDrag" @click.capture="loreSort.click" @dragover="onLoreDragOver" @drop="onLoreDrop">
+      <div v-if="focusImages" class="lore-embedded-images" :data-lore-image-node="focusNode?.id" v-html="focusImages" />
+      <LoreImageHiddenNotice v-if="focusNode" :node-id="focusNode.id" :html="focusNode.html" />
       <div
         v-for="row in visible"
         :key="row.node.key"
@@ -964,9 +967,10 @@ onBeforeUnmount(() => {
           :data-ph="row.node.text ? '' : '输入内容，回车新建节点…'"
           @input="onInput(row, $event)"
           @keydown="onKey(row, $event)"
-          @paste="onPaste"
+          @paste="onLorePaste"
           @focus="onTextFocus"
         />
+        <LoreImageHiddenNotice :node-id="row.node.id" :html="row.node.html" />
         <span v-if="row.node.tags.length" class="ob-tags">
           <button
             v-for="t in row.node.tags"

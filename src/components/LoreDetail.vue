@@ -9,18 +9,21 @@ const { museumPopoverClass, museumLight } = useGlazeMuseum()
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { NButton } from 'naive-ui'
 import OIcon from './OIcon.vue'
+import LoreImageHiddenNotice from './LoreImageHiddenNotice.vue'
 import LoreRelRows from './LoreRelRows.vue'
 import LoreGraph from './LoreGraph.vue'
 import MubuView from './MubuView.vue'
 import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { jumpTo } from '../services/doublelinks'
+import { loreImageHtml } from '../services/lore-editor-dom'
 import { tagColor } from '../services/tagcolors'
 
 const work = useWorkStore()
 const ui = useUiStore()
 
 const node = computed(() => (ui.loreDetailId ? work.mubu.find((n) => n.id === ui.loreDetailId && !n.deletedAt) || null : null))
+const nodeImages = computed(() => loreImageHtml(node.value?.html))
 const entries = computed(() => (node.value ? work.loreLinksOf('mubu', node.value.id) : []))
 const hoverLink = ref(null)
 const relatedOpen = ref(false)
@@ -183,15 +186,23 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
     <div class="ldt-body">
       <div v-if="ui.isStudioSkin" class="gravity-detail-orbit" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
-      <h1 class="ldt-title">{{ (node.text || '').trim() || '（空节点）' }}</h1>
+      <h1 class="ldt-title">{{ (node.text || '').trim() || (nodeImages ? '（图片）' : '（空节点）') }}</h1>
       <div v-if="(node.tags || []).length" class="ldt-tags">
         <button v-for="t in node.tags" :key="t" class="ob-tag" type="button" :style="tagStyle(t)" :title="`筛选标签「${t}」`" @click="filterTag(t)">{{ t }}</button>
       </div>
 
+      <div v-if="nodeImages" class="lore-embedded-images" v-html="nodeImages" />
+      <LoreImageHiddenNotice :node-id="node.id" :html="node.html" />
       <section v-if="ui.isStudioSkin && directChildren.length" class="ldt-sec gravity-detail-content">
         <article v-for="child in directChildren" :key="child.id" class="gravity-detail-article">
           <div class="ldt-sec-head"><h2>{{ child.text || '（空节点）' }}</h2><NButton size="tiny" @click="goTo(child.id)">查看条目 ↗</NButton></div>
-          <p v-for="descendant in descendantContent(child.id)" :key="descendant.id" :style="{ paddingLeft: descendant.depth * 16 + 'px' }">{{ descendant.text }}</p>
+          <div v-if="loreImageHtml(child.html)" class="lore-embedded-images" v-html="loreImageHtml(child.html)" />
+          <LoreImageHiddenNotice :node-id="child.id" :html="child.html" />
+          <div v-for="descendant in descendantContent(child.id)" :key="descendant.id" :style="{ paddingLeft: descendant.depth * 16 + 'px' }">
+            <p>{{ descendant.text }}</p>
+            <div v-if="loreImageHtml(descendant.html)" class="lore-embedded-images" v-html="loreImageHtml(descendant.html)" />
+            <LoreImageHiddenNotice :node-id="descendant.id" :html="descendant.html" />
+          </div>
         </article>
       </section>
 

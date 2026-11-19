@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { listWorks, createWorkRow, seedWorkDefaults, softDeleteRow } from '../db/repo'
 import { db } from '../db/database'
 import { autosave } from '../services/autosave'
+import { useUiStore } from './ui'
 
 export const useShelfStore = defineStore('shelf', {
   state: () => ({
@@ -46,7 +47,7 @@ export const useShelfStore = defineStore('shelf', {
     },
     async createWork(payload) {
       const work = await createWorkRow(payload)
-      await seedWorkDefaults(work.id, { withVolume: payload.withVolume !== false })
+      await seedWorkDefaults(work.id, { withVolume: payload.withVolume !== false, freeLoreEntries: useUiStore().skin === 'dsh' })
       await this.refresh()
       return work
     },

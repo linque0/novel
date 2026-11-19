@@ -4,6 +4,7 @@ import { htmlToMd, htmlToPlain } from '../services/importers'
 import { suspendProjection, resumeProjection } from './project-repo.js'
 import { readWritingPosition } from '../services/writing-position.js'
 import { resolveWritingChapter } from '../services/writing-position-core.js'
+import { starterLoreEntries } from '../services/lore-entries.js'
 /* 写作统计的纯计算口径（隐现皮肤用；旧皮肤 StatsModal 不受影响） */
 import { STATS_TABLES, buildWritingStats, statsDates } from '../services/writing-stats-core.js'
 
@@ -85,11 +86,15 @@ export async function createWorkRow(payload) {
   return work
 }
 
-export async function seedWorkDefaults(workId, { withVolume = true } = {}) {
+export async function seedWorkDefaults(workId, { withVolume = true, freeLoreEntries = false } = {}) {
   const t = now()
   if (withVolume) {
     const volId = uid()
     await db.volumes.add({ id: volId, workId, title: '第一卷', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
+  }
+  if (freeLoreEntries) {
+    await db.mubu.bulkAdd(starterLoreEntries(workId, uid, t))
+    return
   }
   const defaults = ['地点', '势力', '物品', '体系', '大事记']
   await db.lorecats.bulkAdd(
