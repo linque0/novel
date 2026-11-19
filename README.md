@@ -1,252 +1,290 @@
-# 小说工坊 Novel Studio
+<p align="center">
+  <img src="./docs/项目展示文档/项目展示图例/书架2.png" alt="小说工坊 Novel Studio · 幻流书架主舞台" width="100%" />
+</p>
 
-本地优先的小说创作软件（v1.2.0）。正文、大纲、人物、设定、灵感一站式管理，**输入即存**，永不丢稿；正文页提供**阅读模式**（巨排章号 + 限宽只读排版，左侧目录边条滑出章节列表，Esc 两级退出）；正文支持**批注**（选中右键加批注，右侧批注栏逐条对应，被批注文字带**可按用途改色的实线下划线**，与关系链接的点状下划线错位共存不冲突）；关系链接悬浮预览窗带**进出场动画**且**标题栏可拖动**（拖离即钉住为常驻预览、悬停其他关系链接原位换内容、双击恢复跟随）；设定支持**条目级关联关系**（设定↔设定 / 设定↔人物：右键盘「设置关系…」选类型与描述、双向展示与跳转）——拥有关联关系的设定条目行尾有**关系卡片**（悬停看具体关系），**双击条目进入设定详情页**（面包屑 + 关系列表 + **可拖动关系图谱** + 子条目树，图谱布局按条目记忆）；开发调试版（npm run dev）**自动种入全部验证书**（清单与数量以 `tools/verify-seeds.mjs` 注册表为唯一来源，正式版绝不写入测试数据）；支持模块拆出为完整功能界面的独立面板窗口（边看大纲边写正文，面板内可自由切换条目）；大纲画布是**可分层进入的自由画布**——根层只显示直接子节点，容器可进入次级画布或就地展开，七类模块自由摆位、四向锚点拖线、连线**严格锁定建立时的两端接口**（节点挪位绝不漂移），途经任何模块按全局最短路径自动绕行（Hanan 稀疏网格 A*）；并支持**线连到线**（连接点体系）、**连线拖拽塑形**、**关系投影与跨层接续**、事件四态（已完成/正在写/待修改/待展开）与多选封装；右键弹出的连线编辑浮层按四方位候选自动避开连线本体放置。书架为**色带书封（G）**陈列——平涂单色 + 衬线书名 + 作者名圆印，6 款封面配色冷暖对位；另内置**引力书舱、琉光画境与赤月戏**三套整界面皮肤，赤月戏为墨纸旧金、折屏戏本版式，覆盖书架、工作台与独立窗口；正文字体可**中/西文分离切换**（思源宋体 / 霞鹜文楷 / 京华老宋体 / 朝华标题 / 云游手书 / 系统黑体 + Playfair Display / Montenegrin Gothic One，全部为随包本地 OFL 字体、零网络请求），书架封面同步跟随；主题 / 字体 / 数据 / 书签 / 统计 / 帮助统一收编于「设置」入口。
+<div align="center">
 
-> **下载安装**：前往 [Releases](https://github.com/linque0/novel/releases) 下载 `novel-studio-setup-<版本>.exe`（Windows x64，NSIS 向导式安装）。安装程序未做代码签名，首次运行如遇 SmartScreen 提示选「仍要运行」即可。
+# 小说工坊 · Novel Studio
 
-> **版本与提交纪律**（判据见 [docs/开发流程.md](docs/开发流程.md) §3）：
-> - **分支**：`main` 为稳定集成与发布分支；功能、重构、清理走主题分支（如 `前端重置`），完成后合回 `main`；
-> - **提交信息**：采用类型前缀 `feat / fix / refactor / chore / docs / test`，可选作用域（如 `feat(shelf):`）；
-> - **版本号**：普通开发提交**不强制**升版本；版本号只在准备发布时统一更新，以 `package.json` 为**唯一权威来源**（README 与 CHANGELOG 不再各自维护一份）；
-> - **发布**：里程碑发布点打 tag（如 `v1.0.0`），正式版随 GitHub Releases 发布安装程序；
-> - 版本历史见 [CHANGELOG.md](CHANGELOG.md)。
+Local-First Fiction Workbench // 为长篇作者打造的本地幻流写作工坊
 
-对应开发计划见 `../小说创作软件开发计划.md`（v1.1），已覆盖计划中 M0–M6 的核心功能；v1.0.0（2026-09-07）为首个正式版里程碑。
+简体中文 | [English](README.en.md)
 
-## 文档
+[![GitHub release](https://img.shields.io/github/v/release/linque0/novel?label=release)](https://github.com/linque0/novel/releases)
+[![License](https://img.shields.io/github/license/linque0/novel)](https://github.com/linque0/novel/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/linque0/novel?style=social)](https://github.com/linque0/novel/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/linque0/novel)](https://github.com/linque0/novel/issues)
+[![Platform](https://img.shields.io/badge/platform-Windows%20x64-0078D6?logo=windows&logoColor=white)](https://github.com/linque0/novel/releases/latest)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Electron](https://img.shields.io/badge/Electron-33-47848F?logo=electron&logoColor=white)](https://www.electronjs.org/)
+[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vue.js&logoColor=white)](https://vuejs.org/)
 
-**[交互式产品介绍与操作指南](docs/showcase/index.html)** · 按创作任务查找功能，在《雾港纪年》中试写、连线、引用资料和审阅候选稿。开发预览与正式下载的版本差异见[版本和适用端](docs/showcase/guide.html#versions)。
+[快速下载](#快速下载)
+·
+[界面展示](#界面展示)
+·
+[核心能力](#核心能力)
+·
+[本地开发与构建](#本地开发与构建)
+·
+[正在更新的功能](#正在更新的功能)
+·
+[文档与变更记录](#文档与变更记录)
 
-本地可直接打开 `docs/showcase/index.html`，也可以用 `python -m http.server 4174 --bind 127.0.0.1 --directory docs/showcase` 运行静态站。
+</div>
 
-| 文档 | 内容 |
+## 项目简介
+
+**小说工坊（Novel Studio）** 是一款面向长篇小说创作者的开源桌面写作软件，以**本地优先、输入即存、永不丢稿**为第一原则——所有作品、设定、关系与写作统计均存储在用户本机目录中，无需登录、不上传云端。
+
+软件围绕长篇创作常见的结构断裂，将**书架、正文、大纲、设定、人物、灵感与写作分析**收进统一的「**幻流（Latent）**」工作台：
+
+- **正文不再孤立**：左侧卷章目录、中央 TipTap 富文本稿纸与右侧随章批注栏实时联动，同时支持收起两侧栏专注书写与只读阅读模式。
+- **结构可视可下钻**：大纲采用分层自由画布，支持 7 类模块与 4 类语义连线（端口锁定 + Hanan 稀疏网格 A* 自动绕障），并与文本幕布视图同源切换。
+- **世界观与人际网互联**：设定为无限嵌套的统一幕布树与 3D 轨道关系星系；人物具备多篇小传卷宗与拖线即连的关系剧场，三者均可通过 `[[关系链接]]` 与正文互相引用。
+- **灵感与数据全链路沉淀**：按标签分栏管理的灵感拼板可一键转化为正式章节或设定；基于本机保存记录的 9 视图写作分析全程离线运行。
+
+桌面端基于 Electron 33 + Vue 3 构建，提供 Windows x64 安装包与免安装运行形态；仓库同时支持本地网页调试端（`npm run web`）及同步插件端构建（`plugin/dsh/`）。
+
+## 快速下载
+
+> [!TIP]
+> - **GitHub Releases**：前往 [Latest Release](https://github.com/linque0/novel/releases/latest) 下载 `novel-studio-setup-<版本>.exe`（Windows x64 NSIS 向导式安装程序，支持自定义路径与创建快捷方式）。
+> - **应用内更新**：已安装桌面端可在「设置 → 帮助与关于」检测 GitHub Releases 新版并经 SHA-512 校验自动安装。
+
+> [!NOTE]
+> 安装包与可执行文件暂未购买商业代码签名证书。Windows 首次运行如遇 SmartScreen 安全提示，点击「**更多信息 → 仍要运行**」即可；所有创作数据均独立存储在本地数据目录，卸载重装不会删除已有作品库。
+
+## 界面展示
+
+> **截图说明**：以下画面均采集自「幻流」主界面真实构建（`1920×1080`），演示作品为虚构的《星尘旅人》，书名、人物、章节与写作分析数据均为测试生成，未包含任何真实作者稿件。完整 `22` 张实机长篇图鉴与细节解析可参阅 [`产品介绍.md`](docs/项目展示文档/产品介绍.md)、[`产品介绍-图文版.pdf`](docs/项目展示文档/产品介绍-图文版.pdf) 或在浏览器直接打开 [`项目展示.html`](docs/项目展示文档/项目展示.html)。
+
+### 核心工作区预览
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/书架2.png" alt="幻流书架主舞台与 3D 轮播书封" />
+    </td>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/书架.png" alt="WebGL 流场自定义配色与作品状态筛选" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>书架主舞台 · 3D 轮播书封与上次阅读票根</strong></td>
+    <td align="center"><strong>幻流流场 · 支持跟随封面取色或自定义双色流动背景</strong></td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/正文.png" alt="正文三栏协同工作台" />
+    </td>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/正文2.png" alt="正文专注写稿视角" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>正文三栏 · 卷章目录 / 富文本稿纸 / 五项批注联动</strong></td>
+    <td align="center"><strong>专注写稿 · 一键收起侧栏仅留竖轨入口</strong></td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/大纲.png" alt="大纲分层自由画布" />
+    </td>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/大纲2.png" alt="大纲容器就地展开与容器详情面板" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>大纲画布 · 七类模块摆位与 Hanan A* 绕障连线</strong></td>
+    <td align="center"><strong>容器体系 · 次级画布下钻、就地展开与详情面板</strong></td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/设定-节点.png" alt="设定节点大纲幕布树" />
+    </td>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/设定-视觉.png" alt="设定 3D 轨道关系星系" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>世界设定 · 无限嵌套平权节点幕布树</strong></td>
+    <td align="center"><strong>关系星系 · 多圈同心轨道与跨设定集关联网络</strong></td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/人物.png" alt="人物卷宗与右侧故事坐标" />
+    </td>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/人物2.png" alt="人物关系剧场" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>人物卷宗 · 多篇带标题小传、自定义字段与故事坐标</strong></td>
+    <td align="center"><strong>关系剧场 · 节点拖线建改关系、双向同步卷宗</strong></td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/灵感.png" alt="灵感单一拼板与片段整理抽屉" />
+    </td>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/分析-速览.png" alt="写作速览浮窗与七日净增" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>灵感拼板 · 按标签分栏拖拽并一键转为章节或设定</strong></td>
+    <td align="center"><strong>写作速览 · 顶栏一键唤出全书字数与七日净增分布</strong></td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/分析-总览-历程.png" alt="写作分析：创作历程与活跃日历" />
+    </td>
+    <td width="50%">
+      <img src="./docs/项目展示文档/项目展示图例/分析-正文-改稿.png" alt="写作分析：章节×日期改稿轨迹热力矩阵" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>写作分析 · 累计净增曲线与 180 天活跃热力日历</strong></td>
+    <td align="center"><strong>改稿轨迹 · 章节×日期存稿热力矩阵与历史版本回溯</strong></td>
+  </tr>
+</table>
+
+<p align="center">
+  更多视图（阅读视图、卷宗编辑、作品对照、章节结构、大纲 / 设定 / 人物 / 灵感专项分析）见 <a href="docs/项目展示文档/产品介绍.md">产品介绍（22 图完整版）</a>
+</p>
+
+## 核心能力
+
+| 模块 | 能力摘要 |
 |---|---|
-| [开发流程](docs/开发流程.md) | 开发流程：架构分层、版本与提交纪律、五步开发法、验证体系、打包发布流程、缺陷经验 |
-| [使用手册](docs/使用手册.md) | 使用手册（应用内置同源）：功能详解、键位详解、导出行为表、FAQ |
-| [CHANGELOG.md](CHANGELOG.md) | 逐版本变更历史（每版含验收数据） |
+| **书架与幻流流场** | 3D 轮播书封陈列与上次阅读进度票根，支持按连载/完结/构思/搁置筛选及书名作者搜索；底层 WebGL 着色器流场支持跟随封面取色、自定义双色、5 组预设与 `0–2×` 流速调节。 |
+| **正文写作台** | 卷—章两级树（拖拽排序 / ★ 书签 / 状态标记）+ TipTap 富文本稿纸与 Word 式右键操作栏；被批注文字（按用途分色实线下划线）与 `[[关系链接]]`（点状下划线 + 可钉住悬停预览窗）上下错位共存；右栏「批注栏」随章节五项联动，支持折叠专注视角与限宽只读「阅读模式」。 |
+| **分层大纲画布** | 根层只展直接子节点，容器支持进入次级画布或就地展开为迷你卡；事件/便签/引用/文本框/章节锚点/卷/容器 7 类模块自由摆位，4 类语义连线严格锁定建立时的两端接口并用 Hanan 稀疏网格 A* 自动绕障；支持连接点（线连到线）、拖拽塑形、跨层投影及同源幕布文本视图。 |
+| **世界设定** | 统一无限嵌套幕布节点树（支持三区拖拽、悬停自动展开与 `MD/TXT` 标题层级导入）；配套「三栏阅读视图」和「视觉导图（层级导图 + 可调轨道间距/半径的 3D 关系星系）」；支持设定↔设定、设定↔人物双向关联与双击详情页。 |
+| **人物卷宗与剧场** | 左侧按角色定位与标签双重筛选；卷宗支持自定义头像、多角色分隔、多篇带标题小传及自由自定义字段；「关系剧场」中拖线到空白人物建关系、落到已有关系边即改写，并与卷宗双向实时同步。 |
+| **灵感拼板** | 收敛为按标签分栏看板，拖动图钉调整顺序或跨栏归组；可调节卡片尺寸（`80–125`）、配色与排序；在右侧「片段整理」抽屉一键转为正式章节或设定条目，同时保留原灵感追溯。 |
+| **九视图写作分析** | 基于本机保存记录与 ECharts 生成，无需联网：顶栏「写作速览」浮窗直达独立分析台，覆盖总览（创作历程 / 作品对照）、正文（章节结构 / 改稿轨迹热力矩阵）及大纲 / 设定 / 人物 / 灵感专项统计与联动检查器。 |
+| **全局检索与导入导出** | `Ctrl+Shift+F` 跨五模块全局搜索命中跳转；支持 `TXT / MD / DOCX / PDF / EPUB / 图片` 预览分章导入（自动识别 GBK 编码）；按卷勾选导出 `TXT / MD / Word (.docx)`，超阈值可选合并或按卷分目录打包 `.zip`。 |
+| **独立拆窗与实体锁** | 正文、大纲、人物、设定、灵感、写作分析均可拆出为完整功能的独立窗口；主进程级别**实体锁**防止多窗并发覆写，被占用条目在主窗转为只读提示并可一键跳至目标窗口。 |
 
-> 产品介绍与图文说明已迁到 [docs/showcase/](docs/showcase/index.html)（交互式站点）。
+<details>
+<summary>展开查看导出排版、关系链接与本地 OFL 字体详情</summary>
 
-> 图文版重新生成：`node tools/html-to-pdf.mjs`（无头 Chrome 渲染 HTML → PDF，含图片完整性、页面溢出与破损图片自检）。
+- **OOXML 原生 `.docx` 导出**：由 JSZip 组装标准 Word 文档，保留加粗、斜体、下划线、标题层级、段落对齐、列表与引用块样式，按 A4 版式输出；默认单批阈值 30 章（设置页 `2–500` 可调）。
+- **关系链接双向索引**：输入 `[[标题]]` 或右键「添加关系链接…」即可把章节、人物、设定与灵感彼此串联；标题改名不断链，悬停弹出带动画预览窗，拖动标题栏即可钉住到屏幕任意位置。
+- **中西文分离排版与本地字库**：随包附带 6 款中文字体（思源宋体、霞鹜文楷、京华老宋体、朝华标题、云游手书、系统黑体）与 3 款西文字体选项（跟随中文、Playfair Display、Montenegrin Gothic One），支持 `13–24px` 无级调节并零网络请求运行。
 
-## 界面一览
+</details>
 
-> **关于这些截图**：全部取自当前构建的正式前端（1920×1080 无损缩放自 4K 采集），使用独立浏览器配置与构造的演示数据库，未连接任何真实作者作品。演示作品为虚构的《雾港纪年》，画面中的书名、人名、章节与统计均为演示数据。
->
-> 皮肤为内置的**隐现**（顶栏字标 `LATENT`）。演示片为避免与深色界面撞色，对**背景底图**做了红黄色调替换（只作用于背景层，不涉及卡片、文字与控件）；软件默认外观为中性深色，另内置原版工坊、引力书舱、琉光画境、赤月戏等皮肤，可在「设置 → 外观」切换。
+## 本地开发与构建
 
-### 书架：每个故事都有位置
-
-作品以竖排书名 + 生成式书封陈列，顶部「全部 · 3 / 3」是筛选计数，卡片信息行给出作者与章数；选中项下方展开「继续写作 / 打开工作台」，底部票根提示上次读到的章节。新建、编辑、删除（软删除）、按书名/作者/类型搜索与整库备份恢复都在这一页完成。
-
-![书架：作品陈列、筛选计数与续写入口](docs/assets/ui/shelf.jpg)
-
-### 正文：写作的主战场
-
-左侧是卷—章两级树（可拖拽排序、右键收藏书签），中间是富文本正文，右侧札记列把「本章批注 / 本章大纲 / 本章出场人物 / 本章插图 / 本章信息」随章节实时联动。顶栏常驻保存状态，输入即存、无需手动存盘。
-
-![正文工作台：章节目录、稿面与右栏札记联动](docs/assets/ui/writing.jpg)
-
-| 保存状态与页码联动 | 选中文字右键加批注 |
-|---|---|
-| ![自动保存：右上角常驻保存状态](docs/assets/ui/writing-saved.jpg) | ![批注：被批注文字带彩色实线下划线，右栏逐条对应](docs/assets/ui/annotation.jpg) |
-
-批注的文字带**可按用途改色的实线下划线**，与关系链接的点状下划线错位共存、互不干扰。章节历史按策略自动留存快照，可逐条「回滚到此版本」：
-
-![章节版本历史：按时间倒序列出快照，一键回滚](docs/assets/ui/history.jpg)
-
-沉浸阅读时切换为**阅读模式**：巨排章号 + 限宽只读排版，左侧目录边条滑出章节列表：
-
-![阅读模式：巨排章号与限宽只读排版](docs/assets/ui/reading.jpg)
-
-### 大纲：分层自由画布
-
-根层只显示直接子节点，容器可进入次级画布或就地展开；事件、便签、引用、文本框、章节、卷、容器七类模块自由摆位，四向锚点拖线建立连线，连线严格锁定建立时的两端接口——节点挪位绝不漂移，途经其他模块时按全局最短路径自动绕行（Hanan 稀疏网格 A*）。
-
-![大纲根层：事件卡、容器卡与因果连线](docs/assets/ui/outline.jpg)
-
-| 容器就地展开与收起 | 点选事件卡，右栏出事件详情 |
-|---|---|
-| ![容器就地展开：内部迷你卡与容器同步移动](docs/assets/ui/outline-container.jpg) | ![事件详情：情节梗概、关联章节与故事关系](docs/assets/ui/outline-event.jpg) |
-
-右键连线打开编辑浮层，可就地改标签、关系类型（因果/伏笔/冲突/关联）、线型（实线/虚线/点线）、颜色、线宽与箭头大小，并在同一浮层「在此处创建连接点」——即**线连到线**：
-
-![连线编辑浮层：标签、关系类型、线型、颜色和线宽](docs/assets/ui/outline-connection.jpg)
-
-### 设定：一棵无限嵌套的树
-
-整个设定库是一棵统一节点树，任意节点平权、可无限嵌套、自由拖拽；节点支持加粗/斜体/颜色/底色等内联格式与快照式撤销；侧栏层级树实时同步、点击定位。设定与设定、设定与人物之间可建立**条目级关联关系**，双向展示与跳转：
-
-![设定视觉导图：条目层级、子条目与关联标签](docs/assets/ui/lore.jpg)
-
-![设定关系网络：设定条目与人物之间的有向关联](docs/assets/ui/lore-relations.jpg)
-
-### 人物：卷宗与关系剧场
-
-人物卷宗管理别名、标签、自定义字段与小传：
-
-![人物卷宗：小传、自定义字段与关联关系](docs/assets/ui/characters-profile.jpg)
-
-关系剧场是人物的关系图：画布上拖线即建关系、点边即改标签——**拖线是建立与改变关系的统一手势**；悬停高亮一度关系网，可一键切换圆形/网格排布：
-
-![关系剧场：拖线建关系，边上直接写关系名](docs/assets/ui/characters.jpg)
-
-### 灵感：随手记
-
-一条灵感只需一行字，首行即标题；可按标签（伏笔/人物/场景）筛选、按日期分组、标记关联，并**一键转为章节或设定**（转换后保留原灵感），也支持全文检索：
-
-![灵感手记：按日期分组，右侧可转章节/设定](docs/assets/ui/journal.jpg)
-
-![灵感检索：按标签筛选并命中关键词](docs/assets/ui/search.jpg)
-
-### 全局工具：导入与回收站
-
-跨正文/大纲/人物/设定/灵感的全局搜索（`Ctrl+Shift+F`）命中高亮、点击即跳转。
-
-导入支持 TXT / Markdown / DOCX / PDF / EPUB / 常见图片：TXT 自动识别 GBK 等编码并按「第X章」智能分章，DOCX 按标题样式分章，PDF 按书签分章，导入前可预览：
-
-![导入：按标题自动分章并可预览](docs/assets/ui/import.jpg)
-
-回收站对正文/人物/设定/灵感统一软删除，可恢复或彻底删除：
-
-![回收站：分类回收与恢复](docs/assets/ui/trash.jpg)
-
-### 写作分析：数据全在本地
-
-写作分析分四块视图：**写作速览**给出当前正文字数、正式章节数、今日净增与近 7 日柱状图；**稿件案卷**按卷统计章节字数分布与完成度；**创作历程**画每日净增曲线与活跃日历；**章节改稿轨迹**用热力图呈现每章每天的存稿与留存版本。
-
-| 写作速览 | 稿件案卷：章节字数分布 |
-|---|---|
-| ![写作速览：字数、章节数与近 7 日净增](docs/assets/ui/stats-quick.jpg) | ![稿件案卷：按卷统计章节字数与完成度](docs/assets/ui/stats-structure.jpg) |
-
-| 创作历程：净增曲线与活跃日历 | 改稿轨迹：按章按天的热力图 |
-|---|---|
-| ![创作历程：区间累计净增与活跃日历](docs/assets/ui/stats-journey.jpg) | ![改稿轨迹：每章每天的存稿与留存版本热力图](docs/assets/ui/stats-revision.jpg) |
-
-### 设置：外观与排版
-
-字体、字号与写作空间收编于同一处：中文正文字体 6 款、西文字体 3 款可分离切换，正文字号 13–24px 无级调节，右侧实时预览；全部字体为随包本地 OFL 字体，**零网络请求**。
-
-![设置：中/西文字体分离切换、字号无级调节与实时预览](docs/assets/ui/settings.jpg)
-
-> 逐模块更细的功能讲解、键位与导出行为见 [docs/showcase/](docs/showcase/index.html) 与 [docs/使用手册.md](docs/使用手册.md)。
-
-## 快速开始
+前置环境：建议 **Node.js ≥ 18**（当前开发环境为 Node 24），仓库 `.npmrc` 已预置国内镜像配置。
 
 ```bash
-npm install        # 首次安装（约 3 分钟，Electron 较大）
-npm run dev        # 开发模式（Vite 热更新 + Electron，挂 --profile=dev 隔离测试数据）
-npm run build      # 构建渲染进程到 dist/
-npm start          # 以生产模式启动应用（读取 dist/）
-npm run web        # 网页版：启动本地静态服务器并打开浏览器（http://127.0.0.1:18688）
-npm run dist       # 打包：vite build + electron-builder --win → release2/（NSIS 安装程序 + win-unpacked 软件本体）
-npm run stop       # 完全退出所有小说工坊实例（先优雅关闭确保数据落盘，残留进程再强制结束）
+npm install        # 安装依赖（Electron 与渲染器依赖）
+npm run dev        # 启动开发模式（Vite 热更新 + Electron --profile=dev 隔离测试数据）
+npm run build      # 仅构建前端资源到 dist/
+npm run build:plugin  # 构建插件前端输出到 dist-plugin/
+npm start          # 以生产模式启动本地 Electron 应用
+npm run web        # 启动本地静态网页调试端（http://127.0.0.1:18688）
+npm run dist       # 构建并打包 Windows x64 安装包与免安装目录到 release2/
+npm run stop       # 优雅关闭所有运行中的小说工坊实例确保落盘
 ```
 
-> 调试纪律：每次调试 / 自动化验收结束后，必须执行 `npm run stop` 完全退出程序，防止多实例抢占数据目录造成进程冲突。
+### 交付形态对照
 
-要求：Node.js ≥ 18（开发环境为 Node 24）。`.npmrc` 已配置 Electron 国内镜像。
-
-### 交付产物
-
-| 形态 | 路径 / 用法 | 说明 |
+| 形态 | 路径 / 启动方式 | 说明 |
 |---|---|---|
-| 安装程序 | GitHub Releases / `release2/novel-studio-setup-<版本>.exe` | NSIS 向导式安装（可选安装路径、桌面与开始菜单快捷方式），每版随发布 `npm run dist` 重建 |
-| 软件本体 | `release2/win-unpacked/小说工坊.exe` | 双击直接运行（免安装），与安装程序同批产出 |
-| 网页调试 | `npm run web` | 本地静态服务器（http://127.0.0.1:18688，仅开发调试用，Word 导入不可用） |
-| 源码运行 | `npm install && npm start` | 开发者方式 |
+| **Windows 安装程序** | [Releases](https://github.com/linque0/novel/releases/latest) / `release2/novel-studio-setup-<版本>.exe` | NSIS 向导式安装，支持桌面与开始菜单快捷方式 |
+| **免安装本体** | `release2/win-unpacked/小说工坊.exe` | 解压即用，与安装程序共用构建产物 |
+| **DSH 插件前端** | `npm run build:plugin`（源码衔接 `plugin/dsh/`） | 与桌面版幻流界面共享核心代码并适配宿主环境 |
+| **网页调试版** | `npm run web` | 本地浏览器调试（IndexedDB 与桌面库相互独立，不支持 `.docx` 解析导入） |
 
-注意事项：
-- **同一时间只能运行一个实例**：安装版 / 免安装版 / 开发模式共用数据目录（`%APPDATA%\小说工坊`），后启动的会显示「数据库被占用」提示（数据不会损坏）；需要多开时用 `小说工坊.exe --profile=名字` 走独立数据目录；
-- 桌面各形态数据共用本地库；网页版数据在浏览器 IndexedDB，与桌面版互相独立，跨形态迁移请用「备份 / 恢复」；
-- 安装程序与 exe 未做代码签名，首次运行如遇 SmartScreen 提示，选「仍要运行」即可；
-- 网页版中 Word 导入（.docx）依赖桌面端解析，暂不可用；PDF / EPUB / TXT / 图片导入不受影响。
+> [!NOTE]
+> - 桌面安装版、免安装版与正式模式默认共用数据目录（`%APPDATA%\小说工坊`），同一目录同一时间仅允许运行一个实例防止并发冲突；需要多开对比时请附加 `--profile=你的配置名` 启动隔离目录。
+> - 调试或自动化测试结束后请执行 `npm run stop` 安全退出。
 
-## 功能总览
+## 数据存储、安全与自动更新
 
-| 模块 | 功能 |
-|---|---|
-| 书架 | **色带书封（G）陈列**：平涂单色封面 + 衬线书名 + 作者名圆印，6 款封面（虚构·克莱因蓝 / 非虚构·象牙白 / 文集·松绿 / 诗辑·藤紫 / 别藏·绛红 / 特殊·墨黑）冷暖字色对位，新建/编辑可选款、作者名盖于封面圆印；封面书名跟随正文字体；卡片信息行（万字 · 章数）+ 悬停 ⋯ 菜单；新建 / 编辑 / 删除（软删除），本地搜索（书名/作者/类型），全库备份 / 恢复；低频操作（导入/导出/备份/恢复/回收站/统计/帮助）收编于顶栏「设置」面板 |
-| 正文 | 卷-章两级树，拖拽与按钮排序，章节书签（侧栏右键收藏 / 工具栏 ☆ 键 / 顶栏 🔖 下拉跳转），TipTap 富文本编辑器 + Word 风格工具栏（加粗/斜体/下划线/删除线、正文/H1-H3、字号、字体颜色、突出显示、超链接、左中右两端对齐、列表、引用、撤销重做、清除格式），章节状态（草稿/完成/待修改），字数统计 |
-| 大纲 | **自由模块画布**：流程图式白板，事件（矩形/菱形/平行四边形/椭圆，SVG 描边形状）/ 便签 / 引用卡 / 文本框 / 容器 / 章节锚点自由摆位（网格吸附、双密度、pin 固定、宽高拖拽），四向锚点拖线连接（因果/伏笔/冲突/关联四类着色 + 单向/双向/无向箭头 + 标签原位编辑 + 三线型 + 粗细/箭头大小全局与单条设置），贝塞尔/正交折线切换，连线严格锁定端口并按全局最短路径自动绕行（Hanan 稀疏网格 A*）；**连接点（线连到线）**：拖线落到既有连线（12px 容差）自动在落点建连接点接线、连接点↔连接点互连、一线可建多点多引出，连接点寄生在宿主连线上（路径参数 t 存储）随节点挪位不脱线，创建高亮 1.6s 后淡出为微观透明；**连线塑形**：左键按住连线拖弯（控制点实时跟随），拖回近似直线或双击即拉直恢复自动路由；右键连线开编辑浮层（标签/箭头方向/关系类型/线型/颜色/单条线宽与箭头大小/删除 +「在此处创建连接点」），浮层按上/下/左/右四方位候选自动避开连线本体放置；容器拖入即归组、拖出即回根级、可折叠、八向调整尺寸、右键调色板；模块右键操作菜单（形状/编辑内容/透明度/固定/删除）；断线检测（烂尾情节/缺铺垫）；快速开始骨架模板（三幕式/章级清单）；自定义模块类型（olTypes）；关系链接卫星与悬停预览；撤销重做；侧边栏层级树（从属缩进/折叠同步/搜索筛选定位）；文本/画布双视图（文本视图含容器内容卡片与面包屑） |
-| 人物 | 人物卡（定位/别名/标签/自定义字段/头像/小传），**人物关系图**：头像节点 + 关系边可视化，画布上拖线建关系、点边改标签（拖线 = 建立与改变关系的统一手势），圆形/网格一键排布，悬停高亮一度关系网，角色/标签筛选，孤岛提示，线型/颜色/粗细与大纲画布统一，与关系列表双向同步，一键发送为大纲画布引用卡；本章出场人物自动检测；画布右键直接落点新建人物 |
-| 设定 | **幕布式自由大纲**：整个设定库是一棵统一节点树，任意节点平权、可无限嵌套、自由拖拽（三区插入指示、悬停折叠节点自动展开、FLIP 衔接动画、拖到空白处移到顶层）；节点支持内联格式（加粗/斜体/下划线/删除线/颜色/底色/清除格式 + 快照式撤销重做 + 节点复制/剪切/粘贴），右键菜单与正文编辑器同构；侧边栏层级树实时同步、点击定位、逐级折叠；MD/TXT 导入（标题层级自动转节点层级）；旧「分类/条目」数据自动无损迁移；回收站支持节点恢复 |
-| 灵感 | 随手记，一键转为章节 / 设定 |
-| 自动保存 | 输入防抖 1s 落盘 + 30s 兜底 + 失焦/切章/关闭前强制保存；顶部常驻保存状态指示 |
-| 版本快照 | 章节内容变更按策略（5 分钟冷却）自动快照，保留最近 30 份，可一键回滚 |
-| 回收站 | 正文/人物/设定/灵感软删除，可恢复或彻底删除 |
-| 导入 | TXT / Markdown / DOCX / PDF / EPUB / 常见图片；TXT 自动识别 GBK 等编码、按"第X章"智能分章；DOCX 按标题样式分章；PDF 按书签分章（扫描件可转存图片）；导入前预览 |
-| 导出 | **导出对话框按卷分组勾选章节**（全选/按卷选/单选），TXT / Markdown / **Word (docx)** 三格式（docx 由 JSZip 手组 OOXML，保留加粗/标题/对齐/列表等基础语义，A4 版式）；**批量策略**：单章以章节名命名，多章逐章分批导出（仅首章确认一次位置，后续自动写入同目录），大批量（整卷/全选/超阈值，默认 30 章可调 2–500）可选合并为单文件或按章打包 zip（卷分目录 + 序号前缀）；整库备份 JSON（含图片） |
-| 多窗口 | 顶栏「⧉ 拆窗 ▾」把正文/大纲/人物/设定/灵感拆出为完整功能界面的独立面板窗口（侧栏 + 编辑区 + 调宽手柄），面板内可自由切换条目；实体锁随面板选中迁移——面板占用的条目主窗口转只读（「前往窗口」跳转），其余条目照常可写；面板按类型记忆窗口几何，主窗口关闭级联关闭面板 |
-| 帮助 | 设置面板 →「帮助与键位手册」（书架页与书内均可）打开内置使用手册——手册与源码同源打包（md ?raw + marked 渲染），含功能/键位/导出/FAQ 详解，永不失同步 |
-| 右键菜单 | 正文编辑区右键打开 Word 式快捷操作栏：剪切/复制/粘贴为纯文本、格式化、标题/字号/字体颜色/突出显示/对齐二级飞出菜单、列表引用、超链接、撤销重做/全选/清除格式；右键落在选区内保持选区 |
-| 搜索 | 跨正文/大纲/人物/设定/灵感全局搜索，命中高亮、点击跳转（Ctrl+Shift+F） |
-| 统计 | 每日新增字数柱状图、180 天写作热力图、总字数/周新增/写作天数卡片（ECharts） |
-| 主题 | 四套皮肤：**原版工坊**（含宣纸 / 羊皮纸 / 暗夜书房三套主题）、**引力书舱**、**琉光画境**、**赤月戏**（墨纸旧金、折屏戏本版式，76px 顶栏 + 86px 模块条 + 40px 底栏，覆盖书架、工作台与独立窗口）；衬线排版，纸张纹理，沉浸模式；OIcon 内联 SVG 图标体系与视觉令牌体系（全局动效令牌、focus-visible 焦点环、细条滚动条、reduced-motion 降级） |
-| 字体 | 正文字体**中/西文分离切换**：中文 6 款（思源宋体 / 霞鹜文楷 / 京华老宋体 / 朝华标题 / 云游手书 / 系统黑体）、西文 3 款（跟随中文 / Playfair Display / Montenegrin Gothic One），正文字号 13–24px 无级调节；全部为随包本地 OFL 字体（GB2312 子集化 woff2），零网络请求，选择经 appconfig 持久化；书架封面书名同步跟随 |
-| 设置面板 | 顶栏齿轮「设置」面板（G 色带书封风格）：外观（主题 / 中文字体 / 西文字体 / 正文字号）/ 数据（导入 / 导出 / 备份 / 恢复 / 回收站）/ 书签（工作台，随书签列表动态生成）/ 更多（写作统计 / 帮助与键位手册）——替代原顶栏分散的主题下拉、导出菜单与统计/回收站/书签/帮助按钮 |
+- **本地双轨与隔离架构**：创作数据存储在本机应用目录（通过 `Dexie / IndexedDB` 与 `packages/novel-core/` 文件库底座双轨支撑），所有表结构访问经 Repository 层（`src/db/repo.js`）隔离，零默认遥测与零后台上传。
+- **多重防丢稿机制**：正文输入防抖 `1s` 自动落盘 + `30s` 定时兜底 + 失焦 / 切章 / 关窗前强制存盘；每章按 `5 分钟` 冷却策略自动保留最近 `30` 份版本快照并支持逐条一键回滚；四模块统一配备软删除回收站。
+- **备份恢复与目录迁移**：设置内支持查看当前作品库目录并**一键迁移存储路径**；可导出包含全部插图的 **JSON 全库快照**，恢复前预览摘要后整库还原。
+- **SHA-512 校验自动更新**：桌面版内置更新模块（`electron/updates.cjs`）读取 GitHub Releases `latest.yml`，仅接受正式版本，下载安装包后执行本地 SHA-512 摘要比对再调起安装器。
 
-## 数据与安全
+## 正在更新的功能
 
-- 所有数据存储在本机 IndexedDB（Electron 用户数据目录），**无任何网络请求**；
-- 菜单「备份」导出 JSON 全库快照（含图片 base64），「恢复」可整体还原；
-- 超链接仅接受公网 http/https 地址（拒绝本地/私有/保留 IP），点击时在系统默认浏览器打开；
-- 数据库按 SQLite 单文件思路设计（Repository 层隔离），后续可无缝迁移到 SQLite。
+以下能力当前仍在持续开发与打磨中，暂未作为正式定型特性开放或宣传，将在后续版本逐步成熟后陆续交付：
 
-## 与开发计划的差异（取舍）
+- **「恍然梦」创作协同 Agent（持续完善中）**：探索面向长篇创作场景的沉浸式故事协同与侧边辅助工作流，坚持**「只提提案、作者定夺」**的边界设计。当前正在持续完善长篇上下文记忆精度、本地知识库检索一致性及流程稳定性，敬请期待后续更新。
+- **底层存储与格式演进**：围绕已隔离的 Repository 层推进向单文件 SQLite 底座平滑迁移的可选方案，并逐步补充扫描件 OCR 与老版 `.doc` / `.mobi` 文档解析支持。
 
-| 项 | 现状 |
-|---|---|
-| 存储引擎 | 计划默认 SQLite，当前采用 IndexedDB（同为本地持久化，免原生模块编译），Repository 层（`src/db/repo.js`）已隔离，迁移 SQLite 只改这一层 |
-| 编辑器 | 一期为 Markdown 纯文本，已升级为 TipTap 富文本（正文以 HTML 存储）；旧 Markdown/纯文本章节打开编辑时自动转换 |
-| 安装包 | 已接入（v1.0.0 起）：electron-builder NSIS 向导式安装程序，每版随发布重建并发布到 GitHub Releases |
-| 打字机模式 | 未实现（沉浸模式已实现），列入后续 |
-| OCR / 老版 .doc / mobi | 未支持，列入后续 |
-| 快照冷却 | 新章节首次快照需编辑满 5 分钟后才生成，属预期防抖设计 |
+## 参与贡献与工程测试
 
-## 测试
+欢迎通过 [Issues](https://github.com/linque0/novel/issues) 反馈 Bug、提出建议，或在遵循以下协作规范的前提下提交 Pull Request：
 
-验收脚本（通过 Electron 远程调试端口驱动，不抢占前台）：
+- **分支与提交纪律**（详见 [开发流程.md](docs/开发流程.md)）：`main` 为稳定集成与发布分支，特性开发与重构请从主题分支切出；提交信息统一采用 `feat / fix / refactor / docs / test / chore` 前缀；版本历史统一记录于 [CHANGELOG.md](CHANGELOG.md)，`package.json` 为版本号唯一权威来源。
+- **验证脚本体系**：`tools/` 目录下维护了百余套覆盖纯逻辑与 CDP 真机驱动的回归与验收脚本：
 
 ```bash
-npx electron . --remote-debugging-port=9222 --profile=dev   # 终端 1（dev profile 隔离测试数据）
-node tools/canvas-model-test.mjs              # 画布纯逻辑自测（48 项，无需启动应用，含端口/避障路由用例）
-node tools/olcanvas-verify.mjs                # 大纲自由画布验收（29 项）
-node tools/chargraph-verify.mjs               # 人物关系图验收（12 项）
-node tools/dl-verify.mjs                      # 关系链接全链路验收（20 项）
-node tools/lorelink-verify.mjs                # 关联关系 + 设定详情页验收（19 项：面板/卡片/浮层/双向/详情/图谱拖动/还原）
-node tools/cdp-test.mjs                       # 端到端全功能验收（29 项）
-node tools/multiwindow-verify.mjs             # 功能面板多窗口验收（11 项）
-node tools/sidebar-verify.mjs                 # 侧栏调宽 + 画布文本按钮验收（5 项）
-node tools/canvasctx-verify.mjs               # 画布右键建模块 + Delete 删除验收（6 项）
-node tools/relfollow-verify.mjs               # 关系图拖线改关系 + 严格端口/避障验收（15 项）
-node tools/junction-fix-verify.mjs            # 连接点全链路验收（10 项：建点/接线/多点多引出/级联删除）
-node tools/line2line-verify.mjs               # 线连到线验收（4 项）
-node tools/shape-verify.mjs                   # 连线塑形验收（5 项：拖弯/拖直/双击拉直/箭头朝向）
-node tools/edgeedit-ctx-verify.mjs            # 右键连线编辑浮层验收（3 项）
-node tools/edgepanel-avoid-verify.mjs         # 编辑浮层避线放置验收（4 项）
-node tools/visual-fix-verify.mjs              # 视觉专项验收（3 项）
-node tools/freeze-repro-verify.mjs            # 画布卡死复现验收（4 项）
-node tools/pack-smoke.mjs                     # 打包冒烟（界面渲染/mammoth/Dexie，独立 profile 测后即删）
+# 画布核心模型纯逻辑自测（无需启动应用）
+node tools/canvas-model-test.mjs
+
+# 启动调试端后运行专项端到端验收（需保持单一 dev 实例与远程调试端口）
+npx electron . --remote-debugging-port=9222 --profile=dev
+node tools/olcanvas-verify.mjs            # 大纲分层自由画布
+node tools/chargraph-verify.mjs           # 人物关系剧场
+node tools/dl-verify.mjs                  # 关系链接全链路
+node tools/lorelink-verify.mjs            # 设定关联与详情图谱
+node tools/multiwindow-verify.mjs         # 独立拆窗与实体锁
+node tools/latent-integration-verify.mjs  # 幻流界面整合与写作分析回归
+node tools/pack-smoke.mjs                 # 打包产物与解析冒烟
 ```
 
-验证纪律：常规更新只做针对性验证（改动所及功能的主路径实测 + `npm run build` 通过）；四套全量回归（canvas-model / chargraph / olcanvas / relfollow）在大版本合并、里程碑打包或涉共享底层改动时执行。
+### 仓库结构
 
-历史验收摘录（按时间倒序）：关系链接 + 设定详情页（2026-10-15）lorelink 19/19（关联关系面板 / 行尾关系卡片 + 悬停浮层 / 双向展示 / 人物侧 / 备份含表 / purge 级联 / 详情页 / 图谱拖动落库与记忆 / 删除还原）+ 回归 dl 20/20、dlpop 18/18、annotation 29/29、mubu-tags 12/12、mubu-tagpanel 10/10、olcanvas 29/29、chargraph 12/12、relfollow 15/15、bugfix 14/14 + `npm run build` 通过（真机三态截图目检：行尾卡片 + 浮层 / 详情页全貌 / 图谱拖动后）；v1.0.26（2026-10-13）readmode 16/16（正文阅读模式：巨排章号/限宽只读列/目录抽屉/两级 Esc/编辑器不重建）+ v1.0.25（2026-10-13）settings 6/6（设置页「模型设置」改名与上下文预算·每日上限移除）+ 回归 annotation 29/29（补批注栏折叠展开适配）、dl 20/20 + `npm run build` 通过；v1.0.24（2026-10-13）project-unit 13/13、project 18/18、knowledge 19/19、preset 20/20、preset-unit 16/16；共享回归 canvas-model 48/48、chargraph 12/12、olcanvas 29/29、relfollow 15/15；`npm run build` 通过（独立测试 profile、本地 Mock，详见书库读模型实施说明）；v1.0.23（2026-09-21）shelf-verify 15/15 + 封面切换修复真实鼠标 CDP 流端到端（选款即时生效 + DB 持久）+ 6 款封面字色对位/封面字体跟随/设置面板两处形态真机截图目检 + `document.fonts.check` 逐字体通过 + `npm run build` 通过；v1.0.22（2026-09-19）bugfix 14/14 + 回归 dl 20/20、annotation 28/28、dlpop 19/19（窗口可见，进场 opacity 硬断言真实通过）、shelf 15/15、canvas-model 48/48、chargraph 12/12、relfollow 15/15、olcanvas 28/29（唯一失败「容器高度调整」经单文件回退对照确认为 v1.0.17/18 存量问题，非本次回归，已录待办）；v1.0.21（2026-09-19）dlpop 18/18（另 1 项进场 opacity 断言因验证窗口隐藏按可见性跳过）+ dl 回归 20/20；v1.0.20（2026-09-19）shelf 15/15 + 重构回归 annotation 28/28、chargraph 12/12、olcanvas 前 18 项全过、dl 19/20；v1.0.19（2026-09-18）annotation 28/28 + dl 回归 20/20；v1.0.18（2026-09-09）edgepanel-avoid 4/4、edgeedit-ctx 回归 3/3；v1.0.17 edgeedit-ctx 3/3；v1.0.16 shape 5/5；v1.0.15 line2line 4/4 + 连接点全链路 10/10 + 卡死复现 4/4 + 视觉 3/3；canvas-model 48/48；v1.0.8 打包冒烟 3/3（界面渲染 / mammoth Word 解析 / Dexie 数据库打开）。
-
-## 目录结构
-
-```
-electron/        主进程（窗口、app:// 静态协议、导入导出 IPC、面板窗口管理）
+```text
+electron/                  主进程（窗口管理、本地协议、更新、实体锁与导入导出 IPC）
+packages/novel-core/       作品核心存储与领域模型复用底座
+plugin/dsh/                DSH 插件宿主适配层
 src/
-  db/            表结构定义 + Repository 层（存储引擎切换点）
-  services/      自动保存、导入解析、导出（txt/md/docx/zip）、文件 IO
-  stores/        Pinia 状态（书架 / 作品 / 界面）
-  components/    书架、工作台、编辑器、各要素面板与弹窗
-  styles/        四套皮肤 / 主题 + 视觉令牌
-  assets/        本地字体（OFL，woff2 子集化）与静态资源
-build/           打包图标
-docs/            使用手册（内置应用）、产品介绍、开发流程、设计存档
-scripts/         打包后处理（afterpack）、图标生成
-tools/           E2E 验收脚本与截图
+  components/              书架、工作台、编辑器、幻流工作区与分析组件
+  db/                      数据表结构与 Repository 隔离层
+  services/                自动保存、WebGL 流场着色器、导出(OOXML/ZIP)、导入解析
+  stores/                  Pinia 状态管理（书架 / 作品 / 界面状态）
+  styles/                  幻流视觉样式与布局令牌
+  assets/                  本地随包 OFL 字体（woff2 子集化）与静态资源
+docs/                      项目展示图文、使用手册（与内置帮助同源）与开发规范
+tools/                     CDP 端到端验收脚本与单元测试集合
 ```
+
+## 文档与变更记录
+
+| 文档 | 说明 |
+|---|---|
+| [项目展示.html](docs/项目展示文档/项目展示.html) | 单文件交互式图文展板（含 WebGL 流场与 22 张可缩放截图） |
+| [产品介绍.md](docs/项目展示文档/产品介绍.md) / [图文版 PDF](docs/项目展示文档/产品介绍-图文版.pdf) | 全模块 22 图详尽产品说明文档与 A4 排版版 |
+| [使用手册.md](docs/使用手册.md) | 详尽功能操作、快捷键一览、导出规则与 FAQ（与软件内置手册同源） |
+| [开发流程.md](docs/开发流程.md) | 架构分层、五步开发法、测试验收纪律与打包发布规范 |
+| [CHANGELOG.md](CHANGELOG.md) | 逐版本变更记录与验收数据存档 |
+
+## 开发说明与免责声明
+
+本项目在开发与迭代过程中广泛借助了 AI 辅助编程工具完成代码编写、重构整理与自动化测试构建，部分边缘场景仍可能存在未覆盖到的细节瑕疵。欢迎在使用或二次开发过程中通过 Issue 协助完善。
+
+应用所有写作功能默认完全在本地离线执行，不采集任何作者文稿；无论使用何种本地或在线扩展工作流，建议对重要的长篇连载作品定期通过「设置 → 备份与数据」导出完整 JSON 快照妥善保存。
+
+## 致谢
+
+小说工坊的构建离不开以下优秀开源项目与创作资源的支撑：
+
+- [Electron](https://www.electronjs.org/) · [Vue 3](https://vuejs.org/) · [Pinia](https://pinia.vuejs.org/) · [Naive UI](https://www.naiveui.com/)
+- [TipTap](https://tiptap.dev/)（正文富文本编辑内核）
+- [Apache ECharts](https://echarts.apache.org/)（本地多维度写作分析图表）
+- [Three.js](https://threejs.org/) · [paper-design/shaders](https://github.com/paper-design/shaders)（幻流 WebGL 着色器灵感与协议详见 [paper-shaders-LICENSE.txt](public/paper-shaders-LICENSE.txt)）
+- [Dexie.js](https://dexie.org/) · [JSZip](https://stuk.github.io/jszip/) · [Mammoth](https://github.com/mwilliamson/mammoth.js) · [PDF.js](https://mozilla.github.io/pdf.js/) · [Marked](https://marked.js.org/) · [DOMPurify](https://github.com/cure53/DOMPurify)
+- 本地中文字体 [思源宋体 (Noto Serif SC)](public/licenses/Noto-Serif-OFL.txt) 与 [霞鹜文楷 (LXGW WenKai)](public/licenses/LXGW-WenKai-OFL.txt)（SIL Open Font License 1.1）
+
+## 开源协议
+
+本项目基于 [`AGPL-3.0`](LICENSE) 许可证开源。
+
+内置的第三方着色器及本地随包字体等资源各自遵循其原始开源协议（详见 [public/paper-shaders-LICENSE.txt](public/paper-shaders-LICENSE.txt) 与 [public/licenses/](public/licenses/)）。

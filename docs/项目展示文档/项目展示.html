@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>小说工坊 Novel Studio · v1.2.6 产品展示</title>
+<link rel="stylesheet" href="../../src/assets/fonts/fonts.css" />
+<link rel="stylesheet" href="../../src/assets/fonts/fonts-user.css" />
+<style>
+/* ==========================================================================
+   小说工坊 Novel Studio · 商业级项目展示页（v1.2.6）
+   - 离线单文件自包含，兼容 file:// 与 http://，专为 16:9 手动翻页录屏优化
+   - WebGL 幻流着色器源自 src/services/latent/flow-shaders.js (Apache-2.0)
+   ========================================================================== */
+:root {
+  color-scheme: dark;
+  --bg: #0a0c12;
+  --surface: rgba(20, 22, 31, 0.72);
+  --surface-strong: rgba(24, 26, 38, 0.88);
+  --surface-soft: rgba(255, 255, 255, 0.045);
+  --border: rgba(255, 255, 255, 0.10);
+  --border-hi: rgba(232, 168, 100, 0.36);
+  --ink: #f4efe6;
+  --ink-2: #cfc8bc;
+  --muted: #938e9c;
+  --accent: #e8a864;
+  --accent-2: #f4c892;
+  --mint: #73d2b0;
+  --indigo: #8ba4f8;
+
+  --serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif;
+  --kai: "LXGW WenKai", "Noto Serif SC", "KaiTi", serif;
+  --sans: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", -apple-system, sans-serif;
+  --mono: "JetBrains Mono", "Cascadia Mono", Consolas, monospace;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: linear(
+    0, 0.012 0.7%, 0.05 1.5%, 0.197 3.2%, 0.713 7.5%, 0.946 10%,
+    1.084 12.2%, 1.132 13.7%, 1.14 15.1%, 1.119 16.8%, 1.011 21.8%,
+    0.976 24.4%, 0.967 26.8%, 0.975 29.8%, 1.003 36.2%, 1.008 40%,
+    0.998 51.5%, 1
+  );
+  --ease-fallback: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --radius-xl: 20px;
+  --radius-lg: 14px;
+  --radius-md: 10px;
+  --header-h: 64px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-h) + 28px);
+  background: var(--bg);
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.65;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, p, figure, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+code, kbd { font-family: var(--mono); }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+[hidden] { display: none !important; }
+
+/* ---------------- 背景层：WebGL 幻流 + CSS 兜底 ---------------- */
+.backdrop-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(90% 70% at 18% 12%, rgba(212, 128, 66, 0.24), transparent 60%),
+    radial-gradient(80% 70% at 84% 78%, rgba(84, 102, 178, 0.22), transparent 62%),
+    linear-gradient(150deg, #0a0c12 0%, #121420 55%, #0c0e16 100%);
+  transition: opacity 0.6s ease;
+}
+#flow-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0.72;
+}
+.backdrop-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 42%, transparent 25%, rgba(8, 10, 15, 0.72) 100%),
+    linear-gradient(180deg, rgba(10, 12, 18, 0.55) 0%, rgba(10, 12, 18, 0.16) 28%, rgba(10, 12, 18, 0.48) 100%);
+}
+
+/* ---------------- 顶部玻璃导航 ---------------- */
+.site-header {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(1360px, calc(100% - 32px));
+  height: var(--header-h);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 18px 0 20px;
+  border-radius: 999px;
+  background: rgba(16, 18, 27, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  backdrop-filter: blur(22px) saturate(135%);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.36);
+  transition: opacity 0.38s var(--ease-expo), transform 0.38s var(--ease-expo);
+}
+body.clean-stage .site-header,
+body.clean-stage .scene-rail,
+body.clean-stage .stage-hud {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-10px);
+}
+body.clean-stage .site-header { transform: translate(-50%, -14px); }
+body.clean-stage .scene-rail { transform: translate(16px, -50%); }
+body.clean-stage .stage-hud { transform: translate(-50%, 14px); }
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  white-space: nowrap;
+}
+.brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(145deg, rgba(232, 168, 100, 0.24), rgba(232, 168, 100, 0.06));
+  border: 1px solid rgba(232, 168, 100, 0.45);
+  color: var(--accent-2);
+  font-family: var(--serif);
+  font-weight: 700;
+  font-size: 15px;
+}
+.brand-text {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--serif);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.brand-text small {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.top-nav {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.top-nav::-webkit-scrollbar { display: none; }
+.top-nav a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition: color 0.2s, background-color 0.2s;
+}
+.top-nav a:hover { color: var(--ink); background: rgba(255, 255, 255, 0.06); }
+.top-nav a[aria-current="location"] {
+  color: #1c1612;
+  background: var(--accent);
+  font-weight: 600;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--ink-2);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  white-space: nowrap;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+}
+.pill-btn:hover {
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.11);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+.ver-chip {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent-2);
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(232, 168, 100, 0.34);
+  background: rgba(232, 168, 100, 0.10);
+  white-space: nowrap;
+}
+
+/* ---------------- 右侧分镜导览点 ---------------- */
+.scene-rail {
+  position: fixed;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 35;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 10px 7px;
+  border-radius: 999px;
+  background: rgba(14, 16, 24, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  transition: opacity 0.38s var(--ease-expo), transform 0.38s var(--ease-expo);
+}
+.scene-dot {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.24);
+  transition: transform 0.28s var(--ease-expo), background-color 0.28s;
+}
+.scene-dot:hover {
+  transform: scale(1.35);
+  background: rgba(255, 255, 255, 0.65);
+}
+.scene-dot[aria-current="location"] {
+  background: var(--accent);
+  transform: scale(1.42);
+  box-shadow: 0 0 0 4px rgba(232, 168, 100, 0.22);
+}
+.scene-dot::before {
+  content: attr(data-label);
+  position: absolute;
+  right: 22px;
+  top: 50%;
+  transform: translateY(-50%) translateX(6px);
+  padding: 4px 10px;
+  border-radius: 7px;
+  background: rgba(18, 20, 30, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--ink);
+  font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.scene-dot:hover::before,
+.scene-dot:focus-visible::before {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+/* ---------------- 底部轻提示条（录屏时按 H 可一键隐藏） ---------------- */
+.stage-hud {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--muted);
+  background: rgba(14, 16, 24, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(18px);
+  white-space: nowrap;
+  transition: opacity 0.38s var(--ease-expo), transform 0.38s var(--ease-expo);
+}
+.stage-hud kbd {
+  display: inline-block;
+  padding: 1px 6px;
+  margin: 0 2px;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.09);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: var(--ink-2);
+  font-size: 11px;
+}
+
+/* ---------------- 主舞台容器 ---------------- */
+main {
+  position: relative;
+  z-index: 1;
+}
+
+.act {
+  position: relative;
+  width: min(1360px, calc(100% - 72px));
+  margin-inline: auto;
+  padding-block: clamp(54px, 6.2vh, 84px);
+  scroll-margin-top: 84px;
+}
+
+.act-head {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.act-head.center {
+  align-items: center;
+  text-align: center;
+}
+.act-head.center p { max-width: 84ch; }
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  background: rgba(232, 168, 100, 0.10);
+  border: 1px solid rgba(232, 168, 100, 0.28);
+}
+.kicker i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.act-head h2 {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 3.6vw, 3.25rem);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+.act-head p {
+  font-size: clamp(15px, 1.15vw, 17.5px);
+  color: var(--ink-2);
+  max-width: 62ch;
+}
+
+/* ---------------- 滚动入场与合成层动效 ---------------- */
+.reveal {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .reveal {
+    transition: opacity 0.85s var(--ease-expo), transform 0.85s var(--ease-expo);
+  }
+  .reveal[data-reveal="pending"] {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  .reveal[data-reveal="shown"] {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  @supports ((animation-timeline: view()) and (animation-range: entry)) {
+    @keyframes act-entry {
+      from {
+        opacity: 0.18;
+        transform: translateY(34px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .scroll-lift {
+      animation: act-entry linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 42%;
+    }
+  }
+}
+
+/* ---------------- 3D 设备画框（Stage Frame） ---------------- */
+.stage-frame {
+  position: relative;
+  border-radius: var(--radius-xl);
+  padding: 10px;
+  background: linear-gradient(155deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.03) 45%, rgba(232, 168, 100, 0.14));
+  box-shadow:
+    0 32px 84px rgba(0, 0, 0, 0.56),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.stage-frame.stage-centered {
+  width: min(940px, 100%);
+  margin-inline: auto;
+}
+.showcase-toolbar.toolbar-centered {
+  width: min(940px, 100%);
+  margin-inline: auto;
+}
+.matrix-2x2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  width: min(1040px, 100%);
+  margin-inline: auto;
+}
+.stage-screen {
+  position: relative;
+  border-radius: 13px;
+  overflow: hidden;
+  background: #14161e;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  aspect-ratio: 1754 / 1150;
+}
+.stage-screen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.zoom-trigger {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  text-align: left;
+}
+.zoom-badge {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--ink);
+  background: rgba(12, 14, 20, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  backdrop-filter: blur(12px);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s var(--ease-expo);
+}
+.stage-frame:hover .zoom-badge,
+.zoom-trigger:focus-visible .zoom-badge {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* 交叉淡入滑块图层 */
+.crossfade-stage {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+.crossfade-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.crossfade-slide.is-active {
+  opacity: 1;
+  pointer-events: auto;
+  z-index: 2;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .crossfade-slide {
+    transform: scale(1.018);
+    transition:
+      opacity 0.55s var(--ease-expo),
+      transform 0.72s var(--ease-spring);
+  }
+  @supports not (animation-timing-function: linear(0, 1)) {
+    .crossfade-slide {
+      transition: opacity 0.52s var(--ease-fallback), transform 0.65s var(--ease-fallback);
+    }
+  }
+  .crossfade-slide.is-active {
+    transform: scale(1);
+  }
+}
+
+/* ---------------- 第一幕：Hero ---------------- */
+.hero-act {
+  min-height: calc(100svh - 24px);
+  padding-top: calc(var(--header-h) + 46px);
+  padding-bottom: 52px;
+  display: grid;
+  grid-template-columns: minmax(320px, 0.86fr) minmax(0, 1.34fr);
+  gap: clamp(28px, 4vw, 56px);
+  align-items: center;
+}
+.hero-copy h1 {
+  font-family: var(--serif);
+  font-size: clamp(2.8rem, 5.1vw, 4.7rem);
+  font-weight: 700;
+  line-height: 1.09;
+  letter-spacing: -0.03em;
+  margin-top: 18px;
+  background: linear-gradient(180deg, #fbf7ef 0%, #dfd5c4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero-lead {
+  margin-top: 20px;
+  font-size: clamp(15.5px, 1.2vw, 18px);
+  line-height: 1.78;
+  color: var(--ink-2);
+  max-width: 38ch;
+}
+.hero-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 22px;
+}
+.hero-tags span {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  color: var(--ink-2);
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+.hero-cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #191410;
+  background: linear-gradient(135deg, #f3c489, #df9c54);
+  box-shadow: 0 10px 28px rgba(232, 168, 100, 0.28);
+  transition: transform 0.25s var(--ease-expo), filter 0.2s;
+}
+.btn-primary:hover { transform: translateY(-2px); filter: brightness(1.06); }
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.btn-ghost:hover { background: rgba(255, 255, 255, 0.11); border-color: rgba(255, 255, 255, 0.28); }
+
+.hero-stage-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hero-tilt {
+    transform: perspective(1700px) rotateY(-4deg) rotateX(2.5deg);
+    transition: transform 0.9s var(--ease-expo);
+  }
+  .hero-tilt:hover {
+    transform: perspective(1700px) rotateY(0deg) rotateX(0deg);
+  }
+}
+.hero-stage-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 6px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ---------------- Tab 控件 + Anchor Positioning 滑动指标 ---------------- */
+.tablist {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(16, 18, 28, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(14px);
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.tablist::-webkit-scrollbar { display: none; }
+.tablist [role="tab"] {
+  position: relative;
+  flex: none;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--ink-2);
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+.tablist [role="tab"]:hover { color: var(--ink); }
+.tablist [role="tab"][aria-selected="true"] {
+  color: var(--accent-2);
+}
+
+/* 现代 CSS Anchor Positioning 底部高亮线（严格遵循 modern-web-guidance） */
+@supports (position-anchor: auto) {
+  .tablist::before {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    inset-block-start: calc(anchor(bottom) - 3px);
+    inset-inline-start: calc(anchor(left) + 12px);
+    inset-inline-end: calc(anchor(right) + 12px);
+    border-block-end: 2.5px solid var(--accent);
+    border-radius: 2px;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tablist::before {
+      transition: inset 0.34s var(--ease-expo);
+    }
+  }
+  .tablist[data-anchor="1"]::before { position-anchor: --tab-1; }
+  .tablist[data-anchor="2"]::before { position-anchor: --tab-2; }
+  .tablist[data-anchor="3"]::before { position-anchor: --tab-3; }
+  .tablist[data-anchor="4"]::before { position-anchor: --tab-4; }
+  .tablist[data-anchor="5"]::before { position-anchor: --tab-5; }
+  .tablist[data-anchor="6"]::before { position-anchor: --tab-6; }
+  .tablist[data-anchor="7"]::before { position-anchor: --tab-7; }
+  .tablist[data-anchor="8"]::before { position-anchor: --tab-8; }
+  .tablist [role="tab"]:nth-child(1) { anchor-name: --tab-1; }
+  .tablist [role="tab"]:nth-child(2) { anchor-name: --tab-2; }
+  .tablist [role="tab"]:nth-child(3) { anchor-name: --tab-3; }
+  .tablist [role="tab"]:nth-child(4) { anchor-name: --tab-4; }
+  .tablist [role="tab"]:nth-child(5) { anchor-name: --tab-5; }
+  .tablist [role="tab"]:nth-child(6) { anchor-name: --tab-6; }
+  .tablist [role="tab"]:nth-child(7) { anchor-name: --tab-7; }
+  .tablist[data-anchor="a1"]::before { position-anchor: --tab-a1; }
+  .tablist[data-anchor="a2"]::before { position-anchor: --tab-a2; }
+  .tablist [role="tab"].is-a1 { anchor-name: --tab-a1; }
+  .tablist [role="tab"].is-a2 { anchor-name: --tab-a2; }
+}
+/* 针对不支持 anchor positioning 的浏览器的降级（使用 border-bottom 而非 background） */
+@supports not (position-anchor: auto) {
+  .tablist [role="tab"][aria-selected="true"]::after {
+    content: "";
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 2px;
+    border-bottom: 2.5px solid var(--accent);
+  }
+}
+
+/* 独立 tablist 作用域的通用锚点（每个 .tablist-wrap 自己声明 anchor-scope） */
+.tablist-scope {
+  anchor-scope: --active-tab;
+}
+@supports (position-anchor: auto) {
+  .tablist-scope .tablist::before {
+    position-anchor: --active-tab;
+  }
+  .tablist-scope .tablist [role="tab"][aria-selected="true"] {
+    anchor-name: --active-tab;
+  }
+}
+
+/* ---------------- 第二幕：Bento 核心数据与痛点 ---------------- */
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.metric-card {
+  padding: 24px 22px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px);
+}
+.metric-val {
+  font-family: var(--serif);
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--accent-2);
+  font-variant-numeric: tabular-nums;
+}
+.metric-val small { font-size: 16px; font-weight: 500; margin-left: 4px; color: var(--ink-2); }
+.metric-label { margin-top: 8px; font-size: 14px; font-weight: 600; color: var(--ink); }
+.metric-sub { margin-top: 4px; font-size: 12.5px; color: var(--muted); }
+
+.bento-4 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.glass-card {
+  padding: 24px 26px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  backdrop-filter: blur(18px);
+  transition: border-color 0.28s, transform 0.35s var(--ease-expo);
+}
+.glass-card:hover {
+  border-color: var(--border-hi);
+  transform: translateY(-2px);
+}
+.glass-card h3 {
+  font-family: var(--serif);
+  font-size: 20px;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+.glass-card p {
+  font-size: 14.5px;
+  color: var(--ink-2);
+  line-height: 1.72;
+}
+.badge-line {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--mint);
+  margin-bottom: 10px;
+  letter-spacing: 0.08em;
+}
+
+/* ---------------- 第三幕：分屏叙事（正文） ---------------- */
+.split-showcase {
+  display: grid;
+  grid-template-columns: minmax(310px, 0.72fr) minmax(0, 1.28fr);
+  gap: clamp(24px, 3.6vw, 48px);
+  align-items: center;
+}
+.split-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.step-card {
+  text-align: left;
+  padding: 18px 20px;
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: background-color 0.25s, border-color 0.25s, transform 0.3s var(--ease-expo);
+}
+.step-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+.step-card.is-active {
+  background: rgba(232, 168, 100, 0.11);
+  border-color: rgba(232, 168, 100, 0.44);
+  transform: translateX(4px);
+}
+.step-card h3 {
+  font-family: var(--serif);
+  font-size: 18px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+.step-card p {
+  font-size: 13.8px;
+  color: var(--ink-2);
+  line-height: 1.65;
+}
+
+/* ---------------- 第四~七幕：画布与多视图舞台 ---------------- */
+.showcase-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.stage-caption {
+  margin-top: 14px;
+  padding: 16px 20px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.stage-caption p {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.stage-caption strong { color: var(--accent-2); }
+
+.spec-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.spec-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+.spec-chip {
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: rgba(18, 20, 30, 0.66);
+  border: 1px solid var(--border);
+}
+.spec-chip h4 {
+  font-family: var(--serif);
+  font-size: 15.5px;
+  color: var(--accent-2);
+  margin-bottom: 5px;
+}
+.spec-chip p {
+  font-size: 13px;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+/* TabPanel 结构严格遵循 modern-web-guidance：样式放在内层 .panel-inner */
+.panels-stack {
+  display: grid;
+}
+.panels-stack > [role="tabpanel"] {
+  grid-area: 1 / 1;
+}
+.panel-inner {
+  width: 100%;
+}
+
+/* ---------------- 第八幕：写作分析 9 视角控制台 ---------------- */
+.analytics-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(300px, 0.82fr);
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 28px;
+}
+/* 移除重复 .matrix-2x2 声明，已在上方统一限定 width */
+.mini-shot-card {
+  padding: 10px;
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  transition: border-color 0.25s, transform 0.3s var(--ease-expo);
+}
+.mini-shot-card:hover {
+  border-color: var(--border-hi);
+  transform: translateY(-2px);
+}
+.mini-shot-frame {
+  border-radius: 10px;
+  overflow: hidden;
+  aspect-ratio: 1754 / 1150;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.mini-shot-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 4px 2px;
+}
+.mini-shot-meta strong {
+  font-family: var(--serif);
+  font-size: 15px;
+  color: var(--ink);
+}
+.mini-shot-meta span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ---------------- 第九幕：全局工程力 & 正在更新预告 ---------------- */
+.cap-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.upcoming-card {
+  position: relative;
+  padding: 28px 32px;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(155deg, rgba(28, 30, 46, 0.78), rgba(16, 18, 28, 0.76));
+  border: 1px dashed rgba(232, 168, 100, 0.34);
+  backdrop-filter: blur(20px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.upcoming-main {
+  max-width: 72ch;
+}
+.upcoming-card h3 {
+  font-family: var(--serif);
+  font-size: 22px;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.upcoming-card p {
+  font-size: 14.5px;
+  line-height: 1.7;
+  color: var(--ink-2);
+}
+.upcoming-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--accent-soft);
+  background: rgba(232, 168, 100, 0.12);
+  border: 1px solid rgba(232, 168, 100, 0.28);
+}
+.status-pill i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+.status-note {
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ---------------- 结尾 CTA ---------------- */
+.finale {
+  text-align: center;
+  padding-block: 68px 96px;
+  margin-top: 26px;
+  border-top: 1px solid var(--border);
+}
+.finale h2 {
+  font-family: var(--serif);
+  font-size: clamp(2.1rem, 3.6vw, 3.1rem);
+  margin-bottom: 12px;
+}
+.finale p {
+  color: var(--ink-2);
+  max-width: 72ch;
+  margin: 0 auto 26px;
+}
+
+/* ---------------- 原生 <dialog> 灯箱 ---------------- */
+dialog#lightbox {
+  border: 0;
+  padding: 0;
+  margin: auto;
+  width: min(1420px, calc(100vw - 40px));
+  max-height: calc(100vh - 40px);
+  background: rgba(14, 16, 24, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  color: var(--ink);
+  box-shadow: 0 36px 100px rgba(0, 0, 0, 0.78);
+  overflow: hidden;
+  opacity: 0;
+  transition: opacity 0.28s var(--ease-expo), transform 0.34s var(--ease-expo), display, overlay;
+  transition-behavior: allow-discrete;
+}
+dialog#lightbox:modal {
+  overscroll-behavior: contain;
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog#lightbox { transform: scale(0.95); }
+}
+dialog#lightbox::backdrop {
+  background-color: rgba(4, 6, 10, 0);
+  backdrop-filter: blur(0px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  transition: background-color 0.28s ease, backdrop-filter 0.28s ease, display, overlay;
+  transition-behavior: allow-discrete;
+}
+:is(dialog#lightbox[open]):where(:not([data-closing])) {
+  opacity: 1;
+  @starting-style { opacity: 0; }
+  @media (prefers-reduced-motion: no-preference) {
+    transform: scale(1);
+    @starting-style { transform: scale(0.95); }
+  }
+}
+:is(dialog#lightbox[open]):where(:not([data-closing]))::backdrop {
+  background-color: rgba(4, 6, 10, 0.76);
+  backdrop-filter: blur(8px);
+  @starting-style {
+    background-color: rgba(4, 6, 10, 0);
+    backdrop-filter: blur(0px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  dialog#lightbox,
+  dialog#lightbox::backdrop {
+    transition-duration: 0.1s;
+  }
+}
+.lb-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+.lb-head h3 {
+  font-family: var(--serif);
+  font-size: 16px;
+  color: var(--ink);
+}
+.lb-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+  font-size: 18px;
+}
+.lb-close:hover { background: rgba(255, 255, 255, 0.16); }
+.lb-body {
+  padding: 14px;
+  display: grid;
+  place-items: center;
+  max-height: calc(100vh - 140px);
+}
+.lb-body img {
+  max-height: calc(100vh - 175px);
+  width: auto;
+  border-radius: 10px;
+}
+.lb-cap {
+  padding: 0 18px 14px;
+  font-size: 13px;
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* ---------------- 响应式断点 ---------------- */
+@media (max-width: 1120px) {
+  .hero-act, .split-showcase, .analytics-top { grid-template-columns: 1fr; }
+  .spec-grid-4, .metrics-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cap-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .upcoming-status { align-items: flex-start; }
+  .top-nav { display: none; }
+}
+@media (max-width: 720px) {
+  .act { width: calc(100% - 28px); }
+  .bento-4, .spec-grid-4, .spec-grid-3, .metrics-strip, .matrix-2x2, .cap-grid { grid-template-columns: 1fr; }
+  .scene-rail, .stage-hud { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- 背景：真实 WebGL 幻流着色器 + CSS 降级底图 -->
+<div class="backdrop-layer" aria-hidden="true">
+  <canvas id="flow-canvas"></canvas>
+  <div class="backdrop-vignette"></div>
+</div>
+
+<!-- 顶部玻璃导航 -->
+<header class="site-header" id="site-header">
+  <a class="brand" href="#act-1">
+    <span class="brand-mark" aria-hidden="true">工</span>
+    <span class="brand-text">小说工坊 <small>Novel Studio</small></span>
+  </a>
+
+  <nav class="top-nav" aria-label="章节导航">
+    <a href="#act-1">书架</a>
+    <a href="#act-2">底座</a>
+    <a href="#act-3">正文</a>
+    <a href="#act-4">大纲</a>
+    <a href="#act-5">设定</a>
+    <a href="#act-6">人物</a>
+    <a href="#act-7">灵感</a>
+    <a href="#act-8">写作分析</a>
+    <a href="#act-9">工程与预告</a>
+  </nav>
+
+  <div class="header-actions">
+    <button type="button" class="pill-btn" id="flow-toggle">暂停流场</button>
+    <button type="button" class="pill-btn" id="clean-toggle" title="快捷键 H">纯净录屏 (H)</button>
+    <span class="ver-chip">v1.2.6</span>
+  </div>
+</header>
+
+<!-- 右侧分镜圆点轨 -->
+<aside class="scene-rail" aria-label="分镜跳转">
+  <button type="button" class="scene-dot" data-target="#act-1" data-label="01 · 书架与幻流"></button>
+  <button type="button" class="scene-dot" data-target="#act-2" data-label="02 · 工程底座"></button>
+  <button type="button" class="scene-dot" data-target="#act-3" data-label="03 · 正文写作"></button>
+  <button type="button" class="scene-dot" data-target="#act-4" data-label="04 · 分层大纲"></button>
+  <button type="button" class="scene-dot" data-target="#act-5" data-label="05 · 世界设定"></button>
+  <button type="button" class="scene-dot" data-target="#act-6" data-label="06 · 人物剧场"></button>
+  <button type="button" class="scene-dot" data-target="#act-7" data-label="07 · 灵感拼板"></button>
+  <button type="button" class="scene-dot" data-target="#act-8" data-label="08 · 写作分析"></button>
+  <button type="button" class="scene-dot" data-target="#act-9" data-label="09 · 工程与预告"></button>
+</aside>
+
+<!-- 底部快捷键提示条 -->
+<div class="stage-hud" id="stage-hud">
+  <span><kbd>↑</kbd><kbd>↓</kbd> 丝滑切幕</span>
+  <span><kbd>←</kbd><kbd>→</kbd> 切换当前幕视图</span>
+  <span><kbd>H</kbd> 隐藏控件纯净录屏</span>
+  <span><kbd>F</kbd> 全屏</span>
+</div>
+
+<main>
+
+  <!-- ======================= 第一幕：Hero 书架与幻流 ======================= -->
+  <section class="act hero-act" id="act-1" data-palette="amber">
+    <div class="hero-copy reveal">
+      <div class="kicker"><i></i>WINDOWS X64 · 本地优先 · 幻流桌面版</div>
+      <h1>把长篇故事<br />写在一处</h1>
+      <p class="hero-lead">
+        集「正文 / 大纲 / 设定 / 人物 / 灵感」与全视角写作分析于同一个本地工作台。
+        输入即存，永不丢稿，创作数据始终留在你自己的硬盘里。
+      </p>
+      <div class="hero-tags">
+        <span>WebGL 幻流流场</span>
+        <span>分层自由画布</span>
+        <span>3D 设定关系星系</span>
+        <span>人物关系剧场</span>
+        <span>九视图写作分析</span>
+        <span>多窗口实体锁</span>
+      </div>
+      <div class="hero-cta">
+        <a class="btn-primary" href="#act-3">逐幕浏览产品特性 ↓</a>
+        <a class="btn-ghost" href="#act-8">直达写作分析控制台</a>
+      </div>
+    </div>
+
+    <div class="hero-stage-wrap reveal">
+      <div class="hero-stage-bar">
+        <span>书架主舞台 · 3D 轮播书封与流场配色切换</span>
+        <div class="tablist-scope">
+          <div class="tablist" role="tablist" aria-label="书架流场配色对比" data-group="hero">
+            <button type="button" role="tab" id="tab-hero-1" aria-selected="true" data-slide="0" data-palette="amber">暖琥珀 · 幻流</button>
+            <button type="button" role="tab" id="tab-hero-2" aria-selected="false" data-slide="1" data-palette="plum">暮紫铜 · 配色切换</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage-frame hero-tilt">
+        <div class="stage-screen">
+          <div class="crossfade-stage" data-stage="hero">
+            <div class="crossfade-slide is-active" data-index="0">
+              <button type="button" class="zoom-trigger" data-zoom="项目展示图例/书架2.png" data-title="幻流书架 · 暖琥珀流场" data-desc="顶部胶囊切换书架与五大创作模块，中央 3D 轮播生成式书封《星尘旅人》，底部票根记录上次读到的章节与进度。">
+                <img src="项目展示图例/书架2.png" alt="幻流书架暖琥珀配色" fetchpriority="high" />
+                <span class="zoom-badge">点击放大检视</span>
+              </button>
+            </div>
+            <div class="crossfade-slide" data-index="1">
+              <button type="button" class="zoom-trigger" data-zoom="项目展示图例/书架.png" data-title="书架流场切换 · 暮紫铜配色" data-desc="WebGL 流场支持跟随封面自动取色或自定义双色（早期开发标 LATENT 现已统一为「幻流」），顶部支持按创作状态筛选全部书目。">
+                <img src="项目展示图例/书架.png" alt="书架流场配色切换" />
+                <span class="zoom-badge">点击放大检视</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 第二幕：工程底座与痛点解法 ======================= -->
+  <section class="act scroll-lift" id="act-2" data-palette="amber">
+    <div class="act-head center reveal">
+      <div class="kicker"><i></i>02 · CORE ARCHITECTURE</div>
+      <h2>针对长篇创作的四个断裂，给出确定性工程解法</h2>
+      <p>不靠云端锁定，不靠手动存盘记忆——让结构、资料、灵光与版本在本地长久相扣。</p>
+    </div>
+
+    <div class="metrics-strip reveal">
+      <div class="metric-card">
+        <div class="metric-val" data-count="6">6</div>
+        <div class="metric-label">核心工作区视图</div>
+        <div class="metric-sub">书架 · 正文 · 大纲 · 设定 · 人物 · 灵感</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" data-count="30" data-suffix=" 份">30<small>份</small></div>
+        <div class="metric-label">章节自动版本快照</div>
+        <div class="metric-sub">1s 防抖 + 30s 兜底 + 失焦切章关窗强存</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" data-count="10" data-suffix="+">10<small>+</small></div>
+        <div class="metric-label">导入导出与备份形态</div>
+        <div class="metric-sub">TXT / MD / DOCX / PDF / EPUB / ZIP / JSON</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-val" data-count="0">0</div>
+        <div class="metric-label">默认联网上传</div>
+        <div class="metric-sub">作品留在本机，密钥仅存系统加密凭据</div>
+      </div>
+    </div>
+
+    <div class="bento-4 reveal">
+      <article class="glass-card">
+        <span class="badge-line">01 / STRUCTURE</span>
+        <h3>大纲不再是静态大纲文档</h3>
+        <p>分层自由画布与缩进文本视图同源切换：7 类模块自由摆位，4 类语义连线严格锁定端口并以 Hanan 稀疏网格 A* 自动绕障，容器可下钻次级画布或就地展开。</p>
+      </article>
+      <article class="glass-card">
+        <span class="badge-line">02 / WORLD &amp; CAST</span>
+        <h3>人物与设定立体互联</h3>
+        <p>设定采用无限嵌套幕布树 + 三栏阅读视图 + 3D 轨道关系星系；人物拥有多篇带标题小传卷宗与拖线关系剧场，并可通过 <code>[[关系链接]]</code> 与正文互相引用。</p>
+      </article>
+      <article class="glass-card">
+        <span class="badge-line">03 / INSPIRATION</span>
+        <h3>灵光随记随时落进结构</h3>
+        <p>灵感收敛为按标签分组的单一拼板，拖动图钉即可调整顺序或跨栏归组；在右侧「片段整理」抽屉一键转为正式章节或世界观设定，同时保留原灵感追溯。</p>
+      </article>
+      <article class="glass-card">
+        <span class="badge-line">04 / LOCAL ENGINE</span>
+        <h3>独立拆窗，双写锁保护数据</h3>
+        <p>正文、大纲、设定、人物、灵感与写作分析均支持拆为独立窗口协作；条目级与模块级实体锁严格防止多窗双写，30 份版本快照与全库备份保障数据主权。</p>
+      </article>
+    </div>
+  </section>
+
+  <!-- ======================= 第三幕：正文写作台 ======================= -->
+  <section class="act scroll-lift" id="act-3" data-palette="copper">
+    <div class="act-head reveal">
+      <div class="kicker"><i></i>03 · MANUSCRIPT WORKSPACE</div>
+      <h2>正文 · 三栏协同稿面，亦可一秒进入纯净专注</h2>
+      <p>左侧卷章目录、中央 TipTap 富文本稿纸、右侧五项随章联动批注栏；收起两侧栏即化为安静宽幅写稿现场。</p>
+    </div>
+
+    <div class="split-showcase reveal">
+      <div class="split-steps" data-group="writing">
+        <button type="button" class="step-card is-active" data-slide="0">
+          <h3>① 三栏联动与多维随章批注</h3>
+          <p>卷—章两级树支持搜索、★ 书签与拖拽排序；顶部实时显示目标字数进度条与格式工具栏（支持 <code>H1–H3</code> 标题与批注双链）；右栏自动汇总本章批注、本章大纲速记、出场人物识别、插图与信息。</p>
+        </button>
+        <button type="button" class="step-card" data-slide="1">
+          <h3>② 专注写稿视角与竖轨快捷标签</h3>
+          <p>点击左右分隔手柄即可将目录与批注栏收起为极窄竖轨（「批注」「章节」），稿面在屏幕中央铺开，各栏宽度与折叠状态按布局持久化保存；另内置巨排章号只读「阅读模式」。</p>
+        </button>
+        <div class="glass-card" style="padding: 16px 20px;">
+          <span class="badge-line" style="margin-bottom:4px;">COEXISTENCE</span>
+          <p style="font-size:13.3px;">正文<strong>批注（彩色实线下划线）</strong>与<strong>关系链接（点状下划线 + 可拖动钉住预览窗）</strong>可叠加在同一段文字上互不覆盖，右键选区就地呼出 Word 式快捷操作栏。</p>
+        </div>
+      </div>
+
+      <div class="stage-frame">
+        <div class="stage-screen">
+          <div class="crossfade-stage" data-stage="writing">
+            <div class="crossfade-slide is-active" data-index="0">
+              <button type="button" class="zoom-trigger" data-zoom="项目展示图例/正文.png" data-title="正文三栏工作台" data-desc="卷章目录、TipTap 稿纸与右侧「批注栏」五项联动；选中文字可加批注或建立关系双链。">
+                <img src="项目展示图例/正文.png" alt="正文三栏工作台" loading="lazy" />
+                <span class="zoom-badge">点击放大检视</span>
+              </button>
+            </div>
+            <div class="crossfade-slide" data-index="1">
+              <button type="button" class="zoom-trigger" data-zoom="项目展示图例/正文2.png" data-title="正文专注写稿视角" data-desc="收起两侧栏后，右侧边缘仅保留竖向「批注」「章节」折叠标签，提供无干扰的长段写作视野。">
+                <img src="项目展示图例/正文2.png" alt="正文专注写稿视角" loading="lazy" />
+                <span class="zoom-badge">点击放大检视</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 第四幕：大纲分层自由画布 ======================= -->
+  <section class="act scroll-lift" id="act-4" data-palette="plum">
+    <div class="act-head reveal">
+      <div class="kicker"><i></i>04 · LAYERED OUTLINE CANVAS</div>
+      <h2>大纲 · 可逐层下钻的自由画布，与文本大纲同源</h2>
+      <p>根层只呈现直接子节点，复杂故事线装进容器；既能「进入容器」在次级画布精雕细琢，也能「就地展开」查看容器详情。</p>
+    </div>
+
+    <div class="showcase-toolbar toolbar-centered reveal">
+      <div class="tablist-scope">
+        <div class="tablist" role="tablist" aria-label="大纲界面视图" data-group="outline">
+          <button type="button" role="tab" aria-selected="true" data-slide="0">全书分层画布</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="1">容器卡与右侧容器详情</button>
+        </div>
+      </div>
+      <span style="font-size:13px;color:var(--muted);">快捷键 <kbd>Ctrl</kbd>+<kbd>K</kbd> 搜索全部层级并自动进入父层定位</span>
+    </div>
+
+    <div class="stage-frame stage-centered reveal">
+      <div class="stage-screen">
+        <div class="crossfade-stage" data-stage="outline">
+          <div class="crossfade-slide is-active" data-index="0">
+            <button type="button" class="zoom-trigger" data-zoom="项目展示图例/大纲.png" data-title="大纲分层自由画布" data-desc="左侧故事结构树实时同步；底部七类模块工具条与缩放总览；画布内四形状事件卡、便签、引用卡与容器通过四类语义连线自动绕障串联。">
+              <img src="项目展示图例/大纲.png" alt="大纲分层自由画布" loading="lazy" />
+              <span class="zoom-badge">点击放大检视</span>
+            </button>
+          </div>
+          <div class="crossfade-slide" data-index="1">
+            <button type="button" class="zoom-trigger" data-zoom="项目展示图例/大纲2.png" data-title="大纲容器卡与容器详情面板" data-desc="容器支持「就地展开 ＋」为迷你卡或「进入容器 ↗」切入次级画布；右侧详情面板汇总摘要、进度、关联章节与故事关系。">
+              <img src="项目展示图例/大纲2.png" alt="大纲容器卡与容器详情面板" loading="lazy" />
+              <span class="zoom-badge">点击放大检视</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid-4 reveal">
+      <div class="spec-chip">
+        <h4>七类模块与落点预览</h4>
+        <p>事件（4 形状 / 4 状态）、便签、引用、文本框、章节锚点、卷、容器；新建锚点或卷先跟随指针预览落位。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>严格端口 + Hanan A*</h4>
+        <p>建线即锁定两端接口，挪动节点永不漂移；途经模块自动求全局最短路径绕行。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>连接点（线连到线）</h4>
+        <p>右键连线创建双向连接点，支持线连线、左键拖线塑形、双击复原与浮层自动避线。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>关系投影与文本双视图</h4>
+        <p>收起容器自动投影跨层关系；右上角一键切入同源缩进文本大纲。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 第五幕：设定三视图与关系星系 ======================= -->
+  <section class="act scroll-lift" id="act-5" data-palette="cosmos">
+    <div class="act-head reveal">
+      <div class="kicker"><i></i>05 · WORLD TREE &amp; RELATION GALAXY</div>
+      <h2>设定 · 一棵无限节点树，三种看世界的方式</h2>
+      <p>从高速敲入的「节点大纲」、沉浸翻阅的「三栏阅读视图」，到 3D 轨道交互的「关系星系」，共用同一份世界观底库。</p>
+    </div>
+
+    <div class="showcase-toolbar toolbar-centered reveal">
+      <div class="tablist-scope">
+        <div class="tablist" role="tablist" aria-label="设定三视图切换" data-group="lore">
+          <button type="button" role="tab" aria-selected="true" data-slide="0" data-palette="plum">01 · 节点大纲（幕布树）</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="1" data-palette="plum">02 · 三栏阅读视图</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="2" data-palette="cosmos">03 · 视觉导图（关系星系）</button>
+        </div>
+      </div>
+      <span style="font-size:13px;color:var(--muted);">支持设定↔设定、设定↔人物条目级双向关联</span>
+    </div>
+
+    <div class="stage-frame stage-centered reveal">
+      <div class="stage-screen">
+        <div class="crossfade-stage" data-stage="lore">
+          <div class="crossfade-slide is-active" data-index="0">
+            <button type="button" class="zoom-trigger" data-zoom="项目展示图例/设定-节点.png" data-title="设定 · 节点大纲视图" data-desc="无限嵌套平权节点树，顶部集成内联格式工具栏，支持 MD/TXT 标题层级导入与条目双链，底部实时显示面包屑路径。">
+              <img src="项目展示图例/设定-节点.png" alt="设定节点大纲视图" loading="lazy" />
+              <span class="zoom-badge">点击放大检视</span>
+            </button>
+          </div>
+          <div class="crossfade-slide" data-index="1">
+            <button type="button" class="zoom-trigger" data-zoom="项目展示图例/设定-阅读.png" data-title="设定 · 三栏阅读视图" data-desc="左栏全局节点目录、中栏同级条目预览卡（标签筛选 + 关联计数）、右栏选中条目详读与编号子条目下钻。">
+              <img src="项目展示图例/设定-阅读.png" alt="设定三栏阅读视图" loading="lazy" />
+              <span class="zoom-badge">点击放大检视</span>
+            </button>
+          </div>
+          <div class="crossfade-slide" data-index="2">
+            <button type="button" class="zoom-trigger" data-zoom="项目展示图例/设定-视觉.png" data-title="设定 · 视觉导图（关系星系）" data-desc="以作品为核心的多圈同心轨道星系，区分条目织网、集内关系与跨集关系；支持旋转平移、独立轨道拖拽并轨及公转/自转调速。">
+              <img src="项目展示图例/设定-视觉.png" alt="设定关系星系视图" loading="lazy" />
+              <span class="zoom-badge">点击放大检视</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid-3 reveal">
+      <div class="spec-chip">
+        <h4>节点平权 · 三区拖拽排序</h4>
+        <p>摒弃「文件夹 / 条目」二分，任意节点自由嵌套与拖拽；支持快照撤销与设定详情页图谱。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>轨道独立拖拽与靠近并轨</h4>
+        <p>关系星系内单条轨道独立拖动、靠近自动并轨共用轨道；拖动圆边调节星体大小与轨道间距。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>星体转速面板与持久化</h4>
+        <p>右键星体分别调节公转与自转速度，所有自定义星系布局按作品保存在本机。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 第六幕：人物卷宗与关系剧场 ======================= -->
+  <section class="act scroll-lift" id="act-6" data-palette="copper">
+    <div class="act-head reveal">
+      <div class="kicker"><i></i>06 · CHARACTER DOSSIER &amp; THEATER</div>
+      <h2>人物 · 多篇小传卷宗，与拖线即连的关系剧场</h2>
+      <p>档案区把多篇小传、自定义字段与「故事坐标」收进同一视线；切入关系剧场，拖线即建立或改写人物纠葛。</p>
+    </div>
+
+    <div class="showcase-toolbar toolbar-centered reveal">
+      <div class="tablist-scope">
+        <div class="tablist" role="tablist" aria-label="人物视图切换" data-group="chars">
+          <button type="button" role="tab" aria-selected="true" data-slide="0">人物卷宗 · 浏览与故事坐标</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="1">卷宗编辑 · 多篇带标题小传</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="2">关系剧场 · 拖线关系图</button>
+        </div>
+      </div>
+      <span style="font-size:13px;color:var(--muted);">拖线到空白人物建关系，拖线落到既有边直接改写</span>
+    </div>
+
+    <div class="stage-frame stage-centered reveal">
+      <div class="stage-screen">
+        <div class="crossfade-stage" data-stage="chars">
+          <div class="crossfade-slide is-active" data-index="0">
+            <button type="button" class="zoom-trigger" data-zoom="项目展示图例/人物.png" data-title="人物卷宗浏览态" data-desc="左栏按角色/标签双重筛选；中栏呈现头像、角色定位、人物小传、自定义字段（外貌/性格）与关联关系；右栏「故事坐标」迷你图实时同步。">
+              <img src="项目展示图例/人物.png" alt="人物卷宗浏览态" loading="lazy" />
+              <span class="zoom-badge">点击放大检视</span>
+            </button>
+          </div>
+          <div class="crossfade-slide" data-index="1">
+            <button type="button" class="zoom-trigger" data-zoom="项目展示图例/人物3.png" data-title="人物卷宗编辑态 · 多篇小传" data-desc="支持更换头像、以 / 分隔输入多角色定位，并通过「＋ 添加小传」为人物维护多篇独立标题的小传，全文均可被双链与知识库检索。">
+              <img src="项目展示图例/人物3.png" alt="人物卷宗编辑态" loading="lazy" />
+              <span class="zoom-badge">点击放大检视</span>
+            </button>
+          </div>
+          <div class="crossfade-slide" data-index="2">
+            <button type="button" class="zoom-trigger" data-zoom="项目展示图例/人物2.png" data-title="人物关系剧场" data-desc="支持「一度关系 / 全部人物」聚焦切换、圆形与网格一键排布、孤岛人物提醒，画布连线与卷宗列表双向同步。">
+              <img src="项目展示图例/人物2.png" alt="人物关系剧场" loading="lazy" />
+              <span class="zoom-badge">点击放大检视</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="spec-grid-3 reveal">
+      <div class="spec-chip">
+        <h4>多篇小传与自定义字段</h4>
+        <p>支持阶段经历/秘密档案多篇小传，默认预置外貌与性格字段并可自由增删。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>一度关系聚焦与孤岛提醒</h4>
+        <p>选定主角即刻只看其一度关系圈；无连线的孤岛角色独立提示，避免写漏人物。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>一键发送为大纲引用卡</h4>
+        <p>关系剧场右键人物节点直接送入大纲画布参与剧情推演，正文中出场人物自动识别。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 第七幕：灵感单一拼板 ======================= -->
+  <section class="act scroll-lift" id="act-7" data-palette="amber">
+    <div class="act-head reveal">
+      <div class="kicker"><i></i>07 · SNIPPET PINBOARD</div>
+      <h2>灵感 · 单一标签拼板，图钉一拖即可归类转化</h2>
+      <p>v1.2.6 重构为按标签分组的单一拼板工作台，记录、整理、排序到落成正式章节或设定一气呵成。</p>
+    </div>
+
+    <div class="stage-frame stage-centered reveal">
+      <div class="stage-screen">
+        <button type="button" class="zoom-trigger" data-zoom="项目展示图例/灵感.png" data-title="灵感拼板工作台" data-desc="左栏统计全部/未标记/有关联条目并调节排序、缩放比例与卡片大小；中栏按标签分组陈列卡片，拖动图钉跨栏换组；右栏片段整理抽屉一键转章节或设定。">
+          <img src="项目展示图例/灵感.png" alt="灵感拼板工作台" loading="lazy" />
+          <span class="zoom-badge">点击放大检视</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="spec-grid-3 reveal">
+      <div class="spec-chip">
+        <h4>① 拖动图钉排序与跨组</h4>
+        <p>卡片右上角图钉可直接拖拽调整手动顺序或跨标签栏归类，支持最新 / 最早 / 手动排序持久化。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>② 卡片大小 80–125 &amp; 6 色</h4>
+        <p>提供默认、玫瑰、琥珀、苔绿、雾蓝、藤紫六款配色，缩放比例与卡片尺寸按会话记忆。</p>
+      </div>
+      <div class="spec-chip">
+        <h4>③ 一键转为章节或设定</h4>
+        <p>右侧「片段整理」补全正文、标签与跨模块关联后，一键转入正文或设定树并保留原灵感。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 第八幕：写作分析九视角控制台 ======================= -->
+  <section class="act scroll-lift" id="act-8" data-palette="aurora">
+    <div class="act-head reveal">
+      <div class="kicker"><i></i>08 · LOCAL WRITING ANALYTICS</div>
+      <h2>写作分析 · 九大视角的数据交响</h2>
+      <p>从顶栏一键呼出的「写作速览」到独立多标签分析台，完全基于本机写作日志与版本快照实时演算，零联网即可复盘每一天的创作节奏。</p>
+    </div>
+
+    <!-- 上层：速览浮窗特写 + 导览说明 -->
+    <div class="analytics-top reveal">
+      <div class="stage-frame">
+        <div class="stage-screen">
+          <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-速览.png" data-title="写作速览浮窗" data-desc="在书架或任意作品顶栏点击统计按钮即时呼出：显示当前正文字数、正式章节数与近 7 日净增，点选柱状图日期可查看当日记录或直达完整分析。">
+            <img src="项目展示图例/分析-速览.png" alt="写作速览浮窗" loading="lazy" />
+            <span class="zoom-badge">点击放大检视</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div class="glass-card">
+          <span class="badge-line">QUICK PEEK · 写作速览</span>
+          <h3>不切页面，抬手看近 7 日走势</h3>
+          <p>支持在浮窗内切换「全部作品 / 单部作品」，点选近 7 日任意柱条查看当日净增与保存次数，再一键「对照作品」或「查看完整分析」。</p>
+        </div>
+        <div class="glass-card">
+          <span class="badge-line">FULL WORKSPACE · 六大分析板块</span>
+          <h3>总览 · 正文 · 大纲 · 设定 · 人物 · 灵感</h3>
+          <p>完整分析台采用幻流 WebGL 背板并支持拆为独立窗口驻留副屏；在下方控制台点击标签，检视全部 8 个深度分析子视图。</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 下层：5 标签交互切换舞台（涵盖总览历程/对照、正文结构/改稿、四要素 2x2 剖析） -->
+    <div class="showcase-toolbar toolbar-centered reveal">
+      <div class="tablist-scope">
+        <div class="tablist" role="tablist" aria-label="写作分析完整视图切换" data-group="analytics">
+          <button type="button" role="tab" aria-selected="true" data-slide="0">总览 · 创作历程</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="1">总览 · 作品对照</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="2">正文 · 章节结构</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="3">正文 · 改稿轨迹</button>
+          <button type="button" role="tab" aria-selected="false" data-slide="4">四大要素剖析（大纲 / 设定 / 人物 / 灵感）</button>
+        </div>
+      </div>
+      <span style="font-size:13px;color:var(--muted);">支持 7 / 30 / 90 日及自选起止日期</span>
+    </div>
+
+    <div class="panels-stack reveal" data-panels="analytics">
+      <div role="tabpanel" data-panel="0" tabindex="0">
+        <div class="panel-inner">
+          <div class="stage-frame stage-centered">
+            <div class="stage-screen">
+              <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-总览-历程.png" data-title="总览 · 创作历程" data-desc="展示区间累计净增曲线、活跃天数、当前正文存量、活跃日历热力格，以及右侧 DAY INSPECTOR 联动展示选中日期的涉及章节与新增灵感。">
+                <img src="项目展示图例/分析-总览-历程.png" alt="写作分析总览创作历程" loading="lazy" />
+                <span class="zoom-badge">点击放大检视</span>
+              </button>
+            </div>
+          </div>
+          <div class="stage-caption" style="width:min(940px,100%);margin-inline:auto;">
+            <p><strong>创作历程：</strong>支持鼠标在图表上拖选日期范围或手动设定起止区间；点选日历热力格，右侧即时展开当日保存的每一章净增与留存版本。</p>
+          </div>
+        </div>
+      </div>
+
+      <div role="tabpanel" data-panel="1" hidden>
+        <div class="panel-inner">
+          <div class="stage-frame stage-centered">
+            <div class="stage-screen">
+              <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-总览-对照.png" data-title="总览 · 作品对照" data-desc="在统一日期范围与纵轴刻度下同屏对比两部作品的每日净增，下方作品索引卡片展示各书存量字数与完成进度。">
+                <img src="项目展示图例/分析-总览-对照.png" alt="写作分析总览作品对照" loading="lazy" />
+                <span class="zoom-badge">点击放大检视</span>
+              </button>
+            </div>
+          </div>
+          <div class="stage-caption" style="width:min(940px,100%);margin-inline:auto;">
+            <p><strong>作品对照：</strong>两部作品共用时间与刻度基准，写作走势高下立现；点击任意作品卡片上的「深入 →」即可直接钻取该作分析。</p>
+          </div>
+        </div>
+      </div>
+
+      <div role="tabpanel" data-panel="2" hidden>
+        <div class="panel-inner">
+          <div class="stage-frame stage-centered">
+            <div class="stage-screen">
+              <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-正文-结构.png" data-title="稿件案卷 · 章节字数分布" data-desc="左栏分卷目录带完成度进度条；中央按卷列出各章字数条与全部章节中位数（156 字）；右栏展示选中章节的保留版本列表。">
+                <img src="项目展示图例/分析-正文-结构.png" alt="写作分析正文章节结构" loading="lazy" />
+                <span class="zoom-badge">点击放大检视</span>
+              </button>
+            </div>
+          </div>
+          <div class="stage-caption" style="width:min(940px,100%);margin-inline:auto;">
+            <p><strong>章节结构：</strong>支持按「全部 / 已完成 / 待修改 / 草稿」状态筛选与分卷下钻，快速发现偏短或待修章节。</p>
+          </div>
+        </div>
+      </div>
+
+      <div role="tabpanel" data-panel="3" hidden>
+        <div class="panel-inner">
+          <div class="stage-frame stage-centered">
+            <div class="stage-screen">
+              <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-正文-改稿.png" data-title="稿件案卷 · 章节改稿轨迹" data-desc="以章节 × 日期热力矩阵直观标注每日净增（+）、净减（−）、净零写入（=）与留存版本（◆）；点选任意格在右栏溯源当日保存明细。">
+                <img src="项目展示图例/分析-正文-改稿.png" alt="写作分析正文改稿轨迹" loading="lazy" />
+                <span class="zoom-badge">点击放大检视</span>
+              </button>
+            </div>
+          </div>
+          <div class="stage-caption" style="width:min(940px,100%);margin-inline:auto;">
+            <p><strong>改稿轨迹：</strong>支持方向键与横向滚动遍历多日创作历史，点击有版本标记（<code>◆</code>）的格子可直接在右栏展开历史留存内容。</p>
+          </div>
+        </div>
+      </div>
+
+      <div role="tabpanel" data-panel="4" hidden>
+        <div class="panel-inner">
+          <div class="matrix-2x2">
+            <article class="mini-shot-card">
+              <div class="mini-shot-frame">
+                <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-大纲.png" data-title="大纲分析" data-desc="统计事件总数与已完成数，按故事容器展示待写 / 进行中 / 已完成 / 待修改四态比例条，点击容器在右侧列出事件明细。">
+                  <img src="项目展示图例/分析-大纲.png" alt="大纲分析" loading="lazy" />
+                  <span class="zoom-badge">放大</span>
+                </button>
+              </div>
+              <div class="mini-shot-meta">
+                <strong>大纲分析</strong>
+                <span>容器四态进度 · 事件明细</span>
+              </div>
+            </article>
+
+            <article class="mini-shot-card">
+              <div class="mini-shot-frame">
+                <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-设定.png" data-title="设定分析" data-desc="汇总根分支、设定节点、带标签节点与手工关系数，点击任意设定分支在右侧列出其完整子树目录。">
+                  <img src="项目展示图例/分析-设定.png" alt="设定分析" loading="lazy" />
+                  <span class="zoom-badge">放大</span>
+                </button>
+              </div>
+              <div class="mini-shot-meta">
+                <strong>设定分析</strong>
+                <span>根分支规模 · 子树目录</span>
+              </div>
+            </article>
+
+            <article class="mini-shot-card">
+              <div class="mini-shot-frame">
+                <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-人物.png" data-title="人物分析" data-desc="按角色定位分组并统计未建立关系人数，下方人物关系网络支持点击节点高亮一度连线并在右侧展示全部既有关系。">
+                  <img src="项目展示图例/分析-人物.png" alt="人物分析" loading="lazy" />
+                  <span class="zoom-badge">放大</span>
+                </button>
+              </div>
+              <div class="mini-shot-meta">
+                <strong>人物分析</strong>
+                <span>角色分组 · 一度关系高亮</span>
+              </div>
+            </article>
+
+            <article class="mini-shot-card">
+              <div class="mini-shot-frame">
+                <button type="button" class="zoom-trigger" data-zoom="项目展示图例/分析-灵感.png" data-title="灵感分析" data-desc="统计当前灵感总数、已标记比例与标签分布条，下方按日期列出最近新增灵感，点击条目在右侧预览正文。">
+                  <img src="项目展示图例/分析-灵感.png" alt="灵感分析" loading="lazy" />
+                  <span class="zoom-badge">放大</span>
+                </button>
+              </div>
+              <div class="mini-shot-meta">
+                <strong>灵感分析</strong>
+                <span>标签分布 · 最近新增检索</span>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= 第九幕：全局工程底座 & 正在更新预告 & 落幕 ======================= -->
+  <section class="act scroll-lift" id="act-9" data-palette="twilight">
+    <div class="act-head center reveal">
+      <div class="kicker"><i></i>09 · ENGINEERING SUITE &amp; ROADMAP</div>
+      <h2>跨窗口实体锁 · 全生命周期工具链 · 持续进化中</h2>
+      <p>从多窗口防双写保护、导入导出到应用内安全更新，每一处底层细节都为长篇稳定性而设计。</p>
+    </div>
+
+    <div class="cap-grid reveal">
+      <div class="glass-card">
+        <h3>独立拆窗 + 实体锁</h3>
+        <p>正文、大纲、人物、设定、灵感与写作分析均支持拆为独立窗口协作；条目级与模块级实体锁严格防止多窗双写覆盖。</p>
+      </div>
+      <div class="glass-card">
+        <h3>6 类导入 · 3 类智能导出</h3>
+        <p>TXT / MD / DOCX / PDF / EPUB / 图片导入前先预览分章；导出支持 TXT / MD / Word (<code>.docx</code>)，超阈值按卷打包 <code>.zip</code>。</p>
+      </div>
+      <div class="glass-card">
+        <h3>存储迁移 · 更新 · DSH 同步</h3>
+        <p>支持一键迁移作品库存储位置、含图片 JSON 全库备份恢复、SHA-512 校验应用内自动更新，并与 DSH 插件共用核心存储底座。</p>
+      </div>
+    </div>
+
+    <div class="upcoming-card reveal">
+      <div class="upcoming-main">
+        <span class="badge-line">ONGOING UPDATE · 正在更新的功能</span>
+        <h3>「恍然梦」创作协同 Agent</h3>
+        <p>围绕「入梦」沉浸故事协同与「浅眠」随行辅助设计的下一阶段 Agent 功能目前仍在持续完善与打磨中，待长篇上下文协同体验进一步成熟后，将在后续版本陆续更新开放。</p>
+      </div>
+      <div class="upcoming-status">
+        <span class="status-pill"><i aria-hidden="true"></i>开发中 · 持续迭代更新</span>
+        <span class="status-note">当前版本聚焦稳定、流畅的纯本地长篇工坊体验</span>
+      </div>
+    </div>
+
+    <div class="finale reveal">
+      <h2>准备好开始你的下一部长篇了吗</h2>
+      <p>小说工坊 Novel Studio v1.2.6 · Windows x64（Electron 33 + Vue 3 + WebGL + ECharts）· 输入即存、结构清晰、数据永远属于作者自己。</p>
+      <div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+        <a class="btn-primary" href="#act-1">回到开场首屏 ↑</a>
+        <a class="btn-ghost" href="产品介绍.md">阅读 Markdown 产品文档</a>
+        <a class="btn-ghost" href="产品介绍-图文版.pdf">打开 21 页图文版 PDF</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- 原生模态灯箱（点击任意截图放大检视，Esc / 点击外侧关闭） -->
+<dialog id="lightbox" aria-labelledby="lightbox-title" closedby="any">
+  <div class="lb-head">
+    <h3 id="lightbox-title">界面预览</h3>
+    <button type="button" class="lb-close" id="lightbox-close" aria-label="关闭大图">×</button>
+  </div>
+  <div class="lb-body">
+    <img id="lightbox-img" alt="" />
+  </div>
+  <p class="lb-cap" id="lightbox-cap"></p>
+</dialog>
+
+<script>
+(() => {
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const supportsAnchor = CSS.supports('position-anchor: auto');
+
+  /* ========================================================================
+     1. 移植自 src/services/latent/flow-shaders.js 的 WebGL 幻流着色器
+     ======================================================================== */
+  const VERT_SRC = `
+    attribute vec2 a_pos;
+    varying vec2 v_uv;
+    void main() {
+      v_uv = a_pos * 0.5 + 0.5;
+      gl_Position = vec4(a_pos, 0.0, 1.0);
+    }
+  `;
+  const FRAG_SRC = `
+    precision highp float;
+    uniform float u_time;
+    uniform vec4 u_colors[4];
+    uniform vec2 u_resolution;
+    varying vec2 v_uv;
+
+    vec2 rotate2d(vec2 uv, float th) {
+      return mat2(cos(th), sin(th), -sin(th), cos(th)) * uv;
+    }
+    float hash21(vec2 p) {
+      p = fract(p * vec2(0.3183099, 0.3678794)) + 0.1;
+      p += dot(p, p + 19.19);
+      return fract(p.x * p.y);
+    }
+    float valueNoise(vec2 st) {
+      vec2 i = floor(st);
+      vec2 f = fract(st);
+      float a = hash21(i);
+      float b = hash21(i + vec2(1.0, 0.0));
+      float c = hash21(i + vec2(0.0, 1.0));
+      float d = hash21(i + vec2(1.0, 1.0));
+      vec2 u = f * f * (3.0 - 2.0 * f);
+      return mix(mix(a, b, u.x), mix(c, d, u.x), u.y);
+    }
+    vec2 getPos(int i, float t) {
+      float a = float(i) * 0.42;
+      float b = 0.55 + fract(float(i) / 3.0) * 0.75;
+      float c = 0.75 + fract(float(i + 1) / 4.0);
+      return 0.5 + 0.48 * vec2(sin(t * b + a), cos(t * c + a * 1.4));
+    }
+    void main() {
+      vec2 objectScale = u_resolution / min(u_resolution.x, u_resolution.y);
+      vec2 uv = (v_uv - 0.5) * objectScale / 1.04 + 0.5;
+      float grain = valueNoise(uv * 900.0);
+      float t = 0.34 * (u_time + 41.5);
+      float radius = smoothstep(0.0, 1.0, length(uv - 0.5));
+      float center = 1.0 - radius;
+      for (float i = 1.0; i <= 2.0; i += 1.0) {
+        uv.x += 0.24 * center / i * sin(t + i * 0.4 * smoothstep(0.0, 1.0, uv.y)) * cos(0.2 * t + i * 2.2 * smoothstep(0.0, 1.0, uv.y));
+        uv.y += 0.24 * center / i * cos(t + i * 1.9 * smoothstep(0.0, 1.0, uv.x));
+      }
+      vec2 uvRot = rotate2d(uv - 0.5, -1.6 * radius) + 0.5;
+      vec3 col = vec3(0.0);
+      float totalW = 0.0;
+      for (int i = 0; i < 4; i++) {
+        vec2 p = getPos(i, t) + 0.03 * (grain - 0.5);
+        float d = pow(length(uvRot - p), 3.3);
+        float w = 1.0 / (d + 0.0025);
+        col += u_colors[i].rgb * w;
+        totalW += w;
+      }
+      col /= max(totalW, 0.001);
+      col += (grain - 0.5) * 0.025;
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  const PALETTES = {
+    amber:  [[0.07, 0.06, 0.08, 1], [0.56, 0.29, 0.14, 1], [0.85, 0.55, 0.28, 1], [0.16, 0.14, 0.22, 1]],
+    plum:   [[0.08, 0.08, 0.14, 1], [0.34, 0.27, 0.52, 1], [0.76, 0.49, 0.34, 1], [0.14, 0.16, 0.25, 1]],
+    copper: [[0.08, 0.07, 0.10, 1], [0.48, 0.24, 0.16, 1], [0.72, 0.44, 0.26, 1], [0.18, 0.14, 0.22, 1]],
+    cosmos: [[0.06, 0.07, 0.13, 1], [0.22, 0.30, 0.54, 1], [0.68, 0.42, 0.30, 1], [0.12, 0.11, 0.20, 1]],
+    aurora: [[0.06, 0.08, 0.14, 1], [0.16, 0.42, 0.46, 1], [0.66, 0.36, 0.46, 1], [0.24, 0.26, 0.54, 1]],
+    twilight: [[0.06, 0.07, 0.12, 1], [0.24, 0.28, 0.56, 1], [0.58, 0.38, 0.28, 1], [0.11, 0.14, 0.24, 1]]
+  };
+
+  let targetPalette = PALETTES.amber;
+  const currentPalette = PALETTES.amber.map((c) => [...c]);
+  let flowPaused = prefersReduced.matches;
+  const flowToggleBtn = document.getElementById('flow-toggle');
+
+  function setPalette(name) {
+    if (PALETTES[name]) targetPalette = PALETTES[name];
+  }
+
+  function initWebGLFlow() {
+    const canvas = document.getElementById('flow-canvas');
+    const gl = canvas.getContext('webgl', { alpha: true, antialias: false, powerPreference: 'low-power' });
+    if (!gl) {
+      flowToggleBtn.hidden = true;
+      return;
+    }
+    const compile = (type, src) => {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, src);
+      gl.compileShader(s);
+      return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
+    };
+    const vs = compile(gl.VERTEX_SHADER, VERT_SRC);
+    const fs = compile(gl.FRAGMENT_SHADER, FRAG_SRC);
+    if (!vs || !fs) return;
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+    gl.useProgram(prog);
+
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+    const locPos = gl.getAttribLocation(prog, 'a_pos');
+    gl.enableVertexAttribArray(locPos);
+    gl.vertexAttribPointer(locPos, 2, gl.FLOAT, false, 0, 0);
+
+    const locTime = gl.getUniformLocation(prog, 'u_time');
+    const locRes = gl.getUniformLocation(prog, 'u_resolution');
+    const locColors = gl.getUniformLocation(prog, 'u_colors[0]');
+
+    const resize = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+      canvas.width = Math.max(2, Math.floor(window.innerWidth * dpr * 0.55));
+      canvas.height = Math.max(2, Math.floor(window.innerHeight * dpr * 0.55));
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    };
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+
+    let simTime = 0;
+    let lastTs = performance.now();
+    const renderFrame = (now) => {
+      const dt = Math.min(0.05, (now - lastTs) / 1000);
+      lastTs = now;
+      if (!flowPaused) simTime += dt;
+
+      for (let i = 0; i < 4; i++) {
+        for (let k = 0; k < 4; k++) {
+          currentPalette[i][k] += (targetPalette[i][k] - currentPalette[i][k]) * Math.min(1, dt * 2.6);
+        }
+      }
+      gl.uniform1f(locTime, simTime);
+      gl.uniform2f(locRes, canvas.width, canvas.height);
+      gl.uniform4fv(locColors, new Float32Array(currentPalette.flat()));
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      requestAnimationFrame(renderFrame);
+    };
+    requestAnimationFrame(renderFrame);
+  }
+  initWebGLFlow();
+
+  const updateFlowButton = () => {
+    flowToggleBtn.textContent = flowPaused ? '继续流场' : '暂停流场';
+  };
+  updateFlowButton();
+  flowToggleBtn.addEventListener('click', () => {
+    flowPaused = !flowPaused;
+    updateFlowButton();
+  });
+
+  /* ========================================================================
+     2. 滚动揭晓与数值滚动（Scroll-Driven fallback + IntersectionObserver）
+     ======================================================================== */
+  const revealNodes = [...document.querySelectorAll('.reveal')];
+  if (!prefersReduced.matches) {
+    revealNodes.forEach((el) => el.setAttribute('data-reveal', 'pending'));
+    const revObs = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.setAttribute('data-reveal', 'shown');
+            revObs.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.12 }
+    );
+    revealNodes.forEach((el) => revObs.observe(el));
+  }
+
+  // 数值递增动效（尊重 reduced motion）
+  const counterNodes = [...document.querySelectorAll('[data-count]')];
+  const countObs = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        const el = entry.target;
+        countObs.unobserve(el);
+        const endVal = Number(el.dataset.count || 0);
+        const suffix = el.dataset.suffix || '';
+        if (prefersReduced.matches || endVal === 0) {
+          el.innerHTML = endVal + (suffix ? `<small>${suffix.trim()}</small>` : '');
+          continue;
+        }
+        const start = performance.now();
+        const dur = 820;
+        const tick = (now) => {
+          const p = Math.min(1, (now - start) / dur);
+          const eased = 1 - Math.pow(1 - p, 3);
+          const v = Math.round(endVal * eased);
+          el.innerHTML = v + (suffix ? `<small>${suffix.trim()}</small>` : '');
+          if (p < 1) requestAnimationFrame(tick);
+        };
+        requestAnimationFrame(tick);
+      }
+    },
+    { threshold: 0.5 }
+  );
+  counterNodes.forEach((el) => countObs.observe(el));
+
+  /* ========================================================================
+     3. 各幕子视图切换（Tabs + Split Steps + 键盘左右方向联动）
+     ======================================================================== */
+  function activateSlide(groupName, index) {
+    const idx = Number(index);
+    const stage = document.querySelector(`[data-stage="${groupName}"]`);
+    if (stage) {
+      const slides = [...stage.querySelectorAll('.crossfade-slide')];
+      slides.forEach((s, i) => s.classList.toggle('is-active', i === idx));
+    }
+    const panelsWrap = document.querySelector(`[data-panels="${groupName}"]`);
+    if (panelsWrap) {
+      const panels = [...panelsWrap.children];
+      panels.forEach((p, i) => {
+        const show = i === idx;
+        p.hidden = !show;
+        if (show) p.setAttribute('tabindex', '0');
+        else p.removeAttribute('tabindex');
+      });
+    }
+    const groupEl = document.querySelector(`[data-group="${groupName}"]`);
+    if (groupEl) {
+      const btns = [...groupEl.querySelectorAll('[role="tab"], .step-card')];
+      btns.forEach((b, i) => {
+        const active = i === idx;
+        if (b.getAttribute('role') === 'tab') {
+          b.setAttribute('aria-selected', String(active));
+        } else {
+          b.classList.toggle('is-active', active);
+        }
+        if (active && b.dataset.palette) setPalette(b.dataset.palette);
+      });
+    }
+  }
+
+  document.querySelectorAll('[data-group]').forEach((groupEl) => {
+    const groupName = groupEl.dataset.group;
+    const btns = [...groupEl.querySelectorAll('[role="tab"], .step-card')];
+    btns.forEach((btn, i) => {
+      btn.addEventListener('click', () => activateSlide(groupName, btn.dataset.slide ?? i));
+      btn.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        const next = (i + (e.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length;
+        btns[next].focus();
+        activateSlide(groupName, btns[next].dataset.slide ?? next);
+      });
+    });
+  });
+
+  /* ========================================================================
+     4. 当前幕次追踪 + 分镜跳转 + 录屏快捷键（↑/↓, ←/→, 1-9, H, F）
+     ======================================================================== */
+  const acts = [...document.querySelectorAll('section.act')];
+  const navLinks = [...document.querySelectorAll('.top-nav a')];
+  const railDots = [...document.querySelectorAll('.scene-dot')];
+  let currentActIndex = 0;
+
+  function setActiveAct(idx) {
+    currentActIndex = idx;
+    const act = acts[idx];
+    if (!act) return;
+    const id = '#' + act.id;
+    navLinks.forEach((a) => {
+      if (a.getAttribute('href') === id) a.setAttribute('aria-current', 'location');
+      else a.removeAttribute('aria-current');
+    });
+    railDots.forEach((dot) => {
+      if (dot.dataset.target === id) dot.setAttribute('aria-current', 'location');
+      else dot.removeAttribute('aria-current');
+    });
+    // 若当前幕存在选中的 palette tab，优先用其色板，否则用幕默认色板
+    const activeTabPalette = act.querySelector('[role="tab"][aria-selected="true"][data-palette]')?.dataset.palette;
+    setPalette(activeTabPalette || act.dataset.palette || 'amber');
+  }
+
+  const actObs = new IntersectionObserver(
+    (entries) => {
+      let best = null;
+      for (const entry of entries) {
+        if (entry.isIntersecting && (!best || entry.intersectionRatio > best.intersectionRatio)) {
+          best = entry;
+        }
+      }
+      if (best) {
+        const idx = acts.indexOf(best.target);
+        if (idx >= 0) setActiveAct(idx);
+      }
+    },
+    { threshold: [0.25, 0.5, 0.75], rootMargin: '-10% 0px -15% 0px' }
+  );
+  acts.forEach((act) => actObs.observe(act));
+  setActiveAct(0);
+
+  function goToAct(idx) {
+    const clamped = Math.max(0, Math.min(acts.length - 1, idx));
+    acts[clamped].scrollIntoView({ behavior: prefersReduced.matches ? 'auto' : 'smooth', block: 'start' });
+    setActiveAct(clamped);
+  }
+
+  railDots.forEach((dot, i) => {
+    dot.addEventListener('click', () => goToAct(i));
+  });
+
+  const cleanToggleBtn = document.getElementById('clean-toggle');
+  const toggleCleanStage = () => {
+    document.body.classList.toggle('clean-stage');
+    cleanToggleBtn.textContent = document.body.classList.contains('clean-stage') ? '恢复控件 (H)' : '纯净录屏 (H)';
+  };
+  cleanToggleBtn.addEventListener('click', toggleCleanStage);
+
+  document.addEventListener('keydown', (e) => {
+    const tag = document.activeElement?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (lightbox.open) return;
+
+    if (e.key === 'h' || e.key === 'H') {
+      e.preventDefault();
+      toggleCleanStage();
+    } else if (e.key === 'f' || e.key === 'F') {
+      e.preventDefault();
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+      else document.exitFullscreen?.().catch(() => {});
+    } else if (e.key === 'PageDown' || (e.key === 'ArrowDown' && !e.altKey && !e.ctrlKey)) {
+      e.preventDefault();
+      goToAct(currentActIndex + 1);
+    } else if (e.key === 'PageUp' || (e.key === 'ArrowUp' && !e.altKey && !e.ctrlKey)) {
+      e.preventDefault();
+      goToAct(currentActIndex - 1);
+    } else if (/^[1-9]$/.test(e.key)) {
+      e.preventDefault();
+      goToAct(Number(e.key) - 1);
+    } else if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && document.activeElement?.getAttribute('role') !== 'tab') {
+      const act = acts[currentActIndex];
+      const groupEl = act?.querySelector('[data-group]');
+      if (!groupEl) return;
+      const btns = [...groupEl.querySelectorAll('[role="tab"], .step-card')];
+      if (!btns.length) return;
+      e.preventDefault();
+      const cur = Math.max(0, btns.findIndex((b) => b.getAttribute('aria-selected') === 'true' || b.classList.contains('is-active')));
+      const next = (cur + (e.key === 'ArrowRight' ? 1 : -1) + btns.length) % btns.length;
+      activateSlide(groupEl.dataset.group, btns[next].dataset.slide ?? next);
+    }
+  });
+
+  /* ========================================================================
+     5. 原生 <dialog> 灯箱 + 跨浏览器离场/轻触关闭兜底（modern-web-guidance）
+     ======================================================================== */
+  const lightbox = document.getElementById('lightbox');
+  const lbImg = document.getElementById('lightbox-img');
+  const lbTitle = document.getElementById('lightbox-title');
+  const lbCap = document.getElementById('lightbox-cap');
+  const lbClose = document.getElementById('lightbox-close');
+
+  let supportsDisplayTransition;
+  function canTransitionDisplay() {
+    if (supportsDisplayTransition !== undefined) return supportsDisplayTransition;
+    if (!window.CSS?.supports?.('transition-behavior', 'allow-discrete') || !document.body) return false;
+    const probe = document.createElement('div');
+    probe.style.cssText = 'transition: display 1s allow-discrete !important; display: block;';
+    document.body.appendChild(probe);
+    getComputedStyle(probe).display;
+    probe.style.display = 'none';
+    supportsDisplayTransition = getComputedStyle(probe).display === 'block';
+    probe.remove();
+    return supportsDisplayTransition;
+  }
+
+  async function closeLightbox() {
+    if (!lightbox.open) return;
+    if (canTransitionDisplay() || prefersReduced.matches) {
+      lightbox.close();
+      return;
+    }
+    lightbox.setAttribute('data-closing', '');
+    await Promise.allSettled(lightbox.getAnimations({ subtree: true }).map((a) => a.finished));
+    lightbox.removeAttribute('data-closing');
+    lightbox.close();
+  }
+
+  document.querySelectorAll('.zoom-trigger').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      lbImg.src = btn.dataset.zoom;
+      lbImg.alt = btn.dataset.title || '';
+      lbTitle.textContent = btn.dataset.title || '界面预览';
+      lbCap.textContent = btn.dataset.desc || '';
+      lightbox.showModal();
+    });
+  });
+
+  lbClose.addEventListener('click', () => closeLightbox());
+  lightbox.addEventListener('cancel', (e) => {
+    e.preventDefault();
+    closeLightbox();
+  });
+
+  if (!('closedBy' in HTMLDialogElement.prototype)) {
+    const outside = (e) => {
+      const r = lightbox.getBoundingClientRect();
+      return e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
+    };
+    let pressedOutside = false;
+    lightbox.addEventListener('pointerdown', (e) => { pressedOutside = outside(e); });
+    lightbox.addEventListener('pointerup', (e) => {
+      if (pressedOutside && outside(e)) closeLightbox();
+    });
+  }
+})();
+</script>
+</body>
+</html>

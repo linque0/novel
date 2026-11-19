@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>小说工坊 Novel Studio · 产品介绍（v1.2.6）</title>
+<style>
+/* ===================================================================
+   小说工坊 · 产品介绍文档模板（v1.2.6 图文版）
+   A4 分页排版，支持 Chrome 无头渲染输出 PDF
+   =================================================================== */
+:root{
+  --paper:#fbf8f2;
+  --paper-2:#f5efe3;
+  --ink:#2e2921;
+  --ink-2:#57503f;
+  --muted:#8b8172;
+  --faint:#b3aa9a;
+  --accent:#966c42;
+  --accent-deep:#6f4d2b;
+  --accent-soft:#f1e6d6;
+  --accent-line:#d9c7ad;
+  --line:#e6ddcb;
+  --line-soft:#efe8da;
+  --card:#ffffff;
+  --shadow:0 1px 2px rgba(70,55,30,.05), 0 8px 24px rgba(70,55,30,.07);
+  --shadow-lg:0 2px 6px rgba(70,55,30,.08), 0 18px 44px rgba(45,35,20,.16);
+  --radius:9px;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --sans:"Noto Sans SC","PingFang SC","Microsoft YaHei",-apple-system,sans-serif;
+  --mono:"JetBrains Mono","Cascadia Mono",Consolas,monospace;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans); color:var(--ink); background:#e9e3d7;
+  font-size:9.8pt; line-height:1.64;
+  -webkit-font-smoothing:antialiased;
+}
+@page{ size:A4; margin:0; }
+
+/* ---------- 页面骨架（每个 .page = 一张 A4） ---------- */
+.page{
+  position:relative;
+  width:210mm; height:297mm;
+  padding:15mm 16mm 14mm;
+  background:var(--paper);
+  margin:0 auto 8mm;
+  overflow:hidden;
+  display:flex; flex-direction:column;
+  break-after:page; page-break-after:always;
+}
+.page:last-child{break-after:auto;page-break-after:auto}
+
+.p-head{
+  display:flex; justify-content:space-between; align-items:baseline;
+  padding-bottom:2.4mm; border-bottom:1px solid var(--line);
+  margin-bottom:4.8mm; flex:none;
+}
+.p-head .brand{font-family:var(--serif); font-size:9pt; color:var(--accent-deep); letter-spacing:.06em}
+.p-head .brand b{font-weight:700}
+.p-head .sec{font-size:7.5pt; color:var(--faint); letter-spacing:.14em}
+
+.p-foot{
+  position:absolute; left:16mm; right:16mm; bottom:7mm;
+  display:flex; justify-content:space-between; align-items:center;
+  font-size:7.5pt; color:var(--faint);
+  border-top:1px solid var(--line-soft); padding-top:2.1mm;
+}
+.p-foot .pg{font-family:var(--mono); letter-spacing:.08em}
+
+/* ---------- 封面 ---------- */
+.cover{
+  background:
+    radial-gradient(120% 78% at 78% 6%, #fdfbf6 0%, rgba(253,251,246,0) 58%),
+    linear-gradient(168deg, #f7f2e7 0%, #f0e8d9 48%, #e8ddca 100%);
+  padding:0; justify-content:space-between;
+}
+.cover-top{padding:17mm 17mm 0}
+.cover-mark{
+  display:inline-flex; align-items:center; gap:2.8mm;
+  font-size:8.5pt; letter-spacing:.2em; color:var(--accent-deep);
+}
+.cover-mark .dot{width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.cover h1{
+  font-family:var(--serif); font-size:44pt; line-height:1.08;
+  letter-spacing:.03em; margin:7mm 0 0; color:#241f18; font-weight:700;
+}
+.cover .en{
+  font-family:var(--mono); font-size:10pt; letter-spacing:.34em;
+  color:var(--accent); margin-top:2.8mm; text-transform:uppercase;
+}
+.cover .rule{width:26mm; height:3px; background:var(--accent); margin:5.5mm 0}
+.cover .lead{font-family:var(--serif); font-size:12pt; line-height:1.85; color:var(--ink-2); max-width:136mm}
+.cover .tags{display:flex; flex-wrap:wrap; gap:2.2mm; margin-top:6mm}
+.cover .tags span{
+  font-size:8.2pt; color:var(--accent-deep);
+  background:rgba(255,255,255,.72); border:1px solid var(--accent-line);
+  padding:1mm 3mm; border-radius:100px;
+}
+.cover-hero{padding:0 17mm; margin-top:2mm}
+.cover-hero .frame{box-shadow:var(--shadow-lg)}
+.cover-bot{
+  padding:0 17mm 12mm;
+  display:flex; justify-content:space-between; align-items:flex-end;
+  font-size:8.5pt; color:var(--muted);
+}
+.cover-bot .ver{
+  font-family:var(--mono); font-size:9pt; color:var(--paper);
+  background:var(--accent-deep); padding:1.4mm 4mm; border-radius:5px;
+  letter-spacing:.08em;
+}
+
+/* ---------- 目录 ---------- */
+.toc-list{margin-top:1mm}
+.toc-item{display:flex; align-items:baseline; gap:4mm; padding:3.1mm 0; border-bottom:1px dashed var(--line)}
+.toc-item:last-child{border-bottom:none}
+.toc-num{font-family:var(--mono); font-size:8.5pt; color:var(--accent); min-width:9mm; letter-spacing:.06em}
+.toc-t{font-family:var(--serif); font-size:11.2pt; color:var(--ink)}
+.toc-sub{font-size:8.2pt; color:var(--muted); margin-left:2mm}
+.toc-d{flex:1; border-bottom:1px dotted var(--line); transform:translateY(-2px)}
+.toc-p{font-family:var(--mono); font-size:8.5pt; color:var(--muted)}
+.toc-note{
+  margin-top:auto; margin-bottom:9mm; font-size:8.5pt; color:var(--muted);
+  background:var(--accent-soft); border-left:3px solid var(--accent);
+  padding:3.2mm 4.2mm; border-radius:0 6px 6px 0; line-height:1.75;
+}
+
+/* ---------- 章节标题 ---------- */
+.sec-head{margin-bottom:4.2mm; flex:none}
+.sec-head .kicker{font-family:var(--mono); font-size:7.8pt; letter-spacing:.2em; color:var(--accent); margin-bottom:1.8mm}
+.sec-head h2{
+  font-family:var(--serif); font-size:20pt; line-height:1.24;
+  margin:0; color:#241f18; font-weight:700; letter-spacing:.01em;
+}
+.sec-head .sub{font-size:9.2pt; color:var(--muted); margin-top:1.8mm}
+.sec-head .bar{width:16mm; height:2.5px; background:var(--accent); margin-top:2.8mm}
+
+/* ---------- 正文排版 ---------- */
+p{margin:0 0 2.6mm}
+.lead-p{font-size:10.3pt; color:var(--ink-2); line-height:1.78}
+strong{color:var(--ink); font-weight:700}
+code{
+  font-family:var(--mono); font-size:.85em;
+  background:var(--paper-2); border:1px solid var(--line);
+  padding:.2mm 1.2mm; border-radius:4px; color:var(--accent-deep);
+}
+
+/* ---------- 图片框 ---------- */
+.frame{
+  border-radius:var(--radius); overflow:hidden;
+  border:1px solid #d5c5aa; background:#1c1917;
+  box-shadow:var(--shadow);
+}
+.frame img{display:block; width:100%; height:auto}
+figcaption{font-size:7.8pt; color:var(--muted); line-height:1.58; margin-top:2mm}
+figcaption b{color:var(--accent-deep); font-weight:700; letter-spacing:.04em}
+figure{margin:0 0 3.2mm}
+
+/* ---------- 组件：卡片 ---------- */
+.grid2{display:grid; grid-template-columns:1fr 1fr; gap:3.4mm}
+.grid3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:3mm}
+.card{
+  background:var(--card); border:1px solid var(--line);
+  border-radius:8px; padding:3.6mm 4.2mm; break-inside:avoid;
+}
+.card h4{font-family:var(--serif); font-size:10.2pt; margin:0 0 1.4mm; color:var(--accent-deep); font-weight:700}
+.card p{margin:0; font-size:8.9pt; color:var(--ink-2); line-height:1.64}
+
+/* ---------- 组件：数据条 ---------- */
+.stats{display:grid; grid-template-columns:repeat(4,1fr); gap:3.2mm; margin:4mm 0 0}
+.stat{background:var(--card); border:1px solid var(--line); border-radius:8px; padding:3.8mm 3mm; text-align:center}
+.stat .n{font-family:var(--serif); font-size:18pt; font-weight:700; color:var(--accent-deep); line-height:1.1}
+.stat .n small{font-size:9.5pt; font-weight:400; margin-left:.5mm}
+.stat .l{font-size:8.3pt; color:var(--muted); margin-top:1.3mm}
+
+/* ---------- 组件：表格 ---------- */
+table{width:100%; border-collapse:collapse; font-size:8.9pt; margin:2.4mm 0}
+th{
+  text-align:left; font-weight:700; color:var(--accent-deep);
+  background:var(--paper-2); font-size:8.3pt; letter-spacing:.04em;
+  padding:2.2mm 3mm; border-bottom:1px solid var(--accent-line);
+}
+td{padding:2.2mm 3mm; border-bottom:1px solid var(--line-soft); color:var(--ink-2); vertical-align:top}
+tr:last-child td{border-bottom:none}
+td strong{color:var(--ink)}
+table.tight td, table.tight th{padding:1.85mm 2.6mm; font-size:8.6pt}
+
+/* ---------- 组件：提示块 ---------- */
+.callout{
+  background:var(--accent-soft); border-left:3px solid var(--accent);
+  border-radius:0 7px 7px 0; padding:3.2mm 4mm; margin:3mm 0 0;
+  font-size:9.2pt; color:var(--ink-2); line-height:1.7;
+}
+.callout .t{font-family:var(--serif); font-weight:700; color:var(--accent-deep); font-size:9.8pt; display:block; margin-bottom:1mm}
+.callout.dark{background:#2c261f; border-left-color:var(--accent); color:#e8e0d2}
+.callout.dark .t{color:#e2c79a}
+.callout.dark strong, .callout.dark b{color:#f2e7d4}
+.callout.dark code{background:rgba(255,255,255,.1); border-color:rgba(255,255,255,.22); color:#e9d3ab}
+.callout.dark ul.feat li{color:#e8e0d2}
+.callout.dark ul.feat li b{color:#f2e7d4}
+
+ul.feat{list-style:none; margin:1.6mm 0 0; padding:0}
+ul.feat li{position:relative; padding-left:5.8mm; margin-bottom:1.7mm; font-size:9.1pt; color:var(--ink-2); line-height:1.65}
+ul.feat li:last-child{margin-bottom:0}
+ul.feat li::before{
+  content:""; position:absolute; left:0; top:1.85mm;
+  width:1.9mm; height:1.9mm; border-radius:50%;
+  background:var(--accent); box-shadow:0 0 0 1.2mm rgba(150,108,66,.15);
+}
+ul.feat li b{color:var(--ink)}
+
+kbd{
+  font-family:var(--mono); font-size:7.6pt;
+  background:#fff; border:1px solid var(--accent-line); border-bottom-width:2px;
+  border-radius:4px; padding:.3mm 1.4mm; color:var(--accent-deep);
+}
+
+.row{display:flex; gap:4mm; align-items:flex-start}
+.col{flex:1; min-width:0}
+.mb0{margin-bottom:0}
+.side-h4{font-family:var(--serif); font-size:11pt; color:var(--accent-deep); margin:0 0 2mm}
+.side-p{font-size:8.8pt; line-height:1.62}
+.flow{display:flex; align-items:center; gap:2.2mm; flex-wrap:wrap; font-size:8.8pt}
+.flow .step{background:#fff; border:1px solid var(--line); border-radius:6px; padding:1.5mm 2.8mm; color:var(--ink-2)}
+.flow .arw{color:var(--accent); font-size:10pt}
+
+.back{background:linear-gradient(168deg,#f5efe2 0%, #ece2cf 100%); justify-content:center; text-align:center}
+.back .mark{font-family:var(--serif); font-size:29pt; font-weight:700; color:#2b251d; letter-spacing:.06em}
+.back .rule{width:20mm;height:3px;background:var(--accent);margin:6.5mm auto}
+.back .info{font-size:10pt; color:var(--ink-2); line-height:2.05}
+.back .info .k{color:var(--muted); margin-right:2.4mm}
+.back .foot{position:absolute; left:0; right:0; bottom:15mm; font-size:8pt; color:var(--faint)}
+
+@media print{
+  body{background:#fff}
+  .page{margin:0; box-shadow:none}
+  .frame{box-shadow:none}
+}
+</style>
+</head>
+<body>
+
+<!-- ============================= 1 封面 ============================= -->
+<section class="page cover">
+  <div class="cover-top">
+    <div class="cover-mark"><span class="dot"></span>本地优先的小说创作软件</div>
+    <h1>小说工坊</h1>
+    <div class="en">Novel Studio</div>
+    <div class="rule"></div>
+    <p class="lead">
+      正文、大纲、设定、人物、灵感一站式管理，<br />
+      结合「恍然梦」AI 协同工作流。输入即存，永不丢稿，数据留在本机。
+    </p>
+    <div class="tags">
+      <span>幻流 WebGL 流场</span>
+      <span>三栏稿面 · 批注与双链</span>
+      <span>分层自由画布</span>
+      <span>设定关系星系</span>
+      <span>人物关系剧场</span>
+      <span>灵感拼板</span>
+      <span>恍然梦 · 入梦 / 浅眠</span>
+      <span>多窗口实体锁</span>
+    </div>
+  </div>
+
+  <div class="cover-hero">
+    <div class="frame"><img src="项目展示图例/书架2.png" alt="小说工坊幻流书架主界面" /></div>
+  </div>
+
+  <div class="cover-bot">
+    <div>产品介绍 · 图文版<br />github.com/linque0/novel</div>
+    <div class="ver">v1.2.6</div>
+  </div>
+</section>
+
+<!-- ============================= 2 目录 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">目 录</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">CONTENTS</div>
+    <h2>目录</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="toc-list">
+    <div class="toc-item"><span class="toc-num">01</span><span class="toc-t">产品概览<span class="toc-sub">创作定位 · 痛点解法</span></span><span class="toc-d"></span><span class="toc-p">03</span></div>
+    <div class="toc-item"><span class="toc-num">02</span><span class="toc-t">书架与幻流<span class="toc-sub">3D 轮播书封 · WebGL 流场</span></span><span class="toc-d"></span><span class="toc-p">04</span></div>
+    <div class="toc-item"><span class="toc-num">03</span><span class="toc-t">正文<span class="toc-sub">三栏稿面 · 批注双链 · 专注写入</span></span><span class="toc-d"></span><span class="toc-p">05</span></div>
+    <div class="toc-item"><span class="toc-num">04</span><span class="toc-t">大纲<span class="toc-sub">分层自由画布 · 容器详情 · 语义连线</span></span><span class="toc-d"></span><span class="toc-p">07</span></div>
+    <div class="toc-item"><span class="toc-num">05</span><span class="toc-t">设定<span class="toc-sub">无限节点树 · 阅读视图 · 关系星系</span></span><span class="toc-d"></span><span class="toc-p">09</span></div>
+    <div class="toc-item"><span class="toc-num">06</span><span class="toc-t">人物<span class="toc-sub">多篇小传卷宗 · 故事坐标 · 关系剧场</span></span><span class="toc-d"></span><span class="toc-p">11</span></div>
+    <div class="toc-item"><span class="toc-num">07</span><span class="toc-t">灵感<span class="toc-sub">按标签分组拼板 · 一键转章节 / 设定</span></span><span class="toc-d"></span><span class="toc-p">13</span></div>
+    <div class="toc-item"><span class="toc-num">08</span><span class="toc-t">恍然梦 AI 协同<span class="toc-sub">入梦 · 浅眠 · 记忆队列与知识库</span></span><span class="toc-d"></span><span class="toc-p">14</span></div>
+    <div class="toc-item"><span class="toc-num">09</span><span class="toc-t">写作分析<span class="toc-sub">速览 · 历程对照 · 稿件案卷 · 要素剖析</span></span><span class="toc-d"></span><span class="toc-p">15</span></div>
+    <div class="toc-item"><span class="toc-num">10</span><span class="toc-t">全局工具<span class="toc-sub">全局搜索 · 关系链接 · 多窗口实体锁</span></span><span class="toc-d"></span><span class="toc-p">18</span></div>
+    <div class="toc-item"><span class="toc-num">11</span><span class="toc-t">导入导出与数据安全<span class="toc-sub">六类导入 · 智能导出 · 存储迁移</span></span><span class="toc-d"></span><span class="toc-p">19</span></div>
+    <div class="toc-item"><span class="toc-num">12</span><span class="toc-t">外观排版 · 安装运行 · 技术一览</span><span class="toc-d"></span><span class="toc-p">20</span></div>
+  </div>
+
+  <div class="toc-note">
+    <strong>配图与版本说明</strong>　本文档全部 22 张界面截图均取自 <code>项目展示图例/</code> 实机画面（基于「幻流」主界面拍摄，其中早期开发截图左上角标为 <code>LATENT</code>，v1.2.4 起已统一更名为「幻流」）。演示作品为虚构的《星尘旅人》，书架页与全局分析同时展示了验证测试书目，画面中书名、人物与数据仅作功能说明。<br />
+    配套文档：<code>docs/使用手册.md</code>（应用内置同源）· <code>docs/开发流程.md</code>（工程规范）· <code>CHANGELOG.md</code>（逐版本记录）
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">02</span>
+  </div>
+</section>
+
+<!-- ============================= 3 · 01 产品概览 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">01 · 产品概览</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">OVERVIEW</div>
+    <h2>五个创作要素，<br />收进同一个本地工作台</h2>
+    <div class="sub">面向长篇作者的桌面写作软件 · Windows x64 · 另提供 DSH 插件同步版</div>
+    <div class="bar"></div>
+  </div>
+
+  <p class="lead-p">
+    <strong>小说工坊</strong>把「正文 / 大纲 / 设定 / 人物 / 灵感」收进同一个可联动的工作台，并深度整合「<strong>恍然梦</strong>」AI 创作协同。
+    软件以<strong>输入即存</strong>为第一原则：输入防抖 1 秒落盘、30 秒兜底、失焦与切章与关窗前强制保存，配合章节自动版本快照与回收站，尽力让每一句话都不丢。作品数据全部留在本机；除你主动配置并调用的模型服务外，不联网、不上传、不登录。
+  </p>
+
+  <p>它着重解决长篇小说创作中最常见的四个断裂：</p>
+
+  <table>
+    <thead><tr><th style="width:36mm">创作痛点</th><th>小说工坊的做法</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>结构散失</strong><br /><span style="color:var(--muted);font-size:8.3pt">正文与大纲分离</span></td>
+        <td>大纲提供<strong>分层自由画布</strong>与<strong>文本幕布双视图</strong>同源切换；事件、便签、引用、文本框、章节锚点、卷与容器自由摆位，四类语义连线自动绕障；正文可拆窗与大纲并排。</td>
+      </tr>
+      <tr>
+        <td><strong>资料割裂</strong><br /><span style="color:var(--muted);font-size:8.3pt">人物与设定散落多处</span></td>
+        <td>人物配备<strong>卷宗档案 + 关系剧场</strong>；设定是一棵<strong>无限嵌套的幕布树</strong>，配有阅读视图与可交互<strong>关系星系</strong>；三者都能与正文通过关系链接互相引用、悬停预览。</td>
+      </tr>
+      <tr>
+        <td><strong>灵感难落地</strong><br /><span style="color:var(--muted);font-size:8.3pt">零散点子无从归档</span></td>
+        <td>灵感采用<strong>按标签分组的单一拼板</strong>，支持图钉拖拽排序与跨组归类，并在侧栏抽屉中<strong>一键转为章节或设定</strong>（保留原灵感）。</td>
+      </tr>
+      <tr>
+        <td><strong>丢稿与越权改写</strong><br /><span style="color:var(--muted);font-size:8.3pt">版本混乱、AI 难把控</span></td>
+        <td>三道自动保存 + 最近 30 份版本快照 + 回收站 + JSON 全库备份；「恍然梦」所有写稿与设定修改均先生成候选与提案，经作者确认才写入正式稿件。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="stats">
+    <div class="stat"><div class="n">6</div><div class="l">工作区主视图</div></div>
+    <div class="stat"><div class="n">3<small>重</small></div><div class="l">自动落盘保险</div></div>
+    <div class="stat"><div class="n">10<small>+</small></div><div class="l">导入导出格式</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">默认作品上传</div></div>
+  </div>
+
+  <div class="callout">
+    <span class="t">设计主张：把结构留在软件里，把控制权留给作者</span>
+    长篇创作真正的难点往往不在「写」，而在「记住自己写过什么」。小说工坊把大纲、人物、设定与灵感收回到同一个可检索、可跳转、可对照的本地空间里，让创作脉络始终清晰可见。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">03</span>
+  </div>
+</section>
+
+<!-- ============================= 4 · 02 书架与幻流 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">02 · 书架与幻流</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">BOOKSHELF &amp; FLOW BACKDROP</div>
+    <h2>3D 轮播书架与 WebGL 幻流背景</h2>
+    <div class="bar"></div>
+  </div>
+
+  <p>
+    自 v1.2.4 起，桌面版界面收敛为统一的「<strong>幻流</strong>」皮肤语言，覆盖书架、工作台、设置与拆出的独立窗口。顶部胶囊集中切换六大模块（书架 / 正文 / 大纲 / 设定 / 人物 / 灵感），右侧常驻保存状态、搜索、统计、设置、锁屏与「恍然梦-入梦」入口；主舞台以 3D 透视轮播生成式书封，支持按创作状态（全部 / 连载 / 完结 / 构思 / 搁置）筛选、键盘左右切换及「继续写作 / 打开工作台」双入口，底部票根实时记录上次阅读章节与进度。
+  </p>
+
+  <figure>
+    <div class="frame"><img src="项目展示图例/书架2.png" alt="幻流书架暖琥珀配色" /></div>
+    <figcaption><b>图 1</b>　幻流书架（暖琥珀流场）。中央焦点书封《星尘旅人》展示作者、题材状态、章数与总字数，底部票根提示「第一章 · 初雪 · 第 8 章 / 共 11 章」。</figcaption>
+  </figure>
+
+  <div class="row" style="align-items:stretch">
+    <div class="col" style="flex:1.15">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/书架.png" alt="流场切换对比" /></div>
+        <figcaption><b>图 2</b>　流场随配色切换示意（早期标识 <code>LATENT</code> 已统一为「幻流」）。</figcaption>
+      </figure>
+    </div>
+    <div class="col" style="display:flex;flex-direction:column;gap:2.6mm">
+      <div class="card" style="flex:1">
+        <h4>WebGL 实时流场</h4>
+        <p>可选择<strong>跟随作品封面</strong>自动取色，也可切为<strong>自定义两色</strong>（RGB / 色板 / 五组推荐配色），支持 <code>0–2×</code> 流动速度调节（<code>0×</code> 静止）与深/浅面板明暗切换。</p>
+      </div>
+      <div class="card" style="flex:1">
+        <h4>多配置隔离与单实例保护</h4>
+        <p>同一数据目录仅允许单实例运行以防并发损坏；启动加 <code>--profile=名字</code> 即可隔离独立书库目录。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">04</span>
+  </div>
+</section>
+
+<!-- ============================= 5 · 03 正文主战场 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">03 · 正文</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">MANUSCRIPT</div>
+    <h2>正文 · 三栏稿面与实时联动札记</h2>
+    <div class="sub">卷—章两级目录 + TipTap 富文本编辑器 + 右侧「批注栏」协同</div>
+    <div class="bar"></div>
+  </div>
+
+  <figure>
+    <div class="frame"><img src="项目展示图例/正文.png" alt="正文三栏工作台" /></div>
+    <figcaption><b>图 3</b>　正文三栏工作台。左栏卷章目录支持搜索、★ 书签与拖拽排序；中栏集成「恍然梦 · 正文助手」提示、字数目标进度条与富文本工具栏；右栏实时联动本章批注、本章大纲速记、出场人物、插图与章节信息。</figcaption>
+  </figure>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>富文本编辑与快捷动作</h4>
+      <p>工具栏提供撤销重做、加粗 / 斜体 / 下划线 / 删除线、正文与 <code>H1–H3</code>、字号、字体颜色、突出显示、对齐、列表与引用、超链接、清除格式，以及「<strong>发送给恍然梦</strong>」。</p>
+    </div>
+    <div class="card">
+      <h4>右栏五项随章实时联动</h4>
+      <p><strong>本章批注</strong>逐条定位；<strong>本章大纲</strong>输入即挂到大纲画布；<strong>本章出场人物</strong>自动识别；<strong>本章插图</strong>支持拖拽或粘贴上传；<strong>本章信息</strong>显示字数、状态与更新时间。</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="t">输入即存的三道保险与版本快照</span>
+    输入防抖 <strong>1 秒</strong>落盘 + <strong>30 秒</strong>兜底 + 失焦 / 切章 / 关窗前<strong>强制保存</strong>；顶栏常驻「已保存」状态指示。章节内容变更按 5 分钟冷却策略自动保留最近 <strong>30 份版本快照</strong>，随时比对与一键回滚。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">05</span>
+  </div>
+</section>
+
+<!-- ============================= 6 · 03 正文专注与批注 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">03 · 正文</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">FOCUS · ANNOTATIONS · CONTEXT</div>
+    <h2>专注写稿 · 批注双链共存 · 阅读模式</h2>
+    <div class="bar"></div>
+  </div>
+
+  <p>
+    点击左右分隔手柄即可将章节目录与批注栏收起为极窄竖轨标签（「批注」「章节」），让稿面在屏幕中央安静展开，且每块区域的栏宽与收起状态会随布局偏好持久化记忆。在正文中选中文字右键，即可就地呼出 Word 式快捷操作栏，直接完成排版、加批注或添加关系链接。
+  </p>
+
+  <figure>
+    <div class="frame"><img src="项目展示图例/正文2.png" alt="正文专注视图" /></div>
+    <figcaption><b>图 4</b>　收起两侧栏后的正文专注视角。右缘保留竖向「批注」「章节 11」折叠页签，随时点击展开；选中句子以柔和暖色高亮。</figcaption>
+  </figure>
+
+  <table class="tight">
+    <thead><tr><th style="width:30mm">文内标记</th><th style="width:36mm">视觉样式</th><th>能力说明</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>正文批注</strong></td>
+        <td>实线下划线（偏下 + 淡底）</td>
+        <td>可选 6 种用途色或自定义色；右栏逐条对应，点击定位并闪烁；删批注不删原文，整段删文后自动标「已失效」可一键清理。</td>
+      </tr>
+      <tr>
+        <td><strong>关系链接</strong></td>
+        <td>点状下划线（贴字主题色）</td>
+        <td>选中右键或输入 <code>[[标题]]</code> 关联章节 / 人物 / 设定；与批注同句叠放互不覆盖；悬停弹出可拖动钉住的预览窗。</td>
+      </tr>
+      <tr>
+        <td><strong>阅读模式</strong></td>
+        <td>只读宽栏排版</td>
+        <td>收起编辑工具条，巨排章号随正文滚动，左侧细边条滑出章节列表，<kbd>Esc</kbd> 两级退出恢复编辑。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">06</span>
+  </div>
+</section>
+
+<!-- ============================= 7 · 04 大纲画布 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">04 · 大纲</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">OUTLINE CANVAS</div>
+    <h2>大纲 · 分层自由画布</h2>
+    <div class="sub">根层只展示直接子节点；容器可下钻次级画布，也可就地展开；画布与文本双视图同源</div>
+    <div class="bar"></div>
+  </div>
+
+  <figure>
+    <div class="frame"><img src="项目展示图例/大纲.png" alt="大纲自由画布" /></div>
+    <figcaption><b>图 5</b>　大纲画布视图。左侧「故事结构」树同步全书层级与搜索定位；底部悬浮七类模块工具条与缩放总览；画布内事件卡、便签、人物引用卡、章节卡与容器通过实线/虚线语义连线串联，并附「情节推进 / 关联与伏笔」图例。</figcaption>
+  </figure>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>七类模块 · 放置预览</h4>
+      <p><strong>事件</strong>（矩形 / 菱形 / 平行四边形 / 椭圆 4 种 SVG 描边形状，及已完成 / 正在写 / 待修改 / 待展开 4 态）、<strong>便签</strong>、<strong>引用</strong>（卫星令牌关联设定 / 章节 / 人物）、<strong>文本框</strong>（透明度可调）、<strong>锚点</strong>（绑定章节）、<strong>卷</strong>（绑定分卷）、<strong>容器</strong>。新建锚点或卷时跟随指针显示落点预览。</p>
+    </div>
+    <div class="card">
+      <h4>文本视图 · 跨层检索</h4>
+      <p>右上角「画布 / 文本」一键切换同源幕布树，改一处另一处即时同步；<kbd>Ctrl</kbd>+<kbd>K</kbd> 跨全部层级搜索并自动进入目标父层定位；画布设置支持点阵显示开关、16px 网格吸附、卡片密度与透明度调节（20–100%）。</p>
+    </div>
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">07</span>
+  </div>
+</section>
+
+<!-- ============================= 8 · 04 容器与连线 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">04 · 大纲</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">CONTAINERS &amp; ROUTING</div>
+    <h2>容器详情 · 语义连线 · 线连到线</h2>
+    <div class="bar"></div>
+  </div>
+
+  <figure>
+    <div class="frame"><img src="项目展示图例/大纲2.png" alt="大纲容器详情面板" /></div>
+    <figcaption><b>图 6</b>　选中容器卡后，右侧展开「容器详情」面板：显示故事摘要、已完成事件进度、就地展开 / 进入容器入口、关联章节、故事关系与「在文本视图中展开」。</figcaption>
+  </figure>
+
+  <table class="tight">
+    <thead><tr><th style="width:24mm">连线语义</th><th style="width:22mm">默认形态</th><th>适用场景</th></tr></thead>
+    <tbody>
+      <tr><td><strong>关联</strong></td><td>蓝色实线</td><td>常规情节呼应、设定关联与线索绑定</td></tr>
+      <tr><td><strong>因果</strong></td><td>红色实线</td><td>事件之间的直接触发与推动（如「触发」「发现」）</td></tr>
+      <tr><td><strong>伏笔</strong></td><td>紫色虚线</td><td>前期铺垫与后期回收（如「依据」「收束」「闭环」）</td></tr>
+      <tr><td><strong>冲突</strong></td><td>橙色实线</td><td>阵营对抗、角色冲突与戏剧张力</td></tr>
+    </tbody>
+  </table>
+
+  <ul class="feat">
+    <li><b>容器双交互</b>——「进入容器 ↗」切入次级画布，面包屑逐级返回并恢复相机；「就地展开 ＋」展开为两列迷你卡，支持迷你卡拖动重排、拖出回当前层或跨容器换组。</li>
+    <li><b>严格端口锁定 + Hanan 稀疏网格 A*</b>——建立连线时锁定两端接口方向并落库，挪动节点绝不漂移；途经模块自动求全局最短路绕行（无通道时以虚线「路径受阻」提示，移开卡片即自动恢复）。</li>
+    <li><b>连接点与拖拽塑形</b>——右键连线可在路径上建双向连接点实现<strong>线连到线</strong>；左键拖线自由塑形，双击恢复自动路由；编辑浮层自动避开连线本体；收起节点关系自动投影到容器卡或「前接 / 后续」接续卡。</li>
+  </ul>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">08</span>
+  </div>
+</section>
+
+<!-- ============================= 9 · 05 设定幕布与阅读 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">05 · 设定</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">WORLD &amp; LORE</div>
+    <h2>设定 · 节点大纲与三栏阅读视图</h2>
+    <div class="sub">统一无限嵌套节点树 · 内联格式 · 条目级关联关系 · 三视图自由切换</div>
+    <div class="bar"></div>
+  </div>
+
+  <div class="row" style="margin-bottom:3.2mm">
+    <div class="col">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/设定-节点.png" alt="设定节点大纲" /></div>
+        <figcaption><b>图 7</b>　节点大纲。左侧目录与幕布树双向同步，顶部集成「恍然梦 · 设定助手」与内联格式条，底部显示面包屑与键位提示。</figcaption>
+      </figure>
+    </div>
+    <div class="col">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/设定-阅读.png" alt="设定阅读视图" /></div>
+        <figcaption><b>图 8</b>　阅读视图。三栏依次为节点目录、同级条目预览卡（含标签筛选与关联数）及选中条目详读与编号子条目列表。</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>无限嵌套幕布树</h4>
+      <p>没有「文件夹 / 条目」二分，任意节点地位平等。支持三区插入指示拖拽排序、悬停折叠节点自动展开、FLIP 衔接动画、快照式撤销重做及 <code>MD / TXT</code> 标题层级自动导入。</p>
+    </div>
+    <div class="card">
+      <h4>条目关联与设定详情页</h4>
+      <p>右键条目「设置关系…」可建立<strong>设定 ↔ 设定 / 设定 ↔ 人物</strong>带类型双向关联，行尾生成关系卡片；双击条目或点击「详情」进入设定详情页，查看关联关系与子条目。</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="t">三种工作节奏，同一份世界观数据</span>
+    构思期在<strong>节点大纲</strong>快速敲入与缩进拆层；查证期切入<strong>阅读视图</strong>像翻阅百科卡片般浏览同级条目与子条目；全局推演时切到<strong>视觉导图</strong>俯瞰整个世界观结构。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">09</span>
+  </div>
+</section>
+
+<!-- ============================= 10 · 05 设定关系星系 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">05 · 设定</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">RELATION GALAXY</div>
+    <h2>视觉导图 · 可交互设定关系星系</h2>
+    <div class="sub">同心轨道星系 + 层级导图切换 · 独立拖拽并轨 · 转速与星体尺寸调节</div>
+    <div class="bar"></div>
+  </div>
+
+  <figure>
+    <div class="frame"><img src="项目展示图例/设定-视觉.png" alt="设定关系星系" /></div>
+    <figcaption><b>图 9</b>　视觉导图 → 关系星系。以作品《星尘旅人》为发光核心，11 个设定集与 26 个条目分布在同心轨道上，区分「条目织网」「集内关系」与「跨集关系」；左侧目录收起为竖轨，右下提供缩放（135%）与「聚焦」。</figcaption>
+  </figure>
+
+  <div class="grid3">
+    <div class="card">
+      <h4>三维交互与聚焦</h4>
+      <p>左键拖动空白旋转视角，中键拖动平移，滚轮缩放或点击右下角「聚焦」快速回到中心；点击星体即查看关系摘要并支持跳转条目。</p>
+    </div>
+    <div class="card">
+      <h4>独立拖拽与靠近并轨</h4>
+      <p>拖动单条轨道时不打扰其余轨道；靠近另一轨道时出现并轨提示，松手即可让两组星体共用轨道，自定义布局按作品保存。</p>
+    </div>
+    <div class="card">
+      <h4>速度 · 大小 · 间距可调</h4>
+      <p>右键星体可分别调整<strong>公转与自转速度</strong>；拖动圆边即可调节条目大小、轨道间距与入口半径，也可一键「恢复自动布局」。</p>
+    </div>
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">10</span>
+  </div>
+</section>
+
+<!-- ============================= 11 · 06 人物卷宗 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">06 · 人物</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">CHARACTER DOSSIER</div>
+    <h2>人物 · 人物卷宗与多篇小传</h2>
+    <div class="sub">人物名录筛选 · 多篇带标题小传 · 自定义字段 · 右侧「故事坐标」</div>
+    <div class="bar"></div>
+  </div>
+
+  <div class="row" style="margin-bottom:3.2mm">
+    <div class="col" style="flex:1.474">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/人物.png" alt="人物卷宗浏览态" /></div>
+        <figcaption><b>图 10</b>　人物卷宗浏览态。左栏人物名录、中栏小传与自定义字段、右栏「关系与设定（故事坐标）」迷你预览。</figcaption>
+      </figure>
+    </div>
+    <div class="col" style="flex:1.236">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/人物3.png" alt="人物卷宗编辑态" /></div>
+        <figcaption><b>图 11</b>　卷宗编辑态。支持头像上传、多角色定位分隔及「＋ 添加小传」管理多篇小传。</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <table class="tight">
+    <thead><tr><th style="width:32mm">档案区</th><th>功能说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>人物名录</strong></td><td>支持按姓名 / 别名 / 标签搜索，配合「全部角色」「全部标签」双重下拉筛选，列表头像色块与角色定位一目了然。</td></tr>
+      <tr><td><strong>角色定位与标签</strong></td><td>支持多个角色用 <code>/</code> 分隔，内置主角 / 配角 / 反派 / 导师 / 盟友 / 旁观者 / 龙套等预设胶囊并可自定义（兼容历史档案）。</td></tr>
+      <tr><td><strong>多篇人物小传</strong></td><td>支持「＋ 添加小传」维护多篇带标题的小传（如阶段经历、秘密档案），兼容旧版单篇小传，并可被双链与知识库检索。</td></tr>
+      <tr><td><strong>自定义字段与关联</strong></td><td>默认预置「外貌 / 性格」且可自由增删；「关联关系（设定 / 人物）」与右侧「故事坐标」实时同步，点击直达关系图。</td></tr>
+    </tbody>
+  </table>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">11</span>
+  </div>
+</section>
+
+<!-- ============================= 12 · 06 人物关系剧场 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">06 · 人物</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">RELATIONSHIP THEATER</div>
+    <h2>人物 · 关系剧场</h2>
+    <div class="sub">拖线即建关系 · 拖到既有边即改写 · 一度关系与全部人物视图切换</div>
+    <div class="bar"></div>
+  </div>
+
+  <figure>
+    <div class="frame"><img src="项目展示图例/人物2.png" alt="人物关系剧场" /></div>
+    <figcaption><b>图 12</b>　关系剧场视图。展示 6 个人物与 7 条带名关系弧线（「共生契约」「青梅竹马」「宿敌」「同盟」等）；右侧档案收起为竖向「人物档案」标签以释放最大画布空间。</figcaption>
+  </figure>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>建立与修改是同一个手势</h4>
+      <p>从人物节点四向锚点拖线到另一人物即新建关系并命名；拖线落到<strong>已有关系</strong>上则打开该关系的编辑浮层，就地改标签、线型、颜色或删除。</p>
+    </div>
+    <div class="card">
+      <h4>筛选、排布与孤岛提醒</h4>
+      <p>右上角切换「一度关系 / 全部人物」快速聚焦焦点角色的社交圈；支持圆形 / 网格一键排布、缩放与适应，孤岛人物单独提醒防止剧情遗忘。</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="t">双向同步与大纲联动</span>
+    关系剧场中的每一次连线变动都会实时写回人物卷宗与设定关联区；右键节点可一键「发送为大纲引用卡」，把人物直接摆上剧情画布参与推演。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">12</span>
+  </div>
+</section>
+
+<!-- ============================= 13 · 07 灵感拼板 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">07 · 灵感</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">SNIPPET BOARD</div>
+    <h2>灵感 · 按标签分组的单一拼板</h2>
+    <div class="sub">拖动图钉跨栏归类 · 卡片缩放与配色 · 一键转为章节或设定</div>
+    <div class="bar"></div>
+  </div>
+
+  <figure>
+    <div class="frame"><img src="项目展示图例/灵感.png" alt="灵感拼板" /></div>
+    <figcaption><b>图 13</b>　灵感拼板。左栏统计全部 / 未标记 / 有关联灵感并调节排序、缩放比例与卡片大小；中栏按标签分组陈列卡片，拖动图钉调整顺序或跨栏换组；右栏「片段整理」抽屉支持编辑内容、添加关联并一键转为章节或设定。</figcaption>
+  </figure>
+
+  <div class="grid3">
+    <div class="card">
+      <h4>图钉拖拽与标签看板</h4>
+      <p>卡片按标签分栏展示；拖动右上角图钉即可调整手动排序或跨栏更换标签组，支持「最新 / 最早 / 手动」三种排序持久化。</p>
+    </div>
+    <div class="card">
+      <h4>缩放、尺寸与六款配色</h4>
+      <p>支持 <code>80–125</code> 卡片大小与缩放比例滑块调节；提供默认、玫瑰、琥珀、苔绿、雾蓝、藤紫六款卡片配色，另设独立灵感回收站。</p>
+    </div>
+    <div class="card">
+      <h4>一键转为章节或设定</h4>
+      <p>在右侧「片段整理」抽屉补全标题、正文与跨模块关联后，一键「转为章节」或「转为设定」，同时贴心保留原灵感。</p>
+    </div>
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">13</span>
+  </div>
+</section>
+
+<!-- ============================= 14 · 08 恍然梦 AI 协同 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">08 · 恍然梦 AI 协同</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">DREAM ASSISTANT &amp; KNOWLEDGE</div>
+    <h2>恍然梦 · 入梦与浅眠双模式协同</h2>
+    <div class="sub">作者握有最终取舍权：先生成候选与审稿证据，再经确认写入正式稿件</div>
+    <div class="bar"></div>
+  </div>
+
+  <p class="lead-p">
+    「<strong>恍然梦</strong>」从书架、顶栏与编辑工具栏无缝接入创作全流程，分为沉浸共创的「<strong>入梦</strong>」与工坊侧边辅助的「<strong>浅眠</strong>」两种形态，并配备全书记忆队列与知识库检索。
+  </p>
+
+  <div class="grid2" style="margin-bottom:3.2mm">
+    <div class="card">
+      <h4>恍然梦-入梦（故事现场）</h4>
+      <p>面向连贯推进故事的沉浸舞台：支持「AI 叙事主写」与「角色参与」、写稿与剧情讨论切换、章节确认锁定、旅程记录回溯、独立审稿清单（含原文证据定位）与修稿前后对照；内置「高级创作工具」支持最多 10 章批量规划、写稿、审稿与复核流水线及 Token 预算控制。</p>
+    </div>
+    <div class="card">
+      <h4>恍然梦-浅眠（工坊助手）</h4>
+      <p>不离开当前正文、大纲、设定、人物或灵感界面，随时在右侧呼出协同面板；在正文编辑器内选中文字点击「<strong>发送给恍然梦</strong>」即可围绕选中段落请求续写、改写或审修建议，同时支持人物 / 关系 / 设定状态联合提案。</p>
+    </div>
+  </div>
+
+  <table class="tight">
+    <thead><tr><th style="width:36mm">底层能力</th><th>工作机制与安全边界</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>全书知识库索引</strong></td>
+        <td>本地索引全书设定、大纲、连线、人物、关系、灵感与批注；构建全文事实摘要前会弹窗确认范围；检索支持关键词与可选向量模型（Embeddings）语义检索（失败自动回落关键词）。</td>
+      </tr>
+      <tr>
+        <td><strong>章节记忆队列</strong></td>
+        <td>采纳正文后自动登记增量记忆更新任务；以内容指纹防止过期覆盖，异常中断后支持租约回收与重试；切换作品或启用隐私模式时自动取消在跑作业。</td>
+      </tr>
+      <tr>
+        <td><strong>多供应商与凭据加密</strong></td>
+        <td>「设置 → 模型设置」支持多供应商预设（Base URL / API 格式 / Key）、拉取或手动管理模型列表、温度与上下文预算控制；API Key 经系统凭据加密存储在本机，不写入备份文件。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout dark">
+    <span class="t">隐私与本地边界</span>
+    所有作品与设置默认保存在本机。只有当你主动配置模型服务并触发「恍然梦」请求（或手动构建全文事实时），才会向你设定的 API 端点发送必要上下文；开启「隐私模式」可限制发送范围。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">14</span>
+  </div>
+</section>
+
+<!-- ============================= 15 · 09 写作分析：速览与总览 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">09 · 写作分析</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">WRITING ANALYTICS · OVERVIEW</div>
+    <h2>写作分析 · 速览浮窗、创作历程与作品对照</h2>
+    <div class="sub">完全基于本机保存日志实时生成 · 无需联网 · 支持 7 / 30 / 90 日及自选日期区间</div>
+    <div class="bar"></div>
+  </div>
+
+  <div class="row" style="margin-bottom:3mm; align-items:stretch">
+    <div class="col" style="flex:1.25">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/分析-速览.png" alt="写作速览浮窗" /></div>
+        <figcaption><b>图 14</b>　顶栏呼出的「写作速览」浮窗：显示正文字数、正式章节数与近 7 日净增，点选柱状图日期可查看当日保存明细并直达完整分析。</figcaption>
+      </figure>
+    </div>
+    <div class="col" style="display:flex;flex-direction:column;gap:2.6mm">
+      <div class="card" style="flex:1">
+        <h4>创作历程（单作品 / 全库）</h4>
+        <p>同屏呈现<strong>区间累计净增曲线</strong>、每日正文净增柱线与<strong>活跃日历</strong>热力格；支持鼠标刷选日期范围或手动输入起止日期，并在右侧「当日明细检查器」联动展示涉及章节、保留版本与当日新增灵感。</p>
+      </div>
+      <div class="card" style="flex:1">
+        <h4>作品对照</h4>
+        <p>共用同一日期轴与刻度，并排比较任意两部作品的写作走势与活跃天数；下方「作品索引」与「分卷规模」支持点击直入单部作品详情。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" style="margin-bottom:0">
+    <div class="col">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/分析-总览-历程.png" alt="总览创作历程" /></div>
+        <figcaption><b>图 15</b>　总览 → 创作历程。展示《星尘旅人》近 90 日累计净增曲线、活跃日历及选中日期（09.24）的右侧明细。</figcaption>
+      </figure>
+    </div>
+    <div class="col">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/分析-总览-对照.png" alt="总览作品对照" /></div>
+        <figcaption><b>图 16</b>　总览 → 作品对照。同刻度对比《星尘旅人》与另一部作品的每日正文净增走势。</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">15</span>
+  </div>
+</section>
+
+<!-- ============================= 16 · 09 写作分析：稿件案卷 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">09 · 写作分析</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">WRITING ANALYTICS · MANUSCRIPT</div>
+    <h2>稿件案卷 · 章节结构与改稿轨迹</h2>
+    <div class="sub">左侧分卷进度目录 + 中央双图表切换 + 右侧单章明细与历史版本</div>
+    <div class="bar"></div>
+  </div>
+
+  <div class="row" style="margin-bottom:3mm">
+    <div class="col">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/分析-正文-结构.png" alt="章节字数分布" /></div>
+        <figcaption><b>图 17</b>　章节结构视图。按分卷分组展示每章字数条与全部章节中位数（156 字），支持按「全部 / 已完成 / 待修改 / 草稿」状态筛选。</figcaption>
+      </figure>
+    </div>
+    <div class="col">
+      <figure class="mb0">
+        <div class="frame"><img src="项目展示图例/分析-正文-改稿.png" alt="章节改稿轨迹" /></div>
+        <figcaption><b>图 18</b>　改稿轨迹矩阵。以章节 × 日期热力格呈现每日净增（<code>+</code>）、净减（<code>−</code>）、净零写入（<code>=</code>）与留存版本（<code>◆</code>）。</figcaption>
+      </figure>
+    </div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:3mm">
+    <div class="card">
+      <h4>章节结构与分卷进度</h4>
+      <p>左侧「分卷目录」汇总各卷已完成 / 总章数进度条，点击即可下钻单卷；中栏色带直观标示全书或单卷的完成度比例与各章字数分布，点选章节即在右栏查看字数与区间留存版本。</p>
+    </div>
+    <div class="card">
+      <h4>改稿热力矩阵与单日溯源</h4>
+      <p>支持键盘方向键与横滑遍历整段创作日期；点选任意「章节 × 日期」格子，右侧「章节档案」即同步显示该章该日的逐条保存记录、版本快照及区间每日净增小图。</p>
+    </div>
+  </div>
+
+  <div class="callout">
+    <span class="t">从统计直接回到历史版本</span>
+    无论在「创作历程」还是「稿件案卷」，右侧检查器均支持展开当日保留版本查看正文内容，并可一键跳转至对应章节案卷核对改动。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">16</span>
+  </div>
+</section>
+
+<!-- ============================= 17 · 09 写作分析：四大要素剖析 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">09 · 写作分析</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">WRITING ANALYTICS · MODULES</div>
+    <h2>要素剖析 · 大纲 · 设定 · 人物 · 灵感</h2>
+    <div class="sub">四大非正文要素的存量分布、结构状态与关系明细同窗可查</div>
+    <div class="bar"></div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:2.8mm">
+    <figure class="mb0">
+      <div class="frame"><img src="项目展示图例/分析-大纲.png" alt="大纲分析" /></div>
+      <figcaption><b>图 19</b>　大纲分析。统计事件总数与已完成数，按故事容器列出四态（待写 / 进行中 / 已完成 / 待修改）比例条，点选容器查看事件清单。</figcaption>
+    </figure>
+    <figure class="mb0">
+      <div class="frame"><img src="项目展示图例/分析-设定.png" alt="设定分析" /></div>
+      <figcaption><b>图 20</b>　设定分析。汇总根分支、设定节点、带标签节点与手工关系数，点击设定分支在右栏展开完整节点目录树。</figcaption>
+    </figure>
+    <figure class="mb0">
+      <div class="frame"><img src="项目展示图例/分析-人物.png" alt="人物分析" /></div>
+      <figcaption><b>图 21</b>　人物分析。按角色定位分组并标识未建关系人物，下方人物关系图支持点击角色高亮一度连线并在右栏列出既有关系。</figcaption>
+    </figure>
+    <figure class="mb0">
+      <div class="frame"><img src="项目展示图例/分析-灵感.png" alt="灵感分析" /></div>
+      <figcaption><b>图 22</b>　灵感分析。展示当前灵感与已标记数、标签分布条及区间内最近新增记录，点击条目即可在右栏检视灵感正文。</figcaption>
+    </figure>
+  </div>
+
+  <div class="callout dark" style="margin-top:1.8mm">
+    <span class="t">幻流统计背板与独立窗口体验</span>
+    写作分析可作为独立面板窗口驻留副屏，顶部胶囊在「总览 / 正文 / 大纲 / 设定 / 人物 / 灵感」六大分析视角间即时切换，亦可随时收起为速览浮窗。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">17</span>
+  </div>
+</section>
+
+<!-- ============================= 18 · 10 全局工具与多窗口 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">10 · 全局工具</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">SEARCH · LINKS · MULTI-WINDOW</div>
+    <h2>全局搜索 · 关系链接 · 独立拆窗实体锁</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="grid2" style="margin-bottom:3mm">
+    <div class="card">
+      <h4>全局搜索（<code>Ctrl+Shift+F</code>）</h4>
+      <p>跨<strong>正文 / 大纲 / 人物 / 设定 / 灵感</strong>五个模块检索，结果按模块分组并高亮命中片段，点击直接跳回目标条目。</p>
+    </div>
+    <div class="card">
+      <h4>关系链接（<code>[[标题]]</code>）</h4>
+      <p>任意文本选中右键或手输 <code>[[标题]]</code> 串联章节、人物与设定；悬停弹出可拖动钉住的预览窗并记忆停靠位置，改名不断链。</p>
+    </div>
+  </div>
+
+  <table class="tight" style="margin-bottom:3mm">
+    <thead><tr><th style="width:40mm">多窗口与实体锁</th><th>运行机制</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>独立面板窗口</strong></td>
+        <td>支持把正文、大纲、人物、设定、灵感、写作分析或恍然梦拆出为完整功能界面的独立窗口（如双屏左写正文、右看大纲或分析），窗口内可自由切换条目，关闭时按类型记忆几何位置。</td>
+      </tr>
+      <tr>
+        <td><strong>条目级 / 模块级实体锁</strong></td>
+        <td>章节 / 人物 / 灵感采用<strong>条目级锁</strong>——面板占用的条目在主窗口转为只读占位并提示「前往窗口」，其余条目照常可写，锁随选中迁移；大纲与设定采用<strong>模块级锁</strong>防止跨树冲突。</td>
+      </tr>
+      <tr>
+        <td><strong>统一自动保存链路</strong></td>
+        <td>每个独立窗口通过主进程锁表互斥写入，并复用同一套自动保存链路；主窗口关闭时自动触发级联保存并关闭全部面板。</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">跨窗口跳转与协同</span>
+    在独立大纲面板双击指向人物或设定的双链令牌时，主窗口会自动定位到对应作品与目标条目，让双屏对照创作无需反复切屏找位置。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">18</span>
+  </div>
+</section>
+
+<!-- ============================= 19 · 11 导入导出与数据安全 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">11 · 导入导出与数据安全</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">IMPORT · EXPORT · DATA SAFETY</div>
+    <h2>六类格式导入 · 智能导出 · 作品库保护</h2>
+    <div class="bar"></div>
+  </div>
+
+  <table class="tight" style="margin-bottom:3mm">
+    <thead><tr><th style="width:26mm">导入格式</th><th>解析与分章策略（导入前均支持预览确认）</th></tr></thead>
+    <tbody>
+      <tr><td><strong>TXT</strong></td><td>自动识别 UTF-8 / GBK 等编码，按「第 X 章」正则智能分章</td></tr>
+      <tr><td><strong>Markdown</strong></td><td>按标题层级（<code># / ##</code>）映射为卷与章结构</td></tr>
+      <tr><td><strong>DOCX</strong></td><td>桌面端经 Mammoth 解析 Word 标题样式分章并保留富文本格式</td></tr>
+      <tr><td><strong>PDF</strong></td><td>优先按书签目录分章导入，扫描件支持整页转存为章节图片</td></tr>
+      <tr><td><strong>EPUB / 图片</strong></td><td>EPUB 按电子书目录分章导入；常见图片作为章节插图进入右栏管理</td></tr>
+    </tbody>
+  </table>
+
+  <table class="tight" style="margin-bottom:3.2mm">
+    <thead><tr><th style="width:44mm">导出范围与策略</th><th>支持 TXT / Markdown / Word（<code>.docx</code>，JSZip 手组 OOXML）</th></tr></thead>
+    <tbody>
+      <tr><td><strong>单章导出</strong></td><td>直接以 <code>章节名.格式</code> 导出；docx 保留加粗、斜体、下划线、字色、标题、对齐、列表与引文</td></tr>
+      <tr><td><strong>多章（≤ 阈值）</strong></td><td><strong>逐章分批</strong>：仅首次确认导出目录，随后自动按顺序写入同目录，每章一个文件</td></tr>
+      <tr><td><strong>超过阈值（2–500 可调）</strong></td><td>可选「合并为单个文件」或「按章打包 <code>.zip</code>」（按卷建子目录、<code>序号-章节名</code> 命名）</td></tr>
+    </tbody>
+  </table>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>存储位置迁移与整库备份</h4>
+      <p>「设置 → 备份与数据」支持查看并一键把<strong>作品数据存储位置</strong>迁移至任意文件夹；提供含图片在内的整库 JSON 快照备份，恢复前先预览核对备份内容再替换。</p>
+    </div>
+    <div class="card">
+      <h4>回收站 · 链接安全 · 内置手册</h4>
+      <p>正文、人物、设定、灵感软删除后进入分类回收站可随时还原；正文超链接仅放行公网 <code>http/https</code>；内置与源码同源打包的《使用手册》，永不失同步。</p>
+    </div>
+  </div>
+
+  <div class="callout dark">
+    <span class="t">本机存储与多开保护</span>
+    作品默认存放在 <code>%APPDATA%\小说工坊</code>（或你迁移后的自定义目录）。同一数据目录同一时间仅允许一个实例运行，避免并发写坏数据；需要多开试稿时可使用 <code>--profile=名字</code> 启动隔离目录。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">19</span>
+  </div>
+</section>
+
+<!-- ============================= 20 · 12 外观、安装与技术一览 ============================= -->
+<section class="page">
+  <div class="p-head">
+    <div class="brand"><b>小说工坊</b> Novel Studio</div>
+    <div class="sec">12 · 外观排版 · 安装运行 · 技术一览</div>
+  </div>
+
+  <div class="sec-head">
+    <div class="kicker">APPEARANCE · SETUP · ARCHITECTURE</div>
+    <h2>中/西文排版 · 自动更新 · 技术一览</h2>
+    <div class="bar"></div>
+  </div>
+
+  <div class="card" style="margin-bottom:2.8mm">
+    <h4>外观与中/西文分离排版（「设置 → 外观与排版」）</h4>
+    <p>中文正文字体 <strong>6 款</strong>（思源宋体 / 霞鹜文楷 / 京华老宋体 / 朝华标题 / 云游手书 / 系统黑体）与西文字体 <strong>3 款</strong>（跟随中文 / Playfair Display / Montenegrin Gothic One）可分离搭配，全部为随包本地 OFL 字体、零网络请求；正文字号 <code>13–24px</code> 无级调节配右侧实时预览，支持深/浅面板与默认隐藏顶栏。</p>
+  </div>
+
+  <table class="tight" style="margin-bottom:2.8mm">
+    <thead><tr><th style="width:36mm">运行形态</th><th style="width:56mm">获取与启动方式</th><th>说明</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Windows 安装包</strong></td><td><code>novel-studio-setup-1.2.6.exe</code></td><td>GitHub Releases 下载，NSIS 向导式安装；内置应用内检查更新，下载后校验 <strong>SHA-512</strong> 调起安装</td></tr>
+      <tr><td><strong>免安装本体</strong></td><td><code>release2/win-unpacked/小说工坊.exe</code></td><td><code>npm run dist</code> 同批产出，双击即用（首次未签名提示选「仍要运行」）</td></tr>
+      <tr><td><strong>源码 / 网页 / 插件</strong></td><td><code>npm start</code> · <code>npm run web</code> · <code>build:plugin</code></td><td>源码需 Node.js ≥ 18；网页版本地调试；核心与 DSH 插件仓库 <code>dsh-novel-studio</code> 同步构建</td></tr>
+    </tbody>
+  </table>
+
+  <div class="flow" style="margin:2.8mm 0">
+    <span class="step">下载安装程序</span><span class="arw">→</span>
+    <span class="step">选择安装路径</span><span class="arw">→</span>
+    <span class="step">双击启动写作</span><span class="arw">→</span>
+    <span class="step">应用内检查更新（SHA-512 校验）</span>
+  </div>
+
+  <table class="tight">
+    <thead><tr><th style="width:26mm">技术维度</th><th>当前实现（v1.2.6）</th></tr></thead>
+    <tbody>
+      <tr><td><strong>桌面与前端</strong></td><td>Electron 33 + Vue 3 + Pinia + Naive UI；TipTap 富文本 + 自研幕布树 + 自研双画布引擎</td></tr>
+      <tr><td><strong>图形与可视化</strong></td><td>Three.js / WebGL 着色器（幻流流场、3D 书封、设定关系星系）· ECharts（写作分析）</td></tr>
+      <tr><td><strong>存储与文档</strong></td><td>Dexie / IndexedDB + <code>packages/novel-core/</code> 文件库底座（Repository 层隔离）· JSZip / Mammoth / PDF.js</td></tr>
+      <tr><td><strong>代码与质量</strong></td><td><code>src/</code> 共 <strong>408 个源码文件</strong>（含 <strong>168 个 Vue 组件</strong>、约 <strong>8.69 万行</strong>代码）；<strong>110+ 套</strong>验收与单元测试脚本</td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <span class="t">首次运行提示</span>
+    安装程序未做代码签名，如遇 Windows SmartScreen 拦截提示，选择「更多信息 → 仍要运行」即可。卸载程序不影响已保存的作品数据目录。
+  </div>
+
+  <div class="p-foot">
+    <span>小说工坊 Novel Studio · 产品介绍</span>
+    <span class="pg">20</span>
+  </div>
+</section>
+
+<!-- ============================= 21 封底 ============================= -->
+<section class="page back">
+  <div class="mark">小说工坊</div>
+  <div class="rule"></div>
+  <div class="info">
+    <div><span class="k">版本</span>v1.2.6 · Windows x64</div>
+    <div><span class="k">仓库</span>github.com/linque0/novel</div>
+    <div><span class="k">下载</span>github.com/linque0/novel/releases</div>
+    <div style="margin-top:6mm;font-size:9pt;color:var(--muted)">
+      本地优先 · 输入即存 · 创作脉络永不散失
+    </div>
+  </div>
+  <div class="foot">本文档全部 22 张配图均为项目展示图例中的实机界面截图，作品数据取自虚构演示书目《星尘旅人》及测试书库</div>
+</section>
+
+</body>
+</html>
