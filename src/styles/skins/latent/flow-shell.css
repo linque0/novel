@@ -10,6 +10,10 @@
 html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-flow] {
   position: relative;
 }
+html body[data-skin='dsh'] .workbench-shell.latent-studio[data-flow]::before,
+html body[data-skin='dsh'] .workbench-shell.latent-studio[data-flow]::after {
+  display: none;
+}
 
 /* ---- 1. 内容地面让位：.wb-body 原本铺 --ns-bg 实底（dsh.css:305），会把画布整块盖住 ---- */
 html body[data-skin='dsh'] :is(.workbench-shell, .panel-host)[data-flow] :is(.wb-body, .panel-body) {

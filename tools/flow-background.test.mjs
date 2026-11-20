@@ -59,3 +59,37 @@ test('CPU backdrop repaints the chosen palette immediately and after a reduced-m
   assert.ok(frames.at(-1).data[0] > frames.at(-1).data[1] + 20)
   cpu.dispose()
 })
+
+test('a transition suspends the backdrop loop and resumes once at the handed-off phase', t => {
+  const callbacks = new Map()
+  let frameId = 0
+  globalThis.window = new EventTarget()
+  globalThis.document = Object.assign(new EventTarget(), { hidden: false })
+  globalThis.requestAnimationFrame = fn => {
+    callbacks.set(++frameId, fn)
+    return frameId
+  }
+  globalThis.cancelAnimationFrame = id => callbacks.delete(id)
+  t.after(() => {
+    delete globalThis.window
+    delete globalThis.document
+    delete globalThis.requestAnimationFrame
+    delete globalThis.cancelAnimationFrame
+  })
+  const context = {
+    createImageData: (w, h) => ({ data: new Uint8ClampedArray(w * h * 4) }),
+    putImageData() {}
+  }
+  const cpu = createCpuBackdrop({ getContext: () => context, clientWidth: 40, clientHeight: 40 }, { simWidth: 32 })
+  assert.equal(callbacks.size, 1)
+  const release = cpu.holdTransition()
+  assert.equal(callbacks.size, 0)
+  cpu.setSpeed(1.5)
+  cpu.syncTransitionTime(4)
+  assert.equal(callbacks.size, 0)
+  assert.equal(cpu.transitionFrame().time, 4)
+  release()
+  assert.equal(callbacks.size, 1)
+  cpu.dispose()
+  assert.equal(callbacks.size, 0)
+})

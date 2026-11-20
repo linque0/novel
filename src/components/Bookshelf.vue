@@ -105,9 +105,7 @@ async function openWorkAt(w, tab = 'chapters') {
       if (WORK_NAVIGATION.some(item => item.key === tab)) work.tab = tab
     }, {
       skin: ui.skin,
-      flowBackground: ui.flowBackground,
-      work: w,
-      afterCommit: () => nextTick()
+      afterCommit: async () => { await nextTick(); await nextTick() }
     })
   } catch {
     msg.error('作品未能打开，请重试')

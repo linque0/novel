@@ -44,6 +44,7 @@ import './styles/original-records.css'
 import './styles/original-dialogs.css'
 
 const ui = useUiStore()
+const flowScene = ref(null)
 const { museumActive } = useGlazeMuseum()
 const shelf = useShelfStore()
 
@@ -208,7 +209,7 @@ async function seedDevVerifyBooks() {
         <PrefBridge />
         <AppUpdateControls v-if="!nsPlugin && !panelMode && prefsReady" startup />
         <PanelHost v-if="panelMode && !analysisPanel && prefsReady" />
-        <div v-else-if="!panelMode || ui.dbError" class="app-root" :class="'theme-' + ui.theme" :data-skin="activeSkin.id" :style="ui.rootStyle" :inert="ui.statsAnalysisOpen">
+        <div v-else-if="!panelMode || ui.dbError" ref="flowScene" class="app-root" :class="'theme-' + ui.theme" :data-skin="activeSkin.id" :style="ui.rootStyle" :inert="ui.statsAnalysisOpen">
           <div v-if="ui.dbError" class="empty-shelf" style="padding-top: 16vh">
             <div class="big">数据的另一扇门被占用了</div>
             <p>
@@ -236,7 +237,7 @@ async function seedDevVerifyBooks() {
           v-if="analysisPanel ? prefsReady : latent && !panelMode"
           :panel-entry="analysisPanel ? panelSpec[2] || '' : null"
         />
-        <FlowTransitionOverlay v-if="latent && !panelMode" />
+        <FlowTransitionOverlay v-if="latent && !panelMode" :scene="flowScene" />
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>

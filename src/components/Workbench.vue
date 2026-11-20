@@ -36,7 +36,7 @@ import { isLatentSkin } from '../skins/registry'
 /* 隐现皮肤的流动背板（正文/大纲/设定/人物/灵感共用同一个 flow 引擎） */
 import { mountFlowBackdrop } from '../services/latent/flow.js'
 import { flowPaletteKey, resolveFlowPalette } from '../services/latent/flow-palette.js'
-import { runFlowTransition } from '../services/latent/flow-transition.js'
+import { flowTransition, runFlowTransition } from '../services/latent/flow-transition.js'
 import RightPanel from './RightPanel.vue'
 import WritingSidePanels from './writing-layout/WritingSidePanels.vue'
 import AiAssistantPanel from './ai/AiAssistantPanel.vue'
@@ -100,9 +100,7 @@ async function returnToShelf(){
   if(original.value){await autosave.flushAll();if(ui.autosave.pending||ui.autosave.error){msg.error('仍有内容未保存，请重试保存后再返回书单');return}}
   return runFlowTransition(() => work.closeWork(), {
     skin: ui.skin,
-    flowBackground: ui.flowBackground,
-    work: work.work,
-    afterCommit: () => nextTick()
+    afterCommit: async () => { await nextTick(); await nextTick() }
   })
 }
 const inspirationPrompt = ref('把这条灵感扩展成一个场景，保留悬念。')
@@ -138,15 +136,13 @@ function onBookmarkSelect(key) {
 
 const tabs = WORK_NAVIGATION
 function selectTab(key) {
-  if (work.tab === key) return
+  if (work.tab === key) return flowTransition.cancelPending()
   void runFlowTransition(() => {
     ui.loreDetailId = null
     work.tab = key
   }, {
     skin: ui.skin,
-    flowBackground: ui.flowBackground,
-    work: work.work,
-    afterCommit: () => nextTick()
+    afterCommit: async () => { await nextTick(); await nextTick() }
   })
 }
 
@@ -388,6 +384,7 @@ function mountFlow() {
   if (!canvas) return
   const width = window.innerWidth
   flowApi = mountFlowBackdrop(canvas, {
+    transitionSurface: true,
     speed: ui.effectiveFlowSpeed,
     palette: resolveFlowPalette(ui.flowBackground, work.work),
     reducedMotion: Boolean(reduceMotionQuery?.matches),
@@ -405,8 +402,7 @@ function unmountStudioBackdrop() {
   destroyFlow()
 }
 
-/* 切页、切模式、切皮肤即重建：WebGL 上下文必须跟着放掉，重挂时换一张干净画布 */
-watch(() => work.tab, () => { mountFlow() }, { flush: 'post' })
+/* 模块切换共用同一张画布。只有工作模式或皮肤让背板离场时才重挂。 */
 watch(() => ui.workbenchMode, () => { mountFlow() }, { flush: 'post' })
 watch(() => ui.skin, () => { mountFlow() }, { flush: 'post' })
 watch(() => flowPaletteKey(ui.flowBackground, work.work), applyFlowPalette)

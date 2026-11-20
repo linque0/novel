@@ -4,6 +4,12 @@ import { createLatentBackdrop } from './latent-gl.js'
 import { createCpuBackdrop } from './cpu-backdrop.js'
 import { normalizeFlowSpeed } from './flow-motion.js'
 
+const transitionBackdrops = new WeakMap()
+
+export function getTransitionBackdrop(root) {
+  return transitionBackdrops.get(root.querySelector('[data-flow-transition-backdrop]'))
+}
+
 /* 碰过 WebGL 的画布在 loseContext 之后拿不回可用上下文，被 2D 占过的画布同样拿不到 WebGL，
    所以换页重挂必须换一张新画布。调用方的 ref 指向的元素在 replaceWith 之后已脱流，
    新画布记在它身上，下次挂载顺着找回。 */
@@ -26,6 +32,13 @@ export function mountFlowBackdrop(canvas, options = {}) {
   let palette = settings.palette || null
   let speed = normalizeFlowSpeed(settings.speed)
   let live = reusableCanvas(canvas)
+  let api
+
+  function registerTransitionBackdrop() {
+    if (!settings.transitionSurface || !api) return
+    live.dataset.flowTransitionBackdrop = ''
+    transitionBackdrops.set(live, api)
+  }
 
   function notify(reason) {
     try { settings.onFallback?.(reason) } catch { /* 调用方回调不该影响背板本身 */ }
@@ -43,6 +56,7 @@ export function mountFlowBackdrop(canvas, options = {}) {
     backend = cpu.supported ? cpu : null
     if (snapshot.stops) backend?.setPalette(palette, { duration: 300 })
     live.__nsFlowUsed = true
+    registerTransitionBackdrop()
   }
 
   live.__nsFlowUsed = true
@@ -57,7 +71,7 @@ export function mountFlowBackdrop(canvas, options = {}) {
   }
   live.__nsFlowUsed = true
 
-  return {
+  api = {
     get backend() { return backend && backend.backend === 'gpu' ? 'gpu' : 'cpu' },
     setPalette(next, opts = {}) {
       palette = next || null
@@ -72,6 +86,12 @@ export function mountFlowBackdrop(canvas, options = {}) {
       backend?.setReducedMotion?.(value)
     },
     resize() { backend?.resize?.() },
+    transitionFrame() {
+      const frame = backend?.transitionFrame()
+      return frame && { ...frame, speed }
+    },
+    syncTransitionTime(time) { backend?.syncTransitionTime(time) },
+    holdTransition() { return backend?.holdTransition() },
     stats() {
       const base = backend && typeof backend.stats === 'function' ? backend.stats() : {}
       return {
@@ -90,8 +110,12 @@ export function mountFlowBackdrop(canvas, options = {}) {
     dispose() {
       try { backend?.dispose?.() } catch { /* 已销毁 */ }
       backend = null
+      transitionBackdrops.delete(live)
+      delete live.dataset.flowTransitionBackdrop
       if (live !== canvas && live.parentNode) live.replaceWith(canvas)
       delete canvas.__nsFlowLive
     }
   }
+  registerTransitionBackdrop()
+  return api
 }
