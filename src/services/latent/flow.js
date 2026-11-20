@@ -5,6 +5,7 @@ import { createCpuBackdrop } from './cpu-backdrop.js'
 import { normalizeFlowSpeed } from './flow-motion.js'
 
 const transitionBackdrops = new WeakMap()
+let pooledTransitionBackdrop = null
 
 export function getTransitionBackdrop(root) {
   return transitionBackdrops.get(root.querySelector('[data-flow-transition-backdrop]'))
@@ -29,6 +30,7 @@ export function mountFlowBackdrop(canvas, options = {}) {
   if (!canvas) return null
   const settings = { palette: null, reducedMotion: false, simWidth: 640, onFallback: null, ...options }
   let backend = null
+  let shaderLog = ''
   let palette = settings.palette || null
   let speed = normalizeFlowSpeed(settings.speed)
   let live = reusableCanvas(canvas)
@@ -59,15 +61,33 @@ export function mountFlowBackdrop(canvas, options = {}) {
     registerTransitionBackdrop()
   }
 
-  live.__nsFlowUsed = true
-  const gpu = createLatentBackdrop(live, {
-    palette, speed, reducedMotion: settings.reducedMotion,
-    onFallback: (reason, snapshot) => { switchToCpu(snapshot); notify(reason) }
-  })
-  if (gpu.supported) backend = gpu
-  else {
-    switchToCpu()
-    notify((gpu && gpu.reason) || 'gpu-unavailable')
+  const onFallback = (reason, snapshot) => { switchToCpu(snapshot); notify(reason) }
+  const pooled = settings.transitionSurface ? pooledTransitionBackdrop : null
+  if (pooled) {
+    pooledTransitionBackdrop = null
+    pooled.canvas.className = live.className
+    pooled.canvas.style.cssText = live.style.cssText
+    pooled.canvas.__nsFlowUsed = true
+    live.replaceWith(pooled.canvas)
+    canvas.__nsFlowLive = pooled.canvas
+    live = pooled.canvas
+    backend = pooled.backend
+    backend.setPalette(palette, { duration: 0 })
+    backend.setSpeed(speed)
+    backend.setReducedMotion(settings.reducedMotion)
+    backend.reattach(onFallback)
+  } else {
+    live.__nsFlowUsed = true
+    const gpu = createLatentBackdrop(live, {
+      palette, speed, reducedMotion: settings.reducedMotion,
+      onFallback
+    })
+    shaderLog = gpu.shaderLog || ''
+    if (gpu.supported) backend = gpu
+    else {
+      switchToCpu()
+      notify((gpu && gpu.reason) || 'gpu-unavailable')
+    }
   }
   live.__nsFlowUsed = true
 
@@ -103,15 +123,24 @@ export function mountFlowBackdrop(canvas, options = {}) {
         time: Number(base.time) || 0,
         /* 书架既有的取证字段（noise/shaderLog）不删：验收脚本与排查都还在读 */
         noise: base.noise || '',
-        shaderLog: base.shaderLog || gpu.shaderLog || '',
+        shaderLog: base.shaderLog || shaderLog,
         speed
       }
     },
     dispose() {
-      try { backend?.dispose?.() } catch { /* 已销毁 */ }
-      backend = null
       transitionBackdrops.delete(live)
       delete live.dataset.flowTransitionBackdrop
+      if (settings.transitionSurface && backend?.backend === 'gpu' && typeof backend.reattach === 'function') {
+        backend.setParked(true)
+        const previous = pooledTransitionBackdrop
+        pooledTransitionBackdrop = { canvas: live, backend }
+        if (previous && previous.backend !== backend) {
+          try { previous.backend.dispose?.() } catch { /* 已销毁 */ }
+        }
+      } else {
+        try { backend?.dispose?.() } catch { /* 已销毁 */ }
+      }
+      backend = null
       if (live !== canvas && live.parentNode) live.replaceWith(canvas)
       delete canvas.__nsFlowLive
     }

@@ -294,6 +294,8 @@ export function createLatentBackdrop(canvas, options = {}) {
   let raf = 0
   let disposed = false
   let contextLost = false
+  let parked = false
+  let fallbackHandler = options.onFallback
   const maxEdge = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), gl.getParameter(gl.MAX_VIEWPORT_DIMS)[0], gl.getParameter(gl.MAX_VIEWPORT_DIMS)[1])
   let renderRatio = 1
   let targetReady = false
@@ -382,7 +384,7 @@ export function createLatentBackdrop(canvas, options = {}) {
   }
 
   function start() {
-    if (running || disposed || contextLost || transitionHolds || reducedMotion || speed === 0 || document.hidden) return
+    if (running || disposed || contextLost || parked || transitionHolds || reducedMotion || speed === 0 || document.hidden) return
     running = true
     frameTimes = []
     lastFrame = performance.now()
@@ -398,7 +400,7 @@ export function createLatentBackdrop(canvas, options = {}) {
     if (contextLost || disposed) return
     contextLost = true
     stop()
-    options.onFallback?.(reason, { time, stops: lastDrawnStops })
+    fallbackHandler?.(reason, { time, stops: lastDrawnStops })
   }
 
   function resizeOrFallback() {
@@ -412,9 +414,9 @@ export function createLatentBackdrop(canvas, options = {}) {
     return { supported: false, reason: 'framebuffer-error', shaderLog: error.message }
   }
 
-  const onResize = () => { if (resizeOrFallback() && !running && !document.hidden) draw(performance.now()) }
+  const onResize = () => { if (resizeOrFallback() && !running && !parked && !transitionHolds && !document.hidden) draw(performance.now()) }
   const parent = canvas.parentElement
-  const observer = typeof ResizeObserver === 'function' && parent ? new ResizeObserver(onResize) : null
+  let observer = typeof ResizeObserver === 'function' && parent ? new ResizeObserver(onResize) : null
   if (observer) observer.observe(parent)
   const onVisibility = () => {
     if (document.hidden) stop()
@@ -444,7 +446,7 @@ export function createLatentBackdrop(canvas, options = {}) {
       to = flowColorStops(palette)
       blendDuration = running ? Math.max(0, opts.duration ?? 750) : 0
       blendStart = now
-      if (!running && !document.hidden) draw(blendStart)
+      if (!running && !parked && !transitionHolds && !document.hidden) draw(blendStart)
     },
     setSpeed(value) {
       speed = normalizeFlowSpeed(value)
@@ -465,6 +467,24 @@ export function createLatentBackdrop(canvas, options = {}) {
       } else start()
     },
     resize: onResize,
+    reattach(onFallbackNext) {
+      if (disposed || contextLost) return
+      fallbackHandler = onFallbackNext
+      parked = false
+      if (observer) observer.disconnect()
+      const nextParent = canvas.parentElement
+      observer = typeof ResizeObserver === 'function' && nextParent ? new ResizeObserver(onResize) : null
+      if (observer) observer.observe(nextParent)
+      if (resizeOrFallback()) {
+        if (!running && !transitionHolds && !document.hidden) draw(performance.now())
+        start()
+      }
+    },
+    setParked(next) {
+      parked = Boolean(next)
+      if (parked) stop()
+      else start()
+    },
     transitionFrame() { return { time, stops: lastDrawnStops } },
     holdTransition() {
       transitionHolds += 1

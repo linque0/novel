@@ -178,6 +178,11 @@ function buildBackdrop() {
 
 /* ---------- 封面：单例 painter，只画可见的 5 张，结果按 work.id 跨挂载复用 ---------- */
 const sharedCoverCache = new Map()
+let sharedPainter = null
+function ensureCoverPainter() {
+  if (!sharedPainter) sharedPainter = createCoverPainter()
+  return sharedPainter
+}
 const coverEls = new Map()
 const coverCache = sharedCoverCache
 function bindCover(id, el) {
@@ -193,8 +198,10 @@ function paintCover(id, canvas) {
   if (!work) return
   let image = coverCache.get(id)
   if (!image) {
+    painter ||= ensureCoverPainter()
+    flatCovers.value = !painter?.supported
     if (!painter?.supported) return
-    image = painter.paint(paletteOf(work), (hashString(work.id) % 997) / 997, 160, 240)
+    image = painter.paint(paletteOf(work), (hashString(work.id) % 997) / 997, 112, 168)
     if (!image) return
     if (coverCache.size >= 32) coverCache.delete(coverCache.keys().next().value)
     coverCache.set(id, image)
@@ -299,7 +306,7 @@ onMounted(() => {
   window.addEventListener('resize', onResize)
   motionQuery?.addEventListener?.('change', onMotionChange)
   buildBackdrop()
-  painter = createCoverPainter()
+  painter = ensureCoverPainter()
   flatCovers.value = !painter?.supported
   paintVisibleCovers()
   /* 首帧里玻璃牌/卡片可能还没量到最终宽度，下一帧再补一遍（命中缓存，几乎无成本）。 */
@@ -317,7 +324,6 @@ onBeforeUnmount(() => {
   if (window.__nsLatentStats === latentStats) delete window.__nsLatentStats
   stopChapters()
   try { backdrop?.dispose?.() } catch { /* 已销毁 */ }
-  try { painter?.dispose?.() } catch { /* 已销毁 */ }
   backdrop = null
   painter = null
   coverEls.clear()
@@ -363,7 +369,7 @@ onBeforeUnmount(() => {
         >
           <span class="ls-plate">
             <span class="ls-glass">
-              <canvas :ref="(el) => bindCover(work.id, el)" class="ls-cover-art" width="160" height="240"></canvas>
+              <canvas :ref="(el) => bindCover(work.id, el)" class="ls-cover-art" width="112" height="168"></canvas>
               <span class="ls-glyph-top"><span>{{ work.genre || '其他' }}</span><span>{{ work.status || '构思' }}</span></span>
               <span class="ls-glyph-rule"></span>
               <span class="ls-glyph-latin">{{ latinOf(work) }}</span>

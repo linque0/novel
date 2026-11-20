@@ -134,6 +134,23 @@ function onBookmarkSelect(key) {
   if (c) work.selVolumeId = c.volumeId
 }
 
+const latentFlowPalette = computed(() =>
+  latentSkin.value ? flowPaletteKey(ui.flowBackground, work.work) : ''
+)
+const latentFlowRev = computed(() => {
+  if (!latentSkin.value) return ''
+  const common = `${work.work?.id || ''}|${work.tab}|${saveState.value}|${ui.aiDrawerOpen ? 1 : 0}|${ui.focusMode ? 1 : 0}|${modulePopped.value ? 1 : 0}`
+  if (work.tab === 'outline') {
+    const oSum = work.olnodes.reduce((s, n) => s + (n.updatedAt || 0), 0)
+    const cSum = work.chapters.reduce((s, c) => s + (c.updatedAt || 0), 0)
+    return `${common}|${work.outlineView}|${work.olnodes.length}|${work.selOlnodeId || ''}|${ui.outlineSideOpen ? 1 : 0}|${ui.outlineDetailOpen ? 1 : 0}|${ui.outlineLeftWidth}|${ui.outlineRightWidth}|${work.canvasPrefs?.showDots !== false ? 1 : 0}|${work.canvasPrefs?.density || ''}|${oSum}|${cSum}`
+  }
+  if (work.tab === 'lore') {
+    const mSum = work.mubu.reduce((s, n) => s + (n.updatedAt || 0), 0)
+    return `${common}|${ui.loreView}|${ui.loreMapMode}|${ui.loreNavClosed ? 1 : 0}|${ui.loreInspectClosed ? 1 : 0}|${ui.loreScope}|${ui.loreRootId || ''}|${ui.loreActiveId || ''}|${work.mubuRevision}|${work.mubu.length}|${mSum}`
+  }
+  return ''
+})
 const tabs = WORK_NAVIGATION
 function selectTab(key) {
   if (work.tab === key) return flowTransition.cancelPending()
@@ -421,7 +438,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="shell" class="workbench-shell" :data-ow-directory-overlay="original && owMode.directory || undefined" :data-ow-notes-overlay="original && owMode.notes || undefined" :data-ow-open="original ? owDrawer : undefined" :class="{ 'original-workspace':original, 'is-focus': ui.focusMode, 'is-reading': ui.readMode, 'is-crimson': crimson, 'glaze-museum': museum, 'glaze-drawer-open': modalDrawer, 'latent-studio': latentSkin && work.tab === 'chapters', 'outline-strict': latentSkin && work.tab === 'outline' }" :data-glaze-light="museum ? ui.glazeLighting : undefined" :data-module="work.tab" :data-flow="latentSkin ? 'on' : undefined" style="display: flex; flex-direction: column; height: 100%">
+  <div ref="shell" class="workbench-shell" :data-ow-directory-overlay="original && owMode.directory || undefined" :data-ow-notes-overlay="original && owMode.notes || undefined" :data-ow-open="original ? owDrawer : undefined" :class="{ 'original-workspace':original, 'is-focus': ui.focusMode, 'is-reading': ui.readMode, 'is-crimson': crimson, 'glaze-museum': museum, 'glaze-drawer-open': modalDrawer, 'latent-studio': latentSkin && work.tab === 'chapters', 'outline-strict': latentSkin && work.tab === 'outline' }" :data-glaze-light="museum ? ui.glazeLighting : undefined" :data-module="work.tab" :data-flow="latentSkin ? 'on' : undefined" :data-flow-palette="latentFlowPalette || undefined" :data-flow-rev="latentFlowRev || undefined" style="display: flex; flex-direction: column; height: 100%">
     <!-- 隐现皮肤的主窗口流动背板：dots / vignette / grain 三层叠在 canvas 上 -->
     <div v-if="latentSkin" class="st-backdrop-wrap" aria-hidden="true"><canvas class="st-backdrop" ref="flowCanvas"></canvas><div class="st-layer vignette"></div></div>
     <div v-if="museum" class="gm-cornice" aria-hidden="true"><span></span><i></i><span></span></div>
@@ -526,7 +543,7 @@ onBeforeUnmount(() => {
         <span v-if="latentSkin && work.tab === 'chapters'" class="rail-count">{{ work.liveChapters.length }}</span>
       </button>
       <button
-        v-if="!crimson && work.tab === 'outline' && !ui.outlineSideOpen && !ui.focusMode && !ui.readMode && !modulePopped"
+        v-if="showDirectory && work.tab === 'outline' && !dirVisible"
         class="ol-side-rail"
         type="button"
         title="展开故事结构"
@@ -566,11 +583,19 @@ onBeforeUnmount(() => {
       <!-- 隐现（dsh）皮肤的四个模块工作区：必须是 .wb-body 的**直接子元素**。
            它们靠 flex:1 + min-height:0 撑满，而 .center-pane 虽是 flex 项却不是
            display:flex 容器——放进里面会塌成 0 高，界面就“存在但看不见”。
-           结构与插件版 Workbench 一致：占位 / 工作区 / 正文容器并列。 -->
+           结构与插件版 Workbench 一致：占位 / 工作区 / 正文容器并列。
+           大纲与设定含重节点画布与思维导图，作品内用 KeepAlive 保活（换书重挂载），
+           避免往返切页重建千级 DOM/SVG 与重算排版。 -->
       <template v-if="latentSkin">
-        <LatentOutlineCenter v-if="work.tab === 'outline'" v-show="!modulePopped" class="outline-shell-host" />
-        <CharactersWorkspace v-else-if="work.tab === 'characters'" v-show="!modulePopped" class="char-shell-host" />
-        <LoreWorkspace v-else-if="work.tab === 'lore'" v-show="!modulePopped" class="lore-shell-host" />
+        <KeepAlive :max="2" :key="work.work?.id || 'none'">
+          <component
+            :is="work.tab === 'outline' ? LatentOutlineCenter : work.tab === 'lore' ? LoreWorkspace : null"
+            v-if="!modulePopped && (work.tab === 'outline' || work.tab === 'lore')"
+            :key="work.tab"
+            :class="work.tab === 'outline' ? 'outline-shell-host' : 'lore-shell-host'"
+          />
+        </KeepAlive>
+        <CharactersWorkspace v-if="work.tab === 'characters'" v-show="!modulePopped" class="char-shell-host" />
         <SnippetsWorkspace v-else-if="work.tab === 'snippets'" v-show="!modulePopped" class="snippets-shell-host" />
       </template>
 

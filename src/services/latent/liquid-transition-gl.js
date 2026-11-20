@@ -59,7 +59,7 @@ float localProgress(vec2 uv) {
   float horizontal = .8660254 * u_aspect;
   float s = (horizontal * (1.0 - uv.x) + .5 * (1.0 - uv.y)) / (horizontal + .5);
   s += .37 * s * (1.0 - s) * sin(6.1 * uv.y + 1.7 * s);
-  return clamp((u_progress - .49 * s) / .46, 0.0, 1.0);
+  return clamp((u_progress - .46 * s) / .43, 0.0, 1.0);
 }
 
 vec4 sampleInk(sampler2D image, vec2 uv, float lod) {
@@ -84,9 +84,25 @@ vec4 inkAlongFlow(sampler2D image, vec2 uv, float shift, float span, float haze)
   return value;
 }
 
-vec3 placeInk(vec3 color, vec3 material, vec4 ink, float visibility, float dilution) {
+// Simulates frosted glass (backdrop-filter blur) over the fluid canvas for translucent UI panels
+// so bright crests don't pierce unblurred through panels during the capture crossfade.
+vec3 frostedBackdrop(vec2 uv, vec3 sharpMaterial) {
+  vec2 stepUv = 22.0 * u_pixelRatio / max(u_resolution, vec2(1.0));
+  vec3 acc = texture2D(u_scene, clamp(uv, 0.0, 1.0)).rgb * 0.28;
+  acc += texture2D(u_scene, clamp(uv + vec2(stepUv.x, stepUv.y * 0.5), 0.0, 1.0)).rgb * 0.18;
+  acc += texture2D(u_scene, clamp(uv + vec2(-stepUv.x, stepUv.y * 0.5), 0.0, 1.0)).rgb * 0.18;
+  acc += texture2D(u_scene, clamp(uv + vec2(stepUv.x * 0.5, -stepUv.y), 0.0, 1.0)).rgb * 0.18;
+  acc += texture2D(u_scene, clamp(uv + vec2(-stepUv.x * 0.5, -stepUv.y), 0.0, 1.0)).rgb * 0.18;
+  float luma = dot(acc, vec3(.299, .587, .114));
+  vec3 saturated = clamp(vec3(luma) + (acc - vec3(luma)) * 1.18, 0.0, 1.0);
+  return mix(saturated, sharpMaterial, 0.12);
+}
+
+vec3 placeInk(vec3 color, vec3 frosted, vec3 material, vec4 ink, float visibility, float dilution, float frostWeight) {
+  float glass = smoothstep(.05, .24, ink.a) * (1.0 - smoothstep(.92, .99, ink.a)) * frostWeight;
+  vec3 base = mix(color, frosted, glass);
   vec3 tint = mix(ink.rgb, material * ink.a, dilution);
-  return color * (1.0 - visibility * ink.a) + tint * visibility;
+  return base * (1.0 - visibility * ink.a) + tint * visibility;
 }
 
 // Diluted source color becomes an optical density in the same crests as the background.
@@ -98,7 +114,7 @@ vec3 pigment(vec3 material, vec4 ink, float crest, float strength) {
   return mix(dyed, u_colorFront, lightInk * strength * (.15 + .61 * crest));
 }
 
-vec3 compositeScene(vec3 material, float p, vec2 refraction, float crest, float filament) {
+vec3 compositeScene(vec3 material, vec3 frosted, float p, vec2 refraction, float crest, float filament) {
   if (u_outgoingReady && p < .44) {
     float melt = smoothstep(.008, .36, p);
     float erosion = smoothstep(.10, .44, p);
@@ -107,19 +123,19 @@ vec3 compositeScene(vec3 material, float p, vec2 refraction, float crest, float 
     vec4 ink = inkAlongFlow(u_oldInk, wet, shift, .085 * melt, .13);
     float drift = smoothstep(.045, .275, p) * (1.0 - smoothstep(.292, .44, p));
     vec3 tint = pigment(material, ink, crest, drift * (.60 + .38 * filament));
-    return placeInk(tint, tint, ink, 1.0 - erosion, .94 * melt);
+    return placeInk(tint, frosted, tint, ink, 1.0 - erosion, .94 * melt, 1.0 - melt);
   }
   if (u_incomingReady && p > .56) {
     float structure = smoothstep(.56, .80, p);
     float gather = 1.0 - structure;
-    float clarity = smoothstep(.70, .94, p);
+    float clarity = smoothstep(.66, .90, p);
     vec2 wet = v_uv + refraction * gather;
     vec4 form = inkAlongFlow(u_newInk, wet, (.126 + .086 * crest) * gather, .085 * gather, .13);
     vec4 detail = sampleInk(u_newInk, wet, 2.35 * (1.0 - clarity));
     vec4 ink = mix(form, detail, structure);
     float deposition = smoothstep(.56, .664, p) * (1.0 - smoothstep(.75, .91, p));
     vec3 tint = pigment(material, ink, crest, deposition * (.58 + .42 * filament));
-    return placeInk(tint, tint, ink, structure, .88 * gather);
+    return placeInk(tint, frosted, tint, ink, structure, .88 * gather, structure);
   }
   return material;
 }
@@ -158,15 +174,16 @@ void main() {
   float current = bell * (.34 + .66 * local);
   vec3 undertow = mix(blended, u_primary, .11 * current * (1.0 - crest));
   vec3 material = mix(undertow, u_accent, current * crest * (.09 + .18 * fiber));
+  vec3 frosted = frostedBackdrop(advectedUV, material);
   float opacity = 1.0;
   if (!u_outgoingReady && p < .44) {
     opacity = smoothstep(0.0, .44, p);
   } else if (!u_incomingReady && p > .56) {
     opacity = 1.0 - smoothstep(.56, 1.0, p);
   } else if (u_incomingReady) {
-    opacity = 1.0 - smoothstep(.96, 1.0, u_progress);
+    opacity = 1.0 - smoothstep(.88, 1.0, u_progress);
   }
-  vec3 color = compositeScene(material, p, refraction, crest, fiber);
+  vec3 color = compositeScene(material, frosted, p, refraction, crest, fiber);
   gl_FragColor = vec4(color * opacity, opacity);`))
 
 export function createLiquidRenderer(canvas) {
@@ -230,7 +247,7 @@ export function createLiquidRenderer(canvas) {
   const framebuffer = gl.createFramebuffer()
   gl.bindFramebuffer(gl.FRAMEBUFFER, framebuffer)
   gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, meshTexture, 0)
-  const maxEdge = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), 1800)
+  const maxEdge = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), 3200)
   const channels = new Float32Array(24)
   let pixelRatio = 1
   let allocated = false
@@ -246,8 +263,8 @@ export function createLiquidRenderer(canvas) {
 
   return {
     resize(cssWidth, cssHeight) {
-      const density = Math.min(window.devicePixelRatio || 1, 1,
-        maxEdge / Math.max(cssWidth, cssHeight), Math.sqrt(1100000 / (cssWidth * cssHeight)))
+      const density = Math.min(window.devicePixelRatio || 1, 1.5,
+        maxEdge / Math.max(cssWidth, cssHeight), Math.sqrt(3600000 / (cssWidth * cssHeight)))
       const width = Math.max(1, Math.round(cssWidth * density))
       const height = Math.max(1, Math.round(cssHeight * density))
       pixelRatio = Math.min(width / cssWidth, height / cssHeight)
