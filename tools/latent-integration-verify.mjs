@@ -9,10 +9,35 @@ import { resolveLoreGalaxy } from '../src/services/lore-core.js'
 import { characterBiographies, characterBiographyText, createCharacterDraft, characterDraftPatch } from '../src/services/character-biographies.js'
 import { fingerprint, matchesSnippetContent, snippetContentFingerprint } from '../src/services/snippet-history.js'
 import { moveBefore, normalizeSnipState, noteView, pickSnipCardColor, snippetDropPlacement, snippetNavGroups, tagsAfterGroupMove } from '../src/components/skins/latent/snippets/snippet-model.js'
-import { networkModel, orbitPoint, rotation, scaleOrbitRadius, spacePlanets, TUNING, withOrbitSpacingReference } from '../src/components/skins/latent/lore/planets/planet-scene.js'
-import { paintNetwork } from '../src/components/skins/latent/lore/planets/draw-planets.js'
+import {
+  cameraPose, cameraView, centeredPan, makeCamera, networkModel, orbitDragPoint, orbitPoint, orbitPosition,
+  overviewView, planetRadius, rotation, scaleOrbitRadius, spacePlanets, stepCamera, TUNING, withOrbitSpacingReference
+} from '../src/components/skins/latent/lore/planets/planet-scene.js'
+import { galaxyFraming, galaxyProjection, paintNetwork } from '../src/components/skins/latent/lore/planets/draw-planets.js'
+import * as terrain from '../src/components/skins/latent/lore/planets/galaxy-terrain.js'
 import { entryCircleGlyphs, entryCircleScale, entryDisplayRadius, entryRadiusLimit, entryReferenceRadius, layoutEntryCircleText } from '../src/components/skins/latent/lore/planets/entry-circles.js'
-import { advanceCenterGlow, CENTER_GLOW_EFFECTS, centerGlowEdge, centerGlowPulse, centerGlowSample, centerGlowWave, DEFAULT_CENTER_GLOW, hasCenterColorModes, normalizeCenterGlow } from '../src/components/skins/latent/lore/planets/center-glow.js'
+import {
+  advanceCenterGlow,
+  blendCenterSpectrum,
+  CENTER_GLOW_COLOR_MODES,
+  CENTER_GLOW_COLOR_SOURCES,
+  CENTER_GLOW_EFFECTS,
+  centerGlowEdge,
+  centerGlowPulse,
+  centerGlowSample,
+  centerGlowWave,
+  CLASSIC_PRISM_SPECTRUM,
+  DEFAULT_CENTER_GLOW,
+  deriveAccentHex,
+  deriveBackdropSpectrum,
+  hasCenterColorModes,
+  hueDiff,
+  normalizeCenterGlow,
+  resolveCenterSpectrum,
+  rgbToHex,
+  rgbToHsl,
+  samplePrismColor
+} from '../src/components/skins/latent/lore/planets/center-glow.js'
 
 const ROOT = process.cwd()
 const read = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8')
@@ -422,22 +447,188 @@ check('关系星图：跨集关系与集内路线保留', () => {
   assert.equal(merged[0].orbitRadius, merged[1].orbitRadius)
 })
 
+check('关系星图：高度场随世界几何变化，镜头改变只投影', () => {
+  const scope = []
+  const wells = [{ id: 'ridge', u: 3, v: 0, radius: 1.22, depth: .8, inverseVariance: 1.6 }]
+  const field = terrain.galaxyTerrain(scope, 5.2, wells, 0)
+  assert.ok(field.vertices instanceof Float32Array)
+  assert.ok(field.contours instanceof Float32Array)
+  const oldHeight = terrain.terrainDepth(field, 3, 0)
+  let exponentialCalls = 0
+  const exp = Math.exp
+  try {
+    Math.exp = x => { exponentialCalls++; return exp(x) }
+    assert.equal(terrain.galaxyTerrain(scope, 5.2, wells, 0), field)
+    const camera = makeCamera(1440, 800, 1.1, 5.2, { panX: 15 }, overviewView())
+    camera.projectWorldBuffer(field.vertices, field.screen)
+    assert.equal(terrain.terrainDepth(field, 3, 0), oldHeight)
+    assert.equal(exponentialCalls, 0)
+    wells[0].u += .2
+    terrain.galaxyTerrain(scope, 5.2, wells, 0)
+    assert.ok(exponentialCalls > 0)
+    assert.ok(terrain.terrainDepth(field, 3, 0) < oldHeight)
+  } finally {
+    Math.exp = exp
+  }
+})
+
+check('关系星图：宽屏取景、八条目与四条目疏密、文字缓存', () => {
+  const size = { width: 1440, height: 810 }
+  const view = overviewView()
+  const sets = Array.from({ length: 11 }, (_, i) => ({ id: 'set' + i, title: '星域' + i }))
+  const nodes = [8, 4, 9, 11, 13, 14].flatMap((count, i) => Array.from({ length: count }, (_, j) =>
+    ({ setId: 'set' + i, id: `entry-${i}-${j}`, title: `晶体条目${i}号${j}` })))
+  const system = networkModel(sets, nodes, []).system('')
+  const planets = spacePlanets(system.planets, {})
+  const data = { ...system, planets }
+  const framing = galaxyFraming(size, data, {}, view)
+  const scene = { view, zoom: 1, time: 0, framing }
+  const texts = []
+  let measurements = 0
+  const ctx = new Proxy({
+    measureText: value => { measurements++; return { width: Array.from(value).length * 6.5 } },
+    fillText: (value, x, y) => texts.push({ value, x, y }),
+    createRadialGradient: () => ({ addColorStop() {} })
+  }, { get: (target, key) => target[key] ?? (() => {}) })
+  const render = () => paintNetwork(ctx, size, data, scene, { positions: {}, reduced: true })
+  const initial = render()
+  const count = measurements
+  render()
+  assert.equal(measurements, count)
+  assert.equal(planets.every(planet => planet.orbitAspect === 1.26), true)
+  assert.equal(planetRadius(0), .36)
+  assert.ok(planetRadius(8) > planetRadius(4) * 1.3)
+  const core = [initial.work, ...initial.hits.filter(hit => hit.rimRadius && Number(hit.id.slice(3)) < 6)]
+  const share = (key, span) => (Math.max(...core.map(point => point[key] + point.radius))
+    - Math.min(...core.map(point => point[key] - point.radius))) / span
+  assert.ok(share('x', size.width) >= .72 && share('x', size.width) <= .82)
+  assert.ok(share('y', size.height) >= .68 && share('y', size.height) <= .76)
+  for (const id of ['set0', 'set1']) {
+    const domain = initial.hits.find(hit => hit.id === id && hit.rimRadius)
+    const crystals = [...initial.projected.values()].filter(point => point.planetId === id)
+    for (const [i, a] of crystals.entries()) {
+      assert.ok(a.glyphRadius <= domain.radius * (a.node.tier === 1 ? .16 : .115))
+      for (const b of crystals.slice(i + 1)) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > a.glyphRadius + b.glyphRadius)
+    }
+    const names = texts.filter(text => text.value.startsWith('晶体条目' + id.at(-1)))
+    assert.ok(new Set(names.map(text => text.value)).size <= 1)
+    assert.ok(names.every(text => Math.hypot(text.x - domain.x, text.y - domain.y) > domain.radius))
+  }
+})
+
+check('关系星图：方案 B 镜头阻尼、平移与屏幕坐标', () => {
+  const target = cameraPose({ yaw: .5, pitch: .82, panX: 65, panY: -28, zoom: 1.52 })
+  const simulate = hz => {
+    const current = cameraPose()
+    const desired = { ...target }
+    const velocity = { yaw: .002, pitch: .001 }
+    for (let i = 0; i < hz; i++) stepCamera(current, desired, velocity, 1000 / hz)
+    return current
+  }
+  const [normal, fast] = [60, 120].map(simulate)
+  for (const key of Object.keys(normal)) assert.ok(Math.abs(normal[key] - fast[key]) < .001)
+  assert.equal(normal.panX, 65)
+  assert.equal(normal.panY, -28)
+  assert.ok(normal.pitch <= 1.15)
+  const view = cameraView(normal)
+  const world = orbitPoint(2.8, 1.2, .45)
+  const camera = makeCamera(1621, 780, normal.zoom, 8, normal, view)
+  const point = camera.projectWorld(world)
+  const ray = camera.worldRay(point.x, point.y, point.z)
+  assert.ok(ray.origin.distanceTo(world) < 1e-9)
+  const offset = centeredPan(camera, point, 2.2 / normal.zoom)
+  const centered = makeCamera(1621, 780, 2.2, 8, offset, view).projectWorld(world)
+  assert.ok(Math.hypot(centered.x - 1621 / 2, centered.y - 780 * .51) < 1e-9)
+  const size = { width: 1621, height: 780 }
+  const data = { planets: [] }
+  const framing = galaxyFraming(size, data, {}, overviewView())
+  const scaleAtOrigin = point => point.projectWorld(world.clone().set(0, 0, 0)).scale
+  const scales = []
+  for (const pitch of [-1.15, -.44, 0, .001, .44, 1.15]) {
+    const pose = cameraPose({ yaw: .4, pitch, panX: 65, panY: -28 })
+    const projected = galaxyProjection(size, { ...pose, view: cameraView(pose), framing })
+    const anchor = projected.projectWorld(world)
+    const captured = orbitDragPoint(projected, anchor.x, anchor.y, anchor.z, world.y)
+    assert.ok(captured.distanceTo(world) < 1e-9)
+    const moved = orbitDragPoint(projected, anchor.x + 15, anchor.y - 10, anchor.z, world.y)
+    assert.ok(moved.distanceTo(world) < 2)
+    const mapped = projected.projectWorld(moved)
+    assert.ok(Math.hypot(mapped.x - (anchor.x + 15), mapped.y - (anchor.y - 10)) < 1e-9)
+    scales.push(scaleAtOrigin(projected))
+  }
+  assert.ok(scales.every(scale => scale === scales[0]))
+})
+
+check('关系星图：方案 B 等比透视与高密度默认布局', () => {
+  const camera = makeCamera(1200, 720, 1)
+  const point = orbitPoint(1, 1).applyQuaternion(overviewView())
+  const screen = camera.project(point)
+  assert.ok(camera.unproject(screen.x, screen.y, screen.z).distanceTo(point) < 1e-9)
+  assert.ok(Math.abs((screen.x - 600) / point.x - (720 * .51 - screen.y) / point.y) < 1e-9)
+  const sets = Array.from({ length: 11 }, (_, i) => ({ id: 'set' + i, color: '#CD7028' }))
+  const nodes = Array.from({ length: 59 }, (_, i) => ({ id: 'entry' + i, setId: 'set' + (i % 6) }))
+  const layout = spacePlanets(networkModel(sets, nodes, []).system('').planets, {})
+  const [filled, empty] = [layout.slice(0, 6), layout.slice(6)]
+  assert.ok(empty.every(body => body.orbitRadius > Math.max(...filled.map(item => item.orbitRadius))))
+  assert.ok(layout.every(body => body.orbitRadius - body.shellRadius >= 2.25 - 1e-9))
+  assert.ok(filled.every(body => body.color !== '#CD7028' && body.entries.filter(node => node.tier === 1).length <= 2))
+  for (const [i, a] of layout.entries()) {
+    for (const b of layout.slice(i + 1)) {
+      const pa = orbitPosition(a, 0), pb = orbitPosition(b, 0)
+      assert.ok(Math.hypot(pa.x - pb.x, pa.z - pb.z) >= a.shellRadius + b.shellRadius + .45 - 1e-6)
+    }
+  }
+  const canvas = new Proxy({
+    measureText: value => ({ width: Array.from(value).length * 7 }),
+    createRadialGradient: () => ({ addColorStop() {} })
+  }, { get: (target, key) => target[key] ?? (() => {}) })
+  const data = { ...networkModel(sets, nodes, []).system(''), planets: layout }
+  const render = view => paintNetwork(canvas, { width: 1440, height: 810 }, data, { view, zoom: 1, time: 0 },
+    { reduced: true, positions: {}, names: new Map() })
+  const initial = render(overviewView())
+  const domains = initial.hits.filter(hit => hit.kind === 'planet' && hit.radius > 0)
+  for (const [i, a] of domains.entries()) {
+    for (const b of domains.slice(i + 1)) {
+      assert.ok(Math.hypot(a.x - b.x, a.y - b.y) - a.radius - b.radius >= 23)
+    }
+  }
+  for (const view of [overviewView(), rotation(.22, 1.2), rotation(1.1, -.9), rotation(-.45, 2)]) {
+    const labels = render(view).hits.filter(hit => hit.kind === 'planet' && hit.halfWidth)
+    assert.ok(labels.length >= 8)
+    for (const [i, a] of labels.entries()) {
+      for (const b of labels.slice(i + 1)) {
+        assert.ok(Math.abs(a.x - b.x) >= a.halfWidth + b.halfWidth - 1e-9
+          || Math.abs(a.y - b.y) >= a.halfHeight + b.halfHeight - 1e-9)
+      }
+    }
+  }
+  for (const point of initial.projected.values()) {
+    const base = [0, 8.2, 5.6, 3.8][point.node.tier]
+    assert.ok(point.radius >= base * .78 && point.radius <= base * 1.2)
+    assert.ok(point.local.length() <= TUNING.detailRadius * .85 + 1e-9)
+  }
+  const saved = spacePlanets(data.planets, {}, 100, {
+    topology: true, ellipse: true, independent: true, radii: { set0: 8 }, phases: { set0: 1.5 }
+  })
+  assert.equal(saved[0].orbitRadius, 8)
+  assert.equal(saved[0].orbitPhase, 1.5)
+  assert.equal(saved[1].orbitRadius, layout[1].orbitRadius)
+})
+
 check('关系星图：轨道间距直接调整自动轨道留白，保留手动半径和并轨', () => {
   const sets = ['a', 'b', 'c', 'd'].map(id => ({ id, title: id }))
   const entries = Array.from({ length: 20 }, (_, index) => ({ id: 'entry' + index, setId: 'b' }))
   const { planets } = networkModel(sets, entries, []).system('')
+  const spans = []
   for (const spacing of [0, 100, 250]) {
     const layout = spacePlanets(planets, {}, spacing)
-    const gap = TUNING.orbitGap * spacing / 100
-    const [first] = layout
-    assert.ok(Math.abs(first.orbitRadius - first.shellRadius - TUNING.workRadius - TUNING.workClearance - gap) < 1e-9)
-    for (let i = 1; i < layout.length; i++) {
-      const a = layout[i - 1], b = layout[i]
-      assert.ok(Math.abs(b.orbitRadius - a.orbitRadius - a.shellRadius - b.shellRadius - gap) < 1e-9)
-    }
+    const populated = layout.find(body => body.total)
+    assert.ok(layout.every(body => body.orbitRadius - body.shellRadius >= 2.25 - 1e-9))
+    spans.push(Math.max(...layout.map(body => body.orbitRadius)) - populated.orbitRadius)
     const edited = spacePlanets(planets, {}, spacing, { independent: true, radii: { b: 7 }, joins: { c: 'b' } })
     assert.deepEqual(edited.slice(1, 3).map(body => [body.orbitId, body.orbitRadius]), [['b', 7], ['b', 7]])
   }
+  assert.ok(spans[0] < spans[1] && spans[1] < spans[2])
 })
 
 check('关系星图：手动布局在原百分比保持原位，改变百分比后整组轨道伸缩', () => {
@@ -468,11 +659,11 @@ check('关系星图：手动布局在原百分比保持原位，改变百分比�
 
 check('关系星图：紧凑和宽松改变屏幕上的轨道间距', () => {
   const sets = Array.from({ length: 6 }, (_, index) => ({ id: String(index), title: String(index) }))
-  const system = networkModel(sets, [], []).system('')
+  const system = networkModel(sets, [{ id: 'entry', setId: '0' }], []).system('')
   const positions = {}
   const layout = spacing => ({ ...system, planets: spacePlanets(system.planets, positions, spacing) })
   const baseline = layout(100)
-  const scene = { view: rotation(0, 0), zoom: 1, time: 0 }
+  const scene = { view: overviewView(), zoom: 1, time: 0 }
   const canvas = new Proxy({
     measureText: () => ({ width: 8 }),
     createRadialGradient: () => ({ addColorStop() {} })
@@ -485,51 +676,120 @@ check('关系星图：紧凑和宽松改变屏幕上的轨道间距', () => {
     return outer - inner
   }
   const normal = gap(baseline)
-  assert.ok(gap(layout(0)) < normal * .86)
-  assert.ok(gap(layout(300)) > normal * 1.12)
+  assert.ok(gap(layout(0)) < normal)
+  assert.ok(gap(layout(300)) > normal)
 })
 
-check('关系星图：中心动效默认值、范围与连续相位', () => {
+check('关系星图：中心星体配色来源、原稿欧泊默认与旧存档兼容', () => {
   assert.deepEqual(normalizeCenterGlow(), DEFAULT_CENTER_GLOW)
-  assert.deepEqual(normalizeCenterGlow({ color: '#33BBCC', brightness: 500, speed: -1, effect: 'bad' }), {
-    color: '#33bbcc', brightness: 150, speed: 0, effect: 'ripple', colorMode: 'solid'
+  assert.equal(DEFAULT_CENTER_GLOW.colorSource, 'backdrop')
+  assert.equal(DEFAULT_CENTER_GLOW.colorMode, 'opal')
+  assert.equal(DEFAULT_CENTER_GLOW.effect, 'ripple')
+  assert.deepEqual(Object.keys(CENTER_GLOW_COLOR_SOURCES), ['backdrop', 'classic', 'custom'])
+  assert.deepEqual(Object.keys(CENTER_GLOW_COLOR_MODES), ['opal', 'flow', 'layered', 'prism', 'solid'])
+  assert.deepEqual(Object.keys(CENTER_GLOW_EFFECTS), ['ripple', 'breathe', 'pulse', 'sweep'])
+  assert.equal(CENTER_GLOW_COLOR_MODES.opal, '欧泊三彩')
+  assert.equal(CENTER_GLOW_EFFECTS.ripple, '谐波')
+  assert.deepEqual(Object.keys(CENTER_GLOW_EFFECTS).filter(hasCenterColorModes), ['ripple', 'breathe', 'pulse', 'sweep'])
+
+  // 旧存档显式保存过非默认单色时自动保留为 custom 并派生副色；默认色或空对象升级为 backdrop + opal
+  const migratedCustom = normalizeCenterGlow({ color: '#33BBCC', brightness: 500, speed: -1, effect: 'bad' })
+  assert.deepEqual(migratedCustom, {
+    colorSource: 'custom',
+    color: '#33bbcc',
+    accentColor: deriveAccentHex('#33bbcc'),
+    brightness: 150,
+    speed: 0,
+    effect: 'ripple',
+    colorMode: 'opal'
   })
-  assert.deepEqual(normalizeCenterGlow({ color: '#349abc', brightness: 65, speed: 75, effect: 'twinkle' }), {
-    color: '#349abc', brightness: 65, speed: 75, effect: 'pulse', colorMode: 'solid'
+  const migratedTwinkle = normalizeCenterGlow({ color: '#349abc', brightness: 65, speed: 75, effect: 'twinkle', colorMode: 'solid' })
+  assert.deepEqual(migratedTwinkle, {
+    colorSource: 'custom',
+    color: '#349abc',
+    accentColor: deriveAccentHex('#349abc'),
+    brightness: 65,
+    speed: 75,
+    effect: 'pulse',
+    colorMode: 'solid'
   })
-  assert.equal(normalizeCenterGlow({ colorMode: 'zones' }).colorMode, 'zones')
-  assert.equal(normalizeCenterGlow({ colorMode: 'invalid' }).colorMode, 'solid')
-  assert.equal(Object.keys(CENTER_GLOW_EFFECTS).length, 5)
-  assert.equal(CENTER_GLOW_EFFECTS.ripple, '波纹')
-  assert.deepEqual(Object.keys(CENTER_GLOW_EFFECTS).filter(hasCenterColorModes), ['breathe', 'pulse'])
+  // 旧 rainbow / cycle / zones 迁移到新版 3D 棱镜色彩方式
+  const migratedRainbow = normalizeCenterGlow({ effect: 'rainbow' })
+  assert.equal(migratedRainbow.colorSource, 'backdrop')
+  assert.equal(migratedRainbow.effect, 'sweep')
+  assert.equal(migratedRainbow.colorMode, 'prism')
+  assert.equal(normalizeCenterGlow({ colorMode: 'cycle' }).colorMode, 'flow')
+  assert.equal(normalizeCenterGlow({ colorMode: 'zones' }).colorMode, 'layered')
+  assert.equal(normalizeCenterGlow({ colorMode: 'invalid' }).colorMode, 'opal')
+  assert.equal(normalizeCenterGlow({ colorSource: 'classic' }).colorSource, 'classic')
+
   assert.equal(advanceCenterGlow(420, 32, 0), 420)
   assert.equal(advanceCenterGlow(420, 32, 200), 484)
   assert.equal(advanceCenterGlow(420, 2000, 100), 460)
-  for (const effect of ['ripple', 'sweep', 'rainbow']) {
+  for (const effect of ['ripple', 'breathe', 'pulse', 'sweep']) {
     const edge = centerGlowEdge(effect, -.8 / 7, 1.8)
     assert.ok(edge >= 0 && edge <= 1)
     assert.notEqual(edge, centerGlowEdge(effect, -.8 / 7, 0))
   }
 })
 
-check('关系星图：逐色交接、分区相位与脉动扩散包络', () => {
-  for (const [effect, period] of [['breathe', 3.6], ['pulse', 2.6]]) {
-    const sample = (turn, mode = 'cycle', angle = 0) => centerGlowSample(effect, mode, period * turn, angle)
-    assert.equal(sample(.5).hueOffset, 0)
-    assert.ok(sample(.9).hueOffset > 0 && sample(.9).hueOffset < 60)
-    assert.equal(sample(1).hueOffset, 60)
-    assert.ok(sample(5.99).hueOffset > 359)
-    assert.deepEqual(sample(6), sample(0))
-    assert.equal(sample(.5, 'solid').hueOffset, 0)
-    const [first, second] = [0, Math.PI / 3].map(angle => sample(.5, 'zones', angle))
-    assert.equal(first.phase, .5)
-    assert.ok(Math.abs(second.phase - 1 / 3) < 1e-9)
-    assert.equal(second.hueOffset, 60)
+check('关系星图：珠宝级三元色板、邻近色张力校正与星仪原色 1:1 锁定', () => {
+  // 星仪原色 1:1 锁定设计稿 #47d7e8 / #8c7bff / #eaf3ff
+  const classic = resolveCenterSpectrum({ colorSource: 'classic', colorMode: 'opal' })
+  assert.equal(rgbToHex(classic.primary), '#47d7e8')
+  assert.equal(rgbToHex(classic.accent), '#8c7bff')
+  assert.equal(rgbToHex(classic.platinum), '#eaf3ff')
+  assert.deepEqual(classic.primary, [...CLASSIC_PRISM_SPECTRUM.primary])
+
+  // 深暗封面经珠宝级光学曲线映射：保持中明高饱和，不被洗白发粉
+  const darkSpectrum = deriveBackdropSpectrum({ a: [0.12, 0.16, 0.24], b: [0.22, 0.14, 0.18], c: [0.05, 0.06, 0.10] })
+  const darkPrimaryHsl = rgbToHsl(darkSpectrum.primary)
+  assert.ok(darkPrimaryHsl.l >= 0.52 && darkPrimaryHsl.l <= 0.65, `primary l=${darkPrimaryHsl.l}`)
+  assert.ok(darkPrimaryHsl.s >= 0.72, `primary s=${darkPrimaryHsl.s}`)
+  assert.ok(rgbToHsl(darkSpectrum.platinum).l >= 0.92)
+
+  // 邻近色背景（如落日余晖、松林薄雾、同色自定义）自动拉开 >= 48° 欧泊折射张力
+  const adjacentCases = [
+    { a: [185 / 255, 104 / 255, 82 / 255], b: [220 / 255, 165 / 255, 107 / 255], c: [60 / 255, 36 / 255, 40 / 255] },
+    { a: [53 / 255, 106 / 255, 96 / 255], b: [128 / 255, 173 / 255, 146 / 255], c: [28 / 255, 48 / 255, 44 / 255] },
+    { a: [0.3, 0.5, 0.7], b: [0.3, 0.5, 0.7], c: [0.1, 0.15, 0.25] }
+  ]
+  for (const pal of adjacentCases) {
+    const s = deriveBackdropSpectrum(pal)
+    const span = Math.abs(hueDiff(rgbToHsl(s.primary).h, rgbToHsl(s.accent).h))
+    assert.ok(span >= 48, `expected hue span >= 48, got ${span}`)
+  }
+
+  // 色板插值与五种色彩方式采样均输出合法 RGB
+  const warmSpectrum = resolveCenterSpectrum(DEFAULT_CENTER_GLOW, { a: [0.72, 0.40, 0.32], b: [0.88, 0.68, 0.44], c: [0.26, 0.16, 0.18] })
+  const midSpectrum = blendCenterSpectrum(darkSpectrum, warmSpectrum, 0.5)
+  assert.ok(Math.abs(midSpectrum.primary[0] - (darkSpectrum.primary[0] + warmSpectrum.primary[0]) / 2) < 1e-6)
+
+  for (const colorMode of Object.keys(CENTER_GLOW_COLOR_MODES)) {
+    const c0 = samplePrismColor(warmSpectrum, colorMode, 'ripple', 0.2, { role: 'primary', slot: 0, angle: 0, layer: 0.2 })
+    const c1 = samplePrismColor(warmSpectrum, colorMode, 'sweep', 1.6, { role: 'accent', slot: 2, angle: 1.4, layer: 0.85 })
+    assert.equal(c0.length, 3)
+    assert.ok(c0.every(v => Number.isFinite(v) && v >= 0 && v <= 255))
+    assert.ok(c1.every(v => Number.isFinite(v) && v >= 0 && v <= 255))
+  }
+  // 欧泊三彩下三角色（platinum / primary / accent）彼此清晰区分
+  const opalPlat = samplePrismColor(classic, 'opal', 'ripple', 0, { role: 'platinum', slot: 0 })
+  const opalPrim = samplePrismColor(classic, 'opal', 'ripple', 0, { role: 'primary', slot: 1 })
+  const opalAcc = samplePrismColor(classic, 'opal', 'ripple', 0, { role: 'accent', slot: 2 })
+  assert.ok(Math.hypot(opalPrim[0] - opalAcc[0], opalPrim[1] - opalAcc[1], opalPrim[2] - opalAcc[2]) > 80)
+  assert.ok(rgbToHsl(opalPlat).l > rgbToHsl(opalPrim).l + 0.22)
+
+  for (const [effect, period] of [['breathe', 3.8], ['pulse', 2.8]]) {
+    const sample = (turn, mode = 'flow', angle = 0) => centerGlowSample(effect, mode, period * turn, angle)
+    assert.ok(sample(.5).mix > sample(0).mix)
+    assert.equal(sample(.5, 'solid').mix, 0)
+    const [first, second] = [0, Math.PI / 2].map(angle => sample(.5, 'layered', angle))
+    assert.notEqual(first.phase, second.phase)
   }
   assert.ok(centerGlowPulse(.5) > centerGlowPulse(0))
   assert.equal(centerGlowWave(0), 0)
   assert.ok(centerGlowWave(.4) > 0)
-  assert.equal(centerGlowWave(.85), 0)
+  assert.equal(centerGlowWave(.86), 0)
 })
 
 check('关系星图：紧凑名称和手动扩容排版', () => {
@@ -594,11 +854,7 @@ check('关系星图：自动圆和手动圆随倍率缩小，小圆收起文字'
       assert.ok(sequence.every((point, index) => Math.abs(point.radius / sequence[2].radius - entryCircleScale(zooms[index])) < 1e-8))
       assert.ok(sequence[4].lines.length <= 1)
       assert.equal(render('星', detail, .65, entryRadii).radius, sequence[4].radius)
-      if (!detail && !entryRadii) {
-        assert.ok(sequence[1].radius >= 8 * entryCircleScale(1.57) - 1e-9)
-        assert.ok(sequence[1].radius * 2 <= 19.6)
-        assert.ok(sequence[1].radius < sequence[0].radius * .82)
-      }
+      if (!detail && !entryRadii) assert.ok(sequence[2].radius >= 8.2 * .78 && sequence[2].radius <= 8.2 * 1.2)
     }
   }
   assert.deepEqual(render('星', false, .65).lines, [])

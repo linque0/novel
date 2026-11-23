@@ -2,6 +2,8 @@
      数据真源仍是 work.snippets（content 首行 = 标题）与 work.selSnippetId（外部跳转/拆窗锁都用它）；
      每作品状态与未提交草稿落在 appconfig（ui.loadSnipState / loadSnipDrafts）。
      插件版不提供恍然梦入口：设计稿没有模块助手条，这里也不渲染。 -->
+<!-- 灵感拼板工作区主视图：支持标签泳道分组、卡片拖拽排序与跨组迁移（带 FLIP 落点动效）、
+     侧栏详情/浮窗编辑及未提交草稿冲突自愈，所有持久化修改均经 snippetCommandsFor 事务总线执行。 -->
 <script setup>
 import {computed,ref,watch,onMounted,onBeforeUnmount,nextTick,useId} from 'vue'
 import {useWorkStore} from '../../../../stores/work'

@@ -1,3 +1,6 @@
+<!--
+  SettingsAboutPage.vue — 设置中心「关于与快捷键」页（版本号、更新检查、帮助与数据概览弹窗入口）。
+-->
 <script setup>
 import { ref } from 'vue'
 import { useUiStore } from '../../../../stores/ui'

@@ -192,7 +192,182 @@ async function bookSourceBook(ctx,meta) {
   return {workId,volumeId,c1,c2,characterId,otherId,loreId,childId,outlineId,snippetId}
 }
 
+/* ---------- 关系星系设计稿 1:1 复刻验证书（《天穹钟摆纪》：5 设定集 · 30 条目 · 14 集内关系 + 11 跨集关系） ---------- */
+async function galaxyProtoBook(ctx, meta) {
+  const { db, uid, now } = ctx
+  const t = now()
+  const workId = uid()
+  await db.works.add({
+    id: workId,
+    title: meta.title,
+    author: '设计稿复刻',
+    genre: '奇幻',
+    status: '连载中',
+    intro: '关系星系设计稿 1:1 复刻验证书（《天穹钟摆纪》：5 设定集 · 30 条目 · 14 集内关系 + 11 跨集关系）',
+    createdAt: t,
+    updatedAt: t,
+    deletedAt: null
+  })
+  await db.outlines.add({ id: uid(), workId, level: 'master', refId: workId, content: '以《天穹钟摆纪》世界观 1:1 对照原型稿检验关系星系视觉观感与空间布局。', createdAt: t, updatedAt: t, deletedAt: null })
+  const volId = uid()
+  await db.volumes.add({ id: volId, workId, title: '第一卷 · 天穹钟摆纪', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
+  await db.chapters.add({ id: uid(), workId, volumeId: volId, title: '第一章 · 第十二响', fmt: 'html', content: '<p>冬至正午，雾都青铜钟楼敲响第十二声，界脊断崖的青铜星轨刻度随之共振。</p>', wordCount: 36, status: 'draft', sortOrder: 0, createdAt: t, updatedAt: t, deletedAt: null })
+
+  const sets = [
+    {
+      key: 'geo',
+      title: '地理与奇观',
+      subtitle: '横贯大陆的断崖、深水港与古代观测遗迹',
+      entries: [
+        { key: 'geo-1', title: '界脊断崖', desc: '横贯大陆的玄武岩断崖，崖壁嵌有与钟楼同源的青铜星轨刻度。' },
+        { key: 'geo-2', title: '雾都青铜钟楼', desc: '旧纪元遗留的巨型报时钟楼，每逢冬至正午第十二响校准全港船队。' },
+        { key: 'geo-3', title: '白鸦深水港', desc: '建于黑色海岬上的不冻港，仅在退潮三刻露出水下古栈桥。' },
+        { key: 'geo-4', title: '退潮铜刻观测站', desc: '退潮线以北的半沉没青铜穹顶，内置古星历罗盘。' },
+        { key: 'geo-5', title: '沉眠之海', desc: '终年笼罩乳白浓雾的内海，磁针在此常年偏向钟楼。' },
+        { key: 'geo-6', title: '长夜井', desc: '深入地壳潮汐层的回音竖井，可听见海底暗流涌动。' },
+        { key: 'geo-7', title: '折光峡谷', desc: '石英岩构成的狭长海峡，晨昏会将钟楼灯火折射至百里外。' },
+        { key: 'geo-8', title: '双月码头', desc: '远航商队停泊补给的外港泊位。' },
+        { key: 'geo-9', title: '盐霜坡', desc: '海风结晶形成的白色盐丘阶地。' },
+        { key: 'geo-10', title: '北岸石窟', desc: '刻满早期领航员手记的海岸洞窟群。' }
+      ]
+    },
+    {
+      key: 'factions',
+      title: '结社与公议',
+      subtitle: '掌握航图、钟声校准与雾海通商的权力网络',
+      entries: [
+        { key: 'fac-1', title: '领航员公会', desc: '核发远航资格、保管界脊以东观测记录的最高海事机构。' },
+        { key: 'fac-2', title: '铜钟守望者', desc: '世代驻守雾都钟楼的隐秘修会，执掌第十二响的校准权。' },
+        { key: 'fac-3', title: '白鸦议会', desc: '由七大船团长老组成的自由港自治议事厅。' },
+        { key: 'fac-4', title: '潮汐记录者', desc: '常年驻扎各观测站抄录星图与潮位偏差的学者结社。' },
+        { key: 'fac-5', title: '星炉工坊', desc: '锻造青铜经纬仪与抗雾航灯的精密匠人行会。' },
+        { key: 'fac-6', title: '远航商队', desc: '穿行沉眠之海的武装贸易船队。' },
+        { key: 'fac-7', title: '黑砂船团', desc: '游走于禁航期边缘的私掠与打捞船团。' },
+        { key: 'fac-8', title: '旧城密使', desc: '在议会与守望者之间传递密令的信使网络。' }
+      ]
+    },
+    {
+      key: 'laws',
+      title: '天象潮汐律',
+      subtitle: '星图坐标、钟声频率与航路改写的自然法则',
+      entries: [
+        { key: 'law-1', title: '古星图潮汐律', desc: '每一枚星点皆对应一处现实潮汐坐标，钟声共振可改写安全航道。' },
+        { key: 'law-2', title: '第十二响校准令', desc: '唯有冬至最低潮位才会敲响的第十二声钟鸣，用以重置全海罗盘。' },
+        { key: 'law-3', title: '铜盘经纬仪', desc: '镶嵌星图拓片的双环航海定位仪，可感应钟楼余波。' },
+        { key: 'law-4', title: '大潮禁航期', desc: '春秋两季星轨错位、雾海漩涡频发的封港期。' },
+        { key: 'law-5', title: '朔望航标法', desc: '依据双月朔望周期推算暗礁浮沉的航海算术。' },
+        { key: 'law-6', title: '雾海灯语', desc: '巡航塔与远航船只间传递方位的三色弧光密码。' }
+      ]
+    },
+    {
+      key: 'annals',
+      title: '旧纪编年录',
+      subtitle: '从星图初醒到北境失联的重大历史转折',
+      entries: [
+        { key: 'ann-1', title: '星图初醒之年', desc: '界脊断崖首次发声并与青铜钟楼产生跨海共振的纪元起点。' },
+        { key: 'ann-2', title: '北境船队失联', desc: '第三远征船团在退潮线以北集体消失的悬案。' },
+        { key: 'ann-3', title: '钟楼封存事件', desc: '守望者宣布顶层齿轮室永久封锁的历史转折。' },
+        { key: 'ann-4', title: '雾海盟约', desc: '三大结社在白鸦深水港签署的航道共享宪章。' },
+        { key: 'ann-5', title: '铜符失窃案', desc: '四页主星图铜拓抄本自公会秘库流出的导火索。' },
+        { key: 'ann-6', title: '最后一次远航', desc: '旧纪元末代旗舰驶入折光峡谷的不归航程。' }
+      ]
+    },
+    {
+      key: 'uncharted',
+      title: '未勘定星域',
+      subtitle: '尚待探索与归档的空白设定集领域（0 条目）',
+      entries: []
+    }
+  ]
+
+  const idByKey = new Map()
+  const mubuRows = []
+  sets.forEach((s, setIdx) => {
+    const setId = uid()
+    idByKey.set(s.key, setId)
+    mubuRows.push({
+      id: setId,
+      workId,
+      parentId: null,
+      sortOrder: setIdx * 1000,
+      text: s.title + '\n' + s.subtitle,
+      html: null,
+      tags: [],
+      fold: false,
+      deletedAt: null,
+      createdAt: t + setIdx * 10,
+      updatedAt: t + setIdx * 10
+    })
+    s.entries.forEach((e, entryIdx) => {
+      const entryId = uid()
+      idByKey.set(e.key, entryId)
+      mubuRows.push({
+        id: entryId,
+        workId,
+        parentId: setId,
+        sortOrder: entryIdx * 1000,
+        text: e.title + '\n' + e.desc,
+        html: null,
+        tags: [],
+        fold: false,
+        deletedAt: null,
+        createdAt: t + setIdx * 100 + entryIdx + 1,
+        updatedAt: t + setIdx * 100 + entryIdx + 1
+      })
+    })
+  })
+  await db.mubu.bulkAdd(mubuRows)
+
+  const relations = [
+    // 14 条集内关系（INTRA_RELATIONS）
+    { from: 'geo-1', to: 'geo-2', label: '齿轮刻度咬合', desc: '断崖岩层中的铜轨与钟楼机芯同频震动。' },
+    { from: 'geo-2', to: 'geo-3', label: '钟声引航', desc: '钟楼声波穿透浓雾为深水港船队标定航向。' },
+    { from: 'geo-1', to: 'geo-4', label: '潮线延伸', desc: '界脊北端没入海中连接退潮观测站。' },
+    { from: 'geo-3', to: 'geo-5', label: '濒临内海', desc: '白鸦深水港扼守沉眠之海东侧咽喉。' },
+    { from: 'geo-2', to: 'geo-7', label: '灯火折光', desc: '钟楼顶层弧光经峡谷石英壁折射入海。' },
+    { from: 'fac-1', to: 'fac-2', label: '共掌航权', desc: '公会与守望者分别执掌海图核发与钟声校准。' },
+    { from: 'fac-1', to: 'fac-4', label: '观测委派', desc: '公会资助潮汐记录者常驻外海各观测站。' },
+    { from: 'fac-2', to: 'fac-5', label: '机芯修缮', desc: '星炉工坊世代负责钟楼青铜齿轮的维护。' },
+    { from: 'fac-3', to: 'fac-6', label: '船团统辖', desc: '白鸦议会统筹远航商队的护航与税务。' },
+    { from: 'law-1', to: 'law-2', label: '共振触发', desc: '第十二响钟鸣是激活古星图坐标改写的唯一密钥。' },
+    { from: 'law-1', to: 'law-3', label: '拓片校准', desc: '铜盘经纬仪依靠星图母本拓片运转。' },
+    { from: 'law-4', to: 'law-5', label: '潮期推演', desc: '通过朔望航标法预测大潮禁航期的起止时刻。' },
+    { from: 'ann-1', to: 'ann-3', label: '伏笔延续', desc: '星图初醒的异象最终促使守望者封存顶层钟室。' },
+    { from: 'ann-2', to: 'ann-5', label: '秘密调查', desc: '铜符失窃实为寻找北境失联船队的坐标残页。' },
+    // 11 条跨集关系（CROSS_RELATIONS）
+    { from: 'geo-1', to: 'law-1', label: '刻录母本', desc: '界脊断崖的青铜刻痕正是古星图潮汐律的原始母本。' },
+    { from: 'geo-2', to: 'fac-2', label: '世代驻守', desc: '铜钟守望者常年驻守雾都青铜钟楼，严守第十二响机密。' },
+    { from: 'geo-2', to: 'law-2', label: '冬至鸣响', desc: '雾都钟楼在每年冬至最低潮位敲响第十二响校准令。' },
+    { from: 'geo-3', to: 'fac-3', label: '议政驻地', desc: '白鸦议会设于白鸦深水港的玄武岩主堡之内。' },
+    { from: 'geo-4', to: 'fac-4', label: '驻站抄录', desc: '潮汐记录者在退潮铜刻观测站记录每年星轨偏移。' },
+    { from: 'fac-1', to: 'law-3', label: '配发罗盘', desc: '领航员公会向持证船长配发铜盘经纬仪。' },
+    { from: 'fac-5', to: 'law-3', label: '秘法铸造', desc: '星炉工坊掌握铜盘经纬仪的双环铸造工艺。' },
+    { from: 'geo-1', to: 'ann-1', label: '纪元起点', desc: '界脊断崖与海潮的首次轰鸣开启了星图初醒之年。' },
+    { from: 'geo-4', to: 'ann-2', label: '最后航标', desc: '北境失联船队最后的灯语讯号发自退潮铜刻观测站。' },
+    { from: 'fac-2', to: 'ann-3', label: '下令封锁', desc: '铜钟守望者大长老亲手签署了钟楼封存事件密令。' },
+    { from: 'fac-1', to: 'ann-5', label: '秘库失窃', desc: '领航员公会最高档案库在雨夜遗失四枚星图铜符。' }
+  ]
+
+  await db.lorelinks.bulkAdd(relations.map((rel, idx) => ({
+    id: uid(),
+    workId,
+    fromKind: 'mubu',
+    fromId: idByKey.get(rel.from),
+    toKind: 'mubu',
+    toId: idByKey.get(rel.to),
+    label: rel.label,
+    reverseLabel: '',
+    description: rel.desc,
+    createdAt: t + idx,
+    updatedAt: t + idx,
+    deletedAt: null
+  })))
+
+  return { workId, setCount: sets.length, entryCount: mubuRows.length - sets.length, linkCount: relations.length }
+}
+
 export const VERIFY_BOOKS = [
+  { title: '天穹钟摆', owner: 'prototypes/lore-galaxy-designs/index.html', desc: '关系星系设计稿 1:1 复刻验证书（5 设定集 · 30 条目 · 14 集内 + 11 跨集关系）', create: galaxyProtoBook },
   {title:'书内知识验证书',owner:'project-verify.mjs / relation-knowledge-verify.mjs',desc:'完整投影、关联知识、隐私、截止范围、全书知识与增量',create:bookSourceBook},
   { title: '双链验证书', owner: 'dl-verify.mjs', desc: '双链全链路：正文 / 幕布 / 人物 / 灵感 + 大纲令牌', create: dlBook },
   { title: '批注验证书', owner: 'annotation-verify.mjs', desc: '正文批注全链路：正文含一条双链（验证批注与双链共存）', create: annoBook },

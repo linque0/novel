@@ -39,6 +39,10 @@ assert.ok(double.bounds.x < at('b').x)
 
 let next = 0
 const seeds = starterLoreEntries('work', () => 'entry-' + ++next, 10)
-assert.equal(seeds.length, 6)
+assert.deepEqual(seeds.map((row) => row.text), [
+  '地理与场所', '社会与势力', '规则与禁忌', '历史与纪年',
+  '物件与线索', '民俗与信仰', '科技与造物', '生灵与异类',
+  '能力与体系', '典籍与传闻', '货币与资源', '事件与伏笔'
+])
 assert.ok(seeds.every((row, index) => row.parentId === null && row.workId === 'work' && row.sortOrder === index * 1000 && row.kind))
 console.log('自由条目的移动、工作中心布局和起步分类通过')

@@ -13,6 +13,7 @@ import { STATS_TABLES, buildWritingStats, statsDates } from '../services/writing
  * 后续迁移到 SQLite（Electron 主进程）时只需替换本模块实现，stores 无需改动。
  */
 
+/** 一次加载作品全部编辑实体、资产元信息（不含二进制 blob）与大纲画布节点。 */
 export async function loadWorkBundle(workId) {
   const [
     works, volumes, chapters, outlines, characters, relations,

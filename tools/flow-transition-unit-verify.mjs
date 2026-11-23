@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { createFlowTransitionController } from '../src/services/latent/flow-transition.js'
-import { liquidFrame, liquidProgress, matchesSceneAspect, sameSceneRect, sceneCaptureOptions } from '../src/services/latent/liquid-transition.js'
+import { changedScene, isFlowNavigationIntent, liquidFrame, liquidProgress, matchesSceneAspect, sameSceneRect, sceneCaptureOptions } from '../src/services/latent/liquid-transition.js'
+import { splitLiveCaptureSvg } from '../src/services/latent/flow-live-capture.js'
 import { liquidPhase } from '../src/services/latent/liquid-transition-gl.js'
 import { createFlowCaptureQueue } from '../src/services/latent/flow-capture-queue.js'
 
@@ -34,6 +35,31 @@ const mid = liquidFrame(600, start, .35)
 assert.equal(mid.time, .5)
 assert(mid.phase > 0)
 assert.equal(liquidFrame(1100, start, .35).time, 1)
+
+const navButton = { closest: selector => selector.includes('.app-topnav-item[data-nav]') ? navButton : null }
+const pointer = { type: 'pointerdown', button: 0, isPrimary: true, target: navButton }
+assert(isFlowNavigationIntent(pointer))
+assert(!isFlowNavigationIntent({ ...pointer, button: 2 }))
+assert(!isFlowNavigationIntent({ ...pointer, isPrimary: false }))
+assert(!isFlowNavigationIntent({ ...pointer, target: { closest: () => null } }))
+assert(isFlowNavigationIntent({ type: 'keydown', key: 'Enter', target: navButton }))
+assert(isFlowNavigationIntent({ type: 'keydown', key: ' ', target: navButton }))
+assert(!isFlowNavigationIntent({ type: 'keydown', key: 'F10', shiftKey: true, target: navButton }))
+const measuredText = { nodeType: 3, parentElement: null, data: '正文' }
+const textWrites = [
+  { type: 'characterData', target: measuredText, oldValue: '正文' },
+  { type: 'characterData', target: measuredText, oldValue: 'X' }
+]
+assert.equal(changedScene(textWrites), false)
+measuredText.data = '编辑后的正文'
+assert.equal(changedScene(textWrites), true)
+const probePng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAAD'
+const svg = `<svg><img src="${probePng}" data-flow-live-ink="" /><img src="${probePng}" /></svg>`
+const slot = splitLiveCaptureSvg(svg)
+assert.deepEqual([slot.width, slot.height], [2, 3])
+assert.equal(slot.parts.join(probePng), svg)
+assert.equal(slot.parts.join('updated').split(probePng).length, 2)
+assert.equal(splitLiveCaptureSvg('<svg></svg>'), null)
 
 const control = () => createFlowTransitionController({
   isReducedMotion: () => false, hasDocument: () => true

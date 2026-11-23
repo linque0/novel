@@ -1,3 +1,7 @@
+/**
+ * 渲染层桌面端自动更新状态订阅与动作分发（插件构建下 bridge 恒为 null，完全静默）。
+ * 用 observed 修订号避免初始拉取与实时推送事件乱序覆盖。
+ */
 import { onBeforeUnmount, onMounted, readonly, shallowRef } from 'vue'
 
 export const DESKTOP_REPOSITORY = 'https://github.com/linque0/novel'

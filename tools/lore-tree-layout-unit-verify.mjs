@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { layoutLoreTree } from '../src/services/lore-tree-layout.js'
+import { layoutLoreTree, loreActiveFoldLevel, loreFoldedIdsForLevel, loreTreeMaxDepth } from '../src/services/lore-tree-layout.js'
 
 const entries = [
   { id: 'a', children: ['b', 'c'], imageWidth: 0 },
@@ -47,4 +47,22 @@ assert.equal(elbow.edges.find(edge => edge.id === 'b').parentId, 'a')
 const curve = layoutLoreTree(['a', 'other'], byId, new Set(), sizes, { mode: 'double', edgeStyle: 'curve' })
 assert.ok(curve.edges.every(edge => /^M-?\d+ -?\d+C-?\d+ -?\d+,-?\d+ -?\d+,-?\d+ -?\d+$/.test(edge.d)))
 assert.ok(curve.nodes.every(node => Number.isInteger(node.x) && Number.isInteger(node.y)))
-console.log('层级导图排布通过：列宽、内容避让、多根、边界、折叠、折线/曲线与缺失节点')
+
+const childrenOf = id => byId.get(id)?.children || []
+assert.equal(loreTreeMaxDepth(['a', 'other'], childrenOf), 3)
+assert.equal(loreTreeMaxDepth(['other'], childrenOf), 1)
+assert.equal(loreTreeMaxDepth(['a', 'a'], id => id === 'a' ? ['a'] : []), 1)
+
+const fold0 = loreFoldedIdsForLevel(['a', 'other'], childrenOf, 0)
+assert.deepEqual([...fold0].sort(), ['a', 'b', 'c'])
+assert.equal(loreActiveFoldLevel(['a', 'other'], childrenOf, fold0), 1)
+
+const fold2 = loreFoldedIdsForLevel(['a', 'other'], childrenOf, 2)
+assert.deepEqual([...fold2].sort(), ['b', 'c'])
+assert.equal(loreActiveFoldLevel(['a', 'other'], childrenOf, fold2), 2)
+
+const foldAllOpen = loreFoldedIdsForLevel(['a', 'other'], childrenOf, Infinity)
+assert.equal(foldAllOpen.size, 0)
+assert.equal(loreActiveFoldLevel(['a', 'other'], childrenOf, foldAllOpen), Infinity)
+assert.equal(loreActiveFoldLevel(['a', 'other'], childrenOf, new Set(['b'])), null)
+console.log('层级导图排布与层级折叠展开计算通过：列宽、内容避让、多根、边界、动态深度、分级折叠与混合态识别')

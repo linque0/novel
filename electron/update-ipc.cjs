@@ -1,8 +1,14 @@
+/**
+ * 应用内更新 Electron 主进程 IPC 桥接层：
+ * 绑定 GitHub Releases 查询、NsisUpdater 下载/静默安装、全部窗口保存屏障，
+ * 并通过主框架来源校验限制仅受信任渲染页可触发更新通道。
+ */
 const { app, autoUpdater, BrowserWindow, ipcMain, net, shell } = require('electron')
 const { existsSync } = require('node:fs')
 const path = require('node:path')
 const { createUpdates, latest } = require('./updates.cjs')
 
+/** 请求 GitHub Latest Release API（禁止自动重定向、12s 超时），返回 JSON 或 null（404）。 */
 async function fetchRelease() {
   let response
   try {
@@ -22,6 +28,7 @@ async function fetchRelease() {
   try { return await response.json() } catch { throw new Error('未能读取 GitHub 发布信息，请重试。') }
 }
 
+/** 创建受控 NsisUpdater：关闭自动下载、差量下载与网页安装器，仅允许校验后的整包升级。 */
 function makeUpdater(url) {
   const { NsisUpdater } = require('electron-updater')
   // Resolve both the manifest and its one approved installer against the selected tag.
@@ -33,6 +40,7 @@ function makeUpdater(url) {
   updater.disableWebInstaller = true
   updater.disableDifferentialDownload = true
   updater.on('error', error => console.warn('[update]', error.message))
+  /* 2s 内监听 before-quit-for-update 确认安装程序已接管退出，超时则回滚状态 */
   updater.installAndQuit = () => new Promise((resolve, reject) => {
     const quit = () => { clearTimeout(timeout); resolve() }
     const timeout = setTimeout(() => {
@@ -49,6 +57,7 @@ function makeUpdater(url) {
   return updater
 }
 
+/** 安装前向全部存活窗口执行保存屏障（15s 超时），确保脏数据落盘且期间无新窗口打开。 */
 async function prepareWindows() {
   const windows = BrowserWindow.getAllWindows().filter(window => !window.isDestroyed())
   const request = (window, action) => window.webContents.executeJavaScript(
@@ -77,8 +86,10 @@ async function prepareWindows() {
   }
 }
 
+/** 注册 update:* IPC 通道，并返回「当前是否处于 installing 态」的门禁查询函数。 */
 function initUpdateIPC({ isDev, getMainWindow, blocked }) {
   const supported = process.platform === 'win32' && (app.isPackaged || isDev)
+  /* 仅 NSIS 安装版（存在安装标记与 app-update.yml）才允许应用内一键安装，便携版降级为外链跳转 */
   const canInstall = supported && app.isPackaged && !isDev && process.arch === 'x64' &&
     existsSync(path.join(path.dirname(app.getPath('exe')), 'novel-studio-nsis.install')) &&
     existsSync(path.join(process.resourcesPath, 'app-update.yml'))
@@ -92,6 +103,7 @@ function initUpdateIPC({ isDev, getMainWindow, blocked }) {
     }
   })
   const mainSender = event => event.sender === getMainWindow()?.webContents
+  /* 来源守卫：仅允许本地开发页或正式包 app://local 主框架调用更新通道 */
   const trusted = event => {
     if (event.senderFrame !== event.sender.mainFrame || !BrowserWindow.fromWebContents(event.sender)) return false
     const frameUrl = event.senderFrame?.url

@@ -1,3 +1,6 @@
+<!--
+  PanelBackdrop.vue — 独立弹窗与面板共用的隐现 WebGL 流动背景层（响应流速与主题配色设置）。
+-->
 <script setup>
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useUiStore } from '../../../stores/ui'

@@ -1,3 +1,7 @@
+/**
+ * Electron Preload 脚本：通过 contextBridge 向渲染层暴露受控的 window.native API，
+ * 隔离 Node/Electron 原生权限，仅开放更新、文件导入导出、DPAPI 凭据、数据目录/作品库管理与多窗口锁通信。
+ */
 const { contextBridge, ipcRenderer } = require('electron')
 
 contextBridge.exposeInMainWorld('native', {

@@ -1,3 +1,9 @@
+/**
+ * Electron 主进程入口：
+ * - 解析 --profile 与自定义数据目录指针（data-dir.json），在 app ready 前完成 userData 重定向；
+ * - 注册 app:// 静态协议（带 dist 目录穿越校验）并管理主窗口生命周期与关闭前 __flushNow 落盘；
+ * - 暴露文件导入导出、DPAPI 凭据加解密、数据目录迁移/旧目录清理、作品库与自动更新 IPC。
+ */
 const { app, BrowserWindow, ipcMain, dialog, protocol, shell, clipboard, safeStorage } = require('electron')
 const path = require('path')
 const fs = require('fs')

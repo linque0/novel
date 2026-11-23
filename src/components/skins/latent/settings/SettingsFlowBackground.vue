@@ -1,3 +1,6 @@
+<!--
+  SettingsFlowBackground.vue — 设置中心「流动背景」页（流速调节、预设色板选择与三色通道微调）。
+-->
 <script setup>
 import { useUiStore } from '../../../../stores/ui'
 import FlowSpeedSetting from './FlowSpeedSetting.vue'
