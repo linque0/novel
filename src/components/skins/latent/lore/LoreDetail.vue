@@ -10,7 +10,9 @@ import { computed, ref } from 'vue'
 import OIcon from '../../../OIcon.vue'
 import LoreImageHiddenNotice from '../../../LoreImageHiddenNotice.vue'
 import LoreRelRows from '../../../LoreRelRows.vue'
+import LoreWeightIcon from '../../../LoreWeightIcon.vue'
 import { kindOf } from './lore-kinds.js'
+import { entryWeightMeta } from '../../../../services/lore-weights.js'
 import { useWorkStore } from '../../../../stores/work'
 import { useUiStore } from '../../../../stores/ui'
 import { jumpTo } from '../../../../services/doublelinks'
@@ -127,6 +129,10 @@ function addChild() {
             <div class="lore-detail-context">
               <OIcon :name="kindOf(node).icon" :size="13" />
               {{ kindOf(node).label }}
+              <span v-if="work.mubuEntryWeight(node) !== 'standard'" class="lore-weight-pill" :class="`is-${work.mubuEntryWeight(node)}`">
+                <LoreWeightIcon :weight="work.mubuEntryWeight(node)" :size="12" />
+                {{ entryWeightMeta(work.mubuEntryWeight(node)).label }}
+              </span>
             </div>
             <div class="lore-detail-menu-actions">
               <button class="lore-icon" type="button" title="在条目编写中编辑" @click="emit('locate', node.id)"><OIcon name="edit" :size="13" /></button>
@@ -135,7 +141,10 @@ function addChild() {
           </div>
           <h2 class="lore-detail-title">{{ nodeTitle }}</h2>
           <div v-if="(node.tags || []).length" class="lore-detail-tags">
-            <button v-for="t in node.tags" :key="t" class="lore-detail-tag" type="button" :style="tagStyle(t)" :title="`筛选标签「${t}」`" @click="filterTag(t)">{{ t }}</button>
+            <button v-for="t in node.tags" :key="t" class="lore-detail-tag" type="button" :style="tagStyle(t)" :title="`筛选标签「${t}」`" @click="filterTag(t)">
+              <LoreWeightIcon v-if="work.mubuTagWeight(t) !== 'standard'" :weight="work.mubuTagWeight(t)" :size="11" />
+              {{ t }}
+            </button>
           </div>
           <div v-if="nodeImages" class="lore-detail-body lore-embedded-images" v-html="nodeImages" />
           <LoreImageHiddenNotice :node-id="node.id" :html="node.html" />

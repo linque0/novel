@@ -4,9 +4,11 @@
 <script setup>
 import { computed, ref } from 'vue'
 import OIcon from '../../../OIcon.vue'
+import LoreWeightIcon from '../../../LoreWeightIcon.vue'
 import { useWorkStore } from '../../../../stores/work'
 import { useUiStore } from '../../../../stores/ui'
 import { tagColor } from '../../../../services/tagcolors'
+import { entryWeightMeta } from '../../../../services/lore-weights.js'
 
 const emit = defineEmits(['pick'])
 const work = useWorkStore()
@@ -107,12 +109,18 @@ function collapse() {
         @click="goTo(s.id)"
       >
         <div class="lore-detail-entry-head">
-          <h3>{{ (s.text || '').trim() || '（空节点）' }}</h3>
+          <h3>
+            <LoreWeightIcon v-if="work.mubuEntryWeight(s) !== 'standard'" :weight="work.mubuEntryWeight(s)" :size="12" class="lore-inline-wi" />
+            <span>{{ (s.text || '').trim() || '（空节点）' }}</span>
+          </h3>
           <OIcon v-if="node && s.id === node.id" name="caret-right" :size="12" />
         </div>
         <p class="lore-detail-desc">{{ descOf(s) }}</p>
         <div class="lore-detail-entry-meta">
-          <span v-for="t in (s.tags || []).slice(0, 2)" :key="t" class="lore-detail-tagchip" :style="tagStyle(t)">{{ t }}</span>
+          <span v-for="t in (s.tags || []).slice(0, 2)" :key="t" class="lore-detail-tagchip" :style="tagStyle(t)">
+            <LoreWeightIcon v-if="work.mubuTagWeight(t) !== 'standard'" :weight="work.mubuTagWeight(t)" :size="10" />
+            {{ t }}
+          </span>
           <span>{{ relCountOf(s.id) }} 关联</span>
         </div>
       </button>

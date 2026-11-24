@@ -293,25 +293,243 @@ export async function parseEpub(data) {
 }
 
 /* ================= 设定库 MD 导入解析 ================= */
+
+function escHtml(s) {
+  return String(s || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+}
+
+function escAttr(s) {
+  return escHtml(s).replaceAll('"', '&quot;')
+}
+
+function isSafeMediaUrl(url) {
+  return /^(?:https?:\/\/|data:image\/)/i.test(String(url || '').trim())
+}
+
+function isSafeLinkUrl(url) {
+  return /^https?:\/\//i.test(String(url || '').trim())
+}
+
+function formatMubuInline(raw) {
+  let s = String(raw || '').trim()
+  let heading = 0
+  const hm = s.match(/^(#{1,6})\s+(.*)$/)
+  if (hm) {
+    heading = Math.min(3, hm[1].length)
+    s = hm[2].trim()
+  }
+
+  // 兼容幕布导出中偶现的 <span class="bold">...</span> / <span>...</span>
+  s = s
+    .replace(/<span\b[^>]*class=["'][^"']*\bbold\b[^"']*["'][^>]*>([\s\S]*?)<\/span>/gi, (_, inner) => `**${inner}**`)
+    .replace(/<\/?span\b[^>]*>/gi, '')
+
+  const tokens = []
+  const putToken = (tok) => {
+    const idx = tokens.length
+    tokens.push(tok)
+    return `\u0000MUBU_TOK_${idx}\u0000`
+  }
+
+  // 1. 提取行内图片 ![alt](url)
+  s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, (full, alt, url) => {
+    if (!isSafeMediaUrl(url)) return full
+    return putToken({
+      text: '',
+      html: `<img class="lore-image" src="${escAttr(url)}" alt="${escAttr(alt)}">`,
+      rich: true
+    })
+  })
+
+  // 2. 提取行内链接 [label](http(s)://...)
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, (full, label, url) => {
+    if (!isSafeLinkUrl(url)) return full
+    const display = /^\d+$/.test(label.trim()) ? `[${label.trim()}]` : label
+    return putToken({
+      text: display,
+      html: `<a href="${escAttr(url)}" target="_blank" rel="noopener noreferrer">${escHtml(display)}</a>`,
+      rich: true
+    })
+  })
+
+  let rich = tokens.some((t) => t.rich)
+  let plain = s
+  let html = escHtml(s)
+
+  // 3. 加粗+斜体 / 加粗 / 斜体（跳过孤立的 "* " 列表标记）
+  const applyStyle = (re, openTag, closeTag) => {
+    html = html.replace(re, (_, inner) => {
+      rich = true
+      return openTag + inner + closeTag
+    })
+    plain = plain.replace(re, '$1')
+  }
+  applyStyle(/\*\*\*([^*\n](?:[^\n]*?[^*\n])?)\*\*\*/g, '<b><i>', '</i></b>')
+  applyStyle(/\*\*([^*\n](?:[^\n]*?[^*\n])?)\*\*/g, '<b>', '</b>')
+  applyStyle(/\*([^*\s\n](?:[^*\n]*?[^*\s\n])?)\*/g, '<i>', '</i>')
+
+  // 4. 还原占位符
+  const restore = (str, field) => str.replace(/\u0000MUBU_TOK_(\d+)\u0000/g, (_, idx) => tokens[Number(idx)]?.[field] ?? '')
+  plain = restore(plain, 'text').trim()
+  html = restore(html, 'html').trim()
+
+  return {
+    text: plain,
+    html: rich ? html : null,
+    heading
+  }
+}
+
+function appendNodeImage(target, url, alt) {
+  const imgTag = `<img class="lore-image" src="${escAttr(url)}" alt="${escAttr(alt)}">`
+  const base = target.html != null ? target.html : escHtml(target.text).replace(/\n/g, '<br>')
+  target.html = base ? `${base}<br>${imgTag}` : imgTag
+}
+
 /**
- * 幕布节点导入：H1–H6 → 对应层级节点，正文行 → 末级节点的子节点。
- * 返回 [{ text, children }]
+ * 幕布节点导入：
+ * - 支持传统 H1–H6 标题层级；
+ * - 支持幕布导出的多级缩进列表（- / * / +）、无短横线顶层分区、孤立首行 H1 拆壳；
+ * - 支持行内加粗/斜体/链接/### 标题级别、缩进引用块（> 连续合并）与外链图片（img.lore-image）。
+ * 返回 [{ text, html, heading, children }]
  */
 export function parseMubuMd(text) {
+  const lines = String(text || '').split(/\r?\n/)
+  const expandIndent = (ws) => String(ws || '').replace(/\t/g, '  ').length
+
+  let standaloneHeadings = 0
+  let hasLists = false
+  let firstNonEmpty = ''
+  for (const raw of lines) {
+    const trimmed = raw.trim()
+    if (!trimmed) continue
+    if (!firstNonEmpty) firstNonEmpty = raw
+    if (/^#{1,6}\s+\S/.test(raw)) standaloneHeadings++
+    else if (/^[ \t]*[-*+](?:[ \t]+|$)/.test(raw)) hasLists = true
+  }
+  const unwrapLoneH1 = hasLists && standaloneHeadings === 1 && /^#\s+\S/.test(firstNonEmpty)
+
   const root = { children: [] }
-  const stack = [{ level: 0, node: root }]
-  for (const raw of String(text || '').split(/\r?\n/)) {
+  const stack = [{ kind: 'root', rank: -1, indent: -1, node: root }]
+  let loneH1Skipped = false
+  let lastQuote = null
+
+  const popTo = (rank) => {
+    while (stack.length > 1 && stack[stack.length - 1].rank >= rank) stack.pop()
+  }
+
+  for (const raw of lines) {
+    if (!raw.trim()) {
+      lastQuote = null
+      continue
+    }
+
+    // 1. 独立 Markdown 标题
     const hm = raw.match(/^(#{1,6})\s+(.*)$/)
     if (hm) {
+      lastQuote = null
+      if (unwrapLoneH1 && !loneH1Skipped && hm[1].length === 1) {
+        loneH1Skipped = true
+        continue
+      }
       const level = hm[1].length
-      const title = hm[2].trim()
-      if (!title) continue
-      while (stack.length && stack[stack.length - 1].level >= level) stack.pop()
-      const n = { text: title, children: [] }
+      const parsed = formatMubuInline(hm[2])
+      if (!parsed.text && !parsed.html) continue
+      popTo(level)
+      const n = { text: parsed.text, html: parsed.html, heading: Math.min(3, level), children: [] }
       stack[stack.length - 1].node.children.push(n)
-      stack.push({ level, node: n })
-    } else if (raw.trim()) {
-      stack[stack.length - 1].node.children.push({ text: raw.trim(), children: [] })
+      stack.push({ kind: 'heading', rank: level, indent: -1, node: n })
+      continue
+    }
+
+    // 2. 列表项（幕布缩进大纲）
+    const bm = raw.match(/^([ \t]*)[-*+](?:[ \t]+(.*)|[ \t]*$)$/)
+    if (bm) {
+      lastQuote = null
+      const indent = expandIndent(bm[1])
+      const body = (bm[2] || '').trim()
+      if (!body) continue // 过滤幕布导出的末尾空 "-"
+      const parsed = formatMubuInline(body)
+      if (!parsed.text && !parsed.html) continue
+      const rank = 1000 + indent
+      popTo(rank)
+      const n = { text: parsed.text, html: parsed.html, heading: parsed.heading, children: [] }
+      stack[stack.length - 1].node.children.push(n)
+      stack.push({ kind: 'bullet', rank, indent, node: n })
+      continue
+    }
+
+    // 3. 独立外链图片行（按缩进挂入所属父节点的 html）
+    const im = raw.match(/^([ \t]*)!\[([^\]]*)\]\(([^)\s]+)\)[ \t]*$/)
+    if (im && isSafeMediaUrl(im[3])) {
+      lastQuote = null
+      const indent = expandIndent(im[1])
+      const rank = 1000 + indent
+      let target = root
+      for (let i = stack.length - 1; i >= 1; i--) {
+        if (stack[i].rank < rank) {
+          target = stack[i].node
+          break
+        }
+      }
+      if (target !== root) {
+        appendNodeImage(target, im[3], im[2])
+      } else {
+        const imgTag = `<img class="lore-image" src="${escAttr(im[3])}" alt="${escAttr(im[2])}">`
+        root.children.push({ text: im[2] || '图片', html: imgTag, heading: 0, children: [] })
+      }
+      continue
+    }
+
+    // 4. 引用行（> ...，同缩进连续行合并为同一节点）
+    const qm = raw.match(/^([ \t]*)>[ \t]?(.*)$/)
+    if (qm) {
+      const indent = expandIndent(qm[1])
+      const body = qm[2].trim()
+      if (!body) continue
+      const parsed = formatMubuInline(body)
+      if (!parsed.text && !parsed.html) continue
+      if (lastQuote && lastQuote.indent === indent) {
+        const qn = lastQuote.node
+        const prevHtml = qn.html != null ? qn.html : escHtml(qn.text).replace(/\n/g, '<br>')
+        const nextHtml = parsed.html != null ? parsed.html : escHtml(parsed.text)
+        qn.text = qn.text ? `${qn.text}\n${parsed.text}` : parsed.text
+        if (qn.html != null || parsed.html != null) {
+          qn.html = prevHtml ? `${prevHtml}<br>${nextHtml}` : nextHtml
+        }
+      } else {
+        const rank = 1000 + indent
+        popTo(rank)
+        const n = { text: parsed.text, html: parsed.html, heading: parsed.heading, children: [] }
+        stack[stack.length - 1].node.children.push(n)
+        stack.push({ kind: 'quote', rank, indent, node: n })
+        lastQuote = { indent, node: n }
+      }
+      continue
+    }
+
+    // 5. 其他非空行：列表模式下的零缩进分区标题（如「现实模版」「虚构国度」「设定」），或传统正文行
+    lastQuote = null
+    const lm = raw.match(/^([ \t]*)(.+)$/)
+    const indent = expandIndent(lm[1])
+    const parsed = formatMubuInline(lm[2])
+    if (!parsed.text && !parsed.html) continue
+    if (hasLists && indent === 0) {
+      const rank = 100
+      popTo(rank)
+      const n = { text: parsed.text, html: parsed.html, heading: parsed.heading, children: [] }
+      stack[stack.length - 1].node.children.push(n)
+      stack.push({ kind: 'section', rank, indent: 0, node: n })
+    } else {
+      stack[stack.length - 1].node.children.push({
+        text: parsed.text,
+        html: parsed.html,
+        heading: parsed.heading,
+        children: []
+      })
     }
   }
   return root.children

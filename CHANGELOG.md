@@ -1,5 +1,37 @@
 ## [Unreleased]
 
+## [1.2.8] - 2026-11-24 · 设定五级权重、千节点大树优化与层级导航重构
+
+> 围绕**大规模世界观设定的可读性与交互效率**展开全面升级：引入「核心 → 末节」五级条目权重并打通标签推导与关系星系分层；为条目大纲补齐窗口化渲染，重构视觉导图自适应折叠与可读缩放锚定，并对左侧深层目录树完成缩进封顶、参考线与子根下钻改造。同步纳入此前完成的 WebGL 液态转场调优与大纲画布生命周期修复。
+
+### 设定条目五级权重与星系拓扑
+
+- **统一权重领域模型**：新增 [`lore-weights.js`](src/services/lore-weights.js) 与 [`LoreWeightIcon.vue`](src/components/LoreWeightIcon.vue)，定义「核心（CORE）/ 关键（KEY）/ 标准（STANDARD）/ 点缀（ACCENT）/ 末节（TRIVIAL）」五级重要度、视觉几何微标与星体倍径参数，并保持对历史 `mubuTagMeta` 格式的向后兼容。
+- **标签面板与全局协同**：[`MubuTagPanel.vue`](src/components/MubuTagPanel.vue) 新增五档分段选择器，支持从已绑定标签自动推导权重或做条目级覆盖，并支持直接修改标签权重；`LoreDetail`、`LoreEntryList`、`LoreHead`、`LoreInspector`、`LoreNavNode` 与 `MubuView` 全视图同步展示权重徽章与图标。
+- **关系星系径向分层渲染**：[`planet-scene.js`](src/components/skins/latent/lore/planets/planet-scene.js)、[`lore-planet-data.js`](src/components/skins/latent/lore/planets/lore-planet-data.js)、[`draw-planets.js`](src/components/skins/latent/lore/planets/draw-planets.js) 与 [`LorePlanetNetwork.vue`](src/components/skins/latent/lore/planets/LorePlanetNetwork.vue) 依据五级权重区分径向分布、星体半径与测高垂线显现逻辑，改用零 `shadowBlur` 绘制并适配五级命中半径与 LOD 标签阈值；悬停信息卡新增「所属域 · 权重」角标。
+
+### 大规模设定性能优化（千节点级）
+
+- **条目编写窗口化渲染**：新增 [`useLoreRowWindow.js`](src/composables/useLoreRowWindow.js) 并在 [`lore-core.js`](src/services/lore-core.js) 抽出 `indexLoreTree`、`loreRowAtOffset`、`loreViewportIndices` 与 `loreDescendants`，[`MubuView.vue`](src/components/skins/latent/lore/MubuView.vue) 在行数超过 80 时自动启用可视区窗口渲染与锚点防抖，大纲拖拽排序（`useLoreSort` / `usePointerRowSort`）同步复用共享索引。
+- **层级导图（LoreTreeMap）自适应折叠与可读缩放**：
+  - [`lore-tree-layout.js`](src/services/lore-tree-layout.js) 新增 `loreInitialFoldedIds()`：小树（≤ 40 节点）维持全展开，中树（41–150）自动收敛至可控节点数，大树（> 150）默认展开 2 级骨架并自动展开当前激活节点祖先链；可见节点 > 120 时自动采用更紧凑的纵向间距。
+  - [`LoreTreeMap.vue`](src/components/skins/latent/lore/LoreTreeMap.vue) 引入 `READABLE_MIN_ZOOM = 0.6`、`FIT_MIN_ZOOM = 0.08` 与 `FOCUS_TARGET_ZOOM = 0.85`，避免千节点全展开时画布缩成极细像素线；修复跨作品切换时 `work.mubu` 异步就绪前误折叠的时序竞态，补齐桌面端 `focusActive()` 展开聚焦、`zoomReset()` 视野居中及低倍率加速缩放步进。
+  - [`lore-images.css`](src/styles/lore-images.css) 为未选中且未编辑的纯文本导图卡片增加 3 行优雅截断（含图片卡片保持完整展示），显著收敛超大型设定树的纵向包围盒高度。
+- **左侧条目目录空间利用率与深层导航**：
+  - 新增 [`lore-nav-tree.js`](src/services/lore-nav-tree.js)，在常规侧栏实现分段递减缩进并封顶 `48px`（拖宽至 ≥ 300px 时自动放宽至 `72px`），配合 [`LoreNavNode.vue`](src/components/skins/latent/lore/LoreNavNode.vue) 的 1px 纵向层级参考线与深层 `L7+` 徽标，消除 6~10 层节点左侧大面积空白与文字挤压。
+  - [`MubuTree.vue`](src/components/skins/latent/lore/MubuTree.vue) 新增**分支下钻（Hoist）**与吸顶路径面包屑栏，以及「收起无关分支 → 全部折叠」两段式一键收起按钮。
+  - [`lore-free-tree.css`](src/styles/skins/latent/lore-free-tree.css) 接管并消除了 `dsh.css` 旧选择器引起的内边距膨胀与双层圆角背景框；补齐 [`OIcon.vue`](src/components/OIcon.vue) 的 `dots` 三点图标，并将行尾操作钮收敛为「桌面端隐藏（统一右键触发）、触屏及窄屏保留」。
+
+### 导入解析与底层跟随
+
+- **Markdown 设定树导入升级**：[`importers.js`](src/services/importers.js) 重构 `parseMubuMd()`，支持孤立首行一级标题拆包、缩进无序列表任意深度嵌套、`###` 标题级标识、加粗/斜体/安全链接与 `<span class="bold">` 行内富文本、缩进图片转 `<img class="lore-image">` 以及多行引用合并；[`work.js`](src/stores/work.js) 的 `mubuAddTree()` 同步保留标题级并优化批量插入时的顺序标准化逻辑。
+- **转场与画布生命周期继承**：合入此前在 `main` / 特性分支完成的 WebGL 液态转场调优（650ms 截图预算、86% 交棒、空闲预抓帧与嵌套计数器）及 `OutlineCanvas` `KeepAlive` 激活期监听隔离。
+
+### 测试与构建
+
+- **单元测试**：`lore-weights-unit-verify`（4/4）、`lore-free-entries-unit-verify`、`mubu-md-import-unit-verify`（5/5）、`lore-nav-tree-unit-verify`（7/7）与 `lore-tree-layout-unit-verify` 全部通过。
+- **实机验证与构建**：基于 1,009 节点 / 10 层《浮世地域集》压力样本与 35 节点小树样本完成 [`lore-treemap-scale-verify.mjs`](tools/lore-treemap-scale-verify.mjs) 与 [`lore-nav-tree-cdp-verify.mjs`](tools/lore-nav-tree-cdp-verify.mjs) 双样本真机 CDP 验收（0 运行期错误）；`npm run build` 生产构建与 `dsh-novel-studio` 插件产物同步构建（`0.3.7`）均已通过（本次收尾版本号定版按指示跳过重复回归验收）。
+
 ## [1.2.7] - 2026-11-20 · 设定图片与地图编辑、流场转场与库冲突处理
 
 ### 设定：图片与地图编辑（2026-11-20）

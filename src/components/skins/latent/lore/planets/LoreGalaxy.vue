@@ -22,6 +22,7 @@ const data = computed(() => lorePlanetData(
   work.liveCharacters,
   {
     work: work.work,
+    tagMeta: work.mubuTagMeta,
     outlines: work.outlines,
     olnodes: work.olnodes,
     chapters: work.liveChapters,

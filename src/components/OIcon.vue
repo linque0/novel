@@ -59,7 +59,8 @@ const ICONS = {
   'map-pin': '<path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>',
   landmark: '<path d="M3 21h18"/><path d="M5 21V11"/><path d="M9.6 21V11"/><path d="M14.4 21V11"/><path d="M19 21V11"/><path d="M12 3l9 5H3z"/>',
   megaphone: '<path d="M3 11v2a1 1 0 0 0 1 1h2l9 5V5L6 10H4a1 1 0 0 0-1 1z"/><path d="M18 9.5a4 4 0 0 1 0 5"/>',
-  user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-4 3.6-5.8 7-5.8s5.8 1.8 7 5.8"/>'
+  user: '<circle cx="12" cy="8" r="3.6"/><path d="M5 20c1.2-4 3.6-5.8 7-5.8s5.8 1.8 7 5.8"/>',
+  dots: '<circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/>'
 }
 const body = computed(() => ICONS[props.name] || '')
 </script>

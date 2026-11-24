@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict'
+import { computed, reactive } from 'vue'
 import { planLoreMove } from '../src/services/lore-move.js'
 import { layoutLoreTree } from '../src/services/lore-tree-layout.js'
 import { starterLoreEntries } from '../src/services/lore-entries.js'
+import * as loreCore from '../src/services/lore-core.js'
 
 const source = [
   { id: 'a', parentId: null, sortOrder: 0 },
@@ -9,6 +11,36 @@ const source = [
   { id: 'child', parentId: 'a', sortOrder: 0 },
   { id: 'leaf', parentId: 'child', sortOrder: 0 }
 ]
+assert.equal(typeof loreCore.indexLoreTree, 'function', 'the shared tree index is available')
+const deleted = { id: 'deleted', parentId: 'a', deletedAt: 1 }
+const sibling = { id: 'first', parentId: 'a', sortOrder: -1 }
+const tree = loreCore.indexLoreTree([deleted, ...source, sibling])
+assert.deepEqual(tree.live.map(node => node.id), ['first', 'a', 'child', 'leaf', 'b'])
+assert.deepEqual(tree.children.get(null).map(node => node.id), ['a', 'b'])
+assert.deepEqual(loreCore.loreDescendants(tree.children, 'a').map(node => node.id), ['first', 'child', 'leaf'])
+assert.ok(!tree.byId.has('deleted'))
+assert.strictEqual(tree.children.get('a')[1], source[2])
+
+const state = reactive({ nodes: structuredClone(source) })
+const indexed = computed(() => loreCore.indexLoreTree(state.nodes))
+const initial = indexed.value
+state.nodes[2].text = 'Edited'
+assert.strictEqual(indexed.value, initial)
+state.nodes[2].parentId = 'b'
+assert.deepEqual(indexed.value.children.get('b').map(node => node.id), ['child'])
+state.nodes[2].deletedAt = 1
+assert.ok(!indexed.value.byId.has('child'))
+state.nodes[2].deletedAt = null
+state.nodes.push({ id: 'new', parentId: 'b', sortOrder: -1 })
+assert.deepEqual(indexed.value.children.get('b').map(node => node.id), ['new', 'child'])
+state.nodes = [{ id: 'other', sortOrder: 0 }]
+assert.deepEqual(indexed.value.live.map(node => node.id), ['other'])
+
+assert.equal(typeof loreCore.loreViewportIndices, 'function', 'the viewport can retain an offscreen editing row')
+assert.deepEqual(loreCore.loreViewportIndices([0, 35, 85, 105, 170, 200], 86, 45, 0, [0]), [0, 2, 3])
+assert.deepEqual(loreCore.loreViewportIndices([0, 35, 85, 105, 170, 200], 86, 45, 50, [4]), [1, 2, 3, 4])
+assert.deepEqual(loreCore.loreViewportIndices([0], 0, 200, 0, []), [])
+
 const move = (id, target, mode) => planLoreMove(source, id, target, mode, { allowRoot: true })
 assert.deepEqual(move('a', 'b', 'inside').find(row => row.id === 'a'), { id: 'a', parentId: 'b', sortOrder: 0 })
 assert.deepEqual(move('child', null, 'root').find(row => row.id === 'child'), { id: 'child', parentId: null, sortOrder: 2000 })

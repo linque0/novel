@@ -8,6 +8,7 @@ import { referenceTargets } from '../../../../../services/lore-core.js'
 import { characterBiographyText } from '../../../../../services/character-biographies.js'
 import { doublelinkTitle } from '../../../../../services/doublelink-titles.js'
 import { stripTags } from '../../../../../services/wordcount.js'
+import { resolveEntryWeight } from '../../../../../services/lore-weights.js'
 
 // Scheme B · 引力势阱与晶体星座冷色星域色板
 const colors = ['#47D7E8', '#8CB4FF', '#B6A6FF', '#F2CF9C', '#EBA99E', '#7CE6C8']
@@ -81,7 +82,8 @@ export function lorePlanetData(entries = [], relationships = [], characters = []
     const title = summary.split('\n')[0] || '未命名节点'
     const glyphs = entryCircleGlyphs(summary || title)
     const tags = Array.isArray(entry.tags) ? entry.tags.map(t => String(t || '').trim()).filter(Boolean) : []
-    const item = { id: entry.id, title, summary, glyphs, tags, createdAt: entry.createdAt }
+    const weight = resolveEntryWeight(entry, extras.tagMeta)
+    const item = { id: entry.id, title, summary, glyphs, tags, weight, createdAt: entry.createdAt }
     if (entry.id === setId) sets.push({ ...item, color: colors[sets.length % colors.length] })
     else nodes.push({ ...item, setId, parentId: entry.parentId })
     mubuTargets.push({ kind: 'mubu', id: entry.id, title: doublelinkTitle('mubu', entry, workLike) || title })
