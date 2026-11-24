@@ -16,16 +16,22 @@ export function createFlowTransitionController({
   let prepare
   let active
   let pendingCommit
+  let enabled = true
 
   function reset() {
     active?.request.abort()
     active = null
   }
 
+  function setEnabled(flag) {
+    enabled = flag !== false
+    if (!enabled && active && !active.committed) reset()
+  }
+
   async function run(commit, options = {}) {
     const intent = { commit, options }
     const reduced = options.reducedMotion ?? isReducedMotion()
-    const animate = prepare && isLatentSkin(options.skin) && !reduced && hasDocument() ? prepare : null
+    const animate = enabled && prepare && isLatentSkin(options.skin) && !reduced && hasDocument() ? prepare : null
     let navigation = active
     if (animate && navigation?.animate === animate && !navigation.committed) {
       navigation.intent = intent
@@ -100,6 +106,8 @@ export function createFlowTransitionController({
       }
     },
     run,
+    setEnabled,
+    isEnabled: () => enabled,
     cancelPending() {
       if (active && !active.committed) reset()
     },

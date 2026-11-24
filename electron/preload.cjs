@@ -24,6 +24,7 @@ contextBridge.exposeInMainWorld('native', {
   saveFile: (payload) => ipcRenderer.invoke('export:save', payload),
   clipboardReadText: () => ipcRenderer.invoke('clip:readText'),
   clipboardWriteText: (text) => ipcRenderer.invoke('clip:writeText', text),
+  openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),
   /* AI 凭据加解密（safeStorage/DPAPI；主进程只加解密，密文由渲染层存 appconfig，方案 §三） */
   credentialEncrypt: (plain) => ipcRenderer.invoke('credential:put', plain),
   credentialDecrypt: (cipherB64) => ipcRenderer.invoke('credential:get', cipherB64),

@@ -4,6 +4,7 @@
  */
 import { runMemoryQueue, cancelMemoryJobs, recoverMemoryQueue } from './memory-queue.js';
 import { useAiStore } from "../../stores/ai";
+import { useUiStore } from "../../stores/ui";
 import { useWorkStore } from "../../stores/work";
 import { autosave } from "../autosave";
 import { db } from "../../db/database";
@@ -35,6 +36,7 @@ export async function handleAiEvent({ kind, data }) {
   }
   if(kind==='memory-queue-changed'){window.dispatchEvent(new CustomEvent('memory-queue-changed',{detail:data}));return;}
   if (kind === 'memory-queue-ready' && isMain()) {
+    if (!useUiStore().experimentalAiEnabled) { cancelMemoryJobs(data?.workId); return; }
     const ai=useAiStore(); if(!ai.loaded)await ai.loadSettings();
     await runMemoryQueue(ai,data); return;
   }
@@ -79,6 +81,7 @@ export async function handleAiEvent({ kind, data }) {
     return;
   }
   if (kind === "ai-kb-request" && isMain()) {
+    if (!useUiStore().experimentalAiEnabled) { ai.pauseKnowledge(); return; }
     if (data?.action === "pause") ai.pauseKnowledge();
     else if (data?.action === "vectors" && data.workId === ai.workId)
       await ai.embedKnowledge();
@@ -103,7 +106,7 @@ export async function handleAiEvent({ kind, data }) {
     else if (row && Array.isArray(work[data.table])) work[data.table].push(row);
   }
   if (work.work?.id === data.workId) await ai.refreshKnowledge();
-  if (!isMain()) return;
+  if (!isMain() || !useUiStore().experimentalAiEnabled) return;
   const ids = queue.get(data.workId) || new Set();
   if (data.table === "chapters") ids.add(data.id);
   else if (data.workId === ai.workId) {
@@ -121,6 +124,10 @@ export async function handleAiEvent({ kind, data }) {
 function schedule() {
   clearTimeout(timer);
   timer = setTimeout(async () => {
+    if (!useUiStore().experimentalAiEnabled) {
+      queue.clear();
+      return;
+    }
     const ai = useAiStore();
     if (!ai.loaded) await ai.loadSettings();
     if (!ai.options.kb.auto || ai.privacy || !ai.ready) {

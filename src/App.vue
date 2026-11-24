@@ -26,6 +26,8 @@ import LoreDetail from './components/LoreDetail.vue'
 import PrefBridge from './components/PrefBridge.vue'
 import PanelHost from './components/PanelHost.vue'
 import FlowTransitionOverlay from './components/skins/latent/FlowTransitionOverlay.vue'
+import { flowTransition } from './services/latent/flow-transition.js'
+import { cancelMemoryJobs } from './services/ai/memory-queue.js'
 import { installAppBus } from './services/appbus'
 import { useShelfStore } from './stores/shelf'
 import { installAiRuntime } from './services/ai/runtime'
@@ -122,6 +124,23 @@ watch([latent, () => ui.theme, dshNaiveTheme], ([enabled, theme, hostDark]) => {
   document.body.dataset.nsPanelTheme = (nsPlugin ? Boolean(hostDark) : theme === 'night') ? 'dark' : 'light'
   document.body.dataset.nsPanelSource = nsPlugin ? 'host' : 'local'
 }, { immediate: true })
+
+watch(() => ui.pageTransitions, (enabled) => {
+  flowTransition.setEnabled(enabled !== false)
+}, { immediate: true })
+
+/* 实验性功能关闭时实时收口：退回写作视图、收起浅眠侧栏、取消流式请求与后台记忆/知识库任务，本地配置完整保留。 */
+watch(() => ui.experimentalAiEnabled, (enabled) => {
+  if (enabled) return
+  if (ui.workbenchMode === 'agent') ui.workbenchMode = 'writing'
+  ui.aiDrawerOpen = false
+  ui.dreamLauncherOpen = false
+  ui.agentCandidateId = null
+  cancelMemoryJobs()
+  const ai = useAiStore()
+  ai.cancel()
+  ai.pauseKnowledge()
+})
 
 /* 主题类镜像到 body：naive 的 popover/modal 等浮层 teleport 到 body 下，
    继承不到 .app-root 上的主题变量——var(--bg-panel) 等会整条声明失效
@@ -239,7 +258,7 @@ async function seedDevVerifyBooks() {
           v-if="analysisPanel ? prefsReady : latent && !panelMode"
           :panel-entry="analysisPanel ? panelSpec[2] || '' : null"
         />
-        <FlowTransitionOverlay v-if="latent && !panelMode" :scene="flowScene" />
+        <FlowTransitionOverlay v-if="latent && !panelMode && ui.pageTransitions" :scene="flowScene" />
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>

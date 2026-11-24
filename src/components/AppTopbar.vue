@@ -60,7 +60,7 @@ const moreOptions = computed(() => [
       { label: pinLabel.value, key: 'pin:toggle' },
       ...(props.active === 'shelf' ? [
         { label: '搜索作品', key: 'search:shelf' },
-        ...(!nsPlugin ? [{ label: '恍然梦-入梦', key: 'dream:shelf', disabled: props.busy }] : [])
+        ...(ui.experimentalAiEnabled ? [{ label: '恍然梦-入梦', key: 'dream:shelf', disabled: props.busy }] : [])
       ] : [])
     ]
   }] : []),
@@ -77,7 +77,7 @@ const moreOptions = computed(() => [
 function onSelect(key) {
   if (key === 'pin:toggle') return togglePin()
   if (key === 'search:shelf') return toggleSearch()
-  if (key === 'dream:shelf') return (ui.dreamLauncherOpen = true)
+  if (key === 'dream:shelf') return ui.experimentalAiEnabled ? (ui.dreamLauncherOpen = true) : undefined
   if (typeof key === 'string' && key.startsWith('nav:')) return navigate(key.slice(4))
   emit('action', key)
 }
@@ -177,7 +177,7 @@ watch(() => [props.active, ui.skin], async () => {
       </div>
       <span v-else-if="!navigationLabel" class="app-topbar-save" :data-save-state="saveState" role="img" :aria-label="saveLabel" :title="saveLabel" aria-disabled="true"><span class="app-topbar-save-dot"></span></span>
       <span v-if="!latent && !navigationLabel" class="app-topbar-more-wrap"><NDropdown trigger="click" placement="bottom-end" :scrollable="latent" :style="latent ? { maxHeight: 'calc(100dvh - 90px)' } : undefined" :options="moreOptions" @select="onSelect"><button type="button" class="app-topbar-more" aria-label="更多" :title="'更多（当前：' + currentLabel + '）'">⋯</button></NDropdown></span>
-      <div class="app-topbar-actions"><DreamModeEntries v-if="!nsPlugin && active==='shelf'" shelf :disabled="busy" @dream="ui.dreamLauncherOpen=true" /><slot name="actions" /></div>
+      <div class="app-topbar-actions"><DreamModeEntries v-if="ui.experimentalAiEnabled && active==='shelf'" shelf :disabled="busy" @dream="ui.dreamLauncherOpen=true" /><slot name="actions" /></div>
       <div v-if="$slots['window-controls']" class="app-topbar-window-controls">
         <slot name="window-controls" />
       </div>

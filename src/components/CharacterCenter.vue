@@ -34,7 +34,7 @@ const aliasInputEl = ref(null)
 /* 赤月戏：模块条与卷宗头动作走真实入口 */
 const crimsonCharMenu = computed(() => [
   { label: '发送为大纲引用卡', key: 'cite', disabled: !c.value },
-  { label: '恍然梦：丰富', key: 'enrich', disabled: !ai.ready },
+  ...(ui.experimentalAiEnabled ? [{ label: '恍然梦：丰富', key: 'enrich', disabled: !ai.ready }] : []),
   { type: 'divider', key: 'd1' },
   { label: '删除人物', key: 'delete', disabled: !c.value }
 ])
@@ -272,7 +272,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <TaskLauncher v-if="!ui.isStudioSkin && !nsPlugin" module="characters" />
+  <TaskLauncher v-if="!ui.isStudioSkin && ui.experimentalAiEnabled" module="characters" />
   <!-- 赤月戏模块条：列表与关系图两种视图共用，因此放在视图分支之外 -->
   <Teleport defer to="#crimson-bar-tools" :disabled="ui.skin !== 'crimson'">
     <div v-if="ui.skin === 'crimson'" class="crimson-bar-group">
@@ -326,7 +326,7 @@ onMounted(() => {
         <h1>人物档案</h1><span>人物塑造 · 资料与关系</span>
         <div class="gravity-dossier-actions">
           <NButton size="small" @click="work.sendCharToOutline(c.id)">发送为大纲引用卡</NButton>
-          <NButton v-if="!nsPlugin" size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">✦ 丰富</NButton>
+          <NButton v-if="ui.experimentalAiEnabled" size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">✦ 丰富</NButton>
           <NButton size="small" quaternary type="error" @click="work.deleteCharacter(c.id)">删除</NButton>
         </div>
       </template>
@@ -432,7 +432,7 @@ onMounted(() => {
             <label v-if="ui.isStudioSkin || ui.skin === 'original'" class="gravity-field-label">别名</label>
             <NInput class="rp-input" :value="c.aliases" placeholder="别名（用 / 分隔）" style="flex: 1" @update:value="(v) => work.updateCharacter(c.id, { aliases: v })" />
             <NButton size="small" @click="changeAvatar">{{ avatarUrl ? '换头像' : '设头像' }}</NButton>
-            <NButton v-if="!nsPlugin" size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">恍然梦：丰富</NButton>
+            <NButton v-if="ui.experimentalAiEnabled" size="small" :disabled="!ai.ready" :title="ai.ready ? '恍然梦：丰富（字段补全 / 小传扩写 / 别名建议 / 关系建议）' : AI_UNSET_HINT" @click="aiEnrich">恍然梦：丰富</NButton>
             <NButton size="small" quaternary type="error" @click="work.deleteCharacter(c.id)">删除</NButton>
           </div>
           <label v-if="ui.skin === 'original'" class="ow-field-caption">标签</label>

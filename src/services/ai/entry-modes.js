@@ -10,18 +10,21 @@ async function flushCurrent({ui,work,flush}){
 }
 export async function enterDreamMode(context){
   const {ui,work}=context
+  if(!ui?.experimentalAiEnabled)return
   if(!work.work){ui.dreamLauncherOpen=true;return}
   await flushCurrent(context)
   ui.focusMode=false;ui.readMode=false;ui.workbenchMode='agent'
 }
 export async function enterLightSleepMode(context){
   const {ui,isDetached=()=>false,focusDetached,toggle=false}=context
+  if(!ui?.experimentalAiEnabled)return
   await flushCurrent(context)
   ui.focusMode=false;ui.readMode=false;ui.workbenchMode='writing'
   if(isDetached()){await focusDetached?.();return}
   ui.aiDrawerOpen=toggle?!ui.aiDrawerOpen:true
 }
 export async function openDreamBook({ui,work,workId}){
+  if(!ui?.experimentalAiEnabled)return
   const previous=ui.workbenchMode
   ui.workbenchMode='agent'
   try{

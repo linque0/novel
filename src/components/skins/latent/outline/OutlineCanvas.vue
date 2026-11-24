@@ -2771,7 +2771,7 @@ onBeforeUnmount(() => {
         <button v-if="ctxNode" class="oc-ctx-item" :title="ctxNode.pin ? '取消固定（「整理」时将参与重排）' : '固定位置（「整理」时不动）'" @click="ctxAct('pin')"><OIcon name="pin" :size="13" /> {{ ctxNode.pin ? '取消固定' : '固定位置' }}</button>
         <button v-if="ctxNode?.kind === 'container' && ctxNode.parentId" class="oc-ctx-item" title="把容器移到上一层" @click="ctxAct('moveout')"><OIcon name="arrow-up" :size="13" /> 移出上一层</button>
         <button v-if="ctxNode?.kind === 'container'" class="oc-ctx-item" title="折叠/展开侧栏与文本视图中的子模块" @click="ctxAct('fold')"><OIcon name="caret-right" :size="13" /> {{ ctxNode.fold ? '展开侧栏子项' : '折叠侧栏子项' }}</button>
-        <button v-if="ctxNode" class="oc-ctx-item" :disabled="!ai.ready" :title="ai.ready ? '附带此节点，在对话中描述需求后发送' : AI_UNSET_HINT" @click="ctxAct('ai')"><OIcon name="star" :size="13" /> 发送给恍然梦</button>
+        <button v-if="ctxNode && ui.experimentalAiEnabled" class="oc-ctx-item" :disabled="!ai.ready" :title="ai.ready ? '附带此节点，在对话中描述需求后发送' : AI_UNSET_HINT" @click="ctxAct('ai')"><OIcon name="star" :size="13" /> 发送给恍然梦</button>
         <button v-if="ctxNode" class="oc-ctx-item oc-ctx-danger" title="删除模块（容器会连同子模块）" @click="ctxAct('remove')"><OIcon name="close" :size="13" /> 删除</button>
       </div>
     </div>

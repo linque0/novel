@@ -48,11 +48,11 @@ watch(()=>ui.workbenchMode,async()=>{
 onBeforeUnmount(()=>{dispose?.();if(window.__flushNow===flushOnClose)window.__flushNow=previousFlush;if(window.__prepareForPanel===preparePanel)window.__prepareForPanel=previousPrepare})
 </script>
 <template>
-  <div class="studio-workspaces" :data-workbench="ui.workbenchMode">
-    <Workbench v-show="ui.workbenchMode==='writing'" />
-    <AgentWorkbench v-show="ui.workbenchMode==='agent'" />
-    <Teleport v-if="mounted" :to="ui.workbenchMode==='agent'?'#agent-editor-host':'#writing-editor-host'"><EditorPane /></Teleport>
-    <Teleport v-if="mounted&&story.active" :to="ui.workbenchMode==='agent'?'#agent-story-editor-host':'#writing-story-editor-host'"><StoryEditor :key="story.active.id" /></Teleport>
+  <div class="studio-workspaces" :data-workbench="ui.experimentalAiEnabled ? ui.workbenchMode : 'writing'">
+    <Workbench v-show="!ui.experimentalAiEnabled || ui.workbenchMode==='writing'" />
+    <AgentWorkbench v-if="ui.experimentalAiEnabled" v-show="ui.workbenchMode==='agent'" />
+    <Teleport v-if="mounted" :to="ui.experimentalAiEnabled && ui.workbenchMode==='agent'?'#agent-editor-host':'#writing-editor-host'"><EditorPane /></Teleport>
+    <Teleport v-if="mounted&&story.active&&ui.experimentalAiEnabled" :to="ui.workbenchMode==='agent'?'#agent-story-editor-host':'#writing-story-editor-host'"><StoryEditor :key="story.active.id" /></Teleport>
   </div>
 </template>
 <style scoped>.studio-workspaces{height:100%;min-height:0;min-width:0;position:relative}</style>

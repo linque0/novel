@@ -101,7 +101,7 @@ async function openWorkAt(w, tab = 'chapters') {
   try {
     await runFlowTransition(async () => {
       await work.open(w.id)
-      ui.workbenchMode = tab === 'agent' ? 'agent' : 'writing'
+      ui.workbenchMode = tab === 'agent' && ui.experimentalAiEnabled ? 'agent' : 'writing'
       if (WORK_NAVIGATION.some(item => item.key === tab)) work.tab = tab
     }, {
       skin: ui.skin,
@@ -144,13 +144,13 @@ function fmtWords(n) {
 
 const cardMenu = (w) => [
   { label: '打开', key: 'open' },
-  { label: '用恍然梦-入梦打开', key: 'agent' },
+  ...(ui.experimentalAiEnabled ? [{ label: '用恍然梦-入梦打开', key: 'agent' }] : []),
   { label: '编辑信息', key: 'edit' },
   { label: '删除（可回收站恢复，一期先软删除）', key: 'del', props: { style: { color: ui.skin === 'gravity' ? '#f18f86' : '#c2564a' } } }
 ]
 async function onCardMenu(key, w) {
   if (key === 'open') await onWorkClick(w)
-  if (key === 'agent') await openWorkAt(w,'agent')
+  if (key === 'agent' && ui.experimentalAiEnabled) await openWorkAt(w,'agent')
   if (key === 'edit') openEdit(w)
   if (key === 'del') {
     await shelf.deleteWork(w)
@@ -166,7 +166,7 @@ async function onCardMenu(key, w) {
     <GlazeShelf @select-work="glazeSelectedId = $event" v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <CrimsonShelf v-else-if="ui.skin === 'crimson'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <OriginalShelf v-else :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :first-chapter="firstChapter" :menu-options="cardMenu" @select-work="originalSelectedId = $event" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
-    <DreamLaunchDialog />
+    <DreamLaunchDialog v-if="ui.experimentalAiEnabled" />
     <NModal v-model:show="showCreate" preset="card" :title="editing ? '编辑作品信息' : '新建作品'" style="width: 460px">
       <div style="display: flex; flex-direction: column; gap: 12px">
         <NInput v-model:value="form.title" placeholder="书名 *" />

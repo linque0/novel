@@ -46,12 +46,18 @@ const PAGES = [
   { key: 'ai', icon: '模', label: '模型设置', desc: '供应商预设 / 模型 / 参数' },
   { key: 'knowledge', icon: '知', label: '知识库模型', desc: '向量模型 / 语义检索' },
   { key: 'data', icon: '数', label: '数据', desc: '导入导出 / 备份 / 存储' },
+  { key: 'experimental', icon: '实', label: '实验性功能', desc: '恍然梦助手与实验特性' },
   { key: 'about', icon: '关', label: '关于', desc: '统计 / 手册 / 标语' }
 ]
-/* 插件构建没有恍然梦：模型设置 / 知识库模型两个分区从导航里过滤掉（page 只由导航与 @go-ai 赋值，
- * 两个入口都不在，内容区那两段本身不会渲染）。Vue 3 里 v-if 早于 v-for 求值，不能同元素直接判 p.key。 */
-const navPages = computed(() => nsPlugin ? PAGES.filter(p => p.key !== 'ai' && p.key !== 'knowledge') : PAGES)
+const navPages = computed(() => PAGES.filter((p) => {
+  if (nsPlugin && (p.key === 'ai' || p.key === 'knowledge' || p.key === 'experimental')) return false
+  if (!ui.experimentalAiEnabled && (p.key === 'ai' || p.key === 'knowledge')) return false
+  return true
+}))
 const page = ref('appearance')
+watch(() => ui.experimentalAiEnabled, (enabled) => {
+  if (!enabled && (page.value === 'ai' || page.value === 'knowledge')) page.value = 'experimental'
+})
 const originalSettings = computed(() => ui.skin === 'original' && ['appearance', 'data', 'about'].includes(page.value))
 const crimsonShellStyle = computed(() => ui.skin === 'crimson'
   ? {
@@ -289,6 +295,10 @@ async function clearStalePointer() {
               <div class="sw-row-main"><b>默认隐藏顶栏</b><i>鼠标移至顶部展开，可随时固定。</i></div>
               <NSwitch :value="ui.topbarAutoHide" aria-label="默认隐藏顶栏" @update:value="value => ui.setPref('topbarAutoHide', value)" />
             </div>
+            <div class="sw-row">
+              <div class="sw-row-main"><b>界面切换动画</b><i>关闭后书架与模块间瞬时切换。</i></div>
+              <NSwitch :value="ui.pageTransitions" aria-label="界面切换动画" @update:value="value => ui.setPref('pageTransitions', value)" />
+            </div>
             <div class="sw-row sw-theme-row">
               <div class="sw-row-main"><b>原版配色主题</b><i>宣纸 / 羊皮纸 / 暗夜书房，切回原版时使用</i></div>
               <span class="chips">
@@ -317,7 +327,7 @@ async function clearStalePointer() {
         </template>
 
         <!-- 模型设置 -->
-        <template v-else-if="page === 'ai'">
+        <template v-else-if="page === 'ai' && ui.experimentalAiEnabled">
           <h2 class="sw-h serif">模型设置</h2>
           <p class="sw-desc">多供应商预设：连接、模型与生成参数，改动即时生效</p>
           <div class="sw-card sw-card-ai">
@@ -326,11 +336,23 @@ async function clearStalePointer() {
         </template>
 
         <!-- 知识库模型：向量模型从供应商参数中独立出来 -->
-        <template v-else-if="page === 'knowledge'">
+        <template v-else-if="page === 'knowledge' && ui.experimentalAiEnabled">
           <h2 class="sw-h serif">知识库模型</h2>
           <p class="sw-desc">语义检索使用的向量模型；连接跟随当前供应商预设</p>
           <div class="sw-card sw-card-ai">
             <KnowledgeModelSettings @go-ai="page = 'ai'" />
+          </div>
+        </template>
+
+        <!-- 实验性功能 -->
+        <template v-else-if="page === 'experimental' && !nsPlugin">
+          <h2 class="sw-h serif">实验性功能</h2>
+          <p class="sw-desc">控制恍然梦 Agent 入口、助手、模型设置与知识库模型的显示与启用</p>
+          <div class="sw-card">
+            <div class="sw-row">
+              <div class="sw-row-main"><b>显示并启用实验性功能</b><i>关闭后隐藏全部恍然梦入口与设置并暂停后台任务，本地配置完整保留。</i></div>
+              <NSwitch :value="ui.experimentalFeatures" aria-label="显示并启用实验性功能" @update:value="value => ui.setPref('experimentalFeatures', value)" />
+            </div>
           </div>
         </template>
 

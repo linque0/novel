@@ -130,6 +130,8 @@ export const useUiStore = defineStore('ui', {
     flowSpeed: DEFAULT_FLOW_SPEED,
     flowSpeedPreview: null,
     topbarAutoHide: false, // 顶栏默认隐藏（跨窗口持久化，悬停临时展开）
+    pageTransitions: true, // 界面切换液态转场动画开关（默认开启，双端持久化）
+    experimentalFeatures: false, // 实验性功能总开关（默认关闭；控制恍然梦 Agent 入口、助手、模型与知识库设置）
     flowBackground: normalizeFlowBackground(),
     outlineLeftWidth: 220, // 隐现大纲左栏宽度（故事结构）
     outlineRightWidth: 318, // 隐现大纲右栏宽度（节点详情）
@@ -235,6 +237,7 @@ export const useUiStore = defineStore('ui', {
   getters: {
     effectiveFlowSpeed: state => state.flowSpeedPreview ?? state.flowSpeed,
     isStudioSkin: (state) => isStudioSkin(state.skin),
+    experimentalAiEnabled: (state) => !(typeof __NS_PLUGIN__ !== 'undefined' && __NS_PLUGIN__) && state.experimentalFeatures === true,
     rootStyle(state) {
       const latin = (LATIN_FONTS[state.editorLatin] || LATIN_FONTS.none).stack
       const cjk = (CJK_FONTS[state.editorFont] || CJK_FONTS.song).stack
@@ -272,6 +275,8 @@ export const useUiStore = defineStore('ui', {
           this.flowSpeed = normalizeFlowSpeed(map.flowSpeed)
         }
         if (map.topbarAutoHide !== undefined) this.topbarAutoHide = map.topbarAutoHide === true
+        this.pageTransitions = map.pageTransitions !== false
+        this.experimentalFeatures = map.experimentalFeatures === true
         if (!flowPreferenceWrites.has(this.$state) && !this.prefsDirty.flowBackground && this.flowBackground === flowBackgroundAtLoad) {
           this.flowBackground = normalizeFlowBackground(map.flowBackground)
         }

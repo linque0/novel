@@ -8,6 +8,7 @@ import { APP_VERSION } from './settings-version.js'
 
 const props = defineProps({
   page: { type: String, default: 'appearance' },
+  pages: { type: Array, default: () => SETTINGS_PAGES },
   query: { type: String, default: '' },
   resultCount: { type: Number, default: 0 }
 })
@@ -50,7 +51,7 @@ function onInput(event) {
 
     <nav class="category-nav" aria-label="设置页面">
       <button
-        v-for="item in SETTINGS_PAGES"
+        v-for="item in pages"
         :key="item.key"
         type="button"
         class="category"
@@ -63,6 +64,7 @@ function onInput(event) {
       >
         <svg v-if="item.icon === 'type'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16M12 5v16M8 21h8" /></svg>
         <svg v-else-if="item.icon === 'storage'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="8" ry="3" /><path d="M4 5v14c0 4 16 4 16 0V5M4 12c0 4 16 4 16 0" /></svg>
+        <svg v-else-if="item.icon === 'sparkle'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z" /></svg>
         <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h6a4 4 0 0 1 3 2 4 4 0 0 1 3-2h6v16h-6a4 4 0 0 0-3 2 4 4 0 0 0-3-2H3zM12 6v16" /></svg>
         <span>
           <strong>{{ item.title }}</strong>

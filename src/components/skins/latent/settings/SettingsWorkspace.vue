@@ -13,7 +13,7 @@ import { useUiStore } from '../../../../stores/ui'
 import { leaveSettings } from '../../../../services/settings-entry.js'
 import { mountFlowBackdrop } from '../../../../services/latent/flow.js'
 import { flowPaletteKey, resolveFlowPalette } from '../../../../services/latent/flow-palette.js'
-import { SETTINGS_PAGES, SETTINGS_PAGE_KEYS, searchSettings } from './settings-catalog.js'
+import { EXPERIMENTAL_PAGE_KEYS, SETTINGS_PAGES, SETTINGS_PAGE_KEYS, searchSettings, visibleSettingsPages } from './settings-catalog.js'
 import { SETTINGS_SAVE_ERROR, createSettingsHistory, resetAppearancePrefs } from './settings-prefs.js'
 import { SETTINGS_TOAST_KEY, useSettingsToast } from './settings-toast.js'
 import SettingsSidebar from './SettingsSidebar.vue'
@@ -22,6 +22,7 @@ import SettingsAppearance from './SettingsAppearance.vue'
 import SettingsAiPage from './SettingsAiPage.vue'
 import SettingsKnowledgePage from './SettingsKnowledgePage.vue'
 import SettingsDataPage from './SettingsDataPage.vue'
+import SettingsExperimentalPage from './SettingsExperimentalPage.vue'
 import SettingsAboutPage from './SettingsAboutPage.vue'
 import SettingsDialog from './SettingsDialog.vue'
 
@@ -36,7 +37,12 @@ const { message, undoVisible, show: showToast, runUndo } = useSettingsToast()
 provide(SETTINGS_TOAST_KEY, { show: showToast, message, undoVisible, runUndo })
 
 /* ---------- 界面状态 ---------- */
-const page = ref(SETTINGS_PAGE_KEYS.includes(ui.settingsPage) ? ui.settingsPage : 'appearance')
+const visiblePages = computed(() => visibleSettingsPages(ui.experimentalAiEnabled))
+const visiblePageKeys = computed(() => visiblePages.value.map((item) => item.key))
+const initialPage = SETTINGS_PAGE_KEYS.includes(ui.settingsPage) && (ui.experimentalAiEnabled || !EXPERIMENTAL_PAGE_KEYS.includes(ui.settingsPage))
+  ? ui.settingsPage
+  : 'appearance'
+const page = ref(initialPage)
 const query = ref('')
 const drawer = ref(false)
 const previewOpen = ref(ui.settingsPreviewOpen === true)
@@ -45,18 +51,19 @@ const narrow = ref(typeof window !== 'undefined' ? window.innerWidth < NARROW_MA
 const shell = ref(null)
 const scrollEl = ref(null)
 
-const results = computed(() => searchSettings(query.value))
+const results = computed(() => searchSettings(query.value, { experimentalEnabled: ui.experimentalAiEnabled }))
 /* 预览只在外观页有意义：切页复位（抽屉/预览都是「当前屏」的状态，不该跨页延续） */
 const preview = computed(() => previewOpen.value && page.value === 'appearance')
 const trapActive = computed(() => drawer.value && narrow.value)
-const pageMeta = computed(() => SETTINGS_PAGES.find((item) => item.key === page.value) || SETTINGS_PAGES[0])
+const pageMeta = computed(() => visiblePages.value.find((item) => item.key === page.value) || visiblePages.value[0] || SETTINGS_PAGES[0])
 const scrollKey = computed(() => (query.value ? 'search' : page.value))
-const PAGE_LABELS = { appearance: '外观', ai: '模型', knowledge: '知识库', data: '数据', about: '关于' }
+const PAGE_LABELS = { appearance: '外观', ai: '模型', knowledge: '知识库', data: '数据', experimental: '实验性', about: '关于' }
 const PAGE_FOOT = {
   appearance: '改动即时生效',
   ai: '预设与密钥 · 当前设备',
   knowledge: '向量模型跟随当前预设',
   data: '作品与偏好 · 当前设备',
+  experimental: '默认关闭 · 本地保留配置',
   about: '小说工坊 · 幻流'
 }
 const breadcrumb = computed(() => (query.value ? '搜索' : PAGE_LABELS[page.value] || '关于'))
@@ -94,12 +101,15 @@ function applyPage(key) {
   scheduleSaveUi()
 }
 function setPage(key) {
-  if (!SETTINGS_PAGE_KEYS.includes(key)) return
+  if (!visiblePageKeys.value.includes(key)) return
   query.value = ''
   drawer.value = false
   applyPage(key)
   nextTick(restoreScroll)
 }
+watch(() => ui.experimentalAiEnabled, (enabled) => {
+  if (!enabled && EXPERIMENTAL_PAGE_KEYS.includes(page.value)) applyPage('experimental')
+})
 function setQuery(value) {
   query.value = String(value ?? '')
   previewOpen.value = false
@@ -120,7 +130,7 @@ function locate(row) {
   if (!row?.id) return
   query.value = ''
   drawer.value = false
-  if (SETTINGS_PAGE_KEYS.includes(row.page)) applyPage(row.page)
+  if (visiblePageKeys.value.includes(row.page)) applyPage(row.page)
   nextTick(() => {
     requestAnimationFrame(() => {
       const target = scrollEl.value?.querySelector(`[data-setting="${row.id}"]`)
@@ -376,6 +386,7 @@ watch(query, () => scheduleSaveUi())
     <div class="settings-window-drag" aria-hidden="true"></div>
     <SettingsSidebar
       :page="page"
+      :pages="visiblePages"
       :query="query"
       :result-count="results.length"
       @update:query="setQuery"
@@ -428,9 +439,10 @@ watch(query, () => scheduleSaveUi())
       <div ref="scrollEl" class="content-scroll" @scroll="onScroll">
         <SettingsSearchResults v-if="query" :results="results" @locate="locate" @clear="clearQuery" />
         <SettingsAppearance v-else-if="page === 'appearance'" />
-        <SettingsAiPage v-else-if="page === 'ai'" />
-        <SettingsKnowledgePage v-else-if="page === 'knowledge'" @go-ai="setPage('ai')" />
+        <SettingsAiPage v-else-if="page === 'ai' && ui.experimentalAiEnabled" />
+        <SettingsKnowledgePage v-else-if="page === 'knowledge' && ui.experimentalAiEnabled" @go-ai="setPage('ai')" />
         <SettingsDataPage v-else-if="page === 'data'" />
+        <SettingsExperimentalPage v-else-if="page === 'experimental'" @go="setPage" />
         <SettingsAboutPage v-else />
       </div>
 
@@ -442,7 +454,7 @@ watch(query, () => scheduleSaveUi())
       <!-- 弹窗挂在 main.pane 内（不是 .settings-shell 的直接子元素）：既让 .settings-shell dialog 选择器命中，
            原生 dialog 在 top-layer，不占用内容区高度。 -->
       <SettingsDialog v-model:open="resetOpen" title="恢复默认外观">
-        <p>恢复为思源宋体、跟随中文的西文字体和 17 px 字号，关闭默认隐藏顶栏，并重置流动背景配色与速度。</p>
+        <p>恢复为思源宋体、跟随中文的西文字体和 17 px 字号，关闭默认隐藏顶栏、恢复界面切换动画，并重置流动背景配色与速度。</p>
         <p class="dialog-note">正文内容与作品数据会保留。</p>
         <template #footer>
           <button type="button" class="btn" data-act="dialog-close" @click="resetOpen = false">取消</button>

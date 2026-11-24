@@ -414,7 +414,7 @@ async function clearGoal() {
 
 <template>
   <!-- 旧皮肤沿用原有模块助手入口。 -->
-  <TaskLauncher v-if="!nsPlugin && !ui.isStudioSkin && !ui.readMode && !latentSkin" module="chapters" />
+  <TaskLauncher v-if="ui.experimentalAiEnabled && !ui.isStudioSkin && !ui.readMode && !latentSkin" module="chapters" />
   <div ref="editorWrap" class="editor-wrap" :data-paper-adjustable="paperEnabled || undefined" :style="paperWrapStyle"
     :data-writing-paper="ui.writingPaperStyle" :data-paper-skin="ui.skin" :data-paper-theme="ui.theme" :data-paper-quiet="ui.readMode || ui.focusMode" :class="{ 'read-mode': ui.readMode, 'rail-collapsed': ui.skin === 'crimson' && railCollapsed }">
     <div class="editor-head" v-if="work.activeChapter && !ui.readMode && !ui.isStudioSkin">
@@ -530,7 +530,7 @@ async function clearGoal() {
               </div>
               <RightPanel />
               <div id="crimson-margin-foot" class="crimson-margin-foot"></div>
-              <button type="button" class="crimson-dream" @click="ui.aiDrawerOpen = !ui.aiDrawerOpen">恍然梦 ↗</button>
+              <button v-if="ui.experimentalAiEnabled" type="button" class="crimson-dream" @click="ui.aiDrawerOpen = !ui.aiDrawerOpen">恍然梦 ↗</button>
             </aside>
           </section>
         </div>

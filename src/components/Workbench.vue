@@ -188,7 +188,7 @@ watch(() => work.work?.id, (id) => { if (id && crimson.value) playStage() })
 watch(() => work.tab, () => { if (crimson.value) playStage() })
 watch(() => ui.skin, (skin) => { if (skin === 'crimson') playStage() })
 const moreOptions = computed(() => [
-  ...(studio.value ? [{ label: '本模块恍然梦助手', key: 'assistant' }] : []),
+  ...(studio.value && ui.experimentalAiEnabled ? [{ label: '本模块恍然梦助手', key: 'assistant' }] : []),
   { label: '拆出独立窗口', key: 'split', children: splitOptions.value.map(o => ({ ...o, key: 'split:' + o.key })) },
   { label: '章节书签', key: 'bookmarks', children: bookmarkOptions.value.map(o => ({ ...o, key: 'bookmark:' + o.key })) },
   { label: dirVisible.value ? '收起目录栏' : '展开目录栏', key: 'dir' },
@@ -285,9 +285,10 @@ const splitOptions = computed(() => [
   { label: '⧉ 人物', key: 'characters', disabled: false },
   { label: '⧉ 设定', key: 'lore', disabled: false },
   { label: '⧉ 灵感', key: 'snippets', disabled: false },
-  { label: '⧉ 恍然梦', key: 'ai', disabled: false }
+  ...(ui.experimentalAiEnabled ? [{ label: '⧉ 恍然梦', key: 'ai', disabled: false }] : [])
 ])
 async function onSplit(key) {
+  if (key === 'ai' && !ui.experimentalAiEnabled) return
   const titles = {
     chapter: () => `${work.work?.title || ''} · 正文`,
     outline: () => `${work.work?.title || ''} · 大纲`,
@@ -322,7 +323,7 @@ const modulePopped = computed(() => {
 const aiPopped = computed(() => (work.work ? isPopped(work, 'ai', '') : false))
 const aiMounted = ref(ui.aiDrawerOpen)
 watch(() => ui.aiDrawerOpen, open => { if (open) aiMounted.value = true })
-const aiVisible = computed(() => ui.aiDrawerOpen && !ui.focusMode && !ui.readMode && !aiPopped.value)
+const aiVisible = computed(() => ui.experimentalAiEnabled && ui.aiDrawerOpen && !ui.focusMode && !ui.readMode && !aiPopped.value)
 const curTabLabel = computed(() => tabs.find((t) => t.key === work.tab)?.label || '')
 const poppedEntityName = computed(() => {
   if (work.tab === 'characters') return work.activeCharacter?.name || ''
@@ -453,7 +454,7 @@ onBeforeUnmount(() => {
 
     <!-- 编辑皮肤：任务入口只挂一次，经 Teleport 进页头。原先每个模块各挂一份，
          切模块时组件与 Teleport 同时移动会触发 Vue 的 patch/unmount 异常。 -->
-    <TaskLauncher v-if="studio && !nsPlugin" ref="taskLauncher" :module="work.tab" />
+    <TaskLauncher v-if="studio && ui.experimentalAiEnabled" ref="taskLauncher" :module="work.tab" />
 
     <AppTopbar :inert="modalDrawer || owModal || undefined" :active="work.tab" :has-work="!!work.work" :target-title="work.work?.title" :save-state="saveState" @navigate="key => key === 'shelf' ? returnToShelf() : key === 'settings' ? openSettings() : selectTab(key)" :actions="narrowActions" @action="onTopbarAction">
       <template #actions>
@@ -463,14 +464,14 @@ onBeforeUnmount(() => {
              四套旧皮肤保持原有这一整条不动。 -->
         <template v-if="latentSkin">
           <div id="studio-task-actions"></div>
-          <DreamModeEntries :disabled="entryBusy" :active="ui.aiDrawerOpen?'light':''" @dream="enterAiMode('dream')" @light="enterAiMode('light')" />
+          <DreamModeEntries v-if="ui.experimentalAiEnabled" :disabled="entryBusy" :active="ui.aiDrawerOpen?'light':''" @dream="enterAiMode('dream')" @light="enterAiMode('light')" />
         </template>
         <template v-else>
           <GlazeLightingToggle v-if="museum" />
           <OriginalSaveStatus v-if="original"/><span v-else class="save-badge"><span class="save-dot" :class="badgeClass"></span>{{ badgeText }}</span>
           <NButton size="small" quaternary aria-label="搜索" @click="ui.searchOpen = true"><OIcon name="search" :size="16" /> 搜索</NButton>
           <div id="studio-task-actions"></div>
-          <DreamModeEntries v-if="!nsPlugin" :disabled="entryBusy" :active="ui.aiDrawerOpen?'light':''" @dream="enterAiMode('dream')" @light="enterAiMode('light')" />
+          <DreamModeEntries v-if="ui.experimentalAiEnabled" :disabled="entryBusy" :active="ui.aiDrawerOpen?'light':''" @dream="enterAiMode('dream')" @light="enterAiMode('light')" />
           <NDropdown :class="museumPopoverClass" trigger="click" :options="moreOptions" @select="onMore"><NButton size="small" quaternary title="拆窗、书签、沉浸、阅读与皮肤">更多 <OIcon name="caret-down" :size="11" /></NButton></NDropdown>
         </template>
       </template>
@@ -568,9 +569,9 @@ onBeforeUnmount(() => {
       <!-- 正文容器：隐现皮肤下只在正文页出现（四个模块工作区是并列的兄弟，
            同屏显示会让两者争宽度）；旧皮肤保持原样始终渲染。 -->
       <div v-show="!modulePopped && (!latentSkin || work.tab === 'chapters')" class="center-pane paper-texture" :inert="modalDrawer || owModal || undefined">
-        <div v-if="work.tab==='chapters'&&story.active&&!ui.agentCandidateId&&!nsPlugin" class="story-workshop-bar"><span>{{story.formalView?'正式正文':'与恍然梦共用的工作稿'}} · {{story.active.status==='confirmed'?'本章已确认':'尚未确认入正文'}}</span><button @click="story.formalView=!story.formalView">{{story.formalView?'回到共同工作稿':'对照正式正文'}}</button><button @click="ui.workbenchMode='agent'">回到故事现场</button></div>
-        <div id="writing-story-editor-host" v-show="work.tab==='chapters'&&!ui.agentCandidateId&&story.active&&!story.formalView" class="shared-editor-host story-workshop-editor"></div>
-        <div id="writing-editor-host" v-show="work.tab==='chapters'&&!ui.agentCandidateId&&(!story.active||story.formalView)" class="shared-editor-host"></div>
+        <div v-if="work.tab==='chapters'&&story.active&&!ui.agentCandidateId&&ui.experimentalAiEnabled" class="story-workshop-bar"><span>{{story.formalView?'正式正文':'与恍然梦共用的工作稿'}} · {{story.active.status==='confirmed'?'本章已确认':'尚未确认入正文'}}</span><button @click="story.formalView=!story.formalView">{{story.formalView?'回到共同工作稿':'对照正式正文'}}</button><button @click="ui.workbenchMode='agent'">回到故事现场</button></div>
+        <div id="writing-story-editor-host" v-show="work.tab==='chapters'&&!ui.agentCandidateId&&story.active&&!story.formalView&&ui.experimentalAiEnabled" class="shared-editor-host story-workshop-editor"></div>
+        <div id="writing-editor-host" v-show="work.tab==='chapters'&&!ui.agentCandidateId&&(!story.active||story.formalView||!ui.experimentalAiEnabled)" class="shared-editor-host"></div>
         <CandidateEditor v-if="work.tab==='chapters'&&ui.agentCandidateId" :candidate-id="ui.agentCandidateId" handoff @close="ui.agentCandidateId=null" />
         <!-- 旧皮肤的模块视图留在正文容器内，保持原有布局与行为一字不变 -->
         <template v-if="!latentSkin">
@@ -622,7 +623,7 @@ onBeforeUnmount(() => {
       <InspirationPrompt v-if="ui.skin === 'gravity' && work.tab === 'snippets' && (!ui.aiDrawerOpen || aiPopped) && !modulePopped && !ui.focusMode && !ui.readMode" />
 
       <!-- 非模态覆盖层：开合与拖宽不参与正文排版；隐藏时保留输入与生成状态。 -->
-      <aside v-if="aiMounted && !nsPlugin" v-show="aiVisible" class="ai-dock" :data-agent-skin="ui.skin" aria-label="恍然梦-浅眠" :style="{ width: 'min(' + ui.aiDrawerWidth + 'px, 100%)' }">
+      <aside v-if="aiMounted && ui.experimentalAiEnabled" v-show="aiVisible" class="ai-dock" :data-agent-skin="ui.skin" aria-label="恍然梦-浅眠" :style="{ width: 'min(' + ui.aiDrawerWidth + 'px, 100%)' }">
         <div class="ai-dock-resizer" title="拖拽调整恍然梦宽度（双击恢复默认）" @mousedown="startAiResize" @dblclick="resetAiWidth"></div>
         <div class="ai-drawer-head">
           <span class="ai-drawer-name serif">恍然梦-浅眠</span>

@@ -9,11 +9,11 @@ import {useUiStore} from '../../stores/ui'
 import {useAssistantTaskStore} from '../../stores/assistant-task.js'
 const props=defineProps({module:{type:String,required:true}})
 const ui=useUiStore(),work=useWorkStore(),ai=useAiStore(),task=useAssistantTaskStore()
-function open(){task.open(props.module).catch(e=>window.$msg?.warning(e.message))}
+function open(){if(!ui.experimentalAiEnabled)return;task.open(props.module).catch(e=>window.$msg?.warning(e.message))}
 defineExpose({open})
 </script>
 <template>
-  <Teleport defer to="#studio-task-actions" :disabled="!ui.isStudioSkin">
+  <Teleport v-if="ui.experimentalAiEnabled" defer to="#studio-task-actions" :disabled="!ui.isStudioSkin">
     <div class="module-agent"><NButton size="tiny" :disabled="!work.work||ai.busy" @click="open">恍然梦 · {{ {chapters:'正文',outline:'大纲',lore:'设定',characters:'人物',snippets:'灵感'}[module] }}助手</NButton><span v-if="!ui.isStudioSkin">生成草稿与提案，确认后保存</span></div>
   </Teleport>
 </template>

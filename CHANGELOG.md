@@ -1,5 +1,33 @@
 ## [Unreleased]
 
+## [1.2.9] - 2026-11-24 · 实验性功能门控、灵感图片与外部链接加固
+
+### 实验性功能门控（2026-11-24）
+
+- 设置新增「实验性功能」页（`SettingsExperimentalPage.vue` + `settings-catalog.js` 的 `EXPERIMENTAL_PAGE_KEYS`）：AI 与知识库相关开关收进该页，默认关闭。
+- 新增 `experimentalAiEnabled` 偏好（`settings-prefs.js` / `ui.js`）。关闭时：`ai/runtime.js` 暂停知识库、取消记忆任务、清空队列，主进程入口直接返回；`entry-modes.js` 不再派发实验性入口。
+- `visibleSettingsPages()` 按开关决定该页是否出现在分类栏，默认隐藏。
+
+### 灵感：图片支持（2026-11-24）
+
+- `snippet-model.js` 新增 `normalizeImages()`：保留有序 `assetId` 数组并按 id 去重，首张作卡片封面。
+- 新增 `SnipEditorModal.vue`（编辑弹窗）与 `SnipImageLightbox.vue`（大图查看）。
+- `SnippetsWorkspace` / `SnipBoard` / `SnipCard` / `SnipInspector` / `snippet-commands.js` 接入图片字段；`snippets-fusion.css`（+875 行）重写拼板与图片样式。
+
+### 外部链接加固（2026-11-24）
+
+- 新增 `shell:openExternal` IPC（`electron/main.js`）：只放行 `http:` / `https:`，校验 hostname，非法协议返回 `blocked-protocol`。
+- 新增 `src/services/external-url.js` 统一出口，渲染层不再直接调用 `window.open`。
+
+### 其他
+
+- `preload.cjs` / `panels.js` 暴露新通道；`App.vue` / `AppTopbar` / `Bookshelf` / `CharacterCenter` / `EditorContextMenu` / `EditorPane` / `EditorToolbar` / `MubuView` / `OutlineCanvas` / `OutlineSidebar` / `PanelHost` / `SettingsWindow` / `SnippetCenter` / `StudioWorkspace` / `Workbench` / `TaskLauncher` 跟随。
+- `flow-transition.js`、`settings-desktop.css` / `settings-fusion.css` 同步。
+
+### 交付
+
+- 按本次要求跳过功能验收。构建 `npm run build` 通过。
+
 ## [1.2.8] - 2026-11-24 · 设定五级权重、千节点大树优化与层级导航重构
 
 > 围绕**大规模世界观设定的可读性与交互效率**展开全面升级：引入「核心 → 末节」五级条目权重并打通标签推导与关系星系分层；为条目大纲补齐窗口化渲染，重构视觉导图自适应折叠与可读缩放锚定，并对左侧深层目录树完成缩进封顶、参考线与子根下钻改造。同步纳入此前完成的 WebGL 液态转场调优与大纲画布生命周期修复。

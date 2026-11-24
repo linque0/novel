@@ -543,6 +543,18 @@ ipcMain.handle('data:pickDir', async (e) => {
 
 ipcMain.handle('data:openFolder', () => shell.openPath(app.getPath('userData')))
 
+ipcMain.handle('shell:openExternal', async (_e, rawUrl) => {
+  try {
+    const parsed = new URL(String(rawUrl || '').trim())
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') return { ok: false, reason: 'blocked-protocol' }
+    if (!parsed.hostname) return { ok: false, reason: 'invalid-host' }
+    await shell.openExternal(parsed.href)
+    return { ok: true }
+  } catch {
+    return { ok: false, reason: 'invalid-url' }
+  }
+})
+
 /* 清除失效的位置记录：指针指向的目录已不存在（被改名/删除）时，启动会回退默认位置并长期告警，
    而「恢复默认」此时是无操作会被拒——这里给用户一个显式出口。只删默认目录下的指针文件。 */
 ipcMain.handle('data:clearPointer', () => {

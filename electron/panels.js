@@ -4,7 +4,7 @@
  * - 面板几何按类型记忆（userData/panel-geometry.json），恢复时夹取到可见屏内
  * - 生命周期：面板关闭前走 __flushNow 优雅保存并释放锁；主窗口关闭级联关闭全部面板
  */
-const { BrowserWindow, ipcMain, screen, app } = require('electron')
+const { BrowserWindow, ipcMain, screen, app, shell } = require('electron')
 const path = require('path')
 const fs = require('fs')
 const { windowIconPath } = require('./window-icon.cjs')
@@ -139,7 +139,15 @@ function openPanel(spec) {
     }
   })
   win.setMenuBarVisibility(false)
-  win.webContents.setWindowOpenHandler(({ url }) => ({ action: 'deny' }))
+  win.webContents.setWindowOpenHandler(({ url }) => {
+    try {
+      const parsed = new URL(String(url || ''))
+      if ((parsed.protocol === 'http:' || parsed.protocol === 'https:') && parsed.hostname) {
+        shell.openExternal(parsed.href)
+      }
+    } catch { /* ignore invalid url */ }
+    return { action: 'deny' }
+  })
   win.webContents.on('console-message', (_e, _l, message, line, source) => {
     if (!message.includes('DevTools')) console.log(`[panel] ${message} (${source}:${line})`)
   })

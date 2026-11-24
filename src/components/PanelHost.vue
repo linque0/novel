@@ -188,6 +188,17 @@ watch(
   }
 )
 
+const AI_PANEL_TYPES = ['ai', 'agent', 'ai-presets']
+watch(
+  () => [spec.value?.type, ui.experimentalAiEnabled],
+  ([type, enabled]) => {
+    if (type && AI_PANEL_TYPES.includes(type) && !enabled) {
+      window.native?.panelCloseSelf?.()
+    }
+  },
+  { immediate: true }
+)
+
 onMounted(() => {
   startAutosave()
   boot()
@@ -209,7 +220,7 @@ onBeforeUnmount(() => autosave.flushAll())
       <SettingsWindow v-else-if="spec.type === 'settings'" style="flex: 1; min-height: 0" />
       <StudioWorkspace v-else-if="spec.type==='agent'" />
       <template v-else>
-        <TaskLauncher v-if="ui.isStudioSkin && spec.type !== 'ai'" :module="work.tab" />
+        <TaskLauncher v-if="ui.isStudioSkin && ui.experimentalAiEnabled && spec.type !== 'ai'" :module="work.tab" />
         <PanelBackdrop v-if="latentContent" />
         <div v-if="!latentContent" class="panel-topbar" :inert="modalDrawer || owModal || undefined">
           <GlazeLightingToggle v-if="museumActive" />

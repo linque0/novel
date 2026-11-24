@@ -537,8 +537,8 @@ defineExpose({ open, close })
       <div v-if="act.dl" class="ctx-item" @click="jumpDl"><span>跳转到关系链接目标</span></div>
       <div v-if="act.dl" class="ctx-item" @click="removeDl"><span>移除关系链接</span></div>
 
-      <!-- 插件构建：AI 由 DSH 会话承担，这三个入口整组不渲染（组件本体保留）。 -->
-      <template v-if="!nsPlugin">
+      <!-- 插件构建或实验性功能关闭时：这三个入口整组不渲染（组件本体保留）。 -->
+      <template v-if="ui.experimentalAiEnabled">
         <div class="ctx-sep" />
         <div class="ctx-item" @click="writingTask('insert')"><span>恍然梦 · 在此续写剧情</span></div>
         <div v-if="!selEmpty()||st.savedFrom!=null" class="ctx-item" @click="writingTask('replace')"><span>恍然梦 · 改写选段</span></div>

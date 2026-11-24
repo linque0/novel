@@ -8,15 +8,24 @@
    （面板窗口 SettingsWindow.vue 的 PAGES 里本来就有），按同一套隐现语言并入左侧分类。
    导航图标只认 SettingsSidebar 已渲染的两个键（'type' 字形、'storage' 数据），
    该组件不在本次改动范围内，所以两项分别复用它们、不自造第三个键。 */
+export const EXPERIMENTAL_PAGE_KEYS = ['ai', 'knowledge']
+
 export const SETTINGS_PAGES = [
   { key: 'appearance', title: '外观与排版', desc: '字体、字号与写作空间', icon: 'type', sub: '让文字呈现为你习惯的样子' },
   { key: 'ai', title: '模型设置', desc: '预设、模型与生成参数', icon: 'type', sub: '接上你自己的模型服务' },
   { key: 'knowledge', title: '知识库模型', desc: '向量模型与语义检索', icon: 'storage', sub: '让检索读懂你的设定' },
   { key: 'data', title: '备份与数据', desc: '导入导出、备份与回收站', icon: 'storage', sub: '整理作品，备份每一次创作' },
+  { key: 'experimental', title: '实验性功能', desc: '恍然梦助手与实验特性', icon: 'sparkle', sub: '按需开启仍在持续演进的新能力' },
   { key: 'about', title: '帮助与关于', desc: '常用操作、手册与版本', icon: 'book', sub: '了解工坊，也找到顺手的用法' }
 ]
 
-export const SETTINGS_PAGE_KEYS = ['appearance', 'ai', 'knowledge', 'data', 'about']
+export const SETTINGS_PAGE_KEYS = ['appearance', 'ai', 'knowledge', 'data', 'experimental', 'about']
+
+export function visibleSettingsPages(experimentalEnabled = false) {
+  return experimentalEnabled
+    ? SETTINGS_PAGES
+    : SETTINGS_PAGES.filter((item) => !EXPERIMENTAL_PAGE_KEYS.includes(item.key))
+}
 
 export const SETTINGS_CATALOG = [
   { id: 'flowBackground', page: 'appearance', title: '流动背景', desc: '跟随作品封面或自定义两色', terms: '背景 配色 RGB 色板 颜色 推荐 封面' },
@@ -25,6 +34,7 @@ export const SETTINGS_CATALOG = [
   { id: 'editorLatin', page: 'appearance', title: '西文字体', desc: '英文与数字的字形搭配', terms: '英文 拉丁 Playfair Gothic 字体' },
   { id: 'fontSize', page: 'appearance', title: '正文字号', desc: '在13–24px之间调整阅读与编辑字号', terms: '大小 排版 字号 缩放' },
   { id: 'topbarAutoHide', page: 'appearance', title: '默认隐藏顶栏', desc: '移至顶部展开，让写作空间更安静', terms: '自动收起 导航 沉浸 界面' },
+  { id: 'pageTransitions', page: 'appearance', title: '界面切换动画', desc: '书架与模块切换时的液态转场效果', terms: '动画 转场 切换 液态 过渡 瞬切 性能' },
   { id: 'aiModelSettings', page: 'ai', title: '供应商预设与模型', desc: '连接地址、密钥、模型列表与该预设参数', terms: 'AI 大模型 供应商 预设 Base URL API 密钥 Key 模型 选用 拉取 温度 上下文窗口 token 隐私模式 自动记忆 连接测试 停用' },
   { id: 'knowledgeModel', page: 'knowledge', title: '知识库模型', desc: '语义检索开关与向量模型', terms: '知识库 向量 embedding 语义检索 索引 bge text-embedding 跟随预设 关键词回落' },
   { id: 'storageLocation', page: 'data', title: '作品数据存储位置', desc: '把作品库搬到别的文件夹', terms: '路径 目录 移动 迁移 存储位置 数据目录 磁盘 library 备份盘' },
@@ -33,14 +43,19 @@ export const SETTINGS_CATALOG = [
   { id: 'import', page: 'data', title: '导入文本作品', desc: '从 TXT、Markdown、Word、PDF、EPUB 或图片导入正文', terms: 'TXT MD DOCX Word PDF EPUB 图片 png jpg 文本 迁入' },
   { id: 'export', page: 'data', title: '导出正文', desc: '按作品与章节导出 TXT、Markdown 或 Word', terms: 'TXT MD Word 章节 作品 下载' },
   { id: 'trash', page: 'data', title: '回收站', desc: '找回删除的条目，或彻底移除', terms: '恢复 删除 还原 清理' },
+  { id: 'experimentalFeatures', page: 'experimental', title: '显示并启用实验性功能', desc: '包含恍然梦入口、助手、模型设置与知识库模型', terms: '实验性 实验 恍然梦 AI Agent 助手 入梦 浅眠 模型 知识库 隐藏 开关' },
   { id: 'help', page: 'about', title: '帮助与快捷键', desc: '了解常用操作与键盘入口', terms: '手册 使用 操作 Escape Tab Ctrl S' },
   { id: 'stats', page: 'about', title: '写作概览', desc: '查看作品、章节与正文的规模', terms: '统计 字数 数据' },
   { id: 'version', page: 'about', title: '关于小说工坊', desc: '当前版本、项目仓库与软件更新', terms: '版本 更新 升级 检查 GitHub 关于 幻流 DSH' }
 ]
 
-/* 检索口径同总稿 model.mjs:18：trim + 小写，命中 title/desc/terms 任一段即算；空查询不返回全表。 */
-export function searchSettings(query) {
+/* 检索口径同总稿 model.mjs:18：trim + 小写，命中 title/desc/terms 任一段即算；空查询不返回全表。
+   实验性功能关闭时过滤掉隐藏页（ai / knowledge）条目，避免搜出不可达页；实验开关条目自身保留以便引导开启。 */
+export function searchSettings(query, { experimentalEnabled = false } = {}) {
   const q = String(query || '').trim().toLocaleLowerCase()
   if (!q) return []
-  return SETTINGS_CATALOG.filter((item) => [item.title, item.desc, item.terms].join(' ').toLocaleLowerCase().includes(q))
+  return SETTINGS_CATALOG.filter((item) => {
+    if (!experimentalEnabled && EXPERIMENTAL_PAGE_KEYS.includes(item.page)) return false
+    return [item.title, item.desc, item.terms].join(' ').toLocaleLowerCase().includes(q)
+  })
 }

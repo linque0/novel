@@ -263,7 +263,7 @@ const isActive = (name, attrs) => {
     <!-- 旧皮肤窄栏折叠的「更多功能」；隐现已有上面的弹层，这里必须让位，否则主行出现第二个入口 -->
     <NPopover :class="[museumPopoverClass,originalOverlayClass]" :data-glaze-light="museumLight" v-if="isCompact && !latent" trigger="click" :show-arrow="false" placement="bottom-start" :show="moreShow" @update:show="(v) => (moreShow = v)">
       <template #trigger>
-        <button class="tb" :title="paperInMore ? '更多功能：纸面、段落、导入与导出正文、恍然梦' : '更多功能：段落、导入与导出正文、恍然梦'">更多功能 ⌄</button>
+        <button class="tb" :title="paperInMore ? (ui.experimentalAiEnabled ? '更多功能：纸面、段落、导入与导出正文、恍然梦' : '更多功能：纸面、段落、导入与导出正文') : (ui.experimentalAiEnabled ? '更多功能：段落、导入与导出正文、恍然梦' : '更多功能：段落、导入与导出正文')">更多功能 ⌄</button>
       </template>
       <div class="tb-more tb-more-features">
         <span v-if="paperInMore" class="tb-paper-in-more" @click.stop><slot name="paper" /></span>
@@ -288,8 +288,10 @@ const isActive = (name, attrs) => {
         <span class="tb-sep" />
         <button class="tb" data-act="import" title="导入正文：txt / md / docx / pdf / epub / 图片，可分章导入" @click="openImport">导入正文…</button>
         <button class="tb" data-act="export" title="导出正文：TXT / Markdown / Word，可按章节勾选" @click="openExport">导出正文…</button>
-        <span class="tb-sep" />
-        <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
+        <template v-if="ui.experimentalAiEnabled">
+          <span class="tb-sep" />
+          <button class="tb" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
+        </template>
       </div>
     </NPopover>
     <template v-if="!isCompact && !latent">
@@ -314,7 +316,7 @@ const isActive = (name, attrs) => {
       :title="bmOn ? '移除书签' : '收藏本书签'"
       @click="toggleBm"
     ><OIcon :name="bmOn ? 'star-filled' : 'star'" :size="14" /></button>
-    <template v-if="!isCompact || latent">
+    <template v-if="ui.experimentalAiEnabled && (!isCompact || latent)">
       <span class="tb-sep" />
       <button class="tb" data-act="send-ai" :disabled="!ai.ready" :title="ai.ready ? '发送给恍然梦（锚点为当前章节，选中文本一并参考）' : AI_UNSET_HINT" @click="aiPlotBranch">发送给恍然梦</button>
     </template>
