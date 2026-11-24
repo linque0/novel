@@ -30,6 +30,7 @@ const showCreate = ref(false)
 const form = ref({ title: '', author: '', genre: '其他', status: '构思', intro: '', withVolume: true })
 const editing = ref(null)
 const q = ref('')
+const latentShelf = ref(null)
 const opening = ref(false)
 
 /* 书架本地检索：书名 / 作者 / 类型；结果固定按最近打开时间重排 */
@@ -86,7 +87,12 @@ async function submitCreate() {
     })
     msg.success('已保存')
   } else {
-    await shelf.createWork({ ...form.value, title: form.value.title.trim() })
+    const created = await shelf.createWork({ ...form.value, title: form.value.title.trim() })
+    if (latentShelf.value) {
+      if (q.value && !filtered.value.some((work) => work.id === created.id)) q.value = ''
+      await nextTick()
+      latentShelf.value?.focusWork(created.id)
+    }
     msg.success('作品已创建')
   }
   showCreate.value = false
@@ -161,7 +167,7 @@ async function onCardMenu(key, w) {
 
 <template>
   <div style="display: flex; flex-direction: column; height: 100%">
-    <LatentShelf v-if="isLatentSkin(ui.skin)" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :first-chapter="firstChapter" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
+    <LatentShelf ref="latentShelf" v-if="isLatentSkin(ui.skin)" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :first-chapter="firstChapter" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <GravityShelf v-else-if="ui.skin === 'gravity'" :works="filtered" :total="shelf.works.length" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <GlazeShelf @select-work="glazeSelectedId = $event" v-else-if="ui.skin === 'glaze'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
     <CrimsonShelf v-else-if="ui.skin === 'crimson'" :works="filtered" :total="shelf.works.length" :first-chapter="firstChapter" :loading="shelf.loading" :busy="opening" v-model:query="q" :open-stats="shelf.openStats" :menu-options="cardMenu" @open="onWorkClick" @menu="onCardMenu" @create="openCreate" @settings="openSettings" @navigate="(tab, book) => openWorkAt(book, tab)" />
