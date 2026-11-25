@@ -1,66 +1,117 @@
 import assert from 'node:assert/strict'
 import { createFlowTransitionController } from '../src/services/latent/flow-transition.js'
-import { changedScene, isFlowNavigationIntent, liquidFrame, liquidProgress, matchesSceneAspect, sameSceneRect, sceneCaptureOptions } from '../src/services/latent/liquid-transition.js'
-import { splitLiveCaptureSvg } from '../src/services/latent/flow-live-capture.js'
-import { liquidPhase } from '../src/services/latent/liquid-transition-gl.js'
-import { createFlowCaptureQueue } from '../src/services/latent/flow-capture-queue.js'
+import {
+  PAGE_TRANSITION_MODES,
+  SETTINGS_DEFAULTS,
+  normalizePageTransition,
+  normalizeSettingsPrefs,
+  resetAppearancePrefs
+} from '../src/components/skins/latent/settings/settings-prefs.js'
+import { createInkCaptureQueue } from '../src/services/latent/ink-capture-queue.js'
+import {
+  applyForegroundBlur,
+  clearForegroundBlur,
+  foregroundElements,
+  liquidFrame,
+  liquidProgress,
+  sameSceneRect
+} from '../src/services/latent/liquid-transition.js'
+import {
+  COVER_END,
+  HANDOFF_POINT,
+  LIQUID_DURATION,
+  liquidForegroundBlur,
+  liquidMaskOpacity,
+  liquidPhase,
+  MAX_FOREGROUND_BLUR,
+  REVEAL_START
+} from '../src/services/latent/liquid-transition-gl.js'
 
-// A snapshot's viewport coordinates stay in CSS pixels, even when its texture is downsampled.
 const rect = { left: 23, top: 41, width: 1400, height: 800 }
-const capture = sceneCaptureOptions(rect, .75, 12, 30)
-assert.deepEqual(capture.clip, { x: 35, y: 71, width: 1400, height: 800 })
-assert.equal(capture.dpr, .75)
-assert.equal(capture.excludeMode, 'hide')
-assert.equal('width' in capture || 'height' in capture, false)
-assert(matchesSceneAspect({ width: 1050, height: 600 }, rect))
-assert(matchesSceneAspect({ width: 1600, height: 914 }, rect))
-assert(!matchesSceneAspect({ width: 1400, height: 750 }, rect))
 assert(!sameSceneRect(rect, { ...rect, left: 28 }))
 assert(sameSceneRect(rect, { ...rect, width: 1400.4 }))
-const fullscreen = sceneCaptureOptions({ left: 0, top: 0, width: 1400, height: 800 }, .75, 0, 0)
-assert.deepEqual(fullscreen.clip, { x: 0, y: 0, width: 1400, height: 800 })
-assert.equal(fullscreen.exclude, '[data-flow-transition-backdrop], .ls-card.is-out')
-assert.equal(fullscreen.fast, true)
+
+assert.equal(LIQUID_DURATION, 1000)
 assert.equal(liquidProgress(0), 0)
 assert.equal(liquidProgress(150), .15)
 assert.equal(liquidProgress(500), .5)
 assert.equal(liquidProgress(1000), 1)
 assert.equal(liquidProgress(2000), 1)
+
+// 相位积分严格单调递增，且与原版 11-21（4019e618）终值一致（0.35 + 4.8 * 0.5 = 2.75）。
 const phase = Array.from({ length: 1001 }, (_, i) => liquidPhase(i / 1000, .35))
 assert.equal(phase[0], 0)
 assert(Math.abs(phase[1000] - 2.75) < 1e-9)
 assert(phase.slice(1).every((value, i) => value > phase[i]))
+assert(liquidPhase(COVER_END, .35, .1) > liquidPhase(COVER_END, .35, 0))
 const start = 100
 const mid = liquidFrame(600, start, .35)
 assert.equal(mid.time, .5)
 assert(mid.phase > 0)
 assert.equal(liquidFrame(1100, start, .35).time, 1)
 
-const navButton = { closest: selector => selector.includes('.app-topnav-item[data-nav]') ? navButton : null }
-const pointer = { type: 'pointerdown', button: 0, isPrimary: true, target: navButton }
-assert(isFlowNavigationIntent(pointer))
-assert(!isFlowNavigationIntent({ ...pointer, button: 2 }))
-assert(!isFlowNavigationIntent({ ...pointer, isPrimary: false }))
-assert(!isFlowNavigationIntent({ ...pointer, target: { closest: () => null } }))
-assert(isFlowNavigationIntent({ type: 'keydown', key: 'Enter', target: navButton }))
-assert(isFlowNavigationIntent({ type: 'keydown', key: ' ', target: navButton }))
-assert(!isFlowNavigationIntent({ type: 'keydown', key: 'F10', shiftKey: true, target: navButton }))
-const measuredText = { nodeType: 3, parentElement: null, data: '正文' }
-const textWrites = [
-  { type: 'characterData', target: measuredText, oldValue: '正文' },
-  { type: 'characterData', target: measuredText, oldValue: 'X' }
-]
-assert.equal(changedScene(textWrites), false)
-measuredText.data = '编辑后的正文'
-assert.equal(changedScene(textWrites), true)
-const probePng = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAAD'
-const svg = `<svg><img src="${probePng}" data-flow-live-ink="" /><img src="${probePng}" /></svg>`
-const slot = splitLiveCaptureSvg(svg)
-assert.deepEqual([slot.width, slot.height], [2, 3])
-assert.equal(slot.parts.join(probePng), svg)
-assert.equal(slot.parts.join('updated').split(probePng).length, 2)
-assert.equal(splitLiveCaptureSvg('<svg></svg>'), null)
+// 纯程序化对角线波前不透明度边界校验：
+// 1. 离场（stage=0）：progress=0 全屏全透（零起跳闪烁），progress=COVER_END 全屏严密遮盖（=1），且右上（sweep=0）先于左下（sweep=1）合拢；
+// 2. 进场（stage=1）：progress<=REVEAL_START 全屏严密遮盖（=1，绝不提前露底），progress=1 全屏全透（=0），且右上先于左下显露。
+assert(COVER_END > .3 && COVER_END < REVEAL_START)
+assert(HANDOFF_POINT >= COVER_END && HANDOFF_POINT <= REVEAL_START)
+for (const sweep of [0, .25, .5, .75, 1]) {
+  for (const crest of [0, .5, 1]) {
+    for (const fiber of [0, .5, 1]) {
+      assert.equal(liquidMaskOpacity({ progress: 0, sweep, crest, fiber, stage: 0 }), 0)
+      assert.equal(liquidMaskOpacity({ progress: COVER_END, sweep, crest, fiber, stage: 0 }), 1)
+      assert.equal(liquidMaskOpacity({ progress: COVER_END, sweep, crest, fiber, stage: 1 }), 1)
+      assert.equal(liquidMaskOpacity({ progress: REVEAL_START, sweep, crest, fiber, stage: 1 }), 1)
+      assert.equal(liquidMaskOpacity({ progress: 1, sweep, crest, fiber, stage: 1 }), 0)
+    }
+  }
+}
+assert(
+  liquidMaskOpacity({ progress: .18, sweep: 0, crest: .5, fiber: .5, stage: 0 }) >
+  liquidMaskOpacity({ progress: .18, sweep: 1, crest: .5, fiber: .5, stage: 0 })
+)
+assert(
+  liquidMaskOpacity({ progress: .68, sweep: 0, crest: .5, fiber: .5, stage: 1 }) <
+  liquidMaskOpacity({ progress: .68, sweep: 1, crest: .5, fiber: .5, stage: 1 })
+)
 
+// 原地雾化曲线边界校验：零位移零缩放，起止点均为 0，尾段在 progress=0.90 提前归零避免结束跳变。
+assert.equal(liquidForegroundBlur(0, 0), 0)
+assert.equal(liquidForegroundBlur(COVER_END, 0), MAX_FOREGROUND_BLUR)
+assert.equal(liquidForegroundBlur(COVER_END, 1), MAX_FOREGROUND_BLUR)
+assert.equal(liquidForegroundBlur(.9, 1), 0)
+assert.equal(liquidForegroundBlur(1, 1), 0)
+
+// 前景节点筛选与内联样式零残留校验：排除流动背板层，仅触达 filter/willChange，清理后彻底还原。
+const makeEl = (tag, classes = []) => ({
+  nodeType: 1,
+  tagName: tag,
+  classList: { contains: name => classes.includes(name) },
+  style: { filter: '', willChange: '', transform: '' }
+})
+const backdropWrap = makeEl('DIV', ['st-backdrop-wrap'])
+const topbar = makeEl('HEADER', ['app-topbar'])
+const body = makeEl('DIV', ['wb-body'])
+const styleTag = makeEl('STYLE')
+const mockView = { children: [backdropWrap, topbar, body, styleTag] }
+const mockRoot = { querySelector: () => mockView }
+const targets = foregroundElements(mockRoot)
+assert.deepEqual(targets, [topbar, body])
+const tracker = new Set()
+applyForegroundBlur(tracker, targets, 2.5)
+assert.equal(topbar.style.filter, 'blur(2.5px)')
+assert.equal(body.style.filter, 'blur(2.5px)')
+assert.equal(topbar.style.transform, '')
+assert.equal(body.style.transform, '')
+assert.equal(backdropWrap.style.filter, '')
+clearForegroundBlur(tracker)
+assert.equal(topbar.style.filter, '')
+assert.equal(topbar.style.willChange, '')
+assert.equal(body.style.filter, '')
+assert.equal(body.style.willChange, '')
+assert.equal(tracker.size, 0)
+
+// 状态机全链路校验：遮盖后提交、绘制后揭示、无障碍/关闭开关直切、连点复用、提交串行、揭示可打断、异常安全清理。
 const control = () => createFlowTransitionController({
   isReducedMotion: () => false, hasDocument: () => true
 })
@@ -77,7 +128,7 @@ const covering = new Promise(resolve => { coverStarted = resolve })
 const painting = new Promise(resolve => { paintStarted = resolve })
 const revealing = new Promise(resolve => { revealStarted = resolve })
 ctrl.attach(async () => {
-  steps.push('capture old')
+  steps.push('prepare')
   return {
     play: () => new Promise(resolve => {
       steps.push('play')
@@ -101,24 +152,27 @@ const switching = ctrl.run(() => { steps.push('commit'); return 'ok' }, {
   })
 })
 await covering
-assert.deepEqual(steps, ['capture old', 'play'])
+assert.deepEqual(steps, ['prepare', 'play'])
 finishCover()
 await painting
-assert.deepEqual(steps, ['capture old', 'play', 'commit', 'paint'])
+assert.deepEqual(steps, ['prepare', 'play', 'commit', 'paint'])
 finishPaint()
 await revealing
-assert.deepEqual(steps, ['capture old', 'play', 'commit', 'paint', 'reveal'])
+assert.deepEqual(steps, ['prepare', 'play', 'commit', 'paint', 'reveal'])
 finishReveal()
 assert.equal(await switching, 'ok')
-assert.deepEqual(steps, ['capture old', 'play', 'commit', 'paint', 'reveal', 'dispose'])
+assert.deepEqual(steps, ['prepare', 'play', 'commit', 'paint', 'reveal', 'dispose'])
 
 steps.length = 0
 await ctrl.run(() => steps.push('direct'), { ...route, reducedMotion: true })
 await ctrl.run(() => steps.push('crimson'), { skin: 'crimson' })
-assert.deepEqual(steps, ['direct', 'crimson'])
+ctrl.setEnabled(false)
+await ctrl.run(() => steps.push('disabled'), route)
+ctrl.setEnabled(true)
+assert.deepEqual(steps, ['direct', 'crimson', 'disabled'])
 
 const failing = control()
-failing.attach(() => { throw Error('capture failed') })
+failing.attach(() => { throw Error('prepare failed') })
 assert.equal(await failing.run(() => 'arrived', route), 'arrived')
 failing.attach(() => ({ play: () => { throw Error('context lost') }, dispose() {} }))
 assert.equal(await failing.run(() => 'arrived', route), 'arrived')
@@ -131,14 +185,14 @@ const rapid = control()
 const log = []
 let release
 rapid.attach(() => new Promise(resolve => {
-  log.push('capture')
+  log.push('prepare')
   release = () => resolve({ play: () => log.push('play once'), dispose: () => log.push('disposed') })
 }))
 const first = rapid.run(() => log.push('stale commit'), route)
 const second = rapid.run(() => log.push('latest commit'), route)
 release()
 await Promise.all([first, second])
-assert.deepEqual(log, ['capture', 'play once', 'latest commit', 'disposed'])
+assert.deepEqual(log, ['prepare', 'play once', 'latest commit', 'disposed'])
 
 const ongoing = control()
 let finishCommit
@@ -156,24 +210,6 @@ const c = ongoing.run(() => log.push('C'), route)
 finishCommit()
 await Promise.all([a, b, c])
 assert.deepEqual(log.slice(-3), ['start A', 'finish A', 'C'])
-
-const captureQueue = createFlowCaptureQueue((a, b) => a === b)
-const older = new AbortController()
-const newer = new AbortController()
-const opts = { signal: newer.signal, timeoutMs: 500 }
-let completeRaster
-const preparing = captureQueue('outline', () => new Promise(resolve => { completeRaster = resolve }), {
-  ...opts, signal: older.signal
-})
-await Promise.resolve()
-older.abort()
-assert.equal(await preparing, null)
-const reuse = captureQueue('outline', () => { throw Error('duplicate raster') }, opts)
-assert.equal(await captureQueue('characters', () => { throw Error('busy raster') }, { ...opts, skipBusy: true }), null)
-const queued = captureQueue('characters', () => 'characters captured', opts)
-completeRaster('outline captured')
-assert.equal(await reuse, 'outline captured')
-assert.equal(await queued, 'characters captured')
 
 const repeated = control()
 let signalPlaying
@@ -237,4 +273,25 @@ await Promise.all([firstNav, secondNav])
 assert(revealLog.includes('reveal aborted'))
 assert(revealLog.includes('second commit'))
 assert(revealLog.includes('reveal 2'))
-console.log('斜流切页状态机通过：遮盖后提交、绘制后交接、连点复用、提交串行、揭示可打断、渲染降级及异常清理')
+
+// 设置项三档模式归一与历史布尔开关向后兼容校验。
+assert.deepEqual(Object.keys(PAGE_TRANSITION_MODES), ['mist', 'ink', 'off'])
+assert.equal(SETTINGS_DEFAULTS.pageTransitions, 'mist')
+assert.equal(resetAppearancePrefs().pageTransitions, 'mist')
+assert.equal(normalizePageTransition(undefined), 'mist')
+assert.equal(normalizePageTransition(true), 'mist')
+assert.equal(normalizePageTransition('mist'), 'mist')
+assert.equal(normalizePageTransition('ink'), 'ink')
+assert.equal(normalizePageTransition('off'), 'off')
+assert.equal(normalizePageTransition(false), 'off')
+assert.equal(normalizePageTransition('invalid'), 'mist')
+assert.equal(normalizeSettingsPrefs({ pageTransitions: false }).pageTransitions, 'off')
+assert.equal(normalizeSettingsPrefs({ pageTransitions: true }).pageTransitions, 'mist')
+assert.equal(normalizeSettingsPrefs({ pageTransitions: 'ink' }).pageTransitions, 'ink')
+
+// 原版融墨懒加载队列校验。
+const inkQueue = createInkCaptureQueue((a, b) => a === b)
+const inkAc = new AbortController()
+assert.equal(await inkQueue('outline', () => 'ok', { signal: inkAc.signal, timeoutMs: 200 }), 'ok')
+
+console.log('流雾粒子与三档转场模式单测通过：对角线波前边界、原地雾化零残留、设置三档兼容及原版融墨队列')

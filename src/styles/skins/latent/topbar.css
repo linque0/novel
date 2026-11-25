@@ -18,9 +18,10 @@ html body[data-skin='dsh'] .app-topbar-shell .app-topbar[data-topbar-page]:not([
     grid-area: 1 / 1;
     justify-self: start;
     min-width: 0;
+    color: #f4efe6;
   }
 
-  & .app-topbar-brand-text { display: inline-flex; }
+  & .app-topbar-brand-text { display: inline-flex; color: #f4efe6; }
   & .app-topbar-narrow-title { display: none; }
 
   & .app-topnav {

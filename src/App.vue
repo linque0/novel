@@ -10,6 +10,7 @@ import { startAutosave } from './services/autosave'
 import { installLibrarySync } from './services/library-sync'
 import { openDbWithRetry } from './db/database'
 import Bookshelf from './components/Bookshelf.vue'
+import SettingsWindow from './components/SettingsWindow.vue'
 import StudioWorkspace from './components/StudioWorkspace.vue'
 import GlobalSearch from './components/GlobalSearch.vue'
 import ImportDialog from './components/ImportDialog.vue'
@@ -125,8 +126,8 @@ watch([latent, () => ui.theme, dshNaiveTheme], ([enabled, theme, hostDark]) => {
   document.body.dataset.nsPanelSource = nsPlugin ? 'host' : 'local'
 }, { immediate: true })
 
-watch(() => ui.pageTransitions, (enabled) => {
-  flowTransition.setEnabled(enabled !== false)
+watch(() => ui.pageTransitions, (mode) => {
+  flowTransition.setEnabled(mode !== 'off' && mode !== false)
 }, { immediate: true })
 
 /* 实验性功能关闭时实时收口：退回写作视图、收起浅眠侧栏、取消流式请求与后台记忆/知识库任务，本地配置完整保留。 */
@@ -241,6 +242,7 @@ async function seedDevVerifyBooks() {
           </div>
           <template v-else>
             <Bookshelf v-if="ui.view === 'shelf'" />
+            <SettingsWindow v-else-if="ui.view === 'settings'" style="flex: 1; min-height: 0" />
             <StudioWorkspace v-else />
             <GlobalSearch />
             <ImportDialog />
@@ -258,7 +260,7 @@ async function seedDevVerifyBooks() {
           v-if="analysisPanel ? prefsReady : latent && !panelMode"
           :panel-entry="analysisPanel ? panelSpec[2] || '' : null"
         />
-        <FlowTransitionOverlay v-if="latent && !panelMode && ui.pageTransitions" :scene="flowScene" />
+        <FlowTransitionOverlay v-if="latent && !panelMode && ui.pageTransitions !== 'off' && ui.pageTransitions !== false" :scene="flowScene" :mode="ui.pageTransitions" />
       </NDialogProvider>
     </NMessageProvider>
   </NConfigProvider>

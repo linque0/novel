@@ -48,6 +48,7 @@ import DLinkPopover from './DLinkPopover.vue'
 import InspirationPrompt from './InspirationPrompt.vue'
 import TaskLauncher from './ai/TaskLauncher.vue'
 import { popOut, isPopped, focusPopped } from '../services/panelwindows'
+import { openSettings as openSettingsEntry } from '../services/settings-entry'
 import { playStage } from '../services/stage-play'
 import artEditor from '../assets/skins/crimson/editor.webp'
 import artOutline from '../assets/skins/crimson/outline.webp'
@@ -137,23 +138,6 @@ function onBookmarkSelect(key) {
   if (c) work.selVolumeId = c.volumeId
 }
 
-const latentFlowPalette = computed(() =>
-  latentSkin.value ? flowPaletteKey(ui.flowBackground, work.work) : ''
-)
-const latentFlowRev = computed(() => {
-  if (!latentSkin.value) return ''
-  const common = `${work.work?.id || ''}|${work.tab}|${saveState.value}|${ui.aiDrawerOpen ? 1 : 0}|${ui.focusMode ? 1 : 0}|${modulePopped.value ? 1 : 0}`
-  if (work.tab === 'outline') {
-    const oSum = work.olnodes.reduce((s, n) => s + (n.updatedAt || 0), 0)
-    const cSum = work.chapters.reduce((s, c) => s + (c.updatedAt || 0), 0)
-    return `${common}|${work.outlineView}|${work.olnodes.length}|${work.selOlnodeId || ''}|${ui.outlineSideOpen ? 1 : 0}|${ui.outlineDetailOpen ? 1 : 0}|${ui.outlineLeftWidth}|${ui.outlineRightWidth}|${work.canvasPrefs?.showDots !== false ? 1 : 0}|${work.canvasPrefs?.density || ''}|${oSum}|${cSum}`
-  }
-  if (work.tab === 'lore') {
-    const mSum = work.mubu.reduce((s, n) => s + (n.updatedAt || 0), 0)
-    return `${common}|${ui.loreView}|${ui.loreMapMode}|${ui.loreNavClosed ? 1 : 0}|${ui.loreInspectClosed ? 1 : 0}|${ui.loreScope}|${ui.loreRootId || ''}|${ui.loreActiveId || ''}|${work.mubuRevision}|${work.mubu.length}|${mSum}`
-  }
-  return ''
-})
 const tabs = WORK_NAVIGATION
 function selectTab(key) {
   if (work.tab === key) return flowTransition.cancelPending()
@@ -258,13 +242,9 @@ const badgeText = computed(() => {
   return ui.autosave.lastSavedAt ? `已保存 ${fmtTime(ui.autosave.lastSavedAt)}` : '自动保存就绪'
 })
 
-/* ---------- 设置窗口（面板窗口 settings 类型）：外观 / 恍然梦 / 数据 / 关于 ---------- */
+/* ---------- 设置：桌面版开独立面板窗口，网页版或无弹窗通道时在主窗口内就地打开 ---------- */
 function openSettings() {
-  if (!window.native?.panelOpen) {
-    msg.info('设置窗口仅桌面版可用，网页版暂不支持')
-    return
-  }
-  window.native.panelOpen({ type: 'settings', workId: 'app', entityId: '', title: '设置' })
+  void openSettingsEntry(ui)
 }
 
 function onKeydown(e) {
@@ -442,7 +422,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="shell" class="workbench-shell" :data-ow-directory-overlay="original && owMode.directory || undefined" :data-ow-notes-overlay="original && owMode.notes || undefined" :data-ow-open="original ? owDrawer : undefined" :class="{ 'original-workspace':original, 'is-focus': ui.focusMode, 'is-reading': ui.readMode, 'is-crimson': crimson, 'glaze-museum': museum, 'glaze-drawer-open': modalDrawer, 'latent-studio': latentSkin && work.tab === 'chapters', 'outline-strict': latentSkin && work.tab === 'outline' }" :data-glaze-light="museum ? ui.glazeLighting : undefined" :data-module="work.tab" :data-flow="latentSkin ? 'on' : undefined" :data-flow-palette="latentFlowPalette || undefined" :data-flow-rev="latentFlowRev || undefined" style="display: flex; flex-direction: column; height: 100%">
+  <div ref="shell" class="workbench-shell" :data-ow-directory-overlay="original && owMode.directory || undefined" :data-ow-notes-overlay="original && owMode.notes || undefined" :data-ow-open="original ? owDrawer : undefined" :class="{ 'original-workspace':original, 'is-focus': ui.focusMode, 'is-reading': ui.readMode, 'is-crimson': crimson, 'glaze-museum': museum, 'glaze-drawer-open': modalDrawer, 'latent-studio': latentSkin && work.tab === 'chapters', 'outline-strict': latentSkin && work.tab === 'outline' }" :data-glaze-light="museum ? ui.glazeLighting : undefined" :data-module="work.tab" :data-flow="latentSkin ? 'on' : undefined" style="display: flex; flex-direction: column; height: 100%">
     <!-- 隐现皮肤的主窗口流动背板：dots / vignette / grain 三层叠在 canvas 上 -->
     <div v-if="latentSkin" class="st-backdrop-wrap" aria-hidden="true"><canvas class="st-backdrop" ref="flowCanvas"></canvas><div class="st-layer vignette"></div></div>
     <div v-if="museum" class="gm-cornice" aria-hidden="true"><span></span><i></i><span></span></div>

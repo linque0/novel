@@ -173,8 +173,11 @@ export function createCpuBackdrop(canvas, options = {}) {
     holdTransition() {
       transitionHolds += 1
       stop()
+      let released = false
       return () => {
-        transitionHolds -= 1
+        if (released) return
+        released = true
+        transitionHolds = Math.max(0, transitionHolds - 1)
         start()
       }
     },

@@ -27,12 +27,14 @@ import TrashModal from './TrashModal.vue'
 import StatsModal from './StatsModal.vue'
 import HelpManual from './HelpManual.vue'
 import { APP_VERSION } from './skins/latent/settings/settings-version.js'
+import { PAGE_TRANSITION_MODES, normalizePageTransition } from './skins/latent/settings/settings-prefs.js'
 import AppUpdateControls from './AppUpdateControls.vue'
 import { desktopAppIcon } from '../services/desktop-brand.js'
 import { useUiStore, FONT_MAP, LATIN_MAP } from '../stores/ui'
 import { backupAll, restoreBackup } from '../services/exporter'
 import { pickFiles, getDataLocation, pickDataDir, openDataFolder, moveDataDir, cleanOldLocation, openOldFolder, clearDataPointer } from '../services/fileio'
 import { broadcastAppEvent } from '../services/appbus'
+import { isSettingsPanel, leaveSettings } from '../services/settings-entry'
 import crimsonSettings from '../assets/skins/crimson/settings.webp'
 import GlazeArtwork from './GlazeArtwork.vue'
 import GlazeLightingToggle from './GlazeLightingToggle.vue'
@@ -40,6 +42,7 @@ import GlazeLightingToggle from './GlazeLightingToggle.vue'
 const ui = useUiStore()
 /* 插件构建没有恍然梦：模型/知识库两个分区整段不出现（导航与 @go-ai 两条入口都在下面被收掉）。 */
 const nsPlugin = __NS_PLUGIN__
+const panelMode = isSettingsPanel()
 
 const PAGES = [
   { key: 'appearance', icon: '外', label: '外观', desc: '主题 / 字体 / 字号' },
@@ -74,10 +77,11 @@ function resetAppearance() {
   ui.setPref('fontSize', 17)
   ui.setPref('theme', 'xuan')
   ui.setPref('topbarAutoHide', false)
+  ui.setPref('pageTransitions', 'mist')
 }
 
 function closeWindow() {
-  window.native?.panelCloseSelf()
+  leaveSettings(ui)
 }
 
 /* ---------- 外观 ---------- */
@@ -88,6 +92,7 @@ const THEMES = [
 ]
 const CJK_OPTS = Object.entries(FONT_MAP).map(([value, f]) => ({ label: f.label, value }))
 const LATIN_OPTS = Object.entries(LATIN_MAP).map(([value, f]) => ({ label: f.label, value }))
+const PAGE_TRANSITION_OPTS = Object.entries(PAGE_TRANSITION_MODES).map(([value, item]) => ({ label: item.label, value }))
 function bumpFont(d) {
   ui.setPref('fontSize', Math.min(24, Math.max(13, ui.fontSize + d)))
 }
@@ -296,8 +301,8 @@ async function clearStalePointer() {
               <NSwitch :value="ui.topbarAutoHide" aria-label="默认隐藏顶栏" @update:value="value => ui.setPref('topbarAutoHide', value)" />
             </div>
             <div class="sw-row">
-              <div class="sw-row-main"><b>界面切换动画</b><i>关闭后书架与模块间瞬时切换。</i></div>
-              <NSwitch :value="ui.pageTransitions" aria-label="界面切换动画" @update:value="value => ui.setPref('pageTransitions', value)" />
+              <div class="sw-row-main"><b>界面切换动画</b><i v-if="PAGE_TRANSITION_MODES[normalizePageTransition(ui.pageTransitions)].desc">{{ PAGE_TRANSITION_MODES[normalizePageTransition(ui.pageTransitions)].desc }}</i></div>
+              <NSelect :menu-props="{ class: museumPopoverClass }" size="small" style="width: 190px" aria-label="界面切换动画" :value="normalizePageTransition(ui.pageTransitions)" :options="PAGE_TRANSITION_OPTS" @update:value="value => ui.setPref('pageTransitions', value)" />
             </div>
             <div class="sw-row sw-theme-row">
               <div class="sw-row-main"><b>原版配色主题</b><i>宣纸 / 羊皮纸 / 暗夜书房，切回原版时使用</i></div>
@@ -458,12 +463,14 @@ async function clearStalePointer() {
       <span>偏好即时生效</span>
     </footer>
 
-    <!-- 与主窗口同款的弹层：在设置窗口内完成导入 / 导出 / 回收站 / 统计 / 手册 -->
-    <ImportDialog />
-    <ExportDialog />
-    <TrashModal />
-    <StatsModal />
-    <HelpManual />
+    <!-- 与主窗口同款的弹层：仅独立设置面板窗口内挂载；就地视图下由 App.vue 统一挂载 -->
+    <template v-if="panelMode">
+      <ImportDialog />
+      <ExportDialog />
+      <TrashModal />
+      <StatsModal />
+      <HelpManual />
+    </template>
   </div>
 </template>
 

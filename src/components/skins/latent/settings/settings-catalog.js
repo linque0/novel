@@ -34,7 +34,7 @@ export const SETTINGS_CATALOG = [
   { id: 'editorLatin', page: 'appearance', title: '西文字体', desc: '英文与数字的字形搭配', terms: '英文 拉丁 Playfair Gothic 字体' },
   { id: 'fontSize', page: 'appearance', title: '正文字号', desc: '在13–24px之间调整阅读与编辑字号', terms: '大小 排版 字号 缩放' },
   { id: 'topbarAutoHide', page: 'appearance', title: '默认隐藏顶栏', desc: '移至顶部展开，让写作空间更安静', terms: '自动收起 导航 沉浸 界面' },
-  { id: 'pageTransitions', page: 'appearance', title: '界面切换动画', desc: '书架与模块切换时的液态转场效果', terms: '动画 转场 切换 液态 过渡 瞬切 性能' },
+  { id: 'pageTransitions', page: 'appearance', title: '界面切换动画', desc: '选择雾幕、流波或关闭切换转场', terms: '动画 转场 切换 雾幕 流波 液态 过渡 瞬切 性能' },
   { id: 'aiModelSettings', page: 'ai', title: '供应商预设与模型', desc: '连接地址、密钥、模型列表与该预设参数', terms: 'AI 大模型 供应商 预设 Base URL API 密钥 Key 模型 选用 拉取 温度 上下文窗口 token 隐私模式 自动记忆 连接测试 停用' },
   { id: 'knowledgeModel', page: 'knowledge', title: '知识库模型', desc: '语义检索开关与向量模型', terms: '知识库 向量 embedding 语义检索 索引 bge text-embedding 跟随预设 关键词回落' },
   { id: 'storageLocation', page: 'data', title: '作品数据存储位置', desc: '把作品库搬到别的文件夹', terms: '路径 目录 移动 迁移 存储位置 数据目录 磁盘 library 备份盘' },

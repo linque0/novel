@@ -18,10 +18,10 @@ import { clampWidth as clampLoreWidth } from '../components/skins/latent/lore/lo
 import { normalizeCharPrefs, normalizeCharState } from '../components/skins/latent/characters/char-layout.js'
 import { useWorkStore } from './work'
 import { resolveLoreFocus, resolveLoreGalaxy } from '../services/lore-core.js'
-import { createSnippetPersistence } from '../services/snippet-persistence.js'
+import { applySnipSnapshot, createSnippetPersistence } from '../services/snippet-persistence.js'
 import { SNIP_CARD_SIZE } from '../components/skins/latent/snippets/snippet-model.js'
 import { registerFlushHook } from '../services/autosave.js'
-import { SETTINGS_SAVE_ERROR } from '../components/skins/latent/settings/settings-prefs.js'
+import { SETTINGS_SAVE_ERROR, normalizePageTransition } from '../components/skins/latent/settings/settings-prefs.js'
 import { SETTINGS_PAGE_KEYS } from '../components/skins/latent/settings/settings-catalog.js'
 
 /* 人物会话状态的写入防抖（250ms）：拖宽 / 筛选 / 滚动都会频繁调 saveCharState，
@@ -57,11 +57,7 @@ function snippetsFor(store) {
     const engine=createSnippetPersistence({
       read:async key=>(await db.appconfig.get(key))?.value,
       write:async(key,value)=>db.appconfig.put({key,value:plainPref(value)}),
-      apply:snapshot=>{
-        store.snipStateWorkId=snapshot.id
-        for(const [key,field] of Object.entries(SNIP_FIELD))store[field]=snapshot.state[key]
-        store.snipDrafts=snapshot.drafts;store.snipPersistence=snapshot.status
-      }
+      apply:snapshot=>applySnipSnapshot(store,snapshot,SNIP_FIELD)
     })
     snippetPersistence.set(storeId,engine)
     registerFlushHook(()=>engine.flushAll())
@@ -130,7 +126,7 @@ export const useUiStore = defineStore('ui', {
     flowSpeed: DEFAULT_FLOW_SPEED,
     flowSpeedPreview: null,
     topbarAutoHide: false, // 顶栏默认隐藏（跨窗口持久化，悬停临时展开）
-    pageTransitions: true, // 界面切换液态转场动画开关（默认开启，双端持久化）
+    pageTransitions: 'mist', // 界面切换转场模式：'mist'（流雾粒子，默认）| 'ink'（原版融墨）| 'off'（关闭）
     experimentalFeatures: false, // 实验性功能总开关（默认关闭；控制恍然梦 Agent 入口、助手、模型与知识库设置）
     flowBackground: normalizeFlowBackground(),
     outlineLeftWidth: 220, // 隐现大纲左栏宽度（故事结构）
@@ -275,7 +271,7 @@ export const useUiStore = defineStore('ui', {
           this.flowSpeed = normalizeFlowSpeed(map.flowSpeed)
         }
         if (map.topbarAutoHide !== undefined) this.topbarAutoHide = map.topbarAutoHide === true
-        this.pageTransitions = map.pageTransitions !== false
+        this.pageTransitions = normalizePageTransition(map.pageTransitions)
         this.experimentalFeatures = map.experimentalFeatures === true
         if (!flowPreferenceWrites.has(this.$state) && !this.prefsDirty.flowBackground && this.flowBackground === flowBackgroundAtLoad) {
           this.flowBackground = normalizeFlowBackground(map.flowBackground)
@@ -487,6 +483,7 @@ export const useUiStore = defineStore('ui', {
       if (key === 'skin') return this.setSkin(value)
       if (key === 'writingPaperStyle') return this.setWritingPaperStyle(value)
       if (key === 'glazePainting') return this.setGlazePainting(value)
+      if (key === 'pageTransitions') value = normalizePageTransition(value)
       this[key] = value
       /* 落库必须是纯数据：reactive proxy 进不了结构化克隆（见文件头的 plainPref 说明） */
       await db.appconfig.put({ key, value: plainPref(value) })
@@ -546,6 +543,7 @@ export const useUiStore = defineStore('ui', {
       }
       const isFlow = key === 'flowBackground'
       if (isFlow) value = normalizeFlowBackground(value)
+      if (key === 'pageTransitions') value = normalizePageTransition(value)
       this[key] = value
       const current = this[key]
       // 自身也会收到偏好广播。在写入或等待重试期间，旧库值不能覆盖正在预览的颜色。

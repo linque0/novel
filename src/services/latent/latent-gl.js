@@ -480,10 +480,10 @@ export function createLatentBackdrop(canvas, options = {}) {
       const nextParent = canvas.parentElement
       observer = typeof ResizeObserver === 'function' && nextParent ? new ResizeObserver(onResize) : null
       if (observer) observer.observe(nextParent)
-      if (resizeOrFallback()) {
-        if (!running && !transitionHolds && !document.hidden) draw(performance.now())
-        start()
-      }
+      resizeOrFallback()
+      if (contextLost || disposed) return
+      if (!running && !transitionHolds && !document.hidden) draw(performance.now(), false)
+      start()
     },
     setParked(next) {
       parked = Boolean(next)
@@ -494,8 +494,11 @@ export function createLatentBackdrop(canvas, options = {}) {
     holdTransition() {
       transitionHolds += 1
       stop()
+      let released = false
       return () => {
-        transitionHolds -= 1
+        if (released) return
+        released = true
+        transitionHolds = Math.max(0, transitionHolds - 1)
         start()
       }
     },

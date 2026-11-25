@@ -4,7 +4,9 @@
 import { db, uid, now } from '../db/database'
 
 export async function seedVerifyBooks(opts = {}) {
-  const mod = await import('../../tools/verify-seeds.mjs')
+  if (!import.meta.env.DEV) return { books: [] }
+  const seedsModule = '../../tools/' + 'verify-seeds.mjs'
+  const mod = await import(/* @vite-ignore */ seedsModule)
   return mod.seedBooks(
     mod.VERIFY_BOOKS.map((b) => ({ title: b.title, create: b.create })),
     { db, uid, now },

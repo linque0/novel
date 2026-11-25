@@ -18,6 +18,10 @@ export const useShelfStore = defineStore('shelf', {
     async refresh() {
       this.loading = true
       try {
+        if (import.meta.env.VITE_WEB_DEMO === 'true') {
+          const { ensureWebDemoSeeded } = await import('../services/web-demo')
+          await ensureWebDemoSeeded()
+        }
         const [works, statsRow] = await Promise.all([
           listWorks(),
           db.appconfig.get('shelf:openStats')

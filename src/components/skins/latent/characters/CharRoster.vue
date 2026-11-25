@@ -3,12 +3,28 @@
      list-label / person-row / pane-foot），滚动位置的存取由外壳按 data-char-scroll="roster" 负责。 -->
 <script setup>
 import { computed, inject, nextTick, ref, watch } from 'vue'
-import { NSelect } from 'naive-ui'
+import { NConfigProvider, NSelect, darkTheme } from 'naive-ui'
 import OIcon from '../../../OIcon.vue'
 import { useWorkStore } from '../../../../stores/work'
 import { useUiStore } from '../../../../stores/ui'
 import { rolesOf, primaryRole, aliasesOf, characterTagList } from '../../../../services/character-tags'
 import { tagColor } from '../../../../services/tagcolors'
+
+const FILTER_THEME_OVERRIDES = {
+  common: {
+    primaryColor: '#bad6c6',
+    primaryColorHover: '#cde3d6',
+    primaryColorPressed: '#9ec0ac',
+    textColor1: '#f4eef7',
+    textColor2: '#c9bed3',
+    textColor3: '#b1a4bd',
+    placeholderColor: '#b1a4bd',
+    inputColor: 'rgba(255, 255, 255, 0.055)',
+    popoverColor: '#272235',
+    borderColor: 'rgba(255, 255, 255, 0.17)',
+    hoverColor: 'rgba(255, 255, 255, 0.08)'
+  }
+}
 
 const shell = inject('charShell', null)
 const work = useWorkStore()
@@ -137,26 +153,28 @@ function collapse() {
     </label>
 
     <div class="char-filters" @keydown.esc.capture="handleFilterEscape">
-      <NSelect
-        size="small"
-        filterable
-        placeholder="全部角色"
-        :input-props="{ 'aria-label': '按角色筛选' }"
-        :value="ui.charRole"
-        :options="roleOptions"
-        @update:value="onRole"
-        @update:show="menuOpen.role = $event"
-      />
-      <NSelect
-        size="small"
-        filterable
-        placeholder="全部标签"
-        :input-props="{ 'aria-label': '按标签筛选' }"
-        :value="ui.charTag"
-        :options="tagOptions"
-        @update:value="onTag"
-        @update:show="menuOpen.tag = $event"
-      />
+      <NConfigProvider abstract :theme="darkTheme" :theme-overrides="FILTER_THEME_OVERRIDES">
+        <NSelect
+          size="small"
+          filterable
+          placeholder="全部角色"
+          :input-props="{ 'aria-label': '按角色筛选' }"
+          :value="ui.charRole"
+          :options="roleOptions"
+          @update:value="onRole"
+          @update:show="menuOpen.role = $event"
+        />
+        <NSelect
+          size="small"
+          filterable
+          placeholder="全部标签"
+          :input-props="{ 'aria-label': '按标签筛选' }"
+          :value="ui.charTag"
+          :options="tagOptions"
+          @update:value="onTag"
+          @update:show="menuOpen.tag = $event"
+        />
+      </NConfigProvider>
     </div>
 
     <div class="char-roster-label">

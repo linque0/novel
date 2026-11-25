@@ -1,12 +1,15 @@
 <script setup>
 /* 外观页（总稿 app.mjs:39 appearance()）：两组设置 + 右侧预览。
  * 所有改动只走 ui.applyPref——它先写内存再落库，写库失败也保住当前选择（setPref 会 reject）。 */
+import { computed } from 'vue'
 import { useUiStore } from '../../../../stores/ui'
-import { CJK_FONTS, LATIN_FONTS } from './settings-prefs.js'
+import { CJK_FONTS, LATIN_FONTS, PAGE_TRANSITION_MODES, normalizePageTransition } from './settings-prefs.js'
 import SettingsPreview from './SettingsPreview.vue'
 import SettingsFlowBackground from './SettingsFlowBackground.vue'
 
 const ui = useUiStore()
+const transitionMode = computed(() => normalizePageTransition(ui.pageTransitions))
+const transitionDesc = computed(() => PAGE_TRANSITION_MODES[transitionMode.value]?.desc || '')
 const MIN_SIZE = 13
 const MAX_SIZE = 24
 function pick(key, value) {
@@ -24,9 +27,6 @@ function onRange(event) {
 }
 function toggleTopbar() {
   ui.applyPref('topbarAutoHide', !ui.topbarAutoHide)
-}
-function togglePageTransitions() {
-  ui.applyPref('pageTransitions', !ui.pageTransitions)
 }
 /* 幻流只有亮/暗两档：暗由 ui.theme === 'night' 触发（theme-latent.js 的 useLatentTheme）。
  * 写回时保持原值口径——亮色落 'xuan'，与原版工坊等皮肤共用的 theme 键不回退成空。 */
@@ -112,12 +112,12 @@ function toggleDark() {
         </div>
         <div class="setting-row" data-setting="pageTransitions">
           <div class="setting-copy">
-            <strong id="transitions-label">界面切换动画</strong>
-            <p>关闭后书架与创作模块间将瞬时切换，不影响背景流动速度</p>
+            <label for="pageTransitions">界面切换动画</label>
+            <p v-if="transitionDesc">{{ transitionDesc }}</p>
           </div>
-          <button type="button" class="switch" id="transitions-switch" role="switch" aria-labelledby="transitions-label" :aria-checked="ui.pageTransitions" data-act="toggle-transitions" @click="togglePageTransitions">
-            <i></i>
-          </button>
+          <select id="pageTransitions" class="select" data-pref="pageTransitions" aria-label="界面切换动画" :value="transitionMode" @change="pick('pageTransitions', $event.target.value)">
+            <option v-for="(item, key) in PAGE_TRANSITION_MODES" :key="key" :value="key">{{ item.label }}</option>
+          </select>
         </div>
         <p class="section-note">字体与字号只调整文字的呈现，不改变已有正文内容。</p>
       </section>

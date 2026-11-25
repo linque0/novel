@@ -14,16 +14,33 @@
    2026-11-06 两层各自留白导致有效留白 56/48（设计稿 28/24）。
    本层不改任何列宽 / 圆角 / 间距度量，那三样在 chars-*.css 里由设计稿数值一次写死。 */
 
-/* 1. 令牌：把 chars-*.css 读的 --char-* 接到宿主 --ns-* 与设计稿紫灰 + 宋体。
-      外壳只换底：流动背板（flow-shell.css）要能透上来，所以 .char-shell 自身不落实底。 */
+/* 1. 令牌：把 chars-*.css 读的 --char-* 与全局语义变量固定到人物画布深色玻璃色板。
+      无论全局 ui.theme 处于浅色（宣纸）还是深色（暗夜），人物工作区与大纲/设定/灵感一样
+      保持暗玻璃面板 + 亮字，避免浅色文字变量落到暗紫玻璃底板上造成黑字配黑底或白框刺眼。 */
 body[data-skin=dsh] .char-shell {
-  --char-pane-line: var(--ns-border-2, rgb(255 255 255 / .17));
+  --char-pane-line: rgb(255 255 255 / .17);
   --char-pane-bg: rgb(29 25 39 / .68);
   --char-main-bg: rgb(33 27 44 / .55);
-  --char-ink: var(--ns-label-1, #f4eef7);
-  --char-dim: var(--ns-label-3, #b1a4bd);
-  --char-hover: var(--ns-hover, rgb(255 255 255 / .055));
-  --char-accent: var(--ns-accent, #bad6c6);
+  --char-ink: #f4eef7;
+  --char-dim: #b1a4bd;
+  --char-hover: rgb(255 255 255 / .06);
+  --char-accent: #bad6c6;
+  --text: #f4eef7;
+  --text-dim: #c9bed3;
+  --text-faint: #b1a4bd;
+  --card-ink: #f4eef7;
+  --border: rgb(255 255 255 / .17);
+  --border-strong: rgb(255 255 255 / .24);
+  --bg: #1d1927;
+  --bg-panel: rgb(39 34 52 / .86);
+  --bg-editor: rgb(255 255 255 / .055);
+  --bg-hover: rgb(255 255 255 / .07);
+  --accent: #bad6c6;
+  --accent-soft: rgb(186 214 198 / .16);
+  --accent-deep: #9ec0ac;
+  --danger: #ffbac2;
+  --shadow-pop: 0 18px 48px rgb(10 6 28 / .52);
+  color-scheme: dark;
   background: transparent;
   color: var(--char-ink);
 }
@@ -37,8 +54,8 @@ body[data-skin=dsh] .char-pane {
   background: rgb(29 25 39 / .68);
   -webkit-backdrop-filter: blur(24px) saturate(1.25);
   backdrop-filter: blur(24px) saturate(1.25);
-  box-shadow: var(--ns-shadow, 0 18px 48px rgb(10 6 28 / .45));
-  color: var(--ns-label-1, #f4eef7);
+  box-shadow: var(--shadow-pop, 0 18px 48px rgb(10 6 28 / .45));
+  color: var(--char-ink);
 }
 
 /* 主区（卷宗正文 / 关系画布）：studio.css .main-pane 原值 rgb(33 27 44/.55)。
@@ -95,15 +112,38 @@ body[data-skin=dsh] .char-scrim {
   backdrop-filter: blur(3px);
 }
 
-/* 7. 文字：标题统一 500 字重 + 宋体（设计稿 .module-head h1 / .identity h2 / .side-title 都是 500 serif），
-      次级信息落到 --ns-label-3，与 --char-dim 同一档。 */
+/* 7. 文字与交互件：标题统一 500 字重 + 宋体，次级信息落到 --char-dim；
+      分段开关选中态反白、主按钮高对比、弹窗与下拉菜单补实暗底。 */
 body[data-skin=dsh] .char-pane :is(.char-module-head, .char-roster-head, .char-identity, .char-blank-inner) :is(h1, h2) {
   font-family: var(--char-serif);
   font-weight: 500;
-  color: var(--ns-label-1, #f4eef7);
+  color: var(--char-ink);
 }
 body[data-skin=dsh] .char-pane :is(.char-crumbs, .char-roster-label, .char-section-index, .char-identity-meta, .char-tiny-empty) {
-  color: var(--ns-label-3, #b1a4bd);
+  color: var(--char-dim);
+}
+body[data-skin=dsh] .char-portrait {
+  color: color-mix(in srgb, var(--char-tone, #7f9a86) 78%, #f4eef7);
+}
+body[data-skin=dsh] .char-btn.primary {
+  color: #1d1927;
+}
+body[data-skin=dsh] .char-segmented {
+  background: rgb(20 18 30 / .28);
+  border-color: rgb(255 255 255 / .16);
+}
+body[data-skin=dsh] .char-segmented button.on {
+  background: #f4eef7;
+  color: #1d1927;
+}
+body[data-skin=dsh] .char-shell :is(.char-foot-menu, .rel-menu, .graph-filters, .graph-pop) {
+  background: rgb(35 30 49 / .94);
+  -webkit-backdrop-filter: blur(20px) saturate(1.25);
+  backdrop-filter: blur(20px) saturate(1.25);
+}
+body[data-skin=dsh] .char-shell .rel-add select option {
+  background: #231e31;
+  color: #f4eef7;
 }
 
 /* 8. 窄档抽屉是「脱流的覆盖层」，玻璃会叠两层（遮罩 + 背板），按 studio.css .side-pane 的不透明档补实 */

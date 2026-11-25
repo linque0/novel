@@ -23,7 +23,19 @@ export const LATIN_FONTS = {
 export const FONT_MAP = CJK_FONTS
 export const LATIN_MAP = LATIN_FONTS
 
-export const SETTINGS_DEFAULTS = { editorFont: 'song', editorLatin: 'none', fontSize: 17, topbarAutoHide: false, pageTransitions: true, flowSpeed: 1 }
+export const PAGE_TRANSITION_MODES = {
+  mist: { label: '雾幕', desc: '' },
+  ink: { label: '流波', desc: '' },
+  off: { label: '关闭', desc: '关闭后书架与创作模块间将瞬时切换，不影响背景流动速度' }
+}
+
+export function normalizePageTransition(value) {
+  if (value === false || value === 'off') return 'off'
+  if (value === 'ink') return 'ink'
+  return 'mist'
+}
+
+export const SETTINGS_DEFAULTS = { editorFont: 'song', editorLatin: 'none', fontSize: 17, topbarAutoHide: false, pageTransitions: 'mist', flowSpeed: 1 }
 
 /* 总稿 model.mjs:7 的 13–24px 区间与 12 步撤销窗口 */
 const FONT_SIZE_MIN = 13
@@ -42,7 +54,7 @@ export function normalizeSettingsPrefs(p = {}) {
     editorLatin: Object.hasOwn(LATIN_FONTS, src.editorLatin) ? src.editorLatin : SETTINGS_DEFAULTS.editorLatin,
     fontSize: Number.isFinite(size) ? Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, Math.round(size))) : SETTINGS_DEFAULTS.fontSize,
     topbarAutoHide: src.topbarAutoHide === true,
-    pageTransitions: src.pageTransitions !== false
+    pageTransitions: normalizePageTransition(src.pageTransitions)
   }
 }
 
