@@ -27,7 +27,15 @@ import TrashModal from './TrashModal.vue'
 import StatsModal from './StatsModal.vue'
 import HelpManual from './HelpManual.vue'
 import { APP_VERSION } from './skins/latent/settings/settings-version.js'
-import { PAGE_TRANSITION_MODES, normalizePageTransition } from './skins/latent/settings/settings-prefs.js'
+import {
+  PAGE_TRANSITION_MODES,
+  UI_FONT_SCALE_MIN,
+  UI_FONT_SCALE_MAX,
+  UI_FONT_SCALE_STEP,
+  UI_FONT_SCALE_PRESETS,
+  normalizePageTransition,
+  normalizeUiFontScale
+} from './skins/latent/settings/settings-prefs.js'
 import AppUpdateControls from './AppUpdateControls.vue'
 import { desktopAppIcon } from '../services/desktop-brand.js'
 import { useUiStore, FONT_MAP, LATIN_MAP } from '../stores/ui'
@@ -74,7 +82,7 @@ function resetAppearance() {
   ui.setWritingPaperStyle('booklet').catch(e=>window.$msg?.error('纸面未能恢复默认：'+e.message))
   ui.setPref('editorFont', 'song')
   ui.setPref('editorLatin', 'none')
-  ui.setPref('fontSize', 17)
+  ui.setPref('uiFontScale', 100)
   ui.setPref('theme', 'xuan')
   ui.setPref('topbarAutoHide', false)
   ui.setPref('pageTransitions', 'mist')
@@ -93,8 +101,8 @@ const THEMES = [
 const CJK_OPTS = Object.entries(FONT_MAP).map(([value, f]) => ({ label: f.label, value }))
 const LATIN_OPTS = Object.entries(LATIN_MAP).map(([value, f]) => ({ label: f.label, value }))
 const PAGE_TRANSITION_OPTS = Object.entries(PAGE_TRANSITION_MODES).map(([value, item]) => ({ label: item.label, value }))
-function bumpFont(d) {
-  ui.setPref('fontSize', Math.min(24, Math.max(13, ui.fontSize + d)))
+function bumpUiScale(d) {
+  ui.setPref('uiFontScale', normalizeUiFontScale((Number(ui.uiFontScale) || 100) + d * UI_FONT_SCALE_STEP))
 }
 
 /* ---------- 数据 ---------- */
@@ -244,7 +252,7 @@ async function clearStalePointer() {
       <header class="crimson-settings-head">
         <span class="crimson-settings-brand">
           <svg viewBox="0 0 44 44" aria-hidden="true"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
-          <span>小说工坊<small>赤月戏</small></span>
+          <span>空想书典<small>赤月戏</small></span>
         </span>
         <span class="crimson-settings-window-title">设置</span>
         <NButton size="small" quaternary title="关闭设置窗口" @click="closeWindow"><OIcon name="close" :size="13" /></NButton>
@@ -256,7 +264,7 @@ async function clearStalePointer() {
     </template>
     <div v-else class="sw-head">
       <span class="sw-title serif">设置</span>
-      <span class="sw-sub">SETTINGS · 小说工坊</span>
+      <span class="sw-sub">SETTINGS · 空想书典</span>
       <div style="flex: 1"></div>
       <GlazeLightingToggle v-if="ui.skin === 'glaze'" />
       <NButton size="small" quaternary title="关闭设置窗口" @click="closeWindow"><OIcon name="close" :size="13" /></NButton>
@@ -319,11 +327,19 @@ async function clearStalePointer() {
               <NSelect :menu-props="{ class: museumPopoverClass }" size="small" style="width: 190px" :value="ui.editorLatin" :options="LATIN_OPTS" @update:value="(v) => ui.setPref('editorLatin', v)" />
             </div>
             <div class="sw-row">
-              <div class="sw-row-main"><b>正文字号</b><i>正文编辑与阅读字号（13–24px）</i></div>
+              <div class="sw-row-main"><b>全局字体大小</b><i>调整界面导航、菜单与弹窗文字大小（85%–140%，正文字号在正文工具栏调整）</i></div>
               <span class="fs">
-                <NButton size="tiny" :disabled="ui.fontSize <= 13" @click="bumpFont(-1)">A－</NButton>
-                <b>{{ ui.fontSize }} px</b>
-                <NButton size="tiny" :disabled="ui.fontSize >= 24" @click="bumpFont(1)">A＋</NButton>
+                <NButton size="tiny" :disabled="ui.uiFontScale <= UI_FONT_SCALE_MIN" @click="bumpUiScale(-1)">A－</NButton>
+                <b>{{ ui.uiFontScale }}%</b>
+                <NButton size="tiny" :disabled="ui.uiFontScale >= UI_FONT_SCALE_MAX" @click="bumpUiScale(1)">A＋</NButton>
+                <NButton
+                  v-for="p in UI_FONT_SCALE_PRESETS"
+                  :key="p.key"
+                  size="tiny"
+                  :type="ui.uiFontScale === p.value ? 'primary' : 'default'"
+                  quaternary
+                  @click="ui.setPref('uiFontScale', p.value)"
+                >{{ p.label }}</NButton>
               </span>
             </div>
           </div>
@@ -437,7 +453,7 @@ async function clearStalePointer() {
           <div class="sw-about-brand">
             <img :src="desktopAppIcon" width="56" height="56" alt="" />
             <div>
-              <h2 class="sw-h serif">小说工坊桌面版</h2>
+              <h2 class="sw-h serif">空想书典桌面版</h2>
               <p class="sw-desc">v{{ APP_VERSION }}</p>
             </div>
           </div>

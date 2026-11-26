@@ -1,0 +1,183 @@
+{
+  "generatedBy": "latent-skin-port workflow",
+  "scanned": 167,
+  "flaggedCount": 44,
+  "hitsByLabel": {
+    "依赖 Electron": 29,
+    "固定 CDP 端口 9222": 35,
+    "固定 dev profile": 13,
+    "用户数据目录": 3,
+    "全局进程终止": 8,
+    "删除文件/目录": 4
+  },
+  "byFile": {
+    "tools/agent-chat-ui-visual-verify.mjs": [
+      "依赖 Electron @27",
+      "依赖 Electron @30"
+    ],
+    "tools/agent-task-verify.mjs": [
+      "固定 CDP 端口 9222 @31"
+    ],
+    "tools/annotation-verify.mjs": [
+      "固定 dev profile @1",
+      "固定 CDP 端口 9222 @4",
+      "固定 dev profile @4"
+    ],
+    "tools/book-electron-verify.mjs": [
+      "依赖 Electron @15"
+    ],
+    "tools/bugfix-verify.mjs": [
+      "固定 CDP 端口 9222 @4",
+      "固定 CDP 端口 9222 @14",
+      "固定 CDP 端口 9222 @226"
+    ],
+    "tools/builtin-skills-ui-verify.mjs": [
+      "依赖 Electron @51",
+      "用户数据目录 @52",
+      "依赖 Electron @62"
+    ],
+    "tools/canvasctx-verify.mjs": [
+      "固定 CDP 端口 9222 @4",
+      "固定 dev profile @4"
+    ],
+    "tools/cdp-test.mjs": [
+      "固定 CDP 端口 9222 @7"
+    ],
+    "tools/chapter-title-wrap-verify.mjs": [
+      "依赖 Electron @18"
+    ],
+    "tools/crimson-volume-entry-verify.mjs": [
+      "依赖 Electron @13",
+      "依赖 Electron @27",
+      "依赖 Electron @40"
+    ],
+    "tools/crimson-writing-rail-verify.mjs": [
+      "依赖 Electron @12",
+      "依赖 Electron @32"
+    ],
+    "tools/dataDir-verify.mjs": [
+      "固定 CDP 端口 9222 @6",
+      "全局进程终止 @7",
+      "全局进程终止 @8",
+      "用户数据目录 @19",
+      "固定 dev profile @19",
+      "全局进程终止 @37"
+    ],
+    "tools/dl-verify.mjs": [
+      "固定 dev profile @1"
+    ],
+    "tools/dlpop-verify.mjs": [
+      "固定 CDP 端口 9222 @2"
+    ],
+    "tools/glaze-museum-verify.mjs": [
+      "依赖 Electron @16"
+    ],
+    "tools/gravity-outline-verify.mjs": [
+      "固定 dev profile @4",
+      "固定 dev profile @51"
+    ],
+    "tools/knowledge-verify.mjs": [
+      "固定 CDP 端口 9222 @3",
+      "固定 CDP 端口 9222 @5"
+    ],
+    "tools/lorelink-verify.mjs": [
+      "固定 CDP 端口 9222 @6"
+    ],
+    "tools/mubu-tagpanel-verify.mjs": [
+      "固定 CDP 端口 9222 @4"
+    ],
+    "tools/mubu-tags-verify.mjs": [
+      "固定 CDP 端口 9222 @3"
+    ],
+    "tools/multiwindow-verify.mjs": [
+      "固定 CDP 端口 9222 @4",
+      "固定 dev profile @4"
+    ],
+    "tools/original-shelf-hit.test.mjs": [
+      "用户数据目录 @8"
+    ],
+    "tools/preset-verify.mjs": [
+      "固定 CDP 端口 9222 @3",
+      "固定 CDP 端口 9222 @5"
+    ],
+    "tools/preset-windows-verify.mjs": [
+      "固定 CDP 端口 9222 @3",
+      "固定 CDP 端口 9222 @23",
+      "固定 CDP 端口 9222 @58"
+    ],
+    "tools/readmode-verify.mjs": [
+      "固定 CDP 端口 9222 @2"
+    ],
+    "tools/relfollow-verify.mjs": [
+      "固定 CDP 端口 9222 @5",
+      "固定 dev profile @5"
+    ],
+    "tools/rp-fold-verify.mjs": [
+      "固定 CDP 端口 9222 @5",
+      "固定 dev profile @5"
+    ],
+    "tools/seed-demo.mjs": [
+      "固定 CDP 端口 9222 @8"
+    ],
+    "tools/seed-verify.mjs": [
+      "固定 dev profile @51"
+    ],
+    "tools/settings-startup-verify.mjs": [
+      "依赖 Electron @19"
+    ],
+    "tools/settings-verify.mjs": [
+      "固定 CDP 端口 9222 @2"
+    ],
+    "tools/shot-docs-crimson.mjs": [
+      "固定 CDP 端口 9222 @8",
+      "固定 CDP 端口 9222 @21",
+      "依赖 Electron @70",
+      "依赖 Electron @336",
+      "依赖 Electron @402"
+    ],
+    "tools/shot-docs.mjs": [
+      "固定 CDP 端口 9222 @13",
+      "依赖 Electron @70",
+      "依赖 Electron @264"
+    ],
+    "tools/sidebar-verify.mjs": [
+      "固定 CDP 端口 9222 @4",
+      "固定 dev profile @4"
+    ],
+    "tools/studio-writing-skins-layout.mjs": [
+      "依赖 Electron @15",
+      "依赖 Electron @49",
+      "依赖 Electron @62",
+      "依赖 Electron @67"
+    ],
+    "tools/studio-writing-skins-verify.mjs": [
+      "依赖 Electron @14"
+    ],
+    "tools/verify-seeds.mjs": [
+      "固定 dev profile @4"
+    ],
+    "tools/volume-entry-verify.mjs": [
+      "依赖 Electron @13"
+    ],
+    "tools/wordgoal-verify.mjs": [
+      "固定 CDP 端口 9222 @2"
+    ],
+    "tools/writing-paper-visual-verify.mjs": [
+      "依赖 Electron @18"
+    ],
+    "tools/writing-paper-window-verify.mjs": [
+      "依赖 Electron @20"
+    ],
+    "tools/writing-workflow-visual-verify.mjs": [
+      "依赖 Electron @11"
+    ],
+    "tools/_capture-main.mjs": [
+      "依赖 Electron @56",
+      "依赖 Electron @73"
+    ],
+    "tools/_cdp-lib.mjs": [
+      "固定 CDP 端口 9222 @1",
+      "固定 CDP 端口 9222 @2"
+    ]
+  }
+}

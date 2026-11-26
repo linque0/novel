@@ -1,0 +1,58 @@
+{
+  "date": "2026-10-28",
+  "kind": "implementation-acceptance",
+  "isolation": "booksource-verify; registered synthetic verification book; no private SillyTavern content sent",
+  "checks": {
+    "storyApplication": {
+      "passed": 16,
+      "total": 16
+    },
+    "renderedInputAndMotion": {
+      "passed": 3,
+      "total": 3
+    },
+    "legacyWorkbench": {
+      "passed": 15,
+      "total": 15
+    },
+    "legacyCreativeWorkflow": {
+      "passed": 10,
+      "total": 10
+    },
+    "legacyPositionWriting": {
+      "passed": 28,
+      "total": 28
+    },
+    "nodeUnitScripts": {
+      "passed": 15,
+      "total": 15
+    },
+    "richText": "passed",
+    "canonicalTailExclusion": "passed",
+    "build": "passed"
+  },
+  "realModel": {
+    "selectedModel": "story-test",
+    "requiredModel": "deepseek/deepseek-v4.1-flash",
+    "eligible": false,
+    "status": "not-run",
+    "reason": "This read-only configuration probe performs no model-quality request."
+  },
+  "reviews": {
+    "visualInitialScore": 7,
+    "visualFinalScore": null,
+    "visualFindingsAddressed": true,
+    "codeCritical": 1,
+    "codeImportant": 6,
+    "codeFindingsAddressed": true,
+    "secondReview": false
+  },
+  "remaining": [
+    "independent scene-state snapshots",
+    "arbitrary earlier-turn branches",
+    "unconfirmed multi-chapter dependencies in the new story scene",
+    "document-level multi-window editing",
+    "required DeepSeek real-model quality comparison"
+  ],
+  "cleanup": "npm run stop succeeded; this turn owned all matching verification processes; 5173 released"
+}

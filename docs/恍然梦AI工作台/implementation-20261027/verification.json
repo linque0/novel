@@ -1,0 +1,66 @@
+{
+  "kind": "deterministic-ui-integration",
+  "requests": 10,
+  "results": [
+    {
+      "name": "same editor, selection and undo session survive workbench switching",
+      "ok": true
+    },
+    {
+      "name": "chapter plan is saved through the real editor form",
+      "ok": true
+    },
+    {
+      "name": "unsaved outline drafts survive chapter navigation and work reopening",
+      "ok": true
+    },
+    {
+      "name": "real UI plans then drafts a candidate without changing formal prose",
+      "ok": true
+    },
+    {
+      "name": "independent review, selected revision and targeted recheck run from UI",
+      "ok": true
+    },
+    {
+      "name": "candidate handoff stays a candidate and author edits persist",
+      "ok": true
+    },
+    {
+      "name": "failed candidate save retains text and exposes failure",
+      "ok": true
+    },
+    {
+      "name": "adoption keeps the candidate confirmed before an asynchronous save",
+      "ok": true
+    },
+    {
+      "name": "adoption selects its explicit target and atomically registers saved-prose memory",
+      "ok": true
+    },
+    {
+      "name": "six navigation pages open with real chapter, material and run data",
+      "ok": true
+    },
+    {
+      "name": "failed edit-right handoff preserves pending local prose and editor history",
+      "ok": true
+    },
+    {
+      "name": "dedicated AI window mounts and owns the formal editor lock",
+      "ok": true
+    },
+    {
+      "name": "AI window runs and adopts while the main window stays on the bookshelf",
+      "ok": true
+    },
+    {
+      "name": "closing dedicated window restores formal editing without copying the book",
+      "ok": true
+    },
+    {
+      "name": "failed close retains the AI window and manual shelf exit releases its lock",
+      "ok": true
+    }
+  ]
+}

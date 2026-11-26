@@ -1,0 +1,17 @@
+{
+  "kind": "rendered-ui-and-input",
+  "results": [
+    {
+      "name": "1440 and 1080 desktop layouts keep the primary action in view without horizontal overflow",
+      "ok": true
+    },
+    {
+      "name": "Chinese composition Ctrl+Enter does not submit; completed Ctrl+Enter submits once",
+      "ok": true
+    },
+    {
+      "name": "inspector opening interpolates in rendered frames and reduced motion disables transitions",
+      "ok": true
+    }
+  ]
+}

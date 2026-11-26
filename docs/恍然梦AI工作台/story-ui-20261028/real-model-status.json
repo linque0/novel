@@ -1,0 +1,7 @@
+{
+  "selectedModel": "story-test",
+  "requiredModel": "deepseek/deepseek-v4.1-flash",
+  "eligible": false,
+  "status": "not-run",
+  "reason": "This read-only configuration probe performs no model-quality request."
+}

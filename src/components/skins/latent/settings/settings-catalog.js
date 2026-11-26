@@ -16,7 +16,7 @@ export const SETTINGS_PAGES = [
   { key: 'knowledge', title: '知识库模型', desc: '向量模型与语义检索', icon: 'storage', sub: '让检索读懂你的设定' },
   { key: 'data', title: '备份与数据', desc: '导入导出、备份与回收站', icon: 'storage', sub: '整理作品，备份每一次创作' },
   { key: 'experimental', title: '实验性功能', desc: '恍然梦助手与实验特性', icon: 'sparkle', sub: '按需开启仍在持续演进的新能力' },
-  { key: 'about', title: '帮助与关于', desc: '常用操作、手册与版本', icon: 'book', sub: '了解工坊，也找到顺手的用法' }
+  { key: 'about', title: '帮助与关于', desc: '常用操作、手册与版本', icon: 'book', sub: '了解书典，也找到顺手的用法' }
 ]
 
 export const SETTINGS_PAGE_KEYS = ['appearance', 'ai', 'knowledge', 'data', 'experimental', 'about']
@@ -32,7 +32,8 @@ export const SETTINGS_CATALOG = [
   { id: 'flowSpeed', page: 'appearance', title: '流动速度', desc: '调节背景动画速度', terms: '背景 动画 速度 静止' },
   { id: 'editorFont', page: 'appearance', title: '中文正文字体', desc: '选择正文中的中文字形', terms: '思源宋体 文楷 京华老宋 朝华 云游 黑体 字体 font' },
   { id: 'editorLatin', page: 'appearance', title: '西文字体', desc: '英文与数字的字形搭配', terms: '英文 拉丁 Playfair Gothic 字体' },
-  { id: 'fontSize', page: 'appearance', title: '正文字号', desc: '在13–24px之间调整阅读与编辑字号', terms: '大小 排版 字号 缩放' },
+  { id: 'uiFontScale', page: 'appearance', title: '全局字体大小', desc: '在 85%–140% 之间调整全站界面、导航、菜单与弹窗文字大小', terms: '全局 字体 大小 缩放 大字 清晰 视力 界面 UI UX 字号' },
+  { id: 'darkMode', page: 'appearance', title: '主题切换', desc: '在浅色与深色面板之间切换，流动背景继续使用当前配色', terms: '深色 浅色 主题 面板 夜间 日间 明暗 切换 dark light' },
   { id: 'topbarAutoHide', page: 'appearance', title: '默认隐藏顶栏', desc: '移至顶部展开，让写作空间更安静', terms: '自动收起 导航 沉浸 界面' },
   { id: 'pageTransitions', page: 'appearance', title: '界面切换动画', desc: '选择雾幕、流波或关闭切换转场', terms: '动画 转场 切换 雾幕 流波 液态 过渡 瞬切 性能' },
   { id: 'aiModelSettings', page: 'ai', title: '供应商预设与模型', desc: '连接地址、密钥、模型列表与该预设参数', terms: 'AI 大模型 供应商 预设 Base URL API 密钥 Key 模型 选用 拉取 温度 上下文窗口 token 隐私模式 自动记忆 连接测试 停用' },
@@ -46,7 +47,7 @@ export const SETTINGS_CATALOG = [
   { id: 'experimentalFeatures', page: 'experimental', title: '显示并启用实验性功能', desc: '包含恍然梦入口、助手、模型设置与知识库模型', terms: '实验性 实验 恍然梦 AI Agent 助手 入梦 浅眠 模型 知识库 隐藏 开关' },
   { id: 'help', page: 'about', title: '帮助与快捷键', desc: '了解常用操作与键盘入口', terms: '手册 使用 操作 Escape Tab Ctrl S' },
   { id: 'stats', page: 'about', title: '写作概览', desc: '查看作品、章节与正文的规模', terms: '统计 字数 数据' },
-  { id: 'version', page: 'about', title: '关于小说工坊', desc: '当前版本、项目仓库与软件更新', terms: '版本 更新 升级 检查 GitHub 关于 幻流 DSH' }
+  { id: 'version', page: 'about', title: '关于空想书典', desc: '当前版本、项目仓库与软件更新', terms: '版本 更新 升级 检查 GitHub 关于 幻流 DSH 空想书典' }
 ]
 
 /* 检索口径同总稿 model.mjs:18：trim + 小写，命中 title/desc/terms 任一段即算；空查询不返回全表。

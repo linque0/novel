@@ -20,7 +20,7 @@ const style = computed(() => {
     <span class="ob-cover">
       <span class="ob-edition">{{ book.genre || '作品' }}</span>
       <span class="ob-title-zone"><span class="ob-title" :class="treatment">{{ book.title || '未命名作品' }}</span></span>
-      <span class="ob-colophon"><span v-if="book.author" class="ob-author">{{ book.author }}<small>著</small></span><span class="ob-imprint">小说工坊</span></span>
+      <span class="ob-colophon"><span v-if="book.author" class="ob-author">{{ book.author }}<small>著</small></span><span class="ob-imprint">空想书典</span></span>
     </span>
     <span v-if="selected" class="ob-ribbon"></span>
   </span>

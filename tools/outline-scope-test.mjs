@@ -7,7 +7,8 @@ import {
   projectRelations,
   scopeConnections,
   scopeCrumbs,
-  scopeStats
+  scopeStats,
+  shouldShowContainerContent
 } from '../src/components/outline/outline-scope.js'
 
 let pass = 0
@@ -51,13 +52,41 @@ const aStats = scopeStats(rows, 'A')
 ok(aStats.total === 2 && aStats.done === 1, 'A stats')
 ok(!aStats.complete, 'A not complete')
 
-/* 容器卡尺寸：折叠固定，展开按迷你网格增高 */
+/* 容器卡尺寸：折叠固定，展开按内容自适应列数与宽高 */
 const collapsed = containerCardSize(rows, byId.get('A'), new Set())
 ok(collapsed.w === 460 && collapsed.h === SCOPE_METRICS.collapsedH, 'collapsed container size')
 const openA = containerCardSize(rows, byId.get('A'), new Set(['A']))
 ok(openA.h === SCOPE_METRICS.collapsedH + 8 + SCOPE_METRICS.miniContainerH, 'A expanded one row')
 const openA2 = containerCardSize(rows, byId.get('A'), new Set(['A', 'a2']))
 ok(openA2.h > openA.h, 'nested expansion grows parent')
+
+/* 自适应宽高：0/1 项单列紧凑，2-4 项双列，5+ 项三列 */
+const adaptiveRows = [
+  node('E0', null, 'container', { canvasX: 0 }),
+  node('E1', null, 'container', { canvasX: 400 }),
+  node('e1a', 'E1', 'event', { canvasX: 0, canvasY: 0 }),
+  node('E5', null, 'container', { canvasX: 900 }),
+  node('e5a', 'E5', 'event', {}),
+  node('e5b', 'E5', 'event', {}),
+  node('e5c', 'E5', 'event', {}),
+  node('e5d', 'E5', 'event', {}),
+  node('e5e', 'E5', 'event', {})
+]
+const emptyOpen = containerCardSize(adaptiveRows, adaptiveRows[0], new Set(['E0']))
+ok(emptyOpen.w === SCOPE_METRICS.singleColW && emptyOpen.h === SCOPE_METRICS.emptyOpenH, 'empty expanded container uses compact single-column size')
+const oneOpen = containerCardSize(adaptiveRows, adaptiveRows[1], new Set(['E1']))
+ok(oneOpen.w === SCOPE_METRICS.singleColW && oneOpen.h === SCOPE_METRICS.collapsedH + 8 + SCOPE_METRICS.miniLeafH, 'single-item expanded container uses single column')
+const fiveOpen = containerCardSize(adaptiveRows, adaptiveRows[3], new Set(['E5']))
+ok(fiveOpen.w === SCOPE_METRICS.threeColW && fiveOpen.h === SCOPE_METRICS.collapsedH + 8 + SCOPE_METRICS.miniLeafH * 2 + SCOPE_METRICS.miniGap, '5+ items expand to 3 columns and 2 rows')
+
+/* 手动调尺寸内容显隐 50% 阈值 */
+const chromeH = SCOPE_METRICS.headH + SCOPE_METRICS.progressH + SCOPE_METRICS.padY * 2 + SCOPE_METRICS.footH
+const halfLeaf = Math.ceil(SCOPE_METRICS.miniLeafH * 0.5)
+ok(!shouldShowContainerContent(adaptiveRows, adaptiveRows[0], 460, 400, new Set()), 'empty container returns false')
+ok(!shouldShowContainerContent(adaptiveRows, adaptiveRows[1], 320, chromeH + halfLeaf - 1, new Set()), 'below 50% content height hides content')
+ok(shouldShowContainerContent(adaptiveRows, adaptiveRows[1], 320, chromeH + halfLeaf, new Set()), 'at 50% content height shows content')
+ok(!shouldShowContainerContent(adaptiveRows, adaptiveRows[3], 320, chromeH + 200, new Set()), 'narrowing increases rows so same height drops below 50%')
+ok(shouldShowContainerContent(adaptiveRows, adaptiveRows[3], 680, chromeH + 200, new Set()), 'wide 3-col fits 50% at same height')
 /* 手动高度：展开时可小于内容高度（由画布内容区滚动承接），但不能低于最小高度 */
 const manualOpen = containerCardSize(rows, { ...byId.get('A'), h: 300 }, new Set(['A']))
 ok(manualOpen.h === 300, 'manual container height honored')
@@ -137,6 +166,31 @@ const merged = projectRelations([
 ], rows, 'A', insideA)
 const group = merged.groups.find((g) => g.from === 'a1' && g.to === 'a2' && g.kind === '因果')
 ok(group.relations.length === 2 && group.arrow === '<->' && group.label === '甲', 'grouped relations merge arrow/label')
+
+/* 连接点与分叉边：宿主与分支不合并吞并、保持拓扑顺序、允许从连接点回连原卡片形成剧情循环 */
+const jNodes = [
+  node('e1', null, 'event', { canvasX: 0, canvasY: 0 }),
+  node('e2', null, 'event', { canvasX: 300, canvasY: 0 }),
+  node('e3', null, 'event', { canvasX: 300, canvasY: 240 })
+]
+const jById = new Map(jNodes.map((n) => [n.id, n]))
+const jLayout = buildLayerLayout(jNodes, null, new Set())
+const jHost = { id: 'h1', toId: 'e2', kind: '关联', arrows: '->', junctions: [{ id: 'j1', t: 0.5, label: '抉择' }] }
+const jBranch1 = { id: 'b1', fromJunction: { ownerId: 'e1', relId: 'h1', junctionId: 'j1' }, toId: 'e3', kind: '关联', arrows: '->', label: '分支一', junctions: [{ id: 'j2', t: 0.5 }] }
+const jBranchLoop = { id: 'bLoop', fromJunction: { ownerId: 'e1', relId: 'h1', junctionId: 'j1' }, toId: 'e1', kind: '关联', arrows: '->', label: '回环' }
+const jNested = { id: 'bSub', fromJunction: { ownerId: 'e1', relId: 'b1', junctionId: 'j2' }, toId: 'e2', kind: '关联', arrows: '->', label: '二级分支' }
+/* 故意把子分支排在宿主之前，验证拓扑排序把宿主排在最前 */
+const jProjected = projectRelations([
+  { owner: jById.get('e1'), rel: jNested },
+  { owner: jById.get('e1'), rel: jBranchLoop },
+  { owner: jById.get('e1'), rel: jBranch1 },
+  { owner: jById.get('e1'), rel: jHost }
+], jNodes, null, jLayout)
+ok(jProjected.groups.length === 4, 'host, branch, loop branch and nested branch all kept distinct')
+const jKeys = jProjected.groups.map((g) => g.relations[0].rel.id)
+ok(jKeys.indexOf('h1') < jKeys.indexOf('b1') && jKeys.indexOf('b1') < jKeys.indexOf('bSub'), 'topological order puts host before child and nested branch')
+ok(jProjected.groups.find((g) => g.relations[0].rel.id === 'b1')?.fromJunction?.junctionId === 'j1', 'branch retains direct fromJunction')
+ok(jProjected.groups.some((g) => g.relations[0].rel.id === 'bLoop'), 'loop branch back to owner node is preserved')
 
 /* 整理：pin 豁免、换行不越界 */
 const packRows = [

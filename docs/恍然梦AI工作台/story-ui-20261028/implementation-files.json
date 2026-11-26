@@ -1,0 +1,101 @@
+{
+  "date": "2026-10-28",
+  "note": "Whole-file fingerprints include pre-existing uncommitted work; they are not an isolated patch attribution.",
+  "files": [
+    {
+      "path": "src/components/agent/AgentWorkbench.vue",
+      "sha256": "084ccb14b07d339c37c834f0220e029f914f74814b7853c5d4f78e4fd2f07c09",
+      "bytes": 771
+    },
+    {
+      "path": "src/components/agent/LegacyAgentWorkbench.vue",
+      "sha256": "651c5ad65a0e83fe52e4f88b93153594f6f4a35d286def78b8e8b93a20c202b3",
+      "bytes": 23788
+    },
+    {
+      "path": "src/components/agent/StoryScene.vue",
+      "sha256": "08836d26570e0d3c600b97ff5cf2022a27563647a7ed6eb448a2420307e8d783",
+      "bytes": 22543
+    },
+    {
+      "path": "src/components/agent/StoryEditor.vue",
+      "sha256": "93d2f0431d4dec78ea682541b1efb1ee3281eeecaf4285c1505077e26270361f",
+      "bytes": 3038
+    },
+    {
+      "path": "src/components/agent/story-scene.css",
+      "sha256": "b9feea1a95c0e71103559374e04043af2b4dc0b3bb88e1124f5b3dcdfd21a23f",
+      "bytes": 20182
+    },
+    {
+      "path": "src/components/StudioWorkspace.vue",
+      "sha256": "fd1c1d0f48055184b091f4e80afd48dd5d3cf1766c7c8cc26421badcf40602ca",
+      "bytes": 3666
+    },
+    {
+      "path": "src/components/Workbench.vue",
+      "sha256": "57f321946e37904e5d8547879efe4e28410f79f17b0ea92578c7922b0b47bc9e",
+      "bytes": 22224
+    },
+    {
+      "path": "src/stores/story.js",
+      "sha256": "5c33d6f39b8d0f1a5da1103ddea1a8d3a2932d6313a02583aee1180fa62c5e4b",
+      "bytes": 14219
+    },
+    {
+      "path": "src/db/story-repo.js",
+      "sha256": "e79c27541c1c60f0f2a996343a27d1cb33ad2d7af523be1e4eef35b58665a0d8",
+      "bytes": 3134
+    },
+    {
+      "path": "src/services/story-richtext.js",
+      "sha256": "07d9eb7d8cae74c38ed64c1fea021f8cc86a9b0c6aa6a11da74b610e8f8fcf98",
+      "bytes": 3583
+    },
+    {
+      "path": "src/services/ai/story-core.js",
+      "sha256": "0125e1e27df4671891104ab451b1f797b3cfb950c0845314e0d2007b8b47ca9b",
+      "bytes": 4000
+    },
+    {
+      "path": "src/services/ai/application.js",
+      "sha256": "37b4ef6f491950f943f93b0505765ec075a04baa3c53c175abe5d811b5d0f3f3",
+      "bytes": 23301
+    },
+    {
+      "path": "src/services/ai/task-profiles.js",
+      "sha256": "073136e3f7f92211d2d6e69b9b52191c94d77a67c8bf10c9ba23fc1f2b3cc317",
+      "bytes": 14957
+    },
+    {
+      "path": "src/services/ai/novel-context.js",
+      "sha256": "b9b6bb3485109a14b9ab133a489a6f393e724ac9aaac8289f31622d163b18b43",
+      "bytes": 16275
+    },
+    {
+      "path": "src/services/ai/retrieval-policy.js",
+      "sha256": "4ab551f6f7d9955b975d12f3aef4041000753ed8fcd0292483193cd2c0cc93c2",
+      "bytes": 2596
+    },
+    {
+      "path": "src/services/ai/memory-queue-core.js",
+      "sha256": "3565bc28c2afe6a60ed0c55d6595a76311ba38eb808f6258e34c58e7bcbef26a",
+      "bytes": 1549
+    },
+    {
+      "path": "src/services/ai/runtime.js",
+      "sha256": "2011bb4ada9f286fbee1fcbfb640334be4b9fbaa4792aaffd71392164f792fb8",
+      "bytes": 6406
+    },
+    {
+      "path": "src/services/appbus.js",
+      "sha256": "5c5a3a92e39878e8fcd6792a5d3a93244b2835a83f904cd71d6582b781291918",
+      "bytes": 2277
+    },
+    {
+      "path": "src/stores/ai.js",
+      "sha256": "c02f9dbdb603b45acb84a8df944e5aee014b28a8fc2143c127a1d57b3475b066",
+      "bytes": 67791
+    }
+  ]
+}

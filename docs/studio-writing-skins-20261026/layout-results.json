@@ -1,0 +1,3463 @@
+{
+  "cases": [
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "booklet",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 711
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 720
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 546,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 710.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 71.075px 273.6px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "manuscript",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 711
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 720
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 546,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 710.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 71.075px 273.6px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "hardcover",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 711
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 720
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 546,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 710.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 71.075px 273.6px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "booklet",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 639
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 648
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 520,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 638.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 63.875px 273.6px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "manuscript",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 639
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 648
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 520,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 638.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 63.875px 273.6px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "hardcover",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 639
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 648
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 520,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 638.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 63.875px 273.6px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "booklet",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 411
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 420
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 517,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 410.8000183105469,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 41.075px 273.6px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 75,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "manuscript",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 411
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 420
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 517,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 410.8000183105469,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 41.075px 273.6px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 75,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "hardcover",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 411
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 420
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 517,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 410.8000183105469,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 41.075px 273.6px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 75,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "booklet",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 753
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 762
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 523,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 752.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 75.275px 273.6px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "manuscript",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 753
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 762
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 523,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 752.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 75.275px 273.6px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "hardcover",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 753
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 762
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 523,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 752.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 75.275px 273.6px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "booklet",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 681
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 690
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 523,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 680.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 68.075px 273.6px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "manuscript",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 681
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 690
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 523,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 680.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 68.075px 273.6px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "hardcover",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 681
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 690
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 523,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 680.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 68.075px 273.6px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "booklet",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 462
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 499,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 452.8000183105469,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 45.275px 273.6px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "manuscript",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 462
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 499,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 452.8000183105469,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 45.275px 273.6px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "hardcover",
+      "viewport": [
+        1280,
+        720
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 462
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 499,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 452.8000183105469,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 45.275px 273.6px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "booklet",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 871
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 880
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 726,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 870.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 87.075px 342px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "manuscript",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 871
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 880
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 726,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 870.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 87.075px 342px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "hardcover",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 871
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 880
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 726,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 870.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 87.075px 342px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "booklet",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 799
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 808
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 726,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 798.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 79.875px 342px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "manuscript",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 799
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 808
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 726,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 798.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 79.875px 342px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "hardcover",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 799
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 808
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 726,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 798.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 79.875px 342px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "booklet",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 571
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 580
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 700,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 570.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 57.075px 342px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "manuscript",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 571
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 580
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 700,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 570.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 57.075px 342px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "hardcover",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 571
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 580
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 700,
+      "titleHeight": 95,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 570.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 57.075px 342px",
+      "headingHeight": 199.8000030517578,
+      "toolbarHeight": 71,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "booklet",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 913
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 922
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 703,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 912.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 91.275px 342px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "manuscript",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 913
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 922
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 703,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 912.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 91.275px 342px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "hardcover",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 913
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 922
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 703,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 912.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 91.275px 342px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "booklet",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 841
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 850
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 703,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 840.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 84.075px 342px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "manuscript",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 841
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 850
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 703,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 840.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 84.075px 342px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "hardcover",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 841
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 850
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 703,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 840.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 84.075px 342px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "booklet",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 613
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 622
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 682,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 612.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 61.275px 342px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 67,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "manuscript",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 613
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 622
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 682,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 612.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 61.275px 342px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 67,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "hardcover",
+      "viewport": [
+        1440,
+        900
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 613
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 622
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 682,
+      "titleHeight": 98,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 612.7999877929688,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 61.275px 342px",
+      "headingHeight": 194.1999969482422,
+      "toolbarHeight": 67,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "booklet",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1351
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1360
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1350.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 135.075px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "manuscript",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1351
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1360
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1350.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 135.075px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 180,
+      "paper": "hardcover",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1351
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1360
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1350.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 135.075px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "booklet",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1279
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1288
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1278.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 127.875px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "manuscript",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1279
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1288
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1278.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 127.875px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 252,
+      "paper": "hardcover",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1279
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1288
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1278.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 127.875px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "booklet",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1051
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1060
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1050.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 105.075px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "manuscript",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1051
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1060
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1050.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 105.075px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "gravity",
+      "side": 480,
+      "paper": "hardcover",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1051
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1060
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 906,
+      "titleHeight": 49,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1050.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 105.075px 410.4px",
+      "headingHeight": 153.8000030517578,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "booklet",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1393
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1402
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1392.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 139.275px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "manuscript",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1393
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1402
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1392.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 139.275px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 180,
+      "paper": "hardcover",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 153
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 163
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 164
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 158
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1393
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1402
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1392.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 139.275px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "booklet",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1321
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1330
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1320.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 132.075px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "manuscript",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1321
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1330
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1320.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 132.075px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 252,
+      "paper": "hardcover",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 225
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 235
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 236
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 230
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1321
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1330
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1320.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 132.075px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "booklet",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1093
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1102
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1092.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 109.275px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "manuscript",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1093
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1102
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1092.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 109.275px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    },
+    {
+      "skin": "glaze",
+      "side": 480,
+      "paper": "hardcover",
+      "viewport": [
+        1920,
+        1080
+      ],
+      "overflow": [
+        {
+          "sel": ".chapter-catalog",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".chapter-catalog .side-list",
+          "delta": 0,
+          "width": 453
+        },
+        {
+          "sel": ".catalog-masthead",
+          "delta": 0,
+          "width": 463
+        },
+        {
+          "sel": ".catalog-controls",
+          "delta": 0,
+          "width": 464
+        },
+        {
+          "sel": ".catalog-shortcuts",
+          "delta": 0,
+          "width": 458
+        },
+        {
+          "sel": ".rich-host",
+          "delta": 0,
+          "width": 1093
+        },
+        {
+          "sel": ".editor-toolbar",
+          "delta": 0,
+          "width": 1102
+        }
+      ],
+      "titleOK": true,
+      "editorSame": true,
+      "bodyHeight": 883,
+      "titleHeight": 50,
+      "selection": {
+        "type": "text",
+        "anchor": 689,
+        "head": 689
+      },
+      "scroll": 0,
+      "docWidth": 1092.800048828125,
+      "font": "\"Noto Serif SC\", SimSun, serif",
+      "fontSize": "17px",
+      "lineHeight": "33.15px",
+      "padding": "12px 109.275px 410.4px",
+      "headingHeight": 146.1999969482422,
+      "toolbarHeight": 46,
+      "art": "none"
+    }
+  ],
+  "windows": true,
+  "compactPaperMenu": true,
+  "zoom200": true
+}

@@ -1,0 +1,38 @@
+{
+  "date": "2026-10-28",
+  "scope": "read-only local role-card play research and AI-first product design",
+  "sourceChatHashesUnchanged": true,
+  "exactFileDeduplication": "passed",
+  "roleAccounting": "passed",
+  "hiddenMessageSourceInterpretation": "passed",
+  "designLinksAndFences": "passed",
+  "counts": {
+    "physicalChatFiles": 24,
+    "uniqueContentFiles": 12,
+    "emptyFiles": 2,
+    "singleMessageFiles": 3,
+    "multiMessageFiles": 7,
+    "userMessages": 365,
+    "modelTaggedMessages": 364,
+    "linkedCards": 10,
+    "swipeMessages": 4,
+    "extraVariants": 15,
+    "excludedModelMessages": 294
+  },
+  "privateNarrativeExported": false,
+  "productCodeChanged": false,
+  "newModelRequests": 0,
+  "newInterfaceRendered": false,
+  "builderCheck": "nothing important left",
+  "designDefaults": [
+    "AI authors opening from blank",
+    "empty guidance advances the story",
+    "manual editing optional",
+    "AI narrative default; player agency opt-in",
+    "version choice restores corresponding scene state"
+  ],
+  "linkedCardPngHashesFoundUnchanged": 10,
+  "previousPinnedSourceHashesUnchanged": 22,
+  "analysisScriptSha256": "6f1f8121db6155c793dc79aaedbd8881d960d6c38b30290c58382035a42acaff",
+  "anonymousReportSha256": "6e7d47583b559a6713a9fceaa021148f5b5a861875556f1aa3af77878c1176c7"
+}

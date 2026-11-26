@@ -1,4 +1,4 @@
-/* 完全退出所有小说工坊实例与开发服务：先优雅关闭（数据落盘），残留进程再强杀。
+/* 完全退出所有空想书典实例与开发服务：先优雅关闭（数据落盘），残留进程再强杀。
  * v0.4.18 起 同时清理 vite 开发服务（5173 端口占用元凶）与 electron 的 node 包装进程。 */
 import { execSync } from 'node:child_process'
 
@@ -8,8 +8,8 @@ function runPS(script) {
   return execSync(`powershell -NoProfile -EncodedCommand ${b64}`, { encoding: 'utf8' })
 }
 
-// 目标进程：electron 应用 / 打包版应用 / vite 开发服务 / electron cli 的 node 包装
-const MATCH = `($_.Name -eq 'electron.exe') -or ($_.Name -like '*小说工坊*') -or ($_.Name -eq 'node.exe' -and (($_.CommandLine -like '*vite*') -or ($_.CommandLine -like '*electron*cli.js*')))`
+// 目标进程：electron 应用 / 打包版应用（兼容旧名进程） / vite 开发服务 / electron cli 的 node 包装
+const MATCH = `($_.Name -eq 'electron.exe') -or ($_.Name -like '*空想书典*') -or ($_.Name -like '*小说工坊*') -or ($_.Name -eq 'node.exe' -and (($_.CommandLine -like '*vite*') -or ($_.CommandLine -like '*electron*cli.js*')))`
 const findPS = () => `Get-CimInstance Win32_Process | Where-Object { ${MATCH} } | Select-Object ProcessId, Name`
 
 let list = ''
@@ -19,14 +19,14 @@ try {
   list = ''
 }
 if (!list.trim() || !/\d/.test(list)) {
-  console.log('没有运行中的小说工坊实例或开发服务')
+  console.log('没有运行中的空想书典实例或开发服务')
   process.exit(0)
 }
 console.log('发现实例：\n' + list)
 
 // 1) 优雅关闭 GUI 实例（WM_CLOSE → 主进程关闭钩子把数据落盘）
 try {
-  runPS(`Get-Process | Where-Object { $_.Name -eq 'electron' -or $_.Name -like '*小说工坊*' } | ForEach-Object { [void]$_.CloseMainWindow() }`)
+  runPS(`Get-Process | Where-Object { $_.Name -eq 'electron' -or $_.Name -like '*空想书典*' -or $_.Name -like '*小说工坊*' } | ForEach-Object { [void]$_.CloseMainWindow() }`)
 } catch {}
 console.log('已发送关闭请求，等待数据落盘…')
 await new Promise((r) => setTimeout(r, 3000))

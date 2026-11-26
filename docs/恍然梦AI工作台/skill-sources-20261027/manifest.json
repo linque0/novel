@@ -1,0 +1,140 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-27",
+  "method": "Exa discovery; pinned GitHub raw source inspection; text-only adaptation; no upstream code executed",
+  "sources": [
+    {
+      "id": "novel:skills/ns-scene-architect.md",
+      "repository": "leemain88/novel-skills",
+      "commit": "4f93b45c9fb339155687d4e3822e09011645fdc2",
+      "path": "skills/ns-scene-architect.md",
+      "url": "https://github.com/leemain88/novel-skills/blob/4f93b45c9fb339155687d4e3822e09011645fdc2/skills/ns-scene-architect.md",
+      "license": "MIT",
+      "sha256": "9173a49ee2a3486df22f9668759203cc5fa7e0a5240dd43e1238069303750373",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/novel/skills/ns-scene-architect.md"
+    },
+    {
+      "id": "novel:skills/ns-fiction-writer.md",
+      "repository": "leemain88/novel-skills",
+      "commit": "4f93b45c9fb339155687d4e3822e09011645fdc2",
+      "path": "skills/ns-fiction-writer.md",
+      "url": "https://github.com/leemain88/novel-skills/blob/4f93b45c9fb339155687d4e3822e09011645fdc2/skills/ns-fiction-writer.md",
+      "license": "MIT",
+      "sha256": "a9fbe55064f3d219100f8b0ceee896b7abb577b4523abb8183744f62b293f717",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/novel/skills/ns-fiction-writer.md"
+    },
+    {
+      "id": "novel:skills/ns-continuity-reviewer.md",
+      "repository": "leemain88/novel-skills",
+      "commit": "4f93b45c9fb339155687d4e3822e09011645fdc2",
+      "path": "skills/ns-continuity-reviewer.md",
+      "url": "https://github.com/leemain88/novel-skills/blob/4f93b45c9fb339155687d4e3822e09011645fdc2/skills/ns-continuity-reviewer.md",
+      "license": "MIT",
+      "sha256": "03915cc6f4dfe4a04cc5e6d54efef24af47580a45271fb4f617e20d574d45690",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/novel/skills/ns-continuity-reviewer.md"
+    },
+    {
+      "id": "novel:skills/ns-prose-editor.md",
+      "repository": "leemain88/novel-skills",
+      "commit": "4f93b45c9fb339155687d4e3822e09011645fdc2",
+      "path": "skills/ns-prose-editor.md",
+      "url": "https://github.com/leemain88/novel-skills/blob/4f93b45c9fb339155687d4e3822e09011645fdc2/skills/ns-prose-editor.md",
+      "license": "MIT",
+      "sha256": "12bbf91d28fdde32431f32e4af2a75fa93d77529cdbfd61b7be8baac547f3415",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/novel/skills/ns-prose-editor.md"
+    },
+    {
+      "id": "novel:skills/ns-dialogue-editor.md",
+      "repository": "leemain88/novel-skills",
+      "commit": "4f93b45c9fb339155687d4e3822e09011645fdc2",
+      "path": "skills/ns-dialogue-editor.md",
+      "url": "https://github.com/leemain88/novel-skills/blob/4f93b45c9fb339155687d4e3822e09011645fdc2/skills/ns-dialogue-editor.md",
+      "license": "MIT",
+      "sha256": "0cc8c13f52733e0dd6a2ecfa9e7d6ea904e39c521e6d41c7c171da95e3a03b0a",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/novel/skills/ns-dialogue-editor.md"
+    },
+    {
+      "id": "story:skills/scene-craft/SKILL.md",
+      "repository": "danjdewhurst/story-skills",
+      "commit": "57121ee512c6d4218a285c6991193347944f31b0",
+      "path": "skills/scene-craft/SKILL.md",
+      "url": "https://github.com/danjdewhurst/story-skills/blob/57121ee512c6d4218a285c6991193347944f31b0/skills/scene-craft/SKILL.md",
+      "license": "MIT",
+      "sha256": "0c606024141542b6f10d85a976f9cfc2d25c5b42ad939b20fe3fa2a7e1332b6e",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/story/skills/scene-craft/SKILL.md"
+    },
+    {
+      "id": "story:skills/scene-craft/references/scene-sequel.md",
+      "repository": "danjdewhurst/story-skills",
+      "commit": "57121ee512c6d4218a285c6991193347944f31b0",
+      "path": "skills/scene-craft/references/scene-sequel.md",
+      "url": "https://github.com/danjdewhurst/story-skills/blob/57121ee512c6d4218a285c6991193347944f31b0/skills/scene-craft/references/scene-sequel.md",
+      "license": "MIT",
+      "sha256": "01204b7732f1c17c43130e20a0c68f516005b54edc4d9acd08c27e8a9e1af81e",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/story/skills/scene-craft/references/scene-sequel.md"
+    },
+    {
+      "id": "story:skills/scene-craft/references/dialogue-subtext.md",
+      "repository": "danjdewhurst/story-skills",
+      "commit": "57121ee512c6d4218a285c6991193347944f31b0",
+      "path": "skills/scene-craft/references/dialogue-subtext.md",
+      "url": "https://github.com/danjdewhurst/story-skills/blob/57121ee512c6d4218a285c6991193347944f31b0/skills/scene-craft/references/dialogue-subtext.md",
+      "license": "MIT",
+      "sha256": "5988bdb4ba9b596fe40125ece9a11c448a48fb3418d80a40eae1bbac12332514",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/story/skills/scene-craft/references/dialogue-subtext.md"
+    },
+    {
+      "id": "story:skills/scene-craft/references/deep-pov.md",
+      "repository": "danjdewhurst/story-skills",
+      "commit": "57121ee512c6d4218a285c6991193347944f31b0",
+      "path": "skills/scene-craft/references/deep-pov.md",
+      "url": "https://github.com/danjdewhurst/story-skills/blob/57121ee512c6d4218a285c6991193347944f31b0/skills/scene-craft/references/deep-pov.md",
+      "license": "MIT",
+      "sha256": "5ff5924e63955504398ac2aa9ac9f6f957627ed1cfce0602200454ad8e3c7c32",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/story/skills/scene-craft/references/deep-pov.md"
+    },
+    {
+      "id": "context:skills/memory-systems/SKILL.md",
+      "repository": "muratcankoylan/Agent-Skills-for-Context-Engineering",
+      "commit": "9ff0c99108b36d3b886defd825d8ac1f47dba374",
+      "path": "skills/memory-systems/SKILL.md",
+      "url": "https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/9ff0c99108b36d3b886defd825d8ac1f47dba374/skills/memory-systems/SKILL.md",
+      "license": "MIT",
+      "sha256": "9e2b38ffe9474ba19c93b3d75c80e683705d82e8a4b59af16d603d133bab8d2f",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/context/skills/memory-systems/SKILL.md"
+    },
+    {
+      "id": "context:skills/context-compression/SKILL.md",
+      "repository": "muratcankoylan/Agent-Skills-for-Context-Engineering",
+      "commit": "9ff0c99108b36d3b886defd825d8ac1f47dba374",
+      "path": "skills/context-compression/SKILL.md",
+      "url": "https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering/blob/9ff0c99108b36d3b886defd825d8ac1f47dba374/skills/context-compression/SKILL.md",
+      "license": "MIT",
+      "sha256": "ab4fd1e1046db339d83ead5089d4cb9d9c487232945d4ff6be90e08a03f6cfea",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/context/skills/context-compression/SKILL.md"
+    }
+  ],
+  "licenses": [
+    {
+      "repository": "leemain88/novel-skills",
+      "commit": "4f93b45c9fb339155687d4e3822e09011645fdc2",
+      "license": "MIT",
+      "path": "docs\\恍然梦AI工作台\\skill-sources-20261027\\novel/LICENSE",
+      "sha256": "da3412eda1914f26b75c55cb9d43c012a4566ab8d032ad5024d4e9898f1d78e0"
+    },
+    {
+      "repository": "danjdewhurst/story-skills",
+      "commit": "57121ee512c6d4218a285c6991193347944f31b0",
+      "license": "MIT",
+      "path": "docs\\恍然梦AI工作台\\skill-sources-20261027\\story/LICENSE",
+      "sha256": "1c8c7a7b5bef62874f510f603f02ada40f5880668e8983d2fc7d1150b4318226"
+    },
+    {
+      "repository": "muratcankoylan/Agent-Skills-for-Context-Engineering",
+      "commit": "9ff0c99108b36d3b886defd825d8ac1f47dba374",
+      "license": "MIT",
+      "path": "docs\\恍然梦AI工作台\\skill-sources-20261027\\context/LICENSE",
+      "sha256": "65bc33b0759a48b980962833b12bcb820404da9f5256bff39c00e89471bcf209"
+    }
+  ]
+}

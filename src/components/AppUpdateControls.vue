@@ -39,7 +39,7 @@ function startDownload() {
 </script>
 
 <template>
-  <NModal v-if="startup && release" :show="show" preset="card" :title="status === 'ready' ? '更新已下载' : '小说工坊有新版本'"
+  <NModal v-if="startup && release" :show="show" preset="card" :title="status === 'ready' ? '更新已下载' : '空想书典有新版本'"
     class="app-update-modal" :mask-closable="false" @update:show="value => { if (!value) dismiss() }">
     <p class="app-update-versions">v{{ state.current }} → <strong>v{{ release.version }}</strong></p>
     <p v-if="state.error" class="app-update-error" role="alert">{{ state.error }}</p>

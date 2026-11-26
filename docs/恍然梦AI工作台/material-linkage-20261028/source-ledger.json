@@ -1,0 +1,314 @@
+{
+  "date": "2026-10-28",
+  "scope": "read-only implementation research for proposed four-module linkage",
+  "revision": "c2b1be5ad6f6525e92e6b03591b42ff36ecb9f71",
+  "note": "Fingerprints describe the current working tree, including earlier uncommitted changes; not a claim all files match HEAD. No runtime or model-quality validation this turn.",
+  "sources": [
+    {
+      "path": "src/components/agent/StoryScene.vue",
+      "sha256": "08836d26570e0d3c600b97ff5cf2022a27563647a7ed6eb448a2420307e8d783",
+      "symbols": [
+        {
+          "symbol": "async function syncConfig",
+          "line": 31
+        },
+        {
+          "symbol": "async function toWorkshop",
+          "line": 43
+        },
+        {
+          "symbol": "async function refresh",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "path": "src/stores/story.js",
+      "sha256": "5c33d6f39b8d0f1a5da1103ddea1a8d3a2932d6313a02583aee1180fa62c5e4b",
+      "symbols": [
+        {
+          "symbol": "async runStage",
+          "line": 75
+        },
+        {
+          "symbol": "async confirm",
+          "line": 145
+        },
+        {
+          "symbol": "async refreshDocument",
+          "line": 50
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/story-core.js",
+      "sha256": "0125e1e27df4671891104ab451b1f797b3cfb950c0845314e0d2007b8b47ca9b",
+      "symbols": [
+        {
+          "symbol": "createStoryDocument",
+          "line": 11
+        },
+        {
+          "symbol": "storyRequest",
+          "line": 15
+        }
+      ]
+    },
+    {
+      "path": "src/stores/work.js",
+      "sha256": "e42bf6ea38afc5c7af0de61d09c691e092494c5f0efa10d4145e3335a16c6886",
+      "symbols": [
+        {
+          "symbol": "addCharacter(name",
+          "line": 405
+        },
+        {
+          "symbol": "addSnippet(content",
+          "line": 472
+        },
+        {
+          "symbol": "mubuAdd(parentId",
+          "line": 686
+        },
+        {
+          "symbol": "mubuSetText(id",
+          "line": 747
+        },
+        {
+          "symbol": "olnodeAdd(parentId",
+          "line": 982
+        },
+        {
+          "symbol": "olnodeSetRich(id",
+          "line": 1021
+        }
+      ]
+    },
+    {
+      "path": "src/services/project/normalize.js",
+      "sha256": "cd77cf58d550ee77c03e4851e98fe5da3d3e960f45f5b083ef1a86d253babe7b",
+      "symbols": [
+        {
+          "symbol": "SOURCE_TABLES",
+          "line": 7
+        },
+        {
+          "symbol": "tree('mubu'",
+          "line": 94
+        },
+        {
+          "symbol": "for (const r of live('snippets'))",
+          "line": 107
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/novel-context.js",
+      "sha256": "b9b6bb3485109a14b9ab133a489a6f393e724ac9aaac8289f31622d163b18b43",
+      "symbols": [
+        {
+          "symbol": "freezeContext",
+          "line": 15
+        },
+        {
+          "symbol": "const currentDraft",
+          "line": 113
+        },
+        {
+          "symbol": "const reference",
+          "line": 121
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/retrieval-policy.js",
+      "sha256": "4ab551f6f7d9955b975d12f3aef4041000753ed8fcd0292483193cd2c0cc93c2",
+      "symbols": [
+        {
+          "symbol": "buildRetrievalRequest",
+          "line": 6
+        },
+        {
+          "symbol": "const currentDraft",
+          "line": 11
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/booksource.js",
+      "sha256": "f1cada445b0108786c68bc26cc9eea77cadc24ba4ce1680fc1bb093360e3af22",
+      "symbols": [
+        {
+          "symbol": "createBookAccess",
+          "line": 9
+        },
+        {
+          "symbol": "documentView",
+          "line": 52
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/tools.js",
+      "sha256": "f88b6f071beafa35e3cb0332c838b1f80cb1ec2200c78f13b0c8bb3f7b6858b7",
+      "symbols": [
+        {
+          "symbol": "search_book:",
+          "line": 13
+        },
+        {
+          "symbol": "get_character:",
+          "line": 54
+        },
+        {
+          "symbol": "get_outline_subtree:",
+          "line": 79
+        },
+        {
+          "symbol": "get_lore_subtree:",
+          "line": 86
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/task-profiles.js",
+      "sha256": "073136e3f7f92211d2d6e69b9b52191c94d77a67c8bf10c9ba23fc1f2b3cc317",
+      "symbols": [
+        {
+          "symbol": "'chapter.story':",
+          "line": 9
+        },
+        {
+          "symbol": "'character.design':",
+          "line": 24
+        },
+        {
+          "symbol": "'snippet.generate':",
+          "line": 29
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/task-proposals.js",
+      "sha256": "23466fdfa2da0b9197a0fa8f271eae98dcc69513574e0a584fd1ef46944df9e4",
+      "symbols": [
+        {
+          "symbol": "workflowProposal",
+          "line": 27
+        },
+        {
+          "symbol": "workflowChanges",
+          "line": 143
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/task-application.js",
+      "sha256": "12fe14cdffc668d26241306864e03aa77575ccf1a035e66cca2707260e78475b",
+      "symbols": [
+        {
+          "symbol": "applyWorkflow",
+          "line": 31
+        },
+        {
+          "symbol": "undoWorkflow",
+          "line": 59
+        }
+      ]
+    },
+    {
+      "path": "src/services/appbus.js",
+      "sha256": "5c5a3a92e39878e8fcd6792a5d3a93244b2835a83f904cd71d6582b781291918",
+      "symbols": [
+        {
+          "symbol": "installAppBus",
+          "line": 18
+        }
+      ]
+    },
+    {
+      "path": "src/services/ai/runtime.js",
+      "sha256": "2011bb4ada9f286fbee1fcbfb640334be4b9fbaa4792aaffd71392164f792fb8",
+      "symbols": [
+        {
+          "symbol": "handleAiEvent",
+          "line": 13
+        },
+        {
+          "symbol": "kind !== \"ai-source-changed\"",
+          "line": 88
+        }
+      ]
+    },
+    {
+      "path": "src/services/panelwindows.js",
+      "sha256": "8a6c39e5339999caa60a9c244215fbc09a16ab0ec26138ba279ef5f3ead62e12",
+      "symbols": [
+        {
+          "symbol": "function keyOf",
+          "line": 40
+        },
+        {
+          "symbol": "function isPopped",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "path": "src/components/ai/TaskLauncher.vue",
+      "sha256": "12790c88fc053a9f3992448a33f3710ea17fa762e3deddc5f642a1028bbca818",
+      "symbols": [
+        {
+          "symbol": "function open()",
+          "line": 9
+        }
+      ]
+    },
+    {
+      "path": "src/components/MubuView.vue",
+      "sha256": "bca3ccd6706d586eb4968223a9cb5561b9447c36acefbf00c73fd86a5aeff3d9",
+      "symbols": [
+        {
+          "symbol": "const props =",
+          "line": 25
+        },
+        {
+          "symbol": "const contentRoot",
+          "line": 34
+        }
+      ]
+    },
+    {
+      "path": "src/components/CharacterCenter.vue",
+      "sha256": "0a603fab0eaa0380cd41c35c50cd4bf8a255b32db8b60c318e07e6c10775a358",
+      "symbols": [
+        {
+          "symbol": "const c = computed",
+          "line": 21
+        },
+        {
+          "symbol": "function onCrimsonCharMenu",
+          "line": 37
+        }
+      ]
+    },
+    {
+      "path": "src/components/SnippetCenter.vue",
+      "sha256": "453b09a6257e62db5d8032dbb70efd4b625d9853b1d7109b3b1088e931aabedc",
+      "symbols": [
+        {
+          "symbol": "const ideaTitle",
+          "line": 24
+        },
+        {
+          "symbol": "function setIdeaTitle",
+          "line": 31
+        },
+        {
+          "symbol": "function setIdeaBody",
+          "line": 36
+        }
+      ]
+    }
+  ]
+}

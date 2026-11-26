@@ -1,8 +1,8 @@
 {
   "name": "novel-studio",
-  "productName": "小说工坊",
-  "version": "1.2.10",
-  "description": "本地优先的小说创作软件：正文/大纲/人物/设定一站式管理，即时自动保存",
+  "productName": "空想书典",
+  "version": "1.2.11",
+  "description": "空想书典（Reverie Fiction）——本地优先的小说创作软件：正文/大纲/人物/设定一站式管理，即时自动保存",
   "private": true,
   "main": "electron/main.js",
   "scripts": {
@@ -19,7 +19,7 @@
   },
   "build": {
     "appId": "com.novelstudio.app",
-    "productName": "小说工坊",
+    "productName": "空想书典",
     "electronLanguages": [
       "zh-CN",
       "en-US"
@@ -85,7 +85,7 @@
     "win": {
       "icon": "build/icon.ico",
       "extraResources": [{ "from": "build/icon.ico", "to": "icon.ico" }],
-      "artifactName": "novel-studio-setup-${version}.${ext}",
+      "artifactName": "reverie-fiction-setup-${version}.${ext}",
       "target": [
         {
           "target": "nsis",
@@ -110,7 +110,7 @@
       "allowElevation": true,
       "createDesktopShortcut": "always",
       "createStartMenuShortcut": true,
-      "shortcutName": "小说工坊"
+      "shortcutName": "空想书典"
     }
   },
   "dependencies": {

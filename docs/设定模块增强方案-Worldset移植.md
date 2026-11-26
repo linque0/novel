@@ -1,5 +1,7 @@
 # 设定模块增强方案 —— Worldset Studio 功能移植
 
+> **历史归档说明**：本方案撰写于产品原名「小说工坊（Novel Studio）」时期，产品现已正式更名为 **「空想书典（Reverie Fiction）」**。
+
 > 来源：对 <https://myworldstudio.cn/p/prj_ashes>（Worldset Studio）的逆向拆解
 > 拆解报告：[世界观设定管理器逆向拆解报告.md](世界观设定管理器逆向拆解报告.md) ｜ 技术档案：`docs/调研证据/worldset逆向技术档案/`
 > 目标：用其**可复用的设计与算法**（非代码）增强 `小说工坊 / novel-studio` 的设定模块

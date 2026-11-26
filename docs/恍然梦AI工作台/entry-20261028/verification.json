@@ -1,0 +1,30 @@
+{
+  "kind": "isolated-ui-entry-routing",
+  "modelRequests": 0,
+  "results": [
+    {
+      "name": "all four shelf skins expose the dream entry in their shared top bar",
+      "ok": true
+    },
+    {
+      "name": "empty shelf still opens the dream launcher without selecting a book",
+      "ok": true
+    },
+    {
+      "name": "shelf starts one new story directly in AI mode without handwritten text",
+      "ok": true
+    },
+    {
+      "name": "dream top bar switches to light sleep in the same work and opens the built-in assistant",
+      "ok": true
+    },
+    {
+      "name": "workshop top bar toggles light sleep and re-enters the independent story scene",
+      "ok": true
+    },
+    {
+      "name": "shelf dream entry resumes an explicitly chosen work rather than silently taking the first book",
+      "ok": true
+    }
+  ]
+}

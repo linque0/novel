@@ -18,7 +18,7 @@ function readRelease(row, current) {
   if (!version || row.draft || row.prerelease || semver.prerelease(version) || !semver.gt(version, current)) return null
   const url = releases + '/tag/' + encodeURIComponent(tag)
   const base = releases + '/download/' + encodeURIComponent(tag) + '/'
-  const filename = 'novel-studio-setup-' + version + '.exe'
+  const filename = 'reverie-fiction-setup-' + version + '.exe'
   const uploaded = name => Array.isArray(row.assets) && row.assets.some(asset =>
     asset?.name === name && asset.state === 'uploaded' && asset.browser_download_url === base + name)
   return {

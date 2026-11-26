@@ -21,7 +21,7 @@ import { resolveLoreFocus, resolveLoreGalaxy } from '../services/lore-core.js'
 import { applySnipSnapshot, createSnippetPersistence } from '../services/snippet-persistence.js'
 import { SNIP_CARD_SIZE } from '../components/skins/latent/snippets/snippet-model.js'
 import { registerFlushHook } from '../services/autosave.js'
-import { SETTINGS_SAVE_ERROR, normalizePageTransition } from '../components/skins/latent/settings/settings-prefs.js'
+import { SETTINGS_SAVE_ERROR, normalizePageTransition, normalizeUiFontScale } from '../components/skins/latent/settings/settings-prefs.js'
 import { SETTINGS_PAGE_KEYS } from '../components/skins/latent/settings/settings-catalog.js'
 
 /* 人物会话状态的写入防抖（250ms）：拖宽 / 筛选 / 滚动都会频繁调 saveCharState，
@@ -119,6 +119,7 @@ export const useUiStore = defineStore('ui', {
     editorFont: 'song', // 中文正文（CJK_FONTS key）
     editorLatin: 'none', // 西文正文（LATIN_FONTS key）
     fontSize: 17,
+    uiFontScale: 100, // 全局 UI/UX 字体缩放百分比（85–140，步进 5，默认 100%）
     writingPaperStyle: 'booklet',
     latentWritingLayout: {},
     writingPaperSaving: false,
@@ -140,6 +141,15 @@ export const useUiStore = defineStore('ui', {
     mubuSelectedId: null,
     mubuSyncTick: 0,
     mubuQuery: '', // 设定检索词（侧栏搜索框 ↔ 标签卡片点击联动；session 级）
+    chapterSearch: {
+      query: '',
+      terms: [],
+      includeAliases: false,
+      chapterId: null,
+      matchIndex: 0,
+      active: false,
+      nonce: 0
+    }, // 正文检索联动（ChapterTree ↔ EditorPane；session 级，不落盘）
     charQuery: '', // 人物检索词（赤月戏模块条；session 级）
     snippetQuery: '', // 灵感检索词（赤月戏模块条；session 级）
     mubuTagPanel: null, // 设定标签面板 { nodeId, x, y } | null（全局单例；App 主窗口与 PanelHost 各挂一份）
@@ -263,6 +273,7 @@ export const useUiStore = defineStore('ui', {
         if (map.editorFont) this.editorFont = map.editorFont
         if (map.editorLatin) this.editorLatin = map.editorLatin
         if (map.fontSize) this.fontSize = Number(map.fontSize) || 17
+        this.uiFontScale = normalizeUiFontScale(map.uiFontScale)
         this.writingPaperStyle = normalizeWritingPaper(map.writingPaperStyle)
         this.latentWritingLayout = normalizeWritingLayout(map.latentWritingLayout)
         if (map.sideWidth) this.sideWidth = Math.min(480, Math.max(180, Number(map.sideWidth) || 252))
@@ -484,6 +495,7 @@ export const useUiStore = defineStore('ui', {
       if (key === 'writingPaperStyle') return this.setWritingPaperStyle(value)
       if (key === 'glazePainting') return this.setGlazePainting(value)
       if (key === 'pageTransitions') value = normalizePageTransition(value)
+      if (key === 'uiFontScale') value = normalizeUiFontScale(value)
       this[key] = value
       /* 落库必须是纯数据：reactive proxy 进不了结构化克隆（见文件头的 plainPref 说明） */
       await db.appconfig.put({ key, value: plainPref(value) })
@@ -544,6 +556,7 @@ export const useUiStore = defineStore('ui', {
       const isFlow = key === 'flowBackground'
       if (isFlow) value = normalizeFlowBackground(value)
       if (key === 'pageTransitions') value = normalizePageTransition(value)
+      if (key === 'uiFontScale') value = normalizeUiFontScale(value)
       this[key] = value
       const current = this[key]
       // 自身也会收到偏好广播。在写入或等待重试期间，旧库值不能覆盖正在预览的颜色。
@@ -604,6 +617,29 @@ export const useUiStore = defineStore('ui', {
         await db.appconfig.put({ key: 'settings:scroll', value: plainPref(this.settingsScroll) })
         await db.appconfig.put({ key: 'settings:preview', value: this.settingsPreviewOpen === true })
       } catch { /* 静默：界面状态下次改动会再写 */ }
+    },
+    openChapterSearchHit({ query = '', terms = [], includeAliases = false, chapterId = null, matchIndex = 0 } = {}) {
+      const cleanTerms = Array.isArray(terms) ? terms.map(t => String(t || '').trim().toLowerCase()).filter(Boolean) : []
+      this.chapterSearch = {
+        query: String(query || '').trim(),
+        terms: cleanTerms,
+        includeAliases: Boolean(includeAliases),
+        chapterId: chapterId || null,
+        matchIndex: Math.max(0, Number(matchIndex) || 0),
+        active: cleanTerms.length > 0,
+        nonce: (this.chapterSearch?.nonce || 0) + 1
+      }
+    },
+    clearChapterSearch() {
+      this.chapterSearch = {
+        query: '',
+        terms: [],
+        includeAliases: false,
+        chapterId: null,
+        matchIndex: 0,
+        active: false,
+        nonce: (this.chapterSearch?.nonce || 0) + 1
+      }
     }
   }
 })

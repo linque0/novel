@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>斜流转场 · 小说工坊</title>
+<style>
+  :root {
+    color-scheme: dark;
+    font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", system-ui, sans-serif;
+    background: #181715;
+    color: #efe9dd;
+    --muted: #b5ac9e;
+    --line: #3b3730;
+    --surface: #25221e;
+    --warm: #edc89d;
+    --serif: "Songti SC", SimSun, "Noto Serif CJK SC", serif;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main { max-width: 1028px; padding: 29px 34px 48px; margin: 0 auto; }
+  button, input, select { font: inherit; }
+  button, select, input[type="range"] { cursor: pointer; }
+  button, a, select { -webkit-tap-highlight-color: transparent; }
+  button, select { color: #eee5d7; background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 7px 11px; font-size: 12px; }
+  button, select { min-height: 34px; }
+  button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--warm); outline-offset: 4px; }
+  button[aria-pressed="true"] { color: var(--warm); border-color: #ac8764; background: #3a3026; }
+  a { color: var(--warm); text-underline-offset: 3px; }
+  button:hover { border-color: #b39070; }
+  .eyebrow { margin: 0 0 13px; color: var(--muted); font-size: 12px; letter-spacing: .055em; }
+  .eyebrow strong { color: #f4ebdd; }
+  .header { display: flex; align-items: end; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  h1 { font: 500 clamp(36px, 5vw, 66px)/1.02 var(--serif); margin: 0; letter-spacing: -.065em; }
+  .lead { color: var(--muted); font-size: 13px; line-height: 1.65; margin: 12px 0 0; }
+  .controls { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin: 25px 0 18px; padding: 13px 0; border-block: 1px solid var(--line); align-items: center; }
+  .transport { flex: 1 1 440px; display: flex; align-items: center; gap: 9px; min-width: 0; }
+  #play { color: #282018; background: var(--warm); border-color: var(--warm); min-width: 84px; font-weight: 650; }
+  #timeline { flex: 1; min-width: 0; accent-color: var(--warm); }
+  output { color: var(--muted); min-width: 103px; text-align: right; font: 11px ui-monospace, Consolas, monospace; }
+  .review-options, .devices { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+  .review-options { gap: 10px; }
+  .palette { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--muted); }
+  .study { min-width: 0; }
+  .study-heading { display: flex; align-items: baseline; gap: 9px 14px; flex-wrap: wrap; margin: 0 0 10px; }
+  .study-heading h2 { font: 500 clamp(19px, 2vw, 28px)/1.2 var(--serif); margin: 0; letter-spacing: -.02em; }
+  .frame { position: relative; width: 100%; max-width: 960px; aspect-ratio: 16 / 9; isolation: isolate; overflow: hidden; background: #693e30; border-radius: 9px; box-shadow: 0 0 0 1px #856c584e; }
+  .frame canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .frame canvas[hidden] { display: none; }
+  .study footer { margin-top: 10px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+  .frame-status { position: absolute; right: 8px; bottom: 8px; padding: 7px 9px; background: #1c1715; color: #f1d3b6; border-radius: 5px; font-size: 11px; margin: 0; }
+  .is-phone .study { width: min(100%, var(--phone-width)); margin-inline: auto; }
+  .is-phone .frame { aspect-ratio: var(--phone-width-px) / 580; }
+  .media { margin: 31px 0 0; padding-top: 17px; border-top: 1px solid var(--line); }
+  .media summary { cursor: pointer; font-size: 15px; color: #f3e5d4; width: fit-content; }
+  .media figure { margin: 13px 0 0; }
+  .media figcaption { display: flex; justify-content: space-between; gap: 12px; margin-top: 8px; font-size: 12px; color: var(--muted); }
+  .media video { display: block; border-radius: 7px; background: #28211d; width: 100%; aspect-ratio: 16 / 9; }
+  #copy-status { margin: 9px 0 0; color: var(--warm); font-size: 12px; }
+  #copy-fallback { display: block; width: min(425px, 100%); font: 12px monospace; margin-top: 8px; }
+  #copy-fallback[hidden] { display: none; }
+  @media (max-width: 560px) {
+    main { padding: 23px 13px 38px; }
+    .header { gap: 15px; }
+    .controls { margin-top: 17px; }
+    .transport { gap: 5px; }
+    #play { min-width: 60px; }
+    output { min-width: 91px; }
+    .review-options, .devices { gap: 5px; }
+    .study-heading { gap: 6px; }
+  }
+</style>
+<main id="review">
+  <p class="eyebrow"><strong>小说工坊</strong>　/　隐现皮肤 · 动效评审</p>
+  <header class="header">
+    <div>
+      <h1>斜流转场</h1>
+      <p class="lead">旧界面化进背景的流纹，新界面从同一片波纹中浮现。</p>
+    </div>
+    <button id="copy-link" type="button">复制预览链接</button>
+  </header>
+  <p id="copy-status" role="status" hidden></p>
+  <input id="copy-fallback" aria-label="直达地址" readonly hidden>
+
+  <section class="controls" aria-label="预览控制">
+    <div class="transport">
+      <button id="play" type="button">▶ 播放</button>
+      <button id="slow" type="button" aria-pressed="false" aria-label="四分之一速度">0.25×</button>
+      <input id="timeline" type="range" min="0" max="1000" step="1" value="0" aria-label="转场时间">
+      <output id="time" for="timeline">0 / 1000 ms</output>
+    </div>
+    <div class="review-options">
+      <div class="devices" role="group" aria-label="预览视口">
+        <button type="button" data-device="desktop" aria-pressed="true">桌面</button>
+        <button type="button" data-device="375" aria-pressed="false">375 px</button>
+        <button type="button" data-device="390" aria-pressed="false">390 px</button>
+      </div>
+      <label class="palette">背景 <select id="palette"></select></label>
+    </div>
+  </section>
+
+  <section class="study" aria-labelledby="direction">
+    <header class="study-heading"><h2 id="direction">右上斜流向左下</h2></header>
+    <div class="frame">
+      <canvas class="live" role="img" aria-label="背景斜流带动旧界面消融和新界面浮现"></canvas>
+      <canvas class="still" role="img" aria-label="示例界面" hidden></canvas>
+      <p class="frame-status" hidden></p>
+    </div>
+    <footer>卡片和分隔线先从流纹中成型，文字随后收清。</footer>
+  </section>
+  <details class="media" id="recordings">
+    <summary>慢放预览与下载 · 0.25×</summary>
+    <figure>
+      <video src="assets/scheme1-diagonal-0.25x.webm" controls muted playsinline preload="metadata" aria-label="斜流转场四分之一速度"></video>
+      <figcaption><span>旧界面消融 · 新界面浮现</span><a href="assets/scheme1-diagonal-0.25x.webm" download>下载 WebM</a></figcaption>
+    </figure>
+  </details>
+</main>
+<script src="background-material.js"></script>
+<script src="scene.js"></script>
+<script src="renderer.js"></script>
+<script src="review.js"></script>
+</html>

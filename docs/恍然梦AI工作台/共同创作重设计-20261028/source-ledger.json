@@ -1,0 +1,495 @@
+{
+  "date": "2026-10-28",
+  "method": "static source inspection and official documentation; applications not run for this redesign",
+  "scope": "shared authoring document, continuous generation, integrated planning/review and handoff",
+  "repositories": {
+    "ai-novel-writer": {
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "version": "1.3.2",
+      "workingTree": "clean when inspected",
+      "license": "GPL-3.0"
+    },
+    "sillytavern-local": {
+      "version": "1.19.0 per local package.json",
+      "gitCommit": null,
+      "provenance": "local source snapshot; hashes pin inspected files, upstream tag equivalence not asserted",
+      "license": "AGPL-3.0"
+    }
+  },
+  "files": [
+    {
+      "repo": "novel-studio",
+      "file": "src/components/StudioWorkspace.vue",
+      "localPath": "F:/deepseek workplace/novel-studio/src/components/StudioWorkspace.vue",
+      "sha256": "08ae81d4fb3a38bbb13e29f3fc817b71ae4c21f3de27878f317f46a25bc0faf0",
+      "lines": 53,
+      "anchors": [
+        {
+          "symbol": "registerChapterEditorBridge",
+          "line": 10
+        },
+        {
+          "symbol": "<Teleport",
+          "line": 50
+        }
+      ]
+    },
+    {
+      "repo": "novel-studio",
+      "file": "src/components/agent/AgentWorkbench.vue",
+      "localPath": "F:/deepseek workplace/novel-studio/src/components/agent/AgentWorkbench.vue",
+      "sha256": "651c5ad65a0e83fe52e4f88b93153594f6f4a35d286def78b8e8b93a20c202b3",
+      "lines": 141,
+      "anchors": [
+        {
+          "symbol": "const candidate=",
+          "line": 54
+        },
+        {
+          "symbol": "function makeRun",
+          "line": 83
+        },
+        {
+          "symbol": "function switchWriting",
+          "line": 86
+        },
+        {
+          "symbol": "function openLibrary",
+          "line": 90
+        }
+      ]
+    },
+    {
+      "repo": "novel-studio",
+      "file": "src/components/agent/CandidateEditor.vue",
+      "localPath": "F:/deepseek workplace/novel-studio/src/components/agent/CandidateEditor.vue",
+      "sha256": "719a258e4619afb88ebd1a5bf4dc5b6204076f3a5ecdcb02de15957b52b7c92f",
+      "lines": 55,
+      "anchors": [
+        {
+          "symbol": "function openWriting",
+          "line": 27
+        },
+        {
+          "symbol": "candidate-prose",
+          "line": 38
+        }
+      ]
+    },
+    {
+      "repo": "novel-studio",
+      "file": "src/stores/writing.js",
+      "localPath": "F:/deepseek workplace/novel-studio/src/stores/writing.js",
+      "sha256": "9846cfa3612c173f5f99f86abcd48c8d515e654b4452665f605362f12341d207",
+      "lines": 140,
+      "anchors": [
+        {
+          "symbol": "byWork:",
+          "line": 17
+        },
+        {
+          "symbol": "async open(",
+          "line": 48
+        },
+        {
+          "symbol": "async startDraft(",
+          "line": 118
+        }
+      ]
+    },
+    {
+      "repo": "novel-studio",
+      "file": "src/stores/creative-workflow.js",
+      "localPath": "F:/deepseek workplace/novel-studio/src/stores/creative-workflow.js",
+      "sha256": "1394ec811f6f32a40dbee0ecb53a89d5a61042ec1874b2d850b5ac38ad978628",
+      "lines": 258,
+      "anchors": [
+        {
+          "symbol": "byWork:",
+          "line": 27
+        },
+        {
+          "symbol": "async create(",
+          "line": 44
+        },
+        {
+          "symbol": "async assertCurrent(",
+          "line": 68
+        },
+        {
+          "symbol": "async adopt(",
+          "line": 224
+        }
+      ]
+    },
+    {
+      "repo": "novel-studio",
+      "file": "src/services/ai/workbench-view.js",
+      "localPath": "F:/deepseek workplace/novel-studio/src/services/ai/workbench-view.js",
+      "sha256": "5aa3eb7420a21ff4ce1e8736ff09e2100c24c8ff19bc47837dbde08ec90e7547",
+      "lines": 35,
+      "anchors": [
+        {
+          "symbol": "chapterWorkbenchState",
+          "line": 8
+        },
+        {
+          "symbol": "AGENT_PAGES",
+          "line": 28
+        }
+      ]
+    },
+    {
+      "repo": "novel-studio",
+      "file": "src/services/ai/application.js",
+      "localPath": "F:/deepseek workplace/novel-studio/src/services/ai/application.js",
+      "sha256": "c092472b41cf15911081663a05d6aaba9a66137c4da71b01f7eafa0cb11e57ac",
+      "lines": 386,
+      "anchors": [
+        {
+          "symbol": "locateEditorPatch",
+          "line": 60
+        },
+        {
+          "symbol": "window.__ns?.editor",
+          "line": 115
+        }
+      ]
+    },
+    {
+      "repo": "novel-studio",
+      "file": "src/services/ai/novel-context.js",
+      "localPath": "F:/deepseek workplace/novel-studio/src/services/ai/novel-context.js",
+      "sha256": "704fc0dfe94990a75b9a25bea3d9cb3d0cb50bc151802ba9f9bb81f50999b2f4",
+      "lines": 253,
+      "anchors": [
+        {
+          "symbol": "function freezeContext",
+          "line": 15
+        },
+        {
+          "symbol": "function assembleSlots",
+          "line": 45
+        }
+      ]
+    },
+    {
+      "repo": "novel-studio",
+      "file": "src/services/ai/writing-anchor.js",
+      "localPath": "F:/deepseek workplace/novel-studio/src/services/ai/writing-anchor.js",
+      "sha256": "b20550350de7477e246a549a5719929d0013700c3cbbdc06ebf7dc81cba13cd3",
+      "lines": 42,
+      "anchors": [
+        {
+          "symbol": "function captureWritingAnchor",
+          "line": 3
+        },
+        {
+          "symbol": "function validateWritingAnchor",
+          "line": 19
+        }
+      ]
+    },
+    {
+      "repo": "ai-novel-writer",
+      "file": "src/components/stage/chapter/ChapterView.tsx",
+      "localPath": "F:/deepseek workplace/AI-Novel-Writer/src/components/stage/chapter/ChapterView.tsx",
+      "sha256": "1e071ae56d8ed0bdb8882c29d3a55d35eddbfce0d49f41437f41ec77ff9186f1",
+      "lines": 189,
+      "anchors": [
+        {
+          "symbol": "function ChapterView",
+          "line": 67
+        },
+        {
+          "symbol": "function DraftChapter",
+          "line": 78
+        },
+        {
+          "symbol": "ChapterActions",
+          "line": 18
+        },
+        {
+          "symbol": "draft.onBodyChange",
+          "line": 165
+        }
+      ],
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "permalink": "https://github.com/EthanYoQ/AI-Novel-Writer/blob/62880d629af7bbfaf968c0cda5ae76816e917915/src/components/stage/chapter/ChapterView.tsx"
+    },
+    {
+      "repo": "ai-novel-writer",
+      "file": "src/components/stage/chapter/ChapterPlan.tsx",
+      "localPath": "F:/deepseek workplace/AI-Novel-Writer/src/components/stage/chapter/ChapterPlan.tsx",
+      "sha256": "cae5fcbfbe9e6f3998a4273d4d7cfb59b1ea46e5cedf5590893b13327ec8a60d",
+      "lines": 131,
+      "anchors": [
+        {
+          "symbol": "function ChapterPlan",
+          "line": 24
+        },
+        {
+          "symbol": "swapChapterTab",
+          "line": 14
+        },
+        {
+          "symbol": "blueprint === null",
+          "line": 43
+        }
+      ],
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "permalink": "https://github.com/EthanYoQ/AI-Novel-Writer/blob/62880d629af7bbfaf968c0cda5ae76816e917915/src/components/stage/chapter/ChapterPlan.tsx"
+    },
+    {
+      "repo": "ai-novel-writer",
+      "file": "src/components/stage/chapter/ChapterActions.tsx",
+      "localPath": "F:/deepseek workplace/AI-Novel-Writer/src/components/stage/chapter/ChapterActions.tsx",
+      "sha256": "778d05492546737ac09fd9810d60fdf38658801d5ef63045ab5c49d27faf4265",
+      "lines": 458,
+      "anchors": [
+        {
+          "symbol": "function ChapterActions",
+          "line": 59
+        },
+        {
+          "symbol": "const checklist",
+          "line": 79
+        },
+        {
+          "symbol": "sheetOpen",
+          "line": 101
+        },
+        {
+          "symbol": "openPendingRevision",
+          "line": 126
+        }
+      ],
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "permalink": "https://github.com/EthanYoQ/AI-Novel-Writer/blob/62880d629af7bbfaf968c0cda5ae76816e917915/src/components/stage/chapter/ChapterActions.tsx"
+    },
+    {
+      "repo": "ai-novel-writer",
+      "file": "src/services/workflows/creative-workflow-launcher.ts",
+      "localPath": "F:/deepseek workplace/AI-Novel-Writer/src/services/workflows/creative-workflow-launcher.ts",
+      "sha256": "7c28170a1ca2a7cfb470878b1f03f9981a5744ab735b6cd0116d218ee3bf3070",
+      "lines": 270,
+      "anchors": [
+        {
+          "symbol": "function launchCreativeWorkflow",
+          "line": 182
+        },
+        {
+          "symbol": "createChapterWorkflow",
+          "line": 21
+        },
+        {
+          "symbol": "registration",
+          "line": 71
+        }
+      ],
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "permalink": "https://github.com/EthanYoQ/AI-Novel-Writer/blob/62880d629af7bbfaf968c0cda5ae76816e917915/src/services/workflows/creative-workflow-launcher.ts"
+    },
+    {
+      "repo": "ai-novel-writer",
+      "file": "src/services/agent/tools/start-workflow.tool.ts",
+      "localPath": "F:/deepseek workplace/AI-Novel-Writer/src/services/agent/tools/start-workflow.tool.ts",
+      "sha256": "85ce58453e70619dbcde0b7834d9b2025cdf099f13039d27113ed6e4ae2c0052",
+      "lines": 118,
+      "anchors": [
+        {
+          "symbol": "launchCreativeWorkflow",
+          "line": 5
+        },
+        {
+          "symbol": "startWorkflowTool",
+          "line": 11
+        }
+      ],
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "permalink": "https://github.com/EthanYoQ/AI-Novel-Writer/blob/62880d629af7bbfaf968c0cda5ae76816e917915/src/services/agent/tools/start-workflow.tool.ts"
+    },
+    {
+      "repo": "ai-novel-writer",
+      "file": "src/services/workflows/chapter-workflow.ts",
+      "localPath": "F:/deepseek workplace/AI-Novel-Writer/src/services/workflows/chapter-workflow.ts",
+      "sha256": "67602b43cde176bacaab9cb85077407afba94d5b584e3f53ae19772ff45b407e",
+      "lines": 595,
+      "anchors": [
+        {
+          "symbol": "FrozenDraftSourceIdentity",
+          "line": 44
+        },
+        {
+          "symbol": "function createChapterWorkflow",
+          "line": 213
+        },
+        {
+          "symbol": "function createReviewOnlyWorkflow",
+          "line": 350
+        }
+      ],
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "permalink": "https://github.com/EthanYoQ/AI-Novel-Writer/blob/62880d629af7bbfaf968c0cda5ae76816e917915/src/services/workflows/chapter-workflow.ts"
+    },
+    {
+      "repo": "ai-novel-writer",
+      "file": "src/services/workflows/commands/refine-from-review.command.ts",
+      "localPath": "F:/deepseek workplace/AI-Novel-Writer/src/services/workflows/commands/refine-from-review.command.ts",
+      "sha256": "69e3f2c70ecbd4a95740c1e64a905bb215ea2a4d5c0fe71516c19ff429863b45",
+      "lines": 107,
+      "anchors": [
+        {
+          "symbol": "parseHumanConfirmedReviewSnapshot",
+          "line": 4
+        },
+        {
+          "symbol": "confirmation",
+          "line": 39
+        },
+        {
+          "symbol": "reviewSourceId",
+          "line": 38
+        }
+      ],
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "permalink": "https://github.com/EthanYoQ/AI-Novel-Writer/blob/62880d629af7bbfaf968c0cda5ae76816e917915/src/services/workflows/commands/refine-from-review.command.ts"
+    },
+    {
+      "repo": "ai-novel-writer",
+      "file": "src/components/panels/agent/artifact-open.ts",
+      "localPath": "F:/deepseek workplace/AI-Novel-Writer/src/components/panels/agent/artifact-open.ts",
+      "sha256": "7f5d4669f1f4818cdee5784853d6e4d8adc29c9b661946a3b38cd5699f207723",
+      "lines": 124,
+      "anchors": [
+        {
+          "symbol": "function openArtifactInEditor",
+          "line": 42
+        },
+        {
+          "symbol": "projectSession",
+          "line": 43
+        },
+        {
+          "symbol": "useEditorStore.getState().openFile",
+          "line": 114
+        }
+      ],
+      "commit": "62880d629af7bbfaf968c0cda5ae76816e917915",
+      "permalink": "https://github.com/EthanYoQ/AI-Novel-Writer/blob/62880d629af7bbfaf968c0cda5ae76816e917915/src/components/panels/agent/artifact-open.ts"
+    },
+    {
+      "repo": "sillytavern-local",
+      "file": "package.json",
+      "localPath": "E:/SillyTavern/SillyTavern-1.19.0/SillyTavern-1.19.0/package.json",
+      "sha256": "ad0c248ac5c9fec256a4f5ff3b9fb9cb6d86b747c264fd8cf6a082a742854a68",
+      "lines": 175,
+      "anchors": [
+        {
+          "symbol": "\"version\"",
+          "line": 118
+        },
+        {
+          "symbol": "\"license\"",
+          "line": 113
+        }
+      ]
+    },
+    {
+      "repo": "sillytavern-local",
+      "file": "public/script.js",
+      "localPath": "E:/SillyTavern/SillyTavern-1.19.0/SillyTavern-1.19.0/public/script.js",
+      "sha256": "d1e248efbae8a1df0a248410225cea76901f33533919fc32a28a172c1514600f",
+      "lines": 12599,
+      "anchors": [
+        {
+          "symbol": "async function messageEditDone",
+          "line": 8397
+        },
+        {
+          "symbol": "export async function swipe(",
+          "line": 9954
+        },
+        {
+          "symbol": "this.type == 'swipe'",
+          "line": 3705
+        }
+      ]
+    },
+    {
+      "repo": "sillytavern-local",
+      "file": "public/scripts/bookmarks.js",
+      "localPath": "E:/SillyTavern/SillyTavern-1.19.0/SillyTavern-1.19.0/public/scripts/bookmarks.js",
+      "sha256": "ee1ab1ba72456db1ff330648c563073e393c2ca0e9401820ac5d34cc9ae02186",
+      "lines": 740,
+      "anchors": [
+        {
+          "symbol": "export async function createBranch",
+          "line": 187
+        },
+        {
+          "symbol": "getBranchChatSnapshot",
+          "line": 172
+        },
+        {
+          "symbol": "branchChatSnapshot",
+          "line": 224
+        }
+      ]
+    },
+    {
+      "repo": "sillytavern-local",
+      "file": "public/scripts/world-info.js",
+      "localPath": "E:/SillyTavern/SillyTavern-1.19.0/SillyTavern-1.19.0/public/scripts/world-info.js",
+      "sha256": "c42d11f113b53b93bf03786ac5c1190be3cad5152f23805906fce5ebd12fb416",
+      "lines": 6408,
+      "anchors": [
+        {
+          "symbol": "export async function getWorldInfoPrompt",
+          "line": 892
+        },
+        {
+          "symbol": "let budget = Math.round",
+          "line": 4736
+        },
+        {
+          "symbol": "scan_state.MIN_ACTIVATIONS",
+          "line": 323
+        }
+      ]
+    },
+    {
+      "repo": "sillytavern-local",
+      "file": "public/scripts/authors-note.js",
+      "localPath": "E:/SillyTavern/SillyTavern-1.19.0/SillyTavern-1.19.0/public/scripts/authors-note.js",
+      "sha256": "948815f575bd1cbcfa3a44df609f43b229663516baab2ab6e2f76bd62a868e84",
+      "lines": 619,
+      "anchors": [
+        {
+          "symbol": "metadata_keys =",
+          "line": 30
+        },
+        {
+          "symbol": "export function setFloatingPrompt",
+          "line": 324
+        }
+      ]
+    }
+  ],
+  "officialDocumentation": [
+    {
+      "url": "https://docs.sillytavern.app/usage/chatting/",
+      "usedFor": "edit, swipe, branch, prompt visibility"
+    },
+    {
+      "url": "https://docs.sillytavern.app/usage/core-concepts/worldinfo/",
+      "usedFor": "dynamic lore activation and context budget"
+    },
+    {
+      "url": "https://docs.sillytavern.app/usage/core-concepts/authors-note/",
+      "usedFor": "chat-specific guidance and prompt placement"
+    }
+  ],
+  "implementationStatus": "design only; no product code changed in this turn",
+  "licenseHandling": "mechanism study and independent design; no upstream source copied"
+}

@@ -1,12 +1,12 @@
 <p align="center">
-  <img src="./docs/项目展示文档/项目展示图例/书架2.png" alt="小说工坊 Novel Studio · 幻流书架主舞台" width="100%" />
+  <img src="./docs/项目展示文档/项目展示图例/书架2.png" alt="空想书典 Reverie Fiction · 幻流书架主舞台" width="100%" />
 </p>
 
 <div align="center">
 
-# 小说工坊 · Novel Studio
+# 空想书典 · Reverie Fiction
 
-Local-First Fiction Workbench // 为长篇作者打造的本地幻流写作工坊
+Local-First Fiction Workbench // 为长篇作者打造的本地幻流写作书典
 
 简体中文 | [English](README.en.md)
 
@@ -35,7 +35,7 @@ Local-First Fiction Workbench // 为长篇作者打造的本地幻流写作工�
 
 ## 项目简介
 
-**小说工坊（Novel Studio）** 是一款面向长篇小说创作者的开源桌面写作软件，以**本地优先、输入即存、永不丢稿**为第一原则——所有作品、设定、关系与写作统计均存储在用户本机目录中，无需登录、不上传云端。
+**空想书典（Reverie Fiction，原名「小说工坊」）** 是一款面向长篇小说创作者的开源桌面写作软件，以**本地优先、输入即存、永不丢稿**为第一原则——所有作品、设定、关系与写作统计均存储在用户本机目录中，无需登录、不上传云端。
 
 软件围绕长篇创作常见的结构断裂，将**书架、正文、大纲、设定、人物、灵感与写作分析**收进统一的「**幻流（Latent）**」工作台：
 
@@ -49,7 +49,7 @@ Local-First Fiction Workbench // 为长篇作者打造的本地幻流写作工�
 ## 快速下载
 
 > [!TIP]
-> - **GitHub Releases**：前往 [Latest Release](https://github.com/linque0/novel/releases/latest) 下载 `novel-studio-setup-<版本>.exe`（Windows x64 NSIS 向导式安装程序，支持自定义路径与创建快捷方式）。
+> - **GitHub Releases**：前往 [Latest Release](https://github.com/linque0/novel/releases/latest) 下载 `reverie-fiction-setup-<版本>.exe`（Windows x64 NSIS 向导式安装程序，支持自定义路径与创建快捷方式）。
 > - **应用内更新**：已安装桌面端可在「设置 → 帮助与关于」检测 GitHub Releases 新版并经 SHA-512 校验自动安装。
 
 > [!NOTE]
@@ -187,20 +187,20 @@ npm run build:plugin  # 构建插件前端输出到 dist-plugin/
 npm start          # 以生产模式启动本地 Electron 应用
 npm run web        # 启动本地静态网页调试端（http://127.0.0.1:18688）
 npm run dist       # 构建并打包 Windows x64 安装包与免安装目录到 release2/
-npm run stop       # 优雅关闭所有运行中的小说工坊实例确保落盘
+npm run stop       # 优雅关闭所有运行中的空想书典实例确保落盘
 ```
 
 ### 交付形态对照
 
 | 形态 | 路径 / 启动方式 | 说明 |
 |---|---|---|
-| **Windows 安装程序** | [Releases](https://github.com/linque0/novel/releases/latest) / `release2/novel-studio-setup-<版本>.exe` | NSIS 向导式安装，支持桌面与开始菜单快捷方式 |
-| **免安装本体** | `release2/win-unpacked/小说工坊.exe` | 解压即用，与安装程序共用构建产物 |
+| **Windows 安装程序** | [Releases](https://github.com/linque0/novel/releases/latest) / `release2/reverie-fiction-setup-<版本>.exe` | NSIS 向导式安装，支持桌面与开始菜单快捷方式 |
+| **免安装本体** | `release2/win-unpacked/空想书典.exe` | 解压即用，与安装程序共用构建产物 |
 | **DSH 插件前端** | `npm run build:plugin`（源码衔接 `plugin/dsh/`） | 与桌面版幻流界面共享核心代码并适配宿主环境 |
 | **网页调试版** | `npm run web` | 本地浏览器调试（IndexedDB 与桌面库相互独立，不支持 `.docx` 解析导入） |
 
 > [!NOTE]
-> - 桌面安装版、免安装版与正式模式默认共用数据目录（`%APPDATA%\小说工坊`），同一目录同一时间仅允许运行一个实例防止并发冲突；需要多开对比时请附加 `--profile=你的配置名` 启动隔离目录。
+> - 桌面安装版、免安装版与正式模式默认共用数据目录（`%APPDATA%\小说工坊`，为兼容老版本平滑升级沿用旧目录名），同一目录同一时间仅允许运行一个实例防止并发冲突；需要多开对比时请附加 `--profile=你的配置名` 启动隔离目录。
 > - 调试或自动化测试结束后请执行 `npm run stop` 安全退出。
 
 ## 数据存储、安全与自动更新
@@ -274,7 +274,7 @@ tools/                     CDP 端到端验收脚本与单元测试集合
 
 ## 致谢
 
-小说工坊的构建离不开以下优秀开源项目与创作资源的支撑：
+空想书典的构建离不开以下优秀开源项目与创作资源的支撑：
 
 - [Electron](https://www.electronjs.org/) · [Vue 3](https://vuejs.org/) · [Pinia](https://pinia.vuejs.org/) · [Naive UI](https://www.naiveui.com/)
 - [TipTap](https://tiptap.dev/)（正文富文本编辑内核）

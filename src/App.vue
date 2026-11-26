@@ -34,7 +34,7 @@ import { useShelfStore } from './stores/shelf'
 import { installAiRuntime } from './services/ai/runtime'
 import { useAiStore } from './stores/ai'
 import { resolveSkin, isLatentSkin } from './skins/registry'
-import { useLatentTheme } from './skins/theme-latent.js'
+import { useLatentTheme, scaleNaiveOverrides } from './skins/theme-latent.js'
 import { useGlazeMuseum } from './composables/useGlazeMuseum'
 import './styles/skins/gravity.css'
 import './styles/skins/gravity-workbench.css'
@@ -76,17 +76,18 @@ const naiveTheme = computed(() => {
   return activeSkin.value.id === 'glaze' ? null : (activeSkin.value.id === 'gravity' || activeSkin.value.id === 'crimson' || ui.theme === 'night' ? darkTheme : null)
 })
 const overrides = computed(() => {
-  /* 隐现皮肤优先：它的覆盖表与自身的 CSS 令牌同源 */
+  /* 隐现皮肤优先：它的覆盖表与自身的 CSS 令牌同源（已含全局字体缩放） */
   if (latent.value) return latentTheme.value.overrides
-  if (museumActive.value) return {
+  let base
+  if (museumActive.value) base = {
     common: { primaryColor:'#536b4d', primaryColorHover:'#657c5b', primaryColorPressed:'#3d5339', primaryColorSuppl:'#536b4d', textColor1:'#344f42', textColor2:'#4b604b', textColor3:'#69745e', bodyColor:'#dce4d2', cardColor:'#faf7ed', modalColor:'#faf7ed', popoverColor:'#faf7ed', inputColor:'#f7f4e8', borderColor:'#b7b99c', borderRadius:'2px' },
     Tree: { nodeColorActive:'#e8ebda', nodeColorHover:'#eef0e2', nodeColorPressed:'#dce4d2' }
   }
-  if (activeSkin.value.id === 'glaze') return {
+  else if (activeSkin.value.id === 'glaze') base = {
     common: { primaryColor:'#146878', primaryColorHover:'#247b89', primaryColorPressed:'#0e5361', primaryColorSuppl:'#146878', textColor1:'#234752', textColor2:'#315763', textColor3:'#4f7079', bodyColor:'#e7eff1', cardColor:'#f8fcfc', modalColor:'#f8fcfc', popoverColor:'#f4fafb', inputColor:'#f5fafb', borderColor:'#adcbd0', borderRadius:'8px' },
     Tree: { nodeColorActive:'#cde3e6',nodeColorHover:'#e3eff1',nodeColorPressed:'#d2e6e9' }
   }
-  if (activeSkin.value.id === 'crimson') return {
+  else if (activeSkin.value.id === 'crimson') base = {
     common: {
       primaryColor:'#cfb06b', primaryColorHover:'#e0c684', primaryColorPressed:'#b5924f', primaryColorSuppl:'#cfb06b',
       textColor1:'#f0e7d5', textColor2:'#e4dcc6', textColor3:'#bfb59c',
@@ -95,25 +96,32 @@ const overrides = computed(() => {
     },
     Tree: { nodeColorActive:'#33413a', nodeColorHover:'#2a352f', nodeColorPressed:'#33413a' }
   }
-  if (activeSkin.value.id === 'gravity') {
-    return { common: {
+  else if (activeSkin.value.id === 'gravity') {
+    base = { common: {
       primaryColor: '#f29c62', primaryColorHover: '#ffb784', primaryColorPressed: '#dc874f', primaryColorSuppl: '#f29c62',
       textColor1: '#e3eceb', textColor2: '#d7e0e5', textColor3: '#9aadb9',
       bodyColor: '#0b131d', cardColor: '#14212c', modalColor: '#14212c', popoverColor: '#1a2b37',
       borderColor: '#344654', inputColor: '#101c27'
     }, Tree: { nodeColorActive: '#243340', nodeColorHover: '#1b2b37', nodeColorPressed: '#243340' } }
+  } else {
+    const accent = { xuan: '#8c6f4e', parchment: '#a0642f', night: '#d4a95c' }[ui.theme] || '#8c6f4e'
+    base = { common: { primaryColor: accent, primaryColorHover: accent, primaryColorPressed: accent, primaryColorSuppl: accent } }
   }
-  const accent = { xuan: '#8c6f4e', parchment: '#a0642f', night: '#d4a95c' }[ui.theme] || '#8c6f4e'
-  return { common: { primaryColor: accent, primaryColorHover: accent, primaryColorPressed: accent, primaryColorSuppl: accent } }
+  return scaleNaiveOverrides(base, ui.uiFontScale)
 })
 /* M1-C2：插件构建下 naive 主题跟 iframe 根上的 data-ns-dark 走（预览窗口与宿主同亮暗）；
  * 桌面版 __NS_PLUGIN__ 为 false，两个表达式原样落回 naiveTheme / overrides。 */
 const nsPlugin = __NS_PLUGIN__
 const dshThemeState = nsPlugin ? useDshOverrides() : null
 const dshNaiveTheme = computed(() => (dshThemeState && dshThemeState.value.dark ? darkTheme : null))
-const dshOverrides = computed(() => (dshThemeState ? dshThemeState.value.overrides : {}))
+const dshOverrides = computed(() => (dshThemeState ? scaleNaiveOverrides(dshThemeState.value.overrides, ui.uiFontScale) : {}))
 
 watch(activeSkin, skin => { document.body.dataset.skin = skin.id }, { immediate: true })
+watch(() => ui.uiFontScale, (pct) => {
+  const s = Math.max(0.85, Math.min(1.4, (Number(pct) || 100) / 100))
+  document.documentElement.style.setProperty('--ui-font-scale', String(s))
+  document.documentElement.dataset.uiScale = String(Math.round(s * 100))
+}, { immediate: true })
 
 /* Body also supplies the effective appearance to teleported dialogs. */
 watch([latent, () => ui.theme, dshNaiveTheme], ([enabled, theme, hostDark]) => {
@@ -235,7 +243,7 @@ async function seedDevVerifyBooks() {
           <div v-if="ui.dbError" class="empty-shelf" style="padding-top: 16vh">
             <div class="big">数据的另一扇门被占用了</div>
             <p>
-              本地数据库暂时无法打开——很可能是另一个「小说工坊」窗口正在运行。<br />
+              本地数据库暂时无法打开——很可能是另一个「空想书典」窗口正在运行。<br />
               你的全部数据都安全地保存在本地，不会被覆盖。关闭其他窗口后重试即可。
             </p>
             <NButton type="primary" @click="boot">重试</NButton>

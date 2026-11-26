@@ -31,7 +31,8 @@ import {
   scopeConnections,
   scopeCrumbs,
   scopePathIds,
-  scopeStats
+  scopeStats,
+  shouldShowContainerContent
 } from './outline/outline-scope.js'
 import {
   CONTAINER_COLORS,
@@ -91,8 +92,18 @@ const scopeId = computed(() => {
   if (!id) return null
   return live.value.some((n) => n.id === id && n.kind === 'container') ? id : null
 })
+const resizePreviewExpanded = reactive(new Map())
 const expandedSet = computed(() => new Set((work.canvasPrefs.expanded || []).filter((id) => live.value.some((n) => n.id === id && n.kind === 'container'))))
-const layerLayout = computed(() => buildLayerLayout(live.value, scopeId.value, expandedSet.value, {
+const effectiveExpandedSet = computed(() => {
+  if (!resizePreviewExpanded.size) return expandedSet.value
+  const next = new Set(expandedSet.value)
+  for (const [id, show] of resizePreviewExpanded) {
+    if (show) next.add(id)
+    else next.delete(id)
+  }
+  return next
+})
+const layerLayout = computed(() => buildLayerLayout(live.value, scopeId.value, effectiveExpandedSet.value, {
   sizeOf: (n) => dragSize.get(n.id),
   posOf: (n) => posOf(n)
 }))
@@ -104,7 +115,7 @@ const containerSizes = computed(() => layerLayout.value.sizes)
 /* 容器内容区滚动：只影响迷你卡的显示/连线几何，不改真实坐标。 */
 const scrollOffsets = reactive(new Map())
 const MINI_SCROLL_PAD = 6
-const isExpanded = (id) => expandedSet.value.has(id)
+const isExpanded = (id) => effectiveExpandedSet.value.has(id)
 
 const draggingId = ref(null)
 function rectOf(n) {
@@ -117,7 +128,7 @@ function rectOf(n) {
   const p = posOf(n)
   if (!p) return null
   const size = n.kind === 'container'
-    ? (containerSizes.value.get(n.id) || dragSize.get(n.id) || containerCardSize(live.value, n, expandedSet.value))
+    ? (containerSizes.value.get(n.id) || dragSize.get(n.id) || containerCardSize(live.value, n, effectiveExpandedSet.value))
     : sizeOf(n)
   return { ...p, ...size }
 }
@@ -168,18 +179,34 @@ function migrateSides() {
     work.olnodeRelPatchAny(n.id,r.id,{fromSide:r.fromSide||sides.from,toSide:r.toSide||sides.to})
   }
 }
-function hostJunctionGeom(ref, visiting = new Set()) {
+function junctionBranchSide(pt, dx, dy, other) {
+  const tangentSide = Math.abs(dx) >= Math.abs(dy) ? (dx >= 0 ? 'right' : 'left') : (dy >= 0 ? 'bottom' : 'top')
+  if (!other || !Number.isFinite(other.x) || !Number.isFinite(other.y)) return tangentSide
+  const vx = other.x - pt.x
+  const vy = other.y - pt.y
+  if (Math.hypot(vx, vy) < 1) return tangentSide
+  const hostVertical = Math.abs(dy) >= Math.abs(dx)
+  if (hostVertical) {
+    if (Math.abs(vx) >= 12 || Math.abs(vx) >= Math.abs(vy) * 0.35) return vx >= 0 ? 'right' : 'left'
+    return vy >= 0 ? 'bottom' : 'top'
+  }
+  if (Math.abs(vy) >= 12 || Math.abs(vy) >= Math.abs(vx) * 0.35) return vy >= 0 ? 'bottom' : 'top'
+  return vx >= 0 ? 'right' : 'left'
+}
+function hostJunctionGeom(ref, other = null, visiting = new Set(), renderedMap = null) {
   const e = relationEntries.value.find(e => e.owner.id === ref.ownerId && e.rel.id === ref.relId)
   if (!e) return null
   const j = e.rel.junctions?.find(j => j.id === ref.junctionId)
-  const host = edgeGeomFor(e.owner,e.rel,visiting)
+  const host = renderedMap?.get(ref.relId) || edgeGeomFor(e.owner,e.rel,visiting,renderedMap)
   if (!host || host.status === 'blocked' || (!j && !Number.isFinite(ref.t))) return null
   const t = j?.t ?? ref.t
+  const pt = pointAtT(host,t)
+  if (!pt) return null
   const p0 = pointAtT(host,Math.max(0,t-.002)),p1 = pointAtT(host,Math.min(1,t+.002))
-  const dx=p1.x-p0.x,dy=p1.y-p0.y
-  return {point:pointAtT(host,t),side:Math.abs(dx)>=Math.abs(dy)?(dx>=0?'right':'left'):(dy>=0?'bottom':'top')}
+  const dx=(p1?.x??pt.x)-(p0?.x??pt.x),dy=(p1?.y??pt.y)-(p0?.y??pt.y)
+  return {point:pt,side:junctionBranchSide(pt,dx,dy,other)}
 }
-function endpointGeom(endpoint, other, visiting = new Set()) {
+function endpointGeom(endpoint, other, visiting = new Set(), renderedMap = null) {
   if (endpoint.nodeId) {
     const n=nodeById(endpoint.nodeId)
     if (!n || !posOf(n) || !visibleIdSet.value.has(n.id)) return null
@@ -187,7 +214,7 @@ function endpointGeom(endpoint, other, visiting = new Set()) {
     return {point:portsOf(n)[side],side,nodeId:n.id}
   }
   if (endpoint.point) return {point:endpoint.point,side:endpoint.side||'left'}
-  return hostJunctionGeom(endpoint,visiting)
+  return hostJunctionGeom(endpoint,other,visiting,renderedMap)
 }
 function occupiedChannels(key,a,b) {
   const left=Math.min(a.x,b.x)-100,right=Math.max(a.x,b.x)+100,top=Math.min(a.y,b.y)-100,bottom=Math.max(a.y,b.y)+100
@@ -210,12 +237,14 @@ function shiftPort(point, side, offset) {
     ? { x: point.x, y: point.y + offset }
     : { x: point.x + offset, y: point.y }
 }
-function geometryBetween(source,target,rel={},key='',visiting=new Set(),preview=false) {
-  let dst=endpointGeom(target,null,visiting)
+function geometryBetween(source,target,rel={},key='',visiting=new Set(),preview=false,renderedMap=null) {
+  let dst=endpointGeom(target,null,visiting,renderedMap)
   if(!dst) return null
-  let src=endpointGeom(source,dst.point,visiting)
+  let src=endpointGeom(source,dst.point,visiting,renderedMap)
   if(!src) return null
-  if(target.nodeId && !target.side) dst=endpointGeom({...target,side:sideBetween({x:src.point.x,y:src.point.y,w:0,h:0},rectOf(nodeById(target.nodeId))).to},src.point,visiting)
+  if(target.nodeId && !target.side) dst=endpointGeom({...target,side:sideBetween({x:src.point.x,y:src.point.y,w:0,h:0},rectOf(nodeById(target.nodeId))).to},src.point,visiting,renderedMap)
+  else if(!target.nodeId && !target.point) dst=endpointGeom(target,src.point,visiting,renderedMap) || dst
+  if(!source.nodeId && !source.point) src=endpointGeom(source,dst.point,visiting,renderedMap) || src
   /* 同一对模块之间的多条关系平行错开，避免完全重叠。 */
   if (rel._parallel) {
     src = { ...src, point: shiftPort(src.point, src.side, rel._parallel) }
@@ -235,41 +264,46 @@ function geometryBetween(source,target,rel={},key='',visiting=new Set(),preview=
   }
   return preview?build(routeCache.entries.get(key)?.g):routeCache.get(key,signature,obs,build)
 }
-function edgeGeomFor(n,r,visiting=new Set()) {
+function edgeGeomFor(n,r,visiting=new Set(),renderedMap=null) {
   if(visiting.has(r.id)) return null
   const next=new Set(visiting);next.add(r.id)
-  return geometryBetween(r.fromJunction||{nodeId:n.id,side:r.fromSide},r.toJunction||{nodeId:r.toId,side:r.toSide},r,r.id,next)
+  return geometryBetween(r.fromJunction||{nodeId:n.id,side:r.fromSide},r.toJunction||{nodeId:r.toId,side:r.toSide},r,r.id,next,false,renderedMap)
 }
 const scopedRelations = computed(() => projectRelations(relationEntries.value, live.value, scopeId.value, layerLayout.value))
 const edges = computed(() => {
-  const out=[],keys=new Set(),labels=[]
+  const out=[],keys=new Set(),labels=[],renderedByRelId=new Map()
   const groups = scopedRelations.value.groups
-  /* 同一对端点之间的多条关系（含不同关系类型）统一错开。 */
+  /* 同一对端点之间的多条关系（含不同关系类型）统一错开；连接点分支边不参与平行偏移。 */
   const pairCounts = new Map(), pairUsed = new Map()
   for (const g of groups) {
+    if (g.fromJunction || g.toJunction) continue
     const k = `${g.from}>${g.to}`
     pairCounts.set(k, (pairCounts.get(k) || 0) + 1)
   }
   for (const group of groups) {
     const a = nodeById(group.from), b = nodeById(group.to)
-    if (!a || !b) continue
-    const pairKey = `${group.from}>${group.to}`
-    const index = pairUsed.get(pairKey) || 0
-    pairUsed.set(pairKey, index + 1)
-    const parallel = (index - ((pairCounts.get(pairKey) || 1) - 1) / 2) * 18
+    if ((!a && !group.fromJunction) || (!b && !group.toJunction)) continue
+    let parallel = 0
+    if (!group.fromJunction && !group.toJunction) {
+      const pairKey = `${group.from}>${group.to}`
+      const index = pairUsed.get(pairKey) || 0
+      pairUsed.set(pairKey, index + 1)
+      parallel = (index - ((pairCounts.get(pairKey) || 1) - 1) / 2) * 18
+    }
     const only = group.relations.length === 1 ? group.relations[0] : null
     const rel = only ? only.rel : {
       id: group.key, toId: group.to, kind: group.kind, arrows: group.arrow,
       label: group.label, style: '', color: '', junctions: []
     }
-    const sides = sideBetween(rectOf(a), rectOf(b))
+    const sides = a && b ? sideBetween(rectOf(a), rectOf(b)) : { from: 'right', to: 'left' }
     const fromSide = only && !group.projectedFrom && only.rel.fromSide ? only.rel.fromSide : sides.from
-    const toSide = only && !group.projectedTo && only.rel.toSide ? only.rel.toSide : sides.to
-    const source = { nodeId: group.from, side: fromSide }
-    const target = { nodeId: group.to, side: toSide }
-    const g = geometryBetween(source, target, { ...rel, _parallel: parallel }, group.key)
+    const toSide = only && !group.projectedTo && only.rel.toSide ? only.rel.toSide : (group.fromJunction ? undefined : sides.to)
+    const source = group.fromJunction ? { ...group.fromJunction } : { nodeId: group.from, side: fromSide }
+    const target = group.toJunction ? { ...group.toJunction } : { nodeId: group.to, side: toSide }
+    const g = geometryBetween(source, target, { ...rel, _parallel: parallel }, group.key, new Set(), false, renderedByRelId)
     if (!g) continue
     keys.add(group.key)
+    if (only && !group.projected) renderedByRelId.set(only.rel.id, g)
     const arrows = only ? (only.rel.arrows || '->') : group.arrow
     const trim = 7 * relArrowScale(rel) * Math.cos(.42) + relEdgeWidth(rel) * .4
     const displayLabel = group.relations.length > 1 ? `${group.kind} · ${group.relations.length}` : group.label
@@ -299,6 +333,11 @@ const edges = computed(() => {
   }
   routeCache.prune(keys)
   return out
+})
+const renderedEdgeByRelId = computed(() => {
+  const m = new Map()
+  for (const e of edges.value) if (!e.group && !e.projected && e.rel?.id) m.set(e.rel.id, e)
+  return m
 })
 const selectedEdge = computed(() => edges.value.find(e=>e.key===selectedEdgeKey.value))
 /* 箭头三角形：按 rel.arrows 在两端生成；单条连线可经 rel.edgeWidth / rel.arrowScale 覆盖画布全局设置 */
@@ -574,16 +613,119 @@ function ensureMiniVisible(id) {
     scrollOffsets.set(group.id, next)
   }
 }
-function miniStyle(item, group) {
+function miniStyle(item, group, idx = 0) {
   return {
     left: (item.rect.x - group.rect.x + MINI_SCROLL_PAD) + 'px',
     top: (item.rect.y - group.rect.y) + 'px',
     width: item.rect.w + 'px',
     height: item.rect.h + 'px',
     zIndex: 2 + item.depth,
+    '--mini-delay': Math.min(idx, 6) * 24 + 'ms',
     ...(item.node.kind === 'container' ? { '--bc': item.node.color || CONTAINER_COLORS[0][0] } : {})
   }
 }
+
+const MINI_ENTER_MS = 380
+const MINI_LEAVE_MS = 190
+const enteringGroupIds = ref(new Set())
+const enteringGroupTimers = new Map()
+const leavingGroups = ref(new Map())
+
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+}
+
+function clearMiniTransitions() {
+  for (const timer of enteringGroupTimers.values()) clearTimeout(timer)
+  enteringGroupTimers.clear()
+  if (enteringGroupIds.value.size) enteringGroupIds.value = new Set()
+  for (const entry of leavingGroups.value.values()) clearTimeout(entry.timer)
+  if (leavingGroups.value.size) leavingGroups.value = new Map()
+}
+
+watch(
+  [miniGroups, () => work.work?.id, scopeId],
+  ([nextGroups, nextWorkId, nextScopeId], oldVal) => {
+    const [prevGroups = [], prevWorkId, prevScopeId] = oldVal || []
+    if (oldVal && (nextWorkId !== prevWorkId || nextScopeId !== prevScopeId)) {
+      clearMiniTransitions()
+      return
+    }
+    const reduced = prefersReducedMotion()
+    const nextMap = new Map(nextGroups.map(g => [g.id, g]))
+    const prevMap = new Map(prevGroups.map(g => [g.id, g]))
+    let enterSet = null
+    let leaveMap = null
+
+    for (const g of nextGroups) {
+      if (leavingGroups.value.has(g.id)) {
+        const prevEntry = leavingGroups.value.get(g.id)
+        clearTimeout(prevEntry.timer)
+        if (!leaveMap) leaveMap = new Map(leavingGroups.value)
+        leaveMap.delete(g.id)
+      }
+      if (!prevMap.has(g.id) && !reduced && g.items?.length) {
+        if (!enterSet) enterSet = new Set(enteringGroupIds.value)
+        enterSet.add(g.id)
+        if (enteringGroupTimers.has(g.id)) clearTimeout(enteringGroupTimers.get(g.id))
+        const id = g.id
+        enteringGroupTimers.set(id, setTimeout(() => {
+          enteringGroupTimers.delete(id)
+          if (enteringGroupIds.value.has(id)) {
+            const next = new Set(enteringGroupIds.value)
+            next.delete(id)
+            enteringGroupIds.value = next
+          }
+        }, MINI_ENTER_MS))
+      }
+    }
+
+    for (const prev of prevGroups) {
+      if (nextMap.has(prev.id)) continue
+      if (enteringGroupTimers.has(prev.id)) {
+        clearTimeout(enteringGroupTimers.get(prev.id))
+        enteringGroupTimers.delete(prev.id)
+      }
+      if (enteringGroupIds.value.has(prev.id)) {
+        if (!enterSet) enterSet = new Set(enteringGroupIds.value)
+        enterSet.delete(prev.id)
+      }
+      if (!reduced && prev.items?.length) {
+        if (!leaveMap) leaveMap = new Map(leavingGroups.value)
+        if (leaveMap.has(prev.id)) clearTimeout(leaveMap.get(prev.id).timer)
+        const id = prev.id
+        const timer = setTimeout(() => {
+          const cur = leavingGroups.value.get(id)
+          if (!cur) return
+          const next = new Map(leavingGroups.value)
+          next.delete(id)
+          leavingGroups.value = next
+        }, MINI_LEAVE_MS)
+        leaveMap.set(id, { group: prev, timer })
+      }
+    }
+
+    if (enterSet) enteringGroupIds.value = enterSet
+    if (leaveMap) leavingGroups.value = leaveMap
+  }
+)
+
+const renderMiniGroups = computed(() => {
+  const active = miniGroups.value.map(g => ({
+    ...g,
+    entering: enteringGroupIds.value.has(g.id),
+    leaving: false
+  }))
+  if (!leavingGroups.value.size) return active
+  const activeIds = new Set(active.map(g => g.id))
+  const leaving = []
+  for (const [id, entry] of leavingGroups.value.entries()) {
+    if (!activeIds.has(id)) {
+      leaving.push({ ...entry.group, entering: false, leaving: true })
+    }
+  }
+  return active.concat(leaving)
+})
 function selectMini(n) {
   work.selOlnodeId = n.id
   selectedEdgeKey.value = null
@@ -1054,10 +1196,12 @@ function collisionShift(anchorId, before, after) {
 function toggleInline(id) {
   const n = nodeById(id)
   if (!n || n.kind !== 'container') return
+  const nextOpen = !isExpanded(id)
   const anchorId = topLevelAncestor(id) || id
   const anchor = nodeById(anchorId)
   const before = anchor ? { ...posOf(anchor), ...containerCardSize(live.value, anchor, expandedSet.value) } : null
-  setExpanded(id, !isExpanded(id))
+  work.olnodeClearSize(id)
+  setExpanded(id, nextOpen)
   nextTick(() => {
     const after = anchor ? { ...posOf(anchor), ...containerCardSize(live.value, anchor, expandedSet.value) } : null
     if (before && after) collisionShift(anchorId, before, after)
@@ -1082,7 +1226,10 @@ function expandAllDeep() {
   const ids = scopeSubtreeNodes().filter((n) => n.kind === 'container' && kidsOf(n).length).map((n) => n.id)
   if (!ids.length) return
   const list = new Set(work.canvasPrefs.expanded || [])
-  for (const id of ids) list.add(id)
+  for (const id of ids) {
+    work.olnodeClearSize(id)
+    list.add(id)
+  }
   work.canvasPrefs.expanded = [...list]
   work.saveCanvasPrefs()
   nextTick(() => fitLayer(false))
@@ -1091,14 +1238,22 @@ function collapseAllDeep() {
   const ids = new Set(scopeSubtreeNodes().filter((n) => n.kind === 'container').map((n) => n.id))
   if (!ids.size) return
   const list = new Set(work.canvasPrefs.expanded || [])
-  for (const id of ids) list.delete(id)
+  for (const id of ids) {
+    work.olnodeClearSize(id)
+    list.delete(id)
+  }
   work.canvasPrefs.expanded = [...list]
   work.saveCanvasPrefs()
   nextTick(() => fitLayer(false))
 }
 function overview() {
   const list = new Set(work.canvasPrefs.expanded || [])
-  for (const n of visNodes.value) if (n.kind === 'container') list.delete(n.id)
+  for (const n of visNodes.value) {
+    if (n.kind === 'container') {
+      work.olnodeClearSize(n.id)
+      list.delete(n.id)
+    }
+  }
   work.canvasPrefs.expanded = [...list]
   work.saveCanvasPrefs()
   nextTick(() => fitLayer(false))
@@ -1176,9 +1331,7 @@ function startResize(e, n, dir) {
   const p0 = dragPos.get(n.id) || { x: n.canvasX ?? 0, y: n.canvasY ?? 0 }
   const minW = n.kind === 'container' ? SCOPE_METRICS.cardMinW : 96
   const maxW = n.kind === 'container' ? SCOPE_METRICS.cardMaxW : Infinity
-  const minH = n.kind === 'container'
-    ? (isExpanded(n.id) ? SCOPE_METRICS.containerMinH : SCOPE_METRICS.collapsedH)
-    : 36
+  const minH = n.kind === 'container' ? SCOPE_METRICS.collapsedH : 36
   const mx = e.clientX
   const my = e.clientY
   /* 拖拽方向决定可变轴：未拖的轴保持原值不落库（否则横拖会把高度钉死在当前值） */
@@ -1203,14 +1356,22 @@ function startResize(e, n, dir) {
     }
     dragSize.set(n.id, { w, h })
     if (dir.includes('w') || dir.includes('n')) dragPos.set(n.id, { x: Math.round(x), y: Math.round(y) })
+    if (n.kind === 'container' && kidsOf(n).length) {
+      resizePreviewExpanded.set(n.id, shouldShowContainerContent(live.value, n, w, h, expandedSet.value))
+    }
   }
-  const finish=()=>{dragSize.delete(n.id);dragPos.delete(n.id);resizing.value=false;resizeSmooth.value=false}
+  const finish=()=>{dragSize.delete(n.id);dragPos.delete(n.id);resizePreviewExpanded.delete(n.id);resizing.value=false;resizeSmooth.value=false}
   pointerGesture(e,apply,(ev,moved)=>{
     const size=dragSize.get(n.id),pos=dragPos.get(n.id)
     if(moved) {
       work.olnodePushUndo(true)
       if(pos) work.olnodeSetCanvas(n.id,pos.x,pos.y)
-      if(size) work.olnodeSetSize(n.id,canW?size.w:null,canH?size.h:null)
+      if(size) {
+        work.olnodeSetSize(n.id,canW?size.w:null,canH?size.h:null)
+        if(n.kind==='container' && kidsOf(n).length) {
+          setExpanded(n.id, shouldShowContainerContent(live.value, n, size.w, size.h, expandedSet.value))
+        }
+      }
     }
     finish()
   },finish)
@@ -1421,25 +1582,11 @@ const junctionItems = computed(() => {
   void juncFlashTick.value
   const now = Date.now()
   const out = []
-  /* 连接点挂在真实宿主连线上；即使宿主边被投影分组，也要保留可见的连接点。 */
-  for (const { owner, rel } of relationEntries.value) {
-    if (!rel.junctions?.length) continue
-    const fromId = rel.fromJunction?.ownerId || owner.id
-    const toId = rel.toJunction?.ownerId || rel.toId
-    if (!visibleIdSet.value.has(fromId) || !visibleIdSet.value.has(toId)) continue
-    const a = nodeById(fromId), b = nodeById(toId)
-    if (!a || !b) continue
-    const sides = sideBetween(rectOf(a), rectOf(b))
-    const geom = geometryBetween(
-      { nodeId: fromId, side: rel.fromSide || sides.from },
-      { nodeId: toId, side: rel.toSide || sides.to },
-      rel,
-      rel.id
-    )
-    if (!geom) continue
-    for (const j of rel.junctions) {
-      const p = pointAtT(geom, j.t)
-      if (p) out.push({ key: j.id, ownerId: owner.id, relId: rel.id, junctionId: j.id, x: p.x, y: p.y, flash: now - (j.bornAt || 0) < 1600 })
+  for (const edge of edges.value) {
+    if (edge.group || edge.projected || !edge.ownerId || !edge.rel?.junctions?.length) continue
+    for (const j of edge.rel.junctions) {
+      const p = pointAtT(edge, j.t)
+      if (p) out.push({ key: j.id, ownerId: edge.ownerId, relId: edge.rel.id, junctionId: j.id, x: p.x, y: p.y, flash: now - (j.bornAt || 0) < 1600 })
     }
   }
   return out
@@ -1501,7 +1648,7 @@ function snapEndpoint(pt,exclude) {
   }
   if(best) return best
   for(const j of junctionItems.value) {
-    if(edges.value.find(e=>e.key===j.relId)?.status==='blocked') continue
+    if(edges.value.find(e=>e.rel?.id===j.relId)?.status==='blocked') continue
     if(!hostAllowed(j,exclude)) continue
     const d=Math.hypot(pt.x-j.x,pt.y-j.y)
     if(d<=radius&&(!best||d<best.dist)) best={ownerId:j.ownerId,relId:j.relId,junctionId:j.junctionId,point:{x:j.x,y:j.y},dist:d}
@@ -1564,7 +1711,7 @@ const connGeometry=computed(()=>{
   if(!c) return null
   const candidate=c.candidate?endpointData(c.candidate):{point:c.point,side:c.end==='source'?'right':'left'}
   const source=c.end==='source'?candidate:c.source,target=c.end==='source'?c.target:candidate
-  return geometryBetween(source,target,c.rel||{},c.edgeKey||'__preview',new Set(c.edgeKey?[c.edgeKey]:[]),true)
+  return geometryBetween(source,target,c.rel||{},c.edgeKey||'__preview',new Set(c.edgeKey?[c.edgeKey]:[]),true,renderedEdgeByRelId.value)
 })
 const connPath=computed(()=>connGeometry.value?.d||'')
 const routeHandles=computed(()=>{
@@ -1876,8 +2023,7 @@ function createPlacedNode(node, rect) {
     window.$msg?.warning('关联的章节或卷已不存在，请重新选择')
     return
   }
-  const fields = node.kind === 'container' ? { ...node, w: rect.w, manualW: true } : node
-  const row = work.olnodeAdd(scopeId.value, { ...fields, canvasX: rect.x, canvasY: rect.y })
+  const row = work.olnodeAdd(scopeId.value, { ...node, canvasX: rect.x, canvasY: rect.y })
   work.selOlnodeId = row.id
   if (row.kind === 'cite') chooseCitation(row)
 }
@@ -2024,6 +2170,7 @@ watch(() => work.work?.id, () => {
   nextTick(() => { if (!restoreCamera(scopeId.value)) fitLayer(true) })
 })
 onBeforeUnmount(() => {
+  clearMiniTransitions()
   saveCamera()
   cancelGesture?.()
   routeCache.clear()
@@ -2179,14 +2326,14 @@ onBeforeUnmount(() => {
           @contextmenu.prevent="onNodeCtx($event, n)"
         >
           <template v-if="n.kind === 'container'">
+            <button class="oc-inline-toggle" type="button" :aria-expanded="isExpanded(n.id)" :title="isExpanded(n.id) ? '折叠容器内容' : '展开容器内容'" @click.stop="toggleInline(n.id)">{{ isExpanded(n.id) ? '折叠 −' : '展开 ＋' }}</button>
             <div class="oc-cmeta"><span class="oc-container-kind">容器</span>
               <span class="oc-cchapter">{{ n.chapter || '故事片段' }}</span>
               <span v-if="containerProgress(n).blocks">{{ containerProgress(n).blocks }} 个子容器</span>
             </div>
             <div class="oc-chead">
-              <button class="oc-caret" :title="isExpanded(n.id) ? '收起内容' : '就地展开'" @click.stop="toggleInline(n.id)"><OIcon :name="isExpanded(n.id) ? 'caret-down' : 'caret-right'" :size="11" /></button>
+              <button class="oc-caret" :title="isExpanded(n.id) ? '折叠容器内容' : '展开容器内容'" @click.stop="toggleInline(n.id)"><OIcon :name="isExpanded(n.id) ? 'caret-down' : 'caret-right'" :size="11" /></button>
               <span class="oc-ctitle">{{ n.title || '容器' }}</span>
-              <button class="oc-inline-toggle" type="button" @click.stop="toggleInline(n.id)">{{ isExpanded(n.id) ? '收起内容 −' : '就地展开 ＋' }}</button>
             </div>
             <p class="oc-csummary">{{ containerSummary(n) }}</p>
             <div class="oc-cprogress">
@@ -2270,20 +2417,21 @@ onBeforeUnmount(() => {
 
         <!-- 就地展开的迷你卡：按顶层容器分组，内容区可滚动；连线矩形随 scrollOffsets 位移 -->
         <div
-          v-for="group in miniGroups"
+          v-for="group in renderMiniGroups"
           :key="'mini-scroll-' + group.id"
           class="oc-mini-scroll"
+          :class="{ 'oc-mini-entering': group.entering, 'oc-mini-leaving': group.leaving }"
           :style="miniScrollStyle(group)"
           :data-mini-scroll="group.id"
-          :ref="(el) => setMiniScrollEl(group.id, el)"
-          @scroll="onMiniScroll(group.id, $event)"
+          :ref="(el) => !group.leaving && setMiniScrollEl(group.id, el)"
+          @scroll="!group.leaving && onMiniScroll(group.id, $event)"
           @mousedown.stop
           @click.stop
           @wheel.stop
         >
           <div class="oc-mini-content" :style="{ height: group.contentH + 'px' }">
             <div
-              v-for="item in group.items"
+              v-for="(item, idx) in group.items"
               :key="'mini-' + item.node.id"
               class="oc-mini"
               :class="[
@@ -2299,7 +2447,7 @@ onBeforeUnmount(() => {
                   'drop-target': miniDrag && miniDrag.moved && miniDrag.targetId === item.node.id
                 }
               ]"
-              :style="miniStyle(item, group)"
+              :style="miniStyle(item, group, idx)"
               :data-node-id="item.node.id"
               :data-mini-id="item.node.id"
               :data-outline-citation="item.node.kind === 'cite' && item.node.refId ? '' : null"

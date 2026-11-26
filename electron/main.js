@@ -208,7 +208,7 @@ function createWindow() {
     minHeight: 680,
     icon: windowIconPath(),
     backgroundColor: '#f6f2e7',
-    title: '小说工坊' + (profileName ? ' · ' + profileName : ''),
+    title: '空想书典' + (profileName ? ' · ' + profileName : ''),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

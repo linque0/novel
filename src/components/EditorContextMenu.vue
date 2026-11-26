@@ -3,6 +3,7 @@ import { reactive, ref, nextTick, onMounted, onBeforeUnmount } from 'vue'
 import { parseTarget, targetById, findByTitle, jumpTo } from '../services/doublelinks'
 import { ANNOTATION_KINDS, normalizeNoteColor, noteKindOf } from '../services/annotations'
 import { useWorkStore } from '../stores/work'
+import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import { uid } from '../db/database'
 import { useWritingStore } from '../stores/writing.js'
@@ -11,6 +12,7 @@ import DLinkPicker from './DLinkPicker.vue'
 const nsPlugin = __NS_PLUGIN__
 const props = defineProps({ editor: { type: Object, required: true } })
 const work = useWorkStore()
+const ui = useUiStore()
 const ai = useAiStore()
 
 const st = reactive({ open: false, x: 0, y: 0, sub: null, subX: 0, subY: 0, linkEdit: false, linkHref: '', dlPicker: false, dlFrom: 0, dlTo: 0, savedFrom: null, savedTo: null, dlQuery: '', noteEdit: false, noteText: '', noteColor: ANNOTATION_KINDS[0].color, noteFrom: 0, noteTo: 0, noteExistingId: null, noteQuote: '' })
@@ -482,6 +484,7 @@ defineExpose({ open, close })
           <div class="swatch-grid">
             <button v-for="c in COLORS" :key="c" class="swatch" :style="{ background: c }" :title="c" @click="run(() => chain().setColor(c).run())" />
           </div>
+          <div class="ctx-item" @click="run(() => chain().unsetColor().run())"><span>恢复默认颜色</span></div>
         </div>
       </div>
 

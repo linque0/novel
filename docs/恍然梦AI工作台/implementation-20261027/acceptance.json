@@ -1,0 +1,221 @@
+{
+  "date": "2026-10-28",
+  "scope": "independent-agent-workbench-first-milestone",
+  "profile": "booksource-verify",
+  "kind": "deterministic-mechanisms-not-model-quality",
+  "ui": {
+    "passed": 15,
+    "total": 15,
+    "consecutivePasses": 3,
+    "coldStartRecheck": "passed"
+  },
+  "creativeWorkflow": {
+    "kind": "deterministic-integration",
+    "requests": 19,
+    "results": [
+      {
+        "name": "real stage tools create linked batch candidates without writing prose",
+        "ok": true
+      },
+      {
+        "name": "author edits invalidate review and all downstream candidate dependencies",
+        "ok": true
+      },
+      {
+        "name": "interrupted revision keeps confirmation and resumes same repair cycle",
+        "ok": true
+      },
+      {
+        "name": "retry generates revision and recheck from persisted checkpoints",
+        "ok": true
+      },
+      {
+        "name": "completed but unconsumed revision survives crash without another generation request",
+        "ok": true
+      },
+      {
+        "name": "workflow modal mounts actual stage controls and candidates",
+        "ok": true
+      },
+      {
+        "name": "candidate adoption preserves application audit and atomically registers memory",
+        "ok": true
+      },
+      {
+        "name": "same-version backup recovery rejects a pre-restore late save",
+        "ok": true
+      },
+      {
+        "name": "missing record cannot be resurrected by a late workflow save",
+        "ok": true
+      },
+      {
+        "name": "secondary window observes main workflow completion without reopening",
+        "ok": true
+      }
+    ]
+  },
+  "legacyWriting": {
+    "date": "2026-10-27T17:06:46.223Z",
+    "transport": "local deterministic SSE fixture, no real model",
+    "results": [
+      {
+        "name": "正文入口定位对话输入框并同步捕获原位置",
+        "ok": true
+      },
+      {
+        "name": "方向没有正文写回权限且仅注册方向提交工具",
+        "ok": true
+      },
+      {
+        "name": "段内边界裁剪原文检索并排除本章整章派生记忆",
+        "ok": true
+      },
+      {
+        "name": "方向卡可以在其余卡片返回时编辑并防止迟到覆盖",
+        "ok": true
+      },
+      {
+        "name": "选中快照使用作者编辑稿并与后续修改隔离",
+        "ok": true
+      },
+      {
+        "name": "方向编辑与选择在 airuns 持久化且不写作品正文",
+        "ok": true
+      },
+      {
+        "name": "清空选项不能回退AI原稿继续生成",
+        "ok": true
+      },
+      {
+        "name": "仅在隔离窗口内存装配本地固定输入服务",
+        "ok": true
+      },
+      {
+        "name": "重新定位到重复段落后一处而不是章末",
+        "ok": true
+      },
+      {
+        "name": "真实流式工具返回时卡片可编辑且后续结果不覆盖",
+        "ok": true
+      },
+      {
+        "name": "选择作者编辑后的方向生成正文候选",
+        "ok": true
+      },
+      {
+        "name": "正文请求仅带所选编辑稿，不混入其他方向",
+        "ok": true
+      },
+      {
+        "name": "候选编辑和接入预览不修改正文或撤销栈",
+        "ok": true
+      },
+      {
+        "name": "采纳实际编辑稿到冻结位置并且不自动请求记忆",
+        "ok": true
+      },
+      {
+        "name": "重复采纳被拒绝并可撤销恢复原正文",
+        "ok": true
+      },
+      {
+        "name": "直接改写重复文本后一处保持前一处不变",
+        "ok": true
+      },
+      {
+        "name": "来源或方向变化时旧正文保留但不能误采纳",
+        "ok": true
+      },
+      {
+        "name": "编辑器撤销同步采纳状态且不误撤销先前正文",
+        "ok": true
+      },
+      {
+        "name": "保留方向重新定位时作者修改仍可用",
+        "ok": true
+      },
+      {
+        "name": "章首空前文不会退回章末片段作为已知正文",
+        "ok": true
+      },
+      {
+        "name": "4与6方向数量按本次选择执行",
+        "ok": true
+      },
+      {
+        "name": "生成中移除卡片不会因后续返回而复活，停止保留完整卡",
+        "ok": true
+      },
+      {
+        "name": "卡片真实输入事件编辑后关闭浮层仍保留输入和选择",
+        "ok": true
+      },
+      {
+        "name": "接着写草稿使用父候选原位置与编辑稿，历史也保存完整文本",
+        "ok": true
+      },
+      {
+        "name": "跨窗口迟到保存保留双方稿并不阻断全局刷新",
+        "ok": true
+      },
+      {
+        "name": "讨论历史中的同一候选采纳或撤销后工作区状态一致",
+        "ok": true
+      },
+      {
+        "name": "只读工具原文、证据及搜索均受位置边界限制",
+        "ok": true
+      },
+      {
+        "name": "旧任务迟到落盘不抢占新任务的重启恢复目标",
+        "ok": true
+      }
+    ]
+  },
+  "nodeChecks": {
+    "status": "passed",
+    "scripts": [
+      "tools/agent-workbench-unit-verify.mjs",
+      "tools/whole-chapter-apply-unit-verify.mjs",
+      "tools/creative-workflow-unit-verify.mjs",
+      "tools/creative-retrieval-unit-verify.mjs",
+      "tools/review-cycle-unit-verify.mjs",
+      "tools/memory-queue-unit-verify.mjs",
+      "tools/stage-config-unit-verify.mjs",
+      "tools/stage-budget-unit-verify.mjs",
+      "tools/rule-scope-unit-verify.mjs",
+      "tools/writing-application-race-verify.mjs",
+      "tools/writing-workflow-unit-verify.mjs",
+      "tools/builtin-skills-unit-verify.mjs",
+      "tools/builtin-skill-sources-verify.mjs",
+      "tools/workflow-save-unit-verify.mjs"
+    ]
+  },
+  "build": {
+    "command": "npm run build",
+    "status": "passed",
+    "knownWarnings": [
+      "npm electron mirror configuration",
+      "mixed static and dynamic imports",
+      "module format detection",
+      "main chunk size"
+    ]
+  },
+  "realModel": {
+    "status": "incomplete",
+    "reason": "当前配置不是要求的远程 DeepSeek 模型，真实评测未执行"
+  },
+  "visualReview": {
+    "score": 8,
+    "outOf": 10,
+    "evidence": "static 1280x800 and 1440x900",
+    "followup": "acceptance button hierarchy strengthened; no motion claim"
+  },
+  "remaining": [
+    "story-seed-to-book",
+    "rich-text-hunk-merge",
+    "worker-after-app-exit",
+    "real-model-quality-comparison"
+  ]
+}

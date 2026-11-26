@@ -65,4 +65,15 @@ check('unrelated legacy orphan does not prevent a valid new connection',()=>{
  const r=run(nodes,{type:'connect',source:{nodeId:'a'},target:{nodeId:'c'}})
  assert.equal(r.ok,true);assert.equal(r.nodes[2].rels[0].id,'ca')
 })
+check('junction-patch clamps t and trims label without mutating source nodes',()=>{
+ const nodes=seed(),before=JSON.stringify(nodes)
+ const r=run(nodes,{type:'junction-patch',ownerId:'a',relId:'ab',junctionId:'j',patch:{t:1.4,label:'  是否赴约？  '}})
+ assert.equal(r.ok,true);assert.equal(JSON.stringify(nodes),before)
+ const j=r.nodes[0].rels[0].junctions[0]
+ assert.equal(j.t,0.96);assert.equal(j.label,'是否赴约？')
+ const rLow=run(r.nodes,{type:'junction-patch',ownerId:'a',relId:'ab',junctionId:'j',patch:{t:-0.2,label:''}})
+ assert.equal(rLow.ok,true)
+ assert.equal(rLow.nodes[0].rels[0].junctions[0].t,0.04)
+ assert.equal(rLow.nodes[0].rels[0].junctions[0].label,'')
+})
 console.log(`${n}/${n} relation tests passed`)

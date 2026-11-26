@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="./docs/项目展示文档/项目展示图例/书架2.png" alt="Novel Studio · Latent Bookshelf Main Stage" width="100%" />
+  <img src="./docs/项目展示文档/项目展示图例/书架2.png" alt="Reverie Fiction · Latent Bookshelf Main Stage" width="100%" />
 </p>
 
 <div align="center">
 
-# Novel Studio · 小说工坊
+# Reverie Fiction · 空想书典
 
 Local-First Fiction Workbench // A Calm, Fluid Studio for Long-Form Writers
 
@@ -35,9 +35,9 @@ Local-First Fiction Workbench // A Calm, Fluid Studio for Long-Form Writers
 
 ## About
 
-**Novel Studio** is an open-source, **local-first** desktop workbench built for long-form fiction authors. Every story, outline, worldbuilding node, character dossier, snippet, and writing analytics record stays strictly on your own disk—no login required, no silent cloud sync, and instant save-as-you-type persistence.
+**Reverie Fiction（空想书典**, formerly *Novel Studio / 小说工坊*）is an open-source, **local-first** desktop workbench built for long-form fiction authors. Every story, outline, worldbuilding node, character dossier, snippet, and writing analytics record stays strictly on your own disk—no login required, no silent cloud sync, and instant save-as-you-type persistence.
 
-Designed around the unified **Latent（幻流）** workspace interface, Novel Studio closes the structural gaps that commonly fragment long novels:
+Designed around the unified **Latent（幻流）** workspace interface, Reverie Fiction closes the structural gaps that commonly fragment long novels:
 
 - **Cohesive Manuscript Workspace**: A two-level volume/chapter tree, a TipTap rich-text manuscript editor, and a chapter-synced right rail (`Annotations`, `Chapter Outline`, `Appearing Cast`, `Illustrations`, and `Metadata`) stay side-by-side—or collapse down to ultra-slim edge tabs for distraction-free drafting and read-only review.
 - **Hierarchical Freeform Outline Canvas**: Organize plotlines visually across drill-down container canvases or an outline-synchronized tree view. Seven card types connect via four semantic edge types with locked endpoint ports and Hanan sparse-grid A* obstacle avoidance.
@@ -49,7 +49,7 @@ Built with Electron 33 and Vue 3 for Windows x64, the repository also supports a
 ## Quick Download
 
 > [!TIP]
-> - **GitHub Releases**: Download the latest `novel-studio-setup-<version>.exe` installer (Windows x64 NSIS wizard) from [Latest Release](https://github.com/linque0/novel/releases/latest).
+> - **GitHub Releases**: Download the latest `reverie-fiction-setup-<version>.exe` installer (Windows x64 NSIS wizard) from [Latest Release](https://github.com/linque0/novel/releases/latest).
 > - **In-App Updater**: Installed desktop builds check GitHub Releases from **Settings → Help & About**, verify packages via SHA-512, and launch updates cleanly.
 
 > [!NOTE]
@@ -187,20 +187,20 @@ npm run build:plugin  # Build DSH plugin frontend into dist-plugin/
 npm start             # Launch Electron using built dist/
 npm run web           # Start local web debug server (http://127.0.0.1:18688)
 npm run dist          # Build NSIS installer & portable dir into release2/
-npm run stop          # Gracefully close all running Novel Studio instances
+npm run stop          # Gracefully close all running Reverie Fiction instances
 ```
 
 ### Distribution Targets
 
 | Target | Path / Usage | Notes |
 |---|---|---|
-| **Windows Installer** | [Releases](https://github.com/linque0/novel/releases/latest) / `release2/novel-studio-setup-<version>.exe` | NSIS guided installer with desktop & Start Menu shortcuts |
-| **Portable App** | `release2/win-unpacked/小说工坊.exe` | Extract-and-run directory output from `npm run dist` |
+| **Windows Installer** | [Releases](https://github.com/linque0/novel/releases/latest) / `release2/reverie-fiction-setup-<version>.exe` | NSIS guided installer with desktop & Start Menu shortcuts |
+| **Portable App** | `release2/win-unpacked/空想书典.exe` | Extract-and-run directory output from `npm run dist` |
 | **DSH Plugin Build** | `npm run build:plugin` (`plugin/dsh/`) | Shares core Latent UI and storage foundation with host integration |
 | **Web Debug Mode** | `npm run web` | Browser IndexedDB only (`.docx` import relies on desktop parsing) |
 
 > [!NOTE]
-> Only one desktop instance can hold a given data directory (`%APPDATA%\小说工坊`) at a time to prevent database corruption. Pass `--profile=<name>` to run isolated side-by-side libraries, and always run `npm run stop` after automated debugging sessions.
+> Only one desktop instance can hold a given data directory (`%APPDATA%\小说工坊`, kept for seamless upgrade compatibility with legacy builds) at a time to prevent database corruption. Pass `--profile=<name>` to run isolated side-by-side libraries, and always run `npm run stop` after automated debugging sessions.
 
 ## Storage, Safety & Auto-Update
 
@@ -273,7 +273,7 @@ All core writing workflows run completely offline on local storage. Please back 
 
 ## Acknowledgements
 
-Novel Studio builds upon these open-source projects and assets:
+Reverie Fiction builds upon these open-source projects and assets:
 
 - [Electron](https://www.electronjs.org/) · [Vue 3](https://vuejs.org/) · [Pinia](https://pinia.vuejs.org/) · [Naive UI](https://www.naiveui.com/)
 - [TipTap](https://tiptap.dev/) (rich-text manuscript editor core)
@@ -284,6 +284,6 @@ Novel Studio builds upon these open-source projects and assets:
 
 ## License
 
-Novel Studio is open source under the [`AGPL-3.0`](LICENSE) license.
+Reverie Fiction is open source under the [`AGPL-3.0`](LICENSE) license.
 
 Bundled third-party shaders and local fonts remain governed by their respective open-source licenses; see [public/paper-shaders-LICENSE.txt](public/paper-shaders-LICENSE.txt) and [public/licenses/](public/licenses/).

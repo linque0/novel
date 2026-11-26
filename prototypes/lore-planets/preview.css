@@ -1,0 +1,14 @@
+:root { color-scheme: dark; font-family: "Microsoft YaHei", system-ui, sans-serif; background: #251f24; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+#app { min-height: 100dvh; }
+
+.lpn-import { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-left: auto; }
+.lpn-import + .lpn-motion { margin-left: 0; }
+.lpn-source-status, .lpn-summary { overflow-wrap: anywhere; }
+.lpn-summary { white-space: pre-wrap; }
+.lpn-heading .lpn-source-status[role='alert'] { color: #ffd0aa; }
+@media (max-width: 560px) {
+  .lpn-header { flex-wrap: wrap; justify-content: space-between; padding-block: 8px; }
+  .lpn-import { order: 1; flex-basis: 100%; margin-left: 0; }
+}

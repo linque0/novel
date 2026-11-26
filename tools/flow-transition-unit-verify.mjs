@@ -9,6 +9,12 @@ import {
 } from '../src/components/skins/latent/settings/settings-prefs.js'
 import { createInkCaptureQueue } from '../src/services/latent/ink-capture-queue.js'
 import {
+  createSceneCache,
+  createViewportPruner,
+  isNavigationControl,
+  stripBackdropFilterNodes
+} from '../src/services/latent/ink-transition.js'
+import {
   applyForegroundBlur,
   clearForegroundBlur,
   foregroundElements,
@@ -289,9 +295,78 @@ assert.equal(normalizeSettingsPrefs({ pageTransitions: false }).pageTransitions,
 assert.equal(normalizeSettingsPrefs({ pageTransitions: true }).pageTransitions, 'mist')
 assert.equal(normalizeSettingsPrefs({ pageTransitions: 'ink' }).pageTransitions, 'ink')
 
-// 原版融墨懒加载队列校验。
+// 流波懒加载队列与零妥协优化辅助函数校验（Hc 绕过、叶级视口剪枝、导航防误杀、LRU 缓存）。
 const inkQueue = createInkCaptureQueue((a, b) => a === b)
 const inkAc = new AbortController()
 assert.equal(await inkQueue('outline', () => 'ok', { signal: inkAc.signal, timeoutMs: 200 }), 'ok')
 
-console.log('流雾粒子与三档转场模式单测通过：对角线波前边界、原地雾化零残留、设置三档兼容及原版融墨队列')
+// 1. stripBackdropFilterNodes：剔除纯毛玻璃节点映射，保留 url() 背景图与普通节点。
+const mockStyle = (props) => ({ getPropertyValue: k => props[k] || '' })
+const origGlass = { nodeType: 1 }
+const origGlassWithImg = { nodeType: 1 }
+const origPlain = { nodeType: 1 }
+const cloneGlass = {}
+const cloneGlassWithImg = {}
+const clonePlain = {}
+const testNodeMap = new Map([
+  [cloneGlass, origGlass],
+  [cloneGlassWithImg, origGlassWithImg],
+  [clonePlain, origPlain]
+])
+const testStyleCache = new WeakMap([
+  [origGlass, mockStyle({ 'backdrop-filter': 'blur(20px) saturate(1.5)', 'background-image': 'none' })],
+  [origGlassWithImg, mockStyle({ 'backdrop-filter': 'blur(12px)', 'background-image': 'url("cover.png")' })],
+  [origPlain, mockStyle({ 'backdrop-filter': 'none', 'background-image': 'none' })]
+])
+assert.equal(stripBackdropFilterNodes(testNodeMap, testStyleCache, () => null), 1)
+assert.equal(testNodeMap.has(cloneGlass), false)
+assert.equal(testNodeMap.has(cloneGlassWithImg), true)
+assert.equal(testNodeMap.has(clonePlain), true)
+
+// 2. createViewportPruner：绝不误伤 root/定位背景/视口内卡片，精准跳过隐藏保活面板与视口外叶卡片。
+const vpRect = { left: 0, top: 0, right: 1400, bottom: 900, width: 1400, height: 900 }
+const lanesRect = { left: 300, top: 200, right: 1360, bottom: 860, width: 1060, height: 660 }
+const makePruneNode = ({ classes = [], rect: r = vpRect, style = {}, closestMap = {} }) => ({
+  nodeType: 1,
+  style,
+  classList: { contains: name => classes.includes(name) },
+  matches: sel => sel.split(',').map(s => s.trim()).some(token => classes.some(c => token === '.' + c)),
+  getBoundingClientRect: () => r,
+  closest: sel => closestMap[sel] || null
+})
+const mockLanes = makePruneNode({ classes: ['snip-lanes'], rect: lanesRect })
+const prunerRoot = { querySelector: sel => (sel === '.snip-lanes' ? mockLanes : null) }
+const prune = createViewportPruner(prunerRoot, vpRect)
+assert.equal(prune(prunerRoot), false)
+assert.equal(prune(makePruneNode({ classes: ['st-backdrop-wrap'] })), false)
+assert.equal(prune(makePruneNode({ classes: ['center-pane'], style: { display: '' } })), false)
+assert.equal(prune(makePruneNode({ classes: ['center-pane'], style: { display: 'none' } })), true)
+assert.equal(prune(makePruneNode({ classes: ['pop-lock-pane'] })), true)
+assert.equal(prune(makePruneNode({
+  classes: ['snip-note'],
+  rect: { left: 320, top: 240, right: 540, bottom: 420, width: 220, height: 180 },
+  closestMap: { '.snip-lanes': mockLanes }
+})), false)
+assert.equal(prune(makePruneNode({
+  classes: ['snip-note'],
+  rect: { left: 320, top: 1200, right: 540, bottom: 1380, width: 220, height: 180 },
+  closestMap: { '.snip-lanes': mockLanes }
+})), true)
+
+// 3. isNavigationControl：导航栏/书架卡片触发不误杀缓存，正文区触发正常失效。
+assert.equal(isNavigationControl({ nodeType: 1, closest: s => s.includes('.app-topbar') }), true)
+assert.equal(isNavigationControl({ nodeType: 1, closest: () => null }), false)
+
+// 4. createSceneCache：LRU 容量淘汰与指纹变更自动失配。
+const cache = createSceneCache(2)
+cache.set('k1', 'fp1', 'img1')
+cache.set('k2', 'fp2', 'img2')
+assert.equal(cache.get('k1', 'fp1'), 'img1')
+assert.equal(cache.get('k1', 'fp1-changed'), null)
+cache.set('k3', 'fp3', 'img3')
+assert.equal(cache.size, 2)
+assert.equal(cache.get('k2', 'fp2'), null)
+assert.equal(cache.get('k1', 'fp1'), 'img1')
+assert.equal(cache.get('k3', 'fp3'), 'img3')
+
+console.log('雾幕与流波全链路单测通过：对角线波前、原地雾化零残留、设置三档兼容及流波零妥协缓存/剪枝')

@@ -39,6 +39,21 @@ const SIZES = ['12', '14', '15', '16', '18', '20', '24', '28', '32', '40'].map((
 const HIGHLIGHTS = ['#fff3a3', '#ffd6a5', '#ffa8a8', '#b8f2c9', '#a8d8ff', '#e0c3fc']
 const COLORS = ['#3c3427', '#8c6f4e', '#c0392b', '#d35400', '#27ae60', '#2980b9', '#8e44ad', '#7f8c8d']
 
+/* 正文字号（原在设置页，现移入正文工具栏主行，共用 ui.fontSize 13–24px） */
+const EDITOR_FS_MIN = 13
+const EDITOR_FS_MAX = 24
+const EDITOR_FS_DEFAULT = 17
+const fsPopShow = ref(false)
+function setEditorFontSize(val) {
+  const n = Math.round(Number(val))
+  if (!Number.isFinite(n)) return
+  const next = Math.max(EDITOR_FS_MIN, Math.min(EDITOR_FS_MAX, n))
+  if (next !== ui.fontSize) ui.applyPref('fontSize', next)
+}
+function stepEditorFontSize(delta) {
+  setEditorFontSize((Number(ui.fontSize) || EDITOR_FS_DEFAULT) + delta)
+}
+
 const sizeVal = computed(() => {
   void tick.value
   return String(props.editor.getAttributes('textStyle')?.fontSize || '')
@@ -172,6 +187,60 @@ const isActive = (name, attrs) => {
       <span class="tb-sep" />
     </template>
 
+    <!-- 正文字号（从设置页移至正文工具栏主行：紧凑徽标 + 点击弹出「− / 滑杆 / ＋」精调浮层） -->
+    <NPopover
+      :class="[museumPopoverClass, originalOverlayClass]"
+      :data-glaze-light="museumLight"
+      trigger="click"
+      :show-arrow="false"
+      placement="bottom-start"
+      :show="fsPopShow"
+      @update:show="(v) => (fsPopShow = v)"
+    >
+      <template #trigger>
+        <button
+          type="button"
+          class="tb tb-editor-fs"
+          :class="{ on: fsPopShow }"
+          data-act="editor-font-size"
+          title="正文字号：调整正文编辑与阅读文字大小（13–24px）"
+          @click.stop
+        ><span>字号</span><b>{{ ui.fontSize }}px</b></button>
+      </template>
+      <div class="tb-fs-pop" @click.stop @mousedown.stop>
+        <div class="tb-fs-head">
+          <span>正文字号</span>
+          <button
+            v-if="ui.fontSize !== EDITOR_FS_DEFAULT"
+            type="button"
+            class="tb-fs-reset"
+            title="恢复默认 17px"
+            @click="setEditorFontSize(EDITOR_FS_DEFAULT)"
+          >默认 17px</button>
+        </div>
+        <div class="tb-fs-stepper">
+          <button type="button" data-act="editor-fs-down" aria-label="减小正文字号" :disabled="ui.fontSize <= EDITOR_FS_MIN" @click="stepEditorFontSize(-1)">−</button>
+          <output>{{ ui.fontSize }}<small>px</small></output>
+          <button type="button" data-act="editor-fs-up" aria-label="增大正文字号" :disabled="ui.fontSize >= EDITOR_FS_MAX" @click="stepEditorFontSize(1)">＋</button>
+        </div>
+        <div class="tb-fs-range">
+          <span>{{ EDITOR_FS_MIN }}</span>
+          <input
+            type="range"
+            :min="EDITOR_FS_MIN"
+            :max="EDITOR_FS_MAX"
+            step="1"
+            aria-label="正文字号"
+            :value="ui.fontSize"
+            @input="setEditorFontSize($event.target.value)"
+          />
+          <span>{{ EDITOR_FS_MAX }}</span>
+        </div>
+        <p class="tb-fs-note">调整正文编辑与阅读呈现大小，不改动文档格式</p>
+      </div>
+    </NPopover>
+    <span class="tb-sep" />
+
     <!-- 隐现皮肤：主行不放字号/颜色/底色/链接（这些与右键快捷栏重合，弹层里也不再重复）。
          旧皮肤保持桌面原有平铺结构。 -->
     <template v-if="!latent">
@@ -200,6 +269,7 @@ const isActive = (name, attrs) => {
           size="small"
           @update:value="(c) => chain().setColor(c).run()"
         />
+        <button type="button" class="ob-swatch-reset" style="margin-top: 6px" title="仅恢复默认字体颜色，保留其他格式" @click="chain().unsetColor().run()">恢复默认颜色</button>
       </div>
     </NPopover>
 

@@ -13,7 +13,7 @@ import { useWorkStore } from '../stores/work'
 import { useUiStore } from '../stores/ui'
 import { useAiStore } from '../stores/ai'
 import { pickFiles } from '../services/fileio'
-import { loreCaret, loreImageHtml } from '../services/lore-editor-dom'
+import { cleanLoreHtml, clearLoreInlineColor, loreCaret, loreImageHtml, loreText } from '../services/lore-editor-dom'
 import { decodeText, parseMubuMd } from '../services/importers'
 import { tagColor } from '../services/tagcolors'
 import { relIconFor, relColor } from '../services/relation-kinds'
@@ -326,6 +326,17 @@ function fmt(cmd, val = null) {
   pushUndo()
   document.execCommand(cmd, false, val)
   syncFocusedRow()
+}
+function resetColor(kind) {
+  const active = document.activeElement?.classList?.contains('ob-text')
+    ? document.activeElement
+    : (ctx.rowId ? rootEl.value?.querySelector(`[data-node="m:${ctx.rowId}"] .ob-text`) : null)
+  if (!active) return
+  pushUndo()
+  if (clearLoreInlineColor(active, kind)) {
+    const id = active.closest('[data-node]')?.dataset.node?.slice(2)
+    if (id) work.mubuSetText(id, loreText(active), cleanLoreHtml(active.innerHTML))
+  }
 }
 
 function addSibling(row) {
@@ -779,13 +790,37 @@ function relChipText(id) {
   return s.count > 1 ? `${s.label} +${s.count - 1}` : s.label
 }
 const relPop = ref(null) // { nodeId, x, y, flip }
+const relPopEl = ref(null)
 const relPopEntries = computed(() => (relPop.value ? work.loreLinksOf('mubu', relPop.value.nodeId) : []))
 let relPopTimer = null
 function showRelPop(id, e) {
   clearTimeout(relPopTimer)
   const r = e.currentTarget.getBoundingClientRect()
   const flip = r.bottom > window.innerHeight - 220 && r.top > 220
-  relPop.value = { nodeId: id, x: Math.max(8, Math.min(r.left, window.innerWidth - 380)), y: flip ? r.top - 6 : r.bottom + 6, flip }
+  relPop.value = { nodeId: id, x: Math.max(8, Math.min(r.left, window.innerWidth - 300)), y: flip ? r.top - 6 : r.bottom + 6, flip }
+  nextTick(() => {
+    const el = relPopEl.value
+    if (!el || !relPop.value || relPop.value.nodeId !== id) return
+    const box = el.getBoundingClientRect()
+    const pad = 8
+    const gap = 6
+    const w = box.width || 280
+    const h = box.height || 140
+    let x = r.left + w <= window.innerWidth - pad ? r.left : r.right - w
+    x = Math.max(pad, Math.min(x, window.innerWidth - w - pad))
+    let nextFlip = false
+    let y = r.bottom + gap
+    if (y + h > window.innerHeight - pad) {
+      if (r.top - gap - h >= pad) {
+        nextFlip = true
+        y = r.top - gap
+      } else {
+        nextFlip = false
+        y = Math.max(pad, window.innerHeight - h - pad)
+      }
+    }
+    relPop.value = { nodeId: id, x, y, flip: nextFlip }
+  })
 }
 function hideRelPopSoon() {
   clearTimeout(relPopTimer)
@@ -913,16 +948,22 @@ onBeforeUnmount(() => {
         <template #trigger>
           <button class="tb" title="字体颜色" @mousedown.prevent><span style="border-bottom: 3px solid var(--accent)">A</span></button>
         </template>
-        <div class="ob-swatches">
-          <button v-for="c in COLORS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="fmt('foreColor', c)" />
+        <div class="ob-swatch-pop">
+          <div class="ob-swatches">
+            <button v-for="c in COLORS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="fmt('foreColor', c)" />
+          </div>
+          <button type="button" class="ob-swatch-reset" title="仅恢复默认字体颜色，保留加粗等其他格式" @mousedown.prevent @click="resetColor('color')">恢复默认颜色</button>
         </div>
       </NPopover>
       <NPopover :class="museumPopoverClass" :data-glaze-light="museumLight" trigger="click" :show-arrow="false">
         <template #trigger>
           <button class="tb" title="底色" @mousedown.prevent>底</button>
         </template>
-        <div class="ob-swatches">
-          <button v-for="c in HIGHLIGHTS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="fmt('hiliteColor', c)" />
+        <div class="ob-swatch-pop">
+          <div class="ob-swatches">
+            <button v-for="c in HIGHLIGHTS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="fmt('hiliteColor', c)" />
+          </div>
+          <button type="button" class="ob-swatch-reset" title="仅清除文字底色，保留加粗与字体颜色等其他格式" @mousedown.prevent @click="resetColor('background')">恢复无底色</button>
         </div>
       </NPopover>
       <button class="tb" title="清除格式" @mousedown.prevent @click="fmt('removeFormat')">清除</button>
@@ -1019,9 +1060,11 @@ onBeforeUnmount(() => {
       </div>
       <div class="ob-tip">回车 新建节点 · Tab / Shift+Tab 降级升级 · Alt+↑↓ 排序 · 点圆点 折叠 · 拖圆点 移动（拖到空白处移到集内顶层） · 选中文字后可用工具栏或右键设置格式 · 双击条目 打开详情页</div>
 
-      <!-- 关联关系悬停浮层（行尾卡片 hover；移入浮层保持，点击行跳转） -->
+      <!-- 关联关系悬停浮层（传送到 body，避免被祖先 backdrop-filter / overflow 偏移与裁切） -->
+      <Teleport to="body">
       <div
         v-if="relPop && relPopEntries.length"
+        ref="relPopEl"
         class="ob-relpop"
         :class="{ flip: relPop.flip }"
         :style="{ left: relPop.x + 'px', top: relPop.y + 'px' }"
@@ -1032,7 +1075,9 @@ onBeforeUnmount(() => {
         <div class="ob-relpop-head">关联关系</div>
         <LoreRelRows :entries="relPopEntries" compact @pick="jumpRel" />
       </div>
+      </Teleport>
 
+      <Teleport to="body">
       <div v-if="ctx.open" ref="ctxEl" class="ob-ctx" :style="{ left: ctx.x + 'px', top: ctx.y + 'px' }" @contextmenu.prevent>
         <template v-if="!ctx.linkSearch">
         <div class="ctx-item" :class="{ disabled: !selectionText() }" @mousedown.prevent @click="doCutText()"><span>剪切</span><span class="hint">Ctrl+X</span></div>
@@ -1046,10 +1091,12 @@ onBeforeUnmount(() => {
         <div class="ob-ctx-colors" @mousedown.prevent>
           <span style="font-size: 11px; color: var(--text-dim)">颜色</span>
           <button v-for="c in COLORS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="runCtx(() => fmt('foreColor', c))" />
+          <button type="button" class="swatch swatch-reset" title="恢复默认字体颜色（保留其他格式）" aria-label="恢复默认字体颜色" @mousedown.prevent @click="runCtx(() => resetColor('color'))" />
         </div>
         <div class="ob-ctx-colors" @mousedown.prevent>
           <span style="font-size: 11px; color: var(--text-dim)">底色</span>
           <button v-for="c in HIGHLIGHTS" :key="c" class="swatch" :style="{ background: c }" :title="c" @mousedown.prevent @click="runCtx(() => fmt('hiliteColor', c))" />
+          <button type="button" class="swatch swatch-reset" title="恢复无底色（保留其他格式）" aria-label="恢复无底色" @mousedown.prevent @click="runCtx(() => resetColor('background'))" />
         </div>
         <div class="ctx-item" @mousedown.prevent @click="runCtx(() => fmt('removeFormat'))"><span>清除格式</span></div>
         <div class="ctx-sep" />
@@ -1088,6 +1135,7 @@ onBeforeUnmount(() => {
           <button class="ctx-btn" style="width: 100%; margin-top: 8px" type="button" @mousedown.prevent @click="ctx.linkSearch = false">返回</button>
         </div>
       </div>
+      </Teleport>
     </div>
       <div v-if="ui.skin === 'crimson'" class="crimson-lore-bottom">
         <button type="button" @click="addBottomNode">＋ 添加节点</button>

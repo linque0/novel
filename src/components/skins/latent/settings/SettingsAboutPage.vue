@@ -51,10 +51,10 @@ function openHelp() {
     <div>
       <section data-setting="version">
         <div class="about-brand">
-          <span v-if="nsPlugin" class="about-mark" aria-hidden="true">工</span>
+          <span v-if="nsPlugin" class="about-mark" aria-hidden="true">典</span>
           <img v-else class="about-app-icon" :src="desktopAppIcon" width="72" height="72" alt="" />
           <div>
-            <h2>{{ nsPlugin ? '小说工坊' : '小说工坊桌面版' }}</h2>
+            <h2>{{ nsPlugin ? '空想书典' : '空想书典桌面版' }}</h2>
             <p>{{ nsPlugin ? 'DSH 插件版 · ' : '' }}v{{ APP_VERSION }}</p>
           </div>
         </div>
@@ -71,7 +71,7 @@ function openHelp() {
           <svg class="icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h6a4 4 0 0 1 3 2 4 4 0 0 1 3-2h6v16h-6a4 4 0 0 0-3 2 4 4 0 0 0-3-2H3zM12 6v16" /></svg>
           <div>
             <strong>帮助与快捷键</strong>
-            <p>{{ nsPlugin ? '从常用操作开始，让工坊更顺手' : '查看桌面版功能、数据备份和完整键位说明' }}</p>
+            <p>{{ nsPlugin ? '从常用操作开始，让书典更顺手' : '查看桌面版功能、数据备份和完整键位说明' }}</p>
           </div>
           <button type="button" class="btn" data-act="help" aria-label="打开手册" @click="openHelp"><span>打开手册</span></button>
         </div>

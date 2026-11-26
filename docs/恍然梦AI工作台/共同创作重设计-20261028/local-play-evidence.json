@@ -1,0 +1,1381 @@
+{
+  "date": "2026-10-28",
+  "method": "read-only local records; anonymous structural analysis; exact file-hash deduplication",
+  "sourceRoots": [
+    "E:/SillyTavern/SillyTavern-1.14.0/SillyTavern-1.14.0/data/default-user",
+    "E:/SillyTavern/SillyTavern-1.15.0/SillyTavern-1.15.0/data/default-user",
+    "E:/SillyTavern/SillyTavern-1.19.0/SillyTavern-1.19.0/data/default-user"
+  ],
+  "privacy": "No character names, filenames, message text, notes, reasoning text, private variable names/values or API settings exported. Content hashes and line numbers permit local verification by rescanning.",
+  "counts": {
+    "physicalChatFiles": 24,
+    "uniqueContentFiles": 12,
+    "emptyFiles": 2,
+    "singleMessageFiles": 3,
+    "multiMessageFiles": 7,
+    "userMessages": 365,
+    "modelTaggedMessages": 364,
+    "linkedCards": 10,
+    "swipeMessages": 4,
+    "extraVariants": 15,
+    "excludedModelMessages": 294
+  },
+  "technicalInterpretationEvidence": {
+    "file": "public/scripts/chats.js",
+    "localVersion": "1.19.0",
+    "sha256": "82a5113c6a7c6fd3a182db279b0c1d56aa3a0c27438f4a76e6dd8eaebc209360",
+    "function": "hideChatMessageRange",
+    "line": 147,
+    "interpretation": "is_system also marks messages hidden from context, independent of user/model authorship"
+  },
+  "inventory": [
+    {
+      "version": "1.14.0",
+      "chatFiles": 4,
+      "chatBytes": 162482,
+      "cards": 3,
+      "worldFiles": 13,
+      "contentHashes": [
+        "63e31a3f375e610df45c6b27c528f37a0c62f423d9ec1353b06617f608f2f076",
+        "776ecb9d4d2d83c0c5739e6725551347a9012b6b2a1ae85965122a720a9a05e6",
+        "c0f49d7395528cda48da2a96905c880c02df95f288542ce400e49f15e9569910",
+        "fc030bd694835e880e1ce73c1f6f5339da5d70e33fcd4b54fcdea21aa6eb06ac"
+      ]
+    },
+    {
+      "version": "1.15.0",
+      "chatFiles": 10,
+      "chatBytes": 54926981,
+      "cards": 11,
+      "worldFiles": 26,
+      "contentHashes": [
+        "0736518d7de0e9432f23e349fddfbccd033e973f05dff58d2dea331b71a9a739",
+        "38ef185393439295481b3cd862dac156049a850baaa606b92979676587523de4",
+        "63e31a3f375e610df45c6b27c528f37a0c62f423d9ec1353b06617f608f2f076",
+        "71336fb6a7ba17fffa25bc36f94e5b8dcad9afed1374fbbb17341a59720bd742",
+        "8be38cb5d9d213cf2c075f40b7d5435360d3cbd7a01d01133af79c7b2c9bc861",
+        "8c8426a52a07eada2e3050987a6e86f98a2b133568088dffa34b864b2dd81a06",
+        "ad24b791d197be854f99e4cea28a735c3a3f05a069eedf68e487d250a54f06e6",
+        "b68bdeafc4d7a780cff933c4952eaf5b0061683180f7ca1b8b06ff7d34aa226c",
+        "f499f76803f6ddea1a21ea503e8da0dc102a2c8422b0af3f2822f0f800f1b423",
+        "fc030bd694835e880e1ce73c1f6f5339da5d70e33fcd4b54fcdea21aa6eb06ac"
+      ]
+    },
+    {
+      "version": "1.19.0",
+      "chatFiles": 10,
+      "chatBytes": 54926981,
+      "cards": 11,
+      "worldFiles": 26,
+      "contentHashes": [
+        "0736518d7de0e9432f23e349fddfbccd033e973f05dff58d2dea331b71a9a739",
+        "38ef185393439295481b3cd862dac156049a850baaa606b92979676587523de4",
+        "63e31a3f375e610df45c6b27c528f37a0c62f423d9ec1353b06617f608f2f076",
+        "71336fb6a7ba17fffa25bc36f94e5b8dcad9afed1374fbbb17341a59720bd742",
+        "8be38cb5d9d213cf2c075f40b7d5435360d3cbd7a01d01133af79c7b2c9bc861",
+        "8c8426a52a07eada2e3050987a6e86f98a2b133568088dffa34b864b2dd81a06",
+        "ad24b791d197be854f99e4cea28a735c3a3f05a069eedf68e487d250a54f06e6",
+        "b68bdeafc4d7a780cff933c4952eaf5b0061683180f7ca1b8b06ff7d34aa226c",
+        "f499f76803f6ddea1a21ea503e8da0dc102a2c8422b0af3f2822f0f800f1b423",
+        "fc030bd694835e880e1ce73c1f6f5339da5d70e33fcd4b54fcdea21aa6eb06ac"
+      ]
+    }
+  ],
+  "samples": [
+    {
+      "alias": "S01",
+      "sha256": "0736518d7de0e9432f23e349fddfbccd033e973f05dff58d2dea331b71a9a739",
+      "copyVersions": [
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 180805,
+      "messageCount": 1,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 110,
+        "messageText": 34583,
+        "responseVariantFields": 34638,
+        "variableSnapshots": 98908,
+        "persistedMemoryExtensionFields": 11539
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 0,
+        "variableUpdate": 0,
+        "optionsOrActions": 0,
+        "stateDisplay": 0
+      },
+      "linkedCard": "C-7906e2c20dab",
+      "cardOpeningExactMatch": false,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "modelTaggedOutput": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 14474,
+        "medianTextCharacters": 14474,
+        "maxTextCharacters": 14474
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 0,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 0,
+      "extraVariants": 0,
+      "maxVariants": 1,
+      "swipeEvidenceLines": [],
+      "generationEvidenceLines": [],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 1,
+      "distinctVariableSnapshots": 1,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 1,
+        "hash": "ead5e483473f6cd46fc14a3b448cba90857ffe61d7039fc33e3a0d305fb51e0f"
+      },
+      "plotStateRecords": 0,
+      "plotStateShapes": [],
+      "structuredMemoryMessages": 1,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "B"
+      ]
+    },
+    {
+      "alias": "S02",
+      "sha256": "38ef185393439295481b3cd862dac156049a850baaa606b92979676587523de4",
+      "copyVersions": [
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 302192,
+      "messageCount": 7,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 1382,
+        "messageText": 57423,
+        "responseVariantFields": 46619,
+        "variableSnapshots": 21541,
+        "persistedMemoryExtensionFields": 135670,
+        "plotExtensionFields": 27156
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 0,
+        "variableUpdate": 3,
+        "optionsOrActions": 0,
+        "stateDisplay": 3
+      },
+      "linkedCard": "C-aa32f5e2e661",
+      "cardOpeningExactMatch": true,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 3,
+        "textCharacters": 4491,
+        "medianTextCharacters": 1897,
+        "maxTextCharacters": 1909
+      },
+      "modelTaggedOutput": {
+        "messages": 3,
+        "textCharacters": 18020,
+        "medianTextCharacters": 6034,
+        "maxTextCharacters": 8265
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 16,
+        "medianTextCharacters": 16,
+        "maxTextCharacters": 16
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 0,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 1,
+      "extraVariants": 1,
+      "maxVariants": 2,
+      "swipeEvidenceLines": [
+        2
+      ],
+      "generationEvidenceLines": [
+        4,
+        6,
+        8
+      ],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 7,
+      "distinctVariableSnapshots": 5,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 101,
+        "hash": "b7ed1701a687cb9b5a2d9828b89edfb0da25bf65448d35855f3dbf022ac3abe4"
+      },
+      "plotStateRecords": 3,
+      "plotStateShapes": [
+        {
+          "line": 3,
+          "kind": "str"
+        },
+        {
+          "line": 5,
+          "kind": "str"
+        }
+      ],
+      "structuredMemoryMessages": 4,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "B",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G"
+      ]
+    },
+    {
+      "alias": "S03",
+      "sha256": "63e31a3f375e610df45c6b27c528f37a0c62f423d9ec1353b06617f608f2f076",
+      "copyVersions": [
+        "1.14.0",
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 498,
+      "messageCount": 0,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {},
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 0,
+        "variableUpdate": 0,
+        "optionsOrActions": 0,
+        "stateDisplay": 0
+      },
+      "linkedCard": "C-69089763511b",
+      "cardOpeningExactMatch": null,
+      "firstRole": "none",
+      "user": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "modelTaggedOutput": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "otherNonUser": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 0,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 0,
+      "extraVariants": 0,
+      "maxVariants": 0,
+      "swipeEvidenceLines": [],
+      "generationEvidenceLines": [],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 0,
+      "distinctVariableSnapshots": 0,
+      "headerVariableShape": {
+        "kind": "NoneType"
+      },
+      "plotStateRecords": 0,
+      "plotStateShapes": [],
+      "structuredMemoryMessages": 0,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": []
+    },
+    {
+      "alias": "S04",
+      "sha256": "71336fb6a7ba17fffa25bc36f94e5b8dcad9afed1374fbbb17341a59720bd742",
+      "copyVersions": [
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 33664444,
+      "messageCount": 231,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 48188,
+        "messageText": 2289880,
+        "responseVariantFields": 2238993,
+        "persistedMemoryExtensionFields": 24389542,
+        "variableSnapshots": 4463259,
+        "plotExtensionFields": 164774
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 60,
+        "variableUpdate": 115,
+        "optionsOrActions": 5,
+        "stateDisplay": 115
+      },
+      "linkedCard": "C-0e3b99edf8cd",
+      "cardOpeningExactMatch": false,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 115,
+        "textCharacters": 52051,
+        "medianTextCharacters": 374,
+        "maxTextCharacters": 1701
+      },
+      "modelTaggedOutput": {
+        "messages": 115,
+        "textCharacters": 1009183,
+        "medianTextCharacters": 8499,
+        "maxTextCharacters": 16221
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 70,
+        "medianTextCharacters": 70,
+        "maxTextCharacters": 70
+      },
+      "excludedUserMessages": 104,
+      "excludedModelOutputs": 104,
+      "shortUserMessagesAtMost80Characters": 2,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 1,
+      "extraVariants": 6,
+      "maxVariants": 7,
+      "swipeEvidenceLines": [
+        2
+      ],
+      "generationEvidenceLines": [
+        4,
+        6,
+        8
+      ],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": true,
+      "messageVariableSnapshots": 231,
+      "distinctVariableSnapshots": 198,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 110,
+        "hash": "0745cb7eb65133162132e0c6ad9db57807cf31e65a5124c6e7698484145eab1c"
+      },
+      "plotStateRecords": 50,
+      "plotStateShapes": [
+        {
+          "line": 133,
+          "kind": "str"
+        },
+        {
+          "line": 135,
+          "kind": "str"
+        }
+      ],
+      "structuredMemoryMessages": 51,
+      "summaryMetadataMessages": 48,
+      "firstRoleSequence": [
+        "B",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G"
+      ]
+    },
+    {
+      "alias": "S05",
+      "sha256": "776ecb9d4d2d83c0c5739e6725551347a9012b6b2a1ae85965122a720a9a05e6",
+      "copyVersions": [
+        "1.14.0"
+      ],
+      "bytes": 498,
+      "messageCount": 0,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {},
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 0,
+        "variableUpdate": 0,
+        "optionsOrActions": 0,
+        "stateDisplay": 0
+      },
+      "linkedCard": "C-69089763511b",
+      "cardOpeningExactMatch": null,
+      "firstRole": "none",
+      "user": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "modelTaggedOutput": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "otherNonUser": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 0,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 0,
+      "extraVariants": 0,
+      "maxVariants": 0,
+      "swipeEvidenceLines": [],
+      "generationEvidenceLines": [],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 0,
+      "distinctVariableSnapshots": 0,
+      "headerVariableShape": {
+        "kind": "NoneType"
+      },
+      "plotStateRecords": 0,
+      "plotStateShapes": [],
+      "structuredMemoryMessages": 0,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": []
+    },
+    {
+      "alias": "S06",
+      "sha256": "8be38cb5d9d213cf2c075f40b7d5435360d3cbd7a01d01133af79c7b2c9bc861",
+      "copyVersions": [
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 12424349,
+      "messageCount": 272,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 806988,
+        "messageText": 2089001,
+        "responseVariantFields": 2792180,
+        "persistedMemoryExtensionFields": 231149,
+        "variableSnapshots": 6251998,
+        "plotExtensionFields": 180945
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 68,
+        "variableUpdate": 135,
+        "optionsOrActions": 14,
+        "stateDisplay": 135
+      },
+      "linkedCard": "C-15aea16b5878",
+      "cardOpeningExactMatch": false,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 136,
+        "textCharacters": 65121,
+        "medianTextCharacters": 387.5,
+        "maxTextCharacters": 2024
+      },
+      "modelTaggedOutput": {
+        "messages": 135,
+        "textCharacters": 920313,
+        "medianTextCharacters": 6638,
+        "maxTextCharacters": 16634
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 70,
+        "medianTextCharacters": 70,
+        "maxTextCharacters": 70
+      },
+      "excludedUserMessages": 124,
+      "excludedModelOutputs": 124,
+      "shortUserMessagesAtMost80Characters": 2,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 1,
+      "extraVariants": 6,
+      "maxVariants": 7,
+      "swipeEvidenceLines": [
+        2
+      ],
+      "generationEvidenceLines": [
+        4,
+        6,
+        8
+      ],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": true,
+      "messageVariableSnapshots": 272,
+      "distinctVariableSnapshots": 212,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 128,
+        "hash": "4b1ff12df2ceeb3c51a4fd3ab91ecd0818424d5a05d1c30320ce5d8f3d5a197b"
+      },
+      "plotStateRecords": 50,
+      "plotStateShapes": [
+        {
+          "line": 165,
+          "kind": "str"
+        },
+        {
+          "line": 167,
+          "kind": "str"
+        }
+      ],
+      "structuredMemoryMessages": 2,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "B",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G"
+      ]
+    },
+    {
+      "alias": "S07",
+      "sha256": "8c8426a52a07eada2e3050987a6e86f98a2b133568088dffa34b864b2dd81a06",
+      "copyVersions": [
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 19897,
+      "messageCount": 1,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 141,
+        "variableSnapshots": 4,
+        "persistedMemoryExtensionFields": 11539,
+        "messageText": 2
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 0,
+        "variableUpdate": 0,
+        "optionsOrActions": 0,
+        "stateDisplay": 0
+      },
+      "linkedCard": "C-69089763511b",
+      "cardOpeningExactMatch": true,
+      "firstRole": "user",
+      "user": {
+        "messages": 1,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "modelTaggedOutput": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "otherNonUser": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 1,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 0,
+      "extraVariants": 0,
+      "maxVariants": 0,
+      "swipeEvidenceLines": [],
+      "generationEvidenceLines": [],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 1,
+      "distinctVariableSnapshots": 1,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 55,
+        "hash": "8ab05a468b3dc3cd1180fdcf4b638ae72cc1602c8a2753dd0fdfad2b5ed4c670"
+      },
+      "plotStateRecords": 0,
+      "plotStateShapes": [],
+      "structuredMemoryMessages": 1,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "U"
+      ]
+    },
+    {
+      "alias": "S08",
+      "sha256": "ad24b791d197be854f99e4cea28a735c3a3f05a069eedf68e487d250a54f06e6",
+      "copyVersions": [
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 5007871,
+      "messageCount": 143,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 164363,
+        "messageText": 1195560,
+        "responseVariantFields": 1238191,
+        "variableSnapshots": 1707791,
+        "plotExtensionFields": 438320,
+        "persistedMemoryExtensionFields": 175312
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 1,
+        "variableUpdate": 70,
+        "optionsOrActions": 0,
+        "stateDisplay": 71
+      },
+      "linkedCard": "C-86fedf81e6ca",
+      "cardOpeningExactMatch": false,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 71,
+        "textCharacters": 43845,
+        "medianTextCharacters": 697,
+        "maxTextCharacters": 1704
+      },
+      "modelTaggedOutput": {
+        "messages": 71,
+        "textCharacters": 444994,
+        "medianTextCharacters": 5833,
+        "maxTextCharacters": 12364
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 1423,
+        "medianTextCharacters": 1423,
+        "maxTextCharacters": 1423
+      },
+      "excludedUserMessages": 66,
+      "excludedModelOutputs": 66,
+      "shortUserMessagesAtMost80Characters": 21,
+      "shortContinueLikeHeuristic": 2,
+      "swipeMessages": 1,
+      "extraVariants": 2,
+      "maxVariants": 3,
+      "swipeEvidenceLines": [
+        2
+      ],
+      "generationEvidenceLines": [
+        4,
+        6,
+        8
+      ],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": true,
+      "messageVariableSnapshots": 143,
+      "distinctVariableSnapshots": 16,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 220,
+        "hash": "aed163931d00ac07487e9b5efdda7988db3362e9c99e5e0ad42fb4afeb20d824"
+      },
+      "plotStateRecords": 46,
+      "plotStateShapes": [
+        {
+          "line": 53,
+          "kind": "str"
+        },
+        {
+          "line": 55,
+          "kind": "str"
+        }
+      ],
+      "structuredMemoryMessages": 20,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "B",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G"
+      ]
+    },
+    {
+      "alias": "S09",
+      "sha256": "b68bdeafc4d7a780cff933c4952eaf5b0061683180f7ca1b8b06ff7d34aa226c",
+      "copyVersions": [
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 1033907,
+      "messageCount": 37,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 7058,
+        "messageText": 314049,
+        "responseVariantFields": 282737,
+        "variableSnapshots": 148,
+        "persistedMemoryExtensionFields": 227864,
+        "plotExtensionFields": 157644
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 0,
+        "variableUpdate": 0,
+        "optionsOrActions": 1,
+        "stateDisplay": 0
+      },
+      "linkedCard": "C-2747e496ab84",
+      "cardOpeningExactMatch": true,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 18,
+        "textCharacters": 13807,
+        "medianTextCharacters": 731.5,
+        "maxTextCharacters": 1216
+      },
+      "modelTaggedOutput": {
+        "messages": 18,
+        "textCharacters": 110632,
+        "medianTextCharacters": 6593.0,
+        "maxTextCharacters": 8622
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 13,
+        "medianTextCharacters": 13,
+        "maxTextCharacters": 13
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 0,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 0,
+      "extraVariants": 0,
+      "maxVariants": 1,
+      "swipeEvidenceLines": [],
+      "generationEvidenceLines": [
+        4,
+        6,
+        8
+      ],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 37,
+      "distinctVariableSnapshots": 1,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 228,
+        "hash": "2f034627398e20989ab8afbc9b81b5dd8af048e2dca6614dd9a0629757577b95"
+      },
+      "plotStateRecords": 18,
+      "plotStateShapes": [
+        {
+          "line": 3,
+          "kind": "str"
+        },
+        {
+          "line": 5,
+          "kind": "str"
+        }
+      ],
+      "structuredMemoryMessages": 8,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "B",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G"
+      ]
+    },
+    {
+      "alias": "S10",
+      "sha256": "c0f49d7395528cda48da2a96905c880c02df95f288542ce400e49f15e9569910",
+      "copyVersions": [
+        "1.14.0"
+      ],
+      "bytes": 157504,
+      "messageCount": 1,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 51,
+        "messageText": 46739,
+        "variableSnapshots": 109995,
+        "responseVariantFields": 4
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 0,
+        "variableUpdate": 0,
+        "optionsOrActions": 0,
+        "stateDisplay": 0
+      },
+      "linkedCard": "C-9c93a1e0a52d",
+      "cardOpeningExactMatch": false,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "modelTaggedOutput": {
+        "messages": 0,
+        "textCharacters": 0,
+        "medianTextCharacters": 0,
+        "maxTextCharacters": 0
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 21161,
+        "medianTextCharacters": 21161,
+        "maxTextCharacters": 21161
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 0,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 0,
+      "extraVariants": 0,
+      "maxVariants": 0,
+      "swipeEvidenceLines": [],
+      "generationEvidenceLines": [],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 1,
+      "distinctVariableSnapshots": 1,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 1,
+        "hash": "778c0fd4043b939031db94aabcdac323528155ebd44c3b7999a2d6dc6174c4d2"
+      },
+      "plotStateRecords": 0,
+      "plotStateShapes": [],
+      "structuredMemoryMessages": 0,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "B"
+      ]
+    },
+    {
+      "alias": "S11",
+      "sha256": "f499f76803f6ddea1a21ea503e8da0dc102a2c8422b0af3f2822f0f800f1b423",
+      "copyVersions": [
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 2289036,
+      "messageCount": 41,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 63487,
+        "messageText": 283560,
+        "responseVariantFields": 294229,
+        "variableSnapshots": 397878,
+        "persistedMemoryExtensionFields": 611567,
+        "plotExtensionFields": 176028
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 19,
+        "variableUpdate": 20,
+        "optionsOrActions": 0,
+        "stateDisplay": 20
+      },
+      "linkedCard": "C-fc99ab0b0675",
+      "cardOpeningExactMatch": false,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 20,
+        "textCharacters": 19165,
+        "medianTextCharacters": 791.0,
+        "maxTextCharacters": 4372
+      },
+      "modelTaggedOutput": {
+        "messages": 20,
+        "textCharacters": 95839,
+        "medianTextCharacters": 4452.0,
+        "maxTextCharacters": 7419
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 22,
+        "medianTextCharacters": 22,
+        "maxTextCharacters": 22
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 0,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 0,
+      "extraVariants": 0,
+      "maxVariants": 1,
+      "swipeEvidenceLines": [],
+      "generationEvidenceLines": [
+        4,
+        6,
+        8
+      ],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 41,
+      "distinctVariableSnapshots": 9,
+      "headerVariableShape": {
+        "kind": "object",
+        "keys": 94,
+        "hash": "4b66d590ad6115d13c35d4639c1e58933dc2e61c88236da20b65401f74df7f41"
+      },
+      "plotStateRecords": 20,
+      "plotStateShapes": [
+        {
+          "line": 3,
+          "kind": "str"
+        },
+        {
+          "line": 5,
+          "kind": "str"
+        }
+      ],
+      "structuredMemoryMessages": 14,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "B",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G",
+        "U",
+        "G"
+      ]
+    },
+    {
+      "alias": "S12",
+      "sha256": "fc030bd694835e880e1ce73c1f6f5339da5d70e33fcd4b54fcdea21aa6eb06ac",
+      "copyVersions": [
+        "1.14.0",
+        "1.15.0",
+        "1.19.0"
+      ],
+      "bytes": 3982,
+      "messageCount": 4,
+      "parseErrors": 0,
+      "canonicalValueBytesByCategory": {
+        "otherMessageFields": 602,
+        "messageText": 1351,
+        "responseVariantFields": 1057
+      },
+      "modelOutputStructureMarkers": {
+        "htmlDisplay": 0,
+        "variableUpdate": 0,
+        "optionsOrActions": 0,
+        "stateDisplay": 0
+      },
+      "linkedCard": "C-8a71e8270f54",
+      "cardOpeningExactMatch": true,
+      "firstRole": "non-user",
+      "user": {
+        "messages": 1,
+        "textCharacters": 5,
+        "medianTextCharacters": 5,
+        "maxTextCharacters": 5
+      },
+      "modelTaggedOutput": {
+        "messages": 2,
+        "textCharacters": 539,
+        "medianTextCharacters": 269.5,
+        "maxTextCharacters": 457
+      },
+      "otherNonUser": {
+        "messages": 1,
+        "textCharacters": 785,
+        "medianTextCharacters": 785,
+        "maxTextCharacters": 785
+      },
+      "excludedUserMessages": 0,
+      "excludedModelOutputs": 0,
+      "shortUserMessagesAtMost80Characters": 1,
+      "shortContinueLikeHeuristic": 0,
+      "swipeMessages": 0,
+      "extraVariants": 0,
+      "maxVariants": 1,
+      "swipeEvidenceLines": [],
+      "generationEvidenceLines": [
+        4,
+        6
+      ],
+      "branchLinks": 0,
+      "checkpointLinks": 0,
+      "nonemptyAuthorNote": false,
+      "authorNoteInterval": 1,
+      "worldBound": false,
+      "messageVariableSnapshots": 0,
+      "distinctVariableSnapshots": 0,
+      "headerVariableShape": {
+        "kind": "NoneType"
+      },
+      "plotStateRecords": 0,
+      "plotStateShapes": [],
+      "structuredMemoryMessages": 0,
+      "summaryMetadataMessages": 0,
+      "firstRoleSequence": [
+        "B",
+        "U",
+        "G",
+        "G"
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "alias": "C-7906e2c20dab",
+      "pngSha256": "7906e2c20dab18e441dd4c11a5544b70d4db86ddf4dd2739a7b058d18ebc1496",
+      "cardDataSha256": "9beb94d39564e9c31088a68eefbf3f22e6bc49917b857d10246b271ed836a629",
+      "fieldCharacterCounts": {
+        "description": 0,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 21,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 0,
+      "alternateGreetingCharacterCounts": [],
+      "embeddedLoreEntries": 583,
+      "enabledLoreEntries": 504,
+      "constantLoreEntries": 51,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": true,
+        "playerAgency": true,
+        "stateContinuity": true,
+        "optionsOrActions": true
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-aa32f5e2e661",
+      "pngSha256": "aa32f5e2e6612021bd5049f9bc73e0780c55a4092f30e0eb04c4d633d8f1e088",
+      "cardDataSha256": "c19fc06151575697bf306e781ec10d6b1a351d121be7a4c77cd35d01692624d6",
+      "fieldCharacterCounts": {
+        "description": 0,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 16,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 1,
+      "alternateGreetingCharacterCounts": [
+        24
+      ],
+      "embeddedLoreEntries": 22,
+      "enabledLoreEntries": 15,
+      "constantLoreEntries": 15,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": true,
+        "playerAgency": true,
+        "stateContinuity": true,
+        "optionsOrActions": true
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-69089763511b",
+      "pngSha256": "69089763511b8342a9b41efaf5f90eaef69cee864f26dc9cc2d265068432a74c",
+      "cardDataSha256": "cb47e3c6c61bebfd9bda78459742c9529fc5f52570293b594866a776ec639441",
+      "fieldCharacterCounts": {
+        "description": 0,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 0,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 0,
+      "alternateGreetingCharacterCounts": [],
+      "embeddedLoreEntries": 0,
+      "enabledLoreEntries": 0,
+      "constantLoreEntries": 0,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": false,
+        "playerAgency": false,
+        "stateContinuity": false,
+        "optionsOrActions": false
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-0e3b99edf8cd",
+      "pngSha256": "0e3b99edf8cd3bb5753de6d7e49b680f6c4df8c894ca2c656920207b642448f5",
+      "cardDataSha256": "9b0114a4b493a3d3ab23894efdfbbd49872180c897bd52b40b00c52a449572f4",
+      "fieldCharacterCounts": {
+        "description": 0,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 4,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 6,
+      "alternateGreetingCharacterCounts": [
+        46,
+        3299,
+        12,
+        8246,
+        15,
+        3352
+      ],
+      "embeddedLoreEntries": 569,
+      "enabledLoreEntries": 433,
+      "constantLoreEntries": 49,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": true,
+        "playerAgency": true,
+        "stateContinuity": true,
+        "optionsOrActions": true
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-15aea16b5878",
+      "pngSha256": "15aea16b5878a4ec8585dbacfe41397f5adf189558ad3dacbe887f1d0a9ab817",
+      "cardDataSha256": "65105541f7ece95440084c2954c40cc2bad96ced076694ead2a9742f2c3a5401",
+      "fieldCharacterCounts": {
+        "description": 0,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 4,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 6,
+      "alternateGreetingCharacterCounts": [
+        46,
+        3294,
+        12,
+        8276,
+        15,
+        3352
+      ],
+      "embeddedLoreEntries": 511,
+      "enabledLoreEntries": 361,
+      "constantLoreEntries": 54,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": true,
+        "playerAgency": true,
+        "stateContinuity": true,
+        "optionsOrActions": true
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-86fedf81e6ca",
+      "pngSha256": "86fedf81e6cabe3caf5c67e8a3d4505046c9f14c024a94dea9121429981f9413",
+      "cardDataSha256": "a6f5d9e98a8f98ae5443edd380916956689bcc142d7573a4a98cbd72ad4ef88a",
+      "fieldCharacterCounts": {
+        "description": 0,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 206,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 2,
+      "alternateGreetingCharacterCounts": [
+        1489,
+        358
+      ],
+      "embeddedLoreEntries": 21,
+      "enabledLoreEntries": 8,
+      "constantLoreEntries": 8,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": true,
+        "playerAgency": false,
+        "stateContinuity": true,
+        "optionsOrActions": true
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-2747e496ab84",
+      "pngSha256": "2747e496ab8413f9b6a0040f44f9c997ab53091bbce18a51885d08e64feebf75",
+      "cardDataSha256": "62f33c332c26e33739b77f1cb0f0a127c482a20fc4fcd732e923a9b94962099b",
+      "fieldCharacterCounts": {
+        "description": 0,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 13,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 0,
+      "alternateGreetingCharacterCounts": [],
+      "embeddedLoreEntries": 46,
+      "enabledLoreEntries": 46,
+      "constantLoreEntries": 6,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": false,
+        "playerAgency": false,
+        "stateContinuity": true,
+        "optionsOrActions": true
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-9c93a1e0a52d",
+      "pngSha256": "9c93a1e0a52dc6a39c6d1ad22cbdce7049c5e3a61a64f3a73a2ff178731d6353",
+      "cardDataSha256": "c1df852079f2cbf164e201c400d1f2f53fde778e468dee321fb9e0bcbc5c8e1a",
+      "fieldCharacterCounts": {
+        "description": 0,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 21,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 0,
+      "alternateGreetingCharacterCounts": [],
+      "embeddedLoreEntries": 499,
+      "enabledLoreEntries": 420,
+      "constantLoreEntries": 51,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": true,
+        "playerAgency": true,
+        "stateContinuity": true,
+        "optionsOrActions": true
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-fc99ab0b0675",
+      "pngSha256": "fc99ab0b067586dc915c645523a1064980032a13568fe290b48abe35fbd912cf",
+      "cardDataSha256": "c82f447984805ac62633f060c6099b0a6cfa4ae2735077a1cdf1e852fe8b26fe",
+      "fieldCharacterCounts": {
+        "description": 35,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 11,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 0,
+      "alternateGreetingCharacterCounts": [],
+      "embeddedLoreEntries": 338,
+      "enabledLoreEntries": 310,
+      "constantLoreEntries": 33,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": true,
+        "playerAgency": true,
+        "stateContinuity": true,
+        "optionsOrActions": true
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    },
+    {
+      "alias": "C-8a71e8270f54",
+      "pngSha256": "8a71e8270f54fafbccf905b1bdf053a6a55f57bea89c01fcd8c0e87ee76a2d52",
+      "cardDataSha256": "f1eab0329e2f7c64b7390cb3b5bbfab107152f4d3cb32e13dcd6d904e78a59ea",
+      "fieldCharacterCounts": {
+        "description": 2851,
+        "personality": 0,
+        "scenario": 0,
+        "first_mes": 785,
+        "mes_example": 0,
+        "system_prompt": 0,
+        "post_history_instructions": 0
+      },
+      "alternateGreetings": 0,
+      "alternateGreetingCharacterCounts": [],
+      "embeddedLoreEntries": 4,
+      "enabledLoreEntries": 4,
+      "constantLoreEntries": 0,
+      "openingHasHtmlOrScript": false,
+      "instructionPatternHits": {
+        "storyInitiative": false,
+        "playerAgency": false,
+        "stateContinuity": false,
+        "optionsOrActions": false
+      },
+      "patternDisclaimer": "keyword signals only; no claim that model followed the rules"
+    }
+  ],
+  "limits": [
+    "Files with shared prefixes or separate branches can be related; unique content files are not independent users or experiments.",
+    "gen_started/gen_finished/model fields identify recorded generation metadata, not verified authorship or generation quality.",
+    "First non-user messages can be card greetings, UI templates or edits, and are not proof of a model request from a blank input.",
+    "Raw character lengths include markup and auxiliary text, not pure story word counts.",
+    "No local branch links does not prove branching was never used; edits/continue actions may not have an action log.",
+    "Extension keys prove persisted structure only; correctness and which plugin produced it are unverified.",
+    "Byte buckets sum compact UTF-8 JSON field values, not original serialized-file byte attribution; categories are mutually exclusive.",
+    "Card rule regexes also inspect conditional/disabled text and are search signals, not evidence of prompt activation."
+  ]
+}

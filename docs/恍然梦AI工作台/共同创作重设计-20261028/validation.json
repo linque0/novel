@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-28",
+  "kind": "design-and-source-validation",
+  "sourceFiles": 22,
+  "symbolLocations": 61,
+  "sourceHashes": "passed",
+  "localLinks": "passed",
+  "builderCheck": {
+    "initialImportantQuestions": 3,
+    "resolved": 3,
+    "limitedFollowup": "nothing important left"
+  },
+  "productCodeChanged": false,
+  "newUiRendered": false,
+  "modelEvaluationPerformed": false
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "exit": 0,
+    "name": "story-authoring-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "agent-task-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "agent-workbench-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "review-cycle-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "memory-queue-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "creative-workflow-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "creative-retrieval-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "rule-scope-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "stage-budget-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "stage-config-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "builtin-skills-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "whole-chapter-apply-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "workflow-save-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "writing-workflow-unit-verify"
+  },
+  {
+    "exit": 0,
+    "name": "project-unit-verify"
+  }
+]

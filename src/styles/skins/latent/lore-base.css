@@ -9,12 +9,12 @@
 html body[data-skin='dsh'] {
   --lore-line: rgb(255 255 255 / .07);
   --lore-line-2: rgb(255 255 255 / .09);
-  --lore-ink: #e2d8e9;
-  --lore-ink-strong: #f2ecf6;
-  --lore-dim: #bbaac8;
-  --lore-dim-2: #a998ba;
-  --lore-dot: #9e8bad;
-  --lore-eyebrow: #a99bb8;
+  --lore-ink: #f0eaf5;
+  --lore-ink-strong: #faf7fd;
+  --lore-dim: #d8cee4;
+  --lore-dim-2: #c9bed7;
+  --lore-dot: #b6a6c6;
+  --lore-eyebrow: #c8bdd6;
   --lore-pane: rgb(39 31 49 / .62);
   --lore-reader: rgb(33 29 43 / .45);
   --lore-pane-line: rgb(255 255 255 / .17);
@@ -57,8 +57,8 @@ html body[data-skin='dsh'] {
   --lore-edge-label-ink: #e1d2ec;
   --lore-child-no: #877991;
   --lore-shell-bg: rgb(30 25 40 / .48);
-  --lore-nav-bg: rgb(27 25 36 / .65);
-  --lore-detail-bg: rgb(27 25 36 / .65);
+  --lore-nav-bg: rgb(21 19 30 / .82);
+  --lore-detail-bg: rgb(21 19 30 / .82);
   --lore-toolbar-bg: rgb(30 24 40 / .2);
   --lore-toolbar-ink: #d6c9e1;
   --lore-toolbar-sep: rgb(255 255 255 / .13);
@@ -142,10 +142,13 @@ html body[data-skin='dsh'] .ob-swatches {
   padding: 4px;
 }
 
+html body[data-skin='dsh'] > .ob-ctx,
 html body[data-skin='dsh'] .ob-editor .ob-ctx {
   position: fixed;
   z-index: 3000;
   min-width: 190px;
+  max-height: calc(100vh - 16px);
+  overflow-y: auto;
   background: var(--bg-panel);
   border: 1px solid var(--border);
   border-radius: 9px;

@@ -1,0 +1,54 @@
+[
+  {
+    "name": "gravity 新建卷及逐卷编辑入口直接可见",
+    "ok": true
+  },
+  {
+    "name": "glaze 新建卷及逐卷编辑入口直接可见",
+    "ok": true
+  },
+  {
+    "name": "gravity 新建卷先命名，取消不产生空卷",
+    "ok": true
+  },
+  {
+    "name": "gravity 空白卷名不可提交，中文输入法确认不误创建",
+    "ok": true
+  },
+  {
+    "name": "gravity 确认创建卷并落盘，新章归入新卷",
+    "ok": true
+  },
+  {
+    "name": "gravity 行内编辑只改指定卷，不切章或丢失正文",
+    "ok": true
+  },
+  {
+    "name": "gravity 180px侧栏入口不裁切，未分卷无改名按钮",
+    "ok": true
+  },
+  {
+    "name": "glaze 新建卷先命名，取消不产生空卷",
+    "ok": true
+  },
+  {
+    "name": "glaze 空白卷名不可提交，中文输入法确认不误创建",
+    "ok": true
+  },
+  {
+    "name": "glaze 确认创建卷并落盘，新章归入新卷",
+    "ok": true
+  },
+  {
+    "name": "glaze 行内编辑只改指定卷，不切章或丢失正文",
+    "ok": true
+  },
+  {
+    "name": "glaze 180px侧栏入口不裁切，未分卷无改名按钮",
+    "ok": true
+  },
+  {
+    "name": "刷新后新卷和修订名称保持",
+    "ok": true
+  }
+]

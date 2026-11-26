@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "checkedAt": "2026-10-27",
+  "adaptations": [
+    {
+      "id": "builtin:hm:scene-plan:v1",
+      "name": "场景目标与人物选择",
+      "stage": "planning",
+      "adapterVersion": 1,
+      "textSha256": "6243a1740e9bacc0b9d31cc383302a3fbcf1f98d1fef6fac034623f47b251c35",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/adapted/scene-plan/SKILL.md",
+      "snapshotSha256": "d144f5e7dd2e5614f61271bcdea12c7d3e3a919839a664692647fe78b3a9cf38",
+      "sourceIds": [
+        "novel:skills/ns-scene-architect.md",
+        "story:skills/scene-craft/references/scene-sequel.md",
+        "story:skills/scene-craft/SKILL.md"
+      ]
+    },
+    {
+      "id": "builtin:hm:scene-prose:v1",
+      "name": "场景正文与人物声线",
+      "stage": "drafting",
+      "adapterVersion": 1,
+      "textSha256": "6643a64590a9a91b127147a51d8a734e1f47b4f5330159ed17492bb6bb7edd2a",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/adapted/scene-prose/SKILL.md",
+      "snapshotSha256": "6855528886db6e385e6ba1923737fd24e5b5d1c59f098c1bc5ea0289708cda43",
+      "sourceIds": [
+        "novel:skills/ns-fiction-writer.md",
+        "novel:skills/ns-dialogue-editor.md",
+        "story:skills/scene-craft/references/dialogue-subtext.md",
+        "story:skills/scene-craft/references/deep-pov.md"
+      ]
+    },
+    {
+      "id": "builtin:hm:continuity-review:v1",
+      "name": "有据连续性与目标审稿",
+      "stage": "review",
+      "adapterVersion": 1,
+      "textSha256": "3bb9bf594d3c9f831f57b2000629845febd1b000b7aae20a1ccee5906827582a",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/adapted/continuity-review/SKILL.md",
+      "snapshotSha256": "5758d24e46e271f2ef01757e9e24ec657ed3da9a398ef56aade1ce5ee16ae86b",
+      "sourceIds": [
+        "novel:skills/ns-continuity-reviewer.md",
+        "story:skills/scene-craft/references/deep-pov.md"
+      ]
+    },
+    {
+      "id": "builtin:hm:focused-revision:v1",
+      "name": "作者范围内的最小修订",
+      "stage": "revision",
+      "adapterVersion": 1,
+      "textSha256": "1130a111202bdf94d235a4d5f2e0ca581866d46ecfc5d1dc2a1cf49322b2234d",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/adapted/focused-revision/SKILL.md",
+      "snapshotSha256": "1b8d8ee9fa2ecff6d9be07ce8c931f8b7ad5d7e42ee14a4e75ccc45e7d5d054e",
+      "sourceIds": [
+        "novel:skills/ns-prose-editor.md",
+        "novel:skills/ns-dialogue-editor.md",
+        "story:skills/scene-craft/references/dialogue-subtext.md"
+      ]
+    },
+    {
+      "id": "builtin:hm:grounded-memory:v1",
+      "name": "可追溯时序记忆与摘要",
+      "stage": "memory",
+      "adapterVersion": 1,
+      "textSha256": "dc949fa9c819713c830ce65e5f0d953e2cdafdcdf6acbece4f33954150595c1a",
+      "snapshotPath": "docs/恍然梦AI工作台/skill-sources-20261027/adapted/grounded-memory/SKILL.md",
+      "snapshotSha256": "bb632b9cd863332c81f8b06d95a4ea39580a3d92d339738de932a29a3a52403e",
+      "sourceIds": [
+        "context:skills/memory-systems/SKILL.md",
+        "context:skills/context-compression/SKILL.md"
+      ]
+    }
+  ]
+}

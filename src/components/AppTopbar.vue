@@ -49,7 +49,7 @@ function closeSearch(event) {
 }
 const searchPanel = ref(null)
 const currentLabel = computed(() => APP_NAVIGATION.find(item => item.key === props.active)?.label || '')
-const narrowTitle = computed(() => (props.hasWork && props.targetTitle) ? props.targetTitle : '小说工坊')
+const narrowTitle = computed(() => (props.hasWork && props.targetTitle) ? props.targetTitle : '空想书典')
 const SAVE_LABEL = { saved: '已保存', saving: '保存中', dirty: '未保存', error: '保存失败' }
 const saveLabel = computed(() => SAVE_LABEL[props.saveState] || SAVE_LABEL.saved)
 /* ⋯ 菜单分两区：「动作」由工作台注入（窄栏把顶栏按钮收进来），「模块」才是 APP_NAVIGATION。
@@ -131,13 +131,13 @@ watch(() => [props.active, ui.skin], async () => {
 <template>
   <AutoHideTopbar class="app-topbar-shell" :class="{ 'is-auxiliary': navigationLabel }" :auto-hide="!navigationLabel && ui.topbarAutoHide" @update:auto-hide="value => ui.setPref('topbarAutoHide', value)">
     <header class="app-topbar" :data-topbar-page="active">
-      <button type="button" class="app-topbar-brand" :title="navigationLabel ? '关闭写作分析' : '返回书架'" :aria-label="navigationLabel ? '小说工坊，关闭写作分析' : '小说工坊，返回书架'" :disabled="busy" @click="navigate('shelf')">
+      <button type="button" class="app-topbar-brand" :title="navigationLabel ? '关闭写作分析' : '返回书架'" :aria-label="navigationLabel ? '空想书典，关闭写作分析' : '空想书典，返回书架'" :disabled="busy" @click="navigate('shelf')">
         <span v-if="!latent" class="app-topbar-mark" :class="{ 'desktop-brand-mark': !nsPlugin && ui.skin !== 'crimson' }" aria-hidden="true">
           <svg v-if="ui.skin === 'crimson'" viewBox="0 0 44 44"><path d="M22 2 42 22 22 42 2 22zM22 7 37 22 22 37 7 22z" /><path d="M27 11a13 13 0 1 0 6 19 12 12 0 0 1-6-19Z" /></svg>
           <img v-else-if="!nsPlugin" :src="desktopSmallIcon" width="36" height="36" alt="" />
-          <template v-else>坊</template>
+          <template v-else>典</template>
         </span>
-        <span class="app-topbar-brand-text">小说工坊<small>{{ brandSuffix }}</small></span>
+        <span class="app-topbar-brand-text">空想书典<small>{{ brandSuffix }}</small></span>
         <span class="app-topbar-narrow-title" :title="narrowTitle">{{ narrowTitle }}</span>
       </button>
       <nav ref="nav" class="app-topnav" :role="navigationLabel ? 'tablist' : undefined" :aria-label="navigationLabel || '功能模块'">

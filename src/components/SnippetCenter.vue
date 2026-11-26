@@ -118,7 +118,7 @@ function toLore() {
       <aside class="crimson-art-pane compact" aria-hidden="true">
         <img :src="artInspiration" alt="" />
         <div class="crimson-art-copy">
-          <small>{{ work.work?.title || '小说工坊' }}</small>
+          <small>{{ work.work?.title || '空想书典' }}</small>
           <h2>幕间<em>拾光</em></h2>
           <button v-if="ui.experimentalAiEnabled" type="button" class="crimson-art-action" @click="ui.aiDrawerOpen = true">恍然梦 ↗</button>
         </div>

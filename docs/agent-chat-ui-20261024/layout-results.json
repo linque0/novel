@@ -1,0 +1,122 @@
+[
+  {
+    "skin": "original",
+    "width": 300,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(52, 51, 46)",
+    "bg": "rgb(248, 246, 239)"
+  },
+  {
+    "skin": "original",
+    "width": 400,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(52, 51, 46)",
+    "bg": "rgb(248, 246, 239)"
+  },
+  {
+    "skin": "original",
+    "width": 640,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(52, 51, 46)",
+    "bg": "rgb(248, 246, 239)"
+  },
+  {
+    "skin": "gravity",
+    "width": 300,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(227, 235, 239)",
+    "bg": "rgb(17, 28, 37)"
+  },
+  {
+    "skin": "gravity",
+    "width": 400,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(227, 235, 239)",
+    "bg": "rgb(17, 28, 37)"
+  },
+  {
+    "skin": "gravity",
+    "width": 640,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(227, 235, 239)",
+    "bg": "rgb(17, 28, 37)"
+  },
+  {
+    "skin": "glaze",
+    "width": 300,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(40, 70, 80)",
+    "bg": "rgb(240, 247, 246)"
+  },
+  {
+    "skin": "glaze",
+    "width": 400,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(40, 70, 80)",
+    "bg": "rgb(240, 247, 246)"
+  },
+  {
+    "skin": "glaze",
+    "width": 640,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(40, 70, 80)",
+    "bg": "rgb(240, 247, 246)"
+  },
+  {
+    "skin": "crimson",
+    "width": 300,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(239, 231, 213)",
+    "bg": "rgb(24, 30, 27)"
+  },
+  {
+    "skin": "crimson",
+    "width": 400,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(239, 231, 213)",
+    "bg": "rgb(24, 30, 27)"
+  },
+  {
+    "skin": "crimson",
+    "width": 640,
+    "over": 0,
+    "within": true,
+    "connected": true,
+    "font": "14px",
+    "ink": "rgb(239, 231, 213)",
+    "bg": "rgb(24, 30, 27)"
+  }
+]

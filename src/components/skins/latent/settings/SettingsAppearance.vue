@@ -3,35 +3,58 @@
  * 所有改动只走 ui.applyPref——它先写内存再落库，写库失败也保住当前选择（setPref 会 reject）。 */
 import { computed } from 'vue'
 import { useUiStore } from '../../../../stores/ui'
-import { CJK_FONTS, LATIN_FONTS, PAGE_TRANSITION_MODES, normalizePageTransition } from './settings-prefs.js'
+import {
+  CJK_FONTS,
+  LATIN_FONTS,
+  PAGE_TRANSITION_MODES,
+  UI_FONT_SCALE_MIN,
+  UI_FONT_SCALE_MAX,
+  UI_FONT_SCALE_STEP,
+  UI_FONT_SCALE_PRESETS,
+  normalizePageTransition,
+  normalizeUiFontScale
+} from './settings-prefs.js'
 import SettingsPreview from './SettingsPreview.vue'
 import SettingsFlowBackground from './SettingsFlowBackground.vue'
 
 const ui = useUiStore()
 const transitionMode = computed(() => normalizePageTransition(ui.pageTransitions))
 const transitionDesc = computed(() => PAGE_TRANSITION_MODES[transitionMode.value]?.desc || '')
-const MIN_SIZE = 13
-const MAX_SIZE = 24
+const uiScale = computed(() => normalizeUiFontScale(ui.uiFontScale))
 function pick(key, value) {
   ui.applyPref(key, value)
 }
-function stepSize(delta) {
-  const next = Math.min(MAX_SIZE, Math.max(MIN_SIZE, Number(ui.fontSize) + delta))
-  if (next !== ui.fontSize) ui.applyPref('fontSize', next)
+function setScale(val) {
+  const next = normalizeUiFontScale(val)
+  if (next !== uiScale.value) ui.applyPref('uiFontScale', next)
 }
-/* 滑杆与步进共用一条夹紧规则：13–24 取整，越界不写库 */
-function onRange(event) {
-  const raw = Math.round(Number(event.target.value))
+function stepScale(delta) {
+  setScale(uiScale.value + delta * UI_FONT_SCALE_STEP)
+}
+/* 滑杆与步进共用一条夹紧规则：85–140%（步进 5%），越界自动夹紧 */
+function onScaleRange(event) {
+  const raw = Number(event.target.value)
   if (!Number.isFinite(raw)) return
-  ui.applyPref('fontSize', Math.min(MAX_SIZE, Math.max(MIN_SIZE, raw)))
+  setScale(raw)
 }
 function toggleTopbar() {
   ui.applyPref('topbarAutoHide', !ui.topbarAutoHide)
 }
 /* 幻流只有亮/暗两档：暗由 ui.theme === 'night' 触发（theme-latent.js 的 useLatentTheme）。
  * 写回时保持原值口径——亮色落 'xuan'，与原版工坊等皮肤共用的 theme 键不回退成空。 */
-function toggleDark() {
-  ui.applyPref('theme', ui.theme === 'night' ? 'xuan' : 'night')
+const isDarkTheme = computed(() => ui.theme === 'night')
+function setPanelTheme(mode) {
+  const target = mode === 'dark' ? 'night' : 'xuan'
+  if (ui.theme !== target) ui.applyPref('theme', target)
+}
+function onThemeKeydown(event) {
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+    event.preventDefault()
+    setPanelTheme('light')
+  } else if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    event.preventDefault()
+    setPanelTheme('dark')
+  }
 }
 </script>
 
@@ -43,7 +66,7 @@ function toggleDark() {
       <section class="setting-group">
         <div class="section-title">
           <h2>文字与排版</h2>
-          <small>正文编辑 · 阅读</small>
+          <small>字体 · 界面缩放</small>
         </div>
 
         <div class="setting-row" data-setting="editorFont">
@@ -66,24 +89,36 @@ function toggleDark() {
           </select>
         </div>
 
-        <div class="setting-row font-size-setting" data-setting="fontSize">
+        <div class="setting-row font-size-setting ui-font-scale-setting" data-setting="uiFontScale">
           <div class="setting-copy">
-            <label for="font-size-range">正文字号</label>
-            <p>调整正文编辑与阅读的大小</p>
+            <label for="ui-font-scale-range">全局字体大小</label>
+            <p>调整界面导航、目录、菜单与弹窗等全局文字大小（正文字号已移至正文工具栏）</p>
           </div>
           <div class="size-stepper">
-            <button type="button" data-act="font-down" aria-label="减小字号" title="减小字号" :disabled="ui.fontSize <= MIN_SIZE" @click="stepSize(-1)">
+            <button type="button" data-act="ui-scale-down" aria-label="减小全局字体大小" title="减小全局字体大小" :disabled="uiScale <= UI_FONT_SCALE_MIN" @click="stepScale(-1)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /></svg>
             </button>
-            <output id="size-value" for="font-size-range">{{ ui.fontSize }}<small>px</small></output>
-            <button type="button" data-act="font-up" aria-label="增大字号" title="增大字号" :disabled="ui.fontSize >= MAX_SIZE" @click="stepSize(1)">
+            <output id="ui-scale-value" for="ui-font-scale-range">{{ uiScale }}<small>%</small></output>
+            <button type="button" data-act="ui-scale-up" aria-label="增大全局字体大小" title="增大全局字体大小" :disabled="uiScale >= UI_FONT_SCALE_MAX" @click="stepScale(1)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg>
             </button>
           </div>
+          <div class="scale-presets" role="group" aria-label="全局字体大小快捷档位">
+            <button
+              v-for="p in UI_FONT_SCALE_PRESETS"
+              :key="p.key"
+              type="button"
+              class="scale-preset-btn"
+              :class="{ active: uiScale === p.value }"
+              :data-scale-preset="p.value"
+              :aria-pressed="uiScale === p.value"
+              @click="setScale(p.value)"
+            ><span>{{ p.label }}</span><small>{{ p.value }}%</small></button>
+          </div>
           <div class="size-range-row">
-            <span>13</span>
-            <input id="font-size-range" type="range" min="13" max="24" step="1" aria-label="正文字号" :value="ui.fontSize" @input="onRange" />
-            <span>24</span>
+            <span>{{ UI_FONT_SCALE_MIN }}%</span>
+            <input id="ui-font-scale-range" type="range" :min="UI_FONT_SCALE_MIN" :max="UI_FONT_SCALE_MAX" :step="UI_FONT_SCALE_STEP" aria-label="全局字体大小" :value="uiScale" @input="onScaleRange" />
+            <span>{{ UI_FONT_SCALE_MAX }}%</span>
           </div>
         </div>
       </section>
@@ -94,12 +129,48 @@ function toggleDark() {
         </div>
         <div class="setting-row" data-setting="darkMode">
           <div class="setting-copy">
-            <strong id="darkmode-label">深色面板</strong>
-            <p>关闭后使用浅色面板，流动背景继续使用当前配色。</p>
+            <strong id="darkmode-label">主题切换</strong>
+            <p>在浅色与深色面板之间切换，流动背景继续使用当前配色</p>
           </div>
-          <button type="button" class="switch" id="darkmode-switch" role="switch" aria-labelledby="darkmode-label" :aria-checked="ui.theme === 'night'" data-act="toggle-dark" @click="toggleDark">
-            <i></i>
-          </button>
+          <div
+            id="darkmode-switch"
+            class="theme-segmented"
+            role="radiogroup"
+            aria-labelledby="darkmode-label"
+            :data-theme-value="isDarkTheme ? 'dark' : 'light'"
+            @keydown="onThemeKeydown"
+          >
+            <span class="theme-segmented-thumb" aria-hidden="true"></span>
+            <button
+              type="button"
+              class="theme-segmented-opt"
+              role="radio"
+              data-theme-opt="light"
+              :aria-checked="!isDarkTheme"
+              :tabindex="!isDarkTheme ? 0 : -1"
+              @click="setPanelTheme('light')"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+              </svg>
+              <span>浅色</span>
+            </button>
+            <button
+              type="button"
+              class="theme-segmented-opt"
+              role="radio"
+              data-theme-opt="dark"
+              :aria-checked="isDarkTheme"
+              :tabindex="isDarkTheme ? 0 : -1"
+              @click="setPanelTheme('dark')"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+              <span>深色</span>
+            </button>
+          </div>
         </div>
         <div class="setting-row" data-setting="topbarAutoHide">
           <div class="setting-copy">
@@ -119,7 +190,7 @@ function toggleDark() {
             <option v-for="(item, key) in PAGE_TRANSITION_MODES" :key="key" :value="key">{{ item.label }}</option>
           </select>
         </div>
-        <p class="section-note">字体与字号只调整文字的呈现，不改变已有正文内容。</p>
+        <p class="section-note">全局字体大小调整界面各处文字；正文字号可在正文工具栏随时调节，不改变已有正文内容。</p>
       </section>
     </div>
 

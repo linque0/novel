@@ -64,11 +64,11 @@ const PAGE_FOOT = {
   knowledge: '向量模型跟随当前预设',
   data: '作品与偏好 · 当前设备',
   experimental: '默认关闭 · 本地保留配置',
-  about: '小说工坊 · 幻流'
+  about: '空想书典 · 幻流'
 }
 const breadcrumb = computed(() => (query.value ? '搜索' : PAGE_LABELS[page.value] || '关于'))
 const headTitle = computed(() => (query.value ? '搜索设置' : pageMeta.value.title))
-const footRight = computed(() => (query.value ? '快速定位工坊偏好' : PAGE_FOOT[page.value] || '小说工坊 · 幻流'))
+const footRight = computed(() => (query.value ? '快速定位书典偏好' : PAGE_FOOT[page.value] || '空想书典 · 幻流'))
 
 /* ---------- 界面键写回（防抖：滚动与分类切换都是高频动作） ---------- */
 let uiSaveTimer = null

@@ -1,0 +1,113 @@
+{
+  "checks": [
+    {
+      "run": 1,
+      "skin": "original",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 0,
+      "hidden": true
+    },
+    {
+      "run": 1,
+      "skin": "gravity",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    },
+    {
+      "run": 1,
+      "skin": "glaze",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    },
+    {
+      "run": 1,
+      "skin": "crimson",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    },
+    {
+      "run": 2,
+      "skin": "original",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 0,
+      "hidden": true
+    },
+    {
+      "run": 2,
+      "skin": "gravity",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    },
+    {
+      "run": 2,
+      "skin": "glaze",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    },
+    {
+      "run": 2,
+      "skin": "crimson",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    },
+    {
+      "run": 3,
+      "skin": "original",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 0,
+      "hidden": true
+    },
+    {
+      "run": 3,
+      "skin": "gravity",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    },
+    {
+      "run": 3,
+      "skin": "glaze",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    },
+    {
+      "run": 3,
+      "skin": "crimson",
+      "tab": "outline",
+      "headers": 1,
+      "targets": 1,
+      "agents": 1,
+      "hidden": true
+    }
+  ],
+  "errors": []
+}

@@ -1,0 +1,2950 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>条目权重 · 末节专项破形选型板 — 小说工坊（方案 B）</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --font-sans: "Inter", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+
+      /* 方案 B（引力势阱与晶体星座）深空观测仪令牌 */
+      --bg-0: #04070D;
+      --bg-1: #080E1A;
+      --surface: rgba(7, 13, 25, 0.82);
+      --surface-strong: rgba(8, 15, 30, 0.96);
+      --surface-inset: rgba(4, 8, 17, 0.90);
+
+      --line-faint: rgba(234, 243, 255, 0.08);
+      --line-subtle: rgba(234, 243, 255, 0.14);
+      --line-cyan: rgba(71, 215, 232, 0.36);
+      --line-cyan-strong: rgba(71, 215, 232, 0.84);
+      --line-locked: rgba(74, 227, 181, 0.40);
+
+      --ink-1: #EAF3FF;
+      --ink-2: #9FB4CC;
+      --ink-3: #647B98;
+      --cyan: #47D7E8;
+      --cyan-soft: #5CE1F2;
+      --violet: #8C7BFF;
+      --moon: #96B6FF;
+      --locked: #4AE3B5;
+      --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(74% 44% at 50% -6%, rgba(71, 215, 232, 0.088) 0%, transparent 66%),
+        radial-gradient(56% 48% at 88% 82%, rgba(140, 123, 255, 0.068) 0%, transparent 72%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-0) 48%, #03050A 100%);
+      color: var(--ink-1);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* 背景微距冷银观测暗网格 */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.20;
+      background-image:
+        linear-gradient(rgba(150, 182, 255, 0.085) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(150, 182, 255, 0.085) 1px, transparent 1px);
+      background-size: 42px 42px;
+      mask-image: radial-gradient(92% 84% at 50% 30%, #000 32%, transparent 100%);
+    }
+
+    button {
+      font: inherit;
+      color: inherit;
+      background: none;
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+    button:focus-visible {
+      outline: 1.5px solid var(--cyan);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      max-width: 1580px;
+      margin: 0 auto;
+      padding: 14px 20px 96px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* 方案 B 精密观测仪玻璃面板：3px 微倒角 + 1px 细边 + 四角极细冰青校准刻度 */
+    .obs-panel {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--line-subtle);
+      border-radius: 3px;
+      backdrop-filter: blur(18px) saturate(1.25);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(234, 243, 255, 0.05);
+      background-image:
+        linear-gradient(90deg, rgba(71, 215, 232, 0.72) 5px, transparent 5px),
+        linear-gradient(180deg, rgba(71, 215, 232, 0.72) 5px, transparent 5px),
+        linear-gradient(270deg, rgba(71, 215, 232, 0.72) 5px, transparent 5px),
+        linear-gradient(180deg, rgba(71, 215, 232, 0.72) 5px, transparent 5px),
+        linear-gradient(90deg, rgba(71, 215, 232, 0.72) 5px, transparent 5px),
+        linear-gradient(0deg, rgba(71, 215, 232, 0.72) 5px, transparent 5px),
+        linear-gradient(270deg, rgba(71, 215, 232, 0.72) 5px, transparent 5px),
+        linear-gradient(0deg, rgba(71, 215, 232, 0.72) 5px, transparent 5px);
+      background-position:
+        0 0, 0 0,
+        100% 0, 100% 0,
+        0 100%, 0 100%,
+        100% 100%, 100% 100%;
+      background-repeat: no-repeat;
+      background-size: 6px 1px, 1px 6px, 6px 1px, 1px 6px, 6px 1px, 1px 6px, 6px 1px, 1px 6px;
+    }
+
+    /* ==================== 1. 顶部状态栏 ==================== */
+    .top-bar {
+      padding: 13px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px 16px;
+    }
+
+    .brand-col {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 280px;
+    }
+    .brand-title-line {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .brand-title-line h1 {
+      margin: 0;
+      font-size: 16.5px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      color: var(--ink-1);
+    }
+    .scheme-chip {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: var(--cyan);
+      padding: 2px 7px;
+      border-radius: 2px;
+      border: 1px solid var(--line-cyan);
+      background: rgba(71, 215, 232, 0.08);
+    }
+    .brand-sub {
+      margin: 0;
+      font-size: 12px;
+      color: var(--ink-2);
+      line-height: 1.48;
+    }
+    .brand-sub .locked-hl {
+      color: #CFFAE9;
+      font-weight: 500;
+    }
+    .brand-sub .target-hl {
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .ctrl-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7.5px 12px;
+      border-radius: 3px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--ink-2);
+      background: var(--surface-inset);
+      border: 1px solid var(--line-subtle);
+      transition: all 0.18s var(--ease-out);
+      white-space: nowrap;
+    }
+    .ctrl-toggle:hover {
+      color: var(--ink-1);
+      border-color: var(--line-cyan);
+      background: rgba(71, 215, 232, 0.08);
+    }
+    .ctrl-toggle.is-on {
+      color: var(--cyan);
+      border-color: var(--line-cyan-strong);
+      background: rgba(71, 215, 232, 0.13);
+      box-shadow: 0 0 12px rgba(71, 215, 232, 0.15);
+    }
+    .ctrl-toggle.is-violet.is-on {
+      color: #DDD6FF;
+      border-color: rgba(140, 123, 255, 0.85);
+      background: rgba(140, 123, 255, 0.18);
+      box-shadow: 0 0 12px rgba(140, 123, 255, 0.22);
+    }
+    .ctrl-dot {
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      border: 1px solid currentColor;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .ctrl-toggle.is-on .ctrl-dot {
+      background: currentColor;
+      box-shadow: 0 0 6px currentColor;
+    }
+    .ctrl-state-tag {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      opacity: 0.85;
+    }
+
+    /* 通用区块头 */
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 9px;
+      padding: 0 2px;
+    }
+    .section-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--ink-1);
+    }
+    .section-title::before {
+      content: "";
+      width: 2.5px;
+      height: 13px;
+      background: var(--cyan);
+    }
+    .section-title .sub-code {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--moon);
+      letter-spacing: 0.06em;
+    }
+    .section-note {
+      font-size: 11px;
+      color: var(--ink-3);
+    }
+
+    /* ==================== 2. 第一板块：五级权重完整同框梯队（5 列横向） ==================== */
+    .ladder-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 11px;
+    }
+
+    .ladder-card {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: border-color 0.2s var(--ease-out);
+    }
+    .ladder-card.is-locked {
+      background: rgba(6, 11, 20, 0.72);
+      border-color: rgba(74, 227, 181, 0.24);
+    }
+    .ladder-card.is-live {
+      border-color: rgba(71, 215, 232, 0.44);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.50), 0 0 16px rgba(71, 215, 232, 0.12);
+    }
+    .ladder-card:hover {
+      border-color: rgba(71, 215, 232, 0.58);
+    }
+
+    .ladder-top {
+      padding: 9px 11px 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      border-bottom: 1px solid var(--line-faint);
+    }
+    .tier-id {
+      display: flex;
+      align-items: baseline;
+      gap: 5px;
+      min-width: 0;
+    }
+    .tier-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-1);
+    }
+    .tier-en {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--ink-3);
+    }
+    .tier-ratio {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--cyan);
+      margin-left: 1px;
+    }
+
+    .tier-badge {
+      font-size: 10px;
+      padding: 1.5px 6px;
+      border-radius: 2px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .tier-badge.locked {
+      color: #CFFAE9;
+      background: rgba(74, 227, 181, 0.11);
+      border: 1px solid rgba(74, 227, 181, 0.40);
+    }
+    .tier-badge.live {
+      color: var(--cyan);
+      background: rgba(71, 215, 232, 0.13);
+      border: 1px solid rgba(71, 215, 232, 0.50);
+    }
+
+    /* 通用标本展示舞台（2.8× 主视图 + 右上 1:1 实图窗 + 左下 14px 微图标） */
+    .specimen-stage {
+      position: relative;
+      width: 100%;
+      height: 164px;
+      background:
+        radial-gradient(circle at 42% 50%, rgba(71, 215, 232, 0.058) 0%, transparent 64%),
+        #04070D;
+      border-bottom: 1px solid var(--line-faint);
+      cursor: crosshair;
+      overflow: hidden;
+    }
+    .specimen-canvas,
+    .cand-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .stage-label-tl {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--ink-3);
+      letter-spacing: 0.03em;
+      pointer-events: none;
+    }
+    .stage-label-tr {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--ink-3);
+      pointer-events: none;
+    }
+    .stage-hover-tip {
+      position: absolute;
+      right: 8px;
+      bottom: 8px;
+      font-size: 9.5px;
+      color: rgba(159, 180, 204, 0.54);
+      pointer-events: none;
+      transition: color 0.18s ease;
+    }
+    .specimen-stage:hover .stage-hover-tip,
+    .cand-card:hover .stage-hover-tip,
+    body.is-hover-locked .stage-hover-tip {
+      color: var(--cyan);
+    }
+
+    /* 左下角 14px 标签微图标预览 */
+    .micro-icon-chip {
+      position: absolute;
+      left: 7px;
+      bottom: 7px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2.5px 7px;
+      border-radius: 2px;
+      background: rgba(8, 15, 28, 0.94);
+      border: 1px solid rgba(234, 243, 255, 0.16);
+      font-size: 10px;
+      color: var(--ink-2);
+      pointer-events: none;
+    }
+    .micro-icon-chip svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+      flex-shrink: 0;
+    }
+    .micro-icon-chip .chip-sub {
+      color: var(--ink-3);
+      font-size: 9px;
+      border-right: 1px solid rgba(234, 243, 255, 0.12);
+      padding-right: 4.5px;
+    }
+
+    .ladder-foot {
+      padding: 8.5px 11px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .ladder-concept-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .ladder-concept-name {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-1);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .ladder-concept-code {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--moon);
+      flex-shrink: 0;
+    }
+    .ladder-concept-sub {
+      margin: 0;
+      font-size: 10.5px;
+      line-height: 1.45;
+      color: var(--ink-3);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ==================== 3. 第二板块：末节六款破形创意候选网格（3 列 × 2 行） ==================== */
+    .candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .cand-card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s var(--ease-out), transform 0.2s var(--ease-out), box-shadow 0.2s var(--ease-out), background 0.2s var(--ease-out);
+    }
+    .cand-card:hover {
+      border-color: rgba(71, 215, 232, 0.56);
+      transform: translateY(-1px);
+    }
+    .cand-card.is-selected {
+      border-color: var(--line-cyan-strong);
+      border-left: 2.5px solid var(--cyan);
+      background: linear-gradient(180deg, rgba(10, 22, 41, 0.92) 0%, rgba(6, 13, 25, 0.90) 100%);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.58), 0 0 20px rgba(71, 215, 232, 0.18);
+    }
+
+    .cand-top {
+      padding: 10px 12px 9px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      border-bottom: 1px solid var(--line-faint);
+    }
+    .cand-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .cand-code {
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 2px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--cyan);
+      background: rgba(71, 215, 232, 0.10);
+      border: 1px solid rgba(71, 215, 232, 0.36);
+      flex-shrink: 0;
+    }
+    .cand-card.is-selected .cand-code {
+      color: #04070D;
+      background: var(--cyan);
+      border-color: #FFFFFF;
+    }
+    .cand-names {
+      display: flex;
+      align-items: baseline;
+      gap: 7px;
+      min-width: 0;
+    }
+    .cand-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-1);
+      white-space: nowrap;
+    }
+    .cand-en {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--moon);
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cand-badge {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 2px;
+      color: var(--ink-3);
+      border: 1px solid var(--line-faint);
+      background: rgba(234, 243, 255, 0.03);
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.18s ease;
+    }
+    .cand-card.is-selected .cand-badge {
+      color: #FFFFFF;
+      border-color: var(--cyan);
+      background: rgba(71, 215, 232, 0.24);
+    }
+
+    .cand-stage {
+      position: relative;
+      width: 100%;
+      height: 164px;
+      background:
+        radial-gradient(circle at 42% 50%, rgba(71, 215, 232, 0.062) 0%, transparent 64%),
+        #04070D;
+      border-bottom: 1px solid var(--line-faint);
+      overflow: hidden;
+    }
+
+    .cand-foot {
+      padding: 10px 12px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+    }
+    .cand-geo {
+      margin: 0;
+      font-size: 11.5px;
+      line-height: 1.54;
+      color: var(--ink-2);
+    }
+    .cand-hover-note {
+      margin: auto 0 0;
+      padding-top: 6px;
+      border-top: 1px dashed rgba(234, 243, 255, 0.08);
+      font-size: 10.5px;
+      line-height: 1.48;
+      color: var(--ink-3);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .cand-hover-note b {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--cyan);
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    /* ==================== 4. 第三板块：「界脊 [10]」实景星域验效沙盒 ==================== */
+    .sandbox-panel {
+      position: relative;
+      height: 540px;
+      overflow: hidden;
+      background:
+        radial-gradient(62% 66% at 50% 48%, rgba(71, 215, 232, 0.055) 0%, transparent 72%),
+        #04070D;
+    }
+
+    #sandboxCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: default;
+      touch-action: none;
+    }
+
+    .sb-hud {
+      position: absolute;
+      z-index: 8;
+      pointer-events: none;
+    }
+    .sb-hud > * { pointer-events: auto; }
+
+    .sb-top-bar {
+      top: 12px;
+      left: 14px;
+      right: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .sb-left-group,
+    .sb-right-group {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      pointer-events: auto;
+    }
+
+    .sb-title-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 11px;
+      border-radius: 3px;
+      background: rgba(6, 12, 23, 0.88);
+      border: 1px solid var(--line-subtle);
+      backdrop-filter: blur(14px);
+    }
+    .sb-title-pill strong {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-1);
+      letter-spacing: 0.03em;
+    }
+    .sb-title-pill span {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--cyan);
+    }
+
+    .sb-seg {
+      display: inline-flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2.5px;
+      border-radius: 3px;
+      background: rgba(6, 12, 23, 0.88);
+      border: 1px solid var(--line-subtle);
+      backdrop-filter: blur(14px);
+    }
+    .sb-seg-btn {
+      padding: 5px 9.5px;
+      border-radius: 2px;
+      font-size: 11px;
+      color: var(--ink-2);
+      border: 1px solid transparent;
+      transition: all 0.16s ease;
+      white-space: nowrap;
+    }
+    .sb-seg-btn:hover { color: var(--ink-1); }
+    .sb-seg-btn.is-active {
+      color: #FFFFFF;
+      background: rgba(71, 215, 232, 0.18);
+      border-color: var(--line-cyan-strong);
+    }
+
+    .filter-bar {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 3px;
+      padding: 2.5px;
+      border-radius: 3px;
+      background: rgba(6, 12, 23, 0.88);
+      border: 1px solid var(--line-subtle);
+      backdrop-filter: blur(14px);
+    }
+    .filter-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4.5px 8.5px;
+      border-radius: 2px;
+      font-size: 11px;
+      color: var(--ink-2);
+      border: 1px solid transparent;
+      transition: all 0.16s ease;
+      white-space: nowrap;
+    }
+    .filter-pill:hover { color: var(--ink-1); background: rgba(234, 243, 255, 0.06); }
+    .filter-pill.is-active {
+      color: #FFFFFF;
+      background: rgba(71, 215, 232, 0.18);
+      border-color: var(--line-cyan-strong);
+    }
+    .filter-pill svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+
+    .sb-bottom-tip {
+      left: 14px;
+      bottom: 12px;
+      padding: 5px 10px;
+      border-radius: 3px;
+      background: rgba(6, 12, 23, 0.80);
+      border: 1px solid var(--line-faint);
+      font-size: 10.5px;
+      color: var(--ink-3);
+      backdrop-filter: blur(10px);
+    }
+
+    /* 方案 B 悬浮微卡：左侧 2px 冰青光条 */
+    .sb-tooltip {
+      position: absolute;
+      z-index: 16;
+      pointer-events: none;
+      transform: translate(-50%, calc(-100% - 14px));
+      min-width: 232px;
+      max-width: 312px;
+      padding: 9px 12px 10px 13px;
+      border-radius: 3px;
+      background: var(--surface-strong);
+      border: 1px solid var(--line-cyan);
+      border-left: 2px solid var(--cyan);
+      backdrop-filter: blur(18px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.72);
+    }
+    .tt-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 5px;
+    }
+    .tt-weight-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--cyan);
+      padding: 1.5px 6px;
+      border-radius: 2px;
+      background: rgba(71, 215, 232, 0.10);
+      border: 1px solid rgba(71, 215, 232, 0.34);
+    }
+    .tt-weight-pill svg { width: 13px; height: 13px; }
+    .tt-concept {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--moon);
+    }
+    .tt-title {
+      margin: 0 0 4px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-1);
+    }
+    .tt-desc {
+      margin: 0;
+      font-size: 11px;
+      line-height: 1.52;
+      color: var(--ink-2);
+    }
+
+    /* ==================== 5. 底部悬浮定稿栏 ==================== */
+    .floating-dock-wrap {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 12px;
+      z-index: 30;
+      padding: 0 20px;
+      pointer-events: none;
+      display: flex;
+      justify-content: center;
+    }
+    .floating-dock {
+      pointer-events: auto;
+      width: 100%;
+      max-width: 1540px;
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      background: rgba(6, 12, 24, 0.94);
+      border-color: rgba(71, 215, 232, 0.38);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.72);
+    }
+    .dock-summary {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 6px 9px;
+      font-size: 11.5px;
+      color: var(--ink-2);
+    }
+    .dock-prefix {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--locked);
+      padding: 2.5px 7px;
+      border-radius: 2px;
+      border: 1px solid var(--line-locked);
+      background: rgba(74, 227, 181, 0.10);
+    }
+    .dock-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4.5px;
+    }
+    .dock-item svg {
+      width: 14px;
+      height: 14px;
+      display: block;
+    }
+    .dock-item em {
+      font-style: normal;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+    .dock-item.is-locked-item em {
+      color: #B8F5DF;
+      font-weight: 500;
+    }
+    .dock-sep {
+      color: var(--ink-3);
+      opacity: 0.55;
+    }
+
+    .copy-combo-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8.5px 15px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #FFFFFF;
+      background: linear-gradient(135deg, rgba(71, 215, 232, 0.28), rgba(140, 123, 255, 0.18));
+      border: 1px solid var(--line-cyan-strong);
+      transition: all 0.18s var(--ease-out);
+      white-space: nowrap;
+    }
+    .copy-combo-btn:hover {
+      background: linear-gradient(135deg, rgba(71, 215, 232, 0.42), rgba(140, 123, 255, 0.28));
+      box-shadow: 0 0 18px rgba(71, 215, 232, 0.34);
+      transform: translateY(-1px);
+    }
+    .copy-combo-btn svg {
+      width: 13px;
+      height: 13px;
+    }
+
+    /* 克制冰青提示 Toast */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 76px;
+      transform: translateX(-50%) translateY(10px);
+      padding: 8px 16px;
+      border-radius: 3px;
+      background: rgba(7, 15, 29, 0.96);
+      border: 1px solid var(--cyan);
+      color: var(--ink-1);
+      font-size: 12px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.68);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.22s var(--ease-out);
+      z-index: 60;
+      max-width: 92vw;
+      text-align: center;
+    }
+    .toast.is-show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 1320px) {
+      .ladder-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .candidate-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 860px) {
+      .app-shell { padding: 10px 12px 132px; }
+      .ladder-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .sandbox-panel { height: 580px; }
+      .floating-dock-wrap { padding: 0 12px; bottom: 8px; }
+    }
+    @media (max-width: 560px) {
+      .ladder-grid,
+      .candidate-grid { grid-template-columns: 1fr; }
+      .top-bar { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <!-- ==================== 1. 顶部状态栏 ==================== -->
+    <header class="obs-panel top-bar">
+      <div class="brand-col">
+        <div class="brand-title-line">
+          <h1>条目权重 · 末节专项破形选型板</h1>
+          <span class="scheme-chip">SCHEME B // TRIVIAL FINALIZATION (L–Q)</span>
+        </div>
+        <p class="brand-sub">
+          <span class="locked-hl">核心 / 关键 / 标准 / 点缀 四档已锁定</span> · 终极定稿 <span class="target-hl">『末节 (0.62×)』</span> — 彻底破除菱形，强化 1:1 真实星图锐度与叙事辨识度
+        </p>
+      </div>
+
+      <div class="top-controls" role="toolbar" aria-label="动效与悬停对比开关">
+        <button type="button" class="ctrl-toggle is-on" id="motionToggleBtn" aria-pressed="true" title="开关星体自转、伴星巡游与微动效">
+          <i class="ctrl-dot"></i>
+          <span>动态微演</span>
+          <span class="ctrl-state-tag" id="motionStateTag">ON</span>
+        </button>
+        <button type="button" class="ctrl-toggle is-violet" id="hoverLockBtn" aria-pressed="false" title="开启后所有候选卡片与梯队卡同步锁定展示悬停动效态，便于直接横向对比">
+          <i class="ctrl-dot"></i>
+          <span>悬停预览锁</span>
+          <span class="ctrl-state-tag" id="hoverLockTag">OFF</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================== 2. 第一板块：五级权重完整同框梯队 ==================== -->
+    <section aria-label="五级权重完整同框梯队">
+      <div class="section-head">
+        <div class="section-title">
+          <span>五级权重完整同框梯队</span>
+          <span class="sub-code">CORE 1.38× → KEY 1.18× → STANDARD 1.00× → ACCENT 0.80× → TRIVIAL 0.62×</span>
+        </div>
+        <span class="section-note">主视窗：2.8× 放大精雕（移入或开启悬停锁测试动效）· 右上：1:1 实图暗窗 · 左下：14px 标签微图标</span>
+      </div>
+      <div class="ladder-grid" id="ladderGrid"></div>
+    </section>
+
+    <!-- ==================== 3. 第二板块：末节（0.62×）六款破形创意候选网格 ==================== -->
+    <section aria-label="末节六款破形创意候选网格">
+      <div class="section-head">
+        <div class="section-title">
+          <span>末节（trivial · 0.62×）六款破形创意候选</span>
+          <span class="sub-code">L · M · N · O · P · Q // NON-DIAMOND · HIGH-CLARITY AT 1:1</span>
+        </div>
+        <span class="section-note">点击任意卡片立即切换定稿预览，并同步更新上方五级梯队、下方「界脊 [10]」沙盒与底部定稿栏</span>
+      </div>
+      <div class="candidate-grid" id="candidateGrid"></div>
+    </section>
+
+    <!-- ==================== 4. 第三板块：「界脊 [10]」实景星域验效沙盒 ==================== -->
+    <section aria-label="界脊 [10] 实景星域验效沙盒">
+      <div class="section-head">
+        <div class="section-title">
+          <span>「界脊 [10]」实景星域验效沙盒</span>
+          <span class="sub-code">REAL-SCALE CONSTELLATION TEST // 2 CORE + 2 KEY + 2 STD + 2 ACCENT + 2 TRIVIAL</span>
+        </div>
+        <span class="section-note">重点检验 100% 全景下「末节」是否低调不抢戏且一眼可辨 · 点击右上权重按钮可专项放大核验</span>
+      </div>
+
+      <div class="obs-panel sandbox-panel" id="sandboxPanel">
+        <canvas id="sandboxCanvas" aria-label="界脊 [10] 实景星座验证画布"></canvas>
+
+        <div class="sb-hud sb-top-bar">
+          <div class="sb-left-group">
+            <div class="sb-title-pill">
+              <strong>界脊 [10]</strong>
+              <span id="zoomReadout">130%</span>
+            </div>
+
+            <div class="sb-seg" role="group" aria-label="视距切换">
+              <button type="button" class="sb-seg-btn" data-zoom="1.0">100% 全景</button>
+              <button type="button" class="sb-seg-btn is-active" data-zoom="1.30">130% 中距</button>
+              <button type="button" class="sb-seg-btn" data-zoom="1.65">165% 精读</button>
+            </div>
+
+            <div class="sb-seg" role="group" aria-label="标签模式">
+              <button type="button" class="sb-seg-btn is-active" data-label-mode="lod">LOD 渐进</button>
+              <button type="button" class="sb-seg-btn" data-label-mode="all">全部展开</button>
+            </div>
+          </div>
+
+          <div class="sb-right-group">
+            <div class="filter-bar" id="weightFilterBar" role="group" aria-label="权重过滤高亮"></div>
+          </div>
+        </div>
+
+        <div class="sb-hud sb-bottom-tip">
+          悬停星体触发 Focus &amp; Context 孤立高亮与悬浮信息微卡 · 滚轮平滑缩放 · 点击右上「末节」按钮可专项放大核验
+        </div>
+
+        <!-- 悬停悬浮信息微卡（2px 冰青左侧光条） -->
+        <div class="sb-tooltip" id="sbTooltip" hidden>
+          <div class="tt-head">
+            <span class="tt-weight-pill" id="ttWeightPill"></span>
+            <span class="tt-concept" id="ttConcept"></span>
+          </div>
+          <h3 class="tt-title" id="ttTitle"></h3>
+          <p class="tt-desc" id="ttDesc"></p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==================== 5. 底部悬浮定稿栏 ==================== -->
+  <div class="floating-dock-wrap">
+    <footer class="obs-panel floating-dock" aria-label="底部悬浮定稿栏">
+      <div class="dock-summary" id="dockSummary"></div>
+      <button type="button" class="copy-combo-btn" id="copyFinalBtn">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3">
+          <rect x="5.2" y="5.2" width="8.2" height="8.2" rx="1"/>
+          <path d="M10.8 5.2V3.2a1 1 0 0 0-1-1H3.2a1 1 0 0 0-1 1v6.6a1 1 0 0 0 1 1h2"/>
+        </svg>
+        <span>一键复制最终五级定稿方案</span>
+      </button>
+    </footer>
+  </div>
+
+  <div class="toast" id="toast">已复制最终五级定稿方案到剪贴板</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const TAU = Math.PI * 2;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  /* ==================== 1. 五级权重元数据（前四档已锁定 + 末节六款 L–Q） ==================== */
+  const LOCKED_TIERS = {
+    core: {
+      key: 'core',
+      label: '核心',
+      en: 'CORE',
+      ratio: '1.38×',
+      name: '双层四芒十字星核',
+      code: 'LOCKED',
+      spec: '极细长十字光学衍射丝（spikeLen = r * 2.05，悬停 2.65）+ 锐利四芒星深空暗底外廓（outR = r * 1.32, waist = r * 0.38）+ 内部空心菱形晶核（inR = r * 0.62）+ 中心炽白微菱星芯。'
+    },
+    key: {
+      key: 'key',
+      label: '关键',
+      en: 'KEY',
+      ratio: '1.18×',
+      name: '日蚀星环',
+      code: '方案 H · LOCKED',
+      spec: '深空暗玻璃球核配左上渐细发光日蚀弦月高光弧，倾斜 -26° 的 3D 椭圆冰青轨道分前后遮挡绘制，一枚炽白冰青伴星珠沿轨道平滑巡游（过球后自动隐藏）；悬停时轨道提亮并在外围浮现极细断弧光晕。'
+    },
+    standard: {
+      key: 'standard',
+      label: '标准',
+      en: 'STANDARD',
+      ratio: '1.00×',
+      name: '经典双切面实心菱晶',
+      code: 'DEFAULT · LOCKED',
+      spec: '经典双切面实心菱晶（ry = r * 1.16, rx = r * 0.86，左半高光 #EAF3FF、右半半透背光 #5CE1F2 0.46 透明度 + 锐利冷白外框；悬停弹出空心冰青菱形锁定框），新建条目默认权重。'
+    },
+    accent: {
+      key: 'accent',
+      label: '点缀',
+      en: 'ACCENT',
+      ratio: '0.80×',
+      name: '双星共轭结',
+      code: '方案 C · LOCKED',
+      spec: '两枚半透明细长微菱分别沿 +28° 与 -28° 斜轴轻盈交叠（各自带冷铂/冰青微填与细边），交叠正中点亮一颗锐利炽白微星点；悬停时两枚微菱微幅展开并提亮中心星点。'
+    }
+  };
+
+  const TRIVIAL_VARIANTS = {
+    L: {
+      code: 'L',
+      name: '掠影微彗',
+      en: 'MICRO COMET',
+      geo: '中心 2.2px 炽白微星核，向右下 38° 拖出一条 7.5px 线性渐变收尖的冰青流光细尾，尾端游离 1 粒 1.1px 微尘点。',
+      hoverDesc: '光尾平滑拉长 1.3×，星核外围泛起一圈极细冰青微环。',
+      fullSpec: '中心 2.2px 炽白微星核，向右下（斜角 38°）拖出一条 7.5px 线性渐变收尖的冰青流光细尾，尾端游离 1 粒 1.1px 微尘点；悬停时光尾拉长 1.3×，星核外围泛起一圈极细冰青微环。'
+    },
+    M: {
+      code: 'M',
+      name: '脉冲双极星',
+      en: 'PULSAR BEAM',
+      geo: '中心 2.2px 空心冷白微环（中空降权重），沿微斜 -22° 轴对称射出两道 4.6px 极细冰青渐变光针，针尖外侧带微小断点。',
+      hoverDesc: '双极光针提亮至 100%，并沿轴线向外呼吸微扩。',
+      fullSpec: '中心 2.2px 空心冷白微环（中空降权重），沿微斜 -22° 轴对称射出两道 4.6px 极细冰青渐变光针，针尖外侧带极微小断点；悬停时双极光针提亮至 100% 并沿轴线向外呼吸微扩。'
+    },
+    N: {
+      code: 'N',
+      name: '悬涡星屑',
+      en: 'MICRO VORTEX',
+      geo: '两道 180° 错位、跨度 75° 的极细冷白/冰青短旋弧（半径 4.5px），温柔环抱正中 1.8px 炽白针尖核，静息时极缓慢自转。',
+      hoverDesc: '旋弧加速自转并微幅外张，中心星核透出锐利十字微闪。',
+      fullSpec: '两道 180° 错位、跨度 75° 的极细冷白/冰青短旋弧（半径 4.5px），温柔环抱正中 1.8px 炽白针尖核，静息时极缓慢自转；悬停时旋弧加速并微幅外张，中心星核透出十字微闪。'
+    },
+    O: {
+      code: 'O',
+      name: '航标折翼',
+      en: 'WAYPOINT CHEVRON',
+      geo: '开放式锐角冷铂人字折翼（线宽 1.15px、夹角 96°、开口朝下），下方凹口悬停一颗独立 1.9px 冰青微星点。',
+      hoverDesc: '折翼向上微浮展开 1.5px，下方星点转为炽白高亮。',
+      fullSpec: '开放式锐角冷铂人字折翼（线宽 1.15px、夹角 96°、开口朝下），下方凹口悬停一颗独立 1.9px 冰青微星点；悬停时折翼向上微浮展开 1.5px，下方星点转为炽白高亮。'
+    },
+    P: {
+      code: 'P',
+      name: '游标双星',
+      en: 'BINARY TETHER',
+      geo: '一颗 2.2px 空心冷白主珠与一颗 1.5px 实心冰青伴珠沿 -32° 斜轴轻盈分离，中间以 0.75px 极细微丝相系。',
+      hoverDesc: '两颗星珠绕连丝中点产生缓慢的引力共舞微旋，连丝提亮。',
+      fullSpec: '一颗 2.2px 空心冷白主珠与一颗 1.5px 实心冰青伴珠沿 -32° 斜轴轻盈分离，中间以 0.75px 极细微丝相系；悬停时两颗星珠绕连丝中点产生缓慢的引力共舞微旋。'
+    },
+    Q: {
+      code: 'Q',
+      name: '经纬微尺',
+      en: 'VERNIER MARK',
+      geo: '两条高低错落的 1.05px 冰青垂直微刻度短线（左短右长，水平间距 7px），居中夹持一颗 2.2px 冷白微圆星芯。',
+      hoverDesc: '两侧刻度亮起冷白高光并微幅内收夹紧星芯。',
+      fullSpec: '两条高低错落的 1.05px 冰青垂直微刻度短线（左短右长，水平间距 7px），居中夹持一颗 2.2px 冷白微圆星芯；悬停时两侧刻度亮起冷白高光并微幅内收夹紧星芯。'
+    }
+  };
+
+  const TIER_ORDER = ['core', 'key', 'standard', 'accent', 'trivial'];
+  const TIER_META = {
+    core: { label: '核心', en: 'CORE', ratio: '1.38×', locked: true },
+    key: { label: '关键', en: 'KEY', ratio: '1.18×', locked: true },
+    standard: { label: '标准', en: 'STANDARD', ratio: '1.00×', locked: true },
+    accent: { label: '点缀', en: 'ACCENT', ratio: '0.80×', locked: true },
+    trivial: { label: '末节', en: 'TRIVIAL', ratio: '0.62×', locked: false }
+  };
+
+  /* ==================== 2. 应用全局状态 ==================== */
+  const state = {
+    selectedTrivial: 'L',
+    motionOn: true,
+    hoverLock: false,
+    zoom: 1.30,
+    targetZoom: 1.30,
+    labelMode: 'lod', // 'lod' | 'all'
+    filterWeight: 'all',
+    hoveredNodeId: '',
+    animTime: 0
+  };
+
+  /* ==================== 3. 高精度纯路径 Canvas 2D 渲染引擎（零 shadowBlur） ==================== */
+  function drawNode(ctx, opts) {
+    const {
+      weight,
+      variant = 'L',
+      x,
+      y,
+      baseR,
+      hoverT = 0,
+      alpha = 1,
+      time = 0,
+      phase = 0,
+      orbitSpin = 0 // 仅用于部分悬停连续旋转累加
+    } = opts;
+
+    const C_WHITE = '#EAF3FF';
+    const C_CYAN = '#47D7E8';
+    const C_STD_CYAN = '#5CE1F2';
+    const C_VIOLET = '#8C7BFF';
+    const C_MOON = '#96B6FF';
+
+    // scaleU = 1.0 对应 1:1 真实星图大小（baseR = 6.0），2.8 对应 2.8× 评审放大窗
+    const scaleU = baseR / 6.0;
+    const lw = clamp(scaleU, 0.90, 1.55);
+    const isHi = hoverT > 0.04;
+    const boost = 1 + 0.10 * hoverT;
+    const breath = Math.sin(time * 0.0024 + phase);
+
+    ctx.save();
+    ctx.lineJoin = 'miter';
+    ctx.lineCap = 'butt';
+
+    /* ---------- [1] 核心 CORE · 1.38×（严格按定稿规格锁定） ---------- */
+    if (weight === 'core') {
+      const r = baseR * 1.38 * boost;
+      // 极细长十字光学衍射丝（spikeLen = r * 2.05，悬停 2.65）
+      const spikeLen = r * lerp(2.05, 2.65, hoverT);
+
+      ctx.strokeStyle = isHi ? C_CYAN : C_WHITE;
+      ctx.lineWidth = (0.76 + 0.28 * hoverT) * lw;
+      ctx.globalAlpha = alpha * lerp(0.58, 0.96, hoverT);
+      ctx.beginPath();
+      ctx.moveTo(x - spikeLen, y); ctx.lineTo(x + spikeLen, y);
+      ctx.moveTo(x, y - spikeLen); ctx.lineTo(x, y + spikeLen);
+      ctx.stroke();
+
+      // 锐利四芒星深空暗底外廓（outR = r * 1.32, waist = r * 0.38）
+      const outR = r * 1.32;
+      const waist = r * 0.38;
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(4, 9, 18, 0.94)';
+      ctx.strokeStyle = isHi ? C_CYAN : C_WHITE;
+      ctx.lineWidth = (1.12 + 0.28 * hoverT) * lw;
+      ctx.beginPath();
+      ctx.moveTo(x, y - outR);
+      ctx.lineTo(x + waist, y - waist);
+      ctx.lineTo(x + outR, y);
+      ctx.lineTo(x + waist, y + waist);
+      ctx.lineTo(x, y + outR);
+      ctx.lineTo(x - waist, y + waist);
+      ctx.lineTo(x - outR, y);
+      ctx.lineTo(x - waist, y - waist);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // 内部空心菱形晶核（inR = r * 0.62）
+      const inR = r * 0.62;
+      ctx.strokeStyle = isHi ? '#FFFFFF' : C_CYAN;
+      ctx.lineWidth = 0.88 * lw;
+      ctx.globalAlpha = alpha * lerp(0.84, 1.0, hoverT);
+      ctx.beginPath();
+      ctx.moveTo(x, y - inR);
+      ctx.lineTo(x + inR, y);
+      ctx.lineTo(x, y + inR);
+      ctx.lineTo(x - inR, y);
+      ctx.closePath();
+      ctx.stroke();
+
+      // 中心炽白微菱星芯
+      const coreD = Math.max(1.8, r * 0.21);
+      ctx.fillStyle = '#FFFFFF';
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.moveTo(x, y - coreD);
+      ctx.lineTo(x + coreD, y);
+      ctx.lineTo(x, y + coreD);
+      ctx.lineTo(x - coreD, y);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+      return;
+    }
+
+    /* ---------- [2] 关键 KEY · 1.18× · 方案 H 日蚀星环（严格锁定前后遮挡） ---------- */
+    if (weight === 'key') {
+      const r = baseR * 1.18 * boost;
+      const coreR = r * 0.86;
+      const tilt = (-26 * Math.PI) / 180;
+      const orbRx = r * lerp(1.66, 1.80, hoverT);
+      const orbRy = r * lerp(0.46, 0.50, hoverT);
+      const satAng = (time * 0.00145 + phase * 1.9 + 0.55) % TAU;
+      const satXLocal = Math.cos(satAng) * orbRx;
+      const satYLocal = Math.sin(satAng) * orbRy;
+      const satIsBack = Math.sin(satAng) < 0;
+      const satBehindSphere = satIsBack && Math.hypot(satXLocal, satYLocal) < coreR * 0.94;
+
+      // 悬停外围极细断弧光晕
+      if (isHi) {
+        const haloR = r * lerp(1.36, 1.54, hoverT);
+        ctx.strokeStyle = C_CYAN;
+        ctx.lineWidth = 0.84 * lw;
+        ctx.globalAlpha = alpha * 0.76 * hoverT;
+        for (let q = 0; q < 4; q++) {
+          const aMid = q * (Math.PI * 0.5) + Math.PI * 0.25 + time * 0.00042;
+          ctx.beginPath();
+          ctx.arc(x, y, haloR, aMid - 0.36, aMid + 0.36);
+          ctx.stroke();
+        }
+      }
+
+      // (1) 后半椭圆冰青轨道（在球核前绘制、较暗）
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(tilt);
+      ctx.strokeStyle = isHi ? '#8CEAF6' : C_CYAN;
+      ctx.lineWidth = (0.94 + 0.24 * hoverT) * lw;
+      ctx.globalAlpha = alpha * lerp(0.48, 0.78, hoverT);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, orbRx, orbRy, 0, Math.PI, TAU);
+      ctx.stroke();
+
+      // 伴星珠在后半弧且未躲入球体背面时，先于球核绘制；过球后自动隐藏
+      if (satIsBack && !satBehindSphere) {
+        const sr = Math.max(1.8, r * lerp(0.21, 0.26, hoverT));
+        ctx.globalAlpha = alpha * 0.84;
+        ctx.fillStyle = '#DCEEFF';
+        ctx.beginPath();
+        ctx.arc(satXLocal, satYLocal, sr, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      // (2) 不透明深空暗玻璃球核（真实遮挡后半轨与球后伴星）
+      const coreGrad = ctx.createRadialGradient(
+        x - coreR * 0.32, y - coreR * 0.32, coreR * 0.08,
+        x, y, coreR
+      );
+      coreGrad.addColorStop(0, '#13223A');
+      coreGrad.addColorStop(0.58, '#070E1B');
+      coreGrad.addColorStop(1, '#04070E');
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = coreGrad;
+      ctx.beginPath();
+      ctx.arc(x, y, coreR, 0, TAU);
+      ctx.fill();
+
+      ctx.strokeStyle = isHi ? 'rgba(71, 215, 232, 0.62)' : 'rgba(159, 180, 204, 0.36)';
+      ctx.lineWidth = 0.82 * lw;
+      ctx.beginPath();
+      ctx.arc(x, y, coreR, 0, TAU);
+      ctx.stroke();
+
+      // 左上渐细发光日蚀弦月高光弧
+      const aStart = Math.PI * 0.82;
+      const aEnd = Math.PI * 1.72;
+      const steps = 24;
+      const maxThick = coreR * lerp(0.26, 0.32, hoverT);
+      const outerPts = [];
+      const innerPts = [];
+      for (let i = 0; i <= steps; i++) {
+        const u = i / steps;
+        const ang = lerp(aStart, aEnd, u);
+        const ca = Math.cos(ang), sa = Math.sin(ang);
+        const thick = maxThick * Math.pow(Math.sin(Math.PI * u), 0.82);
+        outerPts.push([x + ca * (coreR + 0.25 * lw), y + sa * (coreR + 0.25 * lw)]);
+        innerPts.push([x + ca * (coreR - thick), y + sa * (coreR - thick)]);
+      }
+      const cresGrad = ctx.createLinearGradient(
+        x - coreR * 0.9, y - coreR * 0.9,
+        x + coreR * 0.6, y + coreR * 0.4
+      );
+      cresGrad.addColorStop(0, '#FFFFFF');
+      cresGrad.addColorStop(0.55, C_WHITE);
+      cresGrad.addColorStop(1, C_CYAN);
+
+      ctx.fillStyle = cresGrad;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.moveTo(outerPts[0][0], outerPts[0][1]);
+      for (let i = 1; i <= steps; i++) ctx.lineTo(outerPts[i][0], outerPts[i][1]);
+      for (let i = steps; i >= 0; i--) ctx.lineTo(innerPts[i][0], innerPts[i][1]);
+      ctx.closePath();
+      ctx.fill();
+
+      // (3) 前半椭圆冰青轨道（在球核后绘制、亮冰青）
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(tilt);
+      ctx.strokeStyle = isHi ? '#FFFFFF' : C_CYAN;
+      ctx.lineWidth = (1.16 + 0.30 * hoverT) * lw;
+      ctx.globalAlpha = alpha * lerp(0.92, 1.0, hoverT);
+      ctx.beginPath();
+      ctx.ellipse(0, 0, orbRx, orbRy, 0, 0, Math.PI);
+      ctx.stroke();
+
+      // 伴星珠位于前半弧：叠绘于前景，带冰青微环与炽白内核
+      if (!satIsBack) {
+        const sr = Math.max(2.0, r * lerp(0.24, 0.30, hoverT));
+        ctx.strokeStyle = C_CYAN;
+        ctx.lineWidth = 0.84 * lw;
+        ctx.globalAlpha = alpha * 0.78;
+        ctx.beginPath();
+        ctx.arc(satXLocal, satYLocal, sr * 1.55, 0, TAU);
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.globalAlpha = alpha;
+        ctx.beginPath();
+        ctx.arc(satXLocal, satYLocal, sr, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+
+      ctx.restore();
+      return;
+    }
+
+    /* ---------- [3] 标准 STANDARD · 1.00×（严格按定稿规格锁定） ---------- */
+    if (weight === 'standard') {
+      const r = baseR * 1.00 * boost;
+      const ry = r * 1.16;
+      const rx = r * 0.86;
+
+      // 悬停弹出空心冰青菱形锁定框
+      if (isHi) {
+        const lockR = ry * lerp(1.36, 1.50, hoverT);
+        ctx.strokeStyle = C_CYAN;
+        ctx.lineWidth = 0.88 * lw;
+        ctx.globalAlpha = alpha * 0.86 * hoverT;
+        ctx.beginPath();
+        ctx.moveTo(x, y - lockR);
+        ctx.lineTo(x + lockR * 0.82, y);
+        ctx.lineTo(x, y + lockR);
+        ctx.lineTo(x - lockR * 0.82, y);
+        ctx.closePath();
+        ctx.stroke();
+      }
+
+      ctx.globalAlpha = alpha;
+      // 左半高光 #EAF3FF
+      ctx.fillStyle = isHi ? '#FFFFFF' : C_WHITE;
+      ctx.beginPath();
+      ctx.moveTo(x, y - ry);
+      ctx.lineTo(x, y + ry);
+      ctx.lineTo(x - rx, y);
+      ctx.closePath();
+      ctx.fill();
+
+      // 右半半透背光 #5CE1F2 (0.46 透明度)
+      ctx.fillStyle = isHi ? 'rgba(92, 225, 242, 0.68)' : 'rgba(92, 225, 242, 0.46)';
+      ctx.beginPath();
+      ctx.moveTo(x, y - ry);
+      ctx.lineTo(x + rx, y);
+      ctx.lineTo(x, y + ry);
+      ctx.closePath();
+      ctx.fill();
+
+      // 锐利冷白外框
+      ctx.strokeStyle = C_WHITE;
+      ctx.lineWidth = Math.max(0.88, (0.88 + 0.22 * hoverT) * lw);
+      ctx.beginPath();
+      ctx.moveTo(x, y - ry);
+      ctx.lineTo(x + rx, y);
+      ctx.lineTo(x, y + ry);
+      ctx.lineTo(x - rx, y);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.restore();
+      return;
+    }
+
+    /* ---------- [4] 点缀 ACCENT · 0.80× · 双星共轭结（±28° 轻盈交叠，严格锁定） ---------- */
+    if (weight === 'accent') {
+      const r = baseR * 0.80 * boost;
+      const dLen = r * 1.32;
+      const dWid = r * 0.42;
+      const tiltRad = (28 * Math.PI) / 180 + breath * 0.02 + hoverT * 0.09; // 悬停微幅展开
+      const shift = r * lerp(0.09, 0.22, hoverT);
+
+      const drawConjugateShard = (cx, cy, ang, fillL, fillR, strokeCol) => {
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.rotate(ang);
+
+        ctx.fillStyle = fillL;
+        ctx.beginPath();
+        ctx.moveTo(0, -dLen);
+        ctx.lineTo(0, dLen);
+        ctx.lineTo(-dWid, 0);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = fillR;
+        ctx.beginPath();
+        ctx.moveTo(0, -dLen);
+        ctx.lineTo(dWid, 0);
+        ctx.lineTo(0, dLen);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.strokeStyle = strokeCol;
+        ctx.lineWidth = (0.86 + 0.18 * hoverT) * lw;
+        ctx.beginPath();
+        ctx.moveTo(0, -dLen);
+        ctx.lineTo(dWid, 0);
+        ctx.lineTo(0, dLen);
+        ctx.lineTo(-dWid, 0);
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+      };
+
+      ctx.globalAlpha = alpha * 0.90;
+      drawConjugateShard(
+        x - shift * 0.52,
+        y + shift * 0.30,
+        -tiltRad,
+        'rgba(150, 182, 255, 0.56)',
+        'rgba(140, 123, 255, 0.36)',
+        isHi ? C_CYAN : C_MOON
+      );
+
+      ctx.globalAlpha = alpha * 0.96;
+      drawConjugateShard(
+        x + shift * 0.52,
+        y - shift * 0.30,
+        tiltRad,
+        isHi ? 'rgba(244, 250, 255, 0.92)' : 'rgba(234, 243, 255, 0.74)',
+        'rgba(71, 215, 232, 0.42)',
+        C_WHITE
+      );
+
+      // 交叠正中锐利炽白微星点（悬停提亮放大）
+      const cR = Math.max(2.1, r * lerp(0.32, 0.46, hoverT));
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#FFFFFF';
+      ctx.beginPath();
+      ctx.moveTo(x, y - cR);
+      ctx.lineTo(x + cR, y);
+      ctx.lineTo(x, y + cR);
+      ctx.lineTo(x - cR, y);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.restore();
+      return;
+    }
+
+    /* ---------- [5] 末节 TRIVIAL · 0.62×（六款破形方案 L / M / N / O / P / Q，精准 1:1 清晰规格） ---------- */
+    if (weight === 'trivial') {
+      const crispA = alpha * lerp(0.95, 1.0, hoverT);
+
+      if (variant === 'L') {
+        // 方案 L · 掠影微彗（MICRO COMET）
+        // 中心 2.2px 炽白微星核，向右下 38° 拖出 7.5px 线性渐变收尖冰青流光细尾，尾端游离 1.1px 微尘点
+        // 悬停：光尾拉长 1.3×，星核外围泛起一圈极细冰青微环
+        const ang = (38 * Math.PI) / 180;
+        const dx = Math.cos(ang), dy = Math.sin(ang);
+        const nx = -dy, ny = dx;
+
+        const coreR = 2.2 * scaleU * lerp(1.0, 1.10, hoverT);
+        const tailLen = 7.5 * scaleU * lerp(1.0, 1.30, hoverT);
+        // 微向左上偏移让整体视觉重心贴近节点坐标中心
+        const hx = x - dx * (1.8 * scaleU);
+        const hy = y - dy * (1.8 * scaleU);
+        const tx = hx + dx * tailLen;
+        const ty = hy + dy * tailLen;
+
+        // 渐变收尖冰青流光细尾（双层渐变楔形，确保 1:1 同样锐利通透）
+        const tailGrad = ctx.createLinearGradient(hx, hy, tx, ty);
+        tailGrad.addColorStop(0, isHi ? 'rgba(234, 243, 255, 0.96)' : 'rgba(92, 225, 242, 0.92)');
+        tailGrad.addColorStop(0.45, 'rgba(71, 215, 232, 0.58)');
+        tailGrad.addColorStop(1, 'rgba(71, 215, 232, 0.04)');
+
+        const halfW = coreR * 0.72;
+        ctx.globalAlpha = crispA;
+        ctx.fillStyle = tailGrad;
+        ctx.beginPath();
+        ctx.moveTo(hx + nx * halfW, hy + ny * halfW);
+        ctx.lineTo(tx, ty);
+        ctx.lineTo(hx - nx * halfW, hy - ny * halfW);
+        ctx.closePath();
+        ctx.fill();
+
+        // 中心细脊高光丝（保证 1:1 时光尾极其清脆）
+        const spineGrad = ctx.createLinearGradient(hx, hy, tx, ty);
+        spineGrad.addColorStop(0, '#FFFFFF');
+        spineGrad.addColorStop(0.65, C_CYAN);
+        spineGrad.addColorStop(1, 'rgba(71, 215, 232, 0)');
+        ctx.strokeStyle = spineGrad;
+        ctx.lineWidth = Math.max(0.95, 0.95 * scaleU);
+        ctx.beginPath();
+        ctx.moveTo(hx, hy);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+
+        // 尾端游离 1 粒 1.1px 微尘点
+        const dustGap = (1.6 + 0.5 * hoverT + breath * 0.25) * scaleU;
+        const dustX = tx + dx * dustGap;
+        const dustY = ty + dy * dustGap;
+        const dustR = Math.max(1.1, 1.1 * scaleU * lerp(1.0, 1.18, hoverT));
+        ctx.fillStyle = isHi ? '#FFFFFF' : C_CYAN;
+        ctx.globalAlpha = crispA * lerp(0.84, 1.0, hoverT);
+        ctx.beginPath();
+        ctx.arc(dustX, dustY, dustR, 0, TAU);
+        ctx.fill();
+
+        // 悬停时星核外围泛起一圈极细冰青微环
+        if (isHi) {
+          ctx.strokeStyle = C_CYAN;
+          ctx.lineWidth = Math.max(0.85, 0.85 * scaleU);
+          ctx.globalAlpha = alpha * 0.92 * hoverT;
+          ctx.beginPath();
+          ctx.arc(hx, hy, coreR * lerp(1.45, 1.92, hoverT), 0, TAU);
+          ctx.stroke();
+        }
+
+        // 2.2px 炽白微星核
+        ctx.globalAlpha = crispA;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(hx, hy, coreR, 0, TAU);
+        ctx.fill();
+      } else if (variant === 'M') {
+        // 方案 M · 脉冲双极星（PULSAR BEAM）
+        // 中心 2.2px 空心冷白微环 + 沿微斜 -22° 轴对称射出两道 4.6px 极细冰青渐变光针 + 针尖外侧微小断点
+        // 悬停：双极光针提亮至 100% 并沿轴线向外呼吸微扩
+        const ang = (-22 * Math.PI) / 180;
+        const dx = Math.cos(ang), dy = Math.sin(ang);
+        const ringR = 2.2 * scaleU * lerp(1.0, 1.12, hoverT);
+        const hoverBreath = hoverT * (0.65 + 0.35 * Math.sin(time * 0.005 + phase));
+        const beamStart = ringR + (0.9 + 0.35 * hoverT) * scaleU;
+        const beamLen = (4.6 + 1.35 * hoverBreath) * scaleU;
+        const tipGap = (1.55 + 0.45 * hoverBreath) * scaleU;
+
+        for (const dir of [-1, 1]) {
+          const x0 = x + dir * dx * beamStart;
+          const y0 = y + dir * dy * beamStart;
+          const x1 = x + dir * dx * (beamStart + beamLen);
+          const y1 = y + dir * dy * (beamStart + beamLen);
+
+          const beamGrad = ctx.createLinearGradient(x0, y0, x1, y1);
+          beamGrad.addColorStop(0, isHi ? '#FFFFFF' : C_CYAN);
+          beamGrad.addColorStop(0.55, C_CYAN);
+          beamGrad.addColorStop(1, isHi ? 'rgba(71, 215, 232, 0.72)' : 'rgba(71, 215, 232, 0.18)');
+
+          ctx.strokeStyle = beamGrad;
+          ctx.lineWidth = Math.max(1.05, (1.05 + 0.25 * hoverT) * scaleU);
+          ctx.globalAlpha = alpha * lerp(0.84, 1.0, hoverT);
+          ctx.beginPath();
+          ctx.moveTo(x0, y0);
+          ctx.lineTo(x1, y1);
+          ctx.stroke();
+
+          // 针尖外侧极微小断点
+          const dotX = x + dir * dx * (beamStart + beamLen + tipGap);
+          const dotY = y + dir * dy * (beamStart + beamLen + tipGap);
+          const dotR = Math.max(0.95, 0.98 * scaleU * lerp(1.0, 1.18, hoverT));
+          ctx.fillStyle = isHi ? '#FFFFFF' : C_CYAN;
+          ctx.globalAlpha = alpha * lerp(0.76, 1.0, hoverT);
+          ctx.beginPath();
+          ctx.arc(dotX, dotY, dotR, 0, TAU);
+          ctx.fill();
+        }
+
+        // 中心 2.2px 空心冷白微环（暗底中空，视觉重量轻于实心标准晶）
+        ctx.globalAlpha = crispA;
+        ctx.fillStyle = '#04070D';
+        ctx.strokeStyle = isHi ? '#FFFFFF' : C_WHITE;
+        ctx.lineWidth = Math.max(1.12, 1.12 * scaleU);
+        ctx.beginPath();
+        ctx.arc(x, y, ringR, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+      } else if (variant === 'N') {
+        // 方案 N · 悬涡星屑（MICRO VORTEX）
+        // 两道 180° 错位、跨度 75° 的极细冷白/冰青短旋弧（半径 4.5px）+ 正中 1.8px 炽白针尖核，静息缓慢自转
+        // 悬停：旋弧加速并微幅外张，中心星核透出十字微闪
+        const arcR = (4.5 + 0.85 * hoverT) * scaleU;
+        const arcSpan = (75 * Math.PI) / 180;
+        const coreR = Math.max(1.8, 1.8 * scaleU * lerp(1.0, 1.12, hoverT));
+        const baseRot = time * 0.00065 + orbitSpin + phase;
+
+        // 两道 180° 错位短旋弧（一道冷白、一道冰青）
+        ctx.lineCap = 'round';
+        for (let k = 0; k < 2; k++) {
+          const a0 = baseRot + k * Math.PI;
+          const a1 = a0 + arcSpan;
+          ctx.strokeStyle = k === 0 ? (isHi ? '#FFFFFF' : C_WHITE) : C_CYAN;
+          ctx.lineWidth = Math.max(1.05, (1.05 + 0.20 * hoverT) * scaleU);
+          ctx.globalAlpha = crispA * lerp(0.88, 1.0, hoverT);
+          ctx.beginPath();
+          ctx.arc(x, y, arcR, a0, a1);
+          ctx.stroke();
+
+          // 旋弧领头端微小亮星珠（强化旋涡动势与 1:1 清晰度）
+          const leadX = x + Math.cos(a1) * arcR;
+          const leadY = y + Math.sin(a1) * arcR;
+          ctx.fillStyle = k === 0 ? '#FFFFFF' : C_CYAN;
+          ctx.beginPath();
+          ctx.arc(leadX, leadY, Math.max(0.85, 0.85 * scaleU), 0, TAU);
+          ctx.fill();
+        }
+        ctx.lineCap = 'butt';
+
+        // 悬停时中心星核透出锐利十字微闪
+        if (isHi) {
+          const glint = 3.6 * scaleU * hoverT;
+          ctx.strokeStyle = '#FFFFFF';
+          ctx.lineWidth = Math.max(0.75, 0.78 * scaleU);
+          ctx.globalAlpha = alpha * 0.92 * hoverT;
+          ctx.beginPath();
+          ctx.moveTo(x - glint, y); ctx.lineTo(x + glint, y);
+          ctx.moveTo(x, y - glint); ctx.lineTo(x, y + glint);
+          ctx.stroke();
+        }
+
+        // 正中 1.8px 炽白针尖核
+        ctx.globalAlpha = crispA;
+        ctx.fillStyle = '#FFFFFF';
+        ctx.beginPath();
+        ctx.arc(x, y, coreR, 0, TAU);
+        ctx.fill();
+      } else if (variant === 'O') {
+        // 方案 O · 航标折翼（WAYPOINT CHEVRON）
+        // 开放式锐角冷铂人字折翼（线宽 1.15px、夹角 96°、开口朝下）+ 下方凹口独立 1.9px 冰青微星点
+        // 悬停：折翼向上微浮展开 1.5px，下方星点转为炽白高亮
+        const halfAngle = (48 * Math.PI) / 180; // 夹角 96° -> 半角 48°
+        const armLen = (5.3 + 0.65 * hoverT) * scaleU;
+        const floatUp = 1.5 * scaleU * hoverT;
+        const apexY = y - (2.3 * scaleU) - floatUp;
+        const wingDx = Math.sin(halfAngle) * armLen;
+        const wingDy = Math.cos(halfAngle) * armLen;
+
+        // 开放式冷铂人字折翼（开口朝下）
+        ctx.globalAlpha = crispA;
+        ctx.strokeStyle = isHi ? '#FFFFFF' : C_WHITE;
+        ctx.lineWidth = Math.max(1.15, 1.15 * scaleU);
+        ctx.beginPath();
+        ctx.moveTo(x - wingDx, apexY + wingDy);
+        ctx.lineTo(x, apexY);
+        ctx.lineTo(x + wingDx, apexY + wingDy);
+        ctx.stroke();
+
+        // 悬停时折翼上方浮现极细冰青重影微檐
+        if (isHi) {
+          const echoY = apexY - 1.7 * scaleU * hoverT;
+          ctx.strokeStyle = C_CYAN;
+          ctx.lineWidth = Math.max(0.75, 0.78 * scaleU);
+          ctx.globalAlpha = alpha * 0.72 * hoverT;
+          ctx.beginPath();
+          ctx.moveTo(x - wingDx * 0.62, echoY + wingDy * 0.62);
+          ctx.lineTo(x, echoY);
+          ctx.lineTo(x + wingDx * 0.62, echoY + wingDy * 0.62);
+          ctx.stroke();
+        }
+
+        // 下方凹口独立 1.9px 冰青微星点（悬停转为炽白高亮）
+        const dotY = y + (2.35 * scaleU) + (breath * 0.16 * scaleU);
+        const dotR = Math.max(1.9, 1.9 * scaleU * lerp(1.0, 1.16, hoverT));
+        ctx.globalAlpha = crispA;
+        ctx.fillStyle = isHi ? '#FFFFFF' : C_CYAN;
+        ctx.beginPath();
+        ctx.arc(x, dotY, dotR, 0, TAU);
+        ctx.fill();
+
+        if (isHi) {
+          ctx.strokeStyle = C_CYAN;
+          ctx.lineWidth = Math.max(0.75, 0.78 * scaleU);
+          ctx.globalAlpha = alpha * 0.85 * hoverT;
+          ctx.beginPath();
+          ctx.arc(x, dotY, dotR * 1.65, 0, TAU);
+          ctx.stroke();
+        }
+      } else if (variant === 'P') {
+        // 方案 P · 游标双星（BINARY TETHER）
+        // 2.2px 空心冷白主珠 + 1.5px 实心冰青伴珠沿 -32° 斜轴轻盈分离 + 中间 0.75px 极细微丝相系
+        // 悬停：两颗星珠绕连丝中点产生缓慢引力共舞微旋
+        const baseAng = (-32 * Math.PI) / 180;
+        const danceAng = baseAng + orbitSpin;
+        const dx = Math.cos(danceAng), dy = Math.sin(danceAng);
+
+        const sepHalf = (3.4 + 0.45 * hoverT) * scaleU;
+        const rMain = 2.2 * scaleU * lerp(1.0, 1.10, hoverT);
+        const rSub = 1.5 * scaleU * lerp(1.0, 1.16, hoverT);
+
+        const xMain = x - dx * sepHalf;
+        const yMain = y - dy * sepHalf;
+        const xSub = x + dx * sepHalf;
+        const ySub = y + dy * sepHalf;
+
+        // 悬停时隐约浮现双星共舞微轨虚圆
+        if (isHi) {
+          ctx.setLineDash([1.8 * scaleU, 2.6 * scaleU]);
+          ctx.strokeStyle = C_CYAN;
+          ctx.lineWidth = Math.max(0.68, 0.70 * scaleU);
+          ctx.globalAlpha = alpha * 0.46 * hoverT;
+          ctx.beginPath();
+          ctx.arc(x, y, sepHalf, 0, TAU);
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
+
+        // 中间 0.75px 极细微丝相系（从主珠外缘连至伴珠外缘）
+        const tStartX = xMain + dx * rMain;
+        const tStartY = yMain + dy * rMain;
+        const tEndX = xSub - dx * rSub;
+        const tEndY = ySub - dy * rSub;
+        ctx.globalAlpha = crispA * lerp(0.84, 1.0, hoverT);
+        ctx.strokeStyle = isHi ? '#FFFFFF' : C_CYAN;
+        ctx.lineWidth = Math.max(0.75, (0.75 + 0.25 * hoverT) * scaleU);
+        ctx.beginPath();
+        ctx.moveTo(tStartX, tStartY);
+        ctx.lineTo(tEndX, tEndY);
+        ctx.stroke();
+
+        // 2.2px 空心冷白主珠
+        ctx.globalAlpha = crispA;
+        ctx.fillStyle = '#04070D';
+        ctx.strokeStyle = isHi ? '#FFFFFF' : C_WHITE;
+        ctx.lineWidth = Math.max(1.12, 1.12 * scaleU);
+        ctx.beginPath();
+        ctx.arc(xMain, yMain, rMain, 0, TAU);
+        ctx.fill();
+        ctx.stroke();
+
+        // 1.5px 实心冰青伴珠
+        ctx.fillStyle = isHi ? '#FFFFFF' : C_CYAN;
+        ctx.beginPath();
+        ctx.arc(xSub, ySub, rSub, 0, TAU);
+        ctx.fill();
+      } else {
+        // 方案 Q · 经纬微尺（VERNIER MARK）
+        // 两条高低错落的 1.05px 冰青垂直微刻度短线（左短右长，水平间距 7px）+ 居中夹持 2.2px 冷白微圆星芯
+        // 悬停：两侧刻度亮起冷白高光并微幅内收夹紧星芯
+        const halfGap = (3.5 - 0.55 * hoverT) * scaleU; // 静态总间距 7px，悬停内收夹紧
+        const leftX = x - halfGap;
+        const rightX = x + halfGap;
+
+        // 左短刻度（偏下错落）与右长刻度（偏上舒展）
+        const leftTop = y - 2.3 * scaleU;
+        const leftBot = y + 3.4 * scaleU;
+        const rightTop = y - 4.8 * scaleU;
+        const rightBot = y + 3.8 * scaleU;
+
+        ctx.globalAlpha = crispA;
+        ctx.strokeStyle = isHi ? '#FFFFFF' : C_CYAN;
+        ctx.lineWidth = Math.max(1.05, (1.05 + 0.18 * hoverT) * scaleU);
+        ctx.beginPath();
+        // 左短垂直刻度
+        ctx.moveTo(leftX, leftTop);
+        ctx.lineTo(leftX, leftBot);
+        // 右长垂直刻度
+        ctx.moveTo(rightX, rightTop);
+        ctx.lineTo(rightX, rightBot);
+        ctx.stroke();
+
+        // 刻度水平微距零点短横耳（增强精密游标卡尺质感）
+        const tickEar = (1.15 + 0.3 * hoverT) * scaleU;
+        ctx.lineWidth = Math.max(0.85, 0.85 * scaleU);
+        ctx.globalAlpha = crispA * lerp(0.72, 1.0, hoverT);
+        ctx.beginPath();
+        ctx.moveTo(leftX - tickEar, y);
+        ctx.lineTo(leftX, y);
+        ctx.moveTo(rightX, y);
+        ctx.lineTo(rightX + tickEar, y);
+        ctx.stroke();
+
+        // 居中夹持的 2.2px 冷白微圆星芯
+        const coreR = 2.2 * scaleU * lerp(1.0, 1.12, hoverT);
+        ctx.globalAlpha = crispA;
+        ctx.fillStyle = isHi ? C_CYAN : C_WHITE;
+        ctx.beginPath();
+        ctx.arc(x, y, coreR, 0, TAU);
+        ctx.fill();
+
+        if (isHi) {
+          ctx.fillStyle = '#FFFFFF';
+          ctx.beginPath();
+          ctx.arc(x, y, coreR * 0.56, 0, TAU);
+          ctx.fill();
+        }
+      }
+
+      ctx.restore();
+    }
+  }
+
+  /* ==================== 4. 配套 14px 标签微图标内联 SVG 生成器 ==================== */
+  function getMicroSvg(weight, variant) {
+    const w = '#EAF3FF';
+    const c = '#47D7E8';
+    const s = '#5CE1F2';
+    const v = '#8C7BFF';
+
+    if (weight === 'core') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <path d="M8 .6V15.4M.6 8H15.4" stroke="${c}" stroke-width=".95" opacity=".82"/>
+        <path d="M8 2.1L9.8 6.2L13.9 8L9.8 9.8L8 13.9L6.2 9.8L2.1 8L6.2 6.2Z" fill="#04070D" stroke="${w}" stroke-width="1.15"/>
+        <path d="M8 5.4L10.6 8L8 10.6L5.4 8Z" stroke="${c}" stroke-width=".95"/>
+      </svg>`;
+    }
+    if (weight === 'key') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <ellipse cx="8" cy="8" rx="6.8" ry="2.2" transform="rotate(-26 8 8)" stroke="${c}" stroke-width="1.15"/>
+        <circle cx="8" cy="8" r="3.9" fill="#060E1C" stroke="rgba(159,180,204,0.45)" stroke-width=".8"/>
+        <path d="M4.7 9.2A3.8 3.8 0 0 1 9.6 4.4A3.1 3.1 0 0 0 4.7 9.2Z" fill="#FFFFFF"/>
+        <circle cx="13.2" cy="5.8" r="1.2" fill="#FFFFFF"/>
+      </svg>`;
+    }
+    if (weight === 'standard') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <path d="M8 2.0V14.0L3.9 8Z" fill="${w}"/>
+        <path d="M8 2.0L12.1 8L8 14.0Z" fill="${s}" opacity=".50"/>
+        <path d="M8 2.0L12.1 8L8 14.0L3.9 8Z" stroke="${w}" stroke-width=".9"/>
+      </svg>`;
+    }
+    if (weight === 'accent') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <path d="M4.2 2.4L11.8 13.6" stroke="${v}" stroke-width="2.3" opacity=".64"/>
+        <path d="M11.8 2.4L4.2 13.6" stroke="${w}" stroke-width="2.3" opacity=".82"/>
+        <path d="M8 6.1L9.9 8L8 9.9L6.1 8Z" fill="#FFFFFF"/>
+      </svg>`;
+    }
+    // 末节 6 款破形微图标 L / M / N / O / P / Q
+    if (variant === 'L') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <path d="M5.4 4.2L12.4 10.9L4.0 5.8Z" fill="${c}" opacity=".78"/>
+        <circle cx="4.8" cy="5.0" r="2.2" fill="#FFFFFF"/>
+        <circle cx="13.8" cy="12.1" r="1.05" fill="${c}"/>
+      </svg>`;
+    }
+    if (variant === 'M') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <path d="M2.2 10.3L5.6 9.0M10.4 7.0L13.8 5.7" stroke="${c}" stroke-width="1.25"/>
+        <circle cx="1.0" cy="10.8" r=".85" fill="${c}"/>
+        <circle cx="15.0" cy="5.2" r=".85" fill="${c}"/>
+        <circle cx="8" cy="8" r="2.3" fill="#04070D" stroke="${w}" stroke-width="1.2"/>
+      </svg>`;
+    }
+    if (variant === 'N') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <path d="M3.4 6.4A4.9 4.9 0 0 1 9.6 3.4" stroke="${w}" stroke-width="1.2" stroke-linecap="round"/>
+        <path d="M12.6 9.6A4.9 4.9 0 0 1 6.4 12.6" stroke="${c}" stroke-width="1.2" stroke-linecap="round"/>
+        <circle cx="8" cy="8" r="1.8" fill="#FFFFFF"/>
+      </svg>`;
+    }
+    if (variant === 'O') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <path d="M2.8 8.6L8 4.0L13.2 8.6" stroke="${w}" stroke-width="1.3"/>
+        <circle cx="8" cy="10.8" r="2.0" fill="${c}"/>
+      </svg>`;
+    }
+    if (variant === 'P') {
+      return `<svg viewBox="0 0 16 16" fill="none">
+        <path d="M6.4 9.0L10.3 6.5" stroke="${c}" stroke-width="1.0"/>
+        <circle cx="4.6" cy="10.2" r="2.2" fill="#04070D" stroke="${w}" stroke-width="1.2"/>
+        <circle cx="11.6" cy="5.7" r="1.65" fill="${c}"/>
+      </svg>`;
+    }
+    // Q · 经纬微尺
+    return `<svg viewBox="0 0 16 16" fill="none">
+      <path d="M4.0 5.4V11.6M12.0 3.0V12.2" stroke="${c}" stroke-width="1.25"/>
+      <circle cx="8" cy="8" r="2.2" fill="${w}"/>
+    </svg>`;
+  }
+
+  /* ==================== 5. 通用高分屏 Canvas 适配与 2.8× / 1:1 双视窗渲染 ==================== */
+  const allMiniCanvases = [];
+
+  function resizeHiDpiCanvas(canvas, container, target) {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.max(10, container.clientWidth);
+    const h = Math.max(10, container.clientHeight);
+    target.width = w;
+    target.height = h;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    target.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function renderSpecimenStage(item) {
+    const { ctx, width: w, height: h, weight, hoverT, orbitSpin } = item;
+    const variant = item.fixedVariant || (weight === 'trivial' ? state.selectedTrivial : 'base');
+    ctx.clearRect(0, 0, w, h);
+
+    const cx = w * 0.43;
+    const cy = h * 0.49;
+
+    // 1. 精密观测仪背景准星与刻度虚线参考环
+    ctx.save();
+    ctx.strokeStyle = 'rgba(150, 182, 255, 0.13)';
+    ctx.lineWidth = 0.75;
+    ctx.beginPath();
+    ctx.moveTo(cx - 50, cy); ctx.lineTo(cx + 50, cy);
+    ctx.moveTo(cx, cy - 46); ctx.lineTo(cx, cy + 46);
+    ctx.stroke();
+
+    ctx.setLineDash([2, 3.5]);
+    ctx.strokeStyle = hoverT > 0.04
+      ? `rgba(71, 215, 232, ${0.22 + 0.30 * hoverT})`
+      : 'rgba(150, 182, 255, 0.16)';
+    ctx.beginPath();
+    ctx.arc(cx, cy, 36, 0, TAU);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 2. 右上角独立「1:1 实图」暗窗（真实星图 100% 大小 baseR = 6.0）
+    const rxBox = w - 31;
+    const ryBox = 41;
+    ctx.fillStyle = 'rgba(4, 8, 16, 0.94)';
+    ctx.strokeStyle = hoverT > 0.04 ? 'rgba(71, 215, 232, 0.52)' : 'rgba(234, 243, 255, 0.16)';
+    ctx.lineWidth = 0.85;
+    ctx.fillRect(rxBox - 22, ryBox - 18, 44, 36);
+    ctx.strokeRect(rxBox - 22, ryBox - 18, 44, 36);
+    ctx.restore();
+
+    // 2.8× 放大细节主视图（baseR = 6.0 * 2.8 = 16.8）
+    drawNode(ctx, {
+      weight,
+      variant,
+      x: cx,
+      y: cy,
+      baseR: 16.8,
+      hoverT,
+      alpha: 1,
+      time: state.animTime,
+      phase: item.phase,
+      orbitSpin
+    });
+
+    // 右上角 1:1 真实星图大小校验（baseR = 6.0）
+    drawNode(ctx, {
+      weight,
+      variant,
+      x: rxBox,
+      y: ryBox,
+      baseR: 6.0,
+      hoverT,
+      alpha: 1,
+      time: state.animTime,
+      phase: item.phase,
+      orbitSpin
+    });
+  }
+
+  /* ==================== 6. 构建第一板块：五级权重完整同框梯队 ==================== */
+  const ladderGrid = document.getElementById('ladderGrid');
+  const ladderRefs = {};
+
+  TIER_ORDER.forEach((tierKey, idx) => {
+    const meta = TIER_META[tierKey];
+    const card = document.createElement('article');
+    card.className = `obs-panel ladder-card ${meta.locked ? 'is-locked' : 'is-live'}`;
+
+    card.innerHTML = `
+      <div class="ladder-top">
+        <div class="tier-id">
+          <span class="tier-name">${meta.label}</span>
+          <span class="tier-en">${meta.en}</span>
+          <span class="tier-ratio">${meta.ratio}</span>
+        </div>
+        <span class="tier-badge ${meta.locked ? 'locked' : 'live'}">
+          ${meta.locked ? '已锁定 ✓' : '实时联动'}
+        </span>
+      </div>
+
+      <div class="specimen-stage">
+        <canvas class="specimen-canvas"></canvas>
+        <span class="stage-label-tl">2.8× 放大细节</span>
+        <span class="stage-label-tr">1:1 实图</span>
+        <div class="micro-icon-chip" title="14px 标签微图标预览">
+          <span class="chip-sub">14px</span>
+          <span class="js-svg-slot"></span>
+          <span>${meta.label}</span>
+        </div>
+        <span class="stage-hover-tip">悬停测试</span>
+      </div>
+
+      <div class="ladder-foot">
+        <div class="ladder-concept-row">
+          <span class="ladder-concept-name js-name"></span>
+          <span class="ladder-concept-code js-code"></span>
+        </div>
+        <p class="ladder-concept-sub js-sub"></p>
+      </div>
+    `;
+
+    ladderGrid.appendChild(card);
+
+    const stage = card.querySelector('.specimen-stage');
+    const canvas = card.querySelector('.specimen-canvas');
+    const item = {
+      weight: tierKey,
+      fixedVariant: null,
+      stage,
+      canvas,
+      ctx: canvas.getContext('2d'),
+      width: 240,
+      height: 164,
+      hovered: false,
+      hoverT: 0,
+      orbitSpin: 0,
+      phase: idx * 0.9
+    };
+
+    stage.addEventListener('pointerenter', () => { item.hovered = true; });
+    stage.addEventListener('pointerleave', () => { item.hovered = false; });
+
+    allMiniCanvases.push(item);
+    ladderRefs[tierKey] = { card, item };
+  });
+
+  /* ==================== 7. 构建第二板块：末节六款破形创意候选网格（3×2） ==================== */
+  const candidateGrid = document.getElementById('candidateGrid');
+  const candidateEntries = [];
+
+  Object.keys(TRIVIAL_VARIANTS).forEach((code, idx) => {
+    const v = TRIVIAL_VARIANTS[code];
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'obs-panel cand-card';
+    card.dataset.code = code;
+
+    card.innerHTML = `
+      <div class="cand-top">
+        <div class="cand-title-wrap">
+          <span class="cand-code">${code}</span>
+          <div class="cand-names">
+            <span class="cand-name">${v.name}</span>
+            <span class="cand-en">${v.en}</span>
+          </div>
+        </div>
+        <span class="cand-badge js-badge">点击选定</span>
+      </div>
+
+      <div class="cand-stage">
+        <canvas class="cand-canvas"></canvas>
+        <span class="stage-label-tl">2.8× 放大细节</span>
+        <span class="stage-label-tr">1:1 实图</span>
+        <div class="micro-icon-chip" title="14px 标签微图标预览">
+          <span class="chip-sub">14px</span>
+          ${getMicroSvg('trivial', code)}
+          <span>末节 ${code}</span>
+        </div>
+        <span class="stage-hover-tip">移入测试动效</span>
+      </div>
+
+      <div class="cand-foot">
+        <p class="cand-geo">${v.geo}</p>
+        <p class="cand-hover-note"><b>HOVER</b><span>${v.hoverDesc}</span></p>
+      </div>
+    `;
+
+    candidateGrid.appendChild(card);
+
+    const stage = card.querySelector('.cand-stage');
+    const canvas = card.querySelector('.cand-canvas');
+    const item = {
+      weight: 'trivial',
+      fixedVariant: code,
+      stage,
+      canvas,
+      ctx: canvas.getContext('2d'),
+      width: 340,
+      height: 164,
+      hovered: false,
+      hoverT: 0,
+      orbitSpin: 0,
+      phase: idx * 1.05 + 0.4
+    };
+
+    card.addEventListener('pointerenter', () => { item.hovered = true; });
+    card.addEventListener('pointerleave', () => { item.hovered = false; });
+    card.addEventListener('click', () => {
+      state.selectedTrivial = code;
+      refreshSelectionUI();
+    });
+
+    allMiniCanvases.push(item);
+    candidateEntries.push({ code, card, item });
+  });
+
+  /* ==================== 8. 第三板块：「界脊 [10]」实景星域验效沙盒 ==================== */
+  const sandboxPanel = document.getElementById('sandboxPanel');
+  const sandboxCanvas = document.getElementById('sandboxCanvas');
+  const sbView = { width: 1200, height: 540, ctx: sandboxCanvas.getContext('2d') };
+
+  // 精确配置每档 2 个条目：2 核心 + 2 关键 + 2 标准 + 2 点缀 + 2 末节
+  const SANDBOX_NODES = [
+    {
+      id: 'n1',
+      title: '界脊断崖',
+      weight: 'core',
+      nx: -0.19, ny: 0.05,
+      phase: 0.2,
+      desc: '横贯大陆的黑色玄武岩断崖，崖壁深嵌与青铜钟楼同频共振的古星轨刻度。'
+    },
+    {
+      id: 'n2',
+      title: '雾都青铜钟楼',
+      weight: 'core',
+      nx: 0.21, ny: -0.16,
+      phase: 1.4,
+      desc: '旧纪元遗留的巨型报时钟楼，冬至最低潮位第十二响校准全港罗盘与星图。'
+    },
+    {
+      id: 'n3',
+      title: '领航员公会',
+      weight: 'key',
+      nx: 0.58, ny: 0.13,
+      phase: 0.8,
+      desc: '核发远航资格、保管界脊以东古星图铜拓母本的最高海事机构。'
+    },
+    {
+      id: 'n4',
+      title: '铜钟守望者',
+      weight: 'key',
+      nx: -0.54, ny: -0.27,
+      phase: 2.3,
+      desc: '世代驻守青铜钟楼顶层齿轮室的隐秘修会，执掌第十二响校准权。'
+    },
+    {
+      id: 'n5',
+      title: '白鸦深水港',
+      weight: 'standard',
+      nx: 0.14, ny: 0.44,
+      phase: 1.8,
+      desc: '建于黑色海岬上的不冻深水港，仅在退潮三刻露出水下古栈桥。'
+    },
+    {
+      id: 'n6',
+      title: '退潮铜刻观测站',
+      weight: 'standard',
+      nx: -0.44, ny: 0.40,
+      phase: 3.1,
+      desc: '退潮线以北的半沉没青铜穹顶，内置与断崖星轨共鸣的古星历罗盘。'
+    },
+    {
+      id: 'n7',
+      title: '沉眠之海',
+      weight: 'accent',
+      nx: 0.48, ny: -0.50,
+      phase: 0.7,
+      desc: '终年笼罩乳白浓雾的内海，航船罗盘磁针在此常年偏向青铜钟楼。'
+    },
+    {
+      id: 'n8',
+      title: '折光峡谷',
+      weight: 'accent',
+      nx: -0.14, ny: -0.58,
+      phase: 2.8,
+      desc: '石英岩壁构成的狭长海峡，晨昏可将钟楼弧光折射至百里雾海之外。'
+    },
+    {
+      id: 'n9',
+      title: '盐霜坡',
+      weight: 'trivial',
+      nx: 0.57, ny: 0.50,
+      phase: 3.9,
+      desc: '崖底海风长年吹拂结晶而成的白色盐丘阶地，世界观地貌末节注脚。'
+    },
+    {
+      id: 'n10',
+      title: '北岸旧石窟',
+      weight: 'trivial',
+      nx: -0.68, ny: 0.12,
+      phase: 4.7,
+      desc: '残留早期领航员零散手记与潮位划痕的海岸洞窟群，末节背景注脚。'
+    }
+  ];
+
+  const SANDBOX_EDGES = [
+    ['n1', 'n2'], ['n1', 'n3'], ['n1', 'n4'], ['n1', 'n5'], ['n1', 'n6'], ['n1', 'n10'],
+    ['n2', 'n3'], ['n2', 'n4'], ['n2', 'n7'], ['n2', 'n8'],
+    ['n3', 'n5'], ['n3', 'n7'], ['n3', 'n9'],
+    ['n4', 'n6'], ['n4', 'n8'], ['n4', 'n10'],
+    ['n5', 'n6'], ['n5', 'n9']
+  ];
+
+  const SANDBOX_TRIS = [
+    ['n1', 'n2', 'n4'],
+    ['n1', 'n2', 'n3'],
+    ['n1', 'n3', 'n5'],
+    ['n1', 'n5', 'n6'],
+    ['n2', 'n7', 'n3'],
+    ['n2', 'n8', 'n4'],
+    ['n1', 'n4', 'n10']
+  ];
+
+  const sbNodeState = new Map(SANDBOX_NODES.map(n => [
+    n.id,
+    { hoverT: 0, focusW: 1, filterScale: 1, orbitSpin: 0, sx: 0, sy: 0, hitR: 13 }
+  ]));
+
+  const RANK_VAL = { core: 5, key: 4, standard: 3, accent: 2, trivial: 1 };
+
+  function isLabelVisible(node, connectedSet) {
+    if (state.labelMode === 'all') return true;
+    if (state.hoveredNodeId === node.id) return true;
+    if (state.hoveredNodeId && connectedSet.has(node.id)) return true;
+    if (state.filterWeight !== 'all') return node.weight === state.filterWeight;
+    const z = state.zoom;
+    if (node.weight === 'core') return true;
+    if (node.weight === 'key') return z >= 1.12;
+    if (node.weight === 'standard') return z >= 1.24;
+    if (node.weight === 'accent') return z >= 1.44;
+    if (node.weight === 'trivial') return z >= 1.56;
+    return true;
+  }
+
+  function renderSandbox(dt) {
+    const { ctx, width: w, height: h } = sbView;
+    ctx.clearRect(0, 0, w, h);
+
+    const z = state.zoom;
+    const cx = w * 0.50;
+    const cy = h * 0.45;
+    const domainR = Math.min(w * 0.255, h * 0.34) * clamp(z / 1.28, 0.72, 1.32);
+
+    // 1. 底层 3D 透视弯曲引力势阱曲面网格（单次合批描边，60fps）
+    ctx.save();
+    const wellY = cy + domainR * 1.16;
+    ctx.strokeStyle = 'rgba(150, 182, 255, 0.135)';
+    ctx.lineWidth = 0.75;
+    ctx.beginPath();
+    for (let r = 0; r <= 9; r++) {
+      const t = r / 9;
+      const baseY = h * (0.28 + t * 0.76);
+      for (let c = 0; c <= 32; c++) {
+        const u = c / 32;
+        const gx = w * (0.02 + u * 0.96);
+        const dx = (gx - cx) / (domainR * 1.50);
+        const dy = (baseY - wellY) / (domainR * 0.76);
+        const dip = 26 * Math.exp(-(dx * dx + dy * dy));
+        const gy = baseY + dip;
+        if (c === 0) ctx.moveTo(gx, gy);
+        else ctx.lineTo(gx, gy);
+      }
+    }
+    for (let c = 0; c <= 16; c++) {
+      const u = c / 16;
+      for (let r = 0; r <= 18; r++) {
+        const t = r / 18;
+        const spread = 0.68 + t * 0.62;
+        const gx = w * 0.5 + (u - 0.5) * w * 0.96 * spread;
+        const baseY = h * (0.28 + t * 0.76);
+        const dx = (gx - cx) / (domainR * 1.50);
+        const dy = (baseY - wellY) / (domainR * 0.76);
+        const dip = 26 * Math.exp(-(dx * dx + dy * dy));
+        const gy = baseY + dip;
+        if (r === 0) ctx.moveTo(gx, gy);
+        else ctx.lineTo(gx, gy);
+      }
+    }
+    ctx.stroke();
+
+    // 2. 星域下方双圈引力等高环 + 测高虚线 + 十字锚点
+    const anchorY = cy + domainR * 1.22;
+    ctx.setLineDash([2.5, 3.8]);
+    ctx.strokeStyle = 'rgba(71, 215, 232, 0.30)';
+    ctx.lineWidth = 0.85;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx, anchorY);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(cx, anchorY, domainR * 0.58, domainR * 0.19, 0, 0, TAU);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.strokeStyle = 'rgba(71, 215, 232, 0.22)';
+    ctx.beginPath();
+    ctx.ellipse(cx, anchorY, domainR * 0.30, domainR * 0.10, 0, 0, TAU);
+    ctx.stroke();
+
+    ctx.strokeStyle = 'rgba(71, 215, 232, 0.68)';
+    ctx.beginPath();
+    ctx.moveTo(cx - 4, anchorY); ctx.lineTo(cx + 4, anchorY);
+    ctx.moveTo(cx, anchorY - 4); ctx.lineTo(cx, anchorY + 4);
+    ctx.stroke();
+
+    // 3. 四象限断弧卡尺环
+    const span = 0.48;
+    const serifLen = 5.2;
+    ctx.strokeStyle = 'rgba(234, 243, 255, 0.42)';
+    ctx.lineWidth = 0.95;
+    for (let q = 0; q < 4; q++) {
+      const midA = q * (Math.PI * 0.5) + Math.PI * 0.25;
+      const a0 = midA - span;
+      const a1 = midA + span;
+      ctx.beginPath();
+      ctx.arc(cx, cy, domainR, a0, a1);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(cx + Math.cos(a0) * domainR, cy + Math.sin(a0) * domainR);
+      ctx.lineTo(cx + Math.cos(a0) * (domainR - serifLen), cy + Math.sin(a0) * (domainR - serifLen));
+      ctx.moveTo(cx + Math.cos(a1) * domainR, cy + Math.sin(a1) * domainR);
+      ctx.lineTo(cx + Math.cos(a1) * (domainR - serifLen), cy + Math.sin(a1) * (domainR - serifLen));
+      ctx.stroke();
+
+      ctx.save();
+      ctx.globalAlpha = 0.52;
+      for (let t = 1; t <= 3; t++) {
+        const ta = lerp(a0, a1, t / 4);
+        const tl = t === 2 ? 4.4 : 2.3;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(ta) * (domainR - tl), cy + Math.sin(ta) * (domainR - tl));
+        ctx.lineTo(cx + Math.cos(ta) * domainR, cy + Math.sin(ta) * domainR);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    ctx.strokeStyle = 'rgba(234, 243, 255, 0.56)';
+    ctx.lineWidth = 0.82;
+    for (let p = 0; p < 4; p++) {
+      const pa = p * (Math.PI * 0.5);
+      const px = cx + Math.cos(pa) * domainR;
+      const py = cy + Math.sin(pa) * domainR;
+      ctx.beginPath();
+      ctx.moveTo(px - 2.6, py); ctx.lineTo(px + 2.6, py);
+      ctx.moveTo(px, py - 2.6); ctx.lineTo(px, py + 2.6);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 4. Focus & Context 孤立高亮与权重单档过滤放大核验
+    const hasHover = Boolean(state.hoveredNodeId);
+    const hasFilter = state.filterWeight !== 'all';
+    const connectedSet = new Set();
+    if (hasHover) {
+      connectedSet.add(state.hoveredNodeId);
+      for (const [a, b] of SANDBOX_EDGES) {
+        if (a === state.hoveredNodeId) connectedSet.add(b);
+        if (b === state.hoveredNodeId) connectedSet.add(a);
+      }
+    }
+
+    const easeK = 1 - Math.exp(-dt / 72);
+    const nodeBaseR = 6.0 * Math.pow(z, 0.28);
+
+    for (const node of SANDBOX_NODES) {
+      const st = sbNodeState.get(node.id);
+      const floatY = state.motionOn ? Math.sin(state.animTime * 0.0014 + node.phase) * 1.3 : 0;
+      st.sx = cx + node.nx * domainR * 0.88;
+      st.sy = cy + node.ny * domainR * 0.86 + floatY;
+      st.hitR = Math.max(12.5, nodeBaseR * 2.15);
+
+      const isHov = state.hoveredNodeId === node.id;
+      const isFilteredTarget = hasFilter && node.weight === state.filterWeight;
+      let targetFocus = 1.0;
+      if (hasHover) {
+        targetFocus = connectedSet.has(node.id) ? 1.0 : 0.18;
+      } else if (hasFilter) {
+        targetFocus = isFilteredTarget ? 1.0 : 0.16;
+      }
+      st.hoverT = lerp(st.hoverT, isHov ? 1 : 0, easeK);
+      st.focusW = lerp(st.focusW, targetFocus, easeK);
+      // 权重单档过滤高亮时微微放大 1.16×，便于专项核验
+      st.filterScale = lerp(st.filterScale, isFilteredTarget ? 1.16 : 1.0, easeK);
+
+      if (state.motionOn && st.hoverT > 0.02) {
+        st.orbitSpin += dt * 0.0022 * st.hoverT;
+      }
+    }
+
+    // 5. 悬停冷玻璃三角切面（常态极轻、悬停直连亮起冷玻璃折射感）
+    ctx.save();
+    for (const [id0, id1, id2] of SANDBOX_TRIS) {
+      const p0 = sbNodeState.get(id0), p1 = sbNodeState.get(id1), p2 = sbNodeState.get(id2);
+      const touchesHover = hasHover && (id0 === state.hoveredNodeId || id1 === state.hoveredNodeId || id2 === state.hoveredNodeId);
+      const triA = Math.min(p0.focusW, p1.focusW, p2.focusW) * (touchesHover ? 0.072 : 0.030);
+      if (triA < 0.004) continue;
+      ctx.fillStyle = touchesHover ? '#47D7E8' : '#EAF3FF';
+      ctx.globalAlpha = triA;
+      ctx.beginPath();
+      ctx.moveTo(p0.sx, p0.sy);
+      ctx.lineTo(p1.sx, p1.sy);
+      ctx.lineTo(p2.sx, p2.sy);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // 6. 集内绷紧星座直线骨架
+    ctx.save();
+    for (const [idA, idB] of SANDBOX_EDGES) {
+      const a = sbNodeState.get(idA), b = sbNodeState.get(idB);
+      const isDirect = hasHover && (idA === state.hoveredNodeId || idB === state.hoveredNodeId);
+      ctx.beginPath();
+      ctx.moveTo(a.sx, a.sy);
+      ctx.lineTo(b.sx, b.sy);
+      ctx.strokeStyle = isDirect ? '#47D7E8' : '#EAF3FF';
+      ctx.lineWidth = isDirect ? 1.24 : 0.76;
+      ctx.globalAlpha = isDirect
+        ? 0.90
+        : (hasHover ? 0.08 : (hasFilter ? 0.08 : 0.24));
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // 7. 垂直测高虚线（核心常显，关键中距/悬停显现，其余悬停或单档过滤时显现）
+    ctx.save();
+    ctx.setLineDash([2, 3.2]);
+    for (const node of SANDBOX_NODES) {
+      const st = sbNodeState.get(node.id);
+      const isFilterHit = hasFilter && node.weight === state.filterWeight;
+      const showPlumb = node.weight === 'core'
+        || (node.weight === 'key' && (z >= 1.28 || st.hoverT > 0.05))
+        || st.hoverT > 0.05
+        || isFilterHit;
+      if (!showPlumb) continue;
+      const dropY = Math.min(h - 14, st.sy + domainR * 0.66);
+      ctx.strokeStyle = (st.hoverT > 0.05 || isFilterHit) ? '#47D7E8' : 'rgba(150, 182, 255, 0.45)';
+      ctx.lineWidth = (st.hoverT > 0.05 || isFilterHit) ? 0.95 : 0.68;
+      ctx.globalAlpha = (st.hoverT > 0.05 ? 0.76 : isFilterHit ? 0.56 : (node.weight === 'core' ? 0.34 : 0.20)) * st.focusW;
+      ctx.beginPath();
+      ctx.moveTo(st.sx, st.sy);
+      ctx.lineTo(st.sx, dropY);
+      ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.restore();
+
+    // 8. 按权重由低到高绘制全部 10 颗条目星体
+    const drawList = [...SANDBOX_NODES].sort((a, b) => RANK_VAL[a.weight] - RANK_VAL[b.weight]);
+    for (const node of drawList) {
+      const st = sbNodeState.get(node.id);
+      const vKey = node.weight === 'trivial' ? state.selectedTrivial : 'base';
+      drawNode(ctx, {
+        weight: node.weight,
+        variant: vKey,
+        x: st.sx,
+        y: st.sy,
+        baseR: nodeBaseR * st.filterScale,
+        hoverT: st.hoverT,
+        alpha: st.focusW,
+        time: state.animTime,
+        phase: node.phase,
+        orbitSpin: st.orbitSpin
+      });
+    }
+
+    // 9. 无胶囊测绘折线排印：界脊 [10]
+    ctx.save();
+    const sX = cx - 44;
+    const sY = cy + domainR + 4;
+    const kX = sX + 11;
+    const kY = sY + 11;
+    const eX = kX + 128;
+
+    ctx.strokeStyle = '#47D7E8';
+    ctx.lineWidth = 0.9;
+    ctx.globalAlpha = 0.88;
+    ctx.beginPath();
+    ctx.moveTo(sX, sY);
+    ctx.lineTo(kX, kY);
+    ctx.lineTo(eX, kY);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(eX, kY - 3.5);
+    ctx.lineTo(eX, kY + 3);
+    ctx.stroke();
+
+    ctx.fillStyle = '#04070D';
+    ctx.beginPath();
+    ctx.moveTo(sX, sY - 2.4);
+    ctx.lineTo(sX + 2.4, sY);
+    ctx.lineTo(sX, sY + 2.4);
+    ctx.lineTo(sX - 2.4, sY);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.font = '600 12.5px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.fillStyle = '#EAF3FF';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('界脊', kX + 3, kY - 8.5);
+
+    ctx.font = '600 10.5px "JetBrains Mono", Consolas, monospace';
+    ctx.fillStyle = '#47D7E8';
+    ctx.textAlign = 'right';
+    ctx.fillText('[10]', eX - 4, kY - 8.5);
+
+    ctx.font = '500 8.5px "JetBrains Mono", Consolas, monospace';
+    ctx.fillStyle = 'rgba(150, 182, 255, 0.72)';
+    ctx.textAlign = 'left';
+    ctx.fillText('WELL // ΔZ +0.42', kX + 3, kY + 8.5);
+    ctx.restore();
+
+    // 10. 屏幕防碰撞条目标签（零 shadowBlur 描边脱底 + LOD / 全部展开）
+    const occupied = [
+      { x1: sX - 8, y1: kY - 20, x2: eX + 10, y2: kY + 18 },
+      { x1: 0, y1: 0, x2: w, y2: 58 },
+      { x1: 0, y1: h - 42, x2: w, y2: h }
+    ];
+
+    const labelOrder = [...SANDBOX_NODES].sort((a, b) => {
+      const pa = (state.hoveredNodeId === a.id ? 100 : 0) + RANK_VAL[a.weight] * 10;
+      const pb = (state.hoveredNodeId === b.id ? 100 : 0) + RANK_VAL[b.weight] * 10;
+      return pb - pa;
+    });
+
+    ctx.save();
+    ctx.lineJoin = 'round';
+    for (const node of labelOrder) {
+      if (!isLabelVisible(node, connectedSet)) continue;
+      const st = sbNodeState.get(node.id);
+      const isHov = state.hoveredNodeId === node.id;
+      const labelText = `${node.title} · ${TIER_META[node.weight].label}`;
+
+      const fontSize = node.weight === 'core' || isHov ? 11.5 : (node.weight === 'trivial' ? 10.2 : 10.8);
+      ctx.font = `${node.weight === 'core' || node.weight === 'key' || isHov ? 600 : 500} ${fontSize}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+      const tw = ctx.measureText(labelText).width;
+      const boxW = tw + 10;
+      const boxH = 18;
+      const gap = nodeBaseR * st.filterScale * (node.weight === 'core' ? 2.4 : node.weight === 'key' ? 2.25 : 1.75) + 6;
+      const preferRight = node.nx >= -0.02;
+
+      const cands = preferRight
+        ? [
+            { lx: st.sx + gap + boxW * 0.5, ly: st.sy },
+            { lx: st.sx - gap - boxW * 0.5, ly: st.sy },
+            { lx: st.sx, ly: st.sy - gap - 4 },
+            { lx: st.sx, ly: st.sy + gap + 6 },
+            { lx: st.sx + gap + boxW * 0.5, ly: st.sy - 16 },
+            { lx: st.sx - gap - boxW * 0.5, ly: st.sy + 16 }
+          ]
+        : [
+            { lx: st.sx - gap - boxW * 0.5, ly: st.sy },
+            { lx: st.sx + gap + boxW * 0.5, ly: st.sy },
+            { lx: st.sx, ly: st.sy - gap - 4 },
+            { lx: st.sx, ly: st.sy + gap + 6 },
+            { lx: st.sx - gap - boxW * 0.5, ly: st.sy - 16 },
+            { lx: st.sx + gap + boxW * 0.5, ly: st.sy + 16 }
+          ];
+
+      let chosen = null;
+      for (const c of cands) {
+        const rect = { x1: c.lx - boxW * 0.5, y1: c.ly - boxH * 0.5, x2: c.lx + boxW * 0.5, y2: c.ly + boxH * 0.5 };
+        const hit = occupied.some(b => !(rect.x2 < b.x1 || rect.x1 > b.x2 || rect.y2 < b.y1 || rect.y1 > b.y2));
+        if (!hit) {
+          chosen = { ...c, rect };
+          break;
+        }
+      }
+      if (!chosen && (isHov || state.labelMode === 'all')) {
+        const c = cands[0];
+        chosen = { ...c, rect: { x1: c.lx - boxW * 0.5, y1: c.ly - boxH * 0.5, x2: c.lx + boxW * 0.5, y2: c.ly + boxH * 0.5 } };
+      }
+      if (!chosen) continue;
+      occupied.push(chosen.rect);
+
+      // 测绘引导短丝
+      const nearX = clamp(st.sx, chosen.lx - tw * 0.5 - 3, chosen.lx + tw * 0.5 + 3);
+      const nearY = chosen.ly + (node.weight === 'core' || isHov ? 8.5 : 0);
+      ctx.globalAlpha = st.focusW * (isHov ? 0.96 : 0.56);
+      ctx.strokeStyle = isHov || node.weight === 'key' ? '#47D7E8' : '#EAF3FF';
+      ctx.lineWidth = isHov ? 1.0 : 0.72;
+      ctx.beginPath();
+      ctx.moveTo(st.sx, st.sy);
+      ctx.lineTo(nearX, nearY);
+      if (node.weight === 'core' || isHov) {
+        ctx.moveTo(chosen.lx - tw * 0.5, chosen.ly + 8.5);
+        ctx.lineTo(chosen.lx + tw * 0.5, chosen.ly + 8.5);
+      }
+      ctx.stroke();
+
+      ctx.globalAlpha = st.focusW * (node.weight === 'trivial' && !isHov ? 0.92 : 1.0);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'rgba(4, 7, 13, 0.94)';
+      ctx.lineWidth = 3.2;
+      ctx.strokeText(labelText, chosen.lx, chosen.ly);
+      ctx.fillStyle = isHov
+        ? '#FFFFFF'
+        : node.weight === 'core'
+          ? '#EAF3FF'
+          : node.weight === 'key'
+            ? '#D2F5FA'
+            : '#C6D9EE';
+      ctx.fillText(labelText, chosen.lx, chosen.ly);
+    }
+    ctx.restore();
+  }
+
+  /* ==================== 9. 沙盒交互、UI 联动与一键定稿复制 ==================== */
+  const sbTooltip = document.getElementById('sbTooltip');
+
+  function handleSandboxPointer(clientX, clientY) {
+    const rect = sandboxCanvas.getBoundingClientRect();
+    const mx = clientX - rect.left;
+    const my = clientY - rect.top;
+
+    let best = null;
+    let bestD = Infinity;
+    for (const node of SANDBOX_NODES) {
+      const st = sbNodeState.get(node.id);
+      const d = Math.hypot(mx - st.sx, my - st.sy);
+      if (d <= st.hitR && d < bestD) {
+        best = node;
+        bestD = d;
+      }
+    }
+
+    state.hoveredNodeId = best ? best.id : '';
+    sandboxCanvas.style.cursor = best ? 'pointer' : 'default';
+
+    if (best) {
+      const st = sbNodeState.get(best.id);
+      const meta = TIER_META[best.weight];
+      const vCode = best.weight === 'trivial' ? state.selectedTrivial : 'base';
+      const conceptLabel = best.weight === 'trivial'
+        ? `方案 ${vCode} · ${TRIVIAL_VARIANTS[vCode].name}`
+        : `已锁定 · ${LOCKED_TIERS[best.weight].name}`;
+
+      document.getElementById('ttWeightPill').innerHTML = `${getMicroSvg(best.weight, vCode)}<span>${meta.label} · ${meta.en}</span>`;
+      document.getElementById('ttConcept').textContent = conceptLabel;
+      document.getElementById('ttTitle').textContent = best.title;
+      document.getElementById('ttDesc').textContent = best.desc;
+      sbTooltip.style.left = clamp(st.sx, 152, sbView.width - 152) + 'px';
+      sbTooltip.style.top = Math.max(102, st.sy - 12) + 'px';
+      sbTooltip.hidden = false;
+    } else {
+      sbTooltip.hidden = true;
+    }
+  }
+
+  sandboxCanvas.addEventListener('pointermove', e => handleSandboxPointer(e.clientX, e.clientY));
+  sandboxCanvas.addEventListener('pointerdown', e => handleSandboxPointer(e.clientX, e.clientY));
+  sandboxCanvas.addEventListener('pointerleave', () => {
+    state.hoveredNodeId = '';
+    sbTooltip.hidden = true;
+  });
+
+  sandboxCanvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    state.targetZoom = clamp(state.targetZoom * Math.exp(-e.deltaY * 0.0012), 0.85, 1.90);
+    syncZoomButtons();
+  }, { passive: false });
+
+  function syncZoomButtons() {
+    document.querySelectorAll('[data-zoom]').forEach(btn => {
+      const z = parseFloat(btn.dataset.zoom);
+      btn.classList.toggle('is-active', Math.abs(state.targetZoom - z) < 0.06);
+    });
+  }
+
+  function renderFilterBar() {
+    const bar = document.getElementById('weightFilterBar');
+    const items = [
+      { key: 'all', label: '全部', svg: '' },
+      ...TIER_ORDER.map(k => ({
+        key: k,
+        label: TIER_META[k].label,
+        svg: getMicroSvg(k, k === 'trivial' ? state.selectedTrivial : 'base')
+      }))
+    ];
+    bar.innerHTML = items.map(it => `
+      <button type="button" class="filter-pill ${state.filterWeight === it.key ? 'is-active' : ''}" data-filter="${it.key}">
+        ${it.svg}<span>${it.label}</span>
+      </button>
+    `).join('');
+
+    bar.querySelectorAll('.filter-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.filterWeight = btn.dataset.filter;
+        renderFilterBar();
+      });
+    });
+  }
+
+  function refreshSelectionUI() {
+    const tVar = TRIVIAL_VARIANTS[state.selectedTrivial];
+
+    // 1. 刷新第一板块五级梯队卡片
+    for (const tierKey of TIER_ORDER) {
+      const { card } = ladderRefs[tierKey];
+      const nameEl = card.querySelector('.js-name');
+      const codeEl = card.querySelector('.js-code');
+      const subEl = card.querySelector('.js-sub');
+      const svgEl = card.querySelector('.js-svg-slot');
+
+      if (TIER_META[tierKey].locked) {
+        const info = LOCKED_TIERS[tierKey];
+        nameEl.textContent = info.name;
+        codeEl.textContent = info.code;
+        subEl.textContent = info.spec;
+        svgEl.innerHTML = getMicroSvg(tierKey, 'base');
+      } else {
+        nameEl.textContent = tVar.name;
+        codeEl.textContent = `方案 ${tVar.code}`;
+        subEl.textContent = tVar.geo;
+        svgEl.innerHTML = getMicroSvg('trivial', tVar.code);
+      }
+    }
+
+    // 2. 刷新第二板块 6 张末节候选卡高亮
+    for (const entry of candidateEntries) {
+      const active = entry.code === state.selectedTrivial;
+      entry.card.classList.toggle('is-selected', active);
+      entry.card.setAttribute('aria-pressed', String(active));
+      entry.card.querySelector('.js-badge').textContent = active ? '当前选定 ✓' : '点击选定';
+    }
+
+    // 3. 刷新沙盒右上角权重过滤栏微图标
+    renderFilterBar();
+
+    // 4. 刷新底部悬浮定稿栏
+    document.getElementById('dockSummary').innerHTML = `
+      <span class="dock-prefix">终极五级定稿</span>
+      <span class="dock-item is-locked-item">${getMicroSvg('core', 'base')}<span>核心</span><em>双层四芒十字星核✓</em></span>
+      <span class="dock-sep">/</span>
+      <span class="dock-item is-locked-item">${getMicroSvg('key', 'base')}<span>关键</span><em>H · 日蚀星环✓</em></span>
+      <span class="dock-sep">/</span>
+      <span class="dock-item is-locked-item">${getMicroSvg('standard', 'base')}<span>标准</span><em>双切面实心菱晶✓</em></span>
+      <span class="dock-sep">/</span>
+      <span class="dock-item is-locked-item">${getMicroSvg('accent', 'base')}<span>点缀</span><em>双星共轭结✓</em></span>
+      <span class="dock-sep">/</span>
+      <span class="dock-item">${getMicroSvg('trivial', tVar.code)}<span>末节</span><em>方案 ${tVar.code} · ${tVar.name}</em></span>
+    `;
+  }
+
+  // 顶部开关：动态微演 & 悬停预览锁
+  const motionBtn = document.getElementById('motionToggleBtn');
+  const motionStateTag = document.getElementById('motionStateTag');
+  motionBtn.addEventListener('click', () => {
+    state.motionOn = !state.motionOn;
+    motionBtn.classList.toggle('is-on', state.motionOn);
+    motionBtn.setAttribute('aria-pressed', String(state.motionOn));
+    motionStateTag.textContent = state.motionOn ? 'ON' : 'PAUSED';
+  });
+
+  const hoverLockBtn = document.getElementById('hoverLockBtn');
+  const hoverLockTag = document.getElementById('hoverLockTag');
+  hoverLockBtn.addEventListener('click', () => {
+    state.hoverLock = !state.hoverLock;
+    hoverLockBtn.classList.toggle('is-on', state.hoverLock);
+    hoverLockBtn.setAttribute('aria-pressed', String(state.hoverLock));
+    hoverLockTag.textContent = state.hoverLock ? 'LOCKED' : 'OFF';
+    document.body.classList.toggle('is-hover-locked', state.hoverLock);
+  });
+
+  // 沙盒工具栏：视距与标签模式
+  document.querySelectorAll('[data-zoom]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.targetZoom = parseFloat(btn.dataset.zoom);
+      syncZoomButtons();
+    });
+  });
+
+  document.querySelectorAll('[data-label-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.labelMode = btn.dataset.labelMode;
+      document.querySelectorAll('[data-label-mode]').forEach(b => {
+        b.classList.toggle('is-active', b.dataset.labelMode === state.labelMode);
+      });
+    });
+  });
+
+  // Toast 与剪贴板复制（禁用 alert）
+  const toastEl = document.getElementById('toast');
+  let toastTimer = null;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('is-show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('is-show'), 2400);
+  }
+
+  document.getElementById('copyFinalBtn').addEventListener('click', () => {
+    const tVar = TRIVIAL_VARIANTS[state.selectedTrivial];
+    const finalText = [
+      `【小说工坊 · 关系星图（方案 B · 引力势阱与晶体星座）五级条目权重终极定稿方案】`,
+      `- 核心（core · 1.38× · 已锁定）：双层四芒十字星核 — ${LOCKED_TIERS.core.spec}`,
+      `- 关键（key · 1.18× · 已锁定）：方案 H · 日蚀星环（ECLIPSE LENS）— ${LOCKED_TIERS.key.spec}`,
+      `- 标准（standard · 1.00× · 已锁定）：经典双切面实心菱晶 — ${LOCKED_TIERS.standard.spec}`,
+      `- 点缀（accent · 0.80× · 已锁定）：双星共轭结 — ${LOCKED_TIERS.accent.spec}`,
+      `- 末节（trivial · 0.62× · 最终选定）：方案 ${tVar.code} · ${tVar.name}（${tVar.en}）— ${tVar.fullSpec}`
+    ].join('\n');
+
+    const ta = document.createElement('textarea');
+    ta.value = finalText;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    let copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } catch (_) {
+      copied = false;
+    }
+    document.body.removeChild(ta);
+
+    if (copied) {
+      showToast(`已复制终极五级定稿：末节选定 [方案 ${tVar.code} · ${tVar.name}]`);
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(finalText)
+        .then(() => showToast(`已复制终极五级定稿：末节选定 [方案 ${tVar.code} · ${tVar.name}]`))
+        .catch(() => showToast('复制受限，请直接记录底部定稿栏中的方案代号'));
+    } else {
+      showToast('复制受限，请直接记录底部定稿栏中的方案代号');
+    }
+  });
+
+  /* ==================== 10. 高分屏尺寸监听与 60fps 主循环 ==================== */
+  const ro = new ResizeObserver(() => {
+    try {
+      for (const item of allMiniCanvases) {
+        resizeHiDpiCanvas(item.canvas, item.stage, item);
+      }
+      resizeHiDpiCanvas(sandboxCanvas, sandboxPanel, sbView);
+    } catch (_) {
+      // 忽略容器瞬态零尺寸异常
+    }
+  });
+  for (const item of allMiniCanvases) ro.observe(item.stage);
+  ro.observe(sandboxPanel);
+
+  function startBoard() {
+    for (const item of allMiniCanvases) {
+      resizeHiDpiCanvas(item.canvas, item.stage, item);
+    }
+    resizeHiDpiCanvas(sandboxCanvas, sandboxPanel, sbView);
+    refreshSelectionUI();
+    syncZoomButtons();
+
+    let lastNow = performance.now();
+    const zoomReadout = document.getElementById('zoomReadout');
+
+    function tick(now) {
+      const dt = Math.min(40, now - lastNow);
+      lastNow = now;
+      if (state.motionOn) state.animTime += dt;
+
+      const ease = 1 - Math.exp(-dt / 70);
+      state.zoom = lerp(state.zoom, state.targetZoom, ease);
+      zoomReadout.textContent = Math.round(state.zoom * 100) + '%';
+
+      for (const item of allMiniCanvases) {
+        const wantHover = state.hoverLock || item.hovered;
+        item.hoverT = lerp(item.hoverT, wantHover ? 1 : 0, ease);
+        if (state.motionOn && item.hoverT > 0.02) {
+          // 方案 N 加速自转 / 方案 P 引力共舞旋转平滑累加
+          item.orbitSpin += dt * 0.0020 * item.hoverT;
+        }
+        renderSpecimenStage(item);
+      }
+
+      renderSandbox(dt);
+      requestAnimationFrame(tick);
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  window.onload = startBoard;
+})();
+</script>
+</body>
+</html>

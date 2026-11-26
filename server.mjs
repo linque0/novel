@@ -1,4 +1,4 @@
-/* 小说工坊网页版静态服务器（零依赖） */
+/* 空想书典网页版静态服务器（零依赖） */
 import http from 'node:http'
 import { readFile } from 'node:fs/promises'
 import { extname, join, resolve, dirname, sep } from 'node:path'
@@ -43,7 +43,7 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, '127.0.0.1', () => {
   const url = `http://127.0.0.1:${PORT}`
-  console.log(`📚 小说工坊（网页版）已启动: ${url}  （Ctrl+C 停止）`)
+  console.log(`📚 空想书典（网页版）已启动: ${url}  （Ctrl+C 停止）`)
   console.log('注意：网页版数据存于浏览器 IndexedDB，与桌面版互相独立；请用「备份/恢复」迁移。')
   if (process.argv.includes('--open')) {
     const cmd =

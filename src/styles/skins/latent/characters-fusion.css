@@ -19,15 +19,15 @@
       保持暗玻璃面板 + 亮字，避免浅色文字变量落到暗紫玻璃底板上造成黑字配黑底或白框刺眼。 */
 body[data-skin=dsh] .char-shell {
   --char-pane-line: rgb(255 255 255 / .17);
-  --char-pane-bg: rgb(29 25 39 / .68);
+  --char-pane-bg: rgb(21 19 30 / .82);
   --char-main-bg: rgb(33 27 44 / .55);
-  --char-ink: #f4eef7;
-  --char-dim: #b1a4bd;
-  --char-hover: rgb(255 255 255 / .06);
+  --char-ink: #faf7fc;
+  --char-dim: #d0c6de;
+  --char-hover: rgb(255 255 255 / .075);
   --char-accent: #bad6c6;
-  --text: #f4eef7;
-  --text-dim: #c9bed3;
-  --text-faint: #b1a4bd;
+  --text: #faf7fc;
+  --text-dim: #e5dff0;
+  --text-faint: #d0c6de;
   --card-ink: #f4eef7;
   --border: rgb(255 255 255 / .17);
   --border-strong: rgb(255 255 255 / .24);
@@ -51,7 +51,7 @@ body[data-skin=dsh] .char-shell {
 body[data-skin=dsh] .char-pane {
   --char-serif: var(--lore-serif, var(--ls-serif, "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", serif));
   border: 1px solid rgb(255 255 255 / .17);
-  background: rgb(29 25 39 / .68);
+  background: rgb(21 19 30 / .82);
   -webkit-backdrop-filter: blur(24px) saturate(1.25);
   backdrop-filter: blur(24px) saturate(1.25);
   box-shadow: var(--shadow-pop, 0 18px 48px rgb(10 6 28 / .45));

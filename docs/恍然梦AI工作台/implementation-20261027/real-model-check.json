@@ -1,0 +1,16 @@
+{
+  "kind": "real-model-quality",
+  "status": "incomplete",
+  "modelRequired": "deepseek/deepseek-v4.1-flash",
+  "results": [],
+  "limitations": [
+    "文学质量、误报率与修改量需作者复核；证据定位成功不代表语义正确。",
+    "未记录旧版真实输出，不能据此宣称优化幅度。"
+  ],
+  "configuration": {
+    "ready": true,
+    "model": "workbench-fixture",
+    "remote": false
+  },
+  "reason": "当前配置不是要求的远程 DeepSeek 模型，真实评测未执行"
+}

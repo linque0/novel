@@ -129,7 +129,7 @@ function openPanel(spec) {
     show: !waitForRenderer,
     icon: windowIconPath(),
     backgroundColor: '#f6f2e7',
-    title: spec.title || `小说工坊 · ${meta.label}`,
+    title: spec.title || `空想书典 · ${meta.label}`,
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

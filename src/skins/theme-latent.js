@@ -456,12 +456,41 @@ function buildOverrides(c) {
 export const darkOverrides = buildOverrides(DARK)
 export const lightOverrides = buildOverrides(LIGHT)
 
-const DARK_THEME = Object.freeze({ dark: true, overrides: darkOverrides })
-const LIGHT_THEME = Object.freeze({ dark: false, overrides: lightOverrides })
+export function scaleNaiveOverrides(baseOverrides = {}, uiFontScale = 100) {
+  const scale = Math.max(0.85, Math.min(1.4, (Number(uiFontScale) || 100) / 100))
+  if (Math.abs(scale - 1) < 0.001) return baseOverrides
+  const px = (n) => `${Math.round(n * scale * 10) / 10}px`
+  const hScale = scale > 1 ? 1 + (scale - 1) * 0.65 : 1
+  const hpx = (n) => `${Math.round(n * hScale)}px`
+  return {
+    ...baseOverrides,
+    common: {
+      ...(baseOverrides.common || {}),
+      fontSize: px(14),
+      fontSizeMini: px(12),
+      fontSizeTiny: px(12),
+      fontSizeSmall: px(13),
+      fontSizeMedium: px(14),
+      fontSizeLarge: px(15),
+      fontSizeHuge: px(16),
+      heightTiny: hpx(24),
+      heightSmall: hpx(28),
+      heightMedium: hpx(32),
+      heightLarge: hpx(38)
+    },
+    ...(baseOverrides.Message
+      ? { Message: { ...baseOverrides.Message, fontSize: px(14) } }
+      : {})
+  }
+}
 
 /* 桌面版明暗来源：ui.theme === 'night' 即暗色（暗夜书房），其余为亮色。
  * 返回 computed<{ dark, overrides }>：:theme（darkTheme | null）与 :theme-overrides
  * 都从这一个 computed 派生，保证两者永远同源。 */
 export function useLatentTheme(ui) {
-  return computed(() => (ui && ui.theme === 'night' ? DARK_THEME : LIGHT_THEME))
+  return computed(() => {
+    const dark = Boolean(ui && ui.theme === 'night')
+    const base = dark ? darkOverrides : lightOverrides
+    return { dark, overrides: scaleNaiveOverrides(base, ui?.uiFontScale ?? 100) }
+  })
 }

@@ -1,0 +1,70 @@
+{
+  "kind": "deterministic-application",
+  "requests": 24,
+  "results": [
+    {
+      "name": "blank chapter opens directly as AI story without an outline or handwritten text",
+      "ok": true
+    },
+    {
+      "name": "three empty-guidance continues use latest manuscript and default narrator policy",
+      "ok": true
+    },
+    {
+      "name": "workshop and story scene share the same editable manuscript and preserve manual changes",
+      "ok": true
+    },
+    {
+      "name": "regeneration switches only the latest turn and keeps alternate variants",
+      "ok": true
+    },
+    {
+      "name": "independent review and selected revision stay inside the story scene",
+      "ok": true
+    },
+    {
+      "name": "failed transport retains current prose and records interruption",
+      "ok": true
+    },
+    {
+      "name": "plot discussion stays separate and its selected conclusion becomes optional next-turn guidance",
+      "ok": true
+    },
+    {
+      "name": "automatic chapter advances at most six rounds, independently reviews and never confirms canonical prose",
+      "ok": true
+    },
+    {
+      "name": "stopping generation never commits its late output",
+      "ok": true
+    },
+    {
+      "name": "draft survives full reload without issuing a model request",
+      "ok": true
+    },
+    {
+      "name": "chapter confirmation saves canonical text and queues memory through existing application service",
+      "ok": true
+    },
+    {
+      "name": "independent window owns editing and synchronizes its actual draft back to the workshop",
+      "ok": true
+    },
+    {
+      "name": "lease release storage failure never leaves a permanent busy state",
+      "ok": true
+    },
+    {
+      "name": "stop during post-generation source validation does not publish late text",
+      "ok": true
+    },
+    {
+      "name": "chapter confirmation freezes editing until the application and document are saved",
+      "ok": true
+    },
+    {
+      "name": "reopening recovers an applied chapter when the final document status write failed",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,182 @@
+[
+  {
+    "skin": "original",
+    "width": 1280,
+    "height": 720,
+    "before": {
+      "width": 754,
+      "toolbar": 66.80000305175781,
+      "scroll": 0
+    },
+    "after": {
+      "width": 754,
+      "toolbar": 66.80000305175781,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "original",
+    "width": 1440,
+    "height": 900,
+    "before": {
+      "width": 914,
+      "toolbar": 66.80000305175781,
+      "scroll": 0
+    },
+    "after": {
+      "width": 914,
+      "toolbar": 66.80000305175781,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "original",
+    "width": 1920,
+    "height": 1080,
+    "before": {
+      "width": 1394,
+      "toolbar": 38.79999923706055,
+      "scroll": 0
+    },
+    "after": {
+      "width": 1394,
+      "toolbar": 38.79999923706055,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "gravity",
+    "width": 1280,
+    "height": 720,
+    "before": {
+      "width": 648.4000244140625,
+      "toolbar": 75.80000305175781,
+      "scroll": 0
+    },
+    "after": {
+      "width": 648.4000244140625,
+      "toolbar": 75.80000305175781,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "gravity",
+    "width": 1440,
+    "height": 900,
+    "before": {
+      "width": 808.4000244140625,
+      "toolbar": 75.80000305175781,
+      "scroll": 0
+    },
+    "after": {
+      "width": 808.4000244140625,
+      "toolbar": 75.80000305175781,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "gravity",
+    "width": 1920,
+    "height": 1080,
+    "before": {
+      "width": 1288.4000244140625,
+      "toolbar": 46.79999923706055,
+      "scroll": 0
+    },
+    "after": {
+      "width": 1288.4000244140625,
+      "toolbar": 46.79999923706055,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "glaze",
+    "width": 1280,
+    "height": 720,
+    "before": {
+      "width": 690.4000244140625,
+      "toolbar": 71.80000305175781,
+      "scroll": 0
+    },
+    "after": {
+      "width": 690.4000244140625,
+      "toolbar": 71.80000305175781,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "glaze",
+    "width": 1440,
+    "height": 900,
+    "before": {
+      "width": 850.4000244140625,
+      "toolbar": 71.80000305175781,
+      "scroll": 0
+    },
+    "after": {
+      "width": 850.4000244140625,
+      "toolbar": 71.80000305175781,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "glaze",
+    "width": 1920,
+    "height": 1080,
+    "before": {
+      "width": 1330.4000244140625,
+      "toolbar": 47,
+      "scroll": 0
+    },
+    "after": {
+      "width": 1330.4000244140625,
+      "toolbar": 47,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "crimson",
+    "width": 1280,
+    "height": 720,
+    "before": {
+      "width": 690,
+      "toolbar": 43,
+      "scroll": 0
+    },
+    "after": {
+      "width": 690,
+      "toolbar": 43,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "crimson",
+    "width": 1440,
+    "height": 900,
+    "before": {
+      "width": 850,
+      "toolbar": 43,
+      "scroll": 0
+    },
+    "after": {
+      "width": 850,
+      "toolbar": 43,
+      "scroll": 0
+    }
+  },
+  {
+    "skin": "crimson",
+    "width": 1920,
+    "height": 1080,
+    "before": {
+      "width": 1330,
+      "toolbar": 43,
+      "scroll": 0
+    },
+    "after": {
+      "width": 1330,
+      "toolbar": 43,
+      "scroll": 0
+    }
+  }
+]

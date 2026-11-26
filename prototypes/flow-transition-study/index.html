@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>流动波纹 · 转场设计稿</title>
+<style>
+  :root {
+    color-scheme: dark;
+    font-family: Inter, "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: #171715;
+    color: #ece9e0;
+    --muted: #aaa69c;
+    --line: #393833;
+    --accent: #e4c3a1;
+    --surface: #24231f;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  button, input { font: inherit; }
+  button, input[type="range"], input[type="color"] { cursor: pointer; }
+  button { color: inherit; }
+  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+  main { width: min(1064px, calc(100% - 64px)); margin: 0 auto; padding: 35px 0 34px; }
+  .masthead { display: flex; align-items: baseline; gap: 12px; color: var(--muted); font-size: 12px; letter-spacing: .06em; }
+  .masthead b { color: #dedad1; font-weight: 600; }
+  .heading { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 22px 24px; margin: 13px 0 17px; }
+  h1 { margin: 0; font-family: "Songti SC", "Noto Serif CJK SC", SimSun, serif; font-weight: 500; font-size: clamp(32px, 5vw, 52px); letter-spacing: -.05em; line-height: 1.08; }
+  .subtitle { margin: 10px 0 0; font-size: 13px; color: var(--muted); }
+  .modes { display: flex; gap: 3px; flex-wrap: wrap; padding: 3px; border: 1px solid var(--line); border-radius: 7px; }
+  .modes button { border: 0; padding: 8px 13px; border-radius: 4px; background: transparent; color: var(--muted); font-size: 12px; }
+  .modes button[aria-pressed="true"] { color: #f4eadc; background: #39342e; }
+  .stage { aspect-ratio: 2.1; min-height: 275px; position: relative; isolation: isolate; overflow: hidden; border: 1px solid #74665b; border-radius: 9px; background: #37221d; }
+  .stage canvas { width: 100%; height: 100%; display: block; }
+  .stage-error { position: absolute; inset: auto 18px 18px; background: var(--surface); border-radius: 5px; padding: 10px 14px; color: #ffe0c7; }
+  .mock { position: absolute; inset: 7.2% 9%; display: grid; grid-template-rows: auto 1fr; min-height: 0; color: #f3eae1; pointer-events: none; }
+  .mock[hidden] { display: none; }
+  .mock-top { color: #f5eee6; background: #1c1513b5; border: 1px solid #fff2dd36; border-bottom: 0; border-radius: 9px 9px 0 0; display: flex; align-items: center; gap: 12px; padding: 9px 16px; font-size: 11px; }
+  .mock-top span { opacity: .73; }
+  .mock-body { --sidebar: 23%; position: relative; min-height: 0; border-radius: 0 0 9px 9px; overflow: hidden; background: #211a17a8; border: 1px solid #fff1df3a; }
+  .mock-body::before { content: ""; position: absolute; inset: 0 auto 0 var(--sidebar); border-left: 1px solid #fff1df29; }
+  .screen { position: absolute; inset: 0; display: grid; grid-template-columns: var(--sidebar) 1fr; }
+  #outgoing { mask-image: url(#out-mask); }
+  #incoming { mask-image: url(#in-mask); }
+  .mask-library { position: absolute; }
+  .preview-label { font-size: 10px; color: #d6c6b9; margin: 0 0 14px; }
+  .screen nav { padding: clamp(12px, 2.2vw, 24px) 10px; }
+  .screen nav span { display: block; margin: 0 0 6px; padding: 7px 8px; font-size: 11px; border-radius: 4px; white-space: nowrap; }
+  .active-entry { background: #fff1df20; }
+  .mock-copy { padding: clamp(18px, 4vw, 54px); }
+  .mock-copy h2 { font: 500 clamp(23px, 3.9vw, 44px)/1.12 "Songti SC", SimSun, serif; letter-spacing: -.04em; margin: 0; }
+  .mock-copy p { overflow-wrap: anywhere; }
+  .mock-text { font-size: 12px; line-height: 1.85; color: #ecdcd0; max-width: 29em; margin: 12px 0; }
+  .transport { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 13px 0 12px; }
+  .transport button { border: 1px solid var(--line); background: var(--surface); padding: 7px 10px; border-radius: 5px; font-size: 12px; }
+  .transport button[aria-pressed="true"] { border-color: #8b7662; color: var(--accent); }
+  #play { min-width: 77px; background: var(--accent); color: #251c16; border-color: var(--accent); font-weight: 600; }
+  .actions { display: flex; align-items: center; gap: 8px; }
+  input[type="range"] { accent-color: var(--accent); width: 100%; margin: 0; min-width: 0; }
+  output { font-variant-numeric: tabular-nums; font-size: 11px; color: var(--muted); min-width: 91px; text-align: right; }
+  .settings { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 9px 18px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .palettes, .colors { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
+  .palettes button { display: flex; gap: 6px; align-items: center; border: 1px solid transparent; background: transparent; border-radius: 5px; padding: 5px 7px; color: var(--muted); font-size: 11px; }
+  .palettes button[aria-pressed="true"] { border-color: var(--line); color: #fff0db; background: var(--surface); }
+  .palettes i { flex: none; height: 11px; width: 11px; border-radius: 50%; background: linear-gradient(135deg, var(--a) 48%, var(--b) 52%); }
+  .colors { font-size: 11px; color: var(--muted); }
+  .colors label { display: inline-flex; align-items: center; gap: 5px; }
+  input[type="color"] { width: 27px; height: 22px; padding: 1px 2px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+  .beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .beats h2 { font-size: 12px; margin: 0 0 6px; font-weight: 600; }
+  .beats h2 span { color: var(--accent); font-size: 11px; margin-left: 7px; font-weight: 400; }
+  .beats p { font-size: 12px; color: var(--muted); margin: 0; line-height: 1.6; }
+  @media (max-width: 640px) {
+    main { width: calc(100% - 28px); padding: 20px 0; }
+    .heading { margin-bottom: 12px; gap: 14px; }
+    .stage { aspect-ratio: 1.25; }
+    .mock { inset: 9% 6%; }
+    .mock-body { --sidebar: 30%; }
+    .screen nav { padding-inline: 4px; }
+    .screen nav span { padding-inline: 4px; }
+    .mock-copy { padding: 18px 13px; }
+    .preview-label { margin-bottom: 9px; }
+    .transport { gap: 7px; }
+    .actions { gap: 4px; }
+    #play { min-width: 55px; }
+    .transport button { padding-inline: 5px; }
+    output { min-width: 80px; }
+    .beats { grid-template-columns: 1fr; gap: 10px; }
+  }
+</style>
+<main>
+  <div class="masthead"><b>小说工坊</b><span>隐现皮肤 · 动效设计稿</span></div>
+  <header class="heading">
+    <div>
+      <h1>流动波纹转场</h1>
+      <p class="subtitle">同一片底纹起伏、向左流过，再慢慢平复。</p>
+    </div>
+    <div class="modes" role="group" aria-label="预览方式">
+      <button type="button" data-mode="idle" aria-pressed="false">背景波纹</button>
+      <button type="button" data-mode="wave" aria-pressed="true">波纹划过</button>
+      <button type="button" data-mode="scene" aria-pressed="false">界面转场</button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <canvas aria-label="随背景配色变化的流动波纹"></canvas>
+    <div class="mock" hidden>
+      <div class="mock-top">浮世 <span>作品设定</span></div>
+      <div class="mock-body">
+        <svg class="mask-library" width="0" height="0" aria-hidden="true">
+          <defs>
+            <filter id="feather" x="-.2" y="-.2" width="1.4" height="1.4"
+              filterUnits="objectBoundingBox" primitiveUnits="objectBoundingBox">
+              <feGaussianBlur stdDeviation=".013 0"/>
+            </filter>
+            <mask id="out-mask" x="0" y="0" width="1" height="1" maskContentUnits="objectBoundingBox">
+              <path id="out-edge" fill="white" filter="url(#feather)"/>
+            </mask>
+            <mask id="in-mask" x="0" y="0" width="1" height="1" maskContentUnits="objectBoundingBox">
+              <path id="in-edge" fill="white" filter="url(#feather)"/>
+            </mask>
+          </defs>
+        </svg>
+        <section class="screen" id="outgoing">
+          <nav><p class="preview-label">地域</p><span class="active-entry">长明共和国</span><span>北境诸岛</span><span>松雾港</span></nav>
+          <div class="mock-copy"><p class="preview-label">地域档案</p><h2>长明共和国</h2><p class="mock-text">群山以南，旧河道穿过平原。雨季过后，沿岸市镇重新开港。</p></div>
+        </section>
+        <section class="screen" id="incoming">
+          <nav><p class="preview-label">地域</p><span>长明共和国</span><span>北境诸岛</span><span class="active-entry">松雾港</span></nav>
+          <div class="mock-copy"><p class="preview-label">地域档案</p><h2>松雾港</h2><p class="mock-text">雾沿海岸上升，潮声落在木栈道下。冬天的船队会在这里等风。</p></div>
+        </section>
+      </div>
+    </div>
+    <p class="stage-error" role="alert" hidden></p>
+  </div>
+
+  <div class="transport">
+    <div class="actions">
+      <button type="button" id="play">▶ 播放</button>
+      <button type="button" id="slow" aria-pressed="false" aria-label="四分之一速度">¼ 速</button>
+    </div>
+    <input type="range" id="timeline" min="0" max="840" value="392" aria-label="波纹转场进度">
+    <output id="time" for="timeline">392 / 840 ms</output>
+  </div>
+
+  <div class="settings">
+    <div class="palettes" role="group" aria-label="隐现背景配色"></div>
+    <div class="colors">
+      <label>主色 <input type="color" id="main-color" value="#b96852"></label>
+      <label>辅色 <input type="color" id="accent-color" value="#dca56b"></label>
+    </div>
+  </div>
+
+  <section class="beats" aria-label="转场节奏">
+    <div><h2>起涌<span>0–150 ms</span></h2><p>右侧局部纹路抬起，颗粒沿用背景的密度。</p></div>
+    <div><h2>划过<span>150–670 ms</span></h2><p>宽波峰向左推进，后方的余波更轻；界面沿波峰柔和交接。</p></div>
+    <div><h2>收尾<span>670–840 ms</span></h2><p>波峰出画后，余波回落到原有的流动幅度。</p></div>
+  </section>
+</main>
+<script src="background-material.js"></script>
+<script src="preview.js"></script>
+</html>
