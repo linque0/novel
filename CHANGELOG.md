@@ -4,6 +4,10 @@
 
 - 品牌正式更名为 **空想书典（Reverie Fiction）**，更新主程序与安装程序名称（`空想书典.exe` / `reverie-fiction-setup-<版本>.exe`）、界面品牌文案、内置手册、现行文档及 DSH 插件同步产物；底层数据目录与 `appId` 保持兼容不变。
 
+### 交付
+
+- Windows x64 安装程序 `reverie-fiction-setup-1.2.11.exe`（125,865,389 字节，SHA-512 `RdoiX7tUfHNsoMo5buZQMzt69KeBXe+TJXZlJYaY2X+aosGR2AxzSFA7v5UXVPzyp+RJenimgfgmFQMEeoGdRw==`），随 `latest.yml` 和 `.blockmap` 差分更新映射发布；按本次要求跳过测试，已完成 `npm run dist` 构建与产物静态核对。[GitHub Release](https://github.com/linque0/novel/releases/tag/v1.2.11)
+
 ## [1.2.9] - 2026-11-24 · 实验性功能门控、灵感图片与外部链接加固
 
 ### 实验性功能门控（2026-11-24）
